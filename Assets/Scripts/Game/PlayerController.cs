@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 
 /// <summary>
 /// VirtualJoystick으로부터 방향을 받아 캐릭터를 이동합니다.
@@ -11,24 +12,29 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float moveSpeed = 5f;
 
     [Header("Stats")]
-    [SerializeField] private float maxHP = 100f;
-    [SerializeField] private float currentHP;
+    [SerializeField] private float  maxHP = 100f;
+    [SerializeField] private float  currentHP;
 
-    private Vector2 moveDirection;
-    private Rigidbody2D rb;
+    [Header("플레이어 위 HP 슬라이더 (World Space)")]
+    [SerializeField] private Slider playerHpSlider;
+
+    private Vector2        moveDirection;
+    private Rigidbody2D    rb;
     private SpriteRenderer spriteRenderer;
+    private HitFlash       hitFlash;
 
     private void Awake()
     {
-        Instance = this;
-        rb = GetComponent<Rigidbody2D>();
+        Instance      = this;
+        rb            = GetComponent<Rigidbody2D>();
         spriteRenderer = GetComponent<SpriteRenderer>();
-        currentHP = maxHP;
+        hitFlash      = GetComponent<HitFlash>();
+        currentHP     = maxHP;
     }
 
     private void Start()
     {
-        GameManager.Shared?.UpdateHP(1f);
+        SyncHPUI();
     }
 
     private void Update()
@@ -46,7 +52,19 @@ public class PlayerController : MonoBehaviour
             return;
         }
 
-        rb.linearVelocity = moveDirection * moveSpeed;
+        Vector2 desired = rb.position + moveDirection * moveSpeed * Time.fixedDeltaTime;
+        desired = ClampToBounds(desired);
+
+        rb.linearVelocity = Vector2.zero;
+        rb.MovePosition(desired);
+    }
+
+    private Vector2 ClampToBounds(Vector2 desired)
+    {
+        var bounds = MovementBounds.Shared;
+        if (bounds == null) return desired;
+        if (bounds.IsInside(desired)) return desired;
+        return bounds.ClosestPointOnBoundary(desired);
     }
 
     private void HandleInput()
@@ -63,14 +81,22 @@ public class PlayerController : MonoBehaviour
         else if (moveDirection.x < -0.05f) spriteRenderer.flipX = true;
     }
 
-public void TakeDamage(float damage)
+    public void TakeDamage(float damage)
     {
         currentHP -= damage;
-        currentHP = Mathf.Max(0f, currentHP);
-        GameManager.Shared?.UpdateHP(currentHP / maxHP);
+        currentHP  = Mathf.Max(0f, currentHP);
+        SyncHPUI();
+        hitFlash?.Flash();
 
         if (currentHP <= 0f)
             GameManager.Shared?.TriggerGameOver();
+    }
+
+    private void SyncHPUI()
+    {
+        float norm = currentHP / maxHP;
+        GameManager.Shared?.UpdateHP(norm);
+        if (playerHpSlider) playerHpSlider.value = norm;
     }
 
     public Vector2 Position => transform.position;

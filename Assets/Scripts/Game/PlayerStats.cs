@@ -21,7 +21,11 @@ public class PlayerStats : MonoBehaviourSingleton<PlayerStats>
     {
         base.Awake();
         expToNext = baseExpPerLevel;
-        SyncUI();
+    }
+
+    private void Start()
+    {
+        SyncUI();  // GameManager Awake 완료 후 → goldText, expSlider 초기값 0 반영
     }
 
     public void AddGold(int amount)

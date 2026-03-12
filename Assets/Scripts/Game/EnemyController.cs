@@ -18,12 +18,14 @@ public class EnemyController : MonoBehaviour
     private Transform playerTransform;
     private Rigidbody2D rb;
     private SpriteRenderer sr;
+    private HitFlash hitFlash;
 
     private void Awake()
     {
         currentHP = maxHP;
-        rb = GetComponent<Rigidbody2D>();
-        sr = GetComponent<SpriteRenderer>();
+        rb        = GetComponent<Rigidbody2D>();
+        sr        = GetComponent<SpriteRenderer>();
+        hitFlash  = GetComponent<HitFlash>();
 
         if (rb != null)
         {
@@ -91,6 +93,7 @@ public class EnemyController : MonoBehaviour
         SoundManager.Shared?.Play("enemy_hit");
         FXManager.Shared?.SpawnDamageText(transform.position, damage);
         FXManager.Shared?.SpawnHitEffect(transform.position);
+        hitFlash?.Flash();
         if (currentHP <= 0f)
         {
     

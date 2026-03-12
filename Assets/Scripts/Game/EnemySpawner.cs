@@ -3,7 +3,7 @@ using UnityEngine;
 
 /// <summary>
 /// 스폰 영역 가장자리에서 적을 스폰합니다.
-/// WaveRule 배열로 웨이브별 스폰 규칙을 Inspector에서 자유롭게 설정하세요.
+/// WaveRule 배열로 웨이브별 스폰 규칙을, EnemyEntry 배열로 적 종류/가중치를 Inspector에서 설정하세요.
 /// </summary>
 public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
 {
@@ -19,8 +19,25 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
         public int   spawnCount   = 1;
     }
 
+    // ── 적 종류 항목 ───────────────────────────────────────────
+    [System.Serializable]
+    public class EnemyEntry
+    {
+        [Tooltip("적 프리팹")]
+        public GameObject prefab;
+        [Tooltip("스폰 가중치 (높을수록 자주 등장)")]
+        public int weight   = 10;
+        [Tooltip("이 웨이브 이상일 때만 등장")]
+        public int minWave  = 1;
+    }
+
+    [Header("적 종류 (가중치·등장 웨이브 설정)")]
+    [SerializeField] private EnemyEntry[] enemyEntries = new EnemyEntry[]
+    {
+        new() { weight = 10, minWave = 1 },
+    };
+
     [Header("Prefab")]
-    [SerializeField] private GameObject enemyPrefab;
     [SerializeField] private GameObject spawnMarkerPrefab;
 
     [Header("웨이브 스폰 규칙 (fromWave 오름차순으로 작성)")]
@@ -67,7 +84,8 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
 
     private void SpawnEnemy()
     {
-        if (enemyPrefab == null) return;
+        GameObject prefab = PickEnemyPrefab();
+        if (prefab == null) return;
 
         Vector2 spawnPos = GetRandomEdgePosition();
 
@@ -75,17 +93,38 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
         {
             GameObject markerObj = Instantiate(spawnMarkerPrefab, spawnPos, Quaternion.identity);
             if (markerObj.TryGetComponent<SpawnMarker>(out var marker))
-                marker.Init(enemyPrefab, currentWave);
+                marker.Init(prefab, currentWave);
         }
         else
         {
-            GameObject obj = Instantiate(enemyPrefab, spawnPos, Quaternion.identity);
+            GameObject obj = Instantiate(prefab, spawnPos, Quaternion.identity);
             if (obj.TryGetComponent<EnemyController>(out var enemy))
             {
                 enemy.ApplyWaveScaling(currentWave);
                 enemy.PlaySpawnBounce();
             }
         }
+    }
+
+    /// <summary>현재 웨이브 조건을 만족하는 항목 중 가중치 랜덤으로 프리팹 선택</summary>
+    private GameObject PickEnemyPrefab()
+    {
+        int totalWeight = 0;
+        foreach (var e in enemyEntries)
+            if (e.prefab != null && e.minWave <= currentWave)
+                totalWeight += e.weight;
+
+        if (totalWeight == 0) return null;
+
+        int roll = Random.Range(0, totalWeight);
+        int acc  = 0;
+        foreach (var e in enemyEntries)
+        {
+            if (e.prefab == null || e.minWave > currentWave) continue;
+            acc += e.weight;
+            if (roll < acc) return e.prefab;
+        }
+        return null;
     }
 
     // ── Wave 규칙 적용 ─────────────────────────────────────────
