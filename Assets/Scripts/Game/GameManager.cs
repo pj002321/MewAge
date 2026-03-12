@@ -91,6 +91,16 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         if (gameOverPanel) gameOverPanel.SetActive(true);
     }
 
+    /// <summary>게임오버 패널의 부활 버튼에 연결하세요.</summary>
+    public void Revive()
+    {
+        if (!isGameOver) return;
+        isGameOver = false;
+        if (gameOverPanel) gameOverPanel.SetActive(false);
+        PlayerController.Instance?.Revive();
+        EnemySpawner.Shared?.OnWaveUp(wave);   // 스폰 재개
+    }
+
     public void RestartGame()
     {
         UnityEngine.SceneManagement.SceneManager.LoadScene(

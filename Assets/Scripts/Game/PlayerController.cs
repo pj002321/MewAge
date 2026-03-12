@@ -99,6 +99,13 @@ public class PlayerController : MonoBehaviour
         if (playerHpSlider) playerHpSlider.value = norm;
     }
 
+    /// <summary>GameManager.Revive()에서 호출 — HP를 가득 채우고 UI 동기화</summary>
+    public void Revive()
+    {
+        currentHP = maxHP;
+        SyncHPUI();
+    }
+
     public Vector2 Position => transform.position;
     public Vector2 MoveDirection => moveDirection;
 }
