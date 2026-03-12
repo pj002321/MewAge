@@ -155,6 +155,13 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
         StopAllCoroutines();
     }
 
+    /// <summary>부활 등으로 게임이 재개될 때 호출 — spawning 플래그를 복구 후 스폰 재시작</summary>
+    public void ResumeSpawning(int wave)
+    {
+        spawning = true;
+        OnWaveUp(wave);
+    }
+
     // ── 스폰 위치 ──────────────────────────────────────────────
     private Vector2 GetRandomEdgePosition()
     {

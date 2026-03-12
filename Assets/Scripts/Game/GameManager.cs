@@ -98,7 +98,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         isGameOver = false;
         if (gameOverPanel) gameOverPanel.SetActive(false);
         PlayerController.Instance?.Revive();
-        EnemySpawner.Shared?.OnWaveUp(wave);   // 스폰 재개
+        EnemySpawner.Shared?.ResumeSpawning(wave);   // spawning 플래그 복구 + 스폰 재개
     }
 
     public void RestartGame()
