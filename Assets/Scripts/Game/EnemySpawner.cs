@@ -3,35 +3,52 @@ using UnityEngine;
 
 /// <summary>
 /// 스폰 영역 가장자리에서 적을 스폰합니다.
-/// Scene 뷰에서 Gizmo로 스폰 영역을 시각적으로 확인하고 조정할 수 있습니다.
+/// WaveRule 배열로 웨이브별 스폰 규칙을 Inspector에서 자유롭게 설정하세요.
 /// </summary>
 public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
 {
-    [Header("Spawn")]
-    [SerializeField] private GameObject enemyPrefab;
-    [SerializeField] private GameObject spawnMarkerPrefab;  // SpawnMarker 프리팹
-    [SerializeField] private float spawnInterval = 3f;
-    [SerializeField] private int spawnCountPerWave = 1;
+    // ── 웨이브별 스폰 규칙 ─────────────────────────────────────
+    [System.Serializable]
+    public class WaveRule
+    {
+        [Tooltip("이 웨이브 번호부터 적용")]
+        public int   fromWave     = 1;
+        [Tooltip("스폰 간격 (초)")]
+        public float spawnInterval = 3f;
+        [Tooltip("한 번에 스폰되는 적 수")]
+        public int   spawnCount   = 1;
+    }
 
-    [Header("Spawn 영역 (Gizmo로 표시됨)")]
+    [Header("Prefab")]
+    [SerializeField] private GameObject enemyPrefab;
+    [SerializeField] private GameObject spawnMarkerPrefab;
+
+    [Header("웨이브 스폰 규칙 (fromWave 오름차순으로 작성)")]
+    [SerializeField] private WaveRule[] waveRules = new WaveRule[]
+    {
+        new() { fromWave = 1, spawnInterval = 3.0f, spawnCount = 1 },
+        new() { fromWave = 3, spawnInterval = 2.2f, spawnCount = 2 },
+        new() { fromWave = 5, spawnInterval = 1.8f, spawnCount = 3 },
+        new() { fromWave = 8, spawnInterval = 1.3f, spawnCount = 4 },
+        new() { fromWave = 12, spawnInterval = 0.8f, spawnCount = 5 },
+    };
+
+    [Header("스폰 영역 (Gizmo로 표시됨)")]
     [SerializeField] private Vector2 spawnAreaCenter = Vector2.zero;
-    [SerializeField] private Vector2 spawnAreaSize = new Vector2(10f, 18f);
+    [SerializeField] private Vector2 spawnAreaSize   = new(10f, 18f);
     [Tooltip("스폰 영역 외곽에서 얼마나 더 바깥쪽에 스폰할지")]
     [SerializeField] private float spawnEdgeOffset = 0.3f;
 
-    [Header("Wave Scaling")]
-    [SerializeField] private float intervalDecreasePerWave = 0.2f;
-    [SerializeField] private float minSpawnInterval = 0.5f;
-
     private float currentInterval;
-    private int currentWave = 1;
-    private bool spawning = true;
+    private int   currentSpawnCount;
+    private int   currentWave = 1;
+    private bool  spawning    = true;
 
     protected override bool DontDestroy => false;
 
     private void Start()
     {
-        currentInterval = spawnInterval;
+        ApplyRule(currentWave);
         StartCoroutine(SpawnLoop());
     }
 
@@ -40,11 +57,10 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
         while (spawning)
         {
             yield return new WaitForSeconds(currentInterval);
-
             if (!spawning) yield break;
             if (GameManager.Shared != null && GameManager.Shared.IsGameOver) yield break;
 
-            for (int i = 0; i < spawnCountPerWave; i++)
+            for (int i = 0; i < currentSpawnCount; i++)
                 SpawnEnemy();
         }
     }
@@ -55,7 +71,6 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
 
         Vector2 spawnPos = GetRandomEdgePosition();
 
-        // 마커 프리팹이 있으면 마커 → 스폰, 없으면 즉시 스폰
         if (spawnMarkerPrefab != null)
         {
             GameObject markerObj = Instantiate(spawnMarkerPrefab, spawnPos, Quaternion.identity);
@@ -73,31 +88,23 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
         }
     }
 
-    /// <summary>
-    /// 스폰 영역의 4면 가장자리 중 랜덤 위치를 반환합니다.
-    /// </summary>
-    private Vector2 GetRandomEdgePosition()
+    // ── Wave 규칙 적용 ─────────────────────────────────────────
+    private void ApplyRule(int wave)
     {
-        float halfW = spawnAreaSize.x * 0.5f + spawnEdgeOffset;
-        float halfH = spawnAreaSize.y * 0.5f + spawnEdgeOffset;
-        Vector2 center = spawnAreaCenter;
-
-        int side = Random.Range(0, 4);
-        return side switch
+        WaveRule matched = waveRules[0];
+        foreach (var rule in waveRules)
         {
-            0 => new Vector2(center.x + Random.Range(-halfW, halfW), center.y + halfH),  // 위
-            1 => new Vector2(center.x + Random.Range(-halfW, halfW), center.y - halfH),  // 아래
-            2 => new Vector2(center.x - halfW, center.y + Random.Range(-halfH, halfH)),  // 왼쪽
-            _ => new Vector2(center.x + halfW, center.y + Random.Range(-halfH, halfH)),  // 오른쪽
-        };
+            if (rule.fromWave <= wave) matched = rule;
+        }
+        currentInterval   = matched.spawnInterval;
+        currentSpawnCount = matched.spawnCount;
+        Debug.Log($"[EnemySpawner] Wave {wave} → 간격: {currentInterval:F1}s, 동시 스폰: {currentSpawnCount}");
     }
 
     public void OnWaveUp(int wave)
     {
         currentWave = wave;
-        currentInterval = Mathf.Max(minSpawnInterval, spawnInterval - intervalDecreasePerWave * (wave - 1));
-        spawnCountPerWave = 1 + (wave - 1) / 3;
-        Debug.Log($"[EnemySpawner] Wave {wave} - 간격: {currentInterval:F1}s, 동시 스폰: {spawnCountPerWave}");
+        ApplyRule(wave);
     }
 
     public void StopSpawning()
@@ -106,34 +113,41 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
         StopAllCoroutines();
     }
 
-    // ──────────────────────────────────────────
-    // Gizmo: Scene 뷰에서 스폰 영역 시각화
-    // ──────────────────────────────────────────
+    // ── 스폰 위치 ──────────────────────────────────────────────
+    private Vector2 GetRandomEdgePosition()
+    {
+        float halfW  = spawnAreaSize.x * 0.5f + spawnEdgeOffset;
+        float halfH  = spawnAreaSize.y * 0.5f + spawnEdgeOffset;
+        Vector2 center = spawnAreaCenter;
+
+        int side = Random.Range(0, 4);
+        return side switch
+        {
+            0 => new Vector2(center.x + Random.Range(-halfW, halfW), center.y + halfH),
+            1 => new Vector2(center.x + Random.Range(-halfW, halfW), center.y - halfH),
+            2 => new Vector2(center.x - halfW, center.y + Random.Range(-halfH, halfH)),
+            _ => new Vector2(center.x + halfW, center.y + Random.Range(-halfH, halfH)),
+        };
+    }
+
+    // ── Gizmo ──────────────────────────────────────────────────
     private void OnDrawGizmos()
     {
-        // 외곽 스폰 라인 (실제 적이 나오는 위치)
         Gizmos.color = new Color(1f, 0.3f, 0.3f, 0.8f);
         Vector2 outerSize = spawnAreaSize + Vector2.one * spawnEdgeOffset * 2f;
         Gizmos.DrawWireCube(spawnAreaCenter, outerSize);
 
-        // 내부 플레이 영역 (이 안에서 싸운다)
         Gizmos.color = new Color(0.3f, 1f, 0.3f, 0.5f);
         Gizmos.DrawWireCube(spawnAreaCenter, spawnAreaSize);
 
-        // 네 모서리 스폰 포인트 예시 표시
         Gizmos.color = new Color(1f, 1f, 0f, 0.9f);
         float hw = spawnAreaSize.x * 0.5f + spawnEdgeOffset;
         float hh = spawnAreaSize.y * 0.5f + spawnEdgeOffset;
-        float dotSize = 0.15f;
+        Gizmos.DrawSphere(spawnAreaCenter + new Vector2(0,   hh),  0.15f);
+        Gizmos.DrawSphere(spawnAreaCenter + new Vector2(0,  -hh),  0.15f);
+        Gizmos.DrawSphere(spawnAreaCenter + new Vector2(-hw, 0),   0.15f);
+        Gizmos.DrawSphere(spawnAreaCenter + new Vector2( hw, 0),   0.15f);
 
-        // 위/아래 중앙
-        Gizmos.DrawSphere(spawnAreaCenter + new Vector2(0, hh), dotSize);
-        Gizmos.DrawSphere(spawnAreaCenter + new Vector2(0, -hh), dotSize);
-        // 좌/우 중앙
-        Gizmos.DrawSphere(spawnAreaCenter + new Vector2(-hw, 0), dotSize);
-        Gizmos.DrawSphere(spawnAreaCenter + new Vector2(hw, 0), dotSize);
-
-        // 라벨
 #if UNITY_EDITOR
         UnityEditor.Handles.color = Color.white;
         UnityEditor.Handles.Label(

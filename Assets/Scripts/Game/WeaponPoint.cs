@@ -93,7 +93,6 @@ public class WeaponPoint : MonoBehaviour
     {
         if (targetEnemy == null)
         {
-            WeaponManager.Instance?.Release(targetEnemy);
             BeginReturn();
             return;
         }
@@ -101,7 +100,10 @@ public class WeaponPoint : MonoBehaviour
         transform.position = Vector3.MoveTowards(transform.position, pullbackTarget, pullbackSpeed * Time.deltaTime);
 
         if (Vector3.Distance(transform.position, pullbackTarget) <= 0.05f)
+        {
+            SoundManager.Shared?.Play("weapon_attack");
             state = State.Striking;
+        }
     }
 
     // ─────────────────────────────────────────
@@ -111,7 +113,6 @@ public class WeaponPoint : MonoBehaviour
     {
         if (targetEnemy == null)
         {
-            WeaponManager.Instance?.Release(targetEnemy);
             BeginReturn();
             return;
         }

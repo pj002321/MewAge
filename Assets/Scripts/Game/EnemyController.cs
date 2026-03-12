@@ -85,6 +85,8 @@ public class EnemyController : MonoBehaviour
     {
         currentHP -= damage;
         SoundManager.Shared?.Play("enemy_hit");
+        FXManager.Shared?.SpawnDamageText(transform.position, damage);
+        FXManager.Shared?.SpawnHitEffect(transform.position);
         if (currentHP <= 0f)
         {
             GameManager.Shared?.AddScore(scoreValue);

@@ -52,7 +52,6 @@ public class PlayerController : MonoBehaviour
         }
 
         rb.linearVelocity = moveDirection * moveSpeed;
-        ClampPosition();
     }
 
     private void HandleInput()
