@@ -14,30 +14,32 @@ public class UpgradePanel : MonoBehaviour
 
     [Header("버튼")]
     [SerializeField] private Button          rerollButton;
-    [SerializeField] private TextMeshProUGUI rerollPriceText;
     [SerializeField] private Button          buyExpButton;
-    [SerializeField] private TextMeshProUGUI buyExpPriceText;
     [SerializeField] private Button          nextWaveButton;
 
     [Header("정보 텍스트")]
-    [SerializeField] private TextMeshProUGUI ownedCountText;    // "보유 0 / 10" (선택)
-    [SerializeField] private TextMeshProUGUI playerGoldText;    // 패널 내 골드 표시
-    [SerializeField] private TextMeshProUGUI waveCompleteText;  // "Wave N 클리어!" 타이틀
+    [SerializeField] private TextMeshProUGUI ownedCountText;
+    [SerializeField] private TextMeshProUGUI playerGoldText;
 
-    [Header("노티피케이션 (Image 오브젝트)")]
-    [SerializeField] private GameObject      notificationRoot;  // Image가 포함된 부모 오브젝트
-    [SerializeField] private TextMeshProUGUI notificationText;  // 노티 안의 메시지 텍스트
+    [Header("노티피케이션")]
+    [SerializeField] private GameObject      notificationRoot;
+    [SerializeField] private TextMeshProUGUI notificationText;
     [SerializeField] private float           notificationDuration = 2f;
 
     [Header("자동 진행 타이머")]
-    [SerializeField] private TextMeshProUGUI autoStartTimerText;  // 카운트다운 표시 텍스트
+    [SerializeField] private TextMeshProUGUI autoStartTimerText;
     [SerializeField] private float           autoStartDelay = 30f;
+
+    [Header("타이머 색상")]
+    [SerializeField] private Color timerNormalColor  = Color.white;
+    [SerializeField] private Color timerWarningColor = Color.red;
+    [SerializeField] private float timerWarningThreshold = 5f;
+
+    [Header("다음 웨이브 시작 딜레이")]
+    [SerializeField] private float nextWaveDelay = 1f;
 
     private Coroutine notificationCoroutine;
     private Coroutine autoStartCoroutine;
-
-    public GameObject[] activePanel;
-    public GameObject deActivePanel;
 
     private void Awake()
     {
@@ -50,21 +52,31 @@ public class UpgradePanel : MonoBehaviour
     private void OnNextWaveClicked()
     {
         if (autoStartCoroutine != null) StopCoroutine(autoStartCoroutine);
+        nextWaveButton.interactable = false;
+        autoStartCoroutine = StartCoroutine(NextWaveDelayRoutine());
+    }
+
+    private IEnumerator NextWaveDelayRoutine()
+    {
+        float remaining = nextWaveDelay;
+        while (remaining > 0f)
+        {
+            if (autoStartTimerText)
+            {
+                autoStartTimerText.text  = Mathf.CeilToInt(remaining).ToString();
+                autoStartTimerText.color = timerWarningColor;
+            }
+            yield return new WaitForSecondsRealtime(0.1f);
+            remaining -= 0.1f;
+        }
         UpgradeManager.Shared?.ClosePanel();
     }
 
     private void OnEnable()
     {
-        // timeScale=0이어도 패널 내 모든 Animator가 재생되도록
         foreach (var anim in GetComponentsInChildren<Animator>(true))
             anim.updateMode = AnimatorUpdateMode.UnscaledTime;
-
-        foreach (var ag in activePanel)
-        {
-            ag.SetActive(true);
-        }
-        deActivePanel.SetActive(false);
-
+        if (nextWaveButton) nextWaveButton.interactable = true;
         autoStartCoroutine = StartCoroutine(AutoStartRoutine());
     }
 
@@ -76,7 +88,6 @@ public class UpgradePanel : MonoBehaviour
     public void Refresh(WeaponData[] drawnCards, int rerollPrice, int buyExpPrice,
                         int ownedCount, int maxOwned, int wave)
     {
-        // 카드 세팅
         for (int i = 0; i < cards.Length; i++)
         {
             if (i < drawnCards.Length && drawnCards[i] != null)
@@ -84,12 +95,6 @@ public class UpgradePanel : MonoBehaviour
             else
                 cards[i].SetEmpty();
         }
-
-        if (rerollPriceText) rerollPriceText.text = $"{rerollPrice} G";
-        if (buyExpPriceText) buyExpPriceText.text  = $"{buyExpPrice} G";
-        if (ownedCountText)  ownedCountText.text   = $"보유 {ownedCount} / {maxOwned}";
-        if (waveCompleteText) waveCompleteText.text = $"Wave {wave} 클리어!";
-
         RefreshGold();
     }
 
@@ -99,7 +104,6 @@ public class UpgradePanel : MonoBehaviour
             playerGoldText.text = $"{PlayerStats.Shared.Gold} G";
     }
 
-    /// <summary>구매 실패 등 안내 메시지를 Image 노티로 표시 후 자동으로 숨깁니다.</summary>
     public void ShowNotification(string message)
     {
         if (notificationRoot == null) return;
@@ -112,7 +116,12 @@ public class UpgradePanel : MonoBehaviour
         float remaining = autoStartDelay;
         while (remaining > 0f)
         {
-            if (autoStartTimerText) autoStartTimerText.text = Mathf.CeilToInt(remaining).ToString();
+            if (autoStartTimerText)
+            {
+                autoStartTimerText.text  = Mathf.CeilToInt(remaining).ToString();
+                autoStartTimerText.color = remaining <= timerWarningThreshold
+                    ? timerWarningColor : timerNormalColor;
+            }
             yield return new WaitForSecondsRealtime(0.1f);
             remaining -= 0.1f;
         }
@@ -124,9 +133,7 @@ public class UpgradePanel : MonoBehaviour
     {
         if (notificationText) notificationText.text = message;
         notificationRoot.SetActive(true);
-
-        yield return new WaitForSecondsRealtime(notificationDuration); // timeScale=0에서도 동작
-
+        yield return new WaitForSecondsRealtime(notificationDuration);
         notificationRoot.SetActive(false);
     }
 }
