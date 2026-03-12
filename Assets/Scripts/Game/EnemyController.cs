@@ -9,6 +9,10 @@ public class EnemyController : MonoBehaviour
     [SerializeField] private int scoreValue = 10;
     [SerializeField] private float damageCooldown = 1f;
 
+    [Header("드롭")]
+    [SerializeField] private int goldDrop = 5;
+    [SerializeField] private int expDrop  = 10;
+
     private float currentHP;
     private float damageTimer;
     private Transform playerTransform;
@@ -89,7 +93,8 @@ public class EnemyController : MonoBehaviour
         FXManager.Shared?.SpawnHitEffect(transform.position);
         if (currentHP <= 0f)
         {
-            GameManager.Shared?.AddScore(scoreValue);
+    
+            ItemDropManager.Shared?.SpawnDrops(transform.position, goldDrop, expDrop);
             Destroy(gameObject);
         }
     }

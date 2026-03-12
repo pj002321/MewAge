@@ -105,6 +105,9 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
     {
         currentWave = wave;
         ApplyRule(wave);
+        // 새 웨이브 시작 시 코루틴 재시작 (새 간격 즉시 적용)
+        StopAllCoroutines();
+        if (spawning) StartCoroutine(SpawnLoop());
     }
 
     public void StopSpawning()
