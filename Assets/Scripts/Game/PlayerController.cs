@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -22,6 +23,7 @@ public class PlayerController : MonoBehaviour
     private Rigidbody2D    rb;
     private SpriteRenderer spriteRenderer;
     private HitFlash       hitFlash;
+    private bool           isInvincible;
 
     private void Awake()
     {
@@ -83,6 +85,8 @@ public class PlayerController : MonoBehaviour
 
     public void TakeDamage(float damage)
     {
+        if (isInvincible) return;
+
         currentHP -= damage;
         currentHP  = Mathf.Max(0f, currentHP);
         SyncHPUI();
@@ -99,11 +103,27 @@ public class PlayerController : MonoBehaviour
         if (playerHpSlider) playerHpSlider.value = norm;
     }
 
-    /// <summary>GameManager.Revive()에서 호출 — HP를 가득 채우고 UI 동기화</summary>
+    /// <summary>GameManager.Revive()에서 호출 — HP를 가득 채우고 3초 무적 부여</summary>
     public void Revive()
     {
         currentHP = maxHP;
         SyncHPUI();
+        StartCoroutine(InvincibleRoutine(3f));
+    }
+
+    private IEnumerator InvincibleRoutine(float duration)
+    {
+        isInvincible = true;
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            // 0.15초 주기로 깜빡임
+            if (spriteRenderer) spriteRenderer.enabled = !spriteRenderer.enabled;
+            yield return new WaitForSeconds(0.15f);
+            elapsed += 0.15f;
+        }
+        if (spriteRenderer) spriteRenderer.enabled = true;
+        isInvincible = false;
     }
 
     public Vector2 Position => transform.position;

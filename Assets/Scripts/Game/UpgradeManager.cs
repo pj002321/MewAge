@@ -1,16 +1,13 @@
 using System.Collections.Generic;
+using Mewage.DB;
 using UnityEngine;
 
 /// <summary>
 /// 웨이브 종료 업그레이드 시스템을 총괄합니다.
-/// - 레벨에 따라 등급 가중치로 카드를 뽑습니다.
-/// - 최대 10장 구매, 리롤/경험치 구매 기능 제공.
+/// 카드 구매 시 PlayerInventory에 추가합니다.
 /// </summary>
 public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
 {
-    [Header("무기 데이터 풀 (모든 WeaponData 등록)")]
-    [SerializeField] private WeaponData[] allWeapons;
-
     [Header("UI")]
     [SerializeField] private UpgradePanel upgradePanel;
 
@@ -18,32 +15,62 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
     [SerializeField] private int rerollPrice  = 15;
     [SerializeField] private int buyExpAmount = 30;
     [SerializeField] private int buyExpPrice  = 20;
-    [SerializeField] private int maxOwnedCards = 10;
 
-    // 등급 기본 가중치 (레벨에 따라 일부 조정됨)
-    private static readonly Dictionary<WeaponGrade, int> GradeWeight = new()
+    private struct DrawProfile
     {
-        { WeaponGrade.Normal,    100 },
-        { WeaponGrade.Rare,       50 },
-        { WeaponGrade.Epic,       20 },
-        { WeaponGrade.Legendary,   5 },
-    };
+        public int   minLevel;
+        public float normal, rare, elite, epic, legend;
+    }
 
-    private readonly List<WeaponData> ownedWeapons  = new();
-    private WeaponData[] currentDraw = System.Array.Empty<WeaponData>();
+    private DrawProfile[] drawProfiles = System.Array.Empty<DrawProfile>();
+
+    private WeaponData[] allWeapons   = System.Array.Empty<WeaponData>();
+    private WeaponData[] currentDraw  = System.Array.Empty<WeaponData>();
+    private int          currentChapter = 1;
 
     protected override bool DontDestroy => false;
 
-    // ──────────────────────────────────────────────
+    protected override void Awake()
+    {
+        base.Awake();
+        LoadWeaponsFromDB();
+        LoadDrawProfiles();
+    }
+
+    private void LoadWeaponsFromDB()
+    {
+        var list = new List<WeaponData>();
+        DB_무기.ForEachEntity(row => list.Add(WeaponData.FromDB(row)));
+        allWeapons = list.ToArray();
+    }
+
+    private void LoadDrawProfiles()
+    {
+        var list = new List<DrawProfile>();
+        DB_확률.ForEachEntity(row => list.Add(new DrawProfile
+        {
+            minLevel = row.f_레벨,
+            normal   = row.f_노멀,
+            rare     = row.f_레어,
+            elite    = row.f_엘리트,
+            epic     = row.f_에픽,
+            legend   = row.f_신화,
+        }));
+        list.Sort((a, b) => a.minLevel.CompareTo(b.minLevel));
+        drawProfiles = list.ToArray();
+    }
+
+    // ────────────────────────────────────────────────────────────────
     // 패널 열기 / 닫기
-    // ──────────────────────────────────────────────
+    // ────────────────────────────────────────────────────────────────
     public void ShowPanel(int wave)
     {
         CollectAllDropItems();
         Time.timeScale = 0f;
         currentDraw    = DrawCards(4);
         upgradePanel.Refresh(currentDraw, rerollPrice, buyExpPrice,
-                             ownedWeapons.Count, maxOwnedCards, wave);
+                             PlayerInventory.Shared?.Inventory.Count ?? 0,
+                             PlayerInventory.MaxInventory, wave);
         upgradePanel.gameObject.SetActive(true);
     }
 
@@ -60,15 +87,19 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
         GameManager.Shared?.StartNextWave();
     }
 
-    // ──────────────────────────────────────────────
+    // ────────────────────────────────────────────────────────────────
     // 카드 구매
-    // ──────────────────────────────────────────────
+    // ────────────────────────────────────────────────────────────────
     public void TryBuy(WeaponData data)
     {
         if (data == null) return;
-        if (ownedWeapons.Count >= maxOwnedCards)
+
+        var inv = PlayerInventory.Shared;
+        if (inv == null) return;
+
+        if (inv.InventoryFull)
         {
-            upgradePanel.ShowNotification($"카드는 최대 {maxOwnedCards}장까지 보관할 수 있습니다.");
+            upgradePanel.ShowNotification("인벤토리가 가득 찼습니다.");
             return;
         }
 
@@ -80,18 +111,25 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
         }
 
         stats.SpendGold(data.price);
-        ownedWeapons.Add(data);
 
-        // 구매한 카드는 현재 드로우에서 제거하고 비워둠
+        if (!inv.TryAddToInventory(data))
+        {
+            stats.AddGold(data.price); // 환불
+            upgradePanel.ShowNotification("인벤토리가 가득 찼습니다.");
+            return;
+        }
+
+        // 구매한 카드는 드로우에서 제거
         for (int i = 0; i < currentDraw.Length; i++)
             if (currentDraw[i] == data) { currentDraw[i] = null; break; }
 
+        SoundManager.Shared?.Play(SoundKey.UI_Buy);
         RefreshPanel();
     }
 
-    // ──────────────────────────────────────────────
+    // ────────────────────────────────────────────────────────────────
     // 리롤
-    // ──────────────────────────────────────────────
+    // ────────────────────────────────────────────────────────────────
     public void TryReroll()
     {
         var stats = PlayerStats.Shared;
@@ -103,12 +141,13 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
 
         stats.SpendGold(rerollPrice);
         currentDraw = DrawCards(4);
+        SoundManager.Shared?.Play(SoundKey.UI_Reroll);
         RefreshPanel();
     }
 
-    // ──────────────────────────────────────────────
+    // ────────────────────────────────────────────────────────────────
     // 경험치 구매
-    // ──────────────────────────────────────────────
+    // ────────────────────────────────────────────────────────────────
     public void TryBuyExp()
     {
         var stats = PlayerStats.Shared;
@@ -123,64 +162,73 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
         RefreshPanel();
     }
 
-    // ──────────────────────────────────────────────
+    // ────────────────────────────────────────────────────────────────
     // 내부 유틸
-    // ──────────────────────────────────────────────
+    // ────────────────────────────────────────────────────────────────
     private void RefreshPanel()
     {
         int wave = GameManager.Shared?.CurrentWave ?? 1;
+        int playerLevel = PlayerStats.Shared?.Level ?? 1;
+        DrawProfile p   = GetCurrentProfile(playerLevel);
         upgradePanel.Refresh(currentDraw, rerollPrice, buyExpPrice,
-                             ownedWeapons.Count, maxOwnedCards, wave);
+                             PlayerInventory.Shared?.Inventory.Count ?? 0,
+                             PlayerInventory.MaxInventory, wave,
+                             p.normal, p.rare, p.elite, p.epic, p.legend);
     }
 
-    /// <summary>레벨 필터 + 등급 가중치로 count장 뽑기 (중복 없음)</summary>
+    /// <summary>DB 확률 테이블 기반으로 count장 뽑기 (중복 없음)</summary>
     private WeaponData[] DrawCards(int count)
     {
-        int playerLevel = PlayerStats.Shared?.Level ?? 1;
-
-        // 레벨 조건을 만족하는 무기 필터링
+        // 같은 무기 최대 2장까지 허용
         var pool = new List<WeaponData>();
         foreach (var w in allWeapons)
-            if (w != null && w.minPlayerLevel <= playerLevel)
-                pool.Add(w);
+            if (w != null && w.chapter <= currentChapter)
+            { pool.Add(w); pool.Add(w); }
+
+        int         playerLevel = PlayerStats.Shared?.Level ?? 1;
+        DrawProfile profile     = GetCurrentProfile(playerLevel);
 
         var result = new WeaponData[count];
         for (int i = 0; i < count; i++)
         {
             if (pool.Count == 0) break;
 
-            // 가중 합산
-            int totalWeight = 0;
-            foreach (var w in pool)
-                totalWeight += GetWeight(w.grade, playerLevel);
-
-            int roll = Random.Range(0, totalWeight);
-            int acc  = 0;
-            WeaponData picked = pool[0];
-            foreach (var w in pool)
-            {
-                acc += GetWeight(w.grade, playerLevel);
-                if (roll < acc) { picked = w; break; }
-            }
-
-            result[i] = picked;
-            pool.Remove(picked);
+            WeaponGrade grade  = RollGrade(profile);
+            WeaponData  picked = PickByGrade(pool, grade);
+            if (picked != null) { result[i] = picked; pool.Remove(picked); }
         }
         return result;
     }
 
-    /// <summary>플레이어 레벨에 따라 고급 등급 가중치를 올려줌</summary>
-    private int GetWeight(WeaponGrade grade, int level)
+    /// <summary>현재 레벨에 맞는 DrawProfile 반환 (가장 가까운 하위 레벨 row)</summary>
+    private DrawProfile GetCurrentProfile(int level)
     {
-        int w = GradeWeight[grade];
-        // 레벨이 높을수록 고급 등급 가중치 상승
-        return grade switch
-        {
-            WeaponGrade.Epic      => w + Mathf.Max(0, (level - 3) * 5),
-            WeaponGrade.Legendary => w + Mathf.Max(0, (level - 6) * 5),
-            _                     => w,
-        };
+        DrawProfile result = drawProfiles.Length > 0 ? drawProfiles[0] : default;
+        foreach (var p in drawProfiles)
+            if (level >= p.minLevel) result = p;
+        return result;
     }
 
-    public IReadOnlyList<WeaponData> OwnedWeapons => ownedWeapons;
+    /// <summary>확률 가중치로 등급 랜덤 선택 (합계 100 기준 소수점 지원)</summary>
+    private static WeaponGrade RollGrade(DrawProfile p)
+    {
+        float roll = Random.Range(0f, 100f);
+        float acc  = 0f;
+        acc += p.normal; if (roll <= acc && p.normal > 0f) return WeaponGrade.Normal;
+        acc += p.rare;   if (roll <= acc && p.rare > 0f)   return WeaponGrade.Rare;
+        acc += p.elite;  if (roll <= acc && p.elite > 0f)  return WeaponGrade.Elite;
+        acc += p.epic;   if (roll <= acc && p.epic > 0f)   return WeaponGrade.Epic;
+        return WeaponGrade.Legend;
+    }
+
+    /// <summary>해당 등급 카드를 pool에서 무작위 선택. 없으면 null 반환 (확률DB 엄격 적용)</summary>
+    private WeaponData PickByGrade(List<WeaponData> pool, WeaponGrade grade)
+    {
+        var candidates = pool.FindAll(w => w.grade == grade);
+        if (candidates.Count > 0)
+            return candidates[Random.Range(0, candidates.Count)];
+        
+        this.DLog($"[UpgradeManager] 해당 등급({grade})의 무기가 모두 소진되었으므로, 빈 슬롯으로 표시됩니다.");
+        return null;
+    }
 }

@@ -25,11 +25,11 @@ public class WeaponPoint : MonoBehaviour
     [Header("풀백 (공격 전 플레이어쪽으로 당김)")]
     [SerializeField] private float pullbackDistance = 0.4f;
 
-    [Header("오버슈트 (팍! 느낌)")]
+    [Header("오버슈트 (팍! 느낌) - 현재 미사용")]
     [SerializeField] private float overshootDistance = 0.35f;
     [SerializeField] private float overshootSpeed    = 30f;
 
-    private enum State { Idle, Pullback, Striking, Overshooting, Returning }
+    private enum State { Idle, Pullback, Striking, Returning }
     private State state = State.Idle;
 
     private Vector3 originLocalPos;
@@ -41,6 +41,7 @@ public class WeaponPoint : MonoBehaviour
     private void Start()
     {
         originLocalPos = transform.localPosition;
+        cooldownTimer = attackCooldown; // 시작할 때 쿨타임 한번 대기 (선택)
     }
 
     private void Update()
@@ -56,7 +57,6 @@ public class WeaponPoint : MonoBehaviour
             case State.Idle:         UpdateIdle();         break;
             case State.Pullback:     UpdatePullback();     break;
             case State.Striking:     UpdateStriking();     break;
-            case State.Overshooting: UpdateOvershooting(); break;
             case State.Returning:    UpdateReturning();    break;
         }
     }
@@ -79,20 +79,29 @@ public class WeaponPoint : MonoBehaviour
     }
 
     // ─────────────────────────────────────────
-    // Pullback: 원점에서 플레이어 방향으로 살짝 당겨짐
+    // Pullback: 원점(부모 위치)에서 타겟 반대 방향으로 살짝 당겨짐 (장전 느낌)
     // ─────────────────────────────────────────
     private void BeginPullback()
     {
-        Vector3 originWorld  = transform.parent.TransformPoint(originLocalPos);
-        Vector3 towardPlayer = (transform.parent.position - originWorld).normalized;
-        pullbackTarget = originWorld + towardPlayer * pullbackDistance;
+        Vector3 originWorld = transform.parent.position;
+        Vector3 pullbackDir = Vector3.down; // 기본값
+
+        if (targetEnemy != null)
+        {
+            // 적의 반대 방향으로 당김
+            pullbackDir = (originWorld - targetEnemy.transform.position).normalized;
+        }
+
+        pullbackTarget = originWorld + pullbackDir * pullbackDistance;
         state = State.Pullback;
     }
 
     private void UpdatePullback()
     {
-        if (targetEnemy == null)
+        if (targetEnemy == null || !targetEnemy.gameObject.activeInHierarchy)
         {
+            WeaponManager.Instance?.Release(targetEnemy);
+            targetEnemy = null;
             BeginReturn();
             return;
         }
@@ -101,18 +110,20 @@ public class WeaponPoint : MonoBehaviour
 
         if (Vector3.Distance(transform.position, pullbackTarget) <= 0.05f)
         {
-            SoundManager.Shared?.Play("weapon_attack");
+            SoundManager.Shared?.Play(SoundKey.Weapon_Attack);
             state = State.Striking;
         }
     }
 
     // ─────────────────────────────────────────
-    // Striking: 확! 빠르게 돌진 → 타격 → Overshooting
+    // Striking: 확! 빠르게 돌진 → 타격 → (즉시 복귀)
     // ─────────────────────────────────────────
     private void UpdateStriking()
     {
-        if (targetEnemy == null)
+        if (targetEnemy == null || !targetEnemy.gameObject.activeInHierarchy)
         {
+            WeaponManager.Instance?.Release(targetEnemy);
+            targetEnemy = null;
             BeginReturn();
             return;
         }
@@ -124,37 +135,25 @@ public class WeaponPoint : MonoBehaviour
         {
             targetEnemy.TakeDamage(attackDamage);
 
-            Vector3 strikeDir = (targetPos - transform.parent.position).normalized;
-            overshootTarget = targetPos + strikeDir * overshootDistance;
-
+            // 타격 직후 즉시 예약 해제 후 바로 복귀
             WeaponManager.Instance?.Release(targetEnemy);
             targetEnemy = null;
-            state = State.Overshooting;
+            BeginReturn();
         }
     }
 
     // ─────────────────────────────────────────
-    // Overshooting: 관성으로 살짝 더 나아감 (팍!)
-    // ─────────────────────────────────────────
-    private void UpdateOvershooting()
-    {
-        transform.position = Vector3.MoveTowards(transform.position, overshootTarget, overshootSpeed * Time.deltaTime);
-
-        if (Vector3.Distance(transform.position, overshootTarget) <= 0.05f)
-            BeginReturn();
-    }
-
-    // ─────────────────────────────────────────
-    // Returning: 원위치로 복귀
+    // Returning: 원위치(부모 위치)로 복귀
     // ─────────────────────────────────────────
     private void UpdateReturning()
     {
-        Vector3 worldOrigin = transform.parent.TransformPoint(originLocalPos);
-        transform.position = Vector3.MoveTowards(transform.position, worldOrigin, returnSpeed * Time.deltaTime);
+        // 부모(앵커) 기준으로 (0,0,0) 위치로 되돌아갑니다.
+        // 플레이어가 아무리 빠르게 이동해도 localPosition 기준이므로 빗나가지 않습니다.
+        transform.localPosition = Vector3.MoveTowards(transform.localPosition, Vector3.zero, returnSpeed * Time.deltaTime);
 
-        if (Vector3.Distance(transform.position, worldOrigin) <= 0.01f)
+        if (transform.localPosition.sqrMagnitude <= 0.001f)
         {
-            transform.localPosition = originLocalPos;
+            transform.localPosition = Vector3.zero; // 완벽히 안착
             cooldownTimer = attackCooldown;
             state = State.Idle;
         }
@@ -179,10 +178,6 @@ public class WeaponPoint : MonoBehaviour
         // Striking 중: 타겟 적 방향 고정
         if (state == State.Striking && targetEnemy != null)
             return (targetEnemy.transform.position - transform.position).normalized;
-
-        // Overshooting 중: 날아가는 방향 유지
-        if (state == State.Overshooting)
-            return (overshootTarget - transform.position).normalized;
 
         // 적이 있으면 가장 가까운 적 방향
         EnemyController nearest = FindNearestAny();
@@ -238,7 +233,7 @@ public class WeaponPoint : MonoBehaviour
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = new Color(1f, 0.8f, 0f, 0.4f);
-        Vector3 center = Application.isPlaying ? transform.parent.position : transform.position;
+        Vector3 center = transform.parent != null ? transform.parent.position : transform.position;
         Gizmos.DrawWireSphere(center, attackRange);
     }
 }

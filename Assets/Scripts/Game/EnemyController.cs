@@ -90,7 +90,7 @@ public class EnemyController : MonoBehaviour
     public void TakeDamage(float damage)
     {
         currentHP -= damage;
-        SoundManager.Shared?.Play("enemy_hit");
+        SoundManager.Shared?.Play(SoundKey.Enemy_Hit);
         FXManager.Shared?.SpawnDamageText(transform.position, damage);
         FXManager.Shared?.SpawnHitEffect(transform.position);
         hitFlash?.Flash();

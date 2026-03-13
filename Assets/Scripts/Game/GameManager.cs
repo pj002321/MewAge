@@ -10,6 +10,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     [SerializeField] private TextMeshProUGUI timerText;
     [SerializeField] private TextMeshProUGUI goldText;
     [SerializeField] private TextMeshProUGUI reroll_goldText;
+    [SerializeField] private TextMeshProUGUI levelText;
     [SerializeField] private TextMeshProUGUI expText;
     [SerializeField] private Slider          expSlider;
     [SerializeField] private Slider          reroll_expSlider;
@@ -29,7 +30,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     [SerializeField] private Color timerWarningColor = Color.red;
     [SerializeField] private float timerWarningThreshold = 5f;
 
-    private int   wave = 1;
+    private int   wave = 0;
     private float waveTimer;
     private bool  isGameOver;
     private bool  waitingForUpgrade;
@@ -38,10 +39,16 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 
     private void Start()
     {
-        waveTimer = WaveDuration(wave);
-        UpdateWaveUI();
         if (gameOverPanel) gameOverPanel.SetActive(false);
         if (waveClearPanel) waveClearPanel.SetActive(false);
+
+        // 챕터 시작: Wave 1 이전에 UpgradePanel 표시
+        waitingForUpgrade = true;
+        EnemySpawner.Shared?.StopSpawning(); // 상점 중에는 스폰 정지
+        if (UpgradeManager.Shared != null)
+            UpgradeManager.Shared.ShowPanel(wave);
+        else
+            StartNextWave();
     }
 
     private void Update()
@@ -61,6 +68,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     private IEnumerator WaveClearRoutine()
     {
         if (waveClearPanel) waveClearPanel.SetActive(true);
+        EnemySpawner.Shared?.StopSpawning(); // 웨이브 클리어 시 즉시 스폰 정지
         yield return new WaitForSeconds(waveClearDuration);
         if (waveClearPanel) waveClearPanel.SetActive(false);
 
@@ -70,7 +78,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
             StartNextWave();
     }
 
-    private float WaveDuration(int w) => baseWaveDuration + (w - 1) * waveDurationIncrease;
+    private float WaveDuration(int w) => baseWaveDuration + Mathf.Max(0, w - 1) * waveDurationIncrease;
 
     private void UpdateTimerUI()
     {
@@ -98,6 +106,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 
     public void UpdateExpUI(int exp, int expMax, int level)
     {
+        if (levelText)        levelText.text         = $"lv {level}";
         if (expText)          expText.text          = $"{exp} / {expMax}";
         if (expSlider)        expSlider.value        = (float)exp / expMax;
         if (reroll_expSlider) reroll_expSlider.value = (float)exp / expMax;
@@ -131,7 +140,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         wave++;
         waveTimer         = WaveDuration(wave);
         waitingForUpgrade = false;
-        EnemySpawner.Shared?.OnWaveUp(wave);
+        EnemySpawner.Shared?.ResumeSpawning(wave);
         UpdateWaveUI();
     }
 

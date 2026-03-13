@@ -7,8 +7,12 @@ using UnityEngine;
 public class PlayerStats : MonoBehaviourSingleton<PlayerStats>
 {
     [Header("레벨 설정")]
-    [SerializeField] private int baseExpPerLevel = 50;  // 레벨 1→2 에 필요한 경험치
-    [SerializeField] private float expScalePerLevel = 1.4f; // 레벨업마다 필요 경험치 배율
+    [SerializeField] private int maxLevel          = 20;  // 만렙
+    [SerializeField] private int baseExpPerLevel   = 20;  // 레벨 1→2 필요 경험치
+    [SerializeField] private int expGrowthPerLevel = 10;  // 레벨마다 증가량 (lv19→20 = 200)
+
+    [Header("시작 골드")]
+    [SerializeField] private int startingGold = 2;
 
     private int gold;
     private int exp;
@@ -17,10 +21,15 @@ public class PlayerStats : MonoBehaviourSingleton<PlayerStats>
 
     protected override bool DontDestroy => false;
 
+    // 레벨 lv에서 다음 레벨까지 필요한 경험치
+    // lv=1:20 / lv=5:60 / lv=10:110 / lv=19:200
+    private int CalcExpToNext(int lv) => baseExpPerLevel + (lv - 1) * expGrowthPerLevel;
+
     protected override void Awake()
     {
         base.Awake();
-        expToNext = baseExpPerLevel;
+        expToNext = CalcExpToNext(1);
+        gold      = startingGold;
     }
 
     private void Start()
@@ -44,14 +53,24 @@ public class PlayerStats : MonoBehaviourSingleton<PlayerStats>
 
     public void AddExp(int amount)
     {
+        if (level >= maxLevel) return;
+
         exp += amount;
-        while (exp >= expToNext)
+        while (exp >= expToNext && level < maxLevel)
         {
-            exp     -= expToNext;
+            exp      -= expToNext;
             level++;
-            expToNext = Mathf.RoundToInt(baseExpPerLevel * Mathf.Pow(expScalePerLevel, level - 1));
+            expToNext = CalcExpToNext(level);
             Debug.Log($"[PlayerStats] Level Up! → {level}");
         }
+
+        // 만렙 도달 시 exp 바를 0/200으로 고정
+        if (level >= maxLevel)
+        {
+            exp       = 0;
+            expToNext = CalcExpToNext(maxLevel - 1); // 200
+        }
+
         SyncUI();
     }
 
