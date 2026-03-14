@@ -16,6 +16,13 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float  maxHP = 100f;
     [SerializeField] private float  currentHP;
 
+    [Header("증강 스탯")]
+    [SerializeField] private float attack  = 0f;  // 공격력 보너스
+    [SerializeField] private float defense = 0f;  // 방어력 (받는 피해 감소)
+
+    public float Attack  => attack;
+    public float Defense => defense;
+
     [Header("플레이어 위 HP 슬라이더 (World Space)")]
     [SerializeField] private Slider playerHpSlider;
 
@@ -87,7 +94,8 @@ public class PlayerController : MonoBehaviour
     {
         if (isInvincible) return;
 
-        currentHP -= damage;
+        float reduced = Mathf.Max(0f, damage - defense);
+        currentHP -= reduced;
         currentHP  = Mathf.Max(0f, currentHP);
         SyncHPUI();
         hitFlash?.Flash();
@@ -101,6 +109,31 @@ public class PlayerController : MonoBehaviour
         float norm = currentHP / maxHP;
         GameManager.Shared?.UpdateHP(norm);
         if (playerHpSlider) playerHpSlider.value = norm;
+    }
+
+    // ────────────────────────────────────────────────────────────────
+    // 증강 메서드 (ImprovManager에서 호출)
+    // ────────────────────────────────────────────────────────────────
+    public void HealHP(float amount)
+    {
+        currentHP = Mathf.Min(currentHP + amount, maxHP);
+        SyncHPUI();
+    }
+
+    public void IncreaseMaxHP(float amount)
+    {
+        maxHP += amount;
+        SyncHPUI();
+    }
+
+    public void IncreaseAttack(float amount)
+    {
+        attack += amount;
+    }
+
+    public void IncreaseDefense(float amount)
+    {
+        defense += amount;
     }
 
     /// <summary>GameManager.Revive()에서 호출 — HP를 가득 채우고 3초 무적 부여</summary>

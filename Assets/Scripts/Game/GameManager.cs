@@ -69,7 +69,9 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         yield return new WaitForSeconds(waveClearDuration);
         if (waveClearPanel) waveClearPanel.SetActive(false);
 
-        if (UpgradeManager.Shared != null)
+        if (ImprovManager.Shared != null)
+            ImprovManager.Shared.ShowPanel(wave);
+        else if (UpgradeManager.Shared != null)
             UpgradeManager.Shared.ShowPanel(wave);
         else
             StartNextWave();
