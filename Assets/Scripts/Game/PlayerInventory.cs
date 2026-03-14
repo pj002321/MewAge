@@ -95,6 +95,44 @@ public class PlayerInventory : MonoBehaviourSingleton<PlayerInventory>
     }
 
     // ────────────────────────────────────────────────────────────────
+    // 인벤토리 슬롯 → 특정 장착 슬롯 이동/교체
+    // ────────────────────────────────────────────────────────────────
+    public void MoveInvenToEquip(int invenIndex, int equipIndex)
+    {
+        if (invenIndex < 0 || invenIndex >= inventory.Count) return;
+        var weapon = inventory[invenIndex];
+
+        if (equipIndex < equipped.Count)
+        {
+            // 장착 슬롯에 무기가 있으면 인벤과 교체
+            inventory[invenIndex] = equipped[equipIndex];
+            equipped[equipIndex]  = weapon;
+        }
+        else if (equipped.Count < MaxEquipped)
+        {
+            // 빈 장착 슬롯에 그냥 이동
+            equipped.Add(weapon);
+            inventory.RemoveAt(invenIndex);
+        }
+        // 뒤의 null 정리
+        while (equipped.Count > 0 && equipped[equipped.Count - 1] == null)
+            equipped.RemoveAt(equipped.Count - 1);
+
+        OnChanged?.Invoke();
+    }
+
+    // ────────────────────────────────────────────────────────────────
+    // 인벤토리 슬롯 ↔ 인벤토리 슬롯 교체
+    // ────────────────────────────────────────────────────────────────
+    public void SwapInvenToInven(int a, int b)
+    {
+        if (a < 0 || b < 0 || a == b) return;
+        if (a >= inventory.Count || b >= inventory.Count) return;
+        (inventory[a], inventory[b]) = (inventory[b], inventory[a]);
+        OnChanged?.Invoke();
+    }
+
+    // ────────────────────────────────────────────────────────────────
     // 드래그 & 드롭 교체
     // ────────────────────────────────────────────────────────────────
     /// <summary>장착 슬롯 A ↔ 장착 슬롯 B 교체</summary>

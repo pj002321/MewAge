@@ -61,6 +61,27 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
     }
 
     // ────────────────────────────────────────────────────────────────
+    // 시작 무기 지급
+    // ────────────────────────────────────────────────────────────────
+    public void GiveStarterWeapon()
+    {
+        var normals = new List<WeaponData>();
+        foreach (var w in allWeapons)
+            if (w != null && w.grade == WeaponGrade.Normal && w.chapter <= currentChapter)
+                normals.Add(w);
+
+        if (normals.Count == 0) { Debug.LogWarning("[UpgradeManager] Normal 등급 무기 없음"); return; }
+
+        var starter = normals[Random.Range(0, normals.Count)];
+        var inv     = PlayerInventory.Shared;
+        if (inv == null) return;
+
+        if (!inv.TryAddToInventory(starter)) return;
+        inv.EquipFromInventory(0); // 인벤 0번 슬롯 → 장착 슬롯으로
+        Debug.Log($"[UpgradeManager] 시작 무기 지급: {starter.weaponName}");
+    }
+
+    // ────────────────────────────────────────────────────────────────
     // 패널 열기 / 닫기
     // ────────────────────────────────────────────────────────────────
     public void ShowPanel(int wave)

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -9,15 +10,13 @@ using UnityEngine.UI;
 /// </summary>
 public class EquipSlot : MonoBehaviour,
     IPointerDownHandler, IPointerUpHandler,
-    IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler
+    IBeginDragHandler, IDragHandler, IEndDragHandler
 {
     [SerializeField] private Image frameImg;
     [SerializeField] private Image iconImg;
 
     public int SlotIndex { get; set; }
 
-    // ── 드래그 공유 상태 (정적) ─────────────────────────────────────
-    public static EquipSlot Dragging { get; private set; }
     private static GameObject ghost;
 
     private Canvas       rootCanvas;
@@ -29,7 +28,8 @@ public class EquipSlot : MonoBehaviour,
         rootCanvas = GetComponentInParent<Canvas>();
     }
 
-    public void Init(UpgradePanel upgradePanel) => panel = upgradePanel;
+    public bool IsInitialized { get; private set; }
+    public void Init(UpgradePanel upgradePanel) { panel = upgradePanel; IsInitialized = true; }
 
     // ────────────────────────────────────────────────────────────────
     // 슬롯 갱신
@@ -46,12 +46,11 @@ public class EquipSlot : MonoBehaviour,
     // ────────────────────────────────────────────────────────────────
     // 클릭 → 패널에 알림
     // ────────────────────────────────────────────────────────────────
-    public void OnPointerDown(PointerEventData eventData) { } // EventSystem에 pointer down 등록용
+    public void OnPointerDown(PointerEventData eventData) { }
 
     public void OnPointerUp(PointerEventData eventData)
     {
-        Debug.Log($"[EquipSlot] OnPointerUp slot={SlotIndex}, dragStarted={dragStarted}, panel={(panel != null ? "OK" : "NULL")}");
-        if (dragStarted) return; // 드래그 중이었으면 클릭 무시
+        if (dragStarted) return;
         panel?.OnEquipSlotClicked(SlotIndex);
     }
 
@@ -65,20 +64,42 @@ public class EquipSlot : MonoBehaviour,
             return;
 
         dragStarted = true;
-        Dragging = this;
         CreateGhost(eventData.position);
+        Debug.Log($"[EquipSlot] OnBeginDrag slot={SlotIndex}");
     }
 
-    public void OnDrag(PointerEventData eventData)    => MoveGhost(eventData.position);
-    public void OnEndDrag(PointerEventData eventData) { dragStarted = false; Dragging = null; DestroyGhost(); }
+    public void OnDrag(PointerEventData eventData) => MoveGhost(eventData.position);
 
-    // ────────────────────────────────────────────────────────────────
-    // 드롭 (장착 슬롯 → 장착 슬롯 교체)
-    // ────────────────────────────────────────────────────────────────
-    public void OnDrop(PointerEventData eventData)
+    public void OnEndDrag(PointerEventData eventData)
     {
-        if (Dragging == null || Dragging == this) return;
-        PlayerInventory.Shared?.SwapEquipToEquip(Dragging.SlotIndex, SlotIndex);
+        if (dragStarted)
+        {
+            // RaycastAll로 포인터 아래 타겟을 직접 탐색
+            var results = new List<RaycastResult>();
+            EventSystem.current.RaycastAll(eventData, results);
+            Debug.Log($"[EquipSlot] OnEndDrag slot={SlotIndex}, hits={results.Count}");
+
+            foreach (var hit in results)
+            {
+                var equipTarget = hit.gameObject.GetComponentInParent<EquipSlot>();
+                if (equipTarget != null && equipTarget != this && equipTarget.IsInitialized)
+                {
+                    Debug.Log($"[EquipSlot] SwapEquip {SlotIndex} → {equipTarget.SlotIndex}");
+                    PlayerInventory.Shared?.SwapEquipToEquip(SlotIndex, equipTarget.SlotIndex);
+                    break;
+                }
+                var invenTarget = hit.gameObject.GetComponentInParent<InvenSlot>();
+                if (invenTarget != null && invenTarget.IsInitialized)
+                {
+                    Debug.Log($"[EquipSlot] MoveEquipToInven {SlotIndex} → inven{invenTarget.SlotIndex}");
+                    PlayerInventory.Shared?.MoveEquipToInven(SlotIndex, invenTarget.SlotIndex);
+                    break;
+                }
+            }
+        }
+
+        dragStarted = false;
+        DestroyGhost();
     }
 
     // ────────────────────────────────────────────────────────────────

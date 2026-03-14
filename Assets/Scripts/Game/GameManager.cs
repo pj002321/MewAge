@@ -42,13 +42,9 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         if (gameOverPanel) gameOverPanel.SetActive(false);
         if (waveClearPanel) waveClearPanel.SetActive(false);
 
-        // 챕터 시작: Wave 1 이전에 UpgradePanel 표시
-        waitingForUpgrade = true;
-        EnemySpawner.Shared?.StopSpawning(); // 상점 중에는 스폰 정지
-        if (UpgradeManager.Shared != null)
-            UpgradeManager.Shared.ShowPanel(wave);
-        else
-            StartNextWave();
+        // 시작 시 Normal 무기 1개 지급 후 바로 Wave 1 시작
+        UpgradeManager.Shared?.GiveStarterWeapon();
+        StartNextWave();
     }
 
     private void Update()
@@ -68,7 +64,8 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     private IEnumerator WaveClearRoutine()
     {
         if (waveClearPanel) waveClearPanel.SetActive(true);
-        EnemySpawner.Shared?.StopSpawning(); // 웨이브 클리어 시 즉시 스폰 정지
+        EnemySpawner.Shared?.StopSpawning();
+        EnemySpawner.Shared?.ClearAllEnemies(); // 이전 웨이브 잔여 적 제거
         yield return new WaitForSeconds(waveClearDuration);
         if (waveClearPanel) waveClearPanel.SetActive(false);
 
