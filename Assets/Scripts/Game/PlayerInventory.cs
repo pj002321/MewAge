@@ -100,18 +100,22 @@ public class PlayerInventory : MonoBehaviourSingleton<PlayerInventory>
     public void MoveInvenToEquip(int invenIndex, int equipIndex)
     {
         if (invenIndex < 0 || invenIndex >= inventory.Count) return;
+        if (equipIndex < 0 || equipIndex >= MaxEquipped) return;
         var weapon = inventory[invenIndex];
 
-        if (equipIndex < equipped.Count)
+        // equipIndex까지 null로 확장 (빈 슬롯 포함)
+        while (equipped.Count <= equipIndex) equipped.Add(null);
+
+        if (equipped[equipIndex] != null)
         {
             // 장착 슬롯에 무기가 있으면 인벤과 교체
             inventory[invenIndex] = equipped[equipIndex];
             equipped[equipIndex]  = weapon;
         }
-        else if (equipped.Count < MaxEquipped)
+        else
         {
-            // 빈 장착 슬롯에 그냥 이동
-            equipped.Add(weapon);
+            // 빈 장착 슬롯에 이동 (정확한 equipIndex 위치로)
+            equipped[equipIndex] = weapon;
             inventory.RemoveAt(invenIndex);
         }
         // 뒤의 null 정리

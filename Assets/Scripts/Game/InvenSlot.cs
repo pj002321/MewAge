@@ -26,7 +26,11 @@ public class InvenSlot : MonoBehaviour,
     private UpgradePanel panel;
     private bool         dragStarted;
 
-    private void Awake() => rootCanvas = GetComponentInParent<Canvas>();
+    private void Awake()
+    {
+        var c = GetComponentInParent<Canvas>();
+        rootCanvas = c != null ? c.rootCanvas : null;
+    }
 
     public bool IsInitialized { get; private set; }
     public void Init(UpgradePanel upgradePanel) { panel = upgradePanel; IsInitialized = true; }
@@ -48,7 +52,10 @@ public class InvenSlot : MonoBehaviour,
     // ────────────────────────────────────────────────────────────────
     // 클릭 (드래그가 아닌 경우에만)
     // ────────────────────────────────────────────────────────────────
-    public void OnPointerDown(PointerEventData eventData) { }
+    public void OnPointerDown(PointerEventData eventData)
+    {
+        Debug.Log($"[InvenSlot] OnPointerDown slot={SlotIndex}");
+    }
 
     public void OnPointerClick(PointerEventData eventData)
     {
@@ -61,10 +68,11 @@ public class InvenSlot : MonoBehaviour,
     // ────────────────────────────────────────────────────────────────
     public void OnBeginDrag(PointerEventData eventData)
     {
+        Debug.Log($"[InvenSlot] OnBeginDrag called slot={SlotIndex}");
         var inv = PlayerInventory.Shared;
         if (inv == null || SlotIndex >= inv.Inventory.Count || inv.Inventory[SlotIndex] == null)
         {
-            Debug.Log($"[InvenSlot] OnBeginDrag CANCELLED slot={SlotIndex}");
+            Debug.Log($"[InvenSlot] OnBeginDrag CANCELLED slot={SlotIndex}, inv={inv != null}, count={inv?.Inventory.Count}");
             return;
         }
         dragStarted = true;

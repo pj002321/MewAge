@@ -25,7 +25,8 @@ public class EquipSlot : MonoBehaviour,
 
     private void Awake()
     {
-        rootCanvas = GetComponentInParent<Canvas>();
+        var c = GetComponentInParent<Canvas>();
+        rootCanvas = c != null ? c.rootCanvas : null;
     }
 
     public bool IsInitialized { get; private set; }
