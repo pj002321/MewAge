@@ -43,10 +43,11 @@ public class UpgradePanel : MonoBehaviour
     [Header("인벤토리 슬롯 (10개)")]
     [SerializeField] private InvenSlot[] invenSlots;
 
-    [Header("인벤토리 액션 (장착/팔기)")]
+    [Header("인벤토리 액션 (장착/팔기/합성)")]
     [SerializeField] private GameObject      invenActionPanel;
     [SerializeField] private Button          equipActionButton;
     [SerializeField] private Button          sellActionButton;
+    [SerializeField] private Button          mergeActionButton;
 
     [Header("장착 슬롯 액션 (해제/판매)")]
     [SerializeField] private GameObject      equipSlotActionPanel;
@@ -83,6 +84,7 @@ public class UpgradePanel : MonoBehaviour
 
         if (equipActionButton)    equipActionButton  .onClick.AddListener(OnEquipActionClicked);
         if (sellActionButton)     sellActionButton   .onClick.AddListener(OnSellActionClicked);
+        if (mergeActionButton)    mergeActionButton  .onClick.AddListener(OnMergeActionClicked);
         if (unequipActionButton)  unequipActionButton.onClick.AddListener(OnUnequipActionClicked);
         if (sellEquipActionButton) sellEquipActionButton.onClick.AddListener(OnSellEquipActionClicked);
         if (invenActionPanel)     invenActionPanel   .SetActive(false);
@@ -218,6 +220,16 @@ public class UpgradePanel : MonoBehaviour
 
             selectedInvenIndex = slotIndex;
             if (invenActionPanel) invenActionPanel.SetActive(true);
+
+            // 합성 버튼: 같은 타입+등급이 3개 이상 있을 때만 활성화
+            if (mergeActionButton)
+            {
+                var item    = inv.Inventory[slotIndex];
+                bool canMerge = item != null
+                             && item.grade < WeaponGrade.Legend
+                             && inv.CanMerge(item.weaponName, item.grade);
+                mergeActionButton.interactable = canMerge;
+            }
         }
 
         RefreshInventoryUI();
@@ -286,6 +298,17 @@ public class UpgradePanel : MonoBehaviour
 
         inv.SellFromInventory(selectedInvenIndex);
         SoundManager.Shared?.Play(SoundKey.UI_Sell);
+        Deselect();
+    }
+
+    private void OnMergeActionClicked()
+    {
+        if (selectedInvenIndex < 0) return;
+        var inv = PlayerInventory.Shared;
+        if (inv == null || selectedInvenIndex >= inv.Inventory.Count) return;
+
+        var item = inv.Inventory[selectedInvenIndex];
+        UpgradeManager.Shared?.TryMerge(item.weaponName, item.grade);
         Deselect();
     }
 

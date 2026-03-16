@@ -19,9 +19,11 @@ public class PlayerController : MonoBehaviour
     [Header("증강 스탯")]
     [SerializeField] private float attack  = 0f;  // 공격력 보너스
     [SerializeField] private float defense = 0f;  // 방어력 (받는 피해 감소)
+    [SerializeField] private float dodge   = 0f;  // 회피 확률 0~1
 
     public float Attack  => attack;
     public float Defense => defense;
+    public float Dodge   => dodge;
 
     [Header("플레이어 위 HP 슬라이더 (World Space)")]
     [SerializeField] private Slider playerHpSlider;
@@ -93,6 +95,7 @@ public class PlayerController : MonoBehaviour
     public void TakeDamage(float damage)
     {
         if (isInvincible) return;
+        if (dodge > 0f && Random.value < dodge) return;
 
         float reduced = Mathf.Max(0f, damage - defense);
         currentHP -= reduced;
@@ -134,6 +137,43 @@ public class PlayerController : MonoBehaviour
     public void IncreaseDefense(float amount)
     {
         defense += amount;
+    }
+
+    public void IncreaseMoveSpeed(float amount)
+    {
+        moveSpeed += amount;
+    }
+
+    /// <summary>몸집을 scaleMultiplier배 키우고 최대 체력 hpBonus만큼 증가.</summary>
+    public void IncreaseSizeHP(float scaleMultiplier, float hpBonus)
+    {
+        transform.localScale *= scaleMultiplier;
+        maxHP     += hpBonus;
+        currentHP  = Mathf.Min(currentHP + hpBonus, maxHP);
+        SyncHPUI();
+    }
+
+    /// <summary>몸집을 scaleMultiplier배 줄이고 최대 체력 hpPenalty만큼 감소.</summary>
+    public void DecreaseSizeHP(float scaleMultiplier, float hpPenalty)
+    {
+        transform.localScale /= scaleMultiplier;
+        maxHP     = Mathf.Max(1f, maxHP - hpPenalty);
+        currentHP = Mathf.Min(currentHP, maxHP);
+        SyncHPUI();
+    }
+
+    /// <summary>회피 확률 증가 (0~1 범위로 클램프).</summary>
+    public void IncreaseDodge(float amount)
+    {
+        dodge = Mathf.Clamp01(dodge + amount);
+    }
+
+    /// <summary>공격속도를 amount% 증가 (쿨타임 단축).</summary>
+    public void IncreaseAttackSpeed(float amount)
+    {
+        float multiplier = 1f + amount / 100f;
+        foreach (var wp in GetComponentsInChildren<WeaponPoint>())
+            wp.MultiplyAttackSpeed(multiplier);
     }
 
     /// <summary>GameManager.Revive()에서 호출 — HP를 가득 채우고 3초 무적 부여</summary>

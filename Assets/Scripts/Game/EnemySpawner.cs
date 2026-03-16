@@ -1,65 +1,28 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
+using Mewage.DB;
 
 /// <summary>
 /// 스폰 영역 가장자리에서 적을 스폰합니다.
-/// WaveRule 배열로 웨이브별 스폰 규칙을, EnemyEntry 배열로 적 종류/가중치를 Inspector에서 설정하세요.
+/// DB_웨이브에서 스폰 간격/수를, DB_스폰에서 적 종류/가중치/웨이브 범위를 읽습니다.
 /// </summary>
 public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
 {
-    // ── 웨이브별 스폰 규칙 ─────────────────────────────────────
-    [System.Serializable]
-    public class WaveRule
-    {
-        [Tooltip("이 웨이브 번호부터 적용")]
-        public int   fromWave     = 1;
-        [Tooltip("스폰 간격 (초)")]
-        public float spawnInterval = 3f;
-        [Tooltip("한 번에 스폰되는 적 수")]
-        public int   spawnCount   = 1;
-    }
-
-    // ── 적 종류 항목 ───────────────────────────────────────────
-    [System.Serializable]
-    public class EnemyEntry
-    {
-        [Tooltip("적 프리팹")]
-        public GameObject prefab;
-        [Tooltip("스폰 가중치 (높을수록 자주 등장)")]
-        public int weight   = 10;
-        [Tooltip("이 웨이브 이상일 때만 등장")]
-        public int minWave  = 1;
-    }
-
-    [Header("적 종류 (가중치·등장 웨이브 설정)")]
-    [SerializeField] private EnemyEntry[] enemyEntries = new EnemyEntry[]
-    {
-        new() { weight = 10, minWave = 1 },
-    };
-
     [Header("Prefab")]
     [SerializeField] private GameObject spawnMarkerPrefab;
-
-    [Header("웨이브 스폰 규칙 (fromWave 오름차순으로 작성)")]
-    [SerializeField] private WaveRule[] waveRules = new WaveRule[]
-    {
-        new() { fromWave = 1, spawnInterval = 3.0f, spawnCount = 1 },
-        new() { fromWave = 3, spawnInterval = 2.2f, spawnCount = 2 },
-        new() { fromWave = 5, spawnInterval = 1.8f, spawnCount = 3 },
-        new() { fromWave = 8, spawnInterval = 1.3f, spawnCount = 4 },
-        new() { fromWave = 12, spawnInterval = 0.8f, spawnCount = 5 },
-    };
 
     [Header("스폰 영역 (Gizmo로 표시됨)")]
     [SerializeField] private Vector2 spawnAreaCenter = Vector2.zero;
     [SerializeField] private Vector2 spawnAreaSize   = new(10f, 18f);
     [Tooltip("스폰 영역 외곽에서 얼마나 더 바깥쪽에 스폰할지")]
-    [SerializeField] private float spawnEdgeOffset = 0.3f;
+    [SerializeField] private float spawnEdgeOffset   = 0.3f;
 
     private float currentInterval;
     private int   currentSpawnCount;
-    private int   currentWave = 1;
-    private bool  spawning    = true;
+    private int   currentWave    = 1;
+    private int   currentChapter = 1;
+    private bool  spawning       = true;
 
     protected override bool DontDestroy => false;
 
@@ -84,8 +47,8 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
 
     private void SpawnEnemy()
     {
-        GameObject prefab = PickEnemyPrefab();
-        if (prefab == null) return;
+        DB_유닛 unit = PickUnit();
+        if (unit == null || unit.f_프리팹 == null) return;
 
         Vector2 spawnPos = GetRandomEdgePosition();
 
@@ -93,50 +56,64 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
         {
             GameObject markerObj = Instantiate(spawnMarkerPrefab, spawnPos, Quaternion.identity);
             if (markerObj.TryGetComponent<SpawnMarker>(out var marker))
-                marker.Init(prefab, currentWave);
+                marker.Init(unit, currentWave);
         }
         else
         {
-            GameObject obj = Instantiate(prefab, spawnPos, Quaternion.identity);
+            GameObject obj = Instantiate(unit.f_프리팹, spawnPos, Quaternion.identity);
             if (obj.TryGetComponent<EnemyController>(out var enemy))
-            {
-                enemy.ApplyWaveScaling(currentWave);
-                enemy.PlaySpawnBounce();
-            }
+                enemy.InitFromDB(unit, currentWave);
         }
     }
 
-    /// <summary>현재 웨이브 조건을 만족하는 항목 중 가중치 랜덤으로 프리팹 선택</summary>
-    private GameObject PickEnemyPrefab()
+    /// <summary>
+    /// 현재 웨이브 조건(최소/최대)을 만족하는 DB_스폰 항목 중 가중치 랜덤으로 DB_유닛 선택.
+    /// f_최대웨이브 == 0 이면 상한 없음.
+    /// </summary>
+    private DB_유닛 PickUnit()
     {
-        int totalWeight = 0;
-        foreach (var e in enemyEntries)
-            if (e.prefab != null && e.minWave <= currentWave)
-                totalWeight += e.weight;
+        List<DB_스폰> candidates = DB_스폰.FindEntities(e =>
+            e.f_챕터 == currentChapter &&
+            e.f_유닛 != null &&
+            e.f_유닛.f_프리팹 != null &&
+            e.f_최소웨이브 <= currentWave &&
+            (e.f_최대웨이브 == 0 || e.f_최대웨이브 >= currentWave));
 
+        if (candidates == null || candidates.Count == 0) return null;
+
+        int totalWeight = 0;
+        foreach (var e in candidates) totalWeight += e.f_가중치;
         if (totalWeight == 0) return null;
 
         int roll = Random.Range(0, totalWeight);
         int acc  = 0;
-        foreach (var e in enemyEntries)
+        foreach (var e in candidates)
         {
-            if (e.prefab == null || e.minWave > currentWave) continue;
-            acc += e.weight;
-            if (roll < acc) return e.prefab;
+            acc += e.f_가중치;
+            if (roll < acc) return e.f_유닛;
         }
         return null;
     }
 
-    // ── Wave 규칙 적용 ─────────────────────────────────────────
+    // ── Wave 규칙 적용 (DB_웨이브) ────────────────────────────────
     private void ApplyRule(int wave)
     {
-        WaveRule matched = waveRules[0];
-        foreach (var rule in waveRules)
+        DB_웨이브 matched = null;
+        DB_웨이브.ForEachEntity(e =>
         {
-            if (rule.fromWave <= wave) matched = rule;
+            if (e.f_챕터 == currentChapter && e.f_시작웨이브 <= wave)
+                if (matched == null || e.f_시작웨이브 > matched.f_시작웨이브)
+                    matched = e;
+        });
+
+        if (matched == null)
+        {
+            Debug.LogWarning($"[EnemySpawner] Wave {wave}에 맞는 DB_웨이브 항목 없음");
+            return;
         }
-        currentInterval   = matched.spawnInterval;
-        currentSpawnCount = matched.spawnCount;
+
+        currentInterval   = matched.f_스폰간격;
+        currentSpawnCount = matched.f_동시스폰수;
         Debug.Log($"[EnemySpawner] Wave {wave} → 간격: {currentInterval:F1}s, 동시 스폰: {currentSpawnCount}");
     }
 
@@ -144,7 +121,15 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
     {
         currentWave = wave;
         ApplyRule(wave);
-        // 새 웨이브 시작 시 코루틴 재시작 (새 간격 즉시 적용)
+        StopAllCoroutines();
+        if (spawning) StartCoroutine(SpawnLoop());
+    }
+
+    public void OnChapterUp(int chapter)
+    {
+        currentChapter = chapter;
+        currentWave    = 1;
+        ApplyRule(currentWave);
         StopAllCoroutines();
         if (spawning) StartCoroutine(SpawnLoop());
     }
@@ -169,11 +154,11 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
         OnWaveUp(wave);
     }
 
-    // ── 스폰 위치 ──────────────────────────────────────────────
+    // ── 스폰 위치 ──────────────────────────────────────────────────
     private Vector2 GetRandomEdgePosition()
     {
-        float halfW  = spawnAreaSize.x * 0.5f + spawnEdgeOffset;
-        float halfH  = spawnAreaSize.y * 0.5f + spawnEdgeOffset;
+        float halfW = spawnAreaSize.x * 0.5f + spawnEdgeOffset;
+        float halfH = spawnAreaSize.y * 0.5f + spawnEdgeOffset;
         Vector2 center = spawnAreaCenter;
 
         int side = Random.Range(0, 4);
@@ -186,7 +171,7 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
         };
     }
 
-    // ── Gizmo ──────────────────────────────────────────────────
+    // ── Gizmo ──────────────────────────────────────────────────────
     private void OnDrawGizmos()
     {
         Gizmos.color = new Color(1f, 0.3f, 0.3f, 0.8f);
@@ -199,10 +184,10 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
         Gizmos.color = new Color(1f, 1f, 0f, 0.9f);
         float hw = spawnAreaSize.x * 0.5f + spawnEdgeOffset;
         float hh = spawnAreaSize.y * 0.5f + spawnEdgeOffset;
-        Gizmos.DrawSphere(spawnAreaCenter + new Vector2(0,   hh),  0.15f);
-        Gizmos.DrawSphere(spawnAreaCenter + new Vector2(0,  -hh),  0.15f);
-        Gizmos.DrawSphere(spawnAreaCenter + new Vector2(-hw, 0),   0.15f);
-        Gizmos.DrawSphere(spawnAreaCenter + new Vector2( hw, 0),   0.15f);
+        Gizmos.DrawSphere(spawnAreaCenter + new Vector2(0,    hh), 0.15f);
+        Gizmos.DrawSphere(spawnAreaCenter + new Vector2(0,   -hh), 0.15f);
+        Gizmos.DrawSphere(spawnAreaCenter + new Vector2(-hw,   0), 0.15f);
+        Gizmos.DrawSphere(spawnAreaCenter + new Vector2( hw,   0), 0.15f);
 
 #if UNITY_EDITOR
         UnityEditor.Handles.color = Color.white;

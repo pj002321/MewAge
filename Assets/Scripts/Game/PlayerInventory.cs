@@ -137,6 +137,43 @@ public class PlayerInventory : MonoBehaviourSingleton<PlayerInventory>
     }
 
     // ────────────────────────────────────────────────────────────────
+    // 합성 (3 same type+grade → 1 next grade)
+    // ────────────────────────────────────────────────────────────────
+    /// <summary>인벤토리에 같은 이름+등급 무기가 3개 이상 있는지 확인합니다.</summary>
+    public bool CanMerge(string weaponName, WeaponGrade grade)
+    {
+        int count = 0;
+        foreach (var w in inventory)
+            if (w != null && w.weaponName == weaponName && w.grade == grade)
+                if (++count >= 3) return true;
+        return false;
+    }
+
+    /// <summary>인벤 내 같은 이름+등급 3개를 제거하고 result를 인벤에 추가합니다.</summary>
+    public bool TryMerge(string weaponName, WeaponGrade grade, WeaponData result)
+    {
+        if (result == null) return false;
+
+        var indices = new List<int>();
+        for (int i = 0; i < inventory.Count && indices.Count < 3; i++)
+        {
+            var w = inventory[i];
+            if (w != null && w.weaponName == weaponName && w.grade == grade)
+                indices.Add(i);
+        }
+
+        if (indices.Count < 3) return false;
+
+        // 높은 인덱스부터 제거해야 인덱스 밀림 없음
+        for (int i = indices.Count - 1; i >= 0; i--)
+            inventory.RemoveAt(indices[i]);
+
+        inventory.Add(result);
+        OnChanged?.Invoke();
+        return true;
+    }
+
+    // ────────────────────────────────────────────────────────────────
     // 드래그 & 드롭 교체
     // ────────────────────────────────────────────────────────────────
     /// <summary>장착 슬롯 A ↔ 장착 슬롯 B 교체</summary>

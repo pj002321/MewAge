@@ -1,23 +1,22 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using Mewage.DB;
 
 /// <summary>
 /// ImprovPanel 안의 증강 카드 하나.
-/// Inspector 연결: iconImg, nameText, descText, button, selectedOverlay(선택적), canvasGroup(선택적)
+/// Inspector 연결: iconImg, nameText, descText, button
 /// </summary>
 public class ImprovCard : MonoBehaviour
 {
-    [SerializeField] private Image            iconImg;
-    [SerializeField] private TextMeshProUGUI  nameText;
-    [SerializeField] private TextMeshProUGUI  descText;
-    [SerializeField] private Button           button;
-    [SerializeField] private GameObject       selectedOverlay; // 선택된 카드에 표시할 오버레이 (선택적)
-    [SerializeField] private CanvasGroup      canvasGroup;     // 비선택 카드 흐리게 (선택적)
+    [SerializeField] private Image           iconImg;
+    [SerializeField] private TextMeshProUGUI nameText;
+    [SerializeField] private TextMeshProUGUI descText;
+    [SerializeField] private Button          button;
 
-    public ImprovData Data { get; private set; }
+    public DB_증강 Data { get; private set; }
 
-    private System.Action<ImprovData> onClick;
+    private System.Action<DB_증강> onClick;
 
     private void Awake()
     {
@@ -27,30 +26,31 @@ public class ImprovCard : MonoBehaviour
         });
     }
 
-    // ────────────────────────────────────────────────────────────────
-    // 초기화
-    // ────────────────────────────────────────────────────────────────
-    public void Setup(ImprovData data, System.Action<ImprovData> onClickCallback)
+    public void Setup(DB_증강 data, System.Action<DB_증강> onClickCallback)
     {
         Data    = data;
         onClick = onClickCallback;
 
         if (iconImg)
         {
-            iconImg.sprite  = data.icon;
-            iconImg.enabled = data.icon != null;
-        }
-        if (nameText) nameText.text = data.improvName;
-        if (descText)
-        {
-            descText.text = (data.description != null && data.description.Contains("{0}"))
-                ? string.Format(data.description, data.value)
-                : data.description;
+            var sprite = data.f_아이콘;
+            iconImg.sprite  = sprite;
+            iconImg.enabled = sprite != null;
         }
 
-        if (selectedOverlay) selectedOverlay.SetActive(false);
-        if (canvasGroup)     { canvasGroup.alpha = 1f; canvasGroup.interactable = true; }
-        if (button)          button.interactable = true;
+        if (nameText) nameText.text = data.f_이름;
+        if (descText)
+        {
+            string desc = data.f_설명;
+            if (!string.IsNullOrEmpty(desc))
+            {
+                desc = desc.Replace("{0}", data.f_주수치.ToString());
+                desc = desc.Replace("{1}", data.f_보조수치.ToString());
+            }
+            descText.text = desc ?? string.Empty;
+        }
+
+        if (button) button.interactable = true;
         gameObject.SetActive(true);
     }
 
@@ -58,19 +58,5 @@ public class ImprovCard : MonoBehaviour
     {
         Data = null;
         gameObject.SetActive(false);
-    }
-
-    /// <summary>
-    /// 선택 후 호출 — 선택된 카드(true)는 하이라이트, 나머지(false)는 흐리게
-    /// </summary>
-    public void SetInteractable(bool isSelected)
-    {
-        if (selectedOverlay) selectedOverlay.SetActive(isSelected);
-        if (canvasGroup)
-        {
-            canvasGroup.alpha        = isSelected ? 1f : 0.4f;
-            canvasGroup.interactable = isSelected;
-        }
-        if (button) button.interactable = isSelected;
     }
 }

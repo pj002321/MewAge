@@ -10,6 +10,7 @@ public enum SoundKey
     UI_Equip,
     UI_Unequip,
     UI_Sell,
+    UI_Merge,
 
     // 전투
     Weapon_Attack,

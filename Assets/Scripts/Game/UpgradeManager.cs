@@ -197,6 +197,52 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
                              p.normal, p.rare, p.elite, p.epic, p.legend);
     }
 
+    // ────────────────────────────────────────────────────────────────
+    // 합성
+    // ────────────────────────────────────────────────────────────────
+    /// <summary>같은 이름의 다음 등급 무기를 반환합니다.</summary>
+    public WeaponData GetNextGradeWeapon(string weaponName, WeaponGrade grade)
+    {
+        if (grade >= WeaponGrade.Legend) return null;
+        var next = grade + 1;
+        foreach (var w in allWeapons)
+            if (w != null && w.weaponName == weaponName && w.grade == next)
+                return w;
+        return null;
+    }
+
+    /// <summary>인벤토리에서 같은 이름+등급 3개를 합성합니다.</summary>
+    public bool TryMerge(string weaponName, WeaponGrade grade)
+    {
+        var inv = PlayerInventory.Shared;
+        if (inv == null) return false;
+
+        if (grade >= WeaponGrade.Legend)
+        {
+            upgradePanel.ShowNotification("최대 등급은 합성할 수 없습니다.");
+            return false;
+        }
+
+        if (!inv.CanMerge(weaponName, grade))
+        {
+            upgradePanel.ShowNotification("같은 무기가 3개 필요합니다.");
+            return false;
+        }
+
+        WeaponData result = GetNextGradeWeapon(weaponName, grade);
+        if (result == null)
+        {
+            upgradePanel.ShowNotification($"DB에 {weaponName}의 상위 등급이 없습니다.");
+            return false;
+        }
+
+        if (!inv.TryMerge(weaponName, grade, result)) return false;
+
+        SoundManager.Shared?.Play(SoundKey.UI_Merge);
+        RefreshPanel();
+        return true;
+    }
+
     /// <summary>DB 확률 테이블 기반으로 count장 뽑기 (중복 없음)</summary>
     private WeaponData[] DrawCards(int count)
     {

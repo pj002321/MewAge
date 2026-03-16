@@ -230,6 +230,12 @@ public class WeaponPoint : MonoBehaviour
         return nearest;
     }
 
+    /// <summary>공격속도를 multiplier배 빠르게 합니다 (쿨타임 단축).</summary>
+    public void MultiplyAttackSpeed(float multiplier)
+    {
+        attackCooldown = Mathf.Max(0.1f, attackCooldown / multiplier);
+    }
+
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = new Color(1f, 0.8f, 0f, 0.4f);
