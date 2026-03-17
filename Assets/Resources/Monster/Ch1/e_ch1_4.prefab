@@ -173,7 +173,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 05b90058a78bdf242ada91d00c9db68b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyController
-  moveSpeed: 2
+  moveSpeed: 1
   maxHP: 30
   contactDamage: 10
   scoreValue: 10
@@ -182,9 +182,12 @@ MonoBehaviour:
   expDrop: 1
   unitType: 0
   projectilePrefab: {fileID: 0}
-  preferredRange: 4
+  preferredRange: 5
   shootInterval: 2
   rangedDamage: 0
+  attackRange: 1.2
+  attackInterval: 1
+  attackVfxPrefab: {fileID: 8243363023818174369, guid: a179f453a8a211a42b5427427e735f79, type: 3}
   chargeInterval: 3
   chargeDuration: 0.6
   chargeSpeedMultiplier: 3.5

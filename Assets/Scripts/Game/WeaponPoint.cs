@@ -7,6 +7,9 @@ using UnityEngine;
 /// </summary>
 public class WeaponPoint : MonoBehaviour
 {
+    [Header("무기 타입")]
+    [SerializeField] private WeaponType weaponType = WeaponType.Melee;
+
     [Header("무기 스탯")]
     [SerializeField] private float attackDamage = 20f;
     [SerializeField] private float attackCooldown = 1.5f;
@@ -14,20 +17,24 @@ public class WeaponPoint : MonoBehaviour
     [Header("탐지 범위 (이 안의 적에게 날아감)")]
     [SerializeField] private float attackRange = 3f;
 
-    [Header("이동 속도")]
-    [SerializeField] private float pullbackSpeed = 12f;  // 뒤로 당겨지는 속도
-    [SerializeField] private float strikeSpeed   = 40f;  // 확! 들어가는 속도
-    [SerializeField] private float returnSpeed   = 25f;  // 복귀 속도
+    [Header("근거리 이동 속도")]
+    [SerializeField] private float pullbackSpeed = 12f;
+    [SerializeField] private float strikeSpeed   = 40f;
+    [SerializeField] private float returnSpeed   = 25f;
 
-    [Header("타격 충돌 판정 거리 (보통 0.1~0.3)")]
+    [Header("근거리 타격 판정")]
     [SerializeField] private float hitDistance = 0.25f;
 
-    [Header("풀백 (공격 전 플레이어쪽으로 당김)")]
+    [Header("근거리 풀백")]
     [SerializeField] private float pullbackDistance = 0.4f;
 
-    [Header("오버슈트 (팍! 느낌) - 현재 미사용")]
+    [Header("오버슈트 (미사용)")]
     [SerializeField] private float overshootDistance = 0.35f;
     [SerializeField] private float overshootSpeed    = 30f;
+
+    [Header("원거리 설정")]
+    [SerializeField] private GameObject projectilePrefab;
+    [SerializeField] private float      projectileSpeed = 8f;
 
     private enum State { Idle, Pullback, Striking, Returning }
     private State state = State.Idle;
@@ -71,11 +78,28 @@ public class WeaponPoint : MonoBehaviour
         EnemyController nearest = FindNearestUnclaimed();
         if (nearest == null) return;
 
+        if (weaponType == WeaponType.Ranged)
+        {
+            // 원거리: 제자리에서 발사체 발사, 이동 없음
+            ShootAt(nearest);
+            cooldownTimer = attackCooldown;
+            return;
+        }
+
         if (WeaponManager.Instance.TryClaim(nearest))
         {
             targetEnemy = nearest;
             BeginPullback();
         }
+    }
+
+    private void ShootAt(EnemyController target)
+    {
+        if (projectilePrefab == null) return;
+        SoundManager.Shared?.Play(SoundKey.Weapon_Attack);
+        Vector2 dir = (target.transform.position - transform.position).normalized;
+        var go = Instantiate(projectilePrefab, transform.position, Quaternion.identity);
+        go.GetComponent<Projectile>()?.Init(attackDamage, dir, projectileSpeed);
     }
 
     // ─────────────────────────────────────────
@@ -169,7 +193,7 @@ public class WeaponPoint : MonoBehaviour
         Vector2 dir = GetLookDirection();
         if (dir.sqrMagnitude < 0.001f) return;
 
-        float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
+        float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg - 90f;
         transform.rotation = Quaternion.Euler(0f, 0f, angle);
     }
 
@@ -228,6 +252,16 @@ public class WeaponPoint : MonoBehaviour
             if (dist < minDist) { minDist = dist; nearest = enemy; }
         }
         return nearest;
+    }
+
+    /// <summary>WeaponManager가 장착 시 호출 — 타입과 데미지 설정.</summary>
+    public void Init(WeaponData data)
+    {
+        weaponType    = data.weaponType;
+        // attackDamage = 무기 인스펙터 기본값 + 플레이어 공격력 보너스
+        attackDamage += PlayerController.Instance?.Attack ?? 0f;
+        // projectilePrefab은 인스펙터에서 설정한 값을 유지합니다.
+        // Ranged 무기 프리팹의 WeaponPoint 컴포넌트에 projectilePrefab을 직접 지정하세요.
     }
 
     /// <summary>공격속도를 multiplier배 빠르게 합니다 (쿨타임 단축).</summary>

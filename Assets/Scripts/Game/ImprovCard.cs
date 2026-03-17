@@ -1,3 +1,4 @@
+using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -14,22 +15,42 @@ public class ImprovCard : MonoBehaviour
     [SerializeField] private TextMeshProUGUI descText;
     [SerializeField] private Button          button;
 
+    [Header("선택 애니메이션")]
+    [SerializeField] private float selectLiftAmount = 30f;   // 올라갈 픽셀
+    [SerializeField] private float selectScale      = 1.12f; // 최종 스케일
+    [SerializeField] private float animDuration     = 0.25f;
+
     public DB_증강 Data { get; private set; }
 
-    private System.Action<DB_증강> onClick;
+    private System.Action<ImprovCard, DB_증강> onClick;
+    private RectTransform rt;
+    private Vector2 originPos;
 
     private void Awake()
     {
+        EnsureRt();
         button?.onClick.AddListener(() =>
         {
-            if (Data != null) onClick?.Invoke(Data);
+            if (Data != null) onClick?.Invoke(this, Data);
         });
     }
 
-    public void Setup(DB_증강 data, System.Action<DB_증강> onClickCallback)
+    private void EnsureRt()
     {
+        if (rt != null) return;
+        rt        = GetComponent<RectTransform>();
+        originPos = rt.anchoredPosition;
+    }
+
+    public void Setup(DB_증강 data, System.Action<ImprovCard, DB_증강> onClickCallback)
+    {
+        EnsureRt();
         Data    = data;
         onClick = onClickCallback;
+
+        // 위치/스케일 원래대로 리셋
+        rt.anchoredPosition  = originPos;
+        transform.localScale = Vector3.one;
 
         if (iconImg)
         {
@@ -58,5 +79,33 @@ public class ImprovCard : MonoBehaviour
     {
         Data = null;
         gameObject.SetActive(false);
+    }
+
+    public void PlaySelectAnimation()
+    {
+        StopAllCoroutines();
+        StartCoroutine(SelectRoutine());
+    }
+
+    private IEnumerator SelectRoutine()
+    {
+        Vector2 targetPos   = originPos + Vector2.up * selectLiftAmount;
+        Vector3 targetScale = Vector3.one * selectScale;
+
+        float elapsed = 0f;
+        while (elapsed < animDuration)
+        {
+            float t = elapsed / animDuration;
+            float ease = 1f - (1f - t) * (1f - t); // ease-out quad
+
+            rt.anchoredPosition  = Vector2.Lerp(originPos, targetPos, ease);
+            transform.localScale = Vector3.Lerp(Vector3.one, targetScale, ease);
+
+            elapsed += Time.unscaledDeltaTime;
+            yield return null;
+        }
+
+        rt.anchoredPosition  = targetPos;
+        transform.localScale = targetScale;
     }
 }

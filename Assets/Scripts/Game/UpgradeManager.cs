@@ -70,7 +70,7 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
             if (w != null && w.grade == WeaponGrade.Normal && w.chapter <= currentChapter)
                 normals.Add(w);
 
-        if (normals.Count == 0) { Debug.LogWarning("[UpgradeManager] Normal 등급 무기 없음"); return; }
+        if (normals.Count == 0) { Debug.LogWarning("[UpgradeManager] 지급할 무기 없음"); return; }
 
         var starter = normals[Random.Range(0, normals.Count)];
         var inv     = PlayerInventory.Shared;
@@ -89,9 +89,12 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
         CollectAllDropItems();
         Time.timeScale = 0f;
         currentDraw    = DrawCards(4);
+        int         playerLevel = PlayerStats.Shared?.Level ?? 1;
+        DrawProfile p           = GetCurrentProfile(playerLevel);
         upgradePanel.Refresh(currentDraw, rerollPrice, buyExpPrice,
                              PlayerInventory.Shared?.Inventory.Count ?? 0,
-                             PlayerInventory.MaxInventory, wave);
+                             PlayerInventory.MaxInventory, wave,
+                             p.normal, p.rare, p.elite, p.epic, p.legend);
         upgradePanel.gameObject.SetActive(true);
     }
 
@@ -201,56 +204,58 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
     // 합성
     // ────────────────────────────────────────────────────────────────
     /// <summary>같은 이름의 다음 등급 무기를 반환합니다.</summary>
-    public WeaponData GetNextGradeWeapon(string weaponName, WeaponGrade grade)
+    public WeaponData GetNextGradeWeapon(string weaponName, int star)
     {
-        if (grade >= WeaponGrade.Legend) return null;
-        var next = grade + 1;
+        if (star >= 5) return null;
         foreach (var w in allWeapons)
-            if (w != null && w.weaponName == weaponName && w.grade == next)
-                return w;
+            if (w != null && w.weaponName == weaponName)
+            {
+                var next  = w.Upgraded();  // 희귀도 유지, 복사
+                next.star = star + 1;      // allWeapons는 항상 star=1이므로 직접 지정
+                return next;
+            }
         return null;
     }
 
-    /// <summary>인벤토리에서 같은 이름+등급 3개를 합성합니다.</summary>
-    public bool TryMerge(string weaponName, WeaponGrade grade)
+    /// <summary>인벤토리에서 같은 이름+성 3개를 합성합니다.</summary>
+    public bool TryMerge(string weaponName, int star)
     {
         var inv = PlayerInventory.Shared;
         if (inv == null) return false;
 
-        if (grade >= WeaponGrade.Legend)
+        if (star >= 5)
         {
-            upgradePanel.ShowNotification("최대 등급은 합성할 수 없습니다.");
+            upgradePanel.ShowNotification("최대 성급은 합성할 수 없습니다.");
             return false;
         }
 
-        if (!inv.CanMerge(weaponName, grade))
+        if (!inv.CanMerge(weaponName, star))
         {
-            upgradePanel.ShowNotification("같은 무기가 3개 필요합니다.");
+            upgradePanel.ShowNotification("같은 무기 같은 성급이 3개 필요합니다.");
             return false;
         }
 
-        WeaponData result = GetNextGradeWeapon(weaponName, grade);
+        WeaponData result = GetNextGradeWeapon(weaponName, star);
         if (result == null)
         {
-            upgradePanel.ShowNotification($"DB에 {weaponName}의 상위 등급이 없습니다.");
+            upgradePanel.ShowNotification($"DB에 {weaponName} 항목이 없습니다.");
             return false;
         }
 
-        if (!inv.TryMerge(weaponName, grade, result)) return false;
+        if (!inv.TryMerge(weaponName, star, result)) return false;
 
         SoundManager.Shared?.Play(SoundKey.UI_Merge);
         RefreshPanel();
         return true;
     }
 
-    /// <summary>DB 확률 테이블 기반으로 count장 뽑기 (중복 없음)</summary>
+    /// <summary>DB_확률 기반으로 희귀도를 뽑아 count장 카드 드로우</summary>
     private WeaponData[] DrawCards(int count)
     {
-        // 같은 무기 최대 2장까지 허용
         var pool = new List<WeaponData>();
         foreach (var w in allWeapons)
             if (w != null && w.chapter <= currentChapter)
-            { pool.Add(w); pool.Add(w); }
+            { pool.Add(w); pool.Add(w); }   // 같은 무기 최대 2장
 
         int         playerLevel = PlayerStats.Shared?.Level ?? 1;
         DrawProfile profile     = GetCurrentProfile(playerLevel);
@@ -259,7 +264,6 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
         for (int i = 0; i < count; i++)
         {
             if (pool.Count == 0) break;
-
             WeaponGrade grade  = RollGrade(profile);
             WeaponData  picked = PickByGrade(pool, grade);
             if (picked != null) { result[i] = picked; pool.Remove(picked); }
@@ -267,7 +271,6 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
         return result;
     }
 
-    /// <summary>현재 레벨에 맞는 DrawProfile 반환 (가장 가까운 하위 레벨 row)</summary>
     private DrawProfile GetCurrentProfile(int level)
     {
         DrawProfile result = drawProfiles.Length > 0 ? drawProfiles[0] : default;
@@ -276,7 +279,6 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
         return result;
     }
 
-    /// <summary>확률 가중치로 등급 랜덤 선택 (합계 100 기준 소수점 지원)</summary>
     private static WeaponGrade RollGrade(DrawProfile p)
     {
         float roll = Random.Range(0f, 100f);
@@ -288,14 +290,12 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
         return WeaponGrade.Legend;
     }
 
-    /// <summary>해당 등급 카드를 pool에서 무작위 선택. 없으면 null 반환 (확률DB 엄격 적용)</summary>
     private WeaponData PickByGrade(List<WeaponData> pool, WeaponGrade grade)
     {
         var candidates = pool.FindAll(w => w.grade == grade);
         if (candidates.Count > 0)
             return candidates[Random.Range(0, candidates.Count)];
-        
-        this.DLog($"[UpgradeManager] 해당 등급({grade})의 무기가 모두 소진되었으므로, 빈 슬롯으로 표시됩니다.");
-        return null;
+        // 해당 희귀도 무기 없으면 아무 무기나 반환
+        return pool.Count > 0 ? pool[Random.Range(0, pool.Count)] : null;
     }
 }

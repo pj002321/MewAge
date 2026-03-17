@@ -40,6 +40,7 @@ public class PlayerStats : MonoBehaviourSingleton<PlayerStats>
     public void AddGold(int amount)
     {
         gold += amount;
+        SoundManager.Shared?.Play(SoundKey.Pickup_Gold);
         SyncUI();
     }
 
@@ -55,6 +56,7 @@ public class PlayerStats : MonoBehaviourSingleton<PlayerStats>
     {
         if (level >= maxLevel) return;
 
+        SoundManager.Shared?.Play(SoundKey.Pickup_Exp);
         exp += amount;
         while (exp >= expToNext && level < maxLevel)
         {

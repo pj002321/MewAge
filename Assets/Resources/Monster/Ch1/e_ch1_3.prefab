@@ -92,7 +92,7 @@ SpriteRenderer:
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 1, y: 1}
+  m_Size: {x: 0.64, y: 0.6742857}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
@@ -173,7 +173,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 05b90058a78bdf242ada91d00c9db68b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyController
-  moveSpeed: 2
+  moveSpeed: 1
   maxHP: 30
   contactDamage: 10
   scoreValue: 10
@@ -182,9 +182,12 @@ MonoBehaviour:
   expDrop: 1
   unitType: 0
   projectilePrefab: {fileID: 0}
-  preferredRange: 4
+  preferredRange: 8
   shootInterval: 2
   rangedDamage: 0
+  attackRange: 1.2
+  attackInterval: 1
+  attackVfxPrefab: {fileID: 0}
   chargeInterval: 3
   chargeDuration: 0.6
   chargeSpeedMultiplier: 3.5

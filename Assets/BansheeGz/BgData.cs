@@ -928,6 +928,90 @@ namespace Mewage.DB
 	}
 
 	[Preserve]
+	public sealed partial class DB_기물 : BGEntity
+	{
+		private static BansheeGz.BGDatabase.BGMetaRow _metaDefault;
+		public static BansheeGz.BGDatabase.BGMetaRow MetaDefault => _metaDefault ??= BGCodeGenUtils.GetMeta<BansheeGz.BGDatabase.BGMetaRow>(new BGId(5208437294061921854UL,8163543046462542271UL), () => _metaDefault = null);
+		public static BansheeGz.BGDatabase.BGRepoEvents Events => BGRepo.I.Events;
+		public static int CountEntities => MetaDefault.CountEntities;
+		public System.String f_name
+		{
+			get => _f_name[Index];
+			set => _f_name[Index] = value;
+		}
+		public System.Int32 f_챕터
+		{
+			get => _f_챕터[Index];
+			set => _f_챕터.SetValue(this, value);
+		}
+		public System.String f_설명
+		{
+			get => _f_설명[Index];
+			set => _f_설명[Index] = value;
+		}
+		public UnityEngine.GameObject f_프리팹 => _f_프리팹[Index];
+		public UnityEngine.GameObject f_설치프리팹 => _f_설치프리팹[Index];
+		private static BansheeGz.BGDatabase.BGFieldEntityName _ufle12jhs77_f_name;
+		public static BansheeGz.BGDatabase.BGFieldEntityName _f_name => _ufle12jhs77_f_name ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldEntityName>(MetaDefault, new BGId(5123857077394945653UL, 5211867432024695981UL), () => _ufle12jhs77_f_name = null);
+		private static BansheeGz.BGDatabase.BGFieldInt _ufle12jhs77_f_챕터;
+		public static BansheeGz.BGDatabase.BGFieldInt _f_챕터 => _ufle12jhs77_f_챕터 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(MetaDefault, new BGId(5519519473693040577UL, 14251985686910147212UL), () => _ufle12jhs77_f_챕터 = null);
+		private static BansheeGz.BGDatabase.BGFieldString _ufle12jhs77_f_설명;
+		public static BansheeGz.BGDatabase.BGFieldString _f_설명 => _ufle12jhs77_f_설명 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(MetaDefault, new BGId(4944550473389582269UL, 1410866081397737869UL), () => _ufle12jhs77_f_설명 = null);
+		private static BansheeGz.BGDatabase.BGFieldUnityPrefab _ufle12jhs77_f_프리팹;
+		public static BansheeGz.BGDatabase.BGFieldUnityPrefab _f_프리팹 => _ufle12jhs77_f_프리팹 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldUnityPrefab>(MetaDefault, new BGId(5392730660473967936UL, 9165826992457721514UL), () => _ufle12jhs77_f_프리팹 = null);
+		private static BansheeGz.BGDatabase.BGFieldUnityPrefab _ufle12jhs77_f_설치프리팹;
+		public static BansheeGz.BGDatabase.BGFieldUnityPrefab _f_설치프리팹 => _ufle12jhs77_f_설치프리팹 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldUnityPrefab>(MetaDefault, new BGId(4980004008301831202UL, 13871076970529982358UL), () => _ufle12jhs77_f_설치프리팹 = null);
+		private DB_기물() : base(MetaDefault) {}
+		private DB_기물(BGId id) : base(MetaDefault, id) {}
+		private DB_기물(BGMetaEntity meta) : base(meta) {}
+		private DB_기물(BGMetaEntity meta, BGId id) : base(meta, id) {}
+		public static DB_기물 FindEntity(Predicate<DB_기물> filter) => BGCodeGenUtils.FindEntity(MetaDefault, filter);
+		public static List<DB_기물> FindEntities(Predicate<DB_기물> filter, List<DB_기물> result=null, Comparison<DB_기물> sort=null) => BGCodeGenUtils.FindEntities(MetaDefault, filter, result, sort);
+		public static void ForEachEntity(Action<DB_기물> action, Predicate<DB_기물> filter=null, Comparison<DB_기물> sort=null) => BGCodeGenUtils.ForEachEntity(MetaDefault, action, filter, sort);
+		public static DB_기물 GetEntity(BGId entityId) => (DB_기물) MetaDefault.GetEntity(entityId);
+		public static DB_기물 GetEntity(int index) => (DB_기물) MetaDefault[index];
+		public static DB_기물 GetEntity(string entityName) => (DB_기물) MetaDefault.GetEntity(entityName);
+		public static DB_기물 NewEntity() => (DB_기물) MetaDefault.NewEntity();
+		public static DB_기물 NewEntity(BGId entityId) => (DB_기물) MetaDefault.NewEntity(entityId);
+		public static DB_기물 NewEntity(Action<DB_기물> callback) => (DB_기물) MetaDefault.NewEntity(new BGMetaEntity.NewEntityContext(entity => callback((DB_기물)entity)));
+		public static void InitializeCodeGenRuntime()
+		{
+			_metaDefault = BGCodeGenUtils.GetMeta<BansheeGz.BGDatabase.BGMetaRow>(new BGId(5208437294061921854UL,8163543046462542271UL), ReleaseCodeGenRuntime);
+			_ufle12jhs77_f_name = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldEntityName>(_metaDefault, new BGId(5123857077394945653UL, 5211867432024695981UL));
+			_ufle12jhs77_f_챕터 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(_metaDefault, new BGId(5519519473693040577UL, 14251985686910147212UL));
+			_ufle12jhs77_f_설명 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(_metaDefault, new BGId(4944550473389582269UL, 1410866081397737869UL));
+			_ufle12jhs77_f_프리팹 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldUnityPrefab>(_metaDefault, new BGId(5392730660473967936UL, 9165826992457721514UL));
+			_ufle12jhs77_f_설치프리팹 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldUnityPrefab>(_metaDefault, new BGId(4980004008301831202UL, 13871076970529982358UL));
+		}
+		public static void ReleaseCodeGenRuntime()
+		{
+			_metaDefault = null;
+			_ufle12jhs77_f_name = null;
+			_ufle12jhs77_f_챕터 = null;
+			_ufle12jhs77_f_설명 = null;
+			_ufle12jhs77_f_프리팹 = null;
+			_ufle12jhs77_f_설치프리팹 = null;
+		}
+
+		[Preserve]
+		public sealed class Factory : BGEntity.EntityFactory
+		{
+			public BGEntity NewEntity(BGMetaEntity meta) => new DB_기물(meta);
+			public BGEntity NewEntity(BGMetaEntity meta, BGId id) => new DB_기물(meta, id);
+		}
+
+		public static class __Names
+		{
+			public const string Meta = "기물";
+			public const string name = "name";
+			public const string 챕터 = "챕터";
+			public const string 설명 = "설명";
+			public const string 프리팹 = "프리팹";
+			public const string 설치프리팹 = "설치프리팹";
+		}
+	}
+
+	[Preserve]
 	public static class BGCodeGenRuntimeInitializer
 	{
 		[Preserve]
@@ -943,6 +1027,7 @@ namespace Mewage.DB
 			DB_웨이브.InitializeCodeGenRuntime();
 			DB_증강.InitializeCodeGenRuntime();
 			DB_지형.InitializeCodeGenRuntime();
+			DB_기물.InitializeCodeGenRuntime();
 		}
 		[Preserve]
 		public static void ReleaseCodeGenRuntime()
@@ -957,6 +1042,7 @@ namespace Mewage.DB
 			DB_웨이브.ReleaseCodeGenRuntime();
 			DB_증강.ReleaseCodeGenRuntime();
 			DB_지형.ReleaseCodeGenRuntime();
+			DB_기물.ReleaseCodeGenRuntime();
 		}
 	}
 }

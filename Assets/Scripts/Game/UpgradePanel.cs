@@ -226,8 +226,8 @@ public class UpgradePanel : MonoBehaviour
             {
                 var item    = inv.Inventory[slotIndex];
                 bool canMerge = item != null
-                             && item.grade < WeaponGrade.Legend
-                             && inv.CanMerge(item.weaponName, item.grade);
+                             && item.star < 5
+                             && inv.CanMerge(item.weaponName, item.star);
                 mergeActionButton.interactable = canMerge;
             }
         }
@@ -308,7 +308,7 @@ public class UpgradePanel : MonoBehaviour
         if (inv == null || selectedInvenIndex >= inv.Inventory.Count) return;
 
         var item = inv.Inventory[selectedInvenIndex];
-        UpgradeManager.Shared?.TryMerge(item.weaponName, item.grade);
+        UpgradeManager.Shared?.TryMerge(item.weaponName, item.star);
         Deselect();
     }
 

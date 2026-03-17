@@ -163,7 +163,6 @@ GameObject:
   - component: {fileID: 4293990143691950290}
   - component: {fileID: 7697355881895679643}
   - component: {fileID: 7763035354714037563}
-  - component: {fileID: 2785520281046724271}
   m_Layer: 5
   m_Name: weapon_icon
   m_TagString: Untagged
@@ -178,17 +177,17 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1495241076179858955}
-  m_LocalRotation: {x: 0, y: 0, z: -0.20364168, w: 0.9790455}
+  m_LocalRotation: {x: 0, y: 0, z: -0.38268343, w: 0.92387956}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 8016183595679156995}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: -23.5}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: -45}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 99.38, y: 151.67}
+  m_SizeDelta: {x: 110, y: 115}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &7697355881895679643
 CanvasRenderer:
@@ -218,7 +217,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -1500755329261052452, guid: 6c685feb237c68b408069decb8773c6e, type: 3}
+  m_Sprite: {fileID: -1171583753, guid: 1d7ce842d9493d0498d2f41b923d11bb, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -228,20 +227,6 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &2785520281046724271
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1495241076179858955}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: adb30198aa32dd140b5750692dd48104, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Nobi.UiRoundedCorners::Nobi.UiRoundedCorners.ImageWithRoundedCorners
-  radius: 13.45
-  image: {fileID: 7763035354714037563}
 --- !u!1 &1664962616430495322
 GameObject:
   m_ObjectHideFlags: 0
@@ -345,7 +330,6 @@ GameObject:
   - component: {fileID: 9043240232323905133}
   - component: {fileID: 3432133462222619184}
   - component: {fileID: 6928702535885044936}
-  - component: {fileID: 3142378001297185766}
   m_Layer: 5
   m_Name: Image
   m_TagString: Untagged
@@ -413,20 +397,6 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &3142378001297185766
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2006035519980418514}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: adb30198aa32dd140b5750692dd48104, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Nobi.UiRoundedCorners::Nobi.UiRoundedCorners.ImageWithRoundedCorners
-  radius: 23.7
-  image: {fileID: 6928702535885044936}
 --- !u!1 &3784399428195293379
 GameObject:
   m_ObjectHideFlags: 0
@@ -555,8 +525,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4278190080
-  m_fontColor: {r: 0, g: 0, b: 0, a: 1}
+    rgba: 4294967295
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -629,7 +599,6 @@ GameObject:
   - component: {fileID: 8016183595679156995}
   - component: {fileID: 5911491403779673160}
   - component: {fileID: 7574416912253333311}
-  - component: {fileID: 2412421676744642205}
   m_Layer: 5
   m_Name: grade_frame
   m_TagString: Untagged
@@ -695,20 +664,6 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &2412421676744642205
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7030460661873736801}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: adb30198aa32dd140b5750692dd48104, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Nobi.UiRoundedCorners::Nobi.UiRoundedCorners.ImageWithRoundedCorners
-  radius: 13.45
-  image: {fileID: 7574416912253333311}
 --- !u!1 &7894410760807605595
 GameObject:
   m_ObjectHideFlags: 0

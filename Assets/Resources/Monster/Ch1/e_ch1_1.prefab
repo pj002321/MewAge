@@ -11,10 +11,10 @@ GameObject:
   - component: {fileID: 7645612233078346687}
   - component: {fileID: 3168371140501354424}
   - component: {fileID: 5032155823031694817}
-  - component: {fileID: 3709395134314530827}
   - component: {fileID: 7149393283127745020}
   - component: {fileID: 6364569046898202011}
   - component: {fileID: 5961913948908241603}
+  - component: {fileID: 3560723829451989483}
   m_Layer: 7
   m_Name: e_ch1_1
   m_TagString: Untagged
@@ -87,16 +87,16 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 5
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 2537452021497306913, guid: bb638222ff444bb47a0fb45a38b6115e, type: 3}
+  m_Sprite: {fileID: 6349126696691558719, guid: bb638222ff444bb47a0fb45a38b6115e, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 1, y: 1}
+  m_Size: {x: 1.11, y: 0.825}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_SpriteSortPoint: 0
+  m_SpriteSortPoint: 1
 --- !u!50 &5032155823031694817
 Rigidbody2D:
   serializedVersion: 5
@@ -124,43 +124,6 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 4
---- !u!70 &3709395134314530827
-CapsuleCollider2D:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 301323739485502833}
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Density: 1
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_ForceSendLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ForceReceiveLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ContactCaptureLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_CallbackLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_IsTrigger: 1
-  m_UsedByEffector: 0
-  m_CompositeOperation: 0
-  m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
-  m_Size: {x: 0.98, y: 1.38}
-  m_Direction: 0
 --- !u!114 &7149393283127745020
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -173,7 +136,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 05b90058a78bdf242ada91d00c9db68b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyController
-  moveSpeed: 2
+  moveSpeed: 1
   maxHP: 30
   contactDamage: 10
   scoreValue: 10
@@ -182,9 +145,12 @@ MonoBehaviour:
   expDrop: 1
   unitType: 0
   projectilePrefab: {fileID: 0}
-  preferredRange: 4
+  preferredRange: 5
   shootInterval: 2
   rangedDamage: 0
+  attackRange: 1.2
+  attackInterval: 1
+  attackVfxPrefab: {fileID: 0}
   chargeInterval: 3
   chargeDuration: 0.6
   chargeSpeedMultiplier: 3.5
@@ -224,6 +190,43 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!70 &3560723829451989483
+CapsuleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 301323739485502833}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0, y: 0.4125}
+  m_Size: {x: 1.11, y: 0.825}
+  m_Direction: 0
 --- !u!1 &3449522844066962684
 GameObject:
   m_ObjectHideFlags: 0
@@ -250,7 +253,7 @@ Transform:
   m_GameObject: {fileID: 3449522844066962684}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.011, y: -0.584, z: 0}
+  m_LocalPosition: {x: 0, y: -0.13, z: 0}
   m_LocalScale: {x: 3.27, y: 3.27, z: 3.27}
   m_ConstrainProportionsScale: 1
   m_Children: []

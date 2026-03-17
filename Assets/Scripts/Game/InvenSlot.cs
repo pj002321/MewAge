@@ -42,7 +42,7 @@ public class InvenSlot : MonoBehaviour,
     {
         bool has = data != null;
         if (iconImg)  iconImg.enabled = has;
-        if (frameImg) frameImg.color = has ? WeaponGradeColors.Get(data.grade) : Color.white;
+        if (frameImg) frameImg.color = has ? WeaponGradeColors.Get(data.star) : Color.white;
         if (has && iconImg && data.icon) iconImg.sprite = data.icon;
 
         float s = (has && selected) ? selectedScale : normalScale;

@@ -73,11 +73,10 @@ public class WeaponManager : MonoBehaviour
                 weaponGO.transform.localRotation = Quaternion.identity;
                 weaponGO.transform.localScale    = Vector3.one;
                 
-                // WeaponPoint 컴포넌트가 무기 프리팹 자체에 없다면 붙여줌
-                if (!weaponGO.TryGetComponent<WeaponPoint>(out _))
-                {
-                    weaponGO.AddComponent<WeaponPoint>();
-                }
+                // WeaponPoint 컴포넌트가 없으면 추가, 있으면 가져와서 Init
+                if (!weaponGO.TryGetComponent<WeaponPoint>(out var wp))
+                    wp = weaponGO.AddComponent<WeaponPoint>();
+                wp.Init(equipped[i]);
                 
                 this.DLog($"[WeaponManager] 슬롯 [{i}]: '{equipped[i].weaponName}' 장착 완료 (부모: {anchor.name})");
             }

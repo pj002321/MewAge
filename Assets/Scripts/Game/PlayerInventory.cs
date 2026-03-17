@@ -140,17 +140,17 @@ public class PlayerInventory : MonoBehaviourSingleton<PlayerInventory>
     // 합성 (3 same type+grade → 1 next grade)
     // ────────────────────────────────────────────────────────────────
     /// <summary>인벤토리에 같은 이름+등급 무기가 3개 이상 있는지 확인합니다.</summary>
-    public bool CanMerge(string weaponName, WeaponGrade grade)
+    public bool CanMerge(string weaponName, int star)
     {
         int count = 0;
         foreach (var w in inventory)
-            if (w != null && w.weaponName == weaponName && w.grade == grade)
+            if (w != null && w.weaponName == weaponName && w.star == star)
                 if (++count >= 3) return true;
         return false;
     }
 
-    /// <summary>인벤 내 같은 이름+등급 3개를 제거하고 result를 인벤에 추가합니다.</summary>
-    public bool TryMerge(string weaponName, WeaponGrade grade, WeaponData result)
+    /// <summary>인벤 내 같은 이름+성 3개를 제거하고 result를 인벤에 추가합니다.</summary>
+    public bool TryMerge(string weaponName, int star, WeaponData result)
     {
         if (result == null) return false;
 
@@ -158,7 +158,7 @@ public class PlayerInventory : MonoBehaviourSingleton<PlayerInventory>
         for (int i = 0; i < inventory.Count && indices.Count < 3; i++)
         {
             var w = inventory[i];
-            if (w != null && w.weaponName == weaponName && w.grade == grade)
+            if (w != null && w.weaponName == weaponName && w.star == star)
                 indices.Add(i);
         }
 

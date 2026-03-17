@@ -48,17 +48,21 @@ public class ImprovPanel : MonoBehaviour
         if (nextButton) nextButton.interactable = (visibleCount == 0);
     }
 
-    private void OnCardClicked(DB_증강 data)
+    private void OnCardClicked(ImprovCard card, DB_증강 data)
     {
         if (selectedOnce) return;
         selectedOnce = true;
 
+        card.PlaySelectAnimation();
+
+        SoundManager.Shared?.Play(SoundKey.UI_Click);
         ImprovManager.Shared?.OnImprovSelected(data);
         if (nextButton) nextButton.interactable = true;
     }
 
     private void OnNextButtonClicked()
     {
+        SoundManager.Shared?.Play(SoundKey.UI_Click);
         ImprovManager.Shared?.OnNextClicked();
     }
 
@@ -66,6 +70,7 @@ public class ImprovPanel : MonoBehaviour
     {
         selectedOnce = false;
         if (nextButton) nextButton.interactable = false;
+        SoundManager.Shared?.Play(SoundKey.UI_Reroll);
         ImprovManager.Shared?.Reroll();
     }
 }

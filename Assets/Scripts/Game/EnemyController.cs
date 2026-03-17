@@ -23,6 +23,11 @@ public class EnemyController : MonoBehaviour
     [SerializeField] private float shootInterval   = 2f;
     [SerializeField] private float rangedDamage    = 0f;  // 0이면 contactDamage 사용
 
+    [Header("근거리 설정")]
+    [SerializeField] private float      attackRange    = 1.2f;
+    [SerializeField] private float      attackInterval = 1.0f;
+    [SerializeField] private GameObject attackVfxPrefab;
+
     [Header("돌진 설정")]
     [SerializeField] private float chargeInterval        = 3f;
     [SerializeField] private float chargeDuration        = 0.6f;
@@ -35,7 +40,9 @@ public class EnemyController : MonoBehaviour
     private Rigidbody2D rb;
     private SpriteRenderer sr;
     private HitFlash  hitFlash;
+    private Animator  animator;
 
+    private float   attackTimer;
     private float   shootTimer;
     private float   chargeTimer;
     private bool    isCharging;
@@ -49,6 +56,7 @@ public class EnemyController : MonoBehaviour
         rb        = GetComponent<Rigidbody2D>();
         sr        = GetComponent<SpriteRenderer>();
         hitFlash  = GetComponent<HitFlash>();
+        animator  = GetComponent<Animator>();
 
         if (rb != null)
         {
@@ -59,6 +67,7 @@ public class EnemyController : MonoBehaviour
         }
 
         chargeTimer = chargeInterval;
+        attackTimer = attackInterval;
     }
 
     private void Start()
@@ -93,7 +102,8 @@ public class EnemyController : MonoBehaviour
 
         switch (unitType)
         {
-            case UnitType.원거리: UpdateShootTimer(); break;
+            case UnitType.근거리: UpdateMeleeAttack(); break;
+            case UnitType.원거리: UpdateShootTimer();  break;
             case UnitType.돌진:   UpdateChargeTimer(); break;
         }
     }
@@ -124,9 +134,36 @@ public class EnemyController : MonoBehaviour
     // ── 근거리 ───────────────────────────────────────────────────
     private void MoveTowardPlayer(float speed)
     {
-        Vector2 dir = ((Vector2)playerTransform.position - rb.position).normalized;
-        rb.MovePosition(rb.position + dir * speed * Time.fixedDeltaTime);
+        Vector2 toPlayer = (Vector2)playerTransform.position - rb.position;
+        float dist = toPlayer.magnitude;
+        Vector2 dir = toPlayer / Mathf.Max(dist, 0.001f);
+
+        if (dist > attackRange)
+            rb.MovePosition(rb.position + dir * speed * Time.fixedDeltaTime);
+
         FlipSprite(dir);
+    }
+
+    private void UpdateMeleeAttack()
+    {
+        if (playerTransform == null) return;
+
+        attackTimer -= Time.deltaTime;
+        if (attackTimer > 0f) return;
+
+        float dist = Vector2.Distance(transform.position, playerTransform.position);
+        if (dist <= attackRange)
+        {
+            attackTimer = attackInterval;
+            animator?.SetTrigger("tAttack");
+            SpawnAttackVfx();
+            PlayerController.Instance?.TakeDamage(contactDamage);
+        }
+        else
+        {
+            // 사정거리 밖이면 타이머를 리셋해서 진입 즉시 공격하지 않고 인터벌 후 공격
+            attackTimer = attackInterval;
+        }
     }
 
     // ── 원거리 ───────────────────────────────────────────────────
@@ -163,6 +200,8 @@ public class EnemyController : MonoBehaviour
     private void ShootProjectile()
     {
         if (projectilePrefab == null) return;
+        animator?.SetTrigger("tAttack");
+        SpawnAttackVfx();
         Vector2 dir = ((Vector2)playerTransform.position - rb.position).normalized;
         GameObject proj = Instantiate(projectilePrefab, rb.position, Quaternion.identity);
         if (proj.TryGetComponent<Projectile>(out var p))
@@ -221,6 +260,20 @@ public class EnemyController : MonoBehaviour
     }
 
     // ── 피격 / 사망 ──────────────────────────────────────────────
+    public void Paralyze(float seconds)
+    {
+        StopCoroutine(nameof(ParalyzeRoutine));
+        StartCoroutine(nameof(ParalyzeRoutine), seconds);
+    }
+
+    private System.Collections.IEnumerator ParalyzeRoutine(float seconds)
+    {
+        float saved = moveSpeed;
+        moveSpeed = 0f;
+        yield return new WaitForSeconds(seconds);
+        moveSpeed = saved;
+    }
+
     public void TakeDamage(float damage)
     {
         currentHP -= damage;
@@ -288,6 +341,12 @@ public class EnemyController : MonoBehaviour
     }
 
     // ── 헬퍼 ─────────────────────────────────────────────────────
+    private void SpawnAttackVfx()
+    {
+        if (attackVfxPrefab == null) return;
+        Instantiate(attackVfxPrefab, transform.position, Quaternion.identity);
+    }
+
     private void FlipSprite(Vector2 dir)
     {
         if (sr == null) return;

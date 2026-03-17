@@ -80,9 +80,9 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 2
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -1500755329261052452, guid: 6c685feb237c68b408069decb8773c6e, type: 3}
+  m_Sprite: {fileID: 7120762865740661349, guid: 2eca6fe01314d11488cc962b67a9d50f, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -104,6 +104,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 80572d92ca6952f478c256b7ffc65d80, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponPoint
+  weaponType: 0
   attackDamage: 20
   attackCooldown: 1
   attackRange: 5
@@ -114,3 +115,5 @@ MonoBehaviour:
   pullbackDistance: 0.8
   overshootDistance: 1
   overshootSpeed: 5
+  projectilePrefab: {fileID: 0}
+  projectileSpeed: 8

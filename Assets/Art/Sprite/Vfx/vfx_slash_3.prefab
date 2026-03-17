@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 6123487212897177292}
   - component: {fileID: 4648218787693597007}
   - component: {fileID: 564640699097765018}
+  - component: {fileID: 5092769378277662677}
   m_Layer: 0
   m_Name: vfx_slash_3
   m_TagString: Untagged
@@ -80,7 +81,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 10
   m_MaskInteraction: 0
   m_Sprite: {fileID: -2288390564887103158, guid: fbd6cc8d7a788e849b0b2508712fdd5d, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -114,3 +115,17 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &5092769378277662677
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8468462879242970236}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bf49405ff68c19d438310b6cf4c5d44a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SG.Utility_DestroyAfterTime
+  timeUntilDestroyed: 3
+  autoDestory: 0

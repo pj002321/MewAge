@@ -1,11 +1,13 @@
 using UnityEngine;
 
 /// <summary>
-/// 원거리 적이 발사하는 투사체.
-/// Init() 후 지정 방향으로 이동하며, 플레이어 충돌 시 데미지를 입히고 파괴됩니다.
+/// 플레이어 또는 적이 발사하는 투사체.
+/// 레이어 충돌 매트릭스로 대상을 구분합니다 (PlayerProjectile / EnemyProjectile 레이어).
 /// </summary>
 public class Projectile : MonoBehaviour
 {
+    [SerializeField] private LayerMask targetLayer; // 인스펙터에서 설정 (Enemy 또는 Player)
+
     private float   damage;
     private Vector2 direction;
     private float   speed;
@@ -17,8 +19,7 @@ public class Projectile : MonoBehaviour
         this.speed     = speed;
         Destroy(gameObject, lifetime);
 
-        // 투사체 방향으로 회전
-        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg - 90f;
         transform.rotation = Quaternion.Euler(0f, 0f, angle);
     }
 
@@ -29,10 +30,15 @@ public class Projectile : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.TryGetComponent<PlayerController>(out var player))
-        {
+        if ((targetLayer.value & (1 << other.gameObject.layer)) == 0) return;
+
+        if (other.TryGetComponent<EnemyController>(out var enemy))
+            enemy.TakeDamage(damage);
+        else if (other.TryGetComponent<PlayerController>(out var player))
             player.TakeDamage(damage);
-            Destroy(gameObject);
-        }
+        else
+            return;
+
+        Destroy(gameObject);
     }
 }
