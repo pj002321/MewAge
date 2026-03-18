@@ -20,15 +20,22 @@ public class ImprovCard : MonoBehaviour
     [SerializeField] private float selectScale      = 1.12f; // 최종 스케일
     [SerializeField] private float animDuration     = 0.25f;
 
+    [Header("딤 설정")]
+    [SerializeField] private float dimAlpha = 0.35f;
+
     public DB_증강 Data { get; private set; }
 
     private System.Action<ImprovCard, DB_증강> onClick;
     private RectTransform rt;
-    private Vector2 originPos;
+    private Vector2       originPos;
+    private CanvasGroup   canvasGroup;
 
     private void Awake()
     {
         EnsureRt();
+        canvasGroup = GetComponent<CanvasGroup>();
+        if (canvasGroup == null) canvasGroup = gameObject.AddComponent<CanvasGroup>();
+
         button?.onClick.AddListener(() =>
         {
             if (Data != null) onClick?.Invoke(this, Data);
@@ -72,6 +79,7 @@ public class ImprovCard : MonoBehaviour
         }
 
         if (button) button.interactable = true;
+        SetDimmed(false);
         gameObject.SetActive(true);
     }
 
@@ -79,6 +87,13 @@ public class ImprovCard : MonoBehaviour
     {
         Data = null;
         gameObject.SetActive(false);
+    }
+
+    /// <summary>선택되지 않은 카드를 어둡게 합니다.</summary>
+    public void SetDimmed(bool dimmed)
+    {
+        if (canvasGroup == null) return;
+        canvasGroup.alpha = dimmed ? dimAlpha : 1f;
     }
 
     public void PlaySelectAnimation()

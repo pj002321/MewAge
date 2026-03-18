@@ -36,6 +36,10 @@ public class WeaponPoint : MonoBehaviour
     [SerializeField] private GameObject projectilePrefab;
     [SerializeField] private float      projectileSpeed = 8f;
 
+    [Header("부메랑 설정")]
+    [SerializeField] private int   boomerangMaxBounces = 3;
+    [SerializeField] private float boomerangBounceRange = 5f;
+
     private enum State { Idle, Pullback, Striking, Returning }
     private State state = State.Idle;
 
@@ -80,8 +84,14 @@ public class WeaponPoint : MonoBehaviour
 
         if (weaponType == WeaponType.Ranged)
         {
-            // 원거리: 제자리에서 발사체 발사, 이동 없음
             ShootAt(nearest);
+            cooldownTimer = attackCooldown;
+            return;
+        }
+
+        if (weaponType == WeaponType.Boomerang)
+        {
+            ShootBoomerang(nearest);
             cooldownTimer = attackCooldown;
             return;
         }
@@ -100,6 +110,16 @@ public class WeaponPoint : MonoBehaviour
         Vector2 dir = (target.transform.position - transform.position).normalized;
         var go = Instantiate(projectilePrefab, transform.position, Quaternion.identity);
         go.GetComponent<Projectile>()?.Init(attackDamage, dir, projectileSpeed);
+    }
+
+    private void ShootBoomerang(EnemyController firstTarget)
+    {
+        if (projectilePrefab == null) return;
+        SoundManager.Shared?.Play(SoundKey.Weapon_Attack);
+        var go = Instantiate(projectilePrefab, transform.position, Quaternion.identity);
+        if (go.TryGetComponent<BoomerangProjectile>(out var bm))
+            bm.Init(attackDamage, projectileSpeed, boomerangMaxBounces, boomerangBounceRange,
+                    firstTarget, transform.parent);
     }
 
     // ─────────────────────────────────────────

@@ -19,4 +19,7 @@ public enum SoundKey
     // 아이템 획득
     Pickup_Gold  = 10,
     Pickup_Exp   = 11,
+
+    // 플레이어
+    Player_Hit   = 12,
 }

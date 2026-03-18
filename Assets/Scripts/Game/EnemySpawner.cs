@@ -140,11 +140,14 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
         StopAllCoroutines();
     }
 
-    /// <summary>씬에 남아있는 모든 적 오브젝트를 즉시 제거합니다.</summary>
+    /// <summary>씬에 남아있는 모든 적 오브젝트와 스폰 마커를 즉시 제거합니다.</summary>
     public void ClearAllEnemies()
     {
         foreach (var enemy in Object.FindObjectsByType<EnemyController>(FindObjectsSortMode.None))
             Destroy(enemy.gameObject);
+
+        foreach (var marker in Object.FindObjectsByType<SpawnMarker>(FindObjectsSortMode.None))
+            Destroy(marker.gameObject);
     }
 
     /// <summary>부활 등으로 게임이 재개될 때 호출 — spawning 플래그를 복구 후 스폰 재시작</summary>

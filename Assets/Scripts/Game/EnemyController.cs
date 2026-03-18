@@ -4,11 +4,13 @@ using Mewage.DB;
 public class EnemyController : MonoBehaviour
 {
     [Header("Stats")]
-    [SerializeField] private float moveSpeed    = 2f;
-    [SerializeField] private float maxHP        = 30f;
+    [SerializeField] private float moveSpeed     = 2f;
+    [SerializeField] private float maxHP         = 30f;
     [SerializeField] private float contactDamage = 10f;
-    [SerializeField] private int   scoreValue   = 10;
+    [SerializeField] private int   scoreValue    = 10;
     [SerializeField] private float damageCooldown = 1f;
+    [Tooltip("OnTrigger 접촉 데미지 최대 거리 — 콜라이더가 스프라이트보다 클 때 보정. 두 오브젝트 중심 간 거리.")]
+    [SerializeField] private float contactMaxDist = 0.8f;
 
     [Header("드롭")]
     [SerializeField] private int goldDrop = 5;
@@ -24,7 +26,8 @@ public class EnemyController : MonoBehaviour
     [SerializeField] private float rangedDamage    = 0f;  // 0이면 contactDamage 사용
 
     [Header("근거리 설정")]
-    [SerializeField] private float      attackRange    = 1.2f;
+    [SerializeField] private float      attackRange    = 1.2f;  // 공격 시작 거리 (멈추는 거리)
+    [SerializeField] private float      meleeHitRange  = 0.55f; // Animation Event 시 실제 타격 판정 거리
     [SerializeField] private float      attackInterval = 1.0f;
     [SerializeField] private GameObject attackVfxPrefab;
 
@@ -157,13 +160,25 @@ public class EnemyController : MonoBehaviour
             attackTimer = attackInterval;
             animator?.SetTrigger("tAttack");
             SpawnAttackVfx();
-            PlayerController.Instance?.TakeDamage(contactDamage);
+            // 실제 데미지는 애니메이터 Animation Event → OnMeleeAttackHit() 에서 처리
         }
         else
         {
             // 사정거리 밖이면 타이머를 리셋해서 진입 즉시 공격하지 않고 인터벌 후 공격
             attackTimer = attackInterval;
         }
+    }
+
+    /// <summary>
+    /// 근거리 공격 애니메이션의 타격 프레임에 Animation Event로 호출합니다.
+    /// 이 시점에도 사정거리 안에 플레이어가 있으면 데미지를 줍니다.
+    /// </summary>
+    public void OnMeleeAttackHit()
+    {
+        if (playerTransform == null) return;
+        float dist = Vector2.Distance(transform.position, playerTransform.position);
+        if (dist <= meleeHitRange)
+            PlayerController.Instance?.TakeDamage(contactDamage);
     }
 
     // ── 원거리 ───────────────────────────────────────────────────
@@ -248,21 +263,20 @@ public class EnemyController : MonoBehaviour
     {
         if (damageTimer > 0f) return;
         var p = other.GetComponentInParent<PlayerController>();
-        if (p != null)
-        {
-            p.TakeDamage(contactDamage);
-            damageTimer = damageCooldown;
-        }
+        if (p == null) return;
+        // 콜라이더가 스프라이트보다 큰 경우 너무 먼 거리에서 발동하는 것을 방지
+        if (Vector2.Distance(transform.position, p.transform.position) > contactMaxDist) return;
+        p.TakeDamage(contactDamage);
+        damageTimer = damageCooldown;
     }
 
     private void OnTriggerEnter2D(Collider2D other)
     {
         var p = other.GetComponentInParent<PlayerController>();
-        if (p != null)
-        {
-            p.TakeDamage(contactDamage);
-            damageTimer = damageCooldown;
-        }
+        if (p == null) return;
+        if (Vector2.Distance(transform.position, p.transform.position) > contactMaxDist) return;
+        p.TakeDamage(contactDamage);
+        damageTimer = damageCooldown;
     }
 
     // ── 피격 / 사망 ──────────────────────────────────────────────

@@ -32,6 +32,7 @@ public class PlayerController : MonoBehaviour
     private Rigidbody2D    rb;
     private SpriteRenderer spriteRenderer;
     private HitFlash       hitFlash;
+    private HitShake       hitShake;
     private bool           isInvincible;
 
     private void Awake()
@@ -40,6 +41,7 @@ public class PlayerController : MonoBehaviour
         rb            = GetComponent<Rigidbody2D>();
         spriteRenderer = GetComponent<SpriteRenderer>();
         hitFlash      = GetComponent<HitFlash>();
+        hitShake      = GetComponent<HitShake>();
         currentHP     = maxHP;
     }
 
@@ -101,7 +103,10 @@ public class PlayerController : MonoBehaviour
         currentHP -= reduced;
         currentHP  = Mathf.Max(0f, currentHP);
         SyncHPUI();
+        SoundManager.Shared?.Play(SoundKey.Player_Hit);
         hitFlash?.Flash();
+        hitShake?.Shake();
+        CameraFollow.Shared?.Shake();
 
         if (currentHP <= 0f)
             GameManager.Shared?.TriggerGameOver();

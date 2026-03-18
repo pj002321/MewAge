@@ -18,12 +18,22 @@ public class CameraFollow : MonoBehaviour
     [SerializeField] private Vector2 boundsMin = new(-10f, -18f);
     [SerializeField] private Vector2 boundsMax = new( 10f,  18f);
 
-    private Camera cam;
+    [Header("피격 카메라 셰이크")]
+    [SerializeField] private float shakeDefaultDuration  = 0.18f;
+    [SerializeField] private float shakeDefaultMagnitude = 0.12f;
+
+    public static CameraFollow Shared { get; private set; }
+
+    private Camera  cam;
     private Vector3 velocity;
+    private Vector2 shakeOffset;
+    private float   shakeTimeLeft;
+    private float   shakeMagnitudeCurrent;
 
     private void Awake()
     {
-        cam = GetComponent<Camera>();
+        Shared = this;
+        cam    = GetComponent<Camera>();
         if (target == null && PlayerController.Instance != null)
             target = PlayerController.Instance.transform;
     }
@@ -33,6 +43,13 @@ public class CameraFollow : MonoBehaviour
         // PlayerController가 Awake보다 늦게 초기화될 수 있으므로 Start에서도 시도
         if (target == null && PlayerController.Instance != null)
             target = PlayerController.Instance.transform;
+    }
+
+    /// <summary>카메라를 잠깐 흔듭니다. PlayerController.TakeDamage에서 호출합니다.</summary>
+    public void Shake(float duration = -1f, float magnitude = -1f)
+    {
+        shakeTimeLeft          = duration  > 0f ? duration  : shakeDefaultDuration;
+        shakeMagnitudeCurrent  = magnitude > 0f ? magnitude : shakeDefaultMagnitude;
     }
 
     private void LateUpdate()
@@ -50,6 +67,14 @@ public class CameraFollow : MonoBehaviour
             desiredPos = ClampToBounds(desiredPos);
 
         transform.position = Vector3.SmoothDamp(transform.position, desiredPos, ref velocity, smoothTime);
+
+        // 카메라 셰이크 오프셋 적용
+        if (shakeTimeLeft > 0f)
+        {
+            shakeOffset     = Random.insideUnitCircle * shakeMagnitudeCurrent;
+            shakeTimeLeft  -= Time.unscaledDeltaTime;
+            transform.position += (Vector3)shakeOffset;
+        }
     }
 
     private Vector3 ClampToBounds(Vector3 pos)
