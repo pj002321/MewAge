@@ -72,12 +72,17 @@ public class CameraFollow : MonoBehaviour
             transform.position = Vector3.SmoothDamp(transform.position, desiredPos, ref velocity, smoothTime);
         }
 
-        // 카메라 셰이크 오프셋 적용
+        // 카메라 셰이크 오프셋 적용 (이전 오프셋 제거 후 새 오프셋 추가)
+        transform.position -= (Vector3)shakeOffset;
         if (shakeTimeLeft > 0f)
         {
             shakeOffset     = Random.insideUnitCircle * shakeMagnitudeCurrent;
             shakeTimeLeft  -= Time.unscaledDeltaTime;
             transform.position += (Vector3)shakeOffset;
+        }
+        else
+        {
+            shakeOffset = Vector2.zero;
         }
     }
 
