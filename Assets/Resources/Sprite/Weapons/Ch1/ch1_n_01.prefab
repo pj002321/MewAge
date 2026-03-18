@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 5855629063059765073}
   - component: {fileID: 3484768007866871163}
   - component: {fileID: -694023371800685792}
+  - component: {fileID: 4351835948099329804}
   m_Layer: 0
   m_Name: ch1_n_01
   m_TagString: Untagged
@@ -59,7 +60,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: a97c105638bdf8b4a8650670310a4cd3, type: 2}
+  - {fileID: 2100000, guid: e901129e9679f8e428ec8abe92cf485f, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -113,9 +114,26 @@ MonoBehaviour:
   returnSpeed: 30
   hitDistance: 0.25
   pullbackDistance: 0.8
-  overshootDistance: 1
-  overshootSpeed: 5
   projectilePrefab: {fileID: 0}
   projectileSpeed: 8
   boomerangMaxBounces: 3
   boomerangBounceRange: 5
+--- !u!114 &4351835948099329804
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3119720067875715154}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d880b36e09b826b4aa4d33b07b710c84, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpriteOutline
+  colorProperty: _SolidOutline
+  starColors:
+  - {r: 1, g: 1, b: 1, a: 0}
+  - {r: 0.504717, g: 0.9414869, b: 1, a: 1}
+  - {r: 0.39999998, g: 1, b: 0.6414886, a: 1}
+  - {r: 0.8, g: 0.4, b: 1, a: 1}
+  - {r: 1, g: 0.35, b: 0.35, a: 1}

@@ -21,9 +21,18 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float defense = 0f;  // 방어력 (받는 피해 감소)
     [SerializeField] private float dodge   = 0f;  // 회피 확률 0~1
 
-    public float Attack  => attack;
-    public float Defense => defense;
-    public float Dodge   => dodge;
+    // 무기 타입별 보너스 (런타임 전용)
+    private float rangedAttackBonus = 0f;
+    private float meleeAttackBonus  = 0f;
+    private float waveHealAmount    = 0f;
+    private Coroutine knockbackRoutine;
+
+    public float Attack            => attack;
+    public float Defense           => defense;
+    public float Dodge             => dodge;
+    public float RangedAttackBonus => rangedAttackBonus;
+    public float MeleeAttackBonus  => meleeAttackBonus;
+    public float WaveHealAmount    => waveHealAmount;
 
     [Header("플레이어 위 HP 슬라이더 (World Space)")]
     [SerializeField] private Slider playerHpSlider;
@@ -150,10 +159,15 @@ public class PlayerController : MonoBehaviour
         moveSpeed += amount;
     }
 
+    [Header("몸집 한계")]
+    [SerializeField] private float minScale = 0.4f;
+    [SerializeField] private float maxScale = 3.0f;
+
     /// <summary>몸집을 scaleMultiplier배 키우고 최대 체력 hpBonus만큼 증가.</summary>
     public void IncreaseSizeHP(float scaleMultiplier, float hpBonus)
     {
-        transform.localScale *= scaleMultiplier;
+        float newScale = Mathf.Min(transform.localScale.x * scaleMultiplier, maxScale);
+        transform.localScale = Vector3.one * newScale;
         maxHP     += hpBonus;
         currentHP  = Mathf.Min(currentHP + hpBonus, maxHP);
         SyncHPUI();
@@ -162,7 +176,8 @@ public class PlayerController : MonoBehaviour
     /// <summary>몸집을 scaleMultiplier배 줄이고 최대 체력 hpPenalty만큼 감소.</summary>
     public void DecreaseSizeHP(float scaleMultiplier, float hpPenalty)
     {
-        transform.localScale /= scaleMultiplier;
+        float newScale = Mathf.Max(transform.localScale.x / scaleMultiplier, minScale);
+        transform.localScale = Vector3.one * newScale;
         maxHP     = Mathf.Max(1f, maxHP - hpPenalty);
         currentHP = Mathf.Min(currentHP, maxHP);
         SyncHPUI();
@@ -180,6 +195,37 @@ public class PlayerController : MonoBehaviour
         float multiplier = 1f + amount / 100f;
         foreach (var wp in GetComponentsInChildren<WeaponPoint>())
             wp.MultiplyAttackSpeed(multiplier);
+    }
+
+    /// <summary>원거리 무기 전용 추가 공격력.</summary>
+    public void IncreaseRangedAttackBonus(float amount) => rangedAttackBonus += amount;
+
+    /// <summary>근거리 무기 전용 추가 공격력.</summary>
+    public void IncreaseMeleeAttackBonus(float amount) => meleeAttackBonus += amount;
+
+    /// <summary>웨이브 시작 시 자동 회복량을 늘립니다. (GameManager가 웨이브 시작 시 호출)</summary>
+    public void IncreaseWaveHeal(float amount) => waveHealAmount += amount;
+
+    /// <summary>주기적으로 주변 적을 밀어냅니다. 중복 호출 시 기존 루틴을 교체합니다.</summary>
+    public void StartPeriodicKnockback(float interval, float force, float radius = 4f)
+    {
+        if (knockbackRoutine != null) StopCoroutine(knockbackRoutine);
+        knockbackRoutine = StartCoroutine(PeriodicKnockbackRoutine(interval, force, radius));
+    }
+
+    private System.Collections.IEnumerator PeriodicKnockbackRoutine(float interval, float force, float radius)
+    {
+        var wait = new WaitForSeconds(interval);
+        while (true)
+        {
+            yield return wait;
+            foreach (var enemy in Object.FindObjectsByType<EnemyController>(FindObjectsSortMode.None))
+            {
+                Vector2 dir = (enemy.transform.position - transform.position);
+                if (dir.magnitude <= radius)
+                    enemy.Knockback(dir.normalized, force);
+            }
+        }
     }
 
     /// <summary>GameManager.Revive()에서 호출 — HP를 가득 채우고 3초 무적 부여</summary>

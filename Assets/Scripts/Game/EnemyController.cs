@@ -1,58 +1,51 @@
+using System.Collections;
 using UnityEngine;
 using Mewage.DB;
 
+/// <summary>
+/// 적의 핵심 컴포넌트 — 스탯, HP, 이동 헬퍼, 피격/사망을 담당합니다.
+/// 공격 / 이동 세부 로직은 같은 GameObject에 부착된 <see cref="EnemyBehaviourBase"/>
+/// 서브클래스(MeleeBehaviour, RangedBehaviour 등)에서 처리합니다.
+/// </summary>
 public class EnemyController : MonoBehaviour
 {
-    [Header("Stats")]
-    [SerializeField] private float moveSpeed     = 2f;
-    [SerializeField] private float maxHP         = 30f;
-    [SerializeField] private float contactDamage = 10f;
-    [SerializeField] private int   scoreValue    = 10;
+    // ── 인스펙터 ────────────────────────────────────────────────
+    [Header("기본 스탯")]
+    [SerializeField] private float moveSpeed      = 2f;
+    [SerializeField] private float maxHP          = 30f;
+    [SerializeField] private float contactDamage  = 10f;
+    [SerializeField] private int   scoreValue     = 10;
     [SerializeField] private float damageCooldown = 1f;
-    [Tooltip("OnTrigger 접촉 데미지 최대 거리 — 콜라이더가 스프라이트보다 클 때 보정. 두 오브젝트 중심 간 거리.")]
+    [Tooltip("OnTrigger 접촉 데미지 최대 거리 — 콜라이더가 스프라이트보다 클 때 보정.")]
     [SerializeField] private float contactMaxDist = 0.8f;
 
     [Header("드롭")]
     [SerializeField] private int goldDrop = 5;
     [SerializeField] private int expDrop  = 10;
 
-    [Header("유닛 타입")]
-    [SerializeField] private UnitType unitType = UnitType.근거리;
-
-    [Header("원거리 설정")]
-    [SerializeField] private GameObject projectilePrefab;
-    [SerializeField] private float preferredRange  = 4f;
-    [SerializeField] private float shootInterval   = 2f;
-    [SerializeField] private float rangedDamage    = 0f;  // 0이면 contactDamage 사용
-
-    [Header("근거리 설정")]
-    [SerializeField] private float      attackRange    = 1.2f;  // 공격 시작 거리 (멈추는 거리)
-    [SerializeField] private float      meleeHitRange  = 0.55f; // Animation Event 시 실제 타격 판정 거리
-    [SerializeField] private float      attackInterval = 1.0f;
-    [SerializeField] private GameObject attackVfxPrefab;
-
-    [Header("돌진 설정")]
-    [SerializeField] private float chargeInterval        = 3f;
-    [SerializeField] private float chargeDuration        = 0.6f;
-    [SerializeField] private float chargeSpeedMultiplier = 3.5f;
+    // ── 공개 프로퍼티 (EnemyBehaviourBase에서 사용) ────────────
+    public float      MoveSpeed       => moveSpeed;
+    public float      ContactDamage   => contactDamage;
+    public Transform  PlayerTransform => playerTransform;
+    public Rigidbody2D Rb             => rb;
+    public Animator   EnemyAnimator   => animator;
+    public float      HPRatio         => maxHP > 0f ? currentHP / maxHP : 0f;
 
     // ── 런타임 상태 ─────────────────────────────────────────────
-    private float     currentHP;
-    private float     damageTimer;
-    private Transform playerTransform;
-    private Rigidbody2D rb;
+    private float          currentHP;
+    private float          damageTimer;
+    private Transform      playerTransform;
+    private Rigidbody2D    rb;
     private SpriteRenderer sr;
-    private HitFlash  hitFlash;
-    private Animator  animator;
+    private HitFlash       hitFlash;
+    private Animator       animator;
+    private EnemyBehaviourBase behaviour;
 
-    private float   attackTimer;
-    private float   shootTimer;
-    private float   chargeTimer;
-    private bool    isCharging;
-    private float   chargeRemaining;
-    private Vector2 chargeDir;
+    private bool isStunned;
 
-    // ── 초기화 ───────────────────────────────────────────────────
+    public event System.Action OnDeath;
+
+    // ── 초기화 ──────────────────────────────────────────────────
     private void Awake()
     {
         currentHP = maxHP;
@@ -60,6 +53,7 @@ public class EnemyController : MonoBehaviour
         sr        = GetComponent<SpriteRenderer>();
         hitFlash  = GetComponent<HitFlash>();
         animator  = GetComponent<Animator>();
+        behaviour = GetComponent<EnemyBehaviourBase>();
 
         if (rb != null)
         {
@@ -69,8 +63,7 @@ public class EnemyController : MonoBehaviour
             rb.constraints   = RigidbodyConstraints2D.FreezeRotation;
         }
 
-        chargeTimer = chargeInterval;
-        attackTimer = attackInterval;
+        behaviour?.Init(this);
     }
 
     private void Start()
@@ -81,39 +74,30 @@ public class EnemyController : MonoBehaviour
     /// <summary>EnemySpawner가 DB 데이터로 초기화할 때 호출합니다.</summary>
     public void InitFromDB(DB_유닛 unit, int wave)
     {
-        unitType       = unit.f_타입;
-        maxHP          = unit.f_체력;
-        currentHP      = maxHP;
-        contactDamage  = unit.f_데미지;
-        expDrop        = unit.f_경험치;
-        goldDrop       = unit.f_골드;
-        preferredRange = unit.f_공격범위;
-        shootInterval  = unit.f_쿨타임 > 0f ? unit.f_쿨타임 : shootInterval;
-        rangedDamage   = unit.f_원거리데미지;
+        maxHP         = unit.f_체력;
+        currentHP     = maxHP;
+        contactDamage = unit.f_데미지;
+        expDrop       = unit.f_경험치;
+        goldDrop      = unit.f_골드;
+        if (unit.f_이동속도 > 0f) moveSpeed = unit.f_이동속도;
 
-        if (unit.f_투사체프리펩 != null)
-            projectilePrefab = unit.f_투사체프리펩;
-
+        behaviour?.ApplyDBData(unit);
         ApplyWaveScaling(wave);
         PlaySpawnBounce();
     }
 
-    // ── 매 프레임 ────────────────────────────────────────────────
+    // ── 업데이트 ────────────────────────────────────────────────
     private void Update()
     {
         if (GameManager.Shared != null && GameManager.Shared.IsGameOver) return;
-
-        switch (unitType)
-        {
-            case UnitType.근거리: UpdateMeleeAttack(); break;
-            case UnitType.원거리: UpdateShootTimer();  break;
-            case UnitType.돌진:   UpdateChargeTimer(); break;
-        }
+        if (isStunned) return;
+        behaviour?.OnAttackUpdate();
     }
 
     private void FixedUpdate()
     {
         if (GameManager.Shared != null && GameManager.Shared.IsGameOver) return;
+        if (isStunned) return;
 
         if (playerTransform == null)
         {
@@ -121,12 +105,7 @@ public class EnemyController : MonoBehaviour
             return;
         }
 
-        switch (unitType)
-        {
-            case UnitType.근거리: MoveTowardPlayer(moveSpeed); break;
-            case UnitType.원거리: UpdateRangedMove();          break;
-            case UnitType.돌진:   UpdateChargeMove();          break;
-        }
+        behaviour?.OnMoveFixedUpdate();
     }
 
     private void LateUpdate()
@@ -134,137 +113,37 @@ public class EnemyController : MonoBehaviour
         damageTimer -= Time.deltaTime;
     }
 
-    // ── 근거리 ───────────────────────────────────────────────────
-    private void MoveTowardPlayer(float speed)
+    // ── 이동 헬퍼 (EnemyBehaviourBase에서 호출) ─────────────────
+    /// <summary>플레이어 방향으로 speed만큼 이동합니다.</summary>
+    public void MoveTowardPlayer(float speed)
     {
+        if (playerTransform == null || rb == null) return;
         Vector2 toPlayer = (Vector2)playerTransform.position - rb.position;
-        float dist = toPlayer.magnitude;
-        Vector2 dir = toPlayer / Mathf.Max(dist, 0.001f);
-
-        if (dist > attackRange)
-            rb.MovePosition(rb.position + dir * speed * Time.fixedDeltaTime);
-
-        FlipSprite(dir);
+        MoveInDirection(toPlayer.normalized, speed);
     }
 
-    private void UpdateMeleeAttack()
+    /// <summary>지정 방향으로 speed만큼 이동하고 스프라이트를 뒤집습니다.</summary>
+    public void MoveInDirection(Vector2 dir, float speed)
     {
-        if (playerTransform == null) return;
-
-        attackTimer -= Time.deltaTime;
-        if (attackTimer > 0f) return;
-
-        float dist = Vector2.Distance(transform.position, playerTransform.position);
-        if (dist <= attackRange)
-        {
-            attackTimer = attackInterval;
-            animator?.SetTrigger("tAttack");
-            SpawnAttackVfx();
-            // 실제 데미지는 애니메이터 Animation Event → OnMeleeAttackHit() 에서 처리
-        }
-        else
-        {
-            // 사정거리 밖이면 타이머를 리셋해서 진입 즉시 공격하지 않고 인터벌 후 공격
-            attackTimer = attackInterval;
-        }
+        if (rb == null) return;
+        rb.MovePosition(rb.position + dir.normalized * speed * Time.fixedDeltaTime);
+        FlipToward(dir);
     }
 
-    /// <summary>
-    /// 근거리 공격 애니메이션의 타격 프레임에 Animation Event로 호출합니다.
-    /// 이 시점에도 사정거리 안에 플레이어가 있으면 데미지를 줍니다.
-    /// </summary>
-    public void OnMeleeAttackHit()
+    /// <summary>방향 벡터에 따라 스프라이트를 좌우 반전합니다.</summary>
+    public void FlipToward(Vector2 dir)
     {
-        if (playerTransform == null) return;
-        float dist = Vector2.Distance(transform.position, playerTransform.position);
-        if (dist <= meleeHitRange)
-            PlayerController.Instance?.TakeDamage(contactDamage);
+        if (sr == null) return;
+        if (dir.x > 0.01f)       sr.flipX = false;
+        else if (dir.x < -0.01f) sr.flipX = true;
     }
 
-    // ── 원거리 ───────────────────────────────────────────────────
-    private void UpdateRangedMove()
-    {
-        float   dist     = Vector2.Distance(rb.position, playerTransform.position);
-        Vector2 toPlayer = ((Vector2)playerTransform.position - rb.position).normalized;
-
-        Vector2 moveDir;
-        if (dist < preferredRange * 0.75f)
-            moveDir = -toPlayer;              // 너무 가까우면 후퇴
-        else if (dist > preferredRange * 1.3f)
-            moveDir = toPlayer;               // 너무 멀면 접근
-        else
-            moveDir = Vector2.zero;           // 적정 거리 유지
-
-        if (moveDir != Vector2.zero)
-            rb.MovePosition(rb.position + moveDir * moveSpeed * Time.fixedDeltaTime);
-
-        FlipSprite(toPlayer);
-    }
-
-    private void UpdateShootTimer()
-    {
-        if (playerTransform == null) return;
-        shootTimer -= Time.deltaTime;
-        if (shootTimer <= 0f)
-        {
-            shootTimer = shootInterval;
-            ShootProjectile();
-        }
-    }
-
-    private void ShootProjectile()
-    {
-        if (projectilePrefab == null) return;
-        animator?.SetTrigger("tAttack");
-        SpawnAttackVfx();
-        Vector2 dir = ((Vector2)playerTransform.position - rb.position).normalized;
-        GameObject proj = Instantiate(projectilePrefab, rb.position, Quaternion.identity);
-        if (proj.TryGetComponent<Projectile>(out var p))
-            p.Init(rangedDamage > 0f ? rangedDamage : contactDamage, dir);
-    }
-
-    // ── 돌진 ─────────────────────────────────────────────────────
-    private void UpdateChargeMove()
-    {
-        if (isCharging)
-        {
-            rb.MovePosition(rb.position + chargeDir * moveSpeed * chargeSpeedMultiplier * Time.fixedDeltaTime);
-            FlipSprite(chargeDir);
-
-            chargeRemaining -= Time.fixedDeltaTime;
-            if (chargeRemaining <= 0f)
-                isCharging = false;
-        }
-        else
-        {
-            // 돌진 유형은 멈추지 않고 플레이어 방향으로 계속 접근
-            Vector2 toPlayer = (Vector2)playerTransform.position - rb.position;
-            Vector2 dir = toPlayer.normalized;
-            rb.MovePosition(rb.position + dir * moveSpeed * Time.fixedDeltaTime);
-            FlipSprite(dir);
-        }
-    }
-
-    private void UpdateChargeTimer()
-    {
-        if (isCharging || playerTransform == null) return;
-        chargeTimer -= Time.deltaTime;
-        if (chargeTimer <= 0f)
-        {
-            chargeTimer     = chargeInterval;
-            chargeDir       = ((Vector2)playerTransform.position - rb.position).normalized;
-            chargeRemaining = chargeDuration;
-            isCharging      = true;
-        }
-    }
-
-    // ── 충돌 데미지 ──────────────────────────────────────────────
+    // ── 충돌 접촉 피해 ──────────────────────────────────────────
     private void OnTriggerStay2D(Collider2D other)
     {
         if (damageTimer > 0f) return;
         var p = other.GetComponentInParent<PlayerController>();
         if (p == null) return;
-        // 콜라이더가 스프라이트보다 큰 경우 너무 먼 거리에서 발동하는 것을 방지
         if (Vector2.Distance(transform.position, p.transform.position) > contactMaxDist) return;
         p.TakeDamage(contactDamage);
         damageTimer = damageCooldown;
@@ -279,14 +158,15 @@ public class EnemyController : MonoBehaviour
         damageTimer = damageCooldown;
     }
 
-    // ── 피격 / 사망 ──────────────────────────────────────────────
+    // ── 상태 효과 ────────────────────────────────────────────────
+    /// <summary>지정 시간 동안 이동 불가 상태를 부여합니다.</summary>
     public void Paralyze(float seconds)
     {
         StopCoroutine(nameof(ParalyzeRoutine));
         StartCoroutine(nameof(ParalyzeRoutine), seconds);
     }
 
-    private System.Collections.IEnumerator ParalyzeRoutine(float seconds)
+    private IEnumerator ParalyzeRoutine(float seconds)
     {
         float saved = moveSpeed;
         moveSpeed = 0f;
@@ -294,22 +174,75 @@ public class EnemyController : MonoBehaviour
         moveSpeed = saved;
     }
 
+    /// <summary>지정 시간 동안 이동·공격을 모두 멈추고 스프라이트를 노란색으로 변경합니다.</summary>
+    public void Stun(float seconds)
+    {
+        StopCoroutine(nameof(StunRoutine));
+        StartCoroutine(nameof(StunRoutine), seconds);
+    }
+
+    private IEnumerator StunRoutine(float seconds)
+    {
+        isStunned = true;
+        if (rb != null) rb.linearVelocity = Vector2.zero;
+        Color originalColor = sr != null ? sr.color : Color.white;
+        if (sr != null) sr.color = new Color(1f, 0.92f, 0f, 1f); // 노란색
+
+        yield return new WaitForSeconds(seconds);
+
+        isStunned = false;
+        if (sr != null) sr.color = originalColor;
+    }
+
+    /// <summary>지정 방향으로 순간적으로 밀어냅니다.</summary>
+    public void Knockback(Vector2 dir, float force)
+    {
+        StartCoroutine(KnockbackRoutine(dir.normalized, force));
+    }
+
+    private IEnumerator KnockbackRoutine(Vector2 dir, float force)
+    {
+        float savedSpeed = moveSpeed;
+        moveSpeed = 0f;
+
+        float elapsed  = 0f;
+        float duration = 0.3f;
+
+        while (elapsed < duration)
+        {
+            float t = elapsed / duration;
+            rb?.MovePosition(rb.position + dir * force * (1f - t) * Time.fixedDeltaTime);
+            elapsed += Time.fixedDeltaTime;
+            yield return new WaitForFixedUpdate();
+        }
+
+        moveSpeed = savedSpeed;
+    }
+
+    // ── 피격 / 사망 ──────────────────────────────────────────────
     public void TakeDamage(float damage)
     {
-        float actualDamage = Mathf.Min(damage, currentHP);
+        float actual = Mathf.Min(damage, currentHP);
         currentHP -= damage;
+
         SoundManager.Shared?.Play(SoundKey.Enemy_Hit);
-        FXManager.Shared?.SpawnDamageText(transform.position, actualDamage);
+        // 스프라이트 상단 기준으로 스폰 (몸집이 커도 텍스트가 가려지지 않음)
+        Vector3 textPos = sr != null
+            ? new Vector3(transform.position.x, sr.bounds.max.y, transform.position.z)
+            : transform.position;
+        FXManager.Shared?.SpawnDamageText(textPos, actual);
         FXManager.Shared?.SpawnHitEffect(transform.position);
         hitFlash?.Flash();
+
         if (currentHP <= 0f)
         {
+            OnDeath?.Invoke();
             ItemDropManager.Shared?.SpawnDrops(transform.position, goldDrop, expDrop);
             Destroy(gameObject);
         }
     }
 
-    // ── 웨이브 스케일링 & 스폰 ───────────────────────────────────
+    // ── 웨이브 스케일링 ──────────────────────────────────────────
     public void ApplyWaveScaling(int wave)
     {
         float m = 1f + (wave - 1) * 0.2f;
@@ -317,27 +250,25 @@ public class EnemyController : MonoBehaviour
         maxHP         *= m;
         currentHP      = maxHP;
         contactDamage *= m;
-        if (rangedDamage > 0f) rangedDamage *= m;
         scoreValue     = Mathf.RoundToInt(scoreValue * m);
+
+        behaviour?.ApplyWaveScaling(m);
     }
 
+    // ── 스폰 연출 ────────────────────────────────────────────────
     public void PlaySpawnBounce()
     {
         StartCoroutine(BounceIn());
     }
 
-    private System.Collections.IEnumerator BounceIn()
+    private IEnumerator BounceIn()
     {
         enabled = false;
         if (rb != null) rb.constraints = RigidbodyConstraints2D.FreezeAll;
 
         (float scale, float time)[] keys =
         {
-            (0.0f, 0.00f),
-            (1.3f, 0.20f),
-            (0.85f, 0.32f),
-            (1.1f, 0.40f),
-            (1.0f, 0.48f),
+            (0.0f, 0.00f), (1.3f, 0.20f), (0.85f, 0.32f), (1.1f, 0.40f), (1.0f, 0.48f),
         };
 
         for (int i = 0; i < keys.Length - 1; i++)
@@ -350,8 +281,7 @@ public class EnemyController : MonoBehaviour
             while (t < duration)
             {
                 t += Time.deltaTime;
-                float s = Mathf.Lerp(fromScale, toScale, t / duration);
-                transform.localScale = Vector3.one * s;
+                transform.localScale = Vector3.one * Mathf.Lerp(fromScale, toScale, t / duration);
                 yield return null;
             }
         }
@@ -359,19 +289,5 @@ public class EnemyController : MonoBehaviour
         transform.localScale = Vector3.one;
         if (rb != null) rb.constraints = RigidbodyConstraints2D.FreezeRotation;
         enabled = true;
-    }
-
-    // ── 헬퍼 ─────────────────────────────────────────────────────
-    private void SpawnAttackVfx()
-    {
-        if (attackVfxPrefab == null) return;
-        Instantiate(attackVfxPrefab, transform.position, Quaternion.identity);
-    }
-
-    private void FlipSprite(Vector2 dir)
-    {
-        if (sr == null) return;
-        if (dir.x > 0.01f)       sr.flipX = false;
-        else if (dir.x < -0.01f) sr.flipX = true;
     }
 }

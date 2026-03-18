@@ -14,7 +14,8 @@ GameObject:
   - component: {fileID: 7149393283127745020}
   - component: {fileID: 6364569046898202011}
   - component: {fileID: 874118985240362557}
-  - component: {fileID: 7139473080743354544}
+  - component: {fileID: 8523016074738624959}
+  - component: {fileID: 3816366959971900483}
   m_Layer: 7
   m_Name: e_ch1_2
   m_TagString: Untagged
@@ -87,12 +88,12 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -146881469360011567, guid: 52bddbfdbc837014fb0d9b07a86c2047, type: 3}
+  m_Sprite: {fileID: -1551423249578103226, guid: f74d3515b18d32d4b8e0ec468526420b, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 0.69666666, y: 0.6333333}
+  m_Size: {x: 1.0722222, y: 1.1777778}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
@@ -144,18 +145,6 @@ MonoBehaviour:
   contactMaxDist: 0.8
   goldDrop: 1
   expDrop: 1
-  unitType: 0
-  projectilePrefab: {fileID: 0}
-  preferredRange: 5
-  shootInterval: 2
-  rangedDamage: 0
-  attackRange: 1.2
-  meleeHitRange: 0.55
-  attackInterval: 1
-  attackVfxPrefab: {fileID: 7916182024222986910, guid: 8372c48897342ac47bdf08026dfd5595, type: 3}
-  chargeInterval: 3
-  chargeDuration: 0.6
-  chargeSpeedMultiplier: 3.5
 --- !u!114 &6364569046898202011
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -192,7 +181,7 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
---- !u!70 &7139473080743354544
+--- !u!70 &8523016074738624959
 CapsuleCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -226,9 +215,25 @@ CapsuleCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0.475}
-  m_Size: {x: 1.045, y: 0.95}
+  m_Offset: {x: 0, y: 0}
+  m_Size: {x: 0.71, y: 1.2}
   m_Direction: 0
+--- !u!114 &3816366959971900483
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 301323739485502833}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0ef9839f1a3088e4cad5cf9d4fc2f5ca, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MeleeBehaviour
+  attackRange: 1.2
+  meleeHitRange: 1.3
+  attackInterval: 1
+  attackVfxPrefab: {fileID: 1915369493659787082, guid: 951fa77ecd3fe044db5f4c5db5c400f2, type: 3}
 --- !u!1 &8507211404954327309
 GameObject:
   m_ObjectHideFlags: 0
@@ -255,7 +260,7 @@ Transform:
   m_GameObject: {fileID: 8507211404954327309}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.09, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: -0.48, z: 0}
   m_LocalScale: {x: 3, y: 3, z: 3}
   m_ConstrainProportionsScale: 1
   m_Children: []

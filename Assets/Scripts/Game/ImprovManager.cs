@@ -11,6 +11,9 @@ public class ImprovManager : MonoBehaviourSingleton<ImprovManager>
     [Header("UI")]
     [SerializeField] private ImprovPanel improvPanel;
 
+    [Header("설정")]
+    [SerializeField] private int rerollPrice = 10;
+
     private int pendingWave;
 
     protected override bool DontDestroy => false;
@@ -41,8 +44,16 @@ public class ImprovManager : MonoBehaviourSingleton<ImprovManager>
     // ── 리롤 ──────────────────────────────────────────────────────
     public void Reroll()
     {
+        var stats = PlayerStats.Shared;
+        if (stats == null || stats.Gold < rerollPrice)
+        {
+            // 골드 부족 — 리롤 불가 (패널에서 버튼을 막거나 알림을 추가할 수 있음)
+            return;
+        }
+
+        stats.SpendGold(rerollPrice);
         var draws = DrawImprovs(3);
-        improvPanel.Setup(draws);
+        improvPanel.Setup(draws);   // Setup 내부에서 RefreshGold() 호출됨
     }
 
     // ── 가중치 랜덤 추출 (중복 없이) ─────────────────────────────
@@ -102,12 +113,14 @@ public class ImprovManager : MonoBehaviourSingleton<ImprovManager>
             case ImprovType.IncreaseAttackSpeed: player.IncreaseAttackSpeed(data.f_주수치);              break;
             case ImprovType.IncreaseDodge:    player.IncreaseDodge(data.f_주수치);                       break;
 
-            case ImprovType.RangedDistanceBonus:
-            case ImprovType.MeleeAttackBonus:
-            case ImprovType.PeriodicKnockback:
-            case ImprovType.WaveHealHP:
-                Debug.LogWarning($"[ImprovManager] 미구현 증강 타입: {data.f_효과타입}");
-                break;
+            // 원거리 무기 전용 추가 공격력 (WeaponPoint.Init에서 반영됨)
+            case ImprovType.RangedDistanceBonus: player.IncreaseRangedAttackBonus(data.f_주수치); break;
+            // 근거리 무기 전용 추가 공격력 (WeaponPoint.Init에서 반영됨)
+            case ImprovType.MeleeAttackBonus:    player.IncreaseMeleeAttackBonus(data.f_주수치);  break;
+            // 주기적 넉백 — 주수치=간격(초), 보조수치=힘
+            case ImprovType.PeriodicKnockback:   player.StartPeriodicKnockback(data.f_주수치, data.f_보조수치); break;
+            // 패시브 — 웨이브 시작 시 자동 체력 회복 (GameManager.StartNextWave에서 적용)
+            case ImprovType.WaveHealHP:          player.IncreaseWaveHeal(data.f_주수치);          break;
         }
 
         Debug.Log($"[ImprovManager] 증강 적용: {data.f_이름} (type={data.f_효과타입}, 주수치={data.f_주수치})");

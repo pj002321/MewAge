@@ -149,7 +149,8 @@ public class PlayerInventory : MonoBehaviourSingleton<PlayerInventory>
         return false;
     }
 
-    /// <summary>인벤 내 같은 이름+성 3개를 제거하고 result를 인벤에 추가합니다.</summary>
+    /// <summary>인벤 내 같은 이름+성 3개를 제거하고 result를 인벤에 추가합니다.
+    /// 소모된 2개(result로 대체되지 않는 만큼)의 판매가를 골드로 지급합니다.</summary>
     public bool TryMerge(string weaponName, int star, WeaponData result)
     {
         if (result == null) return false;
@@ -164,6 +165,13 @@ public class PlayerInventory : MonoBehaviourSingleton<PlayerInventory>
 
         if (indices.Count < 3) return false;
 
+        // 소모된 3개 중 결과물로 대체되지 않는 2개의 판매가를 골드로 지급
+        int refundGold = 0;
+        for (int i = 0; i < 2; i++)
+            refundGold += Mathf.Max(1, inventory[indices[i]].price);
+        if (refundGold > 0)
+            PlayerStats.Shared?.AddGold(refundGold);
+
         // 높은 인덱스부터 제거해야 인덱스 밀림 없음
         for (int i = indices.Count - 1; i >= 0; i--)
             inventory.RemoveAt(indices[i]);
@@ -171,6 +179,13 @@ public class PlayerInventory : MonoBehaviourSingleton<PlayerInventory>
         inventory.Add(result);
         OnChanged?.Invoke();
         return true;
+    }
+
+    /// <summary>용량 무시하고 인벤에 추가합니다. 합성으로 슬롯이 바로 확보되는 경우에만 사용하세요.</summary>
+    public void ForceAddToInventory(WeaponData data)
+    {
+        inventory.Add(data);
+        OnChanged?.Invoke();
     }
 
     // ────────────────────────────────────────────────────────────────

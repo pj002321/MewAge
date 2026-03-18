@@ -51,7 +51,7 @@ public class WeaponData : ScriptableObject
         var data        = CreateInstance<WeaponData>();
         data.weaponName = row.f_이름;
         data.grade      = row.f_등급;   // 희귀도는 DB에서 읽음
-        data.star       = GradeToStar(row.f_등급); // 등급에 맞는 초기 성 단계
+        data.star       = 1;            // 구매 시 항상 1성, 합성으로만 성 올라감
         data.weaponType = row.f_타입;
         data.price      = row.f_가격;
         data.chapter    = row.f_챕터;
@@ -61,13 +61,4 @@ public class WeaponData : ScriptableObject
         return data;
     }
 
-    private static int GradeToStar(WeaponGrade grade) => grade switch
-    {
-        WeaponGrade.Normal => 1,
-        WeaponGrade.Rare   => 2,
-        WeaponGrade.Elite  => 3,
-        WeaponGrade.Epic   => 4,
-        WeaponGrade.Legend => 5,
-        _                  => 1,
-    };
 }

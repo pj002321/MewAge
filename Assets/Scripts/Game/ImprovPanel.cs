@@ -1,16 +1,18 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using Mewage.DB;
 
 /// <summary>
 /// 증강 선택 패널.
-/// Inspector 연결: cards (ImprovCard 배열 3개), nextButton
+/// Inspector 연결: cards (ImprovCard 배열 3개), nextButton, goldText
 /// </summary>
 public class ImprovPanel : MonoBehaviour
 {
-    [SerializeField] private ImprovCard[] cards;
-    [SerializeField] private Button       nextButton;
-    [SerializeField] private Button       rerollButton;
+    [SerializeField] private ImprovCard[]     cards;
+    [SerializeField] private Button           nextButton;
+    [SerializeField] private Button           rerollButton;
+    [SerializeField] private TextMeshProUGUI  goldText;
 
     private bool selectedOnce;
 
@@ -26,9 +28,16 @@ public class ImprovPanel : MonoBehaviour
             anim.updateMode = AnimatorUpdateMode.UnscaledTime;
     }
 
+    public void RefreshGold()
+    {
+        if (goldText && PlayerStats.Shared != null)
+            goldText.text = $"{PlayerStats.Shared.Gold}";
+    }
+
     public void Setup(DB_증강[] improvs)
     {
         selectedOnce = false;
+        RefreshGold();
 
         int visibleCount = 0;
         for (int i = 0; i < cards.Length; i++)

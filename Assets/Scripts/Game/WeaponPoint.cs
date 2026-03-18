@@ -18,19 +18,15 @@ public class WeaponPoint : MonoBehaviour
     [SerializeField] private float attackRange = 3f;
 
     [Header("근거리 이동 속도")]
-    [SerializeField] private float pullbackSpeed = 12f;
-    [SerializeField] private float strikeSpeed   = 40f;
+    [SerializeField] private float pullbackSpeed = 20f;   // 빠르게 당김
+    [SerializeField] private float strikeSpeed   = 50f;   // 더 빠르게 돌진
     [SerializeField] private float returnSpeed   = 25f;
 
     [Header("근거리 타격 판정")]
     [SerializeField] private float hitDistance = 0.25f;
 
-    [Header("근거리 풀백")]
-    [SerializeField] private float pullbackDistance = 0.4f;
-
-    [Header("오버슈트 (미사용)")]
-    [SerializeField] private float overshootDistance = 0.35f;
-    [SerializeField] private float overshootSpeed    = 30f;
+    [Header("근거리 풀백 (0 = 플레이어 중심까지만, 양수 = 중심 너머 과장)")]
+    [SerializeField] private float pullbackDistance = 0.15f;
 
     [Header("원거리 설정")]
     [SerializeField] private GameObject projectilePrefab;
@@ -123,20 +119,22 @@ public class WeaponPoint : MonoBehaviour
     }
 
     // ─────────────────────────────────────────
-    // Pullback: 원점(부모 위치)에서 타겟 반대 방향으로 살짝 당겨짐 (장전 느낌)
+    // Pullback: 플레이어 몸 중심으로 확 당겨짐 → 이후 적에게 돌진
     // ─────────────────────────────────────────
     private void BeginPullback()
     {
-        Vector3 originWorld = transform.parent.position;
-        Vector3 pullbackDir = Vector3.down; // 기본값
-
-        if (targetEnemy != null)
+        // 플레이어 몸 중심(localPosition zero)으로 완전히 당김
+        // pullbackDistance > 0이면 중심을 지나 더 반대쪽까지 당겨 과장감 추가
+        Vector3 playerCenter = transform.parent.position;
+        if (pullbackDistance > 0f && targetEnemy != null)
         {
-            // 적의 반대 방향으로 당김
-            pullbackDir = (originWorld - targetEnemy.transform.position).normalized;
+            Vector3 behindDir = (playerCenter - targetEnemy.transform.position).normalized;
+            pullbackTarget = playerCenter + behindDir * pullbackDistance;
         }
-
-        pullbackTarget = originWorld + pullbackDir * pullbackDistance;
+        else
+        {
+            pullbackTarget = playerCenter;
+        }
         state = State.Pullback;
     }
 
@@ -277,11 +275,21 @@ public class WeaponPoint : MonoBehaviour
     /// <summary>WeaponManager가 장착 시 호출 — 타입과 데미지 설정.</summary>
     public void Init(WeaponData data)
     {
-        weaponType    = data.weaponType;
-        // attackDamage = 무기 인스펙터 기본값 + 플레이어 공격력 보너스
-        attackDamage += PlayerController.Instance?.Attack ?? 0f;
-        // projectilePrefab은 인스펙터에서 설정한 값을 유지합니다.
-        // Ranged 무기 프리팹의 WeaponPoint 컴포넌트에 projectilePrefab을 직접 지정하세요.
+        weaponType = data.weaponType;
+
+        var player = PlayerController.Instance;
+        if (player != null)
+        {
+            // 공통 보너스 + 무기 타입별 보너스 적용
+            attackDamage += player.Attack;
+            attackDamage += weaponType == WeaponType.Melee    ? player.MeleeAttackBonus  : 0f;
+            attackDamage += weaponType == WeaponType.Ranged   ? player.RangedAttackBonus : 0f;
+            attackDamage += weaponType == WeaponType.Boomerang ? player.RangedAttackBonus : 0f;
+        }
+
+        // 성 등급에 맞는 외곽선 적용
+        GetComponentInChildren<SpriteOutline>()?.SetStar(data.star);
+        // projectilePrefab은 무기 프리팹 Inspector에서 직접 설정합니다.
     }
 
     /// <summary>공격속도를 multiplier배 빠르게 합니다 (쿨타임 단축).</summary>

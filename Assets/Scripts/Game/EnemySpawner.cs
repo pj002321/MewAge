@@ -23,13 +23,15 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
     private int   currentWave    = 1;
     private int   currentChapter = 1;
     private bool  spawning       = true;
+    private bool  isBossWave     = false;
 
     protected override bool DontDestroy => false;
 
     private void Start()
     {
         ApplyRule(currentWave);
-        StartCoroutine(SpawnLoop());
+        if (isBossWave) SpawnBoss();
+        else            StartCoroutine(SpawnLoop());
     }
 
     private IEnumerator SpawnLoop()
@@ -96,6 +98,31 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
         return null;
     }
 
+    /// <summary>보스 웨이브 전용: 최소웨이브==currentWave 인 DB_스폰 항목에서 유닛을 선택합니다.</summary>
+    private DB_유닛 PickBossUnit()
+    {
+        List<DB_스폰> candidates = DB_스폰.FindEntities(e =>
+            e.f_챕터 == currentChapter &&
+            e.f_유닛 != null &&
+            e.f_유닛.f_프리팹 != null &&
+            e.f_최소웨이브 == currentWave);
+
+        if (candidates == null || candidates.Count == 0) return null;
+
+        int totalWeight = 0;
+        foreach (var e in candidates) totalWeight += e.f_가중치;
+        if (totalWeight == 0) return candidates[0].f_유닛;
+
+        int roll = Random.Range(0, totalWeight);
+        int acc  = 0;
+        foreach (var e in candidates)
+        {
+            acc += e.f_가중치;
+            if (roll < acc) return e.f_유닛;
+        }
+        return null;
+    }
+
     // ── Wave 규칙 적용 (DB_웨이브) ────────────────────────────────
     private void ApplyRule(int wave)
     {
@@ -113,9 +140,11 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
             return;
         }
 
+        // 보스 웨이브는 규칙의 시작웨이브와 현재 웨이브가 정확히 일치할 때만 활성화
+        isBossWave        = matched.f_보스 && matched.f_시작웨이브 == wave;
         currentInterval   = matched.f_스폰간격;
         currentSpawnCount = matched.f_동시스폰수;
-        Debug.Log($"[EnemySpawner] Wave {wave} → 간격: {currentInterval:F1}s, 동시 스폰: {currentSpawnCount}");
+        Debug.Log($"[EnemySpawner] Wave {wave} → 보스: {isBossWave}, 간격: {currentInterval:F1}s, 동시 스폰: {currentSpawnCount}");
     }
 
     public void OnWaveUp(int wave)
@@ -123,7 +152,45 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
         currentWave = wave;
         ApplyRule(wave);
         StopAllCoroutines();
-        if (spawning) StartCoroutine(SpawnLoop());
+
+        if (isBossWave)
+            SpawnBoss();
+        else if (spawning)
+            StartCoroutine(SpawnLoop());
+    }
+
+    private void SpawnBoss()
+    {
+        // 이미 보스가 씬에 존재하면 중복 스폰 방지 (부활 등 재호출 대응)
+        if (Object.FindAnyObjectByType<BossController>() != null)
+        {
+            Debug.Log("[EnemySpawner] 보스가 이미 존재합니다. 중복 스폰 방지.");
+            return;
+        }
+
+        // 보스 웨이브에서는 최소웨이브==currentWave 인 항목만 대상으로 삼습니다.
+        DB_유닛 unit = PickBossUnit();
+        if (unit == null || unit.f_프리팹 == null)
+        {
+            Debug.LogWarning($"[EnemySpawner] Wave {currentWave} 보스 유닛을 DB에서 찾을 수 없습니다. (DB_스폰 최소웨이브={currentWave} 항목 확인)");
+            return;
+        }
+
+        Vector2 spawnPos = GetRandomEdgePosition();
+        if (spawnMarkerPrefab != null)
+        {
+            var markerObj = Instantiate(spawnMarkerPrefab, spawnPos, Quaternion.identity);
+            if (markerObj.TryGetComponent<SpawnMarker>(out var marker))
+                marker.Init(unit, currentWave);
+        }
+        else
+        {
+            var obj = Instantiate(unit.f_프리팹, spawnPos, Quaternion.identity);
+            if (obj.TryGetComponent<EnemyController>(out var enemy))
+                enemy.InitFromDB(unit, currentWave);
+        }
+
+        Debug.Log($"[EnemySpawner] 보스 스폰! Wave {currentWave}");
     }
 
     public void OnChapterUp(int chapter)

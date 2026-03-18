@@ -34,6 +34,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     private float waveTimer;
     private bool  isGameOver;
     private bool  waitingForUpgrade;
+    private bool  bossWaveActive;
 
     protected override bool DontDestroy => false;
 
@@ -50,6 +51,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     private void Update()
     {
         if (isGameOver) return;
+        if (bossWaveActive) return;   // 보스 생존 중 타이머 동결
 
         waveTimer -= Time.deltaTime;
         UpdateTimerUI();
@@ -139,10 +141,59 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         wave++;
         waveTimer         = WaveDuration(wave);
         waitingForUpgrade = false;
+
+        // WaveHealHP 패시브 — 웨이브 시작 시 축적된 회복량만큼 체력 회복
+        var player = PlayerController.Instance;
+        if (player != null && player.WaveHealAmount > 0f)
+            player.HealHP(player.WaveHealAmount);
+
         EnemySpawner.Shared?.ResumeSpawning(wave);
         UpdateWaveUI();
     }
 
     public bool IsGameOver  => isGameOver;
     public int  CurrentWave => wave;
+
+    // ── 보스 웨이브 ──────────────────────────────────────────────
+    public void StartBossWave()
+    {
+        bossWaveActive = true;
+    }
+
+    public void OnBossDefeated()
+    {
+        bossWaveActive = false;
+        if (!waitingForUpgrade)
+        {
+            waitingForUpgrade = true;
+            StartCoroutine(WaveClearRoutine());
+        }
+    }
+
+    // ── 디버그 전용 ──────────────────────────────────────────────
+    /// <summary>현재 웨이브를 즉시 종료합니다.</summary>
+    public void DebugSkipWave()
+    {
+        if (isGameOver || waitingForUpgrade) return;
+        waveTimer         = 0f;
+        waitingForUpgrade = true;
+        StartCoroutine(WaveClearRoutine());
+    }
+
+    /// <summary>다음 보스 웨이브(10의 배수)로 즉시 이동합니다.</summary>
+    public void DebugJumpToBossWave()
+    {
+        if (isGameOver) return;
+
+        int nextBoss = (Mathf.FloorToInt(wave / 10f) + 1) * 10;
+
+        StopAllCoroutines();   // 진행 중인 WaveClearRoutine 취소
+        EnemySpawner.Shared?.StopSpawning();
+        EnemySpawner.Shared?.ClearAllEnemies();
+
+        bossWaveActive    = false;
+        wave              = nextBoss - 1;
+        waitingForUpgrade = false;
+        StartNextWave();
+    }
 }

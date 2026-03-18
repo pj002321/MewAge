@@ -46,7 +46,11 @@ public class InvenSlot : MonoBehaviour,
         if (iconImg)  iconImg.enabled = has;
         if (frameImg) frameImg.color  = has ? WeaponGradeColors.Get(data.grade) : Color.white;
         if (has && iconImg && data.icon) iconImg.sprite = data.icon;
-        if (starText) starText.text   = has ? new string('★', data.star) : string.Empty;
+        if (starText)
+        {
+            starText.text = has ? new string('★', data.star) : string.Empty;
+            starText.gameObject.SetActive(has);
+        }
 
         float s = (has && selected) ? selectedScale : normalScale;
         transform.localScale = Vector3.one * s;

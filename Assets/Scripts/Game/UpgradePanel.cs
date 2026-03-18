@@ -319,11 +319,15 @@ public class UpgradePanel : MonoBehaviour
         if (inv == null) return;
 
         if (!inv.UnequipToInventory(selectedEquipIndex))
+        {
             ShowNotification("인벤토리가 가득 찼습니다.");
-        else
-            SoundManager.Shared?.Play(SoundKey.UI_Unequip);
+            DeselectEquip();
+            return;
+        }
 
+        SoundManager.Shared?.Play(SoundKey.UI_Unequip);
         DeselectEquip();
+        UpgradeManager.Shared?.TryAutoMergeAll();
     }
 
     private void OnSellEquipActionClicked()

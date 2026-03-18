@@ -43,7 +43,11 @@ public class EquipSlot : MonoBehaviour,
         if (iconImg)  iconImg.enabled = has;
         if (frameImg) frameImg.color  = has ? WeaponGradeColors.Get(data.grade) : Color.white;
         if (has && iconImg && data.icon) iconImg.sprite = data.icon;
-        if (starText) starText.text   = has ? new string('★', data.star) : string.Empty;
+        if (starText)
+        {
+            starText.text = has ? new string('★', data.star) : string.Empty;
+            starText.gameObject.SetActive(has);
+        }
         transform.localScale = Vector3.one * (has && selected ? 1.15f : 1f);
     }
 
@@ -97,6 +101,7 @@ public class EquipSlot : MonoBehaviour,
                 {
                     Debug.Log($"[EquipSlot] MoveEquipToInven {SlotIndex} → inven{invenTarget.SlotIndex}");
                     PlayerInventory.Shared?.MoveEquipToInven(SlotIndex, invenTarget.SlotIndex);
+                    UpgradeManager.Shared?.TryAutoMergeAll();
                     break;
                 }
             }

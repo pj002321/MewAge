@@ -3,11 +3,12 @@ using UnityEngine.UI;
 using TMPro;
 
 /// <summary>
-/// 기물 사용 버튼 UI.
-/// Inspector: button, iconImage, countText 연결
+/// 기물 슬롯 버튼 하나.
+/// Inspector: slotIndex(0~3), button, iconImage, countText 연결
 /// </summary>
 public class StructureButton : MonoBehaviour
 {
+    [SerializeField] private int      slotIndex;
     [SerializeField] private Button   button;
     [SerializeField] private Image    iconImage;
     [SerializeField] private TMP_Text countText;
@@ -17,10 +18,7 @@ public class StructureButton : MonoBehaviour
     private void Awake()
     {
         button?.onClick.AddListener(OnClick);
-        // 초기 상태: 아이콘 숨김
-        if (iconImage != null) iconImage.enabled = false;
-        if (countText != null) countText.text    = "";
-        if (button    != null) button.interactable = false;
+        SetEmpty();
     }
 
     private void Update()
@@ -44,29 +42,35 @@ public class StructureButton : MonoBehaviour
     private void Refresh()
     {
         var inv   = StructureInventory.Shared;
-        int count = inv?.Count ?? 0;
-        var top   = inv?.Peek;
+        var data  = inv?.GetData(slotIndex);
+        int count = inv?.GetCount(slotIndex) ?? 0;
 
-        Sprite icon = top?.f_설치프리팹 != null
-            ? top.f_설치프리팹.GetComponentInChildren<SpriteRenderer>()?.sprite
-            : null;
-
-        if (iconImage != null)
+        if (data != null && count > 0)
         {
-            iconImage.sprite  = icon;
-            iconImage.enabled = icon != null;
+            Sprite icon = data.f_설치프리팹 != null
+                ? data.f_설치프리팹.GetComponentInChildren<SpriteRenderer>()?.sprite
+                : null;
+
+            if (iconImage != null) { iconImage.sprite = icon; iconImage.enabled = icon != null; }
+            if (countText != null) countText.text = count.ToString();
+            if (button    != null) button.interactable = true;
         }
+        else
+        {
+            SetEmpty();
+        }
+    }
 
-        if (countText != null)
-            countText.text = count > 0 ? count.ToString() : "";
-
-        if (button != null)
-            button.interactable = count > 0;
+    private void SetEmpty()
+    {
+        if (iconImage != null) { iconImage.sprite = null; iconImage.enabled = false; }
+        if (countText != null) countText.text = "";
+        if (button    != null) button.interactable = false;
     }
 
     private void OnClick()
     {
         SoundManager.Shared?.Play(SoundKey.UI_Click);
-        StructureInventory.Shared?.UseTop();
+        StructureInventory.Shared?.UseAt(slotIndex);
     }
 }

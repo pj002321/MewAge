@@ -22,4 +22,7 @@ public enum SoundKey
 
     // 플레이어
     Player_Hit   = 12,
+
+    // 기물 스킬
+    Structure_Thunder = 13,
 }
