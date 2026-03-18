@@ -222,7 +222,11 @@ public class EnemyController : MonoBehaviour
         }
         else
         {
-            MoveTowardPlayer(moveSpeed);
+            // 돌진 유형은 멈추지 않고 플레이어 방향으로 계속 접근
+            Vector2 toPlayer = (Vector2)playerTransform.position - rb.position;
+            Vector2 dir = toPlayer.normalized;
+            rb.MovePosition(rb.position + dir * moveSpeed * Time.fixedDeltaTime);
+            FlipSprite(dir);
         }
     }
 
@@ -243,7 +247,8 @@ public class EnemyController : MonoBehaviour
     private void OnTriggerStay2D(Collider2D other)
     {
         if (damageTimer > 0f) return;
-        if (other.TryGetComponent<PlayerController>(out var p))
+        var p = other.GetComponentInParent<PlayerController>();
+        if (p != null)
         {
             p.TakeDamage(contactDamage);
             damageTimer = damageCooldown;
@@ -252,7 +257,8 @@ public class EnemyController : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.TryGetComponent<PlayerController>(out var p))
+        var p = other.GetComponentInParent<PlayerController>();
+        if (p != null)
         {
             p.TakeDamage(contactDamage);
             damageTimer = damageCooldown;
@@ -276,9 +282,10 @@ public class EnemyController : MonoBehaviour
 
     public void TakeDamage(float damage)
     {
+        float actualDamage = Mathf.Min(damage, currentHP);
         currentHP -= damage;
         SoundManager.Shared?.Play(SoundKey.Enemy_Hit);
-        FXManager.Shared?.SpawnDamageText(transform.position, damage);
+        FXManager.Shared?.SpawnDamageText(transform.position, actualDamage);
         FXManager.Shared?.SpawnHitEffect(transform.position);
         hitFlash?.Flash();
         if (currentHP <= 0f)

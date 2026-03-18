@@ -125,7 +125,8 @@ public class PlayerController : MonoBehaviour
 
     public void IncreaseMaxHP(float amount)
     {
-        maxHP += amount;
+        maxHP     += amount;
+        currentHP  = Mathf.Min(currentHP + amount, maxHP);
         SyncHPUI();
     }
 

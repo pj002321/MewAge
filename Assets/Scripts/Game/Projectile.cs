@@ -32,9 +32,12 @@ public class Projectile : MonoBehaviour
     {
         if ((targetLayer.value & (1 << other.gameObject.layer)) == 0) return;
 
-        if (other.TryGetComponent<EnemyController>(out var enemy))
+        var enemy  = other.GetComponentInParent<EnemyController>();
+        var player = other.GetComponentInParent<PlayerController>();
+
+        if (enemy != null)
             enemy.TakeDamage(damage);
-        else if (other.TryGetComponent<PlayerController>(out var player))
+        else if (player != null)
             player.TakeDamage(damage);
         else
             return;
