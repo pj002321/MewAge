@@ -32,8 +32,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.74999994, y: 0.74999994, z: 0.74999994}
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 8040994810765155967}
   m_Father: {fileID: 0}
@@ -141,6 +141,7 @@ MonoBehaviour:
   contactDamage: 10
   scoreValue: 10
   damageCooldown: 1
+  contactMaxDist: 0.8
   goldDrop: 1
   expDrop: 1
   unitType: 0
@@ -149,6 +150,7 @@ MonoBehaviour:
   shootInterval: 2
   rangedDamage: 0
   attackRange: 1.2
+  meleeHitRange: 0.55
   attackInterval: 1
   attackVfxPrefab: {fileID: 0}
   chargeInterval: 3

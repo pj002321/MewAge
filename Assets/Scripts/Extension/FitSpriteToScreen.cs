@@ -9,12 +9,17 @@ public class FitSpriteToScreen : MonoBehaviour
 {
     public enum FitMode
     {
-        Fill,   // 화면을 빈틈없이 채움 (스프라이트 일부 잘릴 수 있음)
-        Fit,    // 스프라이트 전체가 보이도록 맞춤 (여백 생길 수 있음)
-        Stretch // 가로/세로 독립 스케일 (비율 무시)
+        Fill,     // 화면을 빈틈없이 채움 (스프라이트 일부 잘릴 수 있음)
+        Fit,      // 스프라이트 전체가 보이도록 맞춤 (여백 생길 수 있음)
+        Stretch,  // 가로/세로 독립 스케일 (비율 무시)
+        FitWidth, // 좌우 끝만 화면에 딱 맞춤 (세로는 비율 유지)
+        FitHeight // 상하 끝만 화면에 딱 맞춤 (가로는 비율 유지)
     }
 
     [SerializeField] private FitMode fitMode = FitMode.Fill;
+
+    [Tooltip("FitWidth 시 카메라 orthographicSize를 스프라이트 높이에 맞게 자동 조절 (위아래 여백 제거)")]
+    [SerializeField] private bool adjustCameraToSprite = false;
 
     private void Start()
     {
@@ -37,18 +42,26 @@ public class FitSpriteToScreen : MonoBehaviour
         float scaleX = camWidth  / spriteSize.x;
         float scaleY = camHeight / spriteSize.y;
 
+        if (fitMode == FitMode.Stretch)
+        {
+            transform.localScale = new Vector3(scaleX, scaleY, 1f);
+            return;
+        }
+
         float scale = fitMode switch
         {
-            FitMode.Fill    => Mathf.Max(scaleX, scaleY),
-            FitMode.Fit     => Mathf.Min(scaleX, scaleY),
-            FitMode.Stretch => 1f, // 아래에서 x/y 개별 처리
-            _               => 1f
+            FitMode.Fill      => Mathf.Max(scaleX, scaleY),
+            FitMode.Fit       => Mathf.Min(scaleX, scaleY),
+            FitMode.FitWidth  => scaleX,
+            FitMode.FitHeight => scaleY,
+            _                 => 1f
         };
 
-        if (fitMode == FitMode.Stretch)
-            transform.localScale = new Vector3(scaleX, scaleY, 1f);
-        else
-            transform.localScale = new Vector3(scale, scale, 1f);
+        transform.localScale = new Vector3(scale, scale, 1f);
+
+        // 카메라 orthographicSize를 스케일된 스프라이트 높이에 맞게 조정 (여백 제거)
+        if (adjustCameraToSprite)
+            cam.orthographicSize = spriteSize.y * scale / 2f;
     }
 
 #if UNITY_EDITOR
