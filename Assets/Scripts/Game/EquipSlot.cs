@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -12,8 +13,9 @@ public class EquipSlot : MonoBehaviour,
     IPointerDownHandler, IPointerUpHandler,
     IBeginDragHandler, IDragHandler, IEndDragHandler
 {
-    [SerializeField] private Image frameImg;
-    [SerializeField] private Image iconImg;
+    [SerializeField] private Image           frameImg;
+    [SerializeField] private Image           iconImg;
+    [SerializeField] private TextMeshProUGUI starText;
 
     public int SlotIndex { get; set; }
 
@@ -39,8 +41,9 @@ public class EquipSlot : MonoBehaviour,
     {
         bool has = data != null;
         if (iconImg)  iconImg.enabled = has;
-        if (frameImg) frameImg.color  = has ? WeaponGradeColors.Get(data.star) : Color.white;
+        if (frameImg) frameImg.color  = has ? WeaponGradeColors.Get(data.grade) : Color.white;
         if (has && iconImg && data.icon) iconImg.sprite = data.icon;
+        if (starText) starText.text   = has ? new string('★', data.star) : string.Empty;
         transform.localScale = Vector3.one * (has && selected ? 1.15f : 1f);
     }
 

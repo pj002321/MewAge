@@ -36,12 +36,13 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
     {
         while (spawning)
         {
-            yield return new WaitForSeconds(currentInterval);
             if (!spawning) yield break;
             if (GameManager.Shared != null && GameManager.Shared.IsGameOver) yield break;
 
             for (int i = 0; i < currentSpawnCount; i++)
                 SpawnEnemy();
+
+            yield return new WaitForSeconds(currentInterval);
         }
     }
 

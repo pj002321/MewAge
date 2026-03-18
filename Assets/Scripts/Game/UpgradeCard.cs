@@ -12,6 +12,7 @@ public class UpgradeCard : MonoBehaviour
     [SerializeField] private Image           weaponIcon;
     [SerializeField] private TextMeshProUGUI weaponNameText;
     [SerializeField] private TextMeshProUGUI priceText;
+    [SerializeField] private TextMeshProUGUI starText;
     [SerializeField] private Button          buyButton;
 
     private WeaponData data;
@@ -30,6 +31,7 @@ public class UpgradeCard : MonoBehaviour
         }
         if (weaponNameText) weaponNameText.text = weaponData.weaponName;
         if (priceText)      priceText.text      = $"{weaponData.price} G";
+        if (starText)       starText.text       = new string('★', weaponData.star);
 
         buyButton.onClick.RemoveAllListeners();
         buyButton.onClick.AddListener(OnClickBuy);

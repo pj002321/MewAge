@@ -9,6 +9,7 @@ public class CameraFollow : MonoBehaviour
 {
     [Header("추적 대상")]
     [SerializeField] private Transform target;
+    [SerializeField] private bool followPlayer = true;
 
     [Header("부드러움 (0 = 즉시, 높을수록 느리게)")]
     [SerializeField] private float smoothTime = 0.15f;
@@ -54,19 +55,22 @@ public class CameraFollow : MonoBehaviour
 
     private void LateUpdate()
     {
-        if (target == null)
+        if (followPlayer)
         {
-            if (PlayerController.Instance != null)
-                target = PlayerController.Instance.transform;
-            return;
+            if (target == null)
+            {
+                if (PlayerController.Instance != null)
+                    target = PlayerController.Instance.transform;
+                return;
+            }
+
+            Vector3 desiredPos = new(target.position.x, target.position.y, transform.position.z);
+
+            if (useBounds)
+                desiredPos = ClampToBounds(desiredPos);
+
+            transform.position = Vector3.SmoothDamp(transform.position, desiredPos, ref velocity, smoothTime);
         }
-
-        Vector3 desiredPos = new(target.position.x, target.position.y, transform.position.z);
-
-        if (useBounds)
-            desiredPos = ClampToBounds(desiredPos);
-
-        transform.position = Vector3.SmoothDamp(transform.position, desiredPos, ref velocity, smoothTime);
 
         // 카메라 셰이크 오프셋 적용
         if (shakeTimeLeft > 0f)

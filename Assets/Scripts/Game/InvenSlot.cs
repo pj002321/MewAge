@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -11,8 +12,9 @@ public class InvenSlot : MonoBehaviour,
     IPointerDownHandler, IPointerClickHandler,
     IBeginDragHandler, IDragHandler, IEndDragHandler
 {
-    [SerializeField] private Image frameImg;
-    [SerializeField] private Image iconImg;
+    [SerializeField] private Image           frameImg;
+    [SerializeField] private Image           iconImg;
+    [SerializeField] private TextMeshProUGUI starText;
 
     [Header("선택 확대")]
     [SerializeField] private float selectedScale = 1.2f;
@@ -42,8 +44,9 @@ public class InvenSlot : MonoBehaviour,
     {
         bool has = data != null;
         if (iconImg)  iconImg.enabled = has;
-        if (frameImg) frameImg.color = has ? WeaponGradeColors.Get(data.star) : Color.white;
+        if (frameImg) frameImg.color  = has ? WeaponGradeColors.Get(data.grade) : Color.white;
         if (has && iconImg && data.icon) iconImg.sprite = data.icon;
+        if (starText) starText.text   = has ? new string('★', data.star) : string.Empty;
 
         float s = (has && selected) ? selectedScale : normalScale;
         transform.localScale = Vector3.one * s;
