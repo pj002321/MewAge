@@ -26,8 +26,12 @@ public class BossBehaviour : EnemyBehaviourBase
 
     // ── Charge ──────────────────────────────────────────────────
     [Header("돌진")]
-    [SerializeField] private float chargeSpeed    = 12f;
-    [SerializeField] private float chargeDuration = 0.55f;
+    [SerializeField] private float   chargeSpeed      = 12f;
+    [SerializeField] private float   chargeDuration   = 0.55f;
+    [Tooltip("돌진 허용 범위 중심 (0,0 = 월드 원점)")]
+    [SerializeField] private Vector2 chargeBoundsCenter = Vector2.zero;
+    [Tooltip("돌진 허용 범위 크기 — EnemySpawner 스폰 영역과 맞추세요")]
+    [SerializeField] private Vector2 chargeBoundsSize   = new(10f, 18f);
 
     // ── Idle ────────────────────────────────────────────────────
     [Header("대기")]
@@ -155,8 +159,28 @@ public class BossBehaviour : EnemyBehaviourBase
         Vector2 dir   = ((Vector2)Owner.PlayerTransform.position - (Vector2)Owner.transform.position).normalized;
         float elapsed = 0f;
 
+        // EnemySpawner 영역을 경계로 사용 (없으면 자체 필드로 폴백)
+        var     spawner  = EnemySpawner.Shared;
+        Vector2 aCenter  = spawner != null ? spawner.AreaCenter : chargeBoundsCenter;
+        Vector2 aSize    = spawner != null ? spawner.AreaSize   : chargeBoundsSize;
+        Vector2 halfSize = aSize * 0.5f;
+        float   minX = aCenter.x - halfSize.x, maxX = aCenter.x + halfSize.x;
+        float   minY = aCenter.y - halfSize.y, maxY = aCenter.y + halfSize.y;
+
         while (elapsed < chargeDuration)
         {
+            Vector2 pos = Owner.transform.position;
+
+            // 경계 도달 시 돌진 즉시 중단
+            if (pos.x <= minX || pos.x >= maxX || pos.y <= minY || pos.y >= maxY)
+            {
+                Owner.transform.position = new Vector3(
+                    Mathf.Clamp(pos.x, minX, maxX),
+                    Mathf.Clamp(pos.y, minY, maxY),
+                    Owner.transform.position.z);
+                break;
+            }
+
             Owner.MoveInDirection(dir, speed);
             elapsed += Time.fixedDeltaTime;
             yield return new WaitForFixedUpdate();

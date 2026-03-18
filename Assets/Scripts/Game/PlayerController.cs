@@ -19,7 +19,10 @@ public class PlayerController : MonoBehaviour
     [Header("증강 스탯")]
     [SerializeField] private float attack  = 0f;  // 공격력 보너스
     [SerializeField] private float defense = 0f;  // 방어력 (받는 피해 감소)
-    [SerializeField] private float dodge   = 0f;  // 회피 확률 0~1
+    [SerializeField, Range(0f, 0.9f)] private float dodge = 0f;  // 회피 확률 0~0.9
+
+    [Header("피격 무적 시간")]
+    [SerializeField] private float hitInvincibleDuration = 0.3f;  // 피격 후 무적 시간(초)
 
     // 무기 타입별 보너스 (런타임 전용)
     private float rangedAttackBonus = 0f;
@@ -117,6 +120,10 @@ public class PlayerController : MonoBehaviour
         hitShake?.Shake();
         CameraFollow.Shared?.Shake();
 
+        // 피격 후 짧은 무적 (여러 적에 동시에 맞는 것 방지)
+        if (hitInvincibleDuration > 0f)
+            StartCoroutine(HitInvincibleRoutine(hitInvincibleDuration));
+
         if (currentHP <= 0f)
             GameManager.Shared?.TriggerGameOver();
     }
@@ -183,10 +190,17 @@ public class PlayerController : MonoBehaviour
         SyncHPUI();
     }
 
-    /// <summary>회피 확률 증가 (0~1 범위로 클램프).</summary>
+    /// <summary>회피 확률 증가. 최대 0.75(75%)로 제한합니다.</summary>
     public void IncreaseDodge(float amount)
     {
-        dodge = Mathf.Clamp01(dodge + amount);
+        dodge = Mathf.Clamp(dodge + amount, 0f, 0.75f);
+    }
+
+    private IEnumerator HitInvincibleRoutine(float duration)
+    {
+        isInvincible = true;
+        yield return new WaitForSeconds(duration);
+        isInvincible = false;
     }
 
     /// <summary>공격속도를 amount% 증가 (쿨타임 단축).</summary>

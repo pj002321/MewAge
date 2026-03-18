@@ -139,7 +139,7 @@ MonoBehaviour:
   slamMarkerPrefab: {fileID: 7905823675861574758, guid: 8fa9636161b22c941a8491bc91090a7b, type: 3}
   chargeSpeed: 10
   chargeDuration: 0.5
-  idleDuration: 2
+  idleDuration: 1
 --- !u!114 &5274065146287222673
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -152,7 +152,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bfce9f499de271b4c8ab1d03e8957395, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossController
-  enrageThreshold: 0.5
+  enrageThreshold: 50
   outlineColorProperty: _SolidColor
   normalOutlineColor: {r: 1, g: 1, b: 1, a: 1}
   enrageOutlineColor: {r: 1, g: 0, b: 0, a: 1}

@@ -42,11 +42,44 @@ public class ChargeBehaviour : EnemyBehaviourBase
         {
             Owner.MoveInDirection(chargeDir, Owner.MoveSpeed * chargeSpeedMultiplier);
             chargeRemaining -= Time.fixedDeltaTime;
+
+            // 맵 경계 도달 시 돌진 중단 + 위치 클램프
+            if (IsOutOfBounds(Owner.transform.position))
+            {
+                ClampToBounds();
+                isCharging = false;
+            }
+
             if (chargeRemaining <= 0f) isCharging = false;
         }
         else
         {
             Owner.MoveTowardPlayer(Owner.MoveSpeed);
         }
+    }
+
+    private bool IsOutOfBounds(Vector2 pos)
+    {
+        var spawner = EnemySpawner.Shared;
+        if (spawner == null) return false;
+
+        Vector2 half = spawner.AreaSize * 0.5f;
+        Vector2 c    = spawner.AreaCenter;
+        return pos.x < c.x - half.x || pos.x > c.x + half.x ||
+               pos.y < c.y - half.y || pos.y > c.y + half.y;
+    }
+
+    private void ClampToBounds()
+    {
+        var spawner = EnemySpawner.Shared;
+        if (spawner == null) return;
+
+        Vector2 half = spawner.AreaSize * 0.5f;
+        Vector2 c    = spawner.AreaCenter;
+        Vector3 p    = Owner.transform.position;
+        Owner.transform.position = new Vector3(
+            Mathf.Clamp(p.x, c.x - half.x, c.x + half.x),
+            Mathf.Clamp(p.y, c.y - half.y, c.y + half.y),
+            p.z);
     }
 }

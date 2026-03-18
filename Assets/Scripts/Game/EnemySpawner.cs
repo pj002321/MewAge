@@ -27,6 +27,10 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
 
     protected override bool DontDestroy => false;
 
+    /// <summary>플레이 영역 경계 — 돌진형 적이 맵 밖으로 나가지 않도록 사용합니다.</summary>
+    public Vector2 AreaCenter => spawnAreaCenter;
+    public Vector2 AreaSize   => spawnAreaSize;
+
     private void Start()
     {
         ApplyRule(currentWave);
