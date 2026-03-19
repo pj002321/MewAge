@@ -238,8 +238,31 @@ public class EnemyController : MonoBehaviour
         {
             OnDeath?.Invoke();
             ItemDropManager.Shared?.SpawnDrops(transform.position, goldDrop, expDrop);
-            Destroy(gameObject);
+            StartCoroutine(DieRoutine());
         }
+    }
+
+    private IEnumerator DieRoutine()
+    {
+        // 이동·공격·충돌 데미지 비활성화
+        enabled = false;
+        if (rb != null) rb.linearVelocity = Vector2.zero;
+
+        float duration   = 0.35f;
+        float elapsed    = 0f;
+        Vector3 initScale = transform.localScale;
+        float   spinSpeed = 520f; // deg/s
+
+        while (elapsed < duration)
+        {
+            float t = elapsed / duration;
+            transform.localScale    = Vector3.Lerp(initScale, Vector3.zero, t * t);
+            transform.Rotate(0f, 0f, spinSpeed * Time.deltaTime);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        Destroy(gameObject);
     }
 
     // ── 웨이브 스케일링 ──────────────────────────────────────────
