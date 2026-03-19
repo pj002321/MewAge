@@ -149,6 +149,21 @@ public class PlayerInventory : MonoBehaviourSingleton<PlayerInventory>
         return false;
     }
 
+    /// <summary>인벤 + 장착 슬롯 합산으로 3개 이상 있는지 확인합니다.</summary>
+    public bool CanMergeAll(string weaponName, int star)
+        => CountAll(weaponName, star) >= 3;
+
+    /// <summary>인벤 + 장착 슬롯 합산 개수를 반환합니다.</summary>
+    public int CountAll(string weaponName, int star)
+    {
+        int count = 0;
+        foreach (var w in inventory)
+            if (w != null && w.weaponName == weaponName && w.star == star) count++;
+        foreach (var w in equipped)
+            if (w != null && w.weaponName == weaponName && w.star == star) count++;
+        return count;
+    }
+
     /// <summary>인벤 내 같은 이름+성 3개를 제거하고 result를 인벤에 추가합니다.
     /// 소모된 2개(result로 대체되지 않는 만큼)의 판매가를 골드로 지급합니다.</summary>
     public bool TryMerge(string weaponName, int star, WeaponData result)
@@ -177,6 +192,65 @@ public class PlayerInventory : MonoBehaviourSingleton<PlayerInventory>
             inventory.RemoveAt(indices[i]);
 
         inventory.Add(result);
+        OnChanged?.Invoke();
+        return true;
+    }
+
+    /// <summary>인벤 + 장착 슬롯을 합산해 3개를 소모하고 result를 배치합니다.
+    /// 장착 슬롯에서 소모된 경우 result는 그 슬롯에 우선 배치됩니다.</summary>
+    public bool TryMergeAll(string weaponName, int star, WeaponData result)
+    {
+        if (result == null) return false;
+
+        // 인벤 먼저, 그 다음 장착에서 최대 3개 수집
+        var invenIdx = new List<int>();
+        var equipIdx = new List<int>();
+
+        for (int i = 0; i < inventory.Count && invenIdx.Count + equipIdx.Count < 3; i++)
+        {
+            var w = inventory[i];
+            if (w != null && w.weaponName == weaponName && w.star == star)
+                invenIdx.Add(i);
+        }
+        for (int i = 0; i < equipped.Count && invenIdx.Count + equipIdx.Count < 3; i++)
+        {
+            var w = equipped[i];
+            if (w != null && w.weaponName == weaponName && w.star == star)
+                equipIdx.Add(i);
+        }
+
+        if (invenIdx.Count + equipIdx.Count < 3) return false;
+
+        // 소모 3개 목록 (가격용)
+        var consumed = new List<WeaponData>();
+        foreach (int i in invenIdx) consumed.Add(inventory[i]);
+        foreach (int i in equipIdx) consumed.Add(equipped[i]);
+
+        // 2개분 환급
+        int refundGold = 0;
+        for (int i = 0; i < 2 && i < consumed.Count; i++)
+            refundGold += Mathf.Max(1, consumed[i].price);
+        if (refundGold > 0) PlayerStats.Shared?.AddGold(refundGold);
+
+        // 인벤 제거 (인덱스 밀림 방지: 높은 순)
+        for (int i = invenIdx.Count - 1; i >= 0; i--)
+            inventory.RemoveAt(invenIdx[i]);
+
+        // 장착 제거 (null 처리) + 결과 배치 슬롯 기억
+        int resultEquipSlot = equipIdx.Count > 0 ? equipIdx[0] : -1;
+        for (int i = equipIdx.Count - 1; i >= 0; i--)
+            equipped[equipIdx[i]] = null;
+
+        // 결과 배치: 장착 슬롯에서 소모됐으면 그 슬롯에, 아니면 인벤에
+        if (resultEquipSlot >= 0 && resultEquipSlot < equipped.Count)
+            equipped[resultEquipSlot] = result;
+        else
+            inventory.Add(result);
+
+        // 뒤의 null 장착 슬롯 정리
+        while (equipped.Count > 0 && equipped[equipped.Count - 1] == null)
+            equipped.RemoveAt(equipped.Count - 1);
+
         OnChanged?.Invoke();
         return true;
     }

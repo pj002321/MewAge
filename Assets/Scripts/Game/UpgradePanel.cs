@@ -221,13 +221,13 @@ public class UpgradePanel : MonoBehaviour
             selectedInvenIndex = slotIndex;
             if (invenActionPanel) invenActionPanel.SetActive(true);
 
-            // 합성 버튼: 같은 타입+등급이 3개 이상 있을 때만 활성화
+            // 합성 버튼: 인벤+장착 합산 3개 이상 있을 때만 활성화
             if (mergeActionButton)
             {
-                var item    = inv.Inventory[slotIndex];
+                var item      = inv.Inventory[slotIndex];
                 bool canMerge = item != null
                              && item.star < 5
-                             && inv.CanMerge(item.weaponName, item.star);
+                             && inv.CanMergeAll(item.weaponName, item.star);
                 mergeActionButton.interactable = canMerge;
             }
         }
