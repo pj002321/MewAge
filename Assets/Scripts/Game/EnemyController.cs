@@ -279,8 +279,11 @@ public class EnemyController : MonoBehaviour
     }
 
     // ── 스폰 연출 ────────────────────────────────────────────────
+    public Vector3 SpawnScale { get; private set; } = Vector3.one;
+
     public void PlaySpawnBounce()
     {
+        SpawnScale = transform.localScale; // BounceIn이 스케일을 바꾸기 전에 저장
         StartCoroutine(BounceIn());
     }
 

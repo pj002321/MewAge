@@ -11,4 +11,5 @@ public enum UnitType
     마법   = 3,  // MagicBehaviour
     힐러   = 4,  // HealerBehaviour
     탱커   = 5,  // TankBehaviour
+    떼거지 = 6,  // HordeBehaviour
 }

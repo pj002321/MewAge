@@ -11,11 +11,22 @@ public class WeaponPoint : MonoBehaviour
     [SerializeField] private WeaponType weaponType = WeaponType.Melee;
 
     [Header("무기 스탯")]
-    [SerializeField] private float attackDamage = 20f;
+    [SerializeField] private float attackDamage   = 20f;
     [SerializeField] private float attackCooldown = 1.5f;
+    [Tooltip("크리티컬 배율 지수 (0 = 없음, 1.5 = 150%)")]
+    [SerializeField] private float criticalRate   = 0f;
+    [Tooltip("도트 데미지 (0 = 없음)")]
+    [SerializeField] private float dotDamage      = 0f;
 
     [Header("탐지 범위 (이 안의 적에게 날아감)")]
     [SerializeField] private float attackRange = 3f;
+
+    // ── 읽기 전용 프로퍼티 (WeaponInfoPanel용) ───────────────────
+    public float AttackDamage   => attackDamage;
+    public float AttackCooldown => attackCooldown;
+    public float AttackRange    => attackRange;
+    public float CriticalRate   => criticalRate;
+    public float DotDamage      => dotDamage;
 
     [Header("근거리 이동 속도")]
     [SerializeField] private float pullbackSpeed = 20f;   // 빠르게 당김

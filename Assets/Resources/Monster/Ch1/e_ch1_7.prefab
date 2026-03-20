@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 7149393283127745020}
   - component: {fileID: 6364569046898202011}
   - component: {fileID: 8234875612620755679}
-  - component: {fileID: 5641893225465990131}
+  - component: {fileID: 4252340750277231950}
   m_Layer: 7
   m_Name: e_ch1_7
   m_TagString: Untagged
@@ -88,7 +88,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 5
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 3635735625031492602, guid: a1435ebbec55a894988e96e29b063c87, type: 3}
+  m_Sprite: {fileID: -9075692140918476292, guid: 0341161a85bc8b642bd3241994277d3a, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -218,7 +218,7 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
---- !u!114 &5641893225465990131
+--- !u!114 &4252340750277231950
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -227,12 +227,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 301323739485502833}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ebf384ff75278374cb62dda6f31d5629, type: 3}
+  m_Script: {fileID: 11500000, guid: 0ef9839f1a3088e4cad5cf9d4fc2f5ca, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ChargeBehaviour
-  chargeInterval: 3
-  chargeDuration: 1
-  chargeSpeedMultiplier: 7
+  m_EditorClassIdentifier: Assembly-CSharp::MeleeBehaviour
+  attackRange: 1.2
+  meleeHitRange: 1.3
+  attackInterval: 1
+  attackVfxPrefab: {fileID: 6979230596295396944, guid: 504d90c8c1191044ca464c201c3f92e3, type: 3}
 --- !u!1 &5756884983519603997
 GameObject:
   m_ObjectHideFlags: 0

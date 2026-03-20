@@ -18,11 +18,14 @@ public class BossBehaviour : EnemyBehaviourBase
     [Header("내려찍기")]
     [SerializeField] private float slamDamage       = 30f;
     [SerializeField] private float slamRadius       = 2.5f;
-    [SerializeField] private float slamJumpHeight   = 3.5f;   // 점프 높이
+    [SerializeField] private float slamJumpHeight   = 6f;     // 점프 높이
     [SerializeField] private float slamRiseTime     = 0.4f;   // 올라가는 시간
     [SerializeField] private float slamHangTime     = 0.8f;   // 정점 유지 (마커 보여주는 시간)
     [SerializeField] private float slamFallSpeed    = 25f;    // 내려오는 속도
     [SerializeField] private GameObject slamMarkerPrefab;
+
+    [Header("내려찍기 착지 애니메이션")]
+    [SerializeField] private string slamLandTrigger = "SlamLand";
 
     // ── Charge ──────────────────────────────────────────────────
     [Header("돌진")]
@@ -39,6 +42,7 @@ public class BossBehaviour : EnemyBehaviourBase
 
     // ── 런타임 ──────────────────────────────────────────────────
     private BossController boss;
+    private Animator       animator;
     private bool           isRunning;
     private int            patternStep; // 0=Slam, 1=Charge, 번갈아가며
 
@@ -46,7 +50,8 @@ public class BossBehaviour : EnemyBehaviourBase
     public override void Init(EnemyController controller)
     {
         base.Init(controller);
-        boss = controller.GetComponent<BossController>();
+        boss     = controller.GetComponent<BossController>();
+        animator = controller.GetComponentInChildren<Animator>();
         if (boss != null) boss.OnEnraged += OnBossEnraged;
     }
 
@@ -107,7 +112,8 @@ public class BossBehaviour : EnemyBehaviourBase
         // 목표 위치 = 발동 시점의 플레이어 위치
         Vector3 slamTarget = Owner.PlayerTransform.position;
         Vector3 startPos   = Owner.transform.position;
-        Vector3 apexPos    = new Vector3(slamTarget.x, slamTarget.y + slamJumpHeight, startPos.z);
+        // apex: 보스 시작 위치 바로 위로 높이 솟구침
+        Vector3 apexPos    = new Vector3(startPos.x, startPos.y + slamJumpHeight, startPos.z);
 
         // 1) 위로 올라가기
         float elapsed = 0f;
@@ -136,6 +142,10 @@ public class BossBehaviour : EnemyBehaviourBase
         Owner.transform.position = slamTarget;
 
         if (marker != null) Object.Destroy(marker);
+
+        // 착지 애니메이션 트리거
+        if (animator != null && !string.IsNullOrEmpty(slamLandTrigger))
+            animator.SetTrigger(slamLandTrigger);
 
         // 4) 피해 판정
         float dmg = slamDamage * (boss != null && boss.IsEnraged ? boss.EnrageDamageMult : 1f);

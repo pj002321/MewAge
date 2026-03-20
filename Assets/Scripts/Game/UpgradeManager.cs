@@ -27,6 +27,7 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
     private WeaponData[] allWeapons   = System.Array.Empty<WeaponData>();
     private WeaponData[] currentDraw  = System.Array.Empty<WeaponData>();
     private int          currentChapter = 1;
+    public  int          CurrentChapter => currentChapter;
 
     protected override bool DontDestroy => false;
 

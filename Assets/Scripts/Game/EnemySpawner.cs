@@ -197,6 +197,13 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
         Debug.Log($"[EnemySpawner] 보스 스폰! Wave {currentWave}");
     }
 
+    /// <summary>환경 전환 시 스폰 영역을 교체합니다.</summary>
+    public void ApplySpawnArea(Vector2 center, Vector2 size)
+    {
+        spawnAreaCenter = center;
+        spawnAreaSize   = size;
+    }
+
     public void OnChapterUp(int chapter)
     {
         currentChapter = chapter;

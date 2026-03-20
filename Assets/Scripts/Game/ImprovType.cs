@@ -15,5 +15,6 @@ public enum ImprovType
     MeleeAttackBonus    = 9,  // 근접 무기 공격력 증가
     IncreaseDodge       = 10, // 회피 증가
     PeriodicKnockback   = 11, // 일정 시간마다 주변 적 밀어내기
-    WaveHealHP          = 12, // 매 웨이브 시작 시 체력 회복 (패시브)
+    WaveHealHP              = 12, // 매 웨이브 시작 시 체력 회복 (패시브)
+    UpgradeRandomEquipped   = 13, // 장비창 무기 중 랜덤 1성 업그레이드 (최대 4성)
 }

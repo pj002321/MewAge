@@ -158,11 +158,13 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     public void StartBossWave()
     {
         bossWaveActive = true;
+        WaveEnvironmentSwitcher.Shared?.SetBoss();
     }
 
     public void OnBossDefeated()
     {
         bossWaveActive = false;
+        WaveEnvironmentSwitcher.Shared?.SetNormal();
         if (!waitingForUpgrade)
         {
             waitingForUpgrade = true;

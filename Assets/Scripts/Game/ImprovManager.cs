@@ -121,9 +121,38 @@ public class ImprovManager : MonoBehaviourSingleton<ImprovManager>
             case ImprovType.PeriodicKnockback:   player.StartPeriodicKnockback(data.f_주수치, data.f_보조수치); break;
             // 패시브 — 웨이브 시작 시 자동 체력 회복 (GameManager.StartNextWave에서 적용)
             case ImprovType.WaveHealHP:          player.IncreaseWaveHeal(data.f_주수치);          break;
+            // 장비창 무기 중 랜덤 1성 업그레이드 (최대 4성)
+            case ImprovType.UpgradeRandomEquipped: ApplyRandomEquipUpgrade(); break;
         }
 
         Debug.Log($"[ImprovManager] 증강 적용: {data.f_이름} (type={data.f_효과타입}, 주수치={data.f_주수치})");
+    }
+
+    // ── 장비창 랜덤 1성 업그레이드 ────────────────────────────────
+    private void ApplyRandomEquipUpgrade()
+    {
+        var inv = PlayerInventory.Shared;
+        if (inv == null) return;
+
+        // 4성 미만인 장착 무기 인덱스 수집 (4성 제외, 우선 업그레이드 대상)
+        var candidates = new System.Collections.Generic.List<int>();
+        for (int i = 0; i < inv.Equipped.Count; i++)
+        {
+            var w = inv.Equipped[i];
+            if (w != null && w.star < 4) candidates.Add(i);
+        }
+
+        if (candidates.Count == 0)
+        {
+            Debug.Log("[ImprovManager] 업그레이드 대상 무기 없음 (모두 4성 이상)");
+            return;
+        }
+
+        int idx     = candidates[Random.Range(0, candidates.Count)];
+        var upgraded = inv.Equipped[idx].Upgraded();
+        inv.ReplaceEquipped(idx, upgraded);
+
+        Debug.Log($"[ImprovManager] 장착 슬롯 {idx} 무기 {upgraded.weaponName} → {upgraded.star}성 업그레이드");
     }
 
     // ── 다음 버튼 → UpgradePanel ─────────────────────────────────

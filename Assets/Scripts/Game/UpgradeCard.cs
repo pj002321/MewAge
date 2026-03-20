@@ -14,6 +14,7 @@ public class UpgradeCard : MonoBehaviour
     [SerializeField] private TextMeshProUGUI priceText;
     [SerializeField] private TextMeshProUGUI starText;
     [SerializeField] private Button          buyButton;
+    [SerializeField] private Button          infoButton;
 
     private WeaponData data;
 
@@ -27,17 +28,21 @@ public class UpgradeCard : MonoBehaviour
         {
             weaponIcon.sprite  = weaponData.icon;
             weaponIcon.enabled = weaponData.icon != null;
-            weaponIcon.color   = Color.white; // 이전 카드에서 색상 변경됐을 경우 초기화
+            weaponIcon.color   = Color.white;
         }
         if (weaponNameText) weaponNameText.text = weaponData.weaponName;
-        if (priceText)      priceText.text      = $"{weaponData.price} G";
+        if (priceText)      priceText.text      = $"{weaponData.price}";
         if (starText)       starText.text       = new string('★', weaponData.star);
 
         buyButton.onClick.RemoveAllListeners();
         buyButton.onClick.AddListener(OnClickBuy);
+
+        infoButton?.onClick.RemoveAllListeners();
+        infoButton?.onClick.AddListener(OnClickInfo);
     }
 
     public void SetEmpty() => gameObject.SetActive(false);
 
-    private void OnClickBuy() => UpgradeManager.Shared?.TryBuy(data);
+    private void OnClickBuy()  => UpgradeManager.Shared?.TryBuy(data);
+    private void OnClickInfo() => WeaponInfoPanel.Shared?.Show(data);
 }

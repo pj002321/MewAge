@@ -46,6 +46,16 @@ public class CameraFollow : MonoBehaviour
             target = PlayerController.Instance.transform;
     }
 
+    /// <summary>환경 전환 시 카메라 동작을 일괄 설정합니다.</summary>
+    public void ApplyConfig(bool follow, bool bounds, Vector2 min, Vector2 max)
+    {
+        followPlayer = follow;
+        useBounds    = bounds;
+        boundsMin    = min;
+        boundsMax    = max;
+        velocity     = Vector3.zero; // 이전 스무딩 속도 초기화
+    }
+
     /// <summary>카메라를 잠깐 흔듭니다. PlayerController.TakeDamage에서 호출합니다.</summary>
     public void Shake(float duration = -1f, float magnitude = -1f)
     {
@@ -88,11 +98,16 @@ public class CameraFollow : MonoBehaviour
 
     private Vector3 ClampToBounds(Vector3 pos)
     {
-        float halfH = cam.orthographicSize;
-        float halfW = halfH * cam.aspect;
+        float halfH   = cam.orthographicSize;
+        float halfW   = halfH * cam.aspect;
+        float centerX = (boundsMin.x + boundsMax.x) * 0.5f;
+        float centerY = (boundsMin.y + boundsMax.y) * 0.5f;
+        float rangeX  = (boundsMax.x - boundsMin.x) * 0.5f - halfW;
+        float rangeY  = (boundsMax.y - boundsMin.y) * 0.5f - halfH;
 
-        pos.x = Mathf.Clamp(pos.x, boundsMin.x + halfW, boundsMax.x - halfW);
-        pos.y = Mathf.Clamp(pos.y, boundsMin.y + halfH, boundsMax.y - halfH);
+        // 카메라 뷰가 bounds보다 크면 중앙 고정, 아니면 클램프
+        pos.x = rangeX > 0f ? Mathf.Clamp(pos.x, centerX - rangeX, centerX + rangeX) : centerX;
+        pos.y = rangeY > 0f ? Mathf.Clamp(pos.y, centerY - rangeY, centerY + rangeY) : centerY;
         return pos;
     }
 

@@ -60,7 +60,8 @@ public class FitSpriteToScreen : MonoBehaviour
         transform.localScale = new Vector3(scale, scale, 1f);
 
         // 카메라 orthographicSize를 스케일된 스프라이트 높이에 맞게 조정 (여백 제거)
-        if (adjustCameraToSprite)
+        // OnValidate는 에디터 모드에서도 호출되므로, 카메라 값 변경은 플레이 중에만 허용
+        if (adjustCameraToSprite && Application.isPlaying)
             cam.orthographicSize = spriteSize.y * scale / 2f;
     }
 

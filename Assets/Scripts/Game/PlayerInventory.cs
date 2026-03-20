@@ -40,13 +40,22 @@ public class PlayerInventory : MonoBehaviourSingleton<PlayerInventory>
         if (invenIndex < 0 || invenIndex >= inventory.Count) return;
         var weapon = inventory[invenIndex];
 
-        if (equipped.Count < MaxEquipped)
+        // 첫 번째 빈(null) 슬롯 탐색, 없으면 MaxEquipped 이내 append
+        int emptySlot = -1;
+        for (int i = 0; i < equipped.Count; i++)
+            if (equipped[i] == null) { emptySlot = i; break; }
+        if (emptySlot < 0 && equipped.Count < MaxEquipped)
+            emptySlot = equipped.Count;
+
+        if (emptySlot >= 0)
         {
-            equipped.Add(weapon);
+            if (emptySlot == equipped.Count) equipped.Add(weapon);
+            else equipped[emptySlot] = weapon;
             inventory.RemoveAt(invenIndex);
         }
         else
         {
+            // 6칸 모두 가득 찬 경우 — 마지막 슬롯과 교체
             var displaced = equipped[equipped.Count - 1];
             equipped[equipped.Count - 1] = weapon;
             inventory[invenIndex] = displaced;
@@ -253,6 +262,14 @@ public class PlayerInventory : MonoBehaviourSingleton<PlayerInventory>
 
         OnChanged?.Invoke();
         return true;
+    }
+
+    /// <summary>장착 슬롯의 무기를 교체합니다 (증강 등 외부 업그레이드용).</summary>
+    public void ReplaceEquipped(int index, WeaponData data)
+    {
+        if (index < 0 || index >= equipped.Count) return;
+        equipped[index] = data;
+        OnChanged?.Invoke();
     }
 
     /// <summary>용량 무시하고 인벤에 추가합니다. 합성으로 슬롯이 바로 확보되는 경우에만 사용하세요.</summary>

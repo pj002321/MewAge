@@ -54,6 +54,9 @@ public class UpgradePanel : MonoBehaviour
     [SerializeField] private Button          unequipActionButton;
     [SerializeField] private Button          sellEquipActionButton;
 
+    [Header("시너지 슬롯 (챕터별 4개)")]
+    [SerializeField] private Image[]  synergySlotImages   = new Image[4];
+
     [Header("등급 확률 텍스트 (Normal/Rare/Elite/Epic/Legend)")]
     [SerializeField] private TextMeshProUGUI normalProbText;
     [SerializeField] private TextMeshProUGUI rareProbText;
@@ -67,11 +70,13 @@ public class UpgradePanel : MonoBehaviour
     [SerializeField] private Canvas        rootCanvas;
 
     // ── 내부 상태 ────────────────────────────────────────────────────
-    private Coroutine notifCoroutine;
-    private Coroutine autoStartCoroutine;
-    private int       selectedInvenIndex  = -1;
-    private int       selectedEquipIndex  = -1;
-    private bool      isFirstWave         = false;
+    private Coroutine          notifCoroutine;
+    private Coroutine          autoStartCoroutine;
+    private int                selectedInvenIndex  = -1;
+    private int                selectedEquipIndex  = -1;
+    private bool               isFirstWave         = false;
+    // 챕터 시너지 슬롯에 매핑된 태그 (Refresh 시 캐싱)
+    private WeaponSynergyTag[] synergySlotTags = new WeaponSynergyTag[4];
 
     // ────────────────────────────────────────────────────────────────
     // 초기화
@@ -89,6 +94,19 @@ public class UpgradePanel : MonoBehaviour
         if (sellEquipActionButton) sellEquipActionButton.onClick.AddListener(OnSellEquipActionClicked);
         if (invenActionPanel)     invenActionPanel   .SetActive(false);
         if (equipSlotActionPanel) equipSlotActionPanel.SetActive(false);
+
+        for (int i = 0; i < synergySlotImages.Length; i++)
+        {
+            int idx = i;
+            var img = synergySlotImages[idx];
+            if (img == null) continue;
+            // 같은 오브젝트 또는 부모에서 Button 자동 검색
+            var btn = img.GetComponent<Button>() ?? img.GetComponentInParent<Button>();
+            if (btn != null)
+                btn.onClick.AddListener(() => OnSynergySlotClicked(idx));
+            else
+                Debug.LogWarning($"[UpgradePanel] synergySlotImages[{idx}] 에서 Button을 찾을 수 없습니다.");
+        }
 
         for (int i = 0; i < invenSlots.Length; i++)
         {
@@ -164,7 +182,32 @@ public class UpgradePanel : MonoBehaviour
         if (legendProbText) legendProbText.text = $"{pLegend:0.#}%";
 
         RefreshGold();
+        RefreshSynergySlots(wave);
         RefreshInventoryUI();
+    }
+
+    private void RefreshSynergySlots(int wave)
+    {
+        int chapter = UpgradeManager.Shared?.CurrentChapter ?? 1;
+        var synergies = SynergyHelper.GetChapterSynergies(chapter);
+
+        for (int i = 0; i < synergySlotImages.Length; i++)
+        {
+            var img = synergySlotImages[i];
+            if (img == null) continue;
+
+            if (i < synergies.Count)
+            {
+                synergySlotTags[i] = synergies[i].Tag;
+                img.sprite  = synergies[i].Icon;
+                img.enabled = synergies[i].Icon != null;
+            }
+            else
+            {
+                synergySlotTags[i] = WeaponSynergyTag.None;
+                img.enabled = false;
+            }
+        }
     }
 
     public void RefreshGold()
@@ -193,7 +236,29 @@ public class UpgradePanel : MonoBehaviour
         bool hasEquipped = inv.Equipped.Count > 0;
         if (nextWaveButton) nextWaveButton.interactable = hasEquipped;
 
+        RefreshSynergyColors();
         RefreshGold();
+    }
+
+    private void RefreshSynergyColors()
+    {
+        for (int i = 0; i < synergySlotImages.Length; i++)
+        {
+            var img = synergySlotImages[i];
+            if (img == null) continue;
+            int count = SynergyHelper.CountEquippedTag(synergySlotTags[i]);
+            img.color = SynergyHelper.GetTierColor(count);
+        }
+
+        // 시너지 정보 패널이 열려있으면 장착 수 반영
+        SynergyInfoPanel.Shared?.Refresh();
+    }
+
+    private void OnSynergySlotClicked(int index)
+    {
+        int chapter = UpgradeManager.Shared?.CurrentChapter ?? 1;
+        Debug.Log($"[Synergy] slot {index} clicked, chapter={chapter}, panel={SynergyInfoPanel.Shared}");
+        SynergyInfoPanel.Shared?.Show(chapter);
     }
 
     // ────────────────────────────────────────────────────────────────
@@ -211,6 +276,7 @@ public class UpgradePanel : MonoBehaviour
         {
             selectedInvenIndex = -1;
             if (invenActionPanel) invenActionPanel.SetActive(false);
+            WeaponInfoPanel.Shared?.Hide();
         }
         else
         {
@@ -230,6 +296,9 @@ public class UpgradePanel : MonoBehaviour
                              && inv.CanMergeAll(item.weaponName, item.star);
                 mergeActionButton.interactable = canMerge;
             }
+
+            // 무기 정보 패널
+            WeaponInfoPanel.Shared?.Show(inv.Inventory[slotIndex]);
         }
 
         RefreshInventoryUI();
@@ -250,6 +319,7 @@ public class UpgradePanel : MonoBehaviour
         {
             selectedEquipIndex = -1;
             if (equipSlotActionPanel) equipSlotActionPanel.SetActive(false);
+            WeaponInfoPanel.Shared?.Hide();
         }
         else
         {
@@ -265,6 +335,9 @@ public class UpgradePanel : MonoBehaviour
             }
             else
                 Debug.LogWarning("[Panel] equipSlotActionPanel 레퍼런스 NULL!");
+
+            // 무기 정보 패널
+            WeaponInfoPanel.Shared?.Show(inv.Equipped[slotIndex]);
         }
 
         RefreshInventoryUI();

@@ -22,24 +22,42 @@ public class WeaponData : ScriptableObject
     [Header("성 단계 (합성으로 증가, 프레임 색 결정)")]
     public int star = 1;        // 1~5성
 
+    [Header("시너지 태그")]
+    public WeaponSynergyTag tag1;
+    public WeaponSynergyTag tag2;
+
     [Header("가격 & 출현 조건")]
     public int price   = 20;
     public int chapter = 1;
+
+    [Header("무기 스탯 (WeaponPoint에서 자동 로드)")]
+    public float attackDamage;
+    public float attackCooldown;
+    public float attackRange;
+    public float criticalRate;
+    public float dotDamage;
 
     // ────────────────────────────────────────────────────────────────
     // 합성 — 같은 무기를 복사하고 성 1단계 올립니다
     // ────────────────────────────────────────────────────────────────
     public WeaponData Upgraded()
     {
-        var next        = CreateInstance<WeaponData>();
-        next.weaponName = weaponName;
-        next.icon       = icon;
-        next.weaponType = weaponType;
-        next.prefab     = prefab;
-        next.grade      = grade;
-        next.price      = price;
-        next.chapter    = chapter;
-        next.star       = star + 1;   // 성 단계만 올림
+        var next            = CreateInstance<WeaponData>();
+        next.weaponName     = weaponName;
+        next.icon           = icon;
+        next.weaponType     = weaponType;
+        next.prefab         = prefab;
+        next.grade          = grade;
+        next.price          = price;
+        next.chapter        = chapter;
+        next.star           = star + 1;
+        next.tag1           = tag1;
+        next.tag2           = tag2;
+        next.attackDamage   = attackDamage;
+        next.attackCooldown = attackCooldown;
+        next.attackRange    = attackRange;
+        next.criticalRate   = criticalRate;
+        next.dotDamage      = dotDamage;
         return next;
     }
 
@@ -50,15 +68,33 @@ public class WeaponData : ScriptableObject
     {
         var data        = CreateInstance<WeaponData>();
         data.weaponName = row.f_이름;
-        data.grade      = row.f_등급;   // 희귀도는 DB에서 읽음
-        data.star       = 1;            // 구매 시 항상 1성, 합성으로만 성 올라감
+        data.grade      = row.f_등급;
+        data.star       = 1;
         data.weaponType = row.f_타입;
         data.price      = row.f_가격;
         data.chapter    = row.f_챕터;
         data.prefab     = row.f_프리팹;
+        data.tag1 = row.f_태그1;
+        data.tag2 = row.f_태그2;
+
         if (data.prefab != null)
-            data.icon = data.prefab.GetComponent<SpriteRenderer>()?.sprite;
+        {
+            // 아이콘: SpriteRenderer (최상위 우선, 없으면 자식 탐색)
+            data.icon = data.prefab.GetComponent<SpriteRenderer>()?.sprite
+                     ?? data.prefab.GetComponentInChildren<SpriteRenderer>()?.sprite;
+
+            // 스탯: WeaponPoint 컴포넌트에서 읽음
+            var wp = data.prefab.GetComponentInChildren<WeaponPoint>();
+            if (wp != null)
+            {
+                data.attackDamage   = wp.AttackDamage;
+                data.attackCooldown = wp.AttackCooldown;
+                data.attackRange    = wp.AttackRange;
+                data.criticalRate   = wp.CriticalRate;
+                data.dotDamage      = wp.DotDamage;
+            }
+        }
+
         return data;
     }
-
 }
