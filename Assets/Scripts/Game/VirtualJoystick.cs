@@ -22,7 +22,6 @@ public class VirtualJoystick : MonoBehaviour
     private void Awake()
     {
         Instance = this;
-        background.gameObject.SetActive(false);
     }
 
     private void Update()
@@ -73,10 +72,8 @@ public class VirtualJoystick : MonoBehaviour
     // ── 조이스틱 상태 제어 ─────────────────────────────
     private void BeginJoystick(Vector2 screenPos)
     {
-        background.gameObject.SetActive(true);
-        background.position      = screenPos;   // Screen Space-Overlay: position == screen coords
-        handle.anchoredPosition  = Vector2.zero;
-        inputVector              = Vector2.zero;
+        handle.anchoredPosition = Vector2.zero;
+        inputVector             = Vector2.zero;
     }
 
     private void MoveJoystick(Vector2 screenPos)
