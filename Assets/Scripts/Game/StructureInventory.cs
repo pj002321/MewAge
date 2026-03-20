@@ -75,7 +75,8 @@ public class StructureInventory : MonoBehaviourSingleton<StructureInventory>
     }
 
     // ── 사용 (버튼 클릭 시 호출) ────────────────────────────────────
-    public void UseAt(int slot)
+    /// <param name="launchOriginWorld">발사 시작 월드 좌표. null이면 플레이어 위치 사용.</param>
+    public void UseAt(int slot, Vector3? launchOriginWorld = null)
     {
         if (slot < 0 || slot >= SlotCount) return;
         if (slotData[slot] == null || slotCount[slot] <= 0) return;
@@ -87,8 +88,12 @@ public class StructureInventory : MonoBehaviourSingleton<StructureInventory>
         slotCount[slot]--;
         if (slotCount[slot] <= 0) slotData[slot] = null;
 
-        if (data.f_설치프리팹 != null)
-            Object.Instantiate(data.f_설치프리팹, player.Position, Quaternion.identity);
+        Vector3 origin = launchOriginWorld ?? (Vector3)(Vector2)player.Position;
+
+        if (StructurePlacer.Shared != null)
+            StructurePlacer.Shared.Place(data, origin);
+        else if (data.f_설치프리팹 != null)
+            Object.Instantiate(data.f_설치프리팹, (Vector3)(Vector2)player.Position, Quaternion.identity);
 
         OnChanged?.Invoke();
     }

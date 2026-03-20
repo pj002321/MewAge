@@ -71,6 +71,19 @@ public class StructureButton : MonoBehaviour
     private void OnClick()
     {
         SoundManager.Shared?.Play(SoundKey.UI_Click);
-        StructureInventory.Shared?.UseAt(slotIndex);
+        StructureInventory.Shared?.UseAt(slotIndex, GetButtonWorldPos());
+    }
+
+    /// <summary>Screen Space – Overlay 버튼 위치를 게임 월드 좌표로 변환합니다.</summary>
+    private Vector3 GetButtonWorldPos()
+    {
+        var cam = Camera.main;
+        if (cam == null || button == null) return Vector3.zero;
+
+        Vector3 screenPos = button.transform.position; // SS-Overlay: position = 화면 픽셀
+        float   depth     = Mathf.Abs(cam.transform.position.z);
+        Vector3 world     = cam.ScreenToWorldPoint(new Vector3(screenPos.x, screenPos.y, depth));
+        world.z = 0f;
+        return world;
     }
 }

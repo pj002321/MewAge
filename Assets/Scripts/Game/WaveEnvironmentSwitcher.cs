@@ -20,13 +20,6 @@ public class WaveEnvironmentSwitcher : MonoBehaviourSingleton<WaveEnvironmentSwi
         public Vector2 boundsMax;
     }
 
-    [System.Serializable]
-    public struct SpawnAreaConfig
-    {
-        public Vector2 center;
-        public Vector2 size;
-    }
-
     [Header("일반 웨이브")]
     [SerializeField] private GameObject   normalEnvironment;
     [SerializeField] private CameraConfig normalCamera = new()
@@ -36,11 +29,6 @@ public class WaveEnvironmentSwitcher : MonoBehaviourSingleton<WaveEnvironmentSwi
         boundsMin    = new Vector2(-10f, -18f),
         boundsMax    = new Vector2( 10f,  18f),
     };
-    [SerializeField] private SpawnAreaConfig normalSpawnArea = new()
-    {
-        center = Vector2.zero,
-        size   = new Vector2(10f, 18f),
-    };
 
     [Header("보스 웨이브")]
     [SerializeField] private GameObject   bossEnvironment;
@@ -49,11 +37,6 @@ public class WaveEnvironmentSwitcher : MonoBehaviourSingleton<WaveEnvironmentSwi
         followPlayer = false,
         useBounds    = false,
     };
-    [SerializeField] private SpawnAreaConfig bossSpawnArea = new()
-    {
-        center = Vector2.zero,
-        size   = new Vector2(10f, 18f),
-    };
 
     protected override bool DontDestroy => false;
 
@@ -61,12 +44,11 @@ public class WaveEnvironmentSwitcher : MonoBehaviourSingleton<WaveEnvironmentSwi
 
     public void SetNormal()
     {
-        if (bossEnvironment)   bossEnvironment.SetActive(false);   // 먼저 끄고
-        if (normalEnvironment) normalEnvironment.SetActive(true);  // 그 다음 켜기
-        // 이미 활성화된 경우 OnEnable이 안 오를 수 있으므로 강제 등록
+        if (bossEnvironment)   bossEnvironment.SetActive(false);
+        if (normalEnvironment) normalEnvironment.SetActive(true);
         normalEnvironment?.GetComponentInChildren<MovementBounds>(true)?.Register();
+        normalEnvironment?.GetComponentInChildren<SpawnZone>(true)?.Register();
         ApplyCamera(normalCamera);
-        EnemySpawner.Shared?.ApplySpawnArea(normalSpawnArea.center, normalSpawnArea.size);
     }
 
     public void SetBoss()
@@ -74,8 +56,8 @@ public class WaveEnvironmentSwitcher : MonoBehaviourSingleton<WaveEnvironmentSwi
         if (normalEnvironment) normalEnvironment.SetActive(false);
         if (bossEnvironment)   bossEnvironment.SetActive(true);
         bossEnvironment?.GetComponentInChildren<MovementBounds>(true)?.Register();
+        bossEnvironment?.GetComponentInChildren<SpawnZone>(true)?.Register();
         ApplyCamera(bossCamera);
-        EnemySpawner.Shared?.ApplySpawnArea(bossSpawnArea.center, bossSpawnArea.size);
     }
 
     private static void ApplyCamera(CameraConfig cfg)

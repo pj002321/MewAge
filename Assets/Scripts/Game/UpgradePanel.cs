@@ -43,17 +43,6 @@ public class UpgradePanel : MonoBehaviour
     [Header("인벤토리 슬롯 (10개)")]
     [SerializeField] private InvenSlot[] invenSlots;
 
-    [Header("인벤토리 액션 (장착/팔기/합성)")]
-    [SerializeField] private GameObject      invenActionPanel;
-    [SerializeField] private Button          equipActionButton;
-    [SerializeField] private Button          sellActionButton;
-    [SerializeField] private Button          mergeActionButton;
-
-    [Header("장착 슬롯 액션 (해제/판매)")]
-    [SerializeField] private GameObject      equipSlotActionPanel;
-    [SerializeField] private Button          unequipActionButton;
-    [SerializeField] private Button          sellEquipActionButton;
-
     [Header("시너지 슬롯 (챕터별 4개)")]
     [SerializeField] private Image[]  synergySlotImages   = new Image[4];
 
@@ -86,14 +75,6 @@ public class UpgradePanel : MonoBehaviour
         rerollButton? .onClick.AddListener(() => UpgradeManager.Shared?.TryReroll());
         buyExpButton? .onClick.AddListener(() => UpgradeManager.Shared?.TryBuyExp());
         nextWaveButton?.onClick.AddListener(OnNextWaveClicked);
-
-        if (equipActionButton)    equipActionButton  .onClick.AddListener(OnEquipActionClicked);
-        if (sellActionButton)     sellActionButton   .onClick.AddListener(OnSellActionClicked);
-        if (mergeActionButton)    mergeActionButton  .onClick.AddListener(OnMergeActionClicked);
-        if (unequipActionButton)  unequipActionButton.onClick.AddListener(OnUnequipActionClicked);
-        if (sellEquipActionButton) sellEquipActionButton.onClick.AddListener(OnSellEquipActionClicked);
-        if (invenActionPanel)     invenActionPanel   .SetActive(false);
-        if (equipSlotActionPanel) equipSlotActionPanel.SetActive(false);
 
         for (int i = 0; i < synergySlotImages.Length; i++)
         {
@@ -132,8 +113,7 @@ public class UpgradePanel : MonoBehaviour
 
         selectedInvenIndex  = -1;
         selectedEquipIndex  = -1;
-        if (invenActionPanel)     invenActionPanel    .SetActive(false);
-        if (equipSlotActionPanel) equipSlotActionPanel.SetActive(false);
+        WeaponInfoPanel.Shared?.Hide();
 
         if (characterPortraitImage && characterPortraitSprite)
             characterPortraitImage.sprite = characterPortraitSprite;
@@ -169,10 +149,8 @@ public class UpgradePanel : MonoBehaviour
                 cards[i].SetEmpty();
         }
 
-        // 첫 웨이브(wave=0)는 리롤·판매 금지
-        if (rerollButton)         rerollButton.interactable        = !isFirstWave;
-        if (sellActionButton)     sellActionButton.interactable    = !isFirstWave;
-        if (sellEquipActionButton) sellEquipActionButton.interactable = !isFirstWave;
+        // 첫 웨이브(wave=0)는 리롤 금지
+        if (rerollButton) rerollButton.interactable = !isFirstWave;
 
         // 등급 확률 텍스트
         if (normalProbText) normalProbText.text = $"{pNormal:0.#}%";
@@ -267,38 +245,36 @@ public class UpgradePanel : MonoBehaviour
     public void OnInvenSlotClicked(int slotIndex, Transform _)
     {
         var inv = PlayerInventory.Shared;
-        if (inv == null) { Debug.LogWarning("[Panel] PlayerInventory.Shared is null"); return; }
+        if (inv == null) return;
 
         bool hasItem = slotIndex < inv.Inventory.Count;
-        Debug.Log($"[Panel] InvenSlot clicked: slot={slotIndex}, hasItem={hasItem}, count={inv.Inventory.Count}");
 
         if (!hasItem || selectedInvenIndex == slotIndex)
         {
             selectedInvenIndex = -1;
-            if (invenActionPanel) invenActionPanel.SetActive(false);
             WeaponInfoPanel.Shared?.Hide();
         }
         else
         {
-            // 장착 슬롯 선택 해제
             selectedEquipIndex = -1;
-            if (equipSlotActionPanel) equipSlotActionPanel.SetActive(false);
-
             selectedInvenIndex = slotIndex;
-            if (invenActionPanel) invenActionPanel.SetActive(true);
 
-            // 합성 버튼: 인벤+장착 합산 3개 이상 있을 때만 활성화
-            if (mergeActionButton)
-            {
-                var item      = inv.Inventory[slotIndex];
-                bool canMerge = item != null
-                             && item.star < 5
-                             && inv.CanMergeAll(item.weaponName, item.star);
-                mergeActionButton.interactable = canMerge;
-            }
-
-            // 무기 정보 패널
-            WeaponInfoPanel.Shared?.Show(inv.Inventory[slotIndex]);
+            var item = inv.Inventory[slotIndex];
+            WeaponInfoPanel.Shared?.Show(item,
+                onEquip: () =>
+                {
+                    PlayerInventory.Shared?.EquipFromInventory(slotIndex);
+                    SoundManager.Shared?.Play(SoundKey.UI_Equip);
+                    selectedInvenIndex = -1;
+                    RefreshInventoryUI();
+                },
+                onSell: isFirstWave ? null : (System.Action)(() =>
+                {
+                    DoSellInven(slotIndex);
+                    selectedInvenIndex = -1;
+                    RefreshInventoryUI();
+                })
+            );
         }
 
         RefreshInventoryUI();
@@ -310,129 +286,83 @@ public class UpgradePanel : MonoBehaviour
     public void OnEquipSlotClicked(int slotIndex)
     {
         var inv = PlayerInventory.Shared;
-        if (inv == null) { Debug.LogWarning("[Panel] PlayerInventory.Shared is null"); return; }
+        if (inv == null) return;
 
         bool hasItem = slotIndex < inv.Equipped.Count && inv.Equipped[slotIndex] != null;
-        Debug.Log($"[Panel] EquipSlot clicked: slot={slotIndex}, hasItem={hasItem}, equippedCount={inv.Equipped.Count}, equipSlotActionPanel={(equipSlotActionPanel != null ? "OK" : "NULL")}");
 
         if (!hasItem || selectedEquipIndex == slotIndex)
         {
             selectedEquipIndex = -1;
-            if (equipSlotActionPanel) equipSlotActionPanel.SetActive(false);
             WeaponInfoPanel.Shared?.Hide();
         }
         else
         {
-            // 인벤 선택 해제
             selectedInvenIndex = -1;
-            if (invenActionPanel) invenActionPanel.SetActive(false);
-
             selectedEquipIndex = slotIndex;
-            if (equipSlotActionPanel)
-            {
-                equipSlotActionPanel.SetActive(true);
-                Debug.Log($"[Panel] equipSlotActionPanel SetActive(true) → activeSelf={equipSlotActionPanel.activeSelf}, activeInHierarchy={equipSlotActionPanel.activeInHierarchy}");
-            }
-            else
-                Debug.LogWarning("[Panel] equipSlotActionPanel 레퍼런스 NULL!");
 
-            // 무기 정보 패널
-            WeaponInfoPanel.Shared?.Show(inv.Equipped[slotIndex]);
+            WeaponInfoPanel.Shared?.Show(inv.Equipped[slotIndex],
+                onUnequip: () =>
+                {
+                    var i = PlayerInventory.Shared;
+                    if (i != null && !i.UnequipToInventory(slotIndex))
+                    {
+                        ShowNotification("인벤토리가 가득 찼습니다.");
+                    }
+                    else
+                    {
+                        SoundManager.Shared?.Play(SoundKey.UI_Unequip);
+                        UpgradeManager.Shared?.TryAutoMergeAll();
+                    }
+                    selectedEquipIndex = -1;
+                    RefreshInventoryUI();
+                },
+                onSell: isFirstWave ? null : (System.Action)(() =>
+                {
+                    DoSellEquip(slotIndex);
+                    selectedEquipIndex = -1;
+                    RefreshInventoryUI();
+                })
+            );
         }
 
         RefreshInventoryUI();
     }
 
     // ────────────────────────────────────────────────────────────────
-    // 액션 버튼
+    // 판매 헬퍼 (코인 이펙트 포함)
     // ────────────────────────────────────────────────────────────────
-    private void OnEquipActionClicked()
+    private void DoSellInven(int slotIndex)
     {
-        if (selectedInvenIndex < 0) return;
-        PlayerInventory.Shared?.EquipFromInventory(selectedInvenIndex);
-        SoundManager.Shared?.Play(SoundKey.UI_Equip);
-        Deselect();
-    }
-
-    private void OnSellActionClicked()
-    {
-        if (selectedInvenIndex < 0) return;
         var inv = PlayerInventory.Shared;
-        if (inv == null || selectedInvenIndex >= inv.Inventory.Count) return;
+        if (inv == null || slotIndex >= inv.Inventory.Count) return;
 
-        // 코인 이펙트
         if (coinImageSource != null && rootCanvas != null && goldTextRect != null)
         {
             Camera cam      = rootCanvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : rootCanvas.worldCamera;
-            Vector2 startSP = RectTransformUtility.WorldToScreenPoint(cam, invenSlots[selectedInvenIndex].transform.position);
+            Vector2 startSP = RectTransformUtility.WorldToScreenPoint(cam, invenSlots[slotIndex].transform.position);
             Vector2 endSP   = RectTransformUtility.WorldToScreenPoint(cam, goldTextRect.position);
             StartCoroutine(CoinFlyRoutine(startSP, endSP, cam));
         }
 
-        inv.SellFromInventory(selectedInvenIndex);
+        inv.SellFromInventory(slotIndex);
         SoundManager.Shared?.Play(SoundKey.UI_Sell);
-        Deselect();
     }
 
-    private void OnMergeActionClicked()
+    private void DoSellEquip(int slotIndex)
     {
-        if (selectedInvenIndex < 0) return;
         var inv = PlayerInventory.Shared;
-        if (inv == null || selectedInvenIndex >= inv.Inventory.Count) return;
+        if (inv == null || slotIndex >= inv.Equipped.Count) return;
 
-        var item = inv.Inventory[selectedInvenIndex];
-        UpgradeManager.Shared?.TryMerge(item.weaponName, item.star);
-        Deselect();
-    }
-
-    private void OnUnequipActionClicked()
-    {
-        if (selectedEquipIndex < 0) return;
-        var inv = PlayerInventory.Shared;
-        if (inv == null) return;
-
-        if (!inv.UnequipToInventory(selectedEquipIndex))
-        {
-            ShowNotification("인벤토리가 가득 찼습니다.");
-            DeselectEquip();
-            return;
-        }
-
-        SoundManager.Shared?.Play(SoundKey.UI_Unequip);
-        DeselectEquip();
-        UpgradeManager.Shared?.TryAutoMergeAll();
-    }
-
-    private void OnSellEquipActionClicked()
-    {
-        if (selectedEquipIndex < 0) return;
-        var inv = PlayerInventory.Shared;
-        if (inv == null || selectedEquipIndex >= inv.Equipped.Count) return;
-
-        // 코인 이펙트
         if (coinImageSource != null && rootCanvas != null && goldTextRect != null)
         {
-            Camera cam = rootCanvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : rootCanvas.worldCamera;
-            Vector2 startSP = RectTransformUtility.WorldToScreenPoint(cam, equipSlots[selectedEquipIndex].transform.position);
+            Camera cam      = rootCanvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : rootCanvas.worldCamera;
+            Vector2 startSP = RectTransformUtility.WorldToScreenPoint(cam, equipSlots[slotIndex].transform.position);
             Vector2 endSP   = RectTransformUtility.WorldToScreenPoint(cam, goldTextRect.position);
             StartCoroutine(CoinFlyRoutine(startSP, endSP, cam));
         }
 
-        inv.SellFromEquipped(selectedEquipIndex);
+        inv.SellFromEquipped(slotIndex);
         SoundManager.Shared?.Play(SoundKey.UI_Sell);
-        DeselectEquip();
-    }
-
-    private void Deselect()
-    {
-        selectedInvenIndex = -1;
-        if (invenActionPanel) invenActionPanel.SetActive(false);
-    }
-
-    private void DeselectEquip()
-    {
-        selectedEquipIndex = -1;
-        if (equipSlotActionPanel) equipSlotActionPanel.SetActive(false);
     }
 
     // ────────────────────────────────────────────────────────────────

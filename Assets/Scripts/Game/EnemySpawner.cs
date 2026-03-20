@@ -12,11 +12,7 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
     [Header("Prefab")]
     [SerializeField] private GameObject spawnMarkerPrefab;
 
-    [Header("스폰 영역 (Gizmo로 표시됨)")]
-    [SerializeField] private Vector2 spawnAreaCenter = Vector2.zero;
-    [SerializeField] private Vector2 spawnAreaSize   = new(10f, 18f);
-    [Tooltip("스폰 영역 외곽에서 얼마나 더 바깥쪽에 스폰할지")]
-    [SerializeField] private float spawnEdgeOffset   = 0.3f;
+    // 스폰 영역은 SpawnZone 컴포넌트(NormalEnv/BossEnv 하위)가 담당합니다.
 
     private float currentInterval;
     private int   currentSpawnCount;
@@ -27,9 +23,9 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
 
     protected override bool DontDestroy => false;
 
-    /// <summary>플레이 영역 경계 — 돌진형 적이 맵 밖으로 나가지 않도록 사용합니다.</summary>
-    public Vector2 AreaCenter => spawnAreaCenter;
-    public Vector2 AreaSize   => spawnAreaSize;
+    /// <summary>현재 SpawnZone AABB — 돌진형/무리 적의 경계 클램프에 사용합니다.</summary>
+    public Vector2 AreaCenter => SpawnZone.Shared != null ? SpawnZone.Shared.BoundsCenter : Vector2.zero;
+    public Vector2 AreaSize   => SpawnZone.Shared != null ? SpawnZone.Shared.BoundsSize   : new Vector2(10f, 18f);
 
     private void Start()
     {
@@ -197,13 +193,6 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
         Debug.Log($"[EnemySpawner] 보스 스폰! Wave {currentWave}");
     }
 
-    /// <summary>환경 전환 시 스폰 영역을 교체합니다.</summary>
-    public void ApplySpawnArea(Vector2 center, Vector2 size)
-    {
-        spawnAreaCenter = center;
-        spawnAreaSize   = size;
-    }
-
     public void OnChapterUp(int chapter)
     {
         currentChapter = chapter;
@@ -239,43 +228,17 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
     // ── 스폰 위치 ──────────────────────────────────────────────────
     private Vector2 GetRandomEdgePosition()
     {
-        float halfW = spawnAreaSize.x * 0.5f + spawnEdgeOffset;
-        float halfH = spawnAreaSize.y * 0.5f + spawnEdgeOffset;
-        Vector2 center = spawnAreaCenter;
+        if (SpawnZone.Shared != null)
+            return SpawnZone.Shared.GetRandomEdgePosition();
 
+        // SpawnZone 없을 때 폴백 (중앙 기준 10×18 직사각형 외곽)
         int side = Random.Range(0, 4);
         return side switch
         {
-            0 => new Vector2(center.x + Random.Range(-halfW, halfW), center.y + halfH),
-            1 => new Vector2(center.x + Random.Range(-halfW, halfW), center.y - halfH),
-            2 => new Vector2(center.x - halfW, center.y + Random.Range(-halfH, halfH)),
-            _ => new Vector2(center.x + halfW, center.y + Random.Range(-halfH, halfH)),
+            0 => new Vector2(Random.Range(-5f,  5f),  9.5f),
+            1 => new Vector2(Random.Range(-5f,  5f), -9.5f),
+            2 => new Vector2(-5.5f, Random.Range(-9f, 9f)),
+            _ => new Vector2( 5.5f, Random.Range(-9f, 9f)),
         };
-    }
-
-    // ── Gizmo ──────────────────────────────────────────────────────
-    private void OnDrawGizmos()
-    {
-        Gizmos.color = new Color(1f, 0.3f, 0.3f, 0.8f);
-        Vector2 outerSize = spawnAreaSize + Vector2.one * spawnEdgeOffset * 2f;
-        Gizmos.DrawWireCube(spawnAreaCenter, outerSize);
-
-        Gizmos.color = new Color(0.3f, 1f, 0.3f, 0.5f);
-        Gizmos.DrawWireCube(spawnAreaCenter, spawnAreaSize);
-
-        Gizmos.color = new Color(1f, 1f, 0f, 0.9f);
-        float hw = spawnAreaSize.x * 0.5f + spawnEdgeOffset;
-        float hh = spawnAreaSize.y * 0.5f + spawnEdgeOffset;
-        Gizmos.DrawSphere(spawnAreaCenter + new Vector2(0,    hh), 0.15f);
-        Gizmos.DrawSphere(spawnAreaCenter + new Vector2(0,   -hh), 0.15f);
-        Gizmos.DrawSphere(spawnAreaCenter + new Vector2(-hw,   0), 0.15f);
-        Gizmos.DrawSphere(spawnAreaCenter + new Vector2( hw,   0), 0.15f);
-
-#if UNITY_EDITOR
-        UnityEditor.Handles.color = Color.white;
-        UnityEditor.Handles.Label(
-            spawnAreaCenter + new Vector2(-spawnAreaSize.x * 0.5f, spawnAreaSize.y * 0.5f + spawnEdgeOffset + 0.2f),
-            "[ Spawn Area ]");
-#endif
     }
 }

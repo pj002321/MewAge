@@ -44,5 +44,6 @@ public class UpgradeCard : MonoBehaviour
     public void SetEmpty() => gameObject.SetActive(false);
 
     private void OnClickBuy()  => UpgradeManager.Shared?.TryBuy(data);
-    private void OnClickInfo() => WeaponInfoPanel.Shared?.Show(data);
+    private void OnClickInfo() => WeaponInfoPanel.Shared?.Show(data,
+        onBuy: () => UpgradeManager.Shared?.TryBuy(data));
 }

@@ -3,32 +3,11 @@ using UnityEngine.UI;
 using TMPro;
 
 /// <summary>
-/// 무기 정보 표시 전용 패널 (정보만, 액션 버튼 없음).
-/// InvenSlot / EquipSlot / UpgradeCard의 정보 버튼이 Show()를 호출합니다.
-///
-/// Inspector 연결:
-///   panelRoot        — 패널 루트 GameObject
-///   bgButton         — 빈 배경 Button (누르면 Hide)
-///   frameImage       — 무기 프레임 Image
-///   iconImage        — 무기 아이콘 Image
-///   starText         — 별 개수 TMP  ("★★★")
-///   gradeText        — 등급 TMP  ("레어")
-///   nameText         — 무기 이름 TMP
-///
-///   스탯 (메인값 / 서브값):
-///     attackText / attackSubText   — 공격력 / 강화된 공격력 델타
-///     speedText  / speedSubText    — 공격속도 (회/s, 1/쿨다운)
-///     rangeText  / rangeSubText    — 사거리
-///     critText       / critSubText      — 크리티컬
-///     bleedText      / bleedSubText     — 출혈 데미지
-///     lifeStealText  / lifeStealSubText — 흡혈
-///
-///   성 강화 설명:
-///     star2Desc / star3Desc / star4Desc — 2/3/4성 보너스 설명 TMP
-///
-///   storyText        — 무기 스토리 설명 TMP
-///   synergyIcon1/2   — 시너지 태그 아이콘 Image
-///   closeButton      — 닫기 버튼 (옵션)
+/// 무기 정보 + 액션 패널.
+/// Show(data, onEquip, onSell, onUnequip, onBuy) — null 콜백의 버튼은 자동으로 숨겨집니다.
+///   InvenSlot  → onEquip + onSell
+///   EquipSlot  → onUnequip + onSell
+///   UpgradeCard → onBuy
 /// </summary>
 public class WeaponInfoPanel : MonoBehaviourSingleton<WeaponInfoPanel>
 {
@@ -76,6 +55,17 @@ public class WeaponInfoPanel : MonoBehaviourSingleton<WeaponInfoPanel>
     [Header("닫기 버튼")]
     [SerializeField] private Button closeButton;
 
+    [Header("액션 버튼")]
+    [SerializeField] private Button equipButton;
+    [SerializeField] private Button sellButton;
+    [SerializeField] private Button unequipButton;
+    [SerializeField] private Button buyButton;
+
+    private System.Action _onEquip;
+    private System.Action _onSell;
+    private System.Action _onUnequip;
+    private System.Action _onBuy;
+
     protected override bool DontDestroy => false;
 
     protected override void Awake()
@@ -83,12 +73,28 @@ public class WeaponInfoPanel : MonoBehaviourSingleton<WeaponInfoPanel>
         base.Awake();
         bgButton?.onClick.AddListener(Hide);
         closeButton?.onClick.AddListener(Hide);
+        equipButton?.onClick.AddListener(OnEquipClicked);
+        sellButton?.onClick.AddListener(OnSellClicked);
+        unequipButton?.onClick.AddListener(OnUnequipClicked);
+        buyButton?.onClick.AddListener(OnBuyClicked);
         if (panelRoot) panelRoot.SetActive(false);
     }
 
-    public void Show(WeaponData data)
+    public void Show(WeaponData data,
+        System.Action onEquip   = null, System.Action onSell    = null,
+        System.Action onUnequip = null, System.Action onBuy     = null)
     {
         if (data == null) return;
+
+        _onEquip   = onEquip;
+        _onSell    = onSell;
+        _onUnequip = onUnequip;
+        _onBuy     = onBuy;
+
+        equipButton?.gameObject.SetActive(onEquip   != null);
+        sellButton?.gameObject.SetActive(onSell     != null);
+        unequipButton?.gameObject.SetActive(onUnequip != null);
+        buyButton?.gameObject.SetActive(onBuy       != null);
 
         // ── 프레임 / 아이콘 ──────────────────────────────────────
         if (frameImage) frameImage.color = WeaponGradeColors.Get(data.grade);
@@ -150,6 +156,14 @@ public class WeaponInfoPanel : MonoBehaviourSingleton<WeaponInfoPanel>
     {
         if (panelRoot) panelRoot.SetActive(false);
     }
+
+    // ────────────────────────────────────────────────────────
+    // 액션 버튼 핸들러
+    // ────────────────────────────────────────────────────────
+    private void OnEquipClicked()   { _onEquip?.Invoke();   Hide(); }
+    private void OnSellClicked()    { _onSell?.Invoke();    Hide(); }
+    private void OnUnequipClicked() { _onUnequip?.Invoke(); Hide(); }
+    private void OnBuyClicked()     { _onBuy?.Invoke();     Hide(); }
 
     // ────────────────────────────────────────────────────────
     // 내부 헬퍼
