@@ -15,7 +15,8 @@ public class MovementBounds : MonoBehaviour
         new( 5f,  9f), new(-5f,  9f),
     };
 
-    private void Awake() => Shared = this;
+    private void OnEnable()  => Shared = this;
+    public  void Register()  => Shared = this; // WaveEnvironmentSwitcher에서 강제 등록용
 
     // ── 외부에서 읽기 ──────────────────────────────────────────
     public int   PointCount               => localPoints.Count;

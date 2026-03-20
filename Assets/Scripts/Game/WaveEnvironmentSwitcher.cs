@@ -61,8 +61,10 @@ public class WaveEnvironmentSwitcher : MonoBehaviourSingleton<WaveEnvironmentSwi
 
     public void SetNormal()
     {
-        if (normalEnvironment) normalEnvironment.SetActive(true);
-        if (bossEnvironment)   bossEnvironment.SetActive(false);
+        if (bossEnvironment)   bossEnvironment.SetActive(false);   // 먼저 끄고
+        if (normalEnvironment) normalEnvironment.SetActive(true);  // 그 다음 켜기
+        // 이미 활성화된 경우 OnEnable이 안 오를 수 있으므로 강제 등록
+        normalEnvironment?.GetComponentInChildren<MovementBounds>(true)?.Register();
         ApplyCamera(normalCamera);
         EnemySpawner.Shared?.ApplySpawnArea(normalSpawnArea.center, normalSpawnArea.size);
     }
@@ -71,6 +73,7 @@ public class WaveEnvironmentSwitcher : MonoBehaviourSingleton<WaveEnvironmentSwi
     {
         if (normalEnvironment) normalEnvironment.SetActive(false);
         if (bossEnvironment)   bossEnvironment.SetActive(true);
+        bossEnvironment?.GetComponentInChildren<MovementBounds>(true)?.Register();
         ApplyCamera(bossCamera);
         EnemySpawner.Shared?.ApplySpawnArea(bossSpawnArea.center, bossSpawnArea.size);
     }
