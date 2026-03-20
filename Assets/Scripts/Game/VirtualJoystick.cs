@@ -14,14 +14,20 @@ public class VirtualJoystick : MonoBehaviour
     [SerializeField] private RectTransform handle;       // 내부 핸들 (움직이는 원)
     [SerializeField] private float handleRadius = 80f;   // 핸들 최대 이동 반경 (UI 픽셀)
 
-    private Vector2 inputVector;
-    private int     activeTouchId = -1;
+    private Vector2    inputVector;
+    private int        activeTouchId = -1;
+    private Canvas     parentCanvas;
+    private Camera     uiCamera;
 
     public Vector2 Direction => inputVector;
 
     private void Awake()
     {
-        Instance = this;
+        Instance     = this;
+        parentCanvas = GetComponentInParent<Canvas>();
+        uiCamera     = parentCanvas?.renderMode == RenderMode.ScreenSpaceOverlay
+                       ? null
+                       : parentCanvas?.worldCamera;
     }
 
     private void Update()
@@ -72,6 +78,12 @@ public class VirtualJoystick : MonoBehaviour
     // ── 조이스틱 상태 제어 ─────────────────────────────
     private void BeginJoystick(Vector2 screenPos)
     {
+        if (parentCanvas != null)
+        {
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                (RectTransform)parentCanvas.transform, screenPos, uiCamera, out Vector2 local);
+            background.localPosition = local;
+        }
         handle.anchoredPosition = Vector2.zero;
         inputVector             = Vector2.zero;
     }
@@ -80,7 +92,7 @@ public class VirtualJoystick : MonoBehaviour
     {
         // background 로컬 좌표계 기준 델타 계산 (Canvas 스케일 자동 보정)
         RectTransformUtility.ScreenPointToLocalPointInRectangle(
-            background, screenPos, null, out Vector2 localDelta);
+            background, screenPos, uiCamera, out Vector2 localDelta);
 
         float mag = localDelta.magnitude;
         inputVector = mag > handleRadius
@@ -95,6 +107,5 @@ public class VirtualJoystick : MonoBehaviour
         activeTouchId           = -1;
         inputVector             = Vector2.zero;
         handle.anchoredPosition = Vector2.zero;
-        background.gameObject.SetActive(false);
     }
 }
