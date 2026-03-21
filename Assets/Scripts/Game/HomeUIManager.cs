@@ -1,0 +1,61 @@
+using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.SceneManagement;
+
+public class HomeUIManager : MonoBehaviour
+{
+    [Header("Panels")]
+    public GameObject[] panels; // 0:상점, 1:대원, 2:전투, 3:장비, 4:기물
+
+    [Header("Tab Buttons")]
+    public Button[] tabButtons;
+
+    [Header("Tab Colors")]
+    public Color activeColor = new Color(1f, 0.8f, 0.2f, 1f);
+    public Color inactiveColor = new Color(0.5f, 0.5f, 0.5f, 1f);
+
+    private int currentTab = -1;
+
+    void Start()
+    {
+        // Register button click events
+        for (int i = 0; i < tabButtons.Length; i++)
+        {
+            int index = i;
+            tabButtons[i].onClick.AddListener(() => ShowTab(index));
+        }
+
+        // Default: show 전투 (index 2)
+        ShowTab(2);
+    }
+
+    public void ShowTab(int index)
+    {
+        if (index < 0 || index >= panels.Length) return;
+
+        currentTab = index;
+
+        // Hide all panels
+        for (int i = 0; i < panels.Length; i++)
+        {
+            if (panels[i] != null)
+                panels[i].SetActive(i == index);
+        }
+
+        // Highlight active tab button
+        for (int i = 0; i < tabButtons.Length; i++)
+        {
+            if (tabButtons[i] != null)
+            {
+                var img = tabButtons[i].GetComponent<Image>();
+                if (img != null)
+                    img.color = (i == index) ? activeColor : inactiveColor;
+            }
+        }
+    }
+
+    public void StartGame()
+    {
+        SceneManager.LoadScene("stage@scene");
+    }
+}

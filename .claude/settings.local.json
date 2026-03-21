@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s -X POST http://localhost:8080/mcp -H \"Content-Type: application/json\" -H \"Accept: application/json, text/event-stream\" -H \"mcp-session-id: b8ea794f3bef4666b47e15ca1fdefcd3\" -d '{\"\"jsonrpc\"\":\"\"2.0\"\",\"\"id\"\":5,\"\"method\"\":\"\"tools/call\"\",\"\"params\"\":{\"\"name\"\":\"\"read_console\"\",\"\"arguments\"\":{\"\"action\"\":\"\"get\"\",\"\"types\"\":[\"\"error\"\",\"\"warning\"\"],\"\"count\"\":\"\"20\"\"}}}')",
+      "Bash(curl -s -X POST http://localhost:8080/mcp -H \"Content-Type: application/json\" -H \"Accept: application/json, text/event-stream\" -H \"mcp-session-id: b8ea794f3bef4666b47e15ca1fdefcd3\" -d '{\"\"jsonrpc\"\":\"\"2.0\"\",\"\"id\"\":6,\"\"method\"\":\"\"tools/call\"\",\"\"params\"\":{\"\"name\"\":\"\"manage_scene\"\",\"\"arguments\"\":{\"\"action\"\":\"\"load\"\",\"\"path\"\":\"\"Assets/_Recovery/Home.unity\"\"}}}')",
+      "Bash(curl -s -X POST http://localhost:8080/mcp -H \"Content-Type: application/json\" -H \"Accept: application/json, text/event-stream\" -H \"mcp-session-id: b8ea794f3bef4666b47e15ca1fdefcd3\" -d '{\"\"jsonrpc\"\":\"\"2.0\"\",\"\"id\"\":7,\"\"method\"\":\"\"tools/call\"\",\"\"params\"\":{\"\"name\"\":\"\"execute_menu_item\"\",\"\"arguments\"\":{\"\"menu_path\"\":\"\"Tools/Build Home UI\"\"}}}')",
+      "Bash(curl -s -X POST http://localhost:8080/mcp -H \"Content-Type: application/json\" -H \"Accept: application/json, text/event-stream\" -H \"mcp-session-id: b8ea794f3bef4666b47e15ca1fdefcd3\" -d '{\"\"jsonrpc\"\":\"\"2.0\"\",\"\"id\"\":8,\"\"method\"\":\"\"tools/call\"\",\"\"params\"\":{\"\"name\"\":\"\"read_console\"\",\"\"arguments\"\":{\"\"action\"\":\"\"get\"\",\"\"types\"\":[\"\"error\"\",\"\"warning\"\"],\"\"count\"\":\"\"20\"\"}}}')",
+      "Bash(curl -s -X POST http://localhost:8080/mcp -H \"Content-Type: application/json\" -H \"Accept: application/json, text/event-stream\" -H \"mcp-session-id: b8ea794f3bef4666b47e15ca1fdefcd3\" -d '{\"\"jsonrpc\"\":\"\"2.0\"\",\"\"id\"\":9,\"\"method\"\":\"\"tools/call\"\",\"\"params\"\":{\"\"name\"\":\"\"read_console\"\",\"\"arguments\"\":{\"\"action\"\":\"\"get\"\",\"\"types\"\":[\"\"error\"\"],\"\"count\"\":\"\"30\"\"}}}')"
+    ]
+  }
+}

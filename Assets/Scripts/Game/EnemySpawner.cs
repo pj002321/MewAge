@@ -12,6 +12,9 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
     [Header("Prefab")]
     [SerializeField] private GameObject spawnMarkerPrefab;
 
+    [Header("적 상한")]
+    [SerializeField] private int maxEnemiesOnMap = 30;
+
     // 스폰 영역은 SpawnZone 컴포넌트(NormalEnv/BossEnv 하위)가 담당합니다.
 
     private float currentInterval;
@@ -41,11 +44,20 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
             if (!spawning) yield break;
             if (GameManager.Shared != null && GameManager.Shared.IsGameOver) yield break;
 
-            for (int i = 0; i < currentSpawnCount; i++)
+            int alive = CountActiveEnemies();
+            int spawnThisTick = Mathf.Min(currentSpawnCount, maxEnemiesOnMap - alive);
+            for (int i = 0; i < spawnThisTick; i++)
                 SpawnEnemy();
 
             yield return new WaitForSeconds(currentInterval);
         }
+    }
+
+    private int CountActiveEnemies()
+    {
+        int enemies = Object.FindObjectsByType<EnemyController>(FindObjectsSortMode.None).Length;
+        int markers = Object.FindObjectsByType<SpawnMarker>(FindObjectsSortMode.None).Length;
+        return enemies + markers;
     }
 
     private void SpawnEnemy()

@@ -32,7 +32,21 @@ Override `DontDestroy => false` in scene-specific singletons (managers that shou
 Uses **BansheeGz** (BgDatabase) for tabular game data. Tables accessed as `DB_무기`, `DB_확률`, `DB_증강`, etc. with Korean field names prefixed `f_`. Data is loaded in `Awake` of the relevant manager.
 
 ### Structure System (new, in progress)
-`StructureController`, `StructureZone`, `StructureInventory`, `StructureOrb`, `StructureSlot`, `StructureButton` — a placement/structure system being added alongside the wave gameplay.
+Tower/placement system. Key classes all in [Assets/Scripts/Game/](Assets/Scripts/Game/):
+- **StructureInventory** — singleton, max 4 slots, stacking same type. `Push(DB_기물)` on orb pickup, `UseAt(slot, pos)` to deploy.
+- **StructurePlacer** — handles launch animation (parabolic arc) from UI button → world position.
+- **StructureZone** — grid-snap placement area using `BoxCollider2D`. `TryGetNearestCell()` / `OccupyCell()` / `ReleaseCell()`.
+- **StructureOrb** — enemy-drop collectible; auto-magnets to player after delay, calls `StructureInventory.Push()` on collision.
+- **StructureSkillBase** — abstract base for structure behaviors (DoT, HealZone, Fence, Paralyze, Thunder).
+
+### Boss Waves
+GameManager queries `DB_웨이브` (field `f_보스`) to find boss wave numbers. On boss wave: `StartBossWave()` freezes timer, calls `WaveEnvironmentSwitcher`. After defeat: `OnBossDefeated()` resumes `WaveClearRoutine`.
+
+### Editor Tools
+[Assets/Scripts/Editor/SceneToolMenu.cs](Assets/Scripts/Editor/SceneToolMenu.cs) adds a Unity toolbar with quick-launch buttons for `home@scene`, `loading@scene`, `stage@scene`, and `dev@*` scenes.
+
+### Debug Panel
+[Assets/Scripts/Game/DebugPanel.cs](Assets/Scripts/Game/DebugPanel.cs) — in-game debug UI. Calls `GameManager.DebugSkipWave()` and `GameManager.DebugJumpToBossWave()`. Methods on DebugPanel that are connected via Inspector Button OnClick must be `public`.
 
 ## Key Conventions
 - Singletons accessed via `.Shared`; `PlayerController` / `WeaponManager` use `.Instance`.
@@ -40,3 +54,4 @@ Uses **BansheeGz** (BgDatabase) for tabular game data. Tables accessed as `DB_�
 - `Time.timeScale = 0f` to pause during panels; restore to `1f` on close.
 - Scene reload for restart: `SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex)`.
 - Debug logging helpers `this.DLog` / `this.DError` are extension methods from [Assets/Scripts/Extension/StringExtension.cs](Assets/Scripts/Extension/StringExtension.cs).
+- Methods called by Unity Inspector Button OnClick events must be `public` — private methods are not invokable from the Inspector event system.

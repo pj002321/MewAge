@@ -1,4 +1,5 @@
 using System.Collections;
+using Mewage.DB;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -154,6 +155,19 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     public bool IsGameOver  => isGameOver;
     public int  CurrentWave => wave;
 
+    /// <summary>DB_웨이브에서 fromWave보다 큰 가장 가까운 보스 웨이브 번호를 반환합니다. 없으면 -1.</summary>
+    public int GetNextBossWave(int fromWave)
+    {
+        int result = -1;
+        DB_웨이브.ForEachEntity(e =>
+        {
+            if (e.f_보스 && e.f_시작웨이브 > fromWave)
+                if (result < 0 || e.f_시작웨이브 < result)
+                    result = e.f_시작웨이브;
+        });
+        return result;
+    }
+
     // ── 보스 웨이브 ──────────────────────────────────────────────
     public void StartBossWave()
     {
@@ -173,28 +187,55 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     }
 
     // ── 디버그 전용 ──────────────────────────────────────────────
-    /// <summary>현재 웨이브를 즉시 종료합니다.</summary>
+    /// <summary>현재 웨이브를 즉시 종료합니다. 패널이 열려 있어도 강제 작동합니다.</summary>
     public void DebugSkipWave()
     {
-        if (isGameOver || waitingForUpgrade) return;
-        waveTimer         = 0f;
+        Debug.Log($"[Debug] SkipWave 호출 — wave={wave}, isGameOver={isGameOver}, waitingForUpgrade={waitingForUpgrade}, timeScale={Time.timeScale}");
+        if (isGameOver) { Debug.LogWarning("[Debug] isGameOver=true → 중단"); return; }
+
+        StopAllCoroutines();
+        Time.timeScale    = 1f;
+        waitingForUpgrade = false;
+
+        EnemySpawner.Shared?.StopSpawning();
+        EnemySpawner.Shared?.ClearAllEnemies();
+
         waitingForUpgrade = true;
+        Debug.Log("[Debug] WaveClearRoutine 시작");
         StartCoroutine(WaveClearRoutine());
     }
 
-    /// <summary>다음 보스 웨이브(10의 배수)로 즉시 이동합니다.</summary>
+    /// <summary>DB_웨이브에서 현재 웨이브보다 큰 가장 가까운 보스 웨이브로 이동합니다.</summary>
     public void DebugJumpToBossWave()
     {
-        if (isGameOver) return;
+        Debug.Log($"[Debug] JumpToBossWave 호출 — wave={wave}, isGameOver={isGameOver}, timeScale={Time.timeScale}");
+        if (isGameOver) { Debug.LogWarning("[Debug] isGameOver=true → 중단"); return; }
 
-        int nextBoss = (Mathf.FloorToInt(wave / 10f) + 1) * 10;
+        // DB에서 현재 wave 초과하는 가장 가까운 보스 웨이브 탐색
+        int targetWave = -1;
+        DB_웨이브.ForEachEntity(e =>
+        {
+            Debug.Log($"  DB_웨이브 항목: f_시작웨이브={e.f_시작웨이브}, f_보스={e.f_보스}");
+            if (e.f_보스 && e.f_시작웨이브 > wave)
+                if (targetWave < 0 || e.f_시작웨이브 < targetWave)
+                    targetWave = e.f_시작웨이브;
+        });
 
-        StopAllCoroutines();   // 진행 중인 WaveClearRoutine 취소
+        if (targetWave < 0)
+        {
+            Debug.LogWarning("[Debug] DB_웨이브에 현재 웨이브보다 큰 보스 웨이브 항목이 없습니다.");
+            return;
+        }
+
+        Debug.Log($"[Debug] → Boss Wave {targetWave}로 점프");
+
+        StopAllCoroutines();
+        Time.timeScale    = 1f;
         EnemySpawner.Shared?.StopSpawning();
         EnemySpawner.Shared?.ClearAllEnemies();
 
         bossWaveActive    = false;
-        wave              = nextBoss - 1;
+        wave              = targetWave - 1;
         waitingForUpgrade = false;
         StartNextWave();
     }
