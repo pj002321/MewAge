@@ -15,6 +15,7 @@ public class ImprovPanel : MonoBehaviour
     [SerializeField] private TextMeshProUGUI  goldText;
 
     private bool selectedOnce;
+    private DB_증강 pendingData;
 
     private void Awake()
     {
@@ -37,6 +38,7 @@ public class ImprovPanel : MonoBehaviour
     public void Setup(DB_증강[] improvs)
     {
         selectedOnce = false;
+        pendingData = null;
         RefreshGold();
 
         int visibleCount = 0;
@@ -59,8 +61,8 @@ public class ImprovPanel : MonoBehaviour
 
     private void OnCardClicked(ImprovCard card, DB_증강 data)
     {
-        if (selectedOnce) return;
         selectedOnce = true;
+        pendingData = data;
 
         card.PlaySelectAnimation();
 
@@ -72,13 +74,13 @@ public class ImprovPanel : MonoBehaviour
         }
 
         SoundManager.Shared?.Play(SoundKey.UI_Click);
-        ImprovManager.Shared?.OnImprovSelected(data);
         if (nextButton) nextButton.interactable = true;
     }
 
     private void OnNextButtonClicked()
     {
         SoundManager.Shared?.Play(SoundKey.UI_Click);
+        ImprovManager.Shared?.OnImprovSelected(pendingData);
         ImprovManager.Shared?.OnNextClicked();
     }
 

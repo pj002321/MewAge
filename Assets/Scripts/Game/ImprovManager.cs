@@ -12,7 +12,7 @@ public class ImprovManager : MonoBehaviourSingleton<ImprovManager>
     [SerializeField] private ImprovPanel improvPanel;
 
     [Header("설정")]
-    [SerializeField] private int rerollPrice = 10;
+    [SerializeField] private int rerollPrice = 2;
 
     private int pendingWave;
 

@@ -137,6 +137,12 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
             UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex);
     }
 
+    public void GoHome()
+    {
+        Time.timeScale = 1f;
+        UnityEngine.SceneManagement.SceneManager.LoadScene("home@scene");
+    }
+
     public void StartNextWave()
     {
         wave++;
