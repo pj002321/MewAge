@@ -11,14 +11,14 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
 
     protected override bool DontDestroy => false;
 
-    public void SpawnDamageText(Vector3 worldPos, float damage)
+    public void SpawnDamageText(Vector3 worldPos, float damage, bool isCritical = false)
     {
         if (damageTextPrefab == null) return;
 
         // 여러 텍스트가 겹치지 않도록 수평 랜덤 오프셋
         Vector3 offset = new(Random.Range(-0.2f, 0.2f), 0.3f, 0f);
         var go = Instantiate(damageTextPrefab, worldPos + offset, Quaternion.identity);
-        go.GetComponent<DamageText>()?.Init(damage);
+        go.GetComponent<DamageText>()?.Init(damage, isCritical);
     }
 
     public void SpawnHitEffect(Vector3 worldPos)

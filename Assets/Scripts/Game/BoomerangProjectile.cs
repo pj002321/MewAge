@@ -17,6 +17,7 @@ public class BoomerangProjectile : MonoBehaviour
     private int     bouncesLeft;
     private float   bounceRange;
     private bool    initialized;
+    private bool    isCritical;
 
     private enum State { Flying, Returning }
     private State state = State.Flying;
@@ -29,9 +30,10 @@ public class BoomerangProjectile : MonoBehaviour
     private Vector2 flyDir;
 
     public void Init(float damage, float speed, int maxBounces, float bounceRange,
-                     EnemyController firstTarget, Transform playerTf)
+                     EnemyController firstTarget, Transform playerTf, bool isCritical = false)
     {
         this.damage          = damage;
+        this.isCritical      = isCritical;
         this.speed           = speed;
         this.bouncesLeft     = maxBounces;
         this.bounceRange     = bounceRange;
@@ -109,7 +111,7 @@ public class BoomerangProjectile : MonoBehaviour
         if (enemy == null || hitEnemies.Contains(enemy)) return;
 
         hitEnemies.Add(enemy);
-        enemy.TakeDamage(damage);
+        enemy.TakeDamage(damage, isCritical);
         bouncesLeft--;
 
         if (bouncesLeft <= 0)

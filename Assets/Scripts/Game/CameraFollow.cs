@@ -54,6 +54,10 @@ public class CameraFollow : MonoBehaviour
         boundsMin    = min;
         boundsMax    = max;
         velocity     = Vector3.zero; // 이전 스무딩 속도 초기화
+
+        // 플레이어 추적을 끄면 카메라를 원점으로 즉시 이동 (배경 밀림 방지)
+        if (!follow)
+            transform.position = new Vector3(0f, 0f, transform.position.z);
     }
 
     /// <summary>카메라를 잠깐 흔듭니다. PlayerController.TakeDamage에서 호출합니다.</summary>

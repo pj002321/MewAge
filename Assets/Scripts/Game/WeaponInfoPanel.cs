@@ -118,10 +118,7 @@ public class WeaponInfoPanel : MonoBehaviourSingleton<WeaponInfoPanel>
         if (attackText) attackText.text = $"{data.attackDamage:0.#}";
 
         if (speedText)
-        {
-            float aps = data.attackCooldown > 0f ? 1f / data.attackCooldown : 0f;
-            speedText.text = $"{aps:0.##}/s";
-        }
+            speedText.text = $"{data.attackCooldown:0.##}s";
 
         if (rangeText) rangeText.text = $"{data.attackRange:0.#}";
         if (critText)      critText.text      = data.criticalRate > 0f ? $"{data.criticalRate:0.#}x" : "-";
@@ -131,7 +128,7 @@ public class WeaponInfoPanel : MonoBehaviourSingleton<WeaponInfoPanel>
         // ── 스탯 서브값 (기본 스탯 대비 강화된 양) ────────────────
         SetSubText(attackSubText,    data.attackDamage,  data.baseAttackDamage);
         SetSubText(rangeSubText,     data.attackRange,   data.baseAttackRange);
-        SetSubText(critSubText,      data.criticalRate,  data.baseCriticalRate, isAbsolute: true);
+        SetSubText(critSubText,      data.criticalRate * 100f,  data.baseCriticalRate * 100f, isAbsolute: true);
         SetSubText(bleedSubText,     data.bleedDamage,   data.baseBleedDamage);
         SetSubText(lifeStealSubText, data.lifeSteal,     data.baseLifeSteal,    isAbsolute: true);
         SetSpeedSubText(speedSubText, data);

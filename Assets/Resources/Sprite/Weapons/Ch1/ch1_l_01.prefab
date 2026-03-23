@@ -107,11 +107,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::WeaponPoint
   weaponType: 0
   attackDamage: 250
-  attackCooldown: 1
-  attackRange: 6
+  attackCooldown: 0.5
+  criticalRate: 0
+  dotDamage: 0
+  lifeSteal: 0
+  attackRange: 7
   pullbackSpeed: 20
   strikeSpeed: 70
-  returnSpeed: 30
+  returnSpeed: 40
   hitDistance: 0.25
   pullbackDistance: 0.8
   projectilePrefab: {fileID: 0}

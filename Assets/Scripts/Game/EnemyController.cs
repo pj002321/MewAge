@@ -220,9 +220,8 @@ public class EnemyController : MonoBehaviour
     }
 
     // ── 피격 / 사망 ──────────────────────────────────────────────
-    public void TakeDamage(float damage)
+    public void TakeDamage(float damage, bool isCritical = false)
     {
-        float actual = Mathf.Min(damage, currentHP);
         currentHP -= damage;
 
         SoundManager.Shared?.Play(SoundKey.Enemy_Hit);
@@ -230,7 +229,7 @@ public class EnemyController : MonoBehaviour
         Vector3 textPos = sr != null
             ? new Vector3(transform.position.x, sr.bounds.max.y, transform.position.z)
             : transform.position;
-        FXManager.Shared?.SpawnDamageText(textPos, actual);
+        FXManager.Shared?.SpawnDamageText(textPos, damage, isCritical);
         FXManager.Shared?.SpawnHitEffect(transform.position);
         hitFlash?.Flash();
 
@@ -268,14 +267,7 @@ public class EnemyController : MonoBehaviour
     // ── 웨이브 스케일링 ──────────────────────────────────────────
     public void ApplyWaveScaling(int wave)
     {
-        float m = 1f + (wave - 1) * 0.2f;
-        moveSpeed     *= m;
-        maxHP         *= m;
-        currentHP      = maxHP;
-        contactDamage *= m;
-        scoreValue     = Mathf.RoundToInt(scoreValue * m);
-
-        behaviour?.ApplyWaveScaling(m);
+        // 웨이브 스케일링 없음
     }
 
     // ── 스폰 연출 ────────────────────────────────────────────────

@@ -9,7 +9,7 @@ public class PlayerStats : MonoBehaviourSingleton<PlayerStats>
     [Header("레벨 설정")]
     [SerializeField] private int maxLevel          = 20;  // 만렙
     [SerializeField] private int baseExpPerLevel   = 20;  // 레벨 1→2 필요 경험치
-    [SerializeField] private int expGrowthPerLevel = 10;  // 레벨마다 증가량 (lv19→20 = 200)
+    [SerializeField] private int expGrowthPerLevel = 300; // 레벨마다 증가량
 
     [Header("시작 골드")]
     [SerializeField] private int startingGold = 2;

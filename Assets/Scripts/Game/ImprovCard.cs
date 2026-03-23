@@ -102,6 +102,15 @@ public class ImprovCard : MonoBehaviour
         StartCoroutine(SelectRoutine());
     }
 
+    /// <summary>선택 해제 시 위치·스케일을 즉시 원래대로 되돌립니다.</summary>
+    public void ResetAnimation()
+    {
+        StopAllCoroutines();
+        EnsureRt();
+        rt.anchoredPosition  = originPos;
+        transform.localScale = Vector3.one;
+    }
+
     private IEnumerator SelectRoutine()
     {
         Vector2 targetPos   = originPos + Vector2.up * selectLiftAmount;

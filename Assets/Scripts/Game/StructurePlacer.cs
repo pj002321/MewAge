@@ -113,6 +113,11 @@ public class StructurePlacer : MonoBehaviourSingleton<StructurePlacer>
         float   r         = Random.Range(minRadius, placeRadius);
         Vector3 candidate = playerPos + (Vector3)(dir.normalized * r);
 
+        // MovementBounds 영역 안으로 제한
+        var bounds = MovementBounds.Shared;
+        if (bounds != null && !bounds.IsInside(candidate))
+            candidate = bounds.ClosestPointOnBoundary(candidate);
+
         // StructureZone 그리드 스냅
         var zone = FindAnyObjectByType<StructureZone>();
         if (zone != null && zone.TryGetNearestCell(candidate, out Vector3 snapped))

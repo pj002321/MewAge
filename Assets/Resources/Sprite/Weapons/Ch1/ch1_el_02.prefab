@@ -108,6 +108,9 @@ MonoBehaviour:
   weaponType: 0
   attackDamage: 100
   attackCooldown: 1
+  criticalRate: 0
+  dotDamage: 0
+  lifeSteal: 0
   attackRange: 5
   pullbackSpeed: 12
   strikeSpeed: 70
@@ -130,7 +133,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d880b36e09b826b4aa4d33b07b710c84, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpriteOutline
-  colorProperty: _OutlineColorBase
+  colorProperty: _SolidOutline
   starColors:
   - {r: 1, g: 1, b: 1, a: 1}
   - {r: 1, g: 0.85, b: 0, a: 1}

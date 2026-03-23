@@ -11,12 +11,14 @@ public class Projectile : MonoBehaviour
     private float   damage;
     private Vector2 direction;
     private float   speed;
+    private bool    isCritical;
 
-    public void Init(float damage, Vector2 direction, float speed = 6f, float lifetime = 5f)
+    public void Init(float damage, Vector2 direction, float speed = 6f, float lifetime = 5f, bool isCritical = false)
     {
-        this.damage    = damage;
-        this.direction = direction.normalized;
-        this.speed     = speed;
+        this.damage     = damage;
+        this.direction  = direction.normalized;
+        this.speed      = speed;
+        this.isCritical = isCritical;
         Destroy(gameObject, lifetime);
 
         float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg - 90f;
@@ -36,7 +38,7 @@ public class Projectile : MonoBehaviour
         var player = other.GetComponentInParent<PlayerController>();
 
         if (enemy != null)
-            enemy.TakeDamage(damage);
+            enemy.TakeDamage(damage, isCritical);
         else if (player != null)
             player.TakeDamage(damage);
         else

@@ -66,11 +66,14 @@ public class ImprovPanel : MonoBehaviour
 
         card.PlaySelectAnimation();
 
-        // 선택된 카드 외 나머지를 어둡게
+        // 선택된 카드 외 나머지를 원위치로 리셋하고 어둡게
         foreach (var c in cards)
         {
             if (c.gameObject.activeSelf)
+            {
+                if (c != card) c.ResetAnimation();
                 c.SetDimmed(c != card);
+            }
         }
 
         SoundManager.Shared?.Play(SoundKey.UI_Click);

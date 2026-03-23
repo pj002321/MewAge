@@ -13,8 +13,10 @@ public class WeaponPoint : MonoBehaviour
     [Header("무기 스탯")]
     [SerializeField] private float attackDamage   = 20f;
     [SerializeField] private float attackCooldown = 1.5f;
-    [Tooltip("크리티컬 배율 지수 (0 = 없음, 1.5 = 150%)")]
-    [SerializeField] private float criticalRate   = 0f;
+    [Tooltip("크리티컬 발동 확률 (0~1, 예: 0.1 = 10%)")]
+    [SerializeField] private float criticalRate       = 0f;
+    [Tooltip("크리티컬 데미지 배율 (예: 2 = 2배)")]
+    [SerializeField] private float criticalMultiplier = 2f;
     [Tooltip("출혈 데미지 (0 = 없음)")]
     [SerializeField] private float dotDamage   = 0f;
     [Tooltip("흡혈 (공격 시 HP 회복 %, 0 = 없음)")]
@@ -117,19 +119,21 @@ public class WeaponPoint : MonoBehaviour
     {
         if (projectilePrefab == null) return;
         SoundManager.Shared?.Play(SoundKey.Weapon_Attack);
+        var (finalDmg, isCrit) = RollCrit(attackDamage);
         Vector2 dir = (target.transform.position - transform.position).normalized;
         var go = Instantiate(projectilePrefab, transform.position, Quaternion.identity);
-        go.GetComponent<Projectile>()?.Init(attackDamage, dir, projectileSpeed);
+        go.GetComponent<Projectile>()?.Init(finalDmg, dir, projectileSpeed, isCritical: isCrit);
     }
 
     private void ShootBoomerang(EnemyController firstTarget)
     {
         if (projectilePrefab == null) return;
         SoundManager.Shared?.Play(SoundKey.Weapon_Attack);
+        var (finalDmg, isCrit) = RollCrit(attackDamage);
         var go = Instantiate(projectilePrefab, transform.position, Quaternion.identity);
         if (go.TryGetComponent<BoomerangProjectile>(out var bm))
-            bm.Init(attackDamage, projectileSpeed, boomerangMaxBounces, boomerangBounceRange,
-                    firstTarget, transform.parent);
+            bm.Init(finalDmg, projectileSpeed, boomerangMaxBounces, boomerangBounceRange,
+                    firstTarget, transform.parent, isCrit);
     }
 
     // ─────────────────────────────────────────
@@ -189,7 +193,8 @@ public class WeaponPoint : MonoBehaviour
 
         if (Vector3.Distance(transform.position, targetPos) <= hitDistance)
         {
-            targetEnemy.TakeDamage(attackDamage);
+            var (finalDmg, isCrit) = RollCrit(attackDamage);
+            targetEnemy.TakeDamage(finalDmg, isCrit);
 
             // 타격 직후 즉시 예약 해제 후 바로 복귀
             WeaponManager.Instance?.Release(targetEnemy);
@@ -289,7 +294,8 @@ public class WeaponPoint : MonoBehaviour
     /// <summary>WeaponManager가 장착 시 호출 — 타입과 데미지 설정.</summary>
     public void Init(WeaponData data)
     {
-        weaponType = data.weaponType;
+        weaponType   = data.weaponType;
+        criticalRate = 0.05f + data.criticalRate;  // 기본 5% + 성 보너스 포함 크리티컬 확률
 
         var player = PlayerController.Instance;
         if (player != null)
@@ -304,6 +310,13 @@ public class WeaponPoint : MonoBehaviour
         // 성 등급에 맞는 외곽선 적용
         GetComponentInChildren<SpriteOutline>()?.SetStar(data.star);
         // projectilePrefab은 무기 프리팹 Inspector에서 직접 설정합니다.
+    }
+
+    /// <summary>크리티컬 판정. isCritical=true이면 데미지에 multiplier를 곱한 값 반환.</summary>
+    private (float finalDamage, bool isCritical) RollCrit(float baseDamage)
+    {
+        bool crit = criticalRate > 0f && Random.value < criticalRate;
+        return crit ? (baseDamage * criticalMultiplier, true) : (baseDamage, false);
     }
 
     /// <summary>공격속도를 multiplier배 빠르게 합니다 (쿨타임 단축).</summary>
