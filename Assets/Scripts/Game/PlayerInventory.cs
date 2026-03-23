@@ -189,12 +189,10 @@ public class PlayerInventory : MonoBehaviourSingleton<PlayerInventory>
 
         if (indices.Count < 3) return false;
 
-        // 소모된 3개 중 결과물로 대체되지 않는 2개의 판매가를 골드로 지급
-        int refundGold = 0;
-        for (int i = 0; i < 2; i++)
-            refundGold += Mathf.Max(1, inventory[indices[i]].price);
-        if (refundGold > 0)
-            PlayerStats.Shared?.AddGold(refundGold);
+        // 합성 결과물 가격 = 소모 3개 합산
+        int totalPrice = 0;
+        foreach (int i in indices) totalPrice += Mathf.Max(1, inventory[i].price);
+        result.price = totalPrice;
 
         // 높은 인덱스부터 제거해야 인덱스 밀림 없음
         for (int i = indices.Count - 1; i >= 0; i--)
@@ -235,11 +233,10 @@ public class PlayerInventory : MonoBehaviourSingleton<PlayerInventory>
         foreach (int i in invenIdx) consumed.Add(inventory[i]);
         foreach (int i in equipIdx) consumed.Add(equipped[i]);
 
-        // 2개분 환급
-        int refundGold = 0;
-        for (int i = 0; i < 2 && i < consumed.Count; i++)
-            refundGold += Mathf.Max(1, consumed[i].price);
-        if (refundGold > 0) PlayerStats.Shared?.AddGold(refundGold);
+        // 합성 결과물 가격 = 소모 3개 합산
+        int totalPrice = 0;
+        foreach (var w in consumed) totalPrice += Mathf.Max(1, w.price);
+        result.price = totalPrice;
 
         // 인벤 제거 (인덱스 밀림 방지: 높은 순)
         for (int i = invenIdx.Count - 1; i >= 0; i--)

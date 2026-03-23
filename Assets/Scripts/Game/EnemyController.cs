@@ -1,6 +1,27 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
-using Mewage.DB;
+
+/// <summary>
+/// 웨이브 구간별 스탯 오버라이드.
+/// fromWave 이하 중 가장 큰 값이 적용됩니다. -1은 기본값 유지.
+/// </summary>
+[System.Serializable]
+public class WaveStatBreakpoint
+{
+    [Tooltip("이 웨이브 이상부터 적용")]
+    public int   fromWave     = 10;
+    [Tooltip("-1 = 기본값 유지")]
+    public float moveSpeed    = -1f;
+    [Tooltip("-1 = 기본값 유지")]
+    public float maxHP        = -1f;
+    [Tooltip("-1 = 기본값 유지")]
+    public float contactDamage = -1f;
+    [Tooltip("-1 = 기본값 유지")]
+    public int   goldDrop     = -1;
+    [Tooltip("-1 = 기본값 유지")]
+    public int   expDrop      = -1;
+}
 
 /// <summary>
 /// 적의 핵심 컴포넌트 — 스탯, HP, 이동 헬퍼, 피격/사망을 담당합니다.
@@ -23,6 +44,14 @@ public class EnemyController : MonoBehaviour
     [SerializeField] private int goldDrop = 5;
     [SerializeField] private int expDrop  = 10;
 
+    [Header("분리 (간격 유지)")]
+    [Tooltip("주변 적과 이 거리 이내면 밀어냅니다. 0 = 비활성")]
+    [SerializeField] private float separationRadius   = 1.2f;
+    [SerializeField] private float separationStrength = 8f;
+
+    [Header("웨이브 구간별 스탯 (fromWave 오름차순 권장)")]
+    [SerializeField] private List<WaveStatBreakpoint> waveBreakpoints = new();
+
     // ── 공개 프로퍼티 (EnemyBehaviourBase에서 사용) ────────────
     public float      MoveSpeed       => moveSpeed;
     public float      ContactDamage   => contactDamage;
@@ -41,18 +70,20 @@ public class EnemyController : MonoBehaviour
     private Animator       animator;
     private EnemyBehaviourBase behaviour;
 
-    private bool isStunned;
+    private bool    isStunned;
+    private Vector2 _pendingMove;
 
     public event System.Action OnDeath;
 
     // ── 초기화 ──────────────────────────────────────────────────
     private void Awake()
     {
+        _allEnemies.Add(this);
         currentHP = maxHP;
         rb        = GetComponent<Rigidbody2D>();
         sr        = GetComponent<SpriteRenderer>();
         hitFlash  = GetComponent<HitFlash>();
-        animator  = GetComponent<Animator>();
+        animator  = GetComponentInChildren<Animator>();
         behaviour = GetComponent<EnemyBehaviourBase>();
 
         if (rb != null)
@@ -69,21 +100,6 @@ public class EnemyController : MonoBehaviour
     private void Start()
     {
         playerTransform = PlayerController.Instance?.transform;
-    }
-
-    /// <summary>EnemySpawner가 DB 데이터로 초기화할 때 호출합니다.</summary>
-    public void InitFromDB(DB_유닛 unit, int wave)
-    {
-        maxHP         = unit.f_체력;
-        currentHP     = maxHP;
-        contactDamage = unit.f_데미지;
-        expDrop       = unit.f_경험치;
-        goldDrop      = unit.f_골드;
-        if (unit.f_이동속도 > 0f) moveSpeed = unit.f_이동속도;
-
-        behaviour?.ApplyDBData(unit);
-        ApplyWaveScaling(wave);
-        PlaySpawnBounce();
     }
 
     // ── 업데이트 ────────────────────────────────────────────────
@@ -106,6 +122,42 @@ public class EnemyController : MonoBehaviour
         }
 
         behaviour?.OnMoveFixedUpdate();
+        ApplySeparation();
+
+        if (_pendingMove != Vector2.zero && rb != null)
+            rb.MovePosition(rb.position + _pendingMove);
+        _pendingMove = Vector2.zero;
+    }
+
+    // ── 분리: Physics 쿼리 없이 전체 목록에서 직접 계산 ─────────
+    private static readonly List<EnemyController> _allEnemies = new List<EnemyController>();
+
+    private void ApplySeparation()
+    {
+        if (separationRadius <= 0f || rb == null) return;
+
+        float   r2   = separationRadius * separationRadius;
+        Vector2 push = Vector2.zero;
+
+        foreach (var other in _allEnemies)
+        {
+            if (other == this || other.rb == null) continue;
+            Vector2 diff  = rb.position - other.rb.position;
+            float   sqDist = diff.sqrMagnitude;
+            if (sqDist > 0.000001f && sqDist < r2)
+            {
+                float dist = Mathf.Sqrt(sqDist);
+                push += (diff / dist) * (1f - dist / separationRadius);
+            }
+        }
+
+        if (push != Vector2.zero)
+            _pendingMove += push * separationStrength * Time.fixedDeltaTime;
+    }
+
+    private void OnDestroy()
+    {
+        _allEnemies.Remove(this);
     }
 
     private void LateUpdate()
@@ -126,7 +178,7 @@ public class EnemyController : MonoBehaviour
     public void MoveInDirection(Vector2 dir, float speed)
     {
         if (rb == null) return;
-        rb.MovePosition(rb.position + dir.normalized * speed * Time.fixedDeltaTime);
+        _pendingMove += dir.normalized * speed * Time.fixedDeltaTime;
         FlipToward(dir);
     }
 
@@ -264,11 +316,27 @@ public class EnemyController : MonoBehaviour
         Destroy(gameObject);
     }
 
-    // ── 웨이브 스케일링 ──────────────────────────────────────────
-    public void ApplyWaveScaling(int wave)
+    // ── 웨이브 구간 스탯 적용 ────────────────────────────────────
+    /// <summary>스폰 시 EnemySpawner에서 호출 — 현재 웨이브에 맞는 breakpoint 적용.</summary>
+    public void InitForWave(int wave)
     {
-        // 웨이브 스케일링 없음
+        if (waveBreakpoints == null || waveBreakpoints.Count == 0) return;
+
+        WaveStatBreakpoint matched = null;
+        foreach (var bp in waveBreakpoints)
+            if (bp.fromWave <= wave && (matched == null || bp.fromWave > matched.fromWave))
+                matched = bp;
+
+        if (matched == null) return;
+
+        if (matched.moveSpeed     >= 0f) moveSpeed     = matched.moveSpeed;
+        if (matched.maxHP         >= 0f) { maxHP = matched.maxHP; currentHP = maxHP; }
+        if (matched.contactDamage >= 0f) contactDamage = matched.contactDamage;
+        if (matched.goldDrop      >= 0)  goldDrop      = matched.goldDrop;
+        if (matched.expDrop       >= 0)  expDrop       = matched.expDrop;
     }
+
+    public void ApplyWaveScaling(int wave) { }
 
     // ── 스폰 연출 ────────────────────────────────────────────────
     public Vector3 SpawnScale { get; private set; } = Vector3.one;

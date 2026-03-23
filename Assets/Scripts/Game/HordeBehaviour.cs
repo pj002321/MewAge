@@ -17,7 +17,9 @@ public class HordeBehaviour : EnemyBehaviourBase
     [Tooltip("맵 경계 바깥으로 이 거리 이상 벗어나면 제거됩니다.")]
     [SerializeField] private float destroyMargin = 2f;
 
-    private bool isClone;
+    private bool    isClone;
+    private Vector2 moveDir;
+    private bool    dirSet;
 
     public void SetAsClone()
     {
@@ -68,16 +70,24 @@ public class HordeBehaviour : EnemyBehaviourBase
         Destroy(Owner.gameObject);
     }
 
-    // ── 이동: 클론만 동작 — 플레이어를 향해 직진 ───────────────
+    // ── 이동: 클론만 동작 — 스폰 시 방향 고정 후 직진 ──────────
     public override void OnMoveFixedUpdate()
     {
         if (!isClone) return;
 
-        Owner.MoveTowardPlayer(Owner.MoveSpeed);
+        // 첫 프레임에 플레이어 방향 고정
+        if (!dirSet)
+        {
+            if (Owner.PlayerTransform == null) return;
+            moveDir = ((Vector2)Owner.PlayerTransform.position - Owner.Rb.position).normalized;
+            dirSet  = true;
 
-        // 떼거지 스프라이트 기본 방향이 반대이므로 flipX 반전
-        var sr = Owner.GetComponent<UnityEngine.SpriteRenderer>();
-        if (sr != null) sr.flipX = !sr.flipX;
+            // 스프라이트 방향 1회 설정
+            var sr = Owner.GetComponent<UnityEngine.SpriteRenderer>();
+            if (sr != null) sr.flipX = moveDir.x < 0f;
+        }
+
+        Owner.MoveInDirection(moveDir, Owner.MoveSpeed);
 
         // 맵 경계 + 여유 거리를 벗어나면 제거
         var spawner = EnemySpawner.Shared;
@@ -89,8 +99,6 @@ public class HordeBehaviour : EnemyBehaviourBase
 
         if (pos.x < center.x - half.x || pos.x > center.x + half.x ||
             pos.y < center.y - half.y || pos.y > center.y + half.y)
-        {
             Destroy(Owner.gameObject);
-        }
     }
 }

@@ -16,6 +16,7 @@ GameObject:
   - component: {fileID: 8439521094403657483}
   - component: {fileID: -5162234949285840292}
   - component: {fileID: 4082114531803439273}
+  - component: {fileID: -5683760290993590863}
   m_Layer: 7
   m_Name: e_ch1_3
   m_TagString: Untagged
@@ -235,6 +236,38 @@ CapsuleCollider2D:
   m_Offset: {x: 0, y: 0}
   m_Size: {x: 1.28, y: 2.3666666}
   m_Direction: 0
+--- !u!114 &-5683760290993590863
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 301323739485502833}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bce05cdbf4c6c0d4b8e3a23bbeb3fb43, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyFXConfig
+  onAttack:
+    vfxPrefab: {fileID: 0}
+    spawnOffset: {x: 0, y: 0}
+    sfxClip: {fileID: 0}
+    volume: 1
+  onHit:
+    vfxPrefab: {fileID: 0}
+    spawnOffset: {x: 0, y: 0}
+    sfxClip: {fileID: 0}
+    volume: 1
+  onDeath:
+    vfxPrefab: {fileID: 0}
+    spawnOffset: {x: 0, y: 0}
+    sfxClip: {fileID: 0}
+    volume: 1
+  onSpawn:
+    vfxPrefab: {fileID: 0}
+    spawnOffset: {x: 0, y: 0}
+    sfxClip: {fileID: 0}
+    volume: 1
 --- !u!1 &559364330560693961
 GameObject:
   m_ObjectHideFlags: 0

@@ -5,6 +5,7 @@ using TMPro;
 /// <summary>
 /// 디버그 전용 패널.
 /// Inspector에서 skipWaveButton, bossWaveButton, waveLabel 연결.
+/// jumpButtons[i] 는 jumpWaves[i] 웨이브로 즉시 점프합니다.
 /// </summary>
 public class DebugPanel : MonoBehaviour
 {
@@ -13,10 +14,20 @@ public class DebugPanel : MonoBehaviour
     [SerializeField] private Button          bossWaveButton;
     [SerializeField] private TextMeshProUGUI waveLabel;
 
+    [Header("웨이브 점프 버튼 (jumpWaves 와 1:1 대응)")]
+    [SerializeField] private Button[] jumpButtons;
+    [SerializeField] private int[]    jumpWaves = { 10, 20, 30, 40 };
+
     private void Awake()
     {
         skipWaveButton?.onClick.AddListener(OnSkipWave);
         bossWaveButton?.onClick.AddListener(OnBossWave);
+
+        for (int i = 0; i < jumpButtons.Length; i++)
+        {
+            int wave = i < jumpWaves.Length ? jumpWaves[i] : (i + 1) * 10;
+            jumpButtons[i]?.onClick.AddListener(() => OnJumpToWave(wave));
+        }
     }
 
     private void Update()
@@ -37,6 +48,12 @@ public class DebugPanel : MonoBehaviour
     {
         Debug.Log($"[Debug] BossWave 버튼 클릭 — GameManager={GameManager.Shared}");
         GameManager.Shared?.DebugJumpToBossWave();
+    }
+
+    public void OnJumpToWave(int wave)
+    {
+        Debug.Log($"[Debug] JumpToWave {wave} 버튼 클릭");
+        GameManager.Shared?.DebugJumpToWave(wave);
     }
 
     private void RefreshLabel()

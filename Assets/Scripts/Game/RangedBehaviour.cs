@@ -1,5 +1,4 @@
 using UnityEngine;
-using Mewage.DB;
 
 /// <summary>
 /// 원거리 공격형 — 적정 거리를 유지하면서 투사체를 발사합니다.
@@ -12,18 +11,14 @@ public class RangedBehaviour : EnemyBehaviourBase
     [SerializeField] private float shootInterval   = 2f;
     [SerializeField] private float rangedDamage    = 0f;  // 0이면 ContactDamage 사용
 
+    [Header("발사 지점")]
+    [Tooltip("null이면 적 중심에서 발사")]
+    [SerializeField] private Transform firePoint;
+
     [Header("VFX")]
     [SerializeField] private GameObject attackVfxPrefab;
 
     private float shootTimer;
-
-    public override void ApplyDBData(DB_유닛 unit)
-    {
-        preferredRange = unit.f_공격범위;
-        if (unit.f_쿨타임 > 0f)       shootInterval  = unit.f_쿨타임;
-        if (unit.f_원거리데미지 > 0f)  rangedDamage   = unit.f_원거리데미지;
-        if (unit.f_투사체프리펩 != null) projectilePrefab = unit.f_투사체프리펩;
-    }
 
     public override void ApplyWaveScaling(float multiplier)
     {
@@ -68,10 +63,11 @@ public class RangedBehaviour : EnemyBehaviourBase
         if (attackVfxPrefab != null)
             Instantiate(attackVfxPrefab, transform.position, Quaternion.identity);
 
-        float   dmg = rangedDamage > 0f ? rangedDamage : Owner.ContactDamage;
-        Vector2 dir = ((Vector2)Owner.PlayerTransform.position - Owner.Rb.position).normalized;
+        float   dmg      = rangedDamage > 0f ? rangedDamage : Owner.ContactDamage;
+        Vector2 spawnPos = firePoint != null ? (Vector2)firePoint.position : Owner.Rb.position;
+        Vector2 dir      = ((Vector2)Owner.PlayerTransform.position - spawnPos).normalized;
 
-        GameObject proj = Instantiate(projectilePrefab, Owner.Rb.position, Quaternion.identity);
+        GameObject proj = Instantiate(projectilePrefab, spawnPos, Quaternion.identity);
         if (proj.TryGetComponent<Projectile>(out var p))
             p.Init(dmg, dir);
     }

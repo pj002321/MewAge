@@ -16,6 +16,7 @@ GameObject:
   - component: {fileID: 6364569046898202011}
   - component: {fileID: 8234875612620755679}
   - component: {fileID: 5639997986829197405}
+  - component: {fileID: -334428835084260574}
   m_Layer: 7
   m_Name: e_ch1_9
   m_TagString: Untagged
@@ -231,7 +232,41 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HordeBehaviour
   splitCount: 6
+  clusterRadius: 0.6
+  spawnEdge: 1
   destroyMargin: 5
+--- !u!114 &-334428835084260574
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 301323739485502833}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bce05cdbf4c6c0d4b8e3a23bbeb3fb43, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyFXConfig
+  onAttack:
+    vfxPrefab: {fileID: 0}
+    spawnOffset: {x: 0, y: 0}
+    sfxClip: {fileID: 0}
+    volume: 1
+  onHit:
+    vfxPrefab: {fileID: 0}
+    spawnOffset: {x: 0, y: 0}
+    sfxClip: {fileID: 0}
+    volume: 1
+  onDeath:
+    vfxPrefab: {fileID: 0}
+    spawnOffset: {x: 0, y: 0}
+    sfxClip: {fileID: 0}
+    volume: 1
+  onSpawn:
+    vfxPrefab: {fileID: 0}
+    spawnOffset: {x: 0, y: 0}
+    sfxClip: {fileID: 0}
+    volume: 1
 --- !u!1 &5756884983519603997
 GameObject:
   m_ObjectHideFlags: 0

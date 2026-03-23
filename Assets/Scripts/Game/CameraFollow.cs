@@ -53,7 +53,9 @@ public class CameraFollow : MonoBehaviour
         useBounds    = bounds;
         boundsMin    = min;
         boundsMax    = max;
-        velocity     = Vector3.zero; // 이전 스무딩 속도 초기화
+        velocity          = Vector3.zero; // 이전 스무딩 속도 초기화
+        shakeOffset       = Vector2.zero; // 남은 셰이크 오프셋 제거
+        shakeTimeLeft     = 0f;
 
         // 플레이어 추적을 끄면 카메라를 원점으로 즉시 이동 (배경 밀림 방지)
         if (!follow)

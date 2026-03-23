@@ -16,6 +16,7 @@ GameObject:
   - component: {fileID: 6364569046898202011}
   - component: {fileID: 7266569840606581715}
   - component: {fileID: 2774005644263688365}
+  - component: {fileID: -2615812168468657421}
   m_Layer: 7
   m_Name: e_ch1_4
   m_TagString: Untagged
@@ -234,6 +235,38 @@ MonoBehaviour:
   meleeHitRange: 1
   attackInterval: 1
   attackVfxPrefab: {fileID: 3234760170618487149, guid: 22c5b9301e172694187cee0fd11a31f1, type: 3}
+--- !u!114 &-2615812168468657421
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 301323739485502833}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bce05cdbf4c6c0d4b8e3a23bbeb3fb43, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyFXConfig
+  onAttack:
+    vfxPrefab: {fileID: 0}
+    spawnOffset: {x: 0, y: 0}
+    sfxClip: {fileID: 0}
+    volume: 1
+  onHit:
+    vfxPrefab: {fileID: 0}
+    spawnOffset: {x: 0, y: 0}
+    sfxClip: {fileID: 0}
+    volume: 1
+  onDeath:
+    vfxPrefab: {fileID: 0}
+    spawnOffset: {x: 0, y: 0}
+    sfxClip: {fileID: 0}
+    volume: 1
+  onSpawn:
+    vfxPrefab: {fileID: 0}
+    spawnOffset: {x: 0, y: 0}
+    sfxClip: {fileID: 0}
+    volume: 1
 --- !u!1 &5580856715578329708
 GameObject:
   m_ObjectHideFlags: 0

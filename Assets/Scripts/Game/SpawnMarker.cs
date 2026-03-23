@@ -1,19 +1,18 @@
 using System.Collections;
 using UnityEngine;
-using Mewage.DB;
 
 public class SpawnMarker : MonoBehaviour
 {
     [SerializeField] private SpriteRenderer sr;
     [SerializeField] private float warningDuration = 1.5f;
 
-    private DB_유닛 unit;
-    private int wave;
+    private GameObject spawnPrefab;
+    private int        spawnWave;
 
-    public void Init(DB_유닛 unit, int currentWave)
+    public void Init(GameObject prefab, int wave = 0)
     {
-        this.unit = unit;
-        this.wave = currentWave;
+        spawnPrefab = prefab;
+        spawnWave   = wave;
 
         if (sr == null) sr = GetComponent<SpriteRenderer>();
         SetAlpha(1f);
@@ -40,11 +39,14 @@ public class SpawnMarker : MonoBehaviour
             yield break;
         }
 
-        if (unit != null && unit.f_프리팹 != null)
+        if (spawnPrefab != null)
         {
-            GameObject obj = Instantiate(unit.f_프리팹, transform.position, Quaternion.identity);
+            var obj = Instantiate(spawnPrefab, transform.position, Quaternion.identity);
             if (obj.TryGetComponent<EnemyController>(out var enemy))
-                enemy.InitFromDB(unit, wave);
+            {
+                enemy.InitForWave(spawnWave);
+                enemy.PlaySpawnBounce();
+            }
         }
 
         Destroy(gameObject);

@@ -1,0 +1,104 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a350008ac8f2cca4d940ee9f2f785a3b, type: 3}
+  m_Name: Chapter_1_Roster
+  m_EditorClassIdentifier: Assembly-CSharp::ChapterRosterSO
+  chapter: 1
+  chapterName: "\uCC55\uD130 1"
+  normalEnemies:
+  - displayName: ch1_snake
+    prefab: {fileID: 2860284734646843584, guid: cb11d0d6d7e43484aa195621e521b165, type: 3}
+    weight: 10
+    minWave: 1
+    maxWave: 5
+  - displayName: ch1_m_1
+    prefab: {fileID: 5595907520033269590, guid: 049bf29a1b6bc904fb603442a0ccf691, type: 3}
+    weight: 45
+    minWave: 2
+    maxWave: 5
+  - displayName: ch1_m_2
+    prefab: {fileID: 6535268019027681566, guid: bed4c8632cad7c14c9cb7c16dda68af8, type: 3}
+    weight: 45
+    minWave: 3
+    maxWave: 6
+  - displayName: ch1_m_3
+    prefab: {fileID: 3138361556347340875, guid: c29eccc246b0c44459e320a1b6a21fba, type: 3}
+    weight: 10
+    minWave: 5
+    maxWave: 7
+  - displayName: ch1_m_4
+    prefab: {fileID: 5835782802500751313, guid: 39ae09684afd7be419be948da05d06ff, type: 3}
+    weight: 10
+    minWave: 6
+    maxWave: 9
+  - displayName: ch1_m_b_0
+    prefab: {fileID: 8067283199427079352, guid: 00eced8b7a5e70a4fa61afdc8761320d, type: 3}
+    weight: 100
+    minWave: 10
+    maxWave: 10
+  - displayName: ch1_m_5
+    prefab: {fileID: 5019672426012245148, guid: 2928777fc71d95f4fb3645b483500273, type: 3}
+    weight: 25
+    minWave: 11
+    maxWave: 13
+  - displayName: ch1_m_6
+    prefab: {fileID: 1651568199920207753, guid: f877b8eccf5c13742aad9e40d932bc01, type: 3}
+    weight: 25
+    minWave: 13
+    maxWave: 15
+  - displayName: ch1_m_7
+    prefab: {fileID: 3526300008354230656, guid: 44b69578253b0d842bf889ed1e5ab49f, type: 3}
+    weight: 25
+    minWave: 15
+    maxWave: 19
+  - displayName: ch1_m_8
+    prefab: {fileID: 574793032822915054, guid: 3ef2031fd8ea57a4d938ed0cee26e243, type: 3}
+    weight: 10
+    minWave: 15
+    maxWave: 19
+  - displayName: ch1_m_b_1
+    prefab: {fileID: 4510239993999273466, guid: 4677679fe0619ca4e8c1d7b15e1429ed, type: 3}
+    weight: 100
+    minWave: 20
+    maxWave: 20
+  - displayName: ch1_m_b_2
+    prefab: {fileID: 4334937760058917553, guid: df4d650d85523254490105010c5e4121, type: 3}
+    weight: 10
+    minWave: 30
+    maxWave: 30
+  - displayName: ch1_m_9
+    prefab: {fileID: 8067283199427079352, guid: 989f08f3b175cfd4a8565801b5bdd7ed, type: 3}
+    weight: 10
+    minWave: 1
+    maxWave: 0
+  - displayName: ch1_m_11
+    prefab: {fileID: 5246812530321141943, guid: e28f0a263299fd3479ff891ef85abe67, type: 3}
+    weight: 10
+    minWave: 1
+    maxWave: 0
+  - displayName: ch1_m_10
+    prefab: {fileID: 6872330745170493892, guid: 19841a5b34b56b749a5cdb16c432dd33, type: 3}
+    weight: 10
+    minWave: 1
+    maxWave: 0
+  - displayName: ch1_m_12
+    prefab: {fileID: 7313528007987417252, guid: 7346ccab7dbbce84fa32d4def763aed2, type: 3}
+    weight: 10
+    minWave: 1
+    maxWave: 0
+  - displayName: ch1_m_b_3
+    prefab: {fileID: 1480230949101478693, guid: 6c98651e2e422d84e90a644cd767b64e, type: 3}
+    weight: 10
+    minWave: 1
+    maxWave: 0
+  bossPrefab: {fileID: 0}
+  waveRules: []

@@ -60,8 +60,9 @@ public class MeleeBehaviour : EnemyBehaviourBase
     /// </summary>
     public void OnMeleeAttackHit()
     {
-        if (Owner == null) return;
-        // 공격 트리거 시점에 이미 거리 체크를 했으므로 여기선 무조건 데미지
-        PlayerController.Instance?.TakeDamage(Owner.ContactDamage);
+        if (Owner == null || Owner.PlayerTransform == null) return;
+        float dist = Vector2.Distance(transform.position, Owner.PlayerTransform.position);
+        if (dist <= meleeHitRange)
+            PlayerController.Instance?.TakeDamage(Owner.ContactDamage);
     }
 }
