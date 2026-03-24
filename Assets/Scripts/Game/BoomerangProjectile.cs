@@ -111,7 +111,8 @@ public class BoomerangProjectile : MonoBehaviour
         if (enemy == null || hitEnemies.Contains(enemy)) return;
 
         hitEnemies.Add(enemy);
-        enemy.TakeDamage(damage, isCritical);
+        Vector2 hitDir = (enemy.transform.position - transform.position).normalized;
+        enemy.TakeDamage(damage, isCritical, hitDir, 6f);
         bouncesLeft--;
 
         if (bouncesLeft <= 0)

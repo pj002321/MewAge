@@ -38,7 +38,7 @@ public class Projectile : MonoBehaviour
         var player = other.GetComponentInParent<PlayerController>();
 
         if (enemy != null)
-            enemy.TakeDamage(damage, isCritical);
+            enemy.TakeDamage(damage, isCritical, direction, 6f);
         else if (player != null)
             player.TakeDamage(damage);
         else

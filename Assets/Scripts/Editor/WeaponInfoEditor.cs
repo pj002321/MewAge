@@ -32,6 +32,13 @@ public class WeaponInfoEditor : Editor
     SerializedProperty p_boomerangMaxBounces;
     SerializedProperty p_boomerangBounceRange;
 
+    // 스핀 전용
+    SerializedProperty p_orbitRadius;
+    SerializedProperty p_orbitSpeed;
+    SerializedProperty p_spinHitRadius;
+    SerializedProperty p_spinHitCooldown;
+    SerializedProperty p_spinKnockback;
+
     private void OnEnable()
     {
         p_weaponType       = serializedObject.FindProperty("weaponType");
@@ -49,6 +56,12 @@ public class WeaponInfoEditor : Editor
         p_projectileSpeed      = serializedObject.FindProperty("projectileSpeed");
         p_boomerangMaxBounces  = serializedObject.FindProperty("boomerangMaxBounces");
         p_boomerangBounceRange = serializedObject.FindProperty("boomerangBounceRange");
+
+        p_orbitRadius     = serializedObject.FindProperty("orbitRadius");
+        p_orbitSpeed      = serializedObject.FindProperty("orbitSpeed");
+        p_spinHitRadius   = serializedObject.FindProperty("spinHitRadius");
+        p_spinHitCooldown = serializedObject.FindProperty("spinHitCooldown");
+        p_spinKnockback   = serializedObject.FindProperty("spinKnockback");
     }
 
     public override void OnInspectorGUI()
@@ -83,6 +96,16 @@ public class WeaponInfoEditor : Editor
             EditorGUILayout.PropertyField(p_projectileSpeed,      new GUIContent("투사체 속도"));
             EditorGUILayout.PropertyField(p_boomerangMaxBounces,  new GUIContent("최대 튕김 횟수"));
             EditorGUILayout.PropertyField(p_boomerangBounceRange, new GUIContent("튕김 탐색 범위"));
+        }
+        else if (type == WeaponType.Spin)
+        {
+            EditorGUILayout.Space(6);
+            EditorGUILayout.LabelField("돌리기 전용 (Spin)", EditorStyles.boldLabel);
+            EditorGUILayout.PropertyField(p_orbitRadius,     new GUIContent("공전 반경"));
+            EditorGUILayout.PropertyField(p_orbitSpeed,      new GUIContent("공전 속도 (deg/s)"));
+            EditorGUILayout.PropertyField(p_spinHitRadius,   new GUIContent("타격 판정 반경"));
+            EditorGUILayout.PropertyField(p_spinHitCooldown, new GUIContent("재타격 쿨타임"));
+            EditorGUILayout.PropertyField(p_spinKnockback,   new GUIContent("넉백 강도"));
         }
         else // Ranged, Magic
         {

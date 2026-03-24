@@ -70,8 +70,10 @@ public class EnemyController : MonoBehaviour
     private Animator       animator;
     private EnemyBehaviourBase behaviour;
 
-    private bool    isStunned;
-    private Vector2 _pendingMove;
+    private bool      isStunned;
+    private Vector2   _pendingMove;
+    private Coroutine knockbackCoroutine;
+    private float     baseSpeed; // 넉백/스턴 전 원본 속도
 
     public event System.Action OnDeath;
 
@@ -80,6 +82,7 @@ public class EnemyController : MonoBehaviour
     {
         _allEnemies.Add(this);
         currentHP = maxHP;
+        baseSpeed = moveSpeed;
         rb        = GetComponent<Rigidbody2D>();
         sr        = GetComponent<SpriteRenderer>();
         hitFlash  = GetComponent<HitFlash>();
@@ -220,10 +223,9 @@ public class EnemyController : MonoBehaviour
 
     private IEnumerator ParalyzeRoutine(float seconds)
     {
-        float saved = moveSpeed;
         moveSpeed = 0f;
         yield return new WaitForSeconds(seconds);
-        moveSpeed = saved;
+        moveSpeed = baseSpeed;
     }
 
     /// <summary>지정 시간 동안 이동·공격을 모두 멈추고 스프라이트를 노란색으로 변경합니다.</summary>
@@ -249,12 +251,12 @@ public class EnemyController : MonoBehaviour
     /// <summary>지정 방향으로 순간적으로 밀어냅니다.</summary>
     public void Knockback(Vector2 dir, float force)
     {
-        StartCoroutine(KnockbackRoutine(dir.normalized, force));
+        if (knockbackCoroutine != null) StopCoroutine(knockbackCoroutine);
+        knockbackCoroutine = StartCoroutine(KnockbackRoutine(dir.normalized, force));
     }
 
     private IEnumerator KnockbackRoutine(Vector2 dir, float force)
     {
-        float savedSpeed = moveSpeed;
         moveSpeed = 0f;
 
         float elapsed  = 0f;
@@ -268,11 +270,12 @@ public class EnemyController : MonoBehaviour
             yield return new WaitForFixedUpdate();
         }
 
-        moveSpeed = savedSpeed;
+        moveSpeed = baseSpeed;
+        knockbackCoroutine = null;
     }
 
     // ── 피격 / 사망 ──────────────────────────────────────────────
-    public void TakeDamage(float damage, bool isCritical = false)
+    public void TakeDamage(float damage, bool isCritical = false, Vector2 knockbackDir = default, float knockbackForce = 0f)
     {
         currentHP -= damage;
 
@@ -284,6 +287,9 @@ public class EnemyController : MonoBehaviour
         FXManager.Shared?.SpawnDamageText(textPos, damage, isCritical);
         FXManager.Shared?.SpawnHitEffect(transform.position);
         hitFlash?.Flash();
+
+        if (knockbackDir != Vector2.zero && knockbackForce > 0f)
+            Knockback(knockbackDir, knockbackForce);
 
         if (currentHP <= 0f)
         {

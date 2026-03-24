@@ -42,8 +42,18 @@ Tower/placement system. Key classes all in [Assets/Scripts/Game/](Assets/Scripts
 ### Boss Waves
 GameManager queries `DB_웨이브` (field `f_보스`) to find boss wave numbers. On boss wave: `StartBossWave()` freezes timer, calls `WaveEnvironmentSwitcher`. After defeat: `OnBossDefeated()` resumes `WaveClearRoutine`.
 
+### Home Scene (`Assets/_Recovery/Home.unity`)
+Lobby screen built via Editor tools — do **not** hand-edit the scene file.
+
+- **`Tools/Build Home UI`** — creates `HomeUICanvas` with 5 panels (상점·대원·전투·장비·기물) and a bottom `TabBar`. Attaches **HomeUIManager** to the canvas. `Panel_전투` is active by default; others start inactive.
+- **`Tools/Build Equipment Panel`** — populates `Panel_장비` with character view, 6 equip slots (left 3 / right 3), inner tab bar (장비/성물), and a scrollable inventory grid. Attaches **HomeEquipPanel**.
+- **HomeUIManager** (`Assets/Scripts/Game/HomeUIManager.cs`) — owns `panels[]` + `tabButtons[]`, calls `ShowTab(index)`. `StartGame()` loads `stage@scene`.
+- **HomeEquipPanel** (`Assets/Scripts/Game/HomeEquipPanel.cs`) — drives equip slot visuals from `PlayerInventory.Shared`, handles inner tab switching between `weaponContent` / `artifactContent` grids.
+
 ### Editor Tools
 [Assets/Scripts/Editor/SceneToolMenu.cs](Assets/Scripts/Editor/SceneToolMenu.cs) adds a Unity toolbar with quick-launch buttons for `home@scene`, `loading@scene`, `stage@scene`, and `dev@*` scenes.
+
+[Assets/Scripts/Editor/HomeUIBuilder.cs](Assets/Scripts/Editor/HomeUIBuilder.cs) — editor-only scene builders for the Home UI (see Home Scene above).
 
 ### Debug Panel
 [Assets/Scripts/Game/DebugPanel.cs](Assets/Scripts/Game/DebugPanel.cs) — in-game debug UI. Calls `GameManager.DebugSkipWave()` and `GameManager.DebugJumpToBossWave()`. Methods on DebugPanel that are connected via Inspector Button OnClick must be `public`.
@@ -55,3 +65,4 @@ GameManager queries `DB_웨이브` (field `f_보스`) to find boss wave numbers.
 - Scene reload for restart: `SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex)`.
 - Debug logging helpers `this.DLog` / `this.DError` are extension methods from [Assets/Scripts/Extension/StringExtension.cs](Assets/Scripts/Extension/StringExtension.cs).
 - Methods called by Unity Inspector Button OnClick events must be `public` — private methods are not invokable from the Inspector event system.
+- **Editor scripts searching for inactive GameObjects** must use `Resources.FindObjectsOfTypeAll<GameObject>()` filtered by `go.scene`, not `GameObject.Find()` (which skips inactive objects).

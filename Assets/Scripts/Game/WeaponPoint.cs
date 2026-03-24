@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
@@ -52,6 +53,13 @@ public class WeaponPoint : MonoBehaviour
     [SerializeField] private int   boomerangMaxBounces = 3;
     [SerializeField] private float boomerangBounceRange = 5f;
 
+    [Header("돌리기 설정 (WeaponType.Spin)")]
+    [SerializeField] private float orbitRadius     = 1.2f;
+    [SerializeField] private float orbitSpeed      = 200f;   // deg/s
+    [SerializeField] private float spinHitRadius   = 0.35f;  // 타격 판정 반경
+    [SerializeField] private float spinHitCooldown = 0.5f;   // 동일 적 재타격 쿨타임
+    [SerializeField] private float spinKnockback   = 7f;
+
     private enum State { Idle, Pullback, Striking, Returning }
     private State state = State.Idle;
 
@@ -60,6 +68,10 @@ public class WeaponPoint : MonoBehaviour
     private Vector3 pullbackTarget;
     private Vector3 overshootTarget;
     private float cooldownTimer;
+
+    // Spin 전용
+    private float currentAngle;
+    private readonly Dictionary<EnemyController, float> spinHitTimers = new Dictionary<EnemyController, float>();
 
     private void Start()
     {
@@ -71,6 +83,12 @@ public class WeaponPoint : MonoBehaviour
     {
         if (GameManager.Shared != null && GameManager.Shared.IsGameOver) return;
 
+        if (weaponType == WeaponType.Spin)
+        {
+            UpdateSpin();
+            return;
+        }
+
         cooldownTimer -= Time.deltaTime;
 
         UpdateRotation();
@@ -81,6 +99,43 @@ public class WeaponPoint : MonoBehaviour
             case State.Pullback:     UpdatePullback();     break;
             case State.Striking:     UpdateStriking();     break;
             case State.Returning:    UpdateReturning();    break;
+        }
+    }
+
+    // ─────────────────────────────────────────
+    // Spin: 플레이어 주위를 공전하며 닿는 적 타격
+    // ─────────────────────────────────────────
+    private void UpdateSpin()
+    {
+        // 공전 각도 증가 → localPosition 갱신
+        currentAngle += orbitSpeed * Time.deltaTime;
+        float rad = currentAngle * Mathf.Deg2Rad;
+        transform.localPosition = new Vector3(Mathf.Cos(rad), Mathf.Sin(rad), 0f) * orbitRadius;
+
+        // 무기 스프라이트를 공전 방향으로 자전
+        transform.rotation = Quaternion.Euler(0f, 0f, currentAngle - 90f);
+
+        // 피타격 쿨타임 감소 (Keys 복사 후 수정)
+        var keys = new List<EnemyController>(spinHitTimers.Keys);
+        foreach (var k in keys)
+        {
+            spinHitTimers[k] -= Time.deltaTime;
+            if (spinHitTimers[k] <= 0f) spinHitTimers.Remove(k);
+        }
+
+        // 타격 판정
+        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, spinHitRadius);
+        foreach (var hit in hits)
+        {
+            var enemy = hit.GetComponentInParent<EnemyController>();
+            if (enemy == null || spinHitTimers.ContainsKey(enemy)) continue;
+
+            SoundManager.Shared?.Play(SoundKey.Weapon_Attack);
+            var (finalDmg, isCrit) = RollCrit(attackDamage);
+            Vector2 knockDir = (enemy.transform.position - transform.position).normalized;
+            enemy.TakeDamage(finalDmg, isCrit, knockDir, spinKnockback);
+
+            spinHitTimers[enemy] = spinHitCooldown;
         }
     }
 
@@ -194,7 +249,8 @@ public class WeaponPoint : MonoBehaviour
         if (Vector3.Distance(transform.position, targetPos) <= hitDistance)
         {
             var (finalDmg, isCrit) = RollCrit(attackDamage);
-            targetEnemy.TakeDamage(finalDmg, isCrit);
+            Vector2 hitDir = (targetEnemy.transform.position - transform.position).normalized;
+            targetEnemy.TakeDamage(finalDmg, isCrit, hitDir, 8f);
 
             // 타격 직후 즉시 예약 해제 후 바로 복귀
             WeaponManager.Instance?.Release(targetEnemy);
@@ -305,6 +361,7 @@ public class WeaponPoint : MonoBehaviour
             attackDamage += weaponType == WeaponType.Melee    ? player.MeleeAttackBonus  : 0f;
             attackDamage += weaponType == WeaponType.Ranged   ? player.RangedAttackBonus : 0f;
             attackDamage += weaponType == WeaponType.Boomerang ? player.RangedAttackBonus : 0f;
+            attackDamage += weaponType == WeaponType.Spin      ? player.MeleeAttackBonus  : 0f;
         }
 
         // 성 등급에 맞는 외곽선 적용
@@ -327,8 +384,16 @@ public class WeaponPoint : MonoBehaviour
 
     private void OnDrawGizmosSelected()
     {
-        Gizmos.color = new Color(1f, 0.8f, 0f, 0.4f);
         Vector3 center = transform.parent != null ? transform.parent.position : transform.position;
+        Gizmos.color = new Color(1f, 0.8f, 0f, 0.4f);
         Gizmos.DrawWireSphere(center, attackRange);
+
+        if (weaponType == WeaponType.Spin)
+        {
+            Gizmos.color = new Color(0.2f, 0.8f, 1f, 0.4f);
+            Gizmos.DrawWireSphere(center, orbitRadius);
+            Gizmos.color = new Color(1f, 0.3f, 0.3f, 0.6f);
+            Gizmos.DrawWireSphere(transform.position, spinHitRadius);
+        }
     }
 }
