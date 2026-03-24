@@ -55,8 +55,25 @@ Lobby screen built via Editor tools — do **not** hand-edit the scene file.
 
 [Assets/Scripts/Editor/HomeUIBuilder.cs](Assets/Scripts/Editor/HomeUIBuilder.cs) — editor-only scene builders for the Home UI (see Home Scene above).
 
+### Enemy System
+- **EnemyBehaviourBase** — abstract base; subclass to add new enemy types. Requires `EnemyController` on the same prefab. Overridable hooks: `OnAttackUpdate()` (Update), `OnMoveFixedUpdate()` (FixedUpdate), `ApplyWaveScaling(float)`.
+- Concrete behaviors: `MeleeBehaviour`, `RangedBehaviour`, `MagicBehaviour`, `HealerBehaviour`, `TankBehaviour`, `ChargeBehaviour`, `SlamBehaviour`, `HordeBehaviour`, `DashComboBehaviour`.
+- **BossController / BossBehaviour** — boss variant of the same pattern. Boss skills extend `BossSkillBase`: `BossSlamSkill`, `BossChargeSkill`, `BossDashComboSkill`, `BossComboSlashSkill`, `BossVolleySkill`.
+
+### Sound & FX
+- **SoundManager** (singleton) — `SoundManager.Shared.Play(SoundKey)`. Keys defined in `SoundKey.cs` enum. Key-clip pairs registered via Inspector. `minInterval` prevents rapid duplicate plays.
+- **FXManager** — pooled visual effects spawned on hit/death etc.
+- `UIButtonSound` — component for button click SFX, attaches to UI buttons.
+
 ### Debug Panel
 [Assets/Scripts/Game/DebugPanel.cs](Assets/Scripts/Game/DebugPanel.cs) — in-game debug UI. Calls `GameManager.DebugSkipWave()` and `GameManager.DebugJumpToBossWave()`. Methods on DebugPanel that are connected via Inspector Button OnClick must be `public`.
+
+## Key Packages
+- **UniTask** (`com.cysharp.unitask`) — preferred async library; use `UniTask` instead of `Task`/coroutines for async flows.
+- **BansheeGz BgDatabase** — tabular game data; not in the standard package manifest (installed separately).
+- **Unity URP** — Universal Render Pipeline; shaders must target URP.
+- **Cinemachine** — camera follow system; `CameraFollow.cs` wraps it for the game camera.
+- **Unity Input System** — `VirtualJoystick` uses the new Input System package.
 
 ## Key Conventions
 - Singletons accessed via `.Shared`; `PlayerController` / `WeaponManager` use `.Instance`.
@@ -66,3 +83,5 @@ Lobby screen built via Editor tools — do **not** hand-edit the scene file.
 - Debug logging helpers `this.DLog` / `this.DError` are extension methods from [Assets/Scripts/Extension/StringExtension.cs](Assets/Scripts/Extension/StringExtension.cs).
 - Methods called by Unity Inspector Button OnClick events must be `public` — private methods are not invokable from the Inspector event system.
 - **Editor scripts searching for inactive GameObjects** must use `Resources.FindObjectsOfTypeAll<GameObject>()` filtered by `go.scene`, not `GameObject.Find()` (which skips inactive objects).
+- Scene files follow the `name@scene` naming convention (e.g., `home@scene.unity`, `stage@scene.unity`).
+- `MainMenuHud.cs` lives in `Assets/` root (not `Assets/Scripts/Game/`); exit logic uses `Application.Quit()` in builds and `EditorApplication.isPlaying = false` in editor.

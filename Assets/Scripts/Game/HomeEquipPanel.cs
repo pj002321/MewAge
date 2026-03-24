@@ -3,57 +3,53 @@ using UnityEngine.UI;
 using TMPro;
 
 /// <summary>
-/// 홈 화면 장비 패널.
-/// - 상단 캐릭터뷰: 장착 슬롯 6개 (좌3 우3) + 스탯 표시
-/// - 내부 탭: 장비 / 성물 전환
-/// - 하단 스크롤: 탭에 따라 보유 아이템 표시
+/// 홈 장비 패널.
+/// 상단: 캐릭터 뷰 + 장착 슬롯 6개 (좌3/우3) + ATK/HP 스탯
+/// 하단: 보유 장비 스크롤 목록 (탭: 등급별 · 나의 장비 · 합성)
 /// </summary>
 public class HomeEquipPanel : MonoBehaviour
 {
-    [Header("장착 슬롯 (0~2 = 왼쪽, 3~5 = 오른쪽)")]
-    public Image[] equipFrames;     // 6개 슬롯 Frame Image
-    public Image[] equipIcons;      // 6개 슬롯 Icon Image
+    [Header("장착 슬롯 (0~2=왼쪽, 3~5=오른쪽)")]
+    public Image[] equipFrames = new Image[6];
+    public Image[] equipIcons  = new Image[6];
 
-    [Header("스탯 텍스트")]
+    [Header("스탯")]
     public TextMeshProUGUI attackText;
     public TextMeshProUGUI hpText;
 
-    [Header("내부 탭 버튼")]
-    public Button tabWeapon;       // 장비
-    public Button tabArtifact;     // 성물
+    [Header("탭 버튼 (등급별 · 나의장비 · 합성)")]
+    public Button tabGrade;
+    public Button tabMyEquip;
+    public Button tabSynth;
 
     [Header("탭 컬러")]
-    public Color tabActiveColor   = new Color(1f,  0.8f, 0.2f, 1f);
-    public Color tabInactiveColor = new Color(0.35f, 0.35f, 0.35f, 1f);
+    public Color tabActiveColor   = new Color(1f,  0.80f, 0.20f, 1f);
+    public Color tabInactiveColor = new Color(0.25f, 0.25f, 0.25f, 1f);
 
-    [Header("스크롤 Content 루트")]
-    public Transform weaponContent;    // 장비 탭 GridLayout content
-    public Transform artifactContent;  // 성물 탭 GridLayout content
-
-    // ────────────────────────────────────────────────────────────────
+    [Header("인벤토리 Content")]
+    public Transform myEquipContent;   // GridLayoutGroup content
+    public Transform gradeContent;
+    public Transform synthContent;
 
     void Start()
     {
-        tabWeapon?.onClick.AddListener(() => ShowTab(0));
-        tabArtifact?.onClick.AddListener(() => ShowTab(1));
-        ShowTab(0);
+        tabGrade?  .onClick.AddListener(() => ShowTab(0));
+        tabMyEquip?.onClick.AddListener(() => ShowTab(1));
+        tabSynth?  .onClick.AddListener(() => ShowTab(2));
+        ShowTab(1);
     }
 
-    void OnEnable()
-    {
-        RefreshEquipSlots();
-    }
-
-    // ────────────────────────────────────────────────────────────────
-    // 탭 전환
-    // ────────────────────────────────────────────────────────────────
+    void OnEnable() => RefreshEquipSlots();
 
     public void ShowTab(int index)
     {
-        weaponContent?.gameObject.SetActive(index == 0);
-        artifactContent?.gameObject.SetActive(index == 1);
-        SetTabColor(tabWeapon,   index == 0);
-        SetTabColor(tabArtifact, index == 1);
+        gradeContent?  .gameObject.SetActive(index == 0);
+        myEquipContent?.gameObject.SetActive(index == 1);
+        synthContent?  .gameObject.SetActive(index == 2);
+
+        SetTabColor(tabGrade,   index == 0);
+        SetTabColor(tabMyEquip, index == 1);
+        SetTabColor(tabSynth,   index == 2);
     }
 
     void SetTabColor(Button btn, bool active)
@@ -63,14 +59,9 @@ public class HomeEquipPanel : MonoBehaviour
         if (img) img.color = active ? tabActiveColor : tabInactiveColor;
     }
 
-    // ────────────────────────────────────────────────────────────────
-    // 장착 슬롯 갱신
-    // ────────────────────────────────────────────────────────────────
-
     public void RefreshEquipSlots()
     {
         var inv = PlayerInventory.Shared;
-
         for (int i = 0; i < 6; i++)
         {
             var data = inv != null && i < inv.Equipped.Count ? inv.Equipped[i] : null;
@@ -79,16 +70,14 @@ public class HomeEquipPanel : MonoBehaviour
             if (equipIcons != null && i < equipIcons.Length && equipIcons[i] != null)
             {
                 equipIcons[i].enabled = has;
-                if (has && data.icon != null)
-                    equipIcons[i].sprite = data.icon;
+                if (has && data.icon != null) equipIcons[i].sprite = data.icon;
             }
-
             if (equipFrames != null && i < equipFrames.Length && equipFrames[i] != null)
-                equipFrames[i].color = has ? WeaponGradeColors.Get(data.grade) : new Color(0.3f, 0.3f, 0.3f, 1f);
+                equipFrames[i].color = has ? WeaponGradeColors.Get(data.grade)
+                                           : new Color(0.3f, 0.3f, 0.3f, 0.8f);
         }
 
-        // 스탯 표시 (PlayerInventory or PlayerStats 연동 가능)
-        if (attackText) attackText.text = "공격력  —";
-        if (hpText)     hpText.text     = "HP  —";
+        if (attackText) attackText.text = "—";
+        if (hpText)     hpText.text     = "—";
     }
 }

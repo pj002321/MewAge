@@ -10,6 +10,9 @@ public class HomeUIManager : MonoBehaviour
     [Header("Tab Buttons")]
     public Button[] tabButtons;
 
+    [Header("User Info")]
+    public HomeUserInfoBar userInfoBar;
+
     [Header("Tab Colors")]
     public Color activeColor = new Color(1f, 0.8f, 0.2f, 1f);
     public Color inactiveColor = new Color(0.5f, 0.5f, 0.5f, 1f);
