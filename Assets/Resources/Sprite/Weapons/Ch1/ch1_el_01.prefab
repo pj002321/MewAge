@@ -109,18 +109,24 @@ MonoBehaviour:
   attackDamage: 100
   attackCooldown: 1
   criticalRate: 0
+  criticalMultiplier: 2
   dotDamage: 0
   lifeSteal: 0
   attackRange: 4
-  pullbackSpeed: 12
-  strikeSpeed: 80
-  returnSpeed: 40
+  pullbackSpeed: 50
+  strikeSpeed: 100
+  returnSpeed: 100
   hitDistance: 0.25
   pullbackDistance: 0.8
   projectilePrefab: {fileID: 0}
   projectileSpeed: 8
   boomerangMaxBounces: 3
   boomerangBounceRange: 5
+  orbitRadius: 1.2
+  orbitSpeed: 200
+  spinHitRadius: 0.35
+  spinHitCooldown: 0.5
+  spinKnockback: 7
 --- !u!114 &4746999439796901104
 MonoBehaviour:
   m_ObjectHideFlags: 0

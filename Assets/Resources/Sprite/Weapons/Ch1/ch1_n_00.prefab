@@ -107,20 +107,26 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::WeaponPoint
   weaponType: 0
   attackDamage: 18
-  attackCooldown: 0.8
+  attackCooldown: 0.6
   criticalRate: 0
+  criticalMultiplier: 2
   dotDamage: 0
   lifeSteal: 0
-  attackRange: 5
-  pullbackSpeed: 20
-  strikeSpeed: 70
-  returnSpeed: 50
+  attackRange: 6
+  pullbackSpeed: 50
+  strikeSpeed: 100
+  returnSpeed: 100
   hitDistance: 0.25
   pullbackDistance: 0.8
   projectilePrefab: {fileID: 0}
   projectileSpeed: 8
   boomerangMaxBounces: 3
   boomerangBounceRange: 5
+  orbitRadius: 1.2
+  orbitSpeed: 200
+  spinHitRadius: 0.35
+  spinHitCooldown: 0.5
+  spinKnockback: 7
 --- !u!114 &-4031585572279877405
 MonoBehaviour:
   m_ObjectHideFlags: 0

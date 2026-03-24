@@ -154,6 +154,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
             player.HealHP(player.WaveHealAmount);
 
         EnemySpawner.Shared?.ResumeSpawning(wave);
+        WaveEnvironmentSwitcher.Shared?.SetWave(wave);
         UpdateWaveUI();
     }
 

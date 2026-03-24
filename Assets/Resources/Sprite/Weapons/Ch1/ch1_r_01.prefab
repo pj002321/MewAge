@@ -105,10 +105,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 80572d92ca6952f478c256b7ffc65d80, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponPoint
-  weaponType: 0
+  weaponType: 1
   attackDamage: 35
   attackCooldown: 1
   criticalRate: 0
+  criticalMultiplier: 2
   dotDamage: 0
   lifeSteal: 0
   attackRange: 5
@@ -118,9 +119,14 @@ MonoBehaviour:
   hitDistance: 0.25
   pullbackDistance: 0.8
   projectilePrefab: {fileID: 6277426376135361209, guid: f4888edad5b713a439a2069abaf5df38, type: 3}
-  projectileSpeed: 10
+  projectileSpeed: 15
   boomerangMaxBounces: 5
   boomerangBounceRange: 10
+  orbitRadius: 1.2
+  orbitSpeed: 200
+  spinHitRadius: 0.35
+  spinHitCooldown: 0.5
+  spinKnockback: 7
 --- !u!114 &-1599712404541412420
 MonoBehaviour:
   m_ObjectHideFlags: 0
