@@ -113,11 +113,12 @@ MonoBehaviour:
   dotDamage: 0
   lifeSteal: 0
   attackRange: 6
-  pullbackSpeed: 50
-  strikeSpeed: 100
-  returnSpeed: 100
+  strikeSpeed: 80
+  returnSpeed: 80
   hitDistance: 0.25
-  pullbackDistance: 0.8
+  areaHitRadius: 1
+  overshootDistance: 2
+  overshootSpeed: 60
   projectilePrefab: {fileID: 0}
   projectileSpeed: 8
   boomerangMaxBounces: 3

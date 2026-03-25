@@ -47,6 +47,7 @@ GameObject:
   - component: {fileID: 5337808210302580648}
   - component: {fileID: 7126431795147920118}
   - component: {fileID: 2583878160409121165}
+  - component: {fileID: -5871980427623642109}
   m_Layer: 0
   m_Name: ch1_m_12
   m_TagString: Untagged
@@ -287,3 +288,17 @@ MonoBehaviour:
   rangedDamage: 100
   firePoint: {fileID: 5428772856677564459}
   attackVfxPrefab: {fileID: 0}
+--- !u!114 &-5871980427623642109
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7313528007987417252}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8dbca1b53536a2b47a8964120af00539, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitFlash
+  flashColor: {r: 1, g: 0.2, b: 0.2, a: 1}
+  flashDuration: 0.12

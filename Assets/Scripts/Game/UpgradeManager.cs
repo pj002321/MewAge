@@ -26,6 +26,7 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
 
     private WeaponData[] allWeapons   = System.Array.Empty<WeaponData>();
     private WeaponData[] currentDraw  = System.Array.Empty<WeaponData>();
+    private WeaponData   adCardData;
     private int          currentChapter = 1;
     public  int          CurrentChapter => currentChapter;
 
@@ -89,13 +90,14 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
     {
         CollectAllDropItems();
         Time.timeScale = 0f;
-        currentDraw    = DrawCards(4);
         int         playerLevel = PlayerStats.Shared?.Level ?? 1;
         DrawProfile p           = GetCurrentProfile(playerLevel);
+        currentDraw = DrawCards(3);
+        adCardData  = DrawAdCard(p);
         upgradePanel.Refresh(currentDraw, rerollPrice, buyExpPrice,
                              PlayerInventory.Shared?.Inventory.Count ?? 0,
                              PlayerInventory.MaxInventory, wave,
-                             p.normal, p.rare, p.elite, p.epic, p.legend);
+                             p.normal, p.rare, p.elite, p.epic, p.legend, adCardData);
         upgradePanel.gameObject.SetActive(true);
     }
 
@@ -224,7 +226,10 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
         }
 
         stats.SpendGold(rerollPrice);
-        currentDraw = DrawCards(4);
+        int         playerLevel = PlayerStats.Shared?.Level ?? 1;
+        DrawProfile p           = GetCurrentProfile(playerLevel);
+        currentDraw = DrawCards(3);
+        adCardData  = DrawAdCard(p);
         SoundManager.Shared?.Play(SoundKey.UI_Reroll);
         RefreshPanel();
     }
@@ -257,7 +262,58 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
         upgradePanel.Refresh(currentDraw, rerollPrice, buyExpPrice,
                              PlayerInventory.Shared?.Inventory.Count ?? 0,
                              PlayerInventory.MaxInventory, wave,
-                             p.normal, p.rare, p.elite, p.epic, p.legend);
+                             p.normal, p.rare, p.elite, p.epic, p.legend, adCardData);
+    }
+
+    // ────────────────────────────────────────────────────────────────
+    // 광고 카드
+    // ────────────────────────────────────────────────────────────────
+    /// <summary>일반 카드와 동일한 확률로 등급을 뽑되, star=2로 지급합니다.</summary>
+    private WeaponData DrawAdCard(DrawProfile profile)
+    {
+        var pool = new List<WeaponData>();
+        foreach (var w in allWeapons)
+            if (w != null && w.chapter <= currentChapter)
+            { pool.Add(w); pool.Add(w); }
+
+        WeaponGrade grade  = RollGrade(profile);
+        WeaponData  picked = PickByGrade(pool, grade);
+        if (picked == null) return null;
+
+        var ad = picked.Upgraded(); // 복사본
+        ad.star = 2;
+        return ad;
+    }
+
+    /// <summary>광고 시청 완료 후 호출 — 광고 카드를 인벤토리에 무료로 지급합니다.</summary>
+    public void TryClaimAdCard()
+    {
+        if (adCardData == null) return;
+
+        var inv = PlayerInventory.Shared;
+        if (inv == null) return;
+
+        if (inv.InventoryFull && inv.CountAll(adCardData.weaponName, adCardData.star) < 2)
+        {
+            upgradePanel.ShowNotification("인벤토리가 가득 찼습니다.");
+            return;
+        }
+
+        string claimedName = adCardData.weaponName;
+        int    claimedStar = adCardData.star;
+
+        if (inv.InventoryFull)
+            inv.ForceAddToInventory(adCardData);
+        else if (!inv.TryAddToInventory(adCardData))
+        {
+            upgradePanel.ShowNotification("인벤토리가 가득 찼습니다.");
+            return;
+        }
+
+        adCardData = null;
+        SoundManager.Shared?.Play(SoundKey.UI_Buy);
+        AutoMerge(inv, claimedName, claimedStar);
+        RefreshPanel();
     }
 
     // ────────────────────────────────────────────────────────────────

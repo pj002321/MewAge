@@ -107,6 +107,7 @@ GameObject:
   - component: {fileID: 4618429624673289503}
   - component: {fileID: 7867964363866000739}
   - component: {fileID: 1767944380024156897}
+  - component: {fileID: -7638926655350617789}
   m_Layer: 7
   m_Name: ch1_m_2
   m_TagString: Untagged
@@ -294,6 +295,8 @@ MonoBehaviour:
   contactMaxDist: 0.8
   goldDrop: 1
   expDrop: 1
+  separationRadius: 0.7
+  separationStrength: 2
   waveBreakpoints:
   - fromWave: 10
     moveSpeed: 2.5
@@ -355,3 +358,17 @@ MonoBehaviour:
   meleeHitRange: 1.3
   attackInterval: 1
   attackVfxPrefab: {fileID: 0}
+--- !u!114 &-7638926655350617789
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6535268019027681566}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8dbca1b53536a2b47a8964120af00539, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitFlash
+  flashColor: {r: 1, g: 0.2, b: 0.2, a: 1}
+  flashDuration: 0.12

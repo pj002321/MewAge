@@ -1,0 +1,117 @@
+using Mewage.DB;
+using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
+
+/// <summary>
+/// 대원 패널 — 캐릭터 슬롯 한 칸.
+/// · 슬롯 클릭 → 하이라이트 + 액션 버튼 표시
+/// · f_보유여부=true  → 장착 버튼
+/// · f_보유여부=false → 구매 버튼 (가격 표시)
+/// · 슬롯 배경색은 f_등급에 따라 결정
+/// </summary>
+[RequireComponent(typeof(Button))]
+public class CharacterSlotView : MonoBehaviour
+{
+    [Header("데이터 (런타임 바인딩)")]
+    public DB_캐릭터 data;
+
+    [Header("슬롯 UI")]
+    public Image           slotBackground;  // 등급 색상 적용 대상
+    public Image           thumbnailImage;  // 캐릭터 썸네일
+    public TextMeshProUGUI gradeText;       // 등급 텍스트 (S / A / B / C)
+
+    [Header("잠금 상태 (미보유)")]
+    public GameObject      lockImage;        // 자물쇠 아이콘
+    public GameObject      lockedOverlay;    // 어두운 오버레이
+
+    [Header("선택 하이라이트")]
+    public GameObject      highlight;
+
+    [Header("선택 시 확대 배율")]
+    public float           selectedScale = 1.12f;
+
+    [Header("액션 버튼 — 장착 (보유 중)")]
+    public Button          equipButton;
+
+    [Header("액션 버튼 — 구매 (미보유)")]
+    public Button          buyButton;
+    public TextMeshProUGUI buyPriceText;
+
+    HomeMemberPanel _panel;
+
+    void Awake()
+    {
+        _panel = GetComponentInParent<HomeMemberPanel>(true);
+        GetComponent<Button>().onClick.AddListener(OnSlotClick);
+        equipButton?.onClick.AddListener(OnEquip);
+        buyButton  ?.onClick.AddListener(OnBuy);
+        Deselect();
+    }
+
+    // ── 데이터 바인딩 ────────────────────────────────────────────
+    public void Bind(DB_캐릭터 row)
+    {
+        data = row;
+        if (row == null) return;
+
+        // 등급 색상
+        if (slotBackground)
+            slotBackground.color = CharacterGradeColor.Get(row.f_등급);
+
+        // 썸네일
+        if (thumbnailImage)
+        {
+            var spr = row.f_썸네일;
+            thumbnailImage.enabled = spr != null;
+            if (spr) thumbnailImage.sprite = spr;
+        }
+
+        // 등급 텍스트
+        if (gradeText) gradeText.text = row.f_등급;
+
+        // 구매 가격
+        if (buyPriceText) buyPriceText.text = $"x{row.f_가격}";
+
+        // 잠금 상태: 미보유면 잠금 이미지 + 오버레이 표시
+        bool owned = row.f_보유여부;
+        if (lockImage)     lockImage    .SetActive(!owned);
+        if (lockedOverlay) lockedOverlay.SetActive(!owned);
+    }
+
+    // ── 클릭 / 장착 / 구매 ──────────────────────────────────────
+    void OnSlotClick() => _panel?.SelectSlot(this);
+
+    void OnEquip()
+    {
+        if (data == null) return;
+        _panel?.SetPortrait(data);
+    }
+
+    void OnBuy()
+    {
+        if (data == null) return;
+        Debug.Log($"[Member] {data.f_이름} 구매 시도 | 가격: {data.f_가격} 보석");
+        // TODO: 보석 차감 → data.f_보유여부 = true → Bind(data)
+    }
+
+    // ── 선택 상태 ─────────────────────────────────────────────────
+    public void Select()
+    {
+        if (highlight) highlight.SetActive(true);
+        transform.localScale = Vector3.one * selectedScale;
+
+        bool owned = data?.f_보유여부 ?? false;
+        if (equipButton) equipButton.gameObject.SetActive(owned);
+        if (buyButton)   buyButton  .gameObject.SetActive(!owned);
+    }
+
+    public void Deselect()
+    {
+        if (highlight)   highlight  .SetActive(false);
+        transform.localScale = Vector3.one;
+
+        if (equipButton) equipButton.gameObject.SetActive(false);
+        if (buyButton)   buyButton  .gameObject.SetActive(false);
+    }
+}

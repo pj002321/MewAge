@@ -15,7 +15,9 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     [SerializeField] private Slider          expSlider;
     [SerializeField] private Slider          reroll_expSlider;
     [SerializeField] private Slider          hpSlider;
+    [SerializeField] private TextMeshProUGUI hpText;
     [SerializeField] private GameObject      gameOverPanel;
+    [SerializeField] private GameObject      waveInfoProgress;
 
     [Header("Wave 타이머")]
     [SerializeField] private float baseWaveDuration    = 20f;
@@ -63,6 +65,40 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         }
     }
 
+    private void WaveInfoProgress()
+    {
+        if (waveInfoProgress == null) return;
+        var anim = waveInfoProgress.GetComponent<Animator>();
+        if (anim == null) return;
+
+        var   stateInfo  = anim.GetCurrentAnimatorStateInfo(0);
+        float clipLength = stateInfo.length;
+        if (clipLength <= 0f) return;
+
+        const float sliceTime = 1f;
+        int milestone = wave / 10; // 지나간 10웨이브 마일스톤 수
+
+        if (wave % 10 != 0)
+        {
+            // 10의 배수가 아닌 웨이브: 마지막 마일스톤 위치에 멈춤
+            float pauseSec = milestone * sliceTime;
+            anim.Play(stateInfo.fullPathHash, 0, pauseSec / clipLength);
+            anim.speed = 0f;
+            return;
+        }
+
+        // 10의 배수 웨이브: 이전 마일스톤 위치에서 1초 재생 후 멈춤
+        float startSec = (milestone - 1) * sliceTime;
+        anim.Play(stateInfo.fullPathHash, 0, startSec / clipLength);
+        anim.speed = 1f;
+        StartCoroutine(PauseAnimAfterSlice(anim, sliceTime));
+    }
+
+    private IEnumerator PauseAnimAfterSlice(Animator anim, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        if (anim != null) anim.speed = 0f;
+    }
     private IEnumerator WaveClearRoutine()
     {
         if (waveClearPanel) waveClearPanel.SetActive(true);
@@ -85,7 +121,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     {
         if (timerText == null) return;
         int secs = Mathf.CeilToInt(Mathf.Max(0f, waveTimer));
-        timerText.text  = secs.ToString();
+        timerText.text  = $"{secs / 60:00}:{secs % 60:00}";
         timerText.color = waveTimer <= timerWarningThreshold ? timerWarningColor : timerNormalColor;
     }
 
@@ -93,11 +129,14 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     {
         if (waveText) waveText.text = $"Wave {wave}";
         if (timerText) timerText.color = timerNormalColor;
+        WaveInfoProgress();
     }
 
-    public void UpdateHP(float normalized)
+    public void UpdateHP(float current, float max)
     {
+        float normalized = max > 0f ? current / max : 0f;
         if (hpSlider) hpSlider.value = normalized;
+        if (hpText)   hpText.text    = $"{Mathf.CeilToInt(current)} / {Mathf.CeilToInt(max)}";
     }
 
     public void UpdateGoldUI(int gold)

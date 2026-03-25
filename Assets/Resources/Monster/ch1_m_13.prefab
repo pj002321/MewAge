@@ -107,6 +107,7 @@ GameObject:
   - component: {fileID: 8996041560601723129}
   - component: {fileID: 6727109159200195602}
   - component: {fileID: -3561500260442199410}
+  - component: {fileID: -5809037154926733745}
   m_Layer: 7
   m_Name: ch1_m_13
   m_TagString: Untagged
@@ -363,3 +364,17 @@ MonoBehaviour:
   hitRange: 1.4
   attackTrigger: tAttack
   attackVfxPrefab: {fileID: 8243363023818174369, guid: a179f453a8a211a42b5427427e735f79, type: 3}
+--- !u!114 &-5809037154926733745
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8067283199427079352}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8dbca1b53536a2b47a8964120af00539, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitFlash
+  flashColor: {r: 1, g: 0.2, b: 0.2, a: 1}
+  flashDuration: 0.12

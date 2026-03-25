@@ -984,9 +984,8 @@ public class HomeUIBuilder
         tabHLG.childForceExpandWidth = tabHLG.childForceExpandHeight = true;
         tabHLG.spacing = 0;
 
-        var tabCharBtn  = CreateMemberTab("Tab_캐릭터", tabBar, "캐릭터", true);
-        var tabEquipBtn = CreateMemberTab("Tab_장비",   tabBar, "장비",   false);
-        var tabRuneBtn  = CreateMemberTab("Tab_룬",     tabBar, "룬",    false);
+        var tabCharBtn = CreateMemberTab("Tab_캐릭터", tabBar, "캐릭터", true);
+        var tabRuneBtn = CreateMemberTab("Tab_룬",     tabBar, "룬",    false);
 
         // ── 3. 캐릭터 스크롤 (하단 42%) ──────────────────────────────
         var scrollGO = new GameObject("CharacterScroll");
@@ -1011,20 +1010,133 @@ public class HomeUIBuilder
 
         // ── 4. HomeMemberPanel 연결 ───────────────────────────────────
         var memberPanel                 = panelDaewon.AddComponent<HomeMemberPanel>();
-        memberPanel.characterPortrait   = portraitImg;
-        memberPanel.characterNameText   = charNameTmp;
-        memberPanel.skillIcon           = skillIconImg;
-        memberPanel.skillNameText       = skillNameTmp;
-        memberPanel.skillLevelContainer = skillLevelContainer;
-        memberPanel.tabCharacter        = tabCharBtn;
-        memberPanel.tabEquip            = tabEquipBtn;
-        memberPanel.tabRune             = tabRuneBtn;
-        memberPanel.characterContent    = charContent;
+        memberPanel.characterPortrait = portraitImg;
+        memberPanel.characterNameText = charNameTmp;
+        memberPanel.tabCharacter      = tabCharBtn;
+        memberPanel.tabRune           = tabRuneBtn;
+        memberPanel.characterContent  = charContent;
 
         panelDaewon.SetActive(false);
         EditorSceneManager.MarkSceneDirty(scene);
         EditorSceneManager.SaveScene(scene);
         Debug.Log("[HomeUIBuilder] Member Panel 빌드 완료.");
+    }
+
+    // ────────────────────────────────────────────────────────────────
+    // 대원 패널 패치 — 기존 구조 유지, 컴포넌트만 추가
+    // ────────────────────────────────────────────────────────────────
+
+    [MenuItem("Tools/Patch Member Panel")]
+    public static void PatchMemberPanel()
+    {
+        var scene = EditorSceneManager.OpenScene(SCENE_PATH, OpenSceneMode.Single);
+
+        // Panel_대원 찾기
+        GameObject panel = null;
+        foreach (var go in Resources.FindObjectsOfTypeAll<GameObject>())
+            if (go.name == "Panel_대원" && go.scene == scene) { panel = go; break; }
+
+        if (panel == null) { Debug.LogError("[Patch] Panel_대원 없음"); return; }
+
+        bool wasActive = panel.activeSelf;
+        panel.SetActive(true);
+
+        // ── 1. HomeMemberPanel 컴포넌트 최신화 (중복 방지) ───────────
+        var existing = panel.GetComponent<HomeMemberPanel>();
+        if (existing != null) Object.DestroyImmediate(existing);
+        var mp = panel.AddComponent<HomeMemberPanel>();
+
+        // 탭 버튼 연결 (이름으로 찾기)
+        var tabBar = panel.transform.Find("TabBar");
+        if (tabBar != null)
+        {
+            // Tab_장비 제거
+            var tabEquip = tabBar.Find("Tab_장비");
+            if (tabEquip != null) Object.DestroyImmediate(tabEquip.gameObject);
+
+            mp.tabCharacter = tabBar.Find("Tab_캐릭터")?.GetComponent<Button>();
+            mp.tabRune      = tabBar.Find("Tab_룬")?.GetComponent<Button>();
+        }
+
+        // ── 2. 캐릭터 Content 스크롤 찾기 ───────────────────────────
+        var scrollGO     = panel.transform.Find("CharacterScroll");
+        var viewport     = scrollGO?.Find("Viewport");
+        var content      = viewport?.Find("CharacterContent");
+        mp.characterContent = content;
+
+        // ── 3. 기존 슬롯에 CharacterSlotView + Highlight + ActionBtn ─
+        if (content != null)
+        {
+            for (int i = 0; i < content.childCount; i++)
+            {
+                var slot = content.GetChild(i);
+                PatchCharacterSlot(slot, i == 2); // 3번 슬롯을 isOwned 예시
+            }
+        }
+
+        panel.SetActive(wasActive);
+        EditorSceneManager.MarkSceneDirty(scene);
+        EditorSceneManager.SaveScene(scene);
+        Debug.Log("[Patch] Member Panel 패치 완료.");
+    }
+
+    static void PatchCharacterSlot(Transform slot, bool isOwned)
+    {
+        // Button 추가 (없으면)
+        if (slot.GetComponent<Button>() == null)
+            slot.gameObject.AddComponent<Button>();
+
+        // Highlight (없으면 생성)
+        var hlT = slot.Find("Highlight");
+        GameObject hlGO;
+        if (hlT == null)
+        {
+            hlGO = new GameObject("Highlight");
+            hlGO.transform.SetParent(slot, false);
+            var hlRT = hlGO.AddComponent<RectTransform>();
+            hlRT.anchorMin = Vector2.zero; hlRT.anchorMax = Vector2.one;
+            hlRT.offsetMin = new Vector2(2, 2); hlRT.offsetMax = new Vector2(-2, -2);
+            hlGO.AddComponent<Image>().color = new Color(0.40f, 0.85f, 1f, 0.35f);
+        }
+        else hlGO = hlT.gameObject;
+        hlGO.SetActive(false);
+
+        // ActionButton (없으면 생성)
+        var actT = slot.Find("ActionButton");
+        GameObject actGO;
+        if (actT == null)
+        {
+            actGO = new GameObject("ActionButton");
+            actGO.transform.SetParent(slot, false);
+            var actRT = actGO.AddComponent<RectTransform>();
+            actRT.anchorMin = new Vector2(0.05f, 0.28f);
+            actRT.anchorMax = new Vector2(0.95f, 0.50f);
+            actRT.offsetMin = actRT.offsetMax = Vector2.zero;
+            actGO.AddComponent<Image>().color = new Color(0.20f, 0.70f, 0.25f, 1f);
+            actGO.AddComponent<Button>();
+            var actTmp = actGO.AddComponent<TextMeshProUGUI>();
+            // TMP는 별도 GO에 붙여야 하므로 텍스트 GO 생성
+            Object.DestroyImmediate(actTmp);
+            var textGO = new GameObject("Text");
+            textGO.transform.SetParent(actGO.transform, false);
+            var textRT    = textGO.AddComponent<RectTransform>();
+            textRT.anchorMin = Vector2.zero; textRT.anchorMax = Vector2.one;
+            textRT.offsetMin = textRT.offsetMax = Vector2.zero;
+            var tmp        = textGO.AddComponent<TextMeshProUGUI>();
+            tmp.text       = isOwned ? "장착" : "구매";
+            tmp.fontSize   = 22f;
+            tmp.fontStyle  = FontStyles.Bold;
+            tmp.alignment  = TextAlignmentOptions.Center;
+            tmp.color      = Color.white;
+        }
+        else actGO = actT.gameObject;
+        actGO.SetActive(false);
+
+        // CharacterSlotView (없으면 추가, 있으면 갱신)
+        var sv = slot.GetComponent<CharacterSlotView>();
+        if (sv == null) sv = slot.gameObject.AddComponent<CharacterSlotView>();
+        sv.highlight  = hlGO;
+        sv.equipButton = actGO.GetComponent<Button>();
     }
 
     static Button CreateMemberTab(string name, RectTransform parent, string label, bool active)
@@ -1069,35 +1181,23 @@ public class HomeUIBuilder
         return rt;
     }
 
-    static void CreateCharacterSlot(string name, RectTransform parent, bool isSelected)
+    static void CreateCharacterSlot(string name, RectTransform parent, bool isOwned)
     {
-        var go  = new GameObject(name);
+        var go = new GameObject(name);
         go.transform.SetParent(parent, false);
-        var bg = go.AddComponent<Image>();
-        bg.color = isSelected
-            ? new Color(0.20f, 0.55f, 0.90f, 1f)
-            : new Color(0.15f, 0.18f, 0.30f, 1f);
+        go.AddComponent<Image>().color = new Color(0.15f, 0.18f, 0.30f, 1f);
+        go.AddComponent<Button>();
 
-        // 테두리 효과 (selected: 밝은 테두리)
-        var borderGO = new GameObject("Border");
-        borderGO.transform.SetParent(go.transform, false);
-        var borderRT = borderGO.AddComponent<RectTransform>();
-        borderRT.anchorMin = Vector2.zero; borderRT.anchorMax = Vector2.one;
-        borderRT.offsetMin = new Vector2(2, 2); borderRT.offsetMax = new Vector2(-2, -2);
-        var borderImg = borderGO.AddComponent<Image>();
-        borderImg.color = isSelected ? new Color(0.40f, 0.80f, 1f, 0.4f) : Color.clear;
-
-        // 캐릭터 이미지 영역
+        // 포트레이트 영역
         var iconGO = new GameObject("Portrait");
         iconGO.transform.SetParent(go.transform, false);
         var iconRT = iconGO.AddComponent<RectTransform>();
-        iconRT.anchorMin = new Vector2(0f, 0.25f);
+        iconRT.anchorMin = new Vector2(0f, 0.28f);
         iconRT.anchorMax = new Vector2(1f, 1f);
         iconRT.offsetMin = iconRT.offsetMax = Vector2.zero;
         iconGO.AddComponent<Image>().color = new Color(0.25f, 0.30f, 0.50f, 1f);
 
-        // 자물쇠 아이콘 (비선택 캐릭터에만)
-        if (!isSelected)
+        if (!isOwned)
         {
             var lockGO = new GameObject("Lock");
             lockGO.transform.SetParent(go.transform, false);
@@ -1109,34 +1209,691 @@ public class HomeUIBuilder
         }
         else
         {
-            // "사용 중" 뱃지
             var badgeGO = new GameObject("Badge_InUse");
             badgeGO.transform.SetParent(go.transform, false);
             var badgeRT = badgeGO.AddComponent<RectTransform>();
-            badgeRT.anchorMin = new Vector2(0.15f, 0.70f);
-            badgeRT.anchorMax = new Vector2(0.85f, 0.90f);
+            badgeRT.anchorMin = new Vector2(0.1f, 0.72f);
+            badgeRT.anchorMax = new Vector2(0.9f, 0.90f);
             badgeRT.offsetMin = badgeRT.offsetMax = Vector2.zero;
             badgeGO.AddComponent<Image>().color = new Color(0.10f, 0.12f, 0.22f, 0.85f);
-            var badgeTmp = CreateTMPText("Text", badgeGO.transform, "사용 중", 22f, TextAlignmentOptions.Center);
-            badgeTmp.color = Color.white;
-            var btRT = badgeTmp.GetComponent<RectTransform>();
+            var btTmp = CreateTMPText("Text", badgeGO.transform, "사용 중", 20f, TextAlignmentOptions.Center);
+            btTmp.color = Color.white;
+            var btRT    = btTmp.GetComponent<RectTransform>();
             btRT.anchorMin = Vector2.zero; btRT.anchorMax = Vector2.one;
             btRT.offsetMin = btRT.offsetMax = Vector2.zero;
         }
 
-        // 하단 조각 카운터 (0/50)
+        // 하단 조각 카운터
         var countGO = new GameObject("FragmentCount");
         countGO.transform.SetParent(go.transform, false);
         var countRT = countGO.AddComponent<RectTransform>();
         countRT.anchorMin = Vector2.zero;
-        countRT.anchorMax = new Vector2(1f, 0.25f);
+        countRT.anchorMax = new Vector2(1f, 0.28f);
         countRT.offsetMin = countRT.offsetMax = Vector2.zero;
         countGO.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.7f);
-        var countTmp = CreateTMPText("Text", countGO.transform, "0/50", 22f, TextAlignmentOptions.Center);
+        var countTmp = CreateTMPText("Text", countGO.transform, "0/50", 20f, TextAlignmentOptions.Center);
         countTmp.color = new Color(0.9f, 0.9f, 0.9f, 1f);
         var ctRT = countTmp.GetComponent<RectTransform>();
         ctRT.anchorMin = Vector2.zero; ctRT.anchorMax = Vector2.one;
         ctRT.offsetMin = ctRT.offsetMax = Vector2.zero;
+
+        // 하이라이트 오버레이 (기본 비표시)
+        var hlGO = new GameObject("Highlight");
+        hlGO.transform.SetParent(go.transform, false);
+        var hlRT = hlGO.AddComponent<RectTransform>();
+        hlRT.anchorMin = Vector2.zero; hlRT.anchorMax = Vector2.one;
+        hlRT.offsetMin = new Vector2(2, 2); hlRT.offsetMax = new Vector2(-2, -2);
+        hlGO.AddComponent<Image>().color = new Color(0.40f, 0.85f, 1f, 0.35f);
+        hlGO.SetActive(false);
+
+        // 액션 버튼 (장착 / 구매, 기본 비표시)
+        var actGO = new GameObject("ActionButton");
+        actGO.transform.SetParent(go.transform, false);
+        var actRT = actGO.AddComponent<RectTransform>();
+        actRT.anchorMin = new Vector2(0.05f, 0.28f);
+        actRT.anchorMax = new Vector2(0.95f, 0.50f);
+        actRT.offsetMin = actRT.offsetMax = Vector2.zero;
+        actGO.AddComponent<Image>().color = new Color(0.20f, 0.70f, 0.25f, 1f);
+        var actBtn = actGO.AddComponent<Button>();
+        var actTmp = CreateTMPText("Text", actGO.transform, isOwned ? "장착" : "구매", 22f, TextAlignmentOptions.Center);
+        actTmp.color = Color.white; actTmp.fontStyle = FontStyles.Bold;
+        var atRT    = actTmp.GetComponent<RectTransform>();
+        atRT.anchorMin = Vector2.zero; atRT.anchorMax = Vector2.one;
+        atRT.offsetMin = atRT.offsetMax = Vector2.zero;
+        actGO.SetActive(false);
+
+        // CharacterSlotView 연결
+        var slotView         = go.AddComponent<CharacterSlotView>();
+        slotView.highlight   = hlGO;
+        slotView.equipButton = actBtn;
+    }
+
+    // ────────────────────────────────────────────────────────────────
+    // 상점 패널 빌더
+    // ────────────────────────────────────────────────────────────────
+
+    [MenuItem("Tools/Build Shop Panel")]
+    public static void BuildShopPanel()
+    {
+        var scene = EditorSceneManager.OpenScene(SCENE_PATH, OpenSceneMode.Single);
+
+        GameObject panelShop = null;
+        foreach (var go in Resources.FindObjectsOfTypeAll<GameObject>())
+            if (go.name == "Panel_상점" && go.scene == scene) { panelShop = go; break; }
+
+        if (panelShop == null)
+        {
+            Debug.LogError("[HomeUIBuilder] Panel_상점 을 찾을 수 없습니다. 먼저 Tools/Build Home UI 를 실행하세요.");
+            return;
+        }
+        panelShop.SetActive(true);
+        while (panelShop.transform.childCount > 0)
+            Object.DestroyImmediate(panelShop.transform.GetChild(0).gameObject);
+
+        var panelRT = panelShop.GetComponent<RectTransform>();
+
+        // ── 배경 ────────────────────────────────────────────────────
+        var bg = CreateRect("BG", panelShop.transform);
+        SetAnchors(bg, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+        bg.gameObject.AddComponent<Image>().color = new Color(0.08f, 0.12f, 0.25f, 1f);
+
+        // ── 상단 웨이브 장식 (상단 11%) ─────────────────────────────
+        var wave = CreateRect("WaveDecoration", panelShop.transform);
+        SetAnchors(wave, new Vector2(0f, 0.89f), Vector2.one, Vector2.zero, Vector2.zero);
+        wave.gameObject.AddComponent<Image>().color = new Color(0.35f, 0.60f, 0.90f, 1f);
+        // 파도 무늬 힌트 레이블
+        var waveTitle = CreateTMPText("ShopTitle", wave, "상점", 52f, TextAlignmentOptions.Center);
+        waveTitle.color     = Color.white;
+        waveTitle.fontStyle = FontStyles.Bold;
+        var wtRT             = waveTitle.GetComponent<RectTransform>();
+        wtRT.anchorMin       = Vector2.zero;
+        wtRT.anchorMax       = Vector2.one;
+        wtRT.offsetMin       = wtRT.offsetMax = Vector2.zero;
+
+        // ── 단일 세로 스크롤 (웨이브 아래 전체) ──────────────────────
+        var mainScroll = new GameObject("MainScroll");
+        mainScroll.transform.SetParent(panelShop.transform, false);
+        var msRT = mainScroll.AddComponent<RectTransform>();
+        SetAnchors(msRT, Vector2.zero, new Vector2(1f, 0.89f), Vector2.zero, Vector2.zero);
+
+        var msr       = mainScroll.AddComponent<ScrollRect>();
+        msr.horizontal = false; msr.vertical = true;
+
+        var msViewport = CreateRect("Viewport", mainScroll.transform);
+        SetAnchors(msViewport, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+        msViewport.gameObject.AddComponent<RectMask2D>();
+        msr.viewport = msViewport;
+
+        var msContent       = CreateRect("Content", msViewport);
+        msContent.anchorMin = new Vector2(0f, 1f);
+        msContent.anchorMax = new Vector2(1f, 1f);
+        msContent.pivot     = new Vector2(0.5f, 1f);
+        msContent.offsetMin = msContent.offsetMax = Vector2.zero;
+
+        var msVLG = msContent.gameObject.AddComponent<VerticalLayoutGroup>();
+        msVLG.childControlWidth = msVLG.childControlHeight = true;
+        msVLG.childForceExpandWidth = true;
+        msVLG.childForceExpandHeight = false;
+        msVLG.spacing = 20;
+        msVLG.padding = new RectOffset(16, 16, 16, 40);
+
+        var msCSF         = msContent.gameObject.AddComponent<ContentSizeFitter>();
+        msCSF.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+        msr.content       = msContent;
+
+        // ─ 섹션 순서: 패키지 → 일일상점 → 장비뽑기 → 골드 → 보석 ──
+        BuildGachaSectionHeader(msContent, "챕터 패키지");
+        BuildChapterPackageCard(msContent);
+
+        BuildDailyShopSection(msContent);
+
+        BuildGachaSectionHeader(msContent, "장비 뽑기");
+        BuildGachaCard(msContent, "일반 장비 상자",
+            "일반, 고급 또는 레어 장비\n레어 장비 확률 증가", 80, 800);
+        BuildGachaCard(msContent, "레어 장비 상자",
+            "고급, 레어 또는 에픽 장비\nS급 에픽 장비 확률 증가", 400, 4000);
+
+        BuildIAPSection(msContent, "골드", new Color(0.15f, 0.40f, 0.70f, 1f), new[]
+        {
+            ("1,350",    "", "골드 한 줌",    "₩1,100"),
+            ("13,500",   "", "골드 더미",     "₩6,600"),
+            ("135,000",  "", "골드 무더기",   "₩14,000"),
+            ("270,000",  "", "골드 한 주머니","₩29,000"),
+            ("700,000",  "", "골드 한 통",    "₩66,000"),
+            ("1,500,000","", "골드 한 상자",  "₩149,000"),
+        });
+
+        BuildIAPSection(msContent, "보석", new Color(0.50f, 0.20f, 0.80f, 1f), new[]
+        {
+            ("80",    "추가 증정 80",    "보석 한 줌",    "₩1,100"),
+            ("500",   "추가 증정 500",   "보석 더미",     "₩6,600"),
+            ("1,200", "추가 증정 1200",  "보석 무더기",   "₩14,000"),
+            ("2,500", "추가 증정 2500",  "보석 한 주머니","₩29,000"),
+            ("6,500", "추가 증정 6500",  "보석 한 통",    "₩66,000"),
+            ("14,000","추가 증정 14000", "보석 한 상자",  "₩149,000"),
+        });
+
+        // ── 가챠 결과 팝업 (최상단 오버레이) ────────────────────────
+        var popupGO = new GameObject("GachaResultPopup");
+        popupGO.transform.SetParent(panelShop.transform, false);
+        var popupRT = popupGO.AddComponent<RectTransform>();
+        SetAnchors(popupRT, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+
+        // 파란 배경
+        var popupBG = popupGO.AddComponent<Image>();
+        popupBG.color = new Color(0.18f, 0.28f, 0.62f, 0.97f);
+
+        // 닫기 히트 에어리어 (전체, 뒤에 배치)
+        var closeHitGO = CreateRect("CloseHitArea", popupGO.transform);
+        SetAnchors(closeHitGO, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+        closeHitGO.gameObject.AddComponent<Image>().color = Color.clear;
+        var closeBtn = closeHitGO.gameObject.AddComponent<Button>();
+        var closeCB  = new UnityEngine.Events.UnityAction(() => {});
+        // (닫기는 GachaResultPopup.Awake 에서 바인딩)
+
+        // 등급 필 (상단 중앙)
+        var gradePillGO = CreateRect("GradePill", popupGO.transform);
+        SetAnchors(gradePillGO, new Vector2(0.25f, 0.72f), new Vector2(0.75f, 0.80f), Vector2.zero, Vector2.zero);
+        gradePillGO.gameObject.AddComponent<Image>().color = new Color(0.10f, 0.14f, 0.30f, 0.95f);
+        var gradeText = CreateTMPText("GradeText", gradePillGO, "일반", 38f, TextAlignmentOptions.Center);
+        gradeText.color     = Color.white;
+        gradeText.fontStyle = FontStyles.Bold;
+        var gradeRT          = gradeText.GetComponent<RectTransform>();
+        gradeRT.anchorMin    = Vector2.zero; gradeRT.anchorMax = Vector2.one;
+        gradeRT.offsetMin    = gradeRT.offsetMax = Vector2.zero;
+
+        // 아이템 이름 텍스트
+        var itemNameGO = CreateRect("ItemNameText", popupGO.transform);
+        SetAnchors(itemNameGO, new Vector2(0.1f, 0.64f), new Vector2(0.9f, 0.72f), Vector2.zero, Vector2.zero);
+        var itemNameTmp = itemNameGO.gameObject.AddComponent<TextMeshProUGUI>();
+        itemNameTmp.text      = "아이템 이름";
+        itemNameTmp.fontSize  = 40f;
+        itemNameTmp.fontStyle = FontStyles.Bold;
+        itemNameTmp.alignment = TextAlignmentOptions.Center;
+        itemNameTmp.color     = Color.white;
+
+        // 아이템 아이콘 카드
+        var iconCardGO = CreateRect("ItemIconCard", popupGO.transform);
+        SetAnchors(iconCardGO, new Vector2(0.25f, 0.46f), new Vector2(0.75f, 0.64f), Vector2.zero, Vector2.zero);
+        iconCardGO.gameObject.AddComponent<Image>().color = new Color(0.45f, 0.48f, 0.55f, 1f);
+        var itemIconGO = CreateRect("ItemIcon", iconCardGO);
+        SetAnchors(itemIconGO, new Vector2(0.1f, 0.1f), new Vector2(0.9f, 0.9f), Vector2.zero, Vector2.zero);
+        var itemIconImg = itemIconGO.gameObject.AddComponent<Image>();
+        itemIconImg.color = Color.white;
+
+        // 보물상자 이미지 영역
+        var chestGO = CreateRect("ChestImage", popupGO.transform);
+        SetAnchors(chestGO, new Vector2(0.2f, 0.25f), new Vector2(0.8f, 0.45f), Vector2.zero, Vector2.zero);
+        chestGO.gameObject.AddComponent<Image>().color = new Color(0.35f, 0.40f, 0.60f, 0.6f);
+        var chestLbl = CreateTMPText("Hint", chestGO, "보물상자", 36f, TextAlignmentOptions.Center);
+        chestLbl.color = new Color(1f, 1f, 1f, 0.5f);
+        var chestLblRT = chestLbl.GetComponent<RectTransform>();
+        chestLblRT.anchorMin = Vector2.zero; chestLblRT.anchorMax = Vector2.one;
+        chestLblRT.offsetMin = chestLblRT.offsetMax = Vector2.zero;
+
+        // 뽑기 버튼 (앞에 배치 — CloseHitArea 위에 렌더링되므로 클릭 차단)
+        var drawBtnGO = CreateRect("DrawButton", popupGO.transform);
+        SetAnchors(drawBtnGO, new Vector2(0.25f, 0.12f), new Vector2(0.75f, 0.20f), Vector2.zero, Vector2.zero);
+        drawBtnGO.gameObject.AddComponent<Image>().color = new Color(0.20f, 0.75f, 0.20f, 1f);
+        var drawBtn = drawBtnGO.gameObject.AddComponent<Button>();
+        var drawBtnLbl = CreateTMPText("Label", drawBtnGO.transform, "1회 뽑기", 34f, TextAlignmentOptions.Center);
+        drawBtnLbl.color     = Color.white;
+        drawBtnLbl.fontStyle = FontStyles.Bold;
+        var drawLblRT         = drawBtnLbl.GetComponent<RectTransform>();
+        drawLblRT.anchorMin   = Vector2.zero; drawLblRT.anchorMax = Vector2.one;
+        drawLblRT.offsetMin   = new Vector2(0f, 0f); drawLblRT.offsetMax = new Vector2(0f, 28f);
+        var drawCostTmp = CreateTMPText("CostText", drawBtnGO.transform, "x80", 28f, TextAlignmentOptions.Center);
+        drawCostTmp.color = new Color(0.80f, 1f, 0.80f, 1f);
+        var costRT         = drawCostTmp.GetComponent<RectTransform>();
+        costRT.anchorMin   = Vector2.zero; costRT.anchorMax = Vector2.one;
+        costRT.offsetMin   = new Vector2(0f, -28f); costRT.offsetMax = Vector2.zero;
+
+        // "빈 곳을 탭하여 닫기" 힌트
+        var closeHintGO = CreateRect("CloseHint", popupGO.transform);
+        SetAnchors(closeHintGO, new Vector2(0.1f, 0.04f), new Vector2(0.9f, 0.10f), Vector2.zero, Vector2.zero);
+        var closeHintTmp = closeHintGO.gameObject.AddComponent<TextMeshProUGUI>();
+        closeHintTmp.text      = "빈 곳을 탭하여 닫기";
+        closeHintTmp.fontSize  = 26f;
+        closeHintTmp.alignment = TextAlignmentOptions.Center;
+        closeHintTmp.color     = new Color(0.70f, 0.70f, 0.70f, 0.8f);
+
+        // GachaResultPopup 컴포넌트 연결
+        var popup           = popupGO.AddComponent<GachaResultPopup>();
+        popup.gradeText     = gradeText;
+        popup.itemNameText  = itemNameTmp;
+        popup.itemIcon      = itemIconImg;
+        popup.drawButton    = drawBtn;
+        popup.drawCostText  = drawCostTmp;
+        popup.closeHitArea  = closeBtn;
+
+        popupGO.SetActive(false);
+
+        // ── HomeShopPanel 컴포넌트 연결 (중복 방지) ─────────────────
+        var existingShop = panelShop.GetComponent<HomeShopPanel>();
+        if (existingShop != null) Object.DestroyImmediate(existingShop);
+        var shopPanel        = panelShop.AddComponent<HomeShopPanel>();
+        shopPanel.gachaPopup = popup;
+
+        // ── 커스텀 폰트 적용 ────────────────────────────────────────
+        var shopFont = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>("Assets/Font/mona12-Bold SDF.asset");
+        if (shopFont != null)
+        {
+            foreach (var tmp in panelShop.GetComponentsInChildren<TextMeshProUGUI>(true))
+                tmp.font = shopFont;
+            Debug.Log("[HomeUIBuilder] 폰트 적용 완료: mona12-Bold SDF");
+        }
+        else
+        {
+            Debug.LogWarning("[HomeUIBuilder] 폰트를 찾을 수 없음: Assets/Font/mona12-Bold SDF.asset");
+        }
+
+        panelShop.SetActive(false);
+        EditorSceneManager.MarkSceneDirty(scene);
+        EditorSceneManager.SaveScene(scene);
+        Debug.Log("[HomeUIBuilder] Shop Panel 빌드 완료.");
+    }
+
+    // ── 상점 탭별 ScrollRect 래퍼 ────────────────────────────────────
+    static GameObject BuildShopScrollTab(string name, RectTransform parent, System.Action<RectTransform> populate)
+    {
+        var rootGO = new GameObject(name);
+        rootGO.transform.SetParent(parent, false);
+        var rootRT = rootGO.AddComponent<RectTransform>();
+        SetAnchors(rootRT, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+
+        var sr       = rootGO.AddComponent<ScrollRect>();
+        sr.horizontal = false;
+        sr.vertical   = true;
+
+        var viewport = CreateRect("Viewport", rootGO.transform);
+        SetAnchors(viewport, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+        viewport.gameObject.AddComponent<RectMask2D>();
+        sr.viewport = viewport;
+
+        var content       = CreateRect("Content", viewport);
+        content.anchorMin = new Vector2(0f, 1f);
+        content.anchorMax = new Vector2(1f, 1f);
+        content.pivot     = new Vector2(0.5f, 1f);
+        content.offsetMin = content.offsetMax = Vector2.zero;
+
+        var vlg = content.gameObject.AddComponent<VerticalLayoutGroup>();
+        vlg.childControlWidth = vlg.childControlHeight = true;
+        vlg.childForceExpandWidth = true;
+        vlg.childForceExpandHeight = false;
+        vlg.spacing = 16;
+        vlg.padding = new RectOffset(16, 16, 16, 32);
+
+        var csf         = content.gameObject.AddComponent<ContentSizeFitter>();
+        csf.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+        sr.content = content;
+
+        populate?.Invoke(content);
+        return rootGO;
+    }
+
+    static GameObject CreatePlaceholderTab(string name, RectTransform parent, string label)
+    {
+        var go = new GameObject(name);
+        go.transform.SetParent(parent, false);
+        var rt = go.AddComponent<RectTransform>();
+        SetAnchors(rt, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+        go.AddComponent<Image>().color = new Color(0.08f, 0.12f, 0.22f, 1f);
+        var tmp       = CreateTMPText("Label", go.transform, $"[{label}]\n준비중", 48f, TextAlignmentOptions.Center);
+        tmp.color     = new Color(0.5f, 0.5f, 0.5f, 1f);
+        var tmpRT     = tmp.GetComponent<RectTransform>();
+        tmpRT.anchorMin = new Vector2(0f, 0.4f); tmpRT.anchorMax = new Vector2(1f, 0.6f);
+        tmpRT.offsetMin = tmpRT.offsetMax = Vector2.zero;
+        return go;
+    }
+
+    // ── 섹션 헤더 (다이아몬드 데코 + 타이틀 필) ──────────────────────
+    static void BuildGachaSectionHeader(RectTransform parent, string title)
+    {
+        var headerGO = new GameObject($"SectionHeader_{title}");
+        headerGO.transform.SetParent(parent, false);
+        var headerLE = headerGO.AddComponent<LayoutElement>();
+        headerLE.preferredHeight = 72;
+        headerGO.AddComponent<Image>().color = new Color(0.10f, 0.14f, 0.28f, 0.8f);
+
+        var pill = CreateRect("TitlePill", headerGO.transform);
+        SetAnchors(pill, new Vector2(0.15f, 0.1f), new Vector2(0.85f, 0.9f), Vector2.zero, Vector2.zero);
+        pill.gameObject.AddComponent<Image>().color = new Color(0.12f, 0.18f, 0.38f, 1f);
+
+        var titleTmp       = CreateTMPText("Title", pill, title, 34f, TextAlignmentOptions.Center);
+        titleTmp.color     = Color.white;
+        titleTmp.fontStyle = FontStyles.Bold;
+        var ttRT            = titleTmp.GetComponent<RectTransform>();
+        ttRT.anchorMin      = Vector2.zero; ttRT.anchorMax = Vector2.one;
+        ttRT.offsetMin      = ttRT.offsetMax = Vector2.zero;
+
+        // 좌우 다이아몬드 장식
+        foreach (var side in new[] { new Vector2(0.02f, 0.2f), new Vector2(0.88f, 0.2f) })
+        {
+            var deco = CreateRect("Deco", headerGO.transform);
+            SetAnchors(deco, side, side + new Vector2(0.10f, 0.60f), Vector2.zero, Vector2.zero);
+            deco.gameObject.AddComponent<Image>().color = new Color(0.6f, 0.65f, 0.8f, 0.8f);
+        }
+    }
+
+    // ── 가챠 카드 ─────────────────────────────────────────────────────
+    static void BuildGachaCard(RectTransform parent, string title, string desc, int cost1, int cost10)
+    {
+        var cardGO = new GameObject($"GachaCard_{title}");
+        cardGO.transform.SetParent(parent, false);
+        var cardLE = cardGO.AddComponent<LayoutElement>();
+        cardLE.preferredHeight = 520;
+        cardGO.AddComponent<Image>().color = new Color(0.18f, 0.12f, 0.45f, 1f);
+
+        // 배너 (왼 60%)
+        var banner = CreateRect("Banner", cardGO.transform);
+        SetAnchors(banner, Vector2.zero, new Vector2(0.58f, 1f), Vector2.zero, Vector2.zero);
+        banner.gameObject.AddComponent<Image>().color = new Color(0.45f, 0.20f, 0.75f, 1f);
+
+        // 정보 영역 (우 40%)
+        var info = CreateRect("Info", cardGO.transform);
+        SetAnchors(info, new Vector2(0.58f, 0.38f), Vector2.one, Vector2.zero, Vector2.zero);
+
+        var titleTmp       = CreateTMPText("Title", info, title, 30f, TextAlignmentOptions.Left);
+        titleTmp.color     = Color.white;
+        titleTmp.fontStyle = FontStyles.Bold;
+        titleTmp.enableWordWrapping = true;
+        var ttRT            = titleTmp.GetComponent<RectTransform>();
+        ttRT.anchorMin      = new Vector2(0.05f, 0.65f); ttRT.anchorMax = Vector2.one;
+        ttRT.offsetMin      = ttRT.offsetMax = Vector2.zero;
+
+        var descTmp      = CreateTMPText("Desc", info, desc, 22f, TextAlignmentOptions.Left);
+        descTmp.color    = new Color(0.60f, 0.90f, 0.50f, 1f);
+        descTmp.enableWordWrapping = true;
+        var dtRT          = descTmp.GetComponent<RectTransform>();
+        dtRT.anchorMin    = new Vector2(0.05f, 0.30f); dtRT.anchorMax = new Vector2(1f, 0.65f);
+        dtRT.offsetMin    = dtRT.offsetMax = Vector2.zero;
+
+        // 패티 행 (9회 보장)
+        for (int pi = 0; pi < 2; pi++)
+        {
+            var pityGO = new GameObject($"PityRow_{pi}");
+            pityGO.transform.SetParent(info, false);
+            var pityRT = pityGO.AddComponent<RectTransform>();
+            pityRT.anchorMin = new Vector2(0.05f, 0.05f + pi * 0.12f);
+            pityRT.anchorMax = new Vector2(0.98f, 0.05f + pi * 0.12f + 0.10f);
+            pityRT.offsetMin = pityRT.offsetMax = Vector2.zero;
+            pityGO.AddComponent<Image>().color = new Color(0.15f, 0.15f, 0.30f, 0.8f);
+            int pityCnt = pi == 0 ? 9 : 26;
+            var pityTmp = CreateTMPText("Text", pityGO.transform, $"{pityCnt}회 내 반드시 에픽 장비 획득", 18f, TextAlignmentOptions.Left);
+            pityTmp.color = new Color(0.85f, 0.85f, 0.85f, 1f);
+            var ptRT = pityTmp.GetComponent<RectTransform>();
+            ptRT.anchorMin = new Vector2(0.04f, 0f); ptRT.anchorMax = Vector2.one;
+            ptRT.offsetMin = ptRT.offsetMax = Vector2.zero;
+        }
+
+        // 뽑기 버튼 행 (하단)
+        var btnRow = CreateRect("BtnRow", cardGO.transform);
+        SetAnchors(btnRow, Vector2.zero, new Vector2(1f, 0.38f), Vector2.zero, Vector2.zero);
+        var btnHLG = btnRow.gameObject.AddComponent<HorizontalLayoutGroup>();
+        btnHLG.childControlWidth = btnHLG.childControlHeight = true;
+        btnHLG.childForceExpandWidth = btnHLG.childForceExpandHeight = true;
+        btnHLG.spacing = 12; btnHLG.padding = new RectOffset(20, 20, 12, 12);
+
+        foreach (var (label, cost) in new[] { ($"1회 뽑기\nx{cost1}", cost1), ($"10회 뽑기\nx{cost10}", cost10) })
+        {
+            var btnGO  = new GameObject("DrawBtn");
+            btnGO.transform.SetParent(btnRow, false);
+            btnGO.AddComponent<Image>().color = new Color(0.15f, 0.65f, 0.20f, 1f);
+            btnGO.AddComponent<Button>();
+            // GachaDrawButton: Start() 에서 부모 HomeShopPanel.TryDraw(cost) 를 연결
+            var gdb      = btnGO.AddComponent<GachaDrawButton>();
+            gdb.gemCost  = cost;
+            var btnTmp   = CreateTMPText("Label", btnGO.transform, label, 28f, TextAlignmentOptions.Center);
+            btnTmp.color = Color.white; btnTmp.fontStyle = FontStyles.Bold;
+            var btnTRT   = btnTmp.GetComponent<RectTransform>();
+            btnTRT.anchorMin = Vector2.zero; btnTRT.anchorMax = Vector2.one;
+            btnTRT.offsetMin = btnTRT.offsetMax = Vector2.zero;
+        }
+    }
+
+    static void BuildGachaBannerSubTabs(RectTransform parent)
+    {
+        var tabGO = new GameObject("GachaSeriesTabs");
+        tabGO.transform.SetParent(parent, false);
+        var tabLE = tabGO.AddComponent<LayoutElement>(); tabLE.preferredHeight = 72;
+        var hlg = tabGO.AddComponent<HorizontalLayoutGroup>();
+        hlg.childControlWidth = hlg.childControlHeight = true;
+        hlg.childForceExpandWidth = hlg.childForceExpandHeight = true;
+        hlg.spacing = 8; hlg.padding = new RectOffset(8, 8, 4, 4);
+
+        string[] series = { "S급 그리핀 시리즈", "S급 오라클 시리즈", "S급 용기사 시리즈" };
+        for (int si = 0; si < series.Length; si++)
+        {
+            var stGO = new GameObject($"SeriesTab_{si}");
+            stGO.transform.SetParent(tabGO.transform, false);
+            stGO.AddComponent<Image>().color = si == 0
+                ? new Color(1f, 0.80f, 0.20f, 1f)
+                : new Color(0.18f, 0.22f, 0.38f, 1f);
+            stGO.AddComponent<Button>();
+            var stTmp = CreateTMPText("Text", stGO.transform, series[si], 22f, TextAlignmentOptions.Center);
+            stTmp.color = si == 0 ? Color.black : Color.white;
+            stTmp.enableWordWrapping = true;
+            var stRT = stTmp.GetComponent<RectTransform>();
+            stRT.anchorMin = Vector2.zero; stRT.anchorMax = Vector2.one;
+            stRT.offsetMin = new Vector2(4, 2); stRT.offsetMax = new Vector2(-4, -2);
+        }
+    }
+
+    // ── 일일상점 ─────────────────────────────────────────────────────
+    static void BuildChapterPackageCard(RectTransform parent)
+    {
+        BuildGachaSectionHeader(parent, "챕터 패키지");
+
+        var cardGO = new GameObject("ChapterPackageCard");
+        cardGO.transform.SetParent(parent, false);
+        var cardLE = cardGO.AddComponent<LayoutElement>(); cardLE.preferredHeight = 280;
+        cardGO.AddComponent<Image>().color = new Color(0.75f, 0.22f, 0.22f, 1f);
+
+        // 배지
+        var badgeGO = CreateRect("Badge600", cardGO.transform);
+        SetAnchors(badgeGO, new Vector2(0.55f, 0.55f), new Vector2(0.80f, 0.95f), Vector2.zero, Vector2.zero);
+        badgeGO.gameObject.AddComponent<Image>().color = new Color(0.95f, 0.20f, 0.20f, 1f);
+        var badgeTmp = CreateTMPText("Text", badgeGO, "600%\n초특가", 30f, TextAlignmentOptions.Center);
+        badgeTmp.color = Color.white; badgeTmp.fontStyle = FontStyles.Bold;
+        var btRT = badgeTmp.GetComponent<RectTransform>();
+        btRT.anchorMin = Vector2.zero; btRT.anchorMax = Vector2.one;
+        btRT.offsetMin = btRT.offsetMax = Vector2.zero;
+
+        // 타이틀
+        var titleTmp = CreateTMPText("Title", cardGO.transform, "챕터13 패키지", 46f, TextAlignmentOptions.Left);
+        titleTmp.color = Color.white; titleTmp.fontStyle = FontStyles.Bold;
+        var tRT = titleTmp.GetComponent<RectTransform>();
+        tRT.anchorMin = new Vector2(0.04f, 0.55f); tRT.anchorMax = new Vector2(0.55f, 0.95f);
+        tRT.offsetMin = tRT.offsetMax = Vector2.zero;
+
+        // 가격
+        var priceTmp = CreateTMPText("Price", cardGO.transform, "₩66,000", 38f, TextAlignmentOptions.Left);
+        priceTmp.color = new Color(1f, 0.95f, 0.60f, 1f);
+        var pRT = priceTmp.GetComponent<RectTransform>();
+        pRT.anchorMin = new Vector2(0.04f, 0.05f); pRT.anchorMax = new Vector2(0.55f, 0.30f);
+        pRT.offsetMin = pRT.offsetMax = Vector2.zero;
+
+        var buyBtnGO = CreateRect("BuyButton", cardGO.transform);
+        SetAnchors(buyBtnGO, new Vector2(0.05f, 0.30f), new Vector2(0.55f, 0.54f), Vector2.zero, Vector2.zero);
+        buyBtnGO.gameObject.AddComponent<Image>().color = new Color(0.20f, 0.70f, 0.25f, 1f);
+        buyBtnGO.gameObject.AddComponent<Button>();
+        var buyTmp = CreateTMPText("Text", buyBtnGO, "구매", 34f, TextAlignmentOptions.Center);
+        buyTmp.color = Color.white; buyTmp.fontStyle = FontStyles.Bold;
+        var buyTRT = buyTmp.GetComponent<RectTransform>();
+        buyTRT.anchorMin = Vector2.zero; buyTRT.anchorMax = Vector2.one;
+        buyTRT.offsetMin = buyTRT.offsetMax = Vector2.zero;
+    }
+
+    static void BuildDailyShopSection(RectTransform parent)
+    {
+        BuildGachaSectionHeader(parent, "일일상점");
+
+        // 타이머
+        var timerGO = new GameObject("TimerRow");
+        timerGO.transform.SetParent(parent, false);
+        var timerLE = timerGO.AddComponent<LayoutElement>(); timerLE.preferredHeight = 48;
+        var timerTmp = timerGO.AddComponent<TextMeshProUGUI>();
+        timerTmp.text = "새로고침까지: 21:06:28";
+        timerTmp.fontSize = 28f;
+        timerTmp.alignment = TextAlignmentOptions.Center;
+        timerTmp.color = new Color(0.75f, 0.75f, 0.85f, 1f);
+
+        // 아이템 그리드
+        var gridGO = new GameObject("DailyGrid");
+        gridGO.transform.SetParent(parent, false);
+        var gridLE = gridGO.AddComponent<LayoutElement>(); gridLE.preferredHeight = 620;
+        var grid = gridGO.AddComponent<GridLayoutGroup>();
+        grid.cellSize       = new Vector2(300, 290);
+        grid.spacing        = new Vector2(12, 12);
+        grid.padding        = new RectOffset(12, 12, 12, 12);
+        grid.childAlignment = TextAnchor.UpperCenter;
+        grid.constraint     = GridLayoutGroup.Constraint.FixedColumnCount;
+        grid.constraintCount = 3;
+
+        string[] dailyItems = { "헬릭스 조각", "속삭이는 자의\n펜던트", "속삭이는 자의\n장궁", "신발 스크롤", "아머 스크롤", "아머 스크롤" };
+        int[] discounts = { 0, 0, 10, 40, 20, 50 };
+        int[] costs     = { 90, 50, 45, 60, 40, 30 };
+        for (int di = 0; di < dailyItems.Length; di++)
+            BuildDailyItemCard(gridGO.transform, dailyItems[di], discounts[di], costs[di], di);
+    }
+
+    static void BuildDailyItemCard(Transform parent, string itemName, int discount, int gemCost, int slot)
+    {
+        var cardGO = new GameObject($"DailyItem_{slot}");
+        cardGO.transform.SetParent(parent, false);
+        cardGO.AddComponent<Image>().color = new Color(0.18f, 0.38f, 0.68f, 1f);
+        cardGO.AddComponent<Button>();
+
+        if (discount > 0)
+        {
+            var discGO = new GameObject("Discount");
+            discGO.transform.SetParent(cardGO.transform, false);
+            var discRT = discGO.AddComponent<RectTransform>();
+            discRT.anchorMin = new Vector2(0f, 0.78f); discRT.anchorMax = new Vector2(0.42f, 1f);
+            discRT.offsetMin = discRT.offsetMax = Vector2.zero;
+            discGO.AddComponent<Image>().color = new Color(0.85f, 0.20f, 0.20f, 1f);
+            var discTmp = CreateTMPText("Text", discGO.transform, $"{discount}%\nOff", 20f, TextAlignmentOptions.Center);
+            discTmp.color = Color.white; discTmp.fontStyle = FontStyles.Bold;
+            var dtRT = discTmp.GetComponent<RectTransform>();
+            dtRT.anchorMin = Vector2.zero; dtRT.anchorMax = Vector2.one;
+            dtRT.offsetMin = dtRT.offsetMax = Vector2.zero;
+        }
+
+        var nameTmp = CreateTMPText("Name", cardGO.transform, itemName, 24f, TextAlignmentOptions.Center);
+        nameTmp.color = Color.white; nameTmp.enableWordWrapping = true;
+        var nRT = nameTmp.GetComponent<RectTransform>();
+        nRT.anchorMin = new Vector2(0f, 0.68f); nRT.anchorMax = Vector2.one;
+        nRT.offsetMin = nRT.offsetMax = Vector2.zero;
+
+        var iconGO = CreateRect("Icon", cardGO.transform);
+        SetAnchors(iconGO, new Vector2(0.15f, 0.28f), new Vector2(0.85f, 0.68f), Vector2.zero, Vector2.zero);
+        iconGO.gameObject.AddComponent<Image>().color = new Color(0.35f, 0.38f, 0.55f, 1f);
+
+        var cntTmp = CreateTMPText("Count", cardGO.transform, "1회 더 구매 가능", 18f, TextAlignmentOptions.Center);
+        cntTmp.color = new Color(0.75f, 0.90f, 1f, 1f);
+        var cntRT = cntTmp.GetComponent<RectTransform>();
+        cntRT.anchorMin = new Vector2(0f, 0.14f); cntRT.anchorMax = new Vector2(1f, 0.28f);
+        cntRT.offsetMin = cntRT.offsetMax = Vector2.zero;
+
+        var costGO = CreateRect("CostBar", cardGO.transform);
+        SetAnchors(costGO, Vector2.zero, new Vector2(1f, 0.14f), Vector2.zero, Vector2.zero);
+        costGO.gameObject.AddComponent<Image>().color = new Color(0.12f, 0.16f, 0.30f, 0.9f);
+        var costTmp = CreateTMPText("Cost", costGO, $"x{gemCost}", 26f, TextAlignmentOptions.Center);
+        costTmp.color = new Color(0.50f, 1f, 0.50f, 1f); costTmp.fontStyle = FontStyles.Bold;
+        var ctRT = costTmp.GetComponent<RectTransform>();
+        ctRT.anchorMin = Vector2.zero; ctRT.anchorMax = Vector2.one;
+        ctRT.offsetMin = ctRT.offsetMax = Vector2.zero;
+    }
+
+    // ── IAP 섹션 (보석 / 골드) ─────────────────────────────────────
+    static void BuildIAPSection(RectTransform parent, string sectionName, Color cardColor,
+        (string amount, string bonus, string prodName, string price)[] items)
+    {
+        BuildGachaSectionHeader(parent, sectionName);
+
+        int cols = 3;
+        int rows = Mathf.CeilToInt(items.Length / (float)cols);
+        var gridGO = new GameObject($"IAPGrid_{sectionName}");
+        gridGO.transform.SetParent(parent, false);
+        var gridLE = gridGO.AddComponent<LayoutElement>(); gridLE.preferredHeight = rows * 340 + (rows - 1) * 12 + 24;
+        var grid = gridGO.AddComponent<GridLayoutGroup>();
+        grid.cellSize        = new Vector2(306, 330);
+        grid.spacing         = new Vector2(12, 12);
+        grid.padding         = new RectOffset(12, 12, 12, 12);
+        grid.childAlignment  = TextAnchor.UpperCenter;
+        grid.constraint      = GridLayoutGroup.Constraint.FixedColumnCount;
+        grid.constraintCount = cols;
+
+        foreach (var item in items)
+            BuildIAPCard(gridGO.transform, item.amount, item.bonus, item.prodName, item.price, cardColor);
+    }
+
+    static void BuildIAPCard(Transform parent, string amount, string bonus, string prodName, string price, Color bgColor)
+    {
+        var cardGO = new GameObject($"IAPCard_{prodName}");
+        cardGO.transform.SetParent(parent, false);
+        cardGO.AddComponent<Image>().color = bgColor;
+        cardGO.AddComponent<Button>();
+
+        if (!string.IsNullOrEmpty(bonus))
+        {
+            var bonusGO = CreateRect("BonusBadge", cardGO.transform);
+            SetAnchors(bonusGO, new Vector2(0f, 0.82f), Vector2.one, Vector2.zero, Vector2.zero);
+            bonusGO.gameObject.AddComponent<Image>().color = new Color(0.20f, 0.65f, 0.20f, 1f);
+            var bonusTmp = CreateTMPText("Text", bonusGO, bonus, 20f, TextAlignmentOptions.Center);
+            bonusTmp.color = Color.white;
+            var btRT = bonusTmp.GetComponent<RectTransform>();
+            btRT.anchorMin = Vector2.zero; btRT.anchorMax = Vector2.one;
+            btRT.offsetMin = btRT.offsetMax = Vector2.zero;
+        }
+
+        var amtTmp       = CreateTMPText("Amount", cardGO.transform, amount, 48f, TextAlignmentOptions.Center);
+        amtTmp.color     = new Color(1f, 0.92f, 0.25f, 1f);
+        amtTmp.fontStyle = FontStyles.Bold;
+        var aRT           = amtTmp.GetComponent<RectTransform>();
+        aRT.anchorMin     = new Vector2(0f, 0.58f); aRT.anchorMax = new Vector2(1f, 0.82f);
+        aRT.offsetMin     = aRT.offsetMax = Vector2.zero;
+
+        var iconGO = CreateRect("GemIcon", cardGO.transform);
+        SetAnchors(iconGO, new Vector2(0.15f, 0.30f), new Vector2(0.85f, 0.58f), Vector2.zero, Vector2.zero);
+        iconGO.gameObject.AddComponent<Image>().color = new Color(0.30f, 0.85f, 0.30f, 0.7f);
+
+        var nameTmp      = CreateTMPText("ProdName", cardGO.transform, prodName, 24f, TextAlignmentOptions.Center);
+        nameTmp.color    = new Color(0.9f, 0.9f, 0.9f, 1f);
+        var pRT           = nameTmp.GetComponent<RectTransform>();
+        pRT.anchorMin     = new Vector2(0f, 0.18f); pRT.anchorMax = new Vector2(1f, 0.30f);
+        pRT.offsetMin     = pRT.offsetMax = Vector2.zero;
+
+        var priceBG = CreateRect("PriceBar", cardGO.transform);
+        SetAnchors(priceBG, Vector2.zero, new Vector2(1f, 0.18f), Vector2.zero, Vector2.zero);
+        priceBG.gameObject.AddComponent<Image>().color = new Color(0.88f, 0.90f, 0.95f, 1f);
+        var priceTmp      = CreateTMPText("Price", priceBG, price, 28f, TextAlignmentOptions.Center);
+        priceTmp.color    = new Color(0.15f, 0.15f, 0.20f, 1f);
+        priceTmp.fontStyle = FontStyles.Bold;
+        var prRT           = priceTmp.GetComponent<RectTransform>();
+        prRT.anchorMin     = Vector2.zero; prRT.anchorMax = Vector2.one;
+        prRT.offsetMin     = prRT.offsetMax = Vector2.zero;
+    }
+
+    static Button CreateShopSubTab(string name, RectTransform parent, string label, bool active)
+    {
+        var go  = new GameObject(name);
+        go.transform.SetParent(parent, false);
+        go.AddComponent<RectTransform>();
+        var img   = go.AddComponent<Image>();
+        img.color = active ? new Color(1f, 0.80f, 0.20f, 1f) : new Color(0.12f, 0.16f, 0.28f, 1f);
+        var btn   = go.AddComponent<Button>();
+
+        var lbl = CreateTMPText("Text", go.transform, label, 24f, TextAlignmentOptions.Center);
+        lbl.fontStyle = FontStyles.Bold;
+        lbl.enableWordWrapping = true;
+        lbl.color     = active ? Color.black : Color.white;
+        var lRT        = lbl.GetComponent<RectTransform>();
+        lRT.anchorMin  = Vector2.zero;
+        lRT.anchorMax  = Vector2.one;
+        lRT.offsetMin  = lRT.offsetMax = Vector2.zero;
+        return btn;
     }
 
     static RectTransform CreateGridContent(string name, RectTransform parent)

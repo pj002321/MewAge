@@ -23,8 +23,64 @@ namespace Mewage.DB
 			get => _f_name[Index];
 			set => _f_name[Index] = value;
 		}
+		public System.String f_이름
+		{
+			get => _f_이름[Index];
+			set => _f_이름[Index] = value;
+		}
+		public System.String f_등급
+		{
+			get => _f_등급[Index];
+			set => _f_등급[Index] = value;
+		}
+		public System.Int32 f_공격력
+		{
+			get => _f_공격력[Index];
+			set => _f_공격력.SetValue(this, value);
+		}
+		public System.Int32 f_회피
+		{
+			get => _f_회피[Index];
+			set => _f_회피.SetValue(this, value);
+		}
+		public System.Int32 f_방어력
+		{
+			get => _f_방어력[Index];
+			set => _f_방어력.SetValue(this, value);
+		}
+		public System.Int32 f_체력
+		{
+			get => _f_체력[Index];
+			set => _f_체력.SetValue(this, value);
+		}
+		public System.Int32 f_공격속도
+		{
+			get => _f_공격속도[Index];
+			set => _f_공격속도.SetValue(this, value);
+		}
+		public System.Int32 f_치명타
+		{
+			get => _f_치명타[Index];
+			set => _f_치명타.SetValue(this, value);
+		}
 		private static BansheeGz.BGDatabase.BGFieldEntityName _ufle12jhs77_f_name;
 		public static BansheeGz.BGDatabase.BGFieldEntityName _f_name => _ufle12jhs77_f_name ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldEntityName>(MetaDefault, new BGId(4622064053395090845UL, 9801120657620766855UL), () => _ufle12jhs77_f_name = null);
+		private static BansheeGz.BGDatabase.BGFieldString _ufle12jhs77_f_이름;
+		public static BansheeGz.BGDatabase.BGFieldString _f_이름 => _ufle12jhs77_f_이름 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(MetaDefault, new BGId(4688442883247528092UL, 11504552102178649512UL), () => _ufle12jhs77_f_이름 = null);
+		private static BansheeGz.BGDatabase.BGFieldString _ufle12jhs77_f_등급;
+		public static BansheeGz.BGDatabase.BGFieldString _f_등급 => _ufle12jhs77_f_등급 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(MetaDefault, new BGId(5416089133998496657UL, 18173592922593351813UL), () => _ufle12jhs77_f_등급 = null);
+		private static BansheeGz.BGDatabase.BGFieldInt _ufle12jhs77_f_공격력;
+		public static BansheeGz.BGDatabase.BGFieldInt _f_공격력 => _ufle12jhs77_f_공격력 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(MetaDefault, new BGId(5046155416119227592UL, 7914186154393482158UL), () => _ufle12jhs77_f_공격력 = null);
+		private static BansheeGz.BGDatabase.BGFieldInt _ufle12jhs77_f_회피;
+		public static BansheeGz.BGDatabase.BGFieldInt _f_회피 => _ufle12jhs77_f_회피 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(MetaDefault, new BGId(5702602514022765921UL, 7336002892900188557UL), () => _ufle12jhs77_f_회피 = null);
+		private static BansheeGz.BGDatabase.BGFieldInt _ufle12jhs77_f_방어력;
+		public static BansheeGz.BGDatabase.BGFieldInt _f_방어력 => _ufle12jhs77_f_방어력 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(MetaDefault, new BGId(5490422440009398168UL, 6807552478207820991UL), () => _ufle12jhs77_f_방어력 = null);
+		private static BansheeGz.BGDatabase.BGFieldInt _ufle12jhs77_f_체력;
+		public static BansheeGz.BGDatabase.BGFieldInt _f_체력 => _ufle12jhs77_f_체력 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(MetaDefault, new BGId(4630081870242333236UL, 6324651756642332593UL), () => _ufle12jhs77_f_체력 = null);
+		private static BansheeGz.BGDatabase.BGFieldInt _ufle12jhs77_f_공격속도;
+		public static BansheeGz.BGDatabase.BGFieldInt _f_공격속도 => _ufle12jhs77_f_공격속도 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(MetaDefault, new BGId(4934806256356352568UL, 2191128357832639654UL), () => _ufle12jhs77_f_공격속도 = null);
+		private static BansheeGz.BGDatabase.BGFieldInt _ufle12jhs77_f_치명타;
+		public static BansheeGz.BGDatabase.BGFieldInt _f_치명타 => _ufle12jhs77_f_치명타 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(MetaDefault, new BGId(5501307540302785938UL, 2932488834860748697UL), () => _ufle12jhs77_f_치명타 = null);
 		private DB_장비() : base(MetaDefault) {}
 		private DB_장비(BGId id) : base(MetaDefault, id) {}
 		private DB_장비(BGMetaEntity meta) : base(meta) {}
@@ -42,11 +98,27 @@ namespace Mewage.DB
 		{
 			_metaDefault = BGCodeGenUtils.GetMeta<BansheeGz.BGDatabase.BGMetaRow>(new BGId(4647470352566326892UL,15282544368400373632UL), ReleaseCodeGenRuntime);
 			_ufle12jhs77_f_name = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldEntityName>(_metaDefault, new BGId(4622064053395090845UL, 9801120657620766855UL));
+			_ufle12jhs77_f_이름 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(_metaDefault, new BGId(4688442883247528092UL, 11504552102178649512UL));
+			_ufle12jhs77_f_등급 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(_metaDefault, new BGId(5416089133998496657UL, 18173592922593351813UL));
+			_ufle12jhs77_f_공격력 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(_metaDefault, new BGId(5046155416119227592UL, 7914186154393482158UL));
+			_ufle12jhs77_f_회피 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(_metaDefault, new BGId(5702602514022765921UL, 7336002892900188557UL));
+			_ufle12jhs77_f_방어력 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(_metaDefault, new BGId(5490422440009398168UL, 6807552478207820991UL));
+			_ufle12jhs77_f_체력 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(_metaDefault, new BGId(4630081870242333236UL, 6324651756642332593UL));
+			_ufle12jhs77_f_공격속도 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(_metaDefault, new BGId(4934806256356352568UL, 2191128357832639654UL));
+			_ufle12jhs77_f_치명타 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(_metaDefault, new BGId(5501307540302785938UL, 2932488834860748697UL));
 		}
 		public static void ReleaseCodeGenRuntime()
 		{
 			_metaDefault = null;
 			_ufle12jhs77_f_name = null;
+			_ufle12jhs77_f_이름 = null;
+			_ufle12jhs77_f_등급 = null;
+			_ufle12jhs77_f_공격력 = null;
+			_ufle12jhs77_f_회피 = null;
+			_ufle12jhs77_f_방어력 = null;
+			_ufle12jhs77_f_체력 = null;
+			_ufle12jhs77_f_공격속도 = null;
+			_ufle12jhs77_f_치명타 = null;
 		}
 
 		[Preserve]
@@ -60,6 +132,14 @@ namespace Mewage.DB
 		{
 			public const string Meta = "장비";
 			public const string name = "name";
+			public const string 이름 = "이름";
+			public const string 등급 = "등급";
+			public const string 공격력 = "공격력";
+			public const string 회피 = "회피";
+			public const string 방어력 = "방어력";
+			public const string 체력 = "체력";
+			public const string 공격속도 = "공격속도";
+			public const string 치명타 = "치명타";
 		}
 	}
 
@@ -550,11 +630,6 @@ namespace Mewage.DB
 			get => _f_속성내용[Index];
 			set => _f_속성내용[Index] = value;
 		}
-		public System.Int32 f_속성행수
-		{
-			get => _f_속성행수[Index];
-			set => _f_속성행수.SetValue(this, value);
-		}
 		private static BansheeGz.BGDatabase.BGFieldEntityName _ufle12jhs77_f_name;
 		public static BansheeGz.BGDatabase.BGFieldEntityName _f_name => _ufle12jhs77_f_name ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldEntityName>(MetaDefault, new BGId(4873413822836436793UL, 9130358899360770223UL), () => _ufle12jhs77_f_name = null);
 		private static BansheeGz.BGDatabase.BGFieldString _ufle12jhs77_f_이름;
@@ -591,8 +666,6 @@ namespace Mewage.DB
 		public static BansheeGz.BGDatabase.BGFieldString _f_속성ID => _ufle12jhs77_f_속성ID ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(MetaDefault, new BGId(4908833490000968265UL, 17647866692600367787UL), () => _ufle12jhs77_f_속성ID = null);
 		private static BansheeGz.BGDatabase.BGFieldString _ufle12jhs77_f_속성내용;
 		public static BansheeGz.BGDatabase.BGFieldString _f_속성내용 => _ufle12jhs77_f_속성내용 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(MetaDefault, new BGId(4658138817673940550UL, 15550968281205060240UL), () => _ufle12jhs77_f_속성내용 = null);
-		private static BansheeGz.BGDatabase.BGFieldInt _ufle12jhs77_f_속성행수;
-		public static BansheeGz.BGDatabase.BGFieldInt _f_속성행수 => _ufle12jhs77_f_속성행수 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(MetaDefault, new BGId(5588802265471715676UL, 17372744389869336462UL), () => _ufle12jhs77_f_속성행수 = null);
 		private DB_무기() : base(MetaDefault) {}
 		private DB_무기(BGId id) : base(MetaDefault, id) {}
 		private DB_무기(BGMetaEntity meta) : base(meta) {}
@@ -627,7 +700,6 @@ namespace Mewage.DB
 			_ufle12jhs77_f_S3 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(_metaDefault, new BGId(5417580942195244136UL, 11467783086778979234UL));
 			_ufle12jhs77_f_속성ID = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(_metaDefault, new BGId(4908833490000968265UL, 17647866692600367787UL));
 			_ufle12jhs77_f_속성내용 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(_metaDefault, new BGId(4658138817673940550UL, 15550968281205060240UL));
-			_ufle12jhs77_f_속성행수 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(_metaDefault, new BGId(5588802265471715676UL, 17372744389869336462UL));
 		}
 		public static void ReleaseCodeGenRuntime()
 		{
@@ -650,7 +722,6 @@ namespace Mewage.DB
 			_ufle12jhs77_f_S3 = null;
 			_ufle12jhs77_f_속성ID = null;
 			_ufle12jhs77_f_속성내용 = null;
-			_ufle12jhs77_f_속성행수 = null;
 		}
 
 		[Preserve]
@@ -681,7 +752,6 @@ namespace Mewage.DB
 			public const string S3 = "S3";
 			public const string 속성ID = "속성ID";
 			public const string 속성내용 = "속성내용";
-			public const string 속성행수 = "속성행수";
 		}
 	}
 
@@ -819,6 +889,11 @@ namespace Mewage.DB
 			get => _f_웨이브[Index];
 			set => _f_웨이브.SetValue(this, value);
 		}
+		public System.Int32 f_스테이지
+		{
+			get => _f_스테이지[Index];
+			set => _f_스테이지.SetValue(this, value);
+		}
 		public DB_유닛 f_유닛1
 		{
 			get => (DB_유닛) _f_유닛1[Index];
@@ -900,6 +975,8 @@ namespace Mewage.DB
 		public static BansheeGz.BGDatabase.BGFieldInt _f_챕터 => _ufle12jhs77_f_챕터 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(MetaDefault, new BGId(5303677988435965904UL, 8712448346152523693UL), () => _ufle12jhs77_f_챕터 = null);
 		private static BansheeGz.BGDatabase.BGFieldInt _ufle12jhs77_f_웨이브;
 		public static BansheeGz.BGDatabase.BGFieldInt _f_웨이브 => _ufle12jhs77_f_웨이브 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(MetaDefault, new BGId(5657852487175108168UL, 14199165360936714166UL), () => _ufle12jhs77_f_웨이브 = null);
+		private static BansheeGz.BGDatabase.BGFieldInt _ufle12jhs77_f_스테이지;
+		public static BansheeGz.BGDatabase.BGFieldInt _f_스테이지 => _ufle12jhs77_f_스테이지 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(MetaDefault, new BGId(5129541792630569843UL, 2213468325488204715UL), () => _ufle12jhs77_f_스테이지 = null);
 		private static BansheeGz.BGDatabase.BGFieldRelationSingle _ufle12jhs77_f_유닛1;
 		public static BansheeGz.BGDatabase.BGFieldRelationSingle _f_유닛1 => _ufle12jhs77_f_유닛1 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldRelationSingle>(MetaDefault, new BGId(5283883056961428301UL, 12423737629785908397UL), () => _ufle12jhs77_f_유닛1 = null);
 		private static BansheeGz.BGDatabase.BGFieldFloat _ufle12jhs77_f_비율1;
@@ -949,6 +1026,7 @@ namespace Mewage.DB
 			_ufle12jhs77_f_name = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldEntityName>(_metaDefault, new BGId(5309531424821574052UL, 6514542215626864563UL));
 			_ufle12jhs77_f_챕터 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(_metaDefault, new BGId(5303677988435965904UL, 8712448346152523693UL));
 			_ufle12jhs77_f_웨이브 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(_metaDefault, new BGId(5657852487175108168UL, 14199165360936714166UL));
+			_ufle12jhs77_f_스테이지 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(_metaDefault, new BGId(5129541792630569843UL, 2213468325488204715UL));
 			_ufle12jhs77_f_유닛1 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldRelationSingle>(_metaDefault, new BGId(5283883056961428301UL, 12423737629785908397UL));
 			_ufle12jhs77_f_비율1 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldFloat>(_metaDefault, new BGId(5176272068877505357UL, 15737679303662090171UL));
 			_ufle12jhs77_f_유닛2 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldRelationSingle>(_metaDefault, new BGId(5504920464945013332UL, 9673892919848474758UL));
@@ -971,6 +1049,7 @@ namespace Mewage.DB
 			_ufle12jhs77_f_name = null;
 			_ufle12jhs77_f_챕터 = null;
 			_ufle12jhs77_f_웨이브 = null;
+			_ufle12jhs77_f_스테이지 = null;
 			_ufle12jhs77_f_유닛1 = null;
 			_ufle12jhs77_f_비율1 = null;
 			_ufle12jhs77_f_유닛2 = null;
@@ -1001,6 +1080,7 @@ namespace Mewage.DB
 			public const string name = "name";
 			public const string 챕터 = "챕터";
 			public const string 웨이브 = "웨이브";
+			public const string 스테이지 = "스테이지";
 			public const string 유닛1 = "유닛1";
 			public const string 비율1 = "비율1";
 			public const string 유닛2 = "유닛2";
@@ -1149,8 +1229,39 @@ namespace Mewage.DB
 			get => _f_name[Index];
 			set => _f_name[Index] = value;
 		}
+		public System.Int32 f_챕터
+		{
+			get => _f_챕터[Index];
+			set => _f_챕터.SetValue(this, value);
+		}
+		public System.Int32 f_스테이지
+		{
+			get => _f_스테이지[Index];
+			set => _f_스테이지.SetValue(this, value);
+		}
+		public System.Int32 f_웨이브
+		{
+			get => _f_웨이브[Index];
+			set => _f_웨이브.SetValue(this, value);
+		}
+		public FitSpriteToScreen.FitMode f_해상도모드
+		{
+			get => (FitSpriteToScreen.FitMode) _f_해상도모드.GetStoredValue(Index);
+			set => _f_해상도모드.SetStoredValue(Index, (System.Int32) value);
+		}
+		public UnityEngine.Sprite f_배경 => _f_배경[Index];
 		private static BansheeGz.BGDatabase.BGFieldEntityName _ufle12jhs77_f_name;
 		public static BansheeGz.BGDatabase.BGFieldEntityName _f_name => _ufle12jhs77_f_name ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldEntityName>(MetaDefault, new BGId(4894036499248098163UL, 10473296830548264848UL), () => _ufle12jhs77_f_name = null);
+		private static BansheeGz.BGDatabase.BGFieldInt _ufle12jhs77_f_챕터;
+		public static BansheeGz.BGDatabase.BGFieldInt _f_챕터 => _ufle12jhs77_f_챕터 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(MetaDefault, new BGId(5436702778809544110UL, 15265829210097098401UL), () => _ufle12jhs77_f_챕터 = null);
+		private static BansheeGz.BGDatabase.BGFieldInt _ufle12jhs77_f_스테이지;
+		public static BansheeGz.BGDatabase.BGFieldInt _f_스테이지 => _ufle12jhs77_f_스테이지 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(MetaDefault, new BGId(5440272663535201008UL, 15560415860017524098UL), () => _ufle12jhs77_f_스테이지 = null);
+		private static BansheeGz.BGDatabase.BGFieldInt _ufle12jhs77_f_웨이브;
+		public static BansheeGz.BGDatabase.BGFieldInt _f_웨이브 => _ufle12jhs77_f_웨이브 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(MetaDefault, new BGId(5012919537865059412UL, 10233447926503797895UL), () => _ufle12jhs77_f_웨이브 = null);
+		private static BansheeGz.BGDatabase.BGFieldEnum _ufle12jhs77_f_해상도모드;
+		public static BansheeGz.BGDatabase.BGFieldEnum _f_해상도모드 => _ufle12jhs77_f_해상도모드 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldEnum>(MetaDefault, new BGId(5558742323650869453UL, 7285474650119547813UL), () => _ufle12jhs77_f_해상도모드 = null);
+		private static BansheeGz.BGDatabase.BGFieldUnitySprite _ufle12jhs77_f_배경;
+		public static BansheeGz.BGDatabase.BGFieldUnitySprite _f_배경 => _ufle12jhs77_f_배경 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldUnitySprite>(MetaDefault, new BGId(5413705792375098153UL, 11820043993245117828UL), () => _ufle12jhs77_f_배경 = null);
 		private DB_지형() : base(MetaDefault) {}
 		private DB_지형(BGId id) : base(MetaDefault, id) {}
 		private DB_지형(BGMetaEntity meta) : base(meta) {}
@@ -1168,11 +1279,21 @@ namespace Mewage.DB
 		{
 			_metaDefault = BGCodeGenUtils.GetMeta<BansheeGz.BGDatabase.BGMetaRow>(new BGId(5109999077840081745UL,5880540202674039979UL), ReleaseCodeGenRuntime);
 			_ufle12jhs77_f_name = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldEntityName>(_metaDefault, new BGId(4894036499248098163UL, 10473296830548264848UL));
+			_ufle12jhs77_f_챕터 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(_metaDefault, new BGId(5436702778809544110UL, 15265829210097098401UL));
+			_ufle12jhs77_f_스테이지 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(_metaDefault, new BGId(5440272663535201008UL, 15560415860017524098UL));
+			_ufle12jhs77_f_웨이브 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(_metaDefault, new BGId(5012919537865059412UL, 10233447926503797895UL));
+			_ufle12jhs77_f_해상도모드 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldEnum>(_metaDefault, new BGId(5558742323650869453UL, 7285474650119547813UL));
+			_ufle12jhs77_f_배경 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldUnitySprite>(_metaDefault, new BGId(5413705792375098153UL, 11820043993245117828UL));
 		}
 		public static void ReleaseCodeGenRuntime()
 		{
 			_metaDefault = null;
 			_ufle12jhs77_f_name = null;
+			_ufle12jhs77_f_챕터 = null;
+			_ufle12jhs77_f_스테이지 = null;
+			_ufle12jhs77_f_웨이브 = null;
+			_ufle12jhs77_f_해상도모드 = null;
+			_ufle12jhs77_f_배경 = null;
 		}
 
 		[Preserve]
@@ -1186,6 +1307,11 @@ namespace Mewage.DB
 		{
 			public const string Meta = "지형";
 			public const string name = "name";
+			public const string 챕터 = "챕터";
+			public const string 스테이지 = "스테이지";
+			public const string 웨이브 = "웨이브";
+			public const string 해상도모드 = "해상도모드";
+			public const string 배경 = "배경";
 		}
 	}
 
@@ -1326,6 +1452,194 @@ namespace Mewage.DB
 	}
 
 	[Preserve]
+	public sealed partial class DB_캐릭터 : BGEntity
+	{
+		private static BansheeGz.BGDatabase.BGMetaRow _metaDefault;
+		public static BansheeGz.BGDatabase.BGMetaRow MetaDefault => _metaDefault ??= BGCodeGenUtils.GetMeta<BansheeGz.BGDatabase.BGMetaRow>(new BGId(5267432092477492360UL,6034467317306443681UL), () => _metaDefault = null);
+		public static BansheeGz.BGDatabase.BGRepoEvents Events => BGRepo.I.Events;
+		public static int CountEntities => MetaDefault.CountEntities;
+		public System.String f_name
+		{
+			get => _f_name[Index];
+			set => _f_name[Index] = value;
+		}
+		public System.String f_이름
+		{
+			get => _f_이름[Index];
+			set => _f_이름[Index] = value;
+		}
+		public System.String f_등급
+		{
+			get => _f_등급[Index];
+			set => _f_등급[Index] = value;
+		}
+		public UnityEngine.Sprite f_썸네일 => _f_썸네일[Index];
+		public System.Boolean f_보유여부
+		{
+			get => _f_보유여부[Index];
+			set => _f_보유여부.SetValue(this, value);
+		}
+		public System.Int32 f_가격
+		{
+			get => _f_가격[Index];
+			set => _f_가격.SetValue(this, value);
+		}
+		public System.String f_능력치1
+		{
+			get => _f_능력치1[Index];
+			set => _f_능력치1[Index] = value;
+		}
+		public System.String f_속성1ID
+		{
+			get => _f_속성1ID[Index];
+			set => _f_속성1ID[Index] = value;
+		}
+		public System.String f_속성2ID
+		{
+			get => _f_속성2ID[Index];
+			set => _f_속성2ID[Index] = value;
+		}
+		public System.String f_속성3ID
+		{
+			get => _f_속성3ID[Index];
+			set => _f_속성3ID[Index] = value;
+		}
+		public System.String f_S1
+		{
+			get => _f_S1[Index];
+			set => _f_S1[Index] = value;
+		}
+		public System.String f_S2
+		{
+			get => _f_S2[Index];
+			set => _f_S2[Index] = value;
+		}
+		public System.String f_S3
+		{
+			get => _f_S3[Index];
+			set => _f_S3[Index] = value;
+		}
+		public System.String f_능력ID
+		{
+			get => _f_능력ID[Index];
+			set => _f_능력ID[Index] = value;
+		}
+		public System.String f_능력치설명
+		{
+			get => _f_능력치설명[Index];
+			set => _f_능력치설명[Index] = value;
+		}
+		private static BansheeGz.BGDatabase.BGFieldEntityName _ufle12jhs77_f_name;
+		public static BansheeGz.BGDatabase.BGFieldEntityName _f_name => _ufle12jhs77_f_name ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldEntityName>(MetaDefault, new BGId(4891015843578241108UL, 8229321223816846005UL), () => _ufle12jhs77_f_name = null);
+		private static BansheeGz.BGDatabase.BGFieldString _ufle12jhs77_f_이름;
+		public static BansheeGz.BGDatabase.BGFieldString _f_이름 => _ufle12jhs77_f_이름 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(MetaDefault, new BGId(4660564450710270058UL, 7679014943788794021UL), () => _ufle12jhs77_f_이름 = null);
+		private static BansheeGz.BGDatabase.BGFieldString _ufle12jhs77_f_등급;
+		public static BansheeGz.BGDatabase.BGFieldString _f_등급 => _ufle12jhs77_f_등급 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(MetaDefault, new BGId(5229293891259047953UL, 216854564448490135UL), () => _ufle12jhs77_f_등급 = null);
+		private static BansheeGz.BGDatabase.BGFieldUnitySprite _ufle12jhs77_f_썸네일;
+		public static BansheeGz.BGDatabase.BGFieldUnitySprite _f_썸네일 => _ufle12jhs77_f_썸네일 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldUnitySprite>(MetaDefault, new BGId(5418634385160004518UL, 13945281163803020211UL), () => _ufle12jhs77_f_썸네일 = null);
+		private static BansheeGz.BGDatabase.BGFieldBool _ufle12jhs77_f_보유여부;
+		public static BansheeGz.BGDatabase.BGFieldBool _f_보유여부 => _ufle12jhs77_f_보유여부 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldBool>(MetaDefault, new BGId(5737439437541528387UL, 13376332798114342583UL), () => _ufle12jhs77_f_보유여부 = null);
+		private static BansheeGz.BGDatabase.BGFieldInt _ufle12jhs77_f_가격;
+		public static BansheeGz.BGDatabase.BGFieldInt _f_가격 => _ufle12jhs77_f_가격 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(MetaDefault, new BGId(5536759165630509935UL, 9937488079184106431UL), () => _ufle12jhs77_f_가격 = null);
+		private static BansheeGz.BGDatabase.BGFieldString _ufle12jhs77_f_능력치1;
+		public static BansheeGz.BGDatabase.BGFieldString _f_능력치1 => _ufle12jhs77_f_능력치1 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(MetaDefault, new BGId(5607107671578101578UL, 13487316801094411938UL), () => _ufle12jhs77_f_능력치1 = null);
+		private static BansheeGz.BGDatabase.BGFieldString _ufle12jhs77_f_속성1ID;
+		public static BansheeGz.BGDatabase.BGFieldString _f_속성1ID => _ufle12jhs77_f_속성1ID ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(MetaDefault, new BGId(5363574824707190718UL, 14584173080617980855UL), () => _ufle12jhs77_f_속성1ID = null);
+		private static BansheeGz.BGDatabase.BGFieldString _ufle12jhs77_f_속성2ID;
+		public static BansheeGz.BGDatabase.BGFieldString _f_속성2ID => _ufle12jhs77_f_속성2ID ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(MetaDefault, new BGId(5099274170740909656UL, 17474599961514814117UL), () => _ufle12jhs77_f_속성2ID = null);
+		private static BansheeGz.BGDatabase.BGFieldString _ufle12jhs77_f_속성3ID;
+		public static BansheeGz.BGDatabase.BGFieldString _f_속성3ID => _ufle12jhs77_f_속성3ID ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(MetaDefault, new BGId(5111407358879489858UL, 4787598671519100038UL), () => _ufle12jhs77_f_속성3ID = null);
+		private static BansheeGz.BGDatabase.BGFieldString _ufle12jhs77_f_S1;
+		public static BansheeGz.BGDatabase.BGFieldString _f_S1 => _ufle12jhs77_f_S1 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(MetaDefault, new BGId(5689959713858354191UL, 15214737337811067540UL), () => _ufle12jhs77_f_S1 = null);
+		private static BansheeGz.BGDatabase.BGFieldString _ufle12jhs77_f_S2;
+		public static BansheeGz.BGDatabase.BGFieldString _f_S2 => _ufle12jhs77_f_S2 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(MetaDefault, new BGId(4996792532321297574UL, 6120161515052793771UL), () => _ufle12jhs77_f_S2 = null);
+		private static BansheeGz.BGDatabase.BGFieldString _ufle12jhs77_f_S3;
+		public static BansheeGz.BGDatabase.BGFieldString _f_S3 => _ufle12jhs77_f_S3 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(MetaDefault, new BGId(5654840768132919402UL, 15567472977549209502UL), () => _ufle12jhs77_f_S3 = null);
+		private static BansheeGz.BGDatabase.BGFieldString _ufle12jhs77_f_능력ID;
+		public static BansheeGz.BGDatabase.BGFieldString _f_능력ID => _ufle12jhs77_f_능력ID ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(MetaDefault, new BGId(4751244244858069506UL, 10364928103018884286UL), () => _ufle12jhs77_f_능력ID = null);
+		private static BansheeGz.BGDatabase.BGFieldString _ufle12jhs77_f_능력치설명;
+		public static BansheeGz.BGDatabase.BGFieldString _f_능력치설명 => _ufle12jhs77_f_능력치설명 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(MetaDefault, new BGId(4851910044861907790UL, 18127686838471431345UL), () => _ufle12jhs77_f_능력치설명 = null);
+		private DB_캐릭터() : base(MetaDefault) {}
+		private DB_캐릭터(BGId id) : base(MetaDefault, id) {}
+		private DB_캐릭터(BGMetaEntity meta) : base(meta) {}
+		private DB_캐릭터(BGMetaEntity meta, BGId id) : base(meta, id) {}
+		public static DB_캐릭터 FindEntity(Predicate<DB_캐릭터> filter) => BGCodeGenUtils.FindEntity(MetaDefault, filter);
+		public static List<DB_캐릭터> FindEntities(Predicate<DB_캐릭터> filter, List<DB_캐릭터> result=null, Comparison<DB_캐릭터> sort=null) => BGCodeGenUtils.FindEntities(MetaDefault, filter, result, sort);
+		public static void ForEachEntity(Action<DB_캐릭터> action, Predicate<DB_캐릭터> filter=null, Comparison<DB_캐릭터> sort=null) => BGCodeGenUtils.ForEachEntity(MetaDefault, action, filter, sort);
+		public static DB_캐릭터 GetEntity(BGId entityId) => (DB_캐릭터) MetaDefault.GetEntity(entityId);
+		public static DB_캐릭터 GetEntity(int index) => (DB_캐릭터) MetaDefault[index];
+		public static DB_캐릭터 GetEntity(string entityName) => (DB_캐릭터) MetaDefault.GetEntity(entityName);
+		public static DB_캐릭터 NewEntity() => (DB_캐릭터) MetaDefault.NewEntity();
+		public static DB_캐릭터 NewEntity(BGId entityId) => (DB_캐릭터) MetaDefault.NewEntity(entityId);
+		public static DB_캐릭터 NewEntity(Action<DB_캐릭터> callback) => (DB_캐릭터) MetaDefault.NewEntity(new BGMetaEntity.NewEntityContext(entity => callback((DB_캐릭터)entity)));
+		public static void InitializeCodeGenRuntime()
+		{
+			_metaDefault = BGCodeGenUtils.GetMeta<BansheeGz.BGDatabase.BGMetaRow>(new BGId(5267432092477492360UL,6034467317306443681UL), ReleaseCodeGenRuntime);
+			_ufle12jhs77_f_name = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldEntityName>(_metaDefault, new BGId(4891015843578241108UL, 8229321223816846005UL));
+			_ufle12jhs77_f_이름 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(_metaDefault, new BGId(4660564450710270058UL, 7679014943788794021UL));
+			_ufle12jhs77_f_등급 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(_metaDefault, new BGId(5229293891259047953UL, 216854564448490135UL));
+			_ufle12jhs77_f_썸네일 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldUnitySprite>(_metaDefault, new BGId(5418634385160004518UL, 13945281163803020211UL));
+			_ufle12jhs77_f_보유여부 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldBool>(_metaDefault, new BGId(5737439437541528387UL, 13376332798114342583UL));
+			_ufle12jhs77_f_가격 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(_metaDefault, new BGId(5536759165630509935UL, 9937488079184106431UL));
+			_ufle12jhs77_f_능력치1 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(_metaDefault, new BGId(5607107671578101578UL, 13487316801094411938UL));
+			_ufle12jhs77_f_속성1ID = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(_metaDefault, new BGId(5363574824707190718UL, 14584173080617980855UL));
+			_ufle12jhs77_f_속성2ID = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(_metaDefault, new BGId(5099274170740909656UL, 17474599961514814117UL));
+			_ufle12jhs77_f_속성3ID = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(_metaDefault, new BGId(5111407358879489858UL, 4787598671519100038UL));
+			_ufle12jhs77_f_S1 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(_metaDefault, new BGId(5689959713858354191UL, 15214737337811067540UL));
+			_ufle12jhs77_f_S2 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(_metaDefault, new BGId(4996792532321297574UL, 6120161515052793771UL));
+			_ufle12jhs77_f_S3 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(_metaDefault, new BGId(5654840768132919402UL, 15567472977549209502UL));
+			_ufle12jhs77_f_능력ID = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(_metaDefault, new BGId(4751244244858069506UL, 10364928103018884286UL));
+			_ufle12jhs77_f_능력치설명 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(_metaDefault, new BGId(4851910044861907790UL, 18127686838471431345UL));
+		}
+		public static void ReleaseCodeGenRuntime()
+		{
+			_metaDefault = null;
+			_ufle12jhs77_f_name = null;
+			_ufle12jhs77_f_이름 = null;
+			_ufle12jhs77_f_등급 = null;
+			_ufle12jhs77_f_썸네일 = null;
+			_ufle12jhs77_f_보유여부 = null;
+			_ufle12jhs77_f_가격 = null;
+			_ufle12jhs77_f_능력치1 = null;
+			_ufle12jhs77_f_속성1ID = null;
+			_ufle12jhs77_f_속성2ID = null;
+			_ufle12jhs77_f_속성3ID = null;
+			_ufle12jhs77_f_S1 = null;
+			_ufle12jhs77_f_S2 = null;
+			_ufle12jhs77_f_S3 = null;
+			_ufle12jhs77_f_능력ID = null;
+			_ufle12jhs77_f_능력치설명 = null;
+		}
+
+		[Preserve]
+		public sealed class Factory : BGEntity.EntityFactory
+		{
+			public BGEntity NewEntity(BGMetaEntity meta) => new DB_캐릭터(meta);
+			public BGEntity NewEntity(BGMetaEntity meta, BGId id) => new DB_캐릭터(meta, id);
+		}
+
+		public static class __Names
+		{
+			public const string Meta = "캐릭터";
+			public const string name = "name";
+			public const string 이름 = "이름";
+			public const string 등급 = "등급";
+			public const string 썸네일 = "썸네일";
+			public const string 보유여부 = "보유여부";
+			public const string 가격 = "가격";
+			public const string 능력치1 = "능력치1";
+			public const string 속성1ID = "속성1ID";
+			public const string 속성2ID = "속성2ID";
+			public const string 속성3ID = "속성3ID";
+			public const string S1 = "S1";
+			public const string S2 = "S2";
+			public const string S3 = "S3";
+			public const string 능력ID = "능력ID";
+			public const string 능력치설명 = "능력치설명";
+		}
+	}
+
+	[Preserve]
 	public static class BGCodeGenRuntimeInitializer
 	{
 		[Preserve]
@@ -1342,6 +1656,7 @@ namespace Mewage.DB
 			DB_지형.InitializeCodeGenRuntime();
 			DB_기물.InitializeCodeGenRuntime();
 			DB_챕터.InitializeCodeGenRuntime();
+			DB_캐릭터.InitializeCodeGenRuntime();
 		}
 		[Preserve]
 		public static void ReleaseCodeGenRuntime()
@@ -1357,6 +1672,7 @@ namespace Mewage.DB
 			DB_지형.ReleaseCodeGenRuntime();
 			DB_기물.ReleaseCodeGenRuntime();
 			DB_챕터.ReleaseCodeGenRuntime();
+			DB_캐릭터.ReleaseCodeGenRuntime();
 		}
 	}
 }

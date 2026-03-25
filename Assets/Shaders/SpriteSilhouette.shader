@@ -21,7 +21,7 @@ Shader "Custom/SpriteSilhouette"
         Pass
         {
             Name "SpriteSilhouette"
-            Tags { "LightMode" = "UniversalForward" }
+            Tags { "LightMode" = "Universal2D" }
 
             HLSLPROGRAM
             #pragma vertex   vert

@@ -14,6 +14,7 @@ public class UpgradeCard : MonoBehaviour
     [SerializeField] private TextMeshProUGUI priceText;
     [SerializeField] private TextMeshProUGUI starText;
     [SerializeField] private Button          buyButton;
+    [SerializeField] private Button          adButton;
     [SerializeField] private Button          infoButton;
 
     private WeaponData data;
@@ -34,11 +35,24 @@ public class UpgradeCard : MonoBehaviour
         if (priceText)      priceText.text      = $"{weaponData.price}";
         if (starText)       starText.text       = new string('★', weaponData.star);
 
+        buyButton.gameObject.SetActive(true);
         buyButton.onClick.RemoveAllListeners();
         buyButton.onClick.AddListener(OnClickBuy);
 
+        adButton?.gameObject.SetActive(false);
+
         infoButton?.onClick.RemoveAllListeners();
         infoButton?.onClick.AddListener(OnClickInfo);
+    }
+
+    public void SetupAdCard(WeaponData weaponData, System.Action onAdWatch)
+    {
+        Setup(weaponData);
+        buyButton.gameObject.SetActive(false);
+        if (priceText) priceText.text = "";
+        adButton?.gameObject.SetActive(true);
+        adButton?.onClick.RemoveAllListeners();
+        adButton?.onClick.AddListener(() => onAdWatch?.Invoke());
     }
 
     public void SetEmpty() => gameObject.SetActive(false);

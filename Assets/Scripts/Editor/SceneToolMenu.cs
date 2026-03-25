@@ -55,10 +55,6 @@ namespace Hades.Tool
         private static void BuildToolbarRight()
         {
             if (commandButtonStyle == null) CreateStyle();
-            if (GUILayout.Button(new GUIContent("Loading", "open Boot scene"), commandButtonStyle))
-            {
-                SceneHelper.OpenScene("loading@scene");
-            }
             if (GUILayout.Button(new GUIContent("Home", "open Home scene"), commandButtonStyle))
             {
                 SceneHelper.OpenScene("home@scene");

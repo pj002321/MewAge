@@ -35,15 +35,19 @@ public class WeaponPoint : MonoBehaviour
     public float LifeSteal      => lifeSteal;
 
     [Header("근거리 이동 속도")]
-    [SerializeField] private float pullbackSpeed = 20f;   // 빠르게 당김
-    [SerializeField] private float strikeSpeed   = 50f;   // 더 빠르게 돌진
-    [SerializeField] private float returnSpeed   = 25f;
+    [SerializeField] private float strikeSpeed = 50f;
+    [SerializeField] private float returnSpeed = 25f;
 
     [Header("근거리 타격 판정")]
     [SerializeField] private float hitDistance = 0.25f;
 
-    [Header("근거리 풀백 (0 = 플레이어 중심까지만, 양수 = 중심 너머 과장)")]
-    [SerializeField] private float pullbackDistance = 0.15f;
+    [Header("범위 타격 반경 (중거리 판정)")]
+    [SerializeField] private float areaHitRadius      = 0.4f;
+    [SerializeField] private float areaHitDamageRatio = 0.5f; // 주변 적 데미지 배율 (0~1)
+
+    [Header("오버슛 (타격 후 더 나아감)")]
+    [SerializeField] private float overshootDistance = 0.5f;
+    [SerializeField] private float overshootSpeed    = 60f;
 
     [Header("원거리 설정")]
     [SerializeField] private GameObject projectilePrefab;
@@ -60,12 +64,11 @@ public class WeaponPoint : MonoBehaviour
     [SerializeField] private float spinHitCooldown = 0.5f;   // 동일 적 재타격 쿨타임
     [SerializeField] private float spinKnockback   = 7f;
 
-    private enum State { Idle, Pullback, Striking, Returning }
+    private enum State { Idle, Striking, Overshooting, Returning }
     private State state = State.Idle;
 
     private Vector3 originLocalPos;
     private EnemyController targetEnemy;
-    private Vector3 pullbackTarget;
     private Vector3 overshootTarget;
     private float cooldownTimer;
 
@@ -96,8 +99,8 @@ public class WeaponPoint : MonoBehaviour
         switch (state)
         {
             case State.Idle:         UpdateIdle();         break;
-            case State.Pullback:     UpdatePullback();     break;
             case State.Striking:     UpdateStriking();     break;
+            case State.Overshooting: UpdateOvershooting(); break;
             case State.Returning:    UpdateReturning();    break;
         }
     }
@@ -166,7 +169,7 @@ public class WeaponPoint : MonoBehaviour
         if (WeaponManager.Instance.TryClaim(nearest))
         {
             targetEnemy = nearest;
-            BeginPullback();
+            BeginStrike();
         }
     }
 
@@ -192,46 +195,17 @@ public class WeaponPoint : MonoBehaviour
     }
 
     // ─────────────────────────────────────────
-    // Pullback: 플레이어 몸 중심으로 확 당겨짐 → 이후 적에게 돌진
+    // BeginStrike: 무기를 플레이어 중심에 스냅 후 즉시 돌진 시작
     // ─────────────────────────────────────────
-    private void BeginPullback()
+    private void BeginStrike()
     {
-        // 플레이어 몸 중심(localPosition zero)으로 완전히 당김
-        // pullbackDistance > 0이면 중심을 지나 더 반대쪽까지 당겨 과장감 추가
-        Vector3 playerCenter = transform.parent.position;
-        if (pullbackDistance > 0f && targetEnemy != null)
-        {
-            Vector3 behindDir = (playerCenter - targetEnemy.transform.position).normalized;
-            pullbackTarget = playerCenter + behindDir * pullbackDistance;
-        }
-        else
-        {
-            pullbackTarget = playerCenter;
-        }
-        state = State.Pullback;
-    }
-
-    private void UpdatePullback()
-    {
-        if (targetEnemy == null || !targetEnemy.gameObject.activeInHierarchy)
-        {
-            WeaponManager.Instance?.Release(targetEnemy);
-            targetEnemy = null;
-            BeginReturn();
-            return;
-        }
-
-        transform.position = Vector3.MoveTowards(transform.position, pullbackTarget, pullbackSpeed * Time.deltaTime);
-
-        if (Vector3.Distance(transform.position, pullbackTarget) <= 0.05f)
-        {
-            SoundManager.Shared?.Play(SoundKey.Weapon_Attack);
-            state = State.Striking;
-        }
+        transform.position = transform.parent.position;
+        SoundManager.Shared?.Play(SoundKey.Weapon_Attack);
+        state = State.Striking;
     }
 
     // ─────────────────────────────────────────
-    // Striking: 확! 빠르게 돌진 → 타격 → (즉시 복귀)
+    // Striking: 빠르게 돌진 → 범위 타격 → Overshooting으로 전환
     // ─────────────────────────────────────────
     private void UpdateStriking()
     {
@@ -248,14 +222,43 @@ public class WeaponPoint : MonoBehaviour
 
         if (Vector3.Distance(transform.position, targetPos) <= hitDistance)
         {
-            var (finalDmg, isCrit) = RollCrit(attackDamage);
-            Vector2 hitDir = (targetEnemy.transform.position - transform.position).normalized;
-            targetEnemy.TakeDamage(finalDmg, isCrit, hitDir, 8f);
+            Vector2 hitDir = (targetPos - transform.parent.position).normalized;
+            HitArea(hitDir, targetEnemy);
 
-            // 타격 직후 즉시 예약 해제 후 바로 복귀
+            // 타격 지점 너머로 오버슛
+            overshootTarget = targetPos + (Vector3)(hitDir * overshootDistance);
+
             WeaponManager.Instance?.Release(targetEnemy);
             targetEnemy = null;
+            state = State.Overshooting;
+        }
+    }
+
+    // ─────────────────────────────────────────
+    // Overshooting: 타격 후 조금 더 나아갔다가 복귀
+    // ─────────────────────────────────────────
+    private void UpdateOvershooting()
+    {
+        transform.position = Vector3.MoveTowards(transform.position, overshootTarget, overshootSpeed * Time.deltaTime);
+        if (Vector3.Distance(transform.position, overshootTarget) <= 0.05f)
             BeginReturn();
+    }
+
+    // ─────────────────────────────────────────
+    // HitArea: 현재 위치 반경 내 모든 적 타격
+    // ─────────────────────────────────────────
+    private void HitArea(Vector2 hitDir, EnemyController primaryTarget)
+    {
+        Collider2D[] cols = Physics2D.OverlapCircleAll(transform.position, areaHitRadius);
+        foreach (var col in cols)
+        {
+            if (!col.TryGetComponent<EnemyController>(out var enemy)) continue;
+            bool isPrimary = enemy == primaryTarget;
+            float baseDmg = isPrimary ? attackDamage : attackDamage * areaHitDamageRatio;
+            var (finalDmg, isCrit) = RollCrit(baseDmg);
+            Vector2 knockDir = ((Vector2)enemy.transform.position - (Vector2)transform.position);
+            if (knockDir.sqrMagnitude < 0.001f) knockDir = hitDir;
+            enemy.TakeDamage(finalDmg, isCrit, knockDir.normalized, 8f);
         }
     }
 

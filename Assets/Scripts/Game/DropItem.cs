@@ -80,6 +80,8 @@ public class DropItem : MonoBehaviour
         if (itemType == ItemType.Gold) PlayerStats.Shared?.AddGold(value);
         else                           PlayerStats.Shared?.AddExp(value);
 
+        if (itemType == ItemType.Gold) FXManager.Shared?.SpawnGoldOrbDebris(transform.position);
+        else                           FXManager.Shared?.SpawnExpOrbDebris(transform.position);
         Destroy(gameObject);
     }
 

@@ -109,6 +109,7 @@ GameObject:
   - component: {fileID: 5661193446084583444}
   - component: {fileID: 2063245544409043341}
   - component: {fileID: 161268097173731193}
+  - component: {fileID: -4658155594815874080}
   m_Layer: 7
   m_Name: ch1_m_b_0
   m_TagString: Untagged
@@ -389,3 +390,17 @@ MonoBehaviour:
   slamFallSpeed: 25
   slamMarkerPrefab: {fileID: 7905823675861574758, guid: 8fa9636161b22c941a8491bc91090a7b, type: 3}
   slamLandTrigger: SlamLand
+--- !u!114 &-4658155594815874080
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8067283199427079352}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8dbca1b53536a2b47a8964120af00539, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitFlash
+  flashColor: {r: 1, g: 0.2, b: 0.2, a: 1}
+  flashDuration: 0.12

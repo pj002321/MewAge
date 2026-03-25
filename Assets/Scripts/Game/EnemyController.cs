@@ -74,6 +74,19 @@ public class EnemyController : MonoBehaviour
     private Vector2   _pendingMove;
     private Coroutine knockbackCoroutine;
     private float     baseSpeed; // 넉백/스턴 전 원본 속도
+    private Vector2   _deathDir;  // 사망 시 날아갈 방향
+
+    // 사망 흰색 실루엣 재질 (SpriteSilhouette 쉐이더) — 씬 전체 공유
+    private static Material _deathFlashMat;
+    private static Material GetDeathFlashMat()
+    {
+        if (_deathFlashMat != null) return _deathFlashMat;
+        var shader = Shader.Find("Custom/SpriteSilhouette");
+        if (shader == null) return null;
+        _deathFlashMat = new Material(shader);
+        _deathFlashMat.SetColor("_Color", Color.white);
+        return _deathFlashMat;
+    }
 
     public event System.Action OnDeath;
 
@@ -84,8 +97,8 @@ public class EnemyController : MonoBehaviour
         currentHP = maxHP;
         baseSpeed = moveSpeed;
         rb        = GetComponent<Rigidbody2D>();
-        sr        = GetComponent<SpriteRenderer>();
-        hitFlash  = GetComponent<HitFlash>();
+        sr        = GetComponentInChildren<SpriteRenderer>(true);
+        hitFlash  = GetComponentInChildren<HitFlash>(true);
         animator  = GetComponentInChildren<Animator>();
         behaviour = GetComponent<EnemyBehaviourBase>();
 
@@ -293,6 +306,7 @@ public class EnemyController : MonoBehaviour
 
         if (currentHP <= 0f)
         {
+            _deathDir = knockbackDir.sqrMagnitude > 0.001f ? knockbackDir.normalized : Vector2.up;
             OnDeath?.Invoke();
             ItemDropManager.Shared?.SpawnDrops(transform.position, goldDrop, expDrop);
             StartCoroutine(DieRoutine());
@@ -305,16 +319,30 @@ public class EnemyController : MonoBehaviour
         enabled = false;
         if (rb != null) rb.linearVelocity = Vector2.zero;
 
-        float duration   = 0.35f;
-        float elapsed    = 0f;
+        // 사망 위치에 파편 스폰 (FXManager 없으면 인라인 실행)
+        var debrisPos = transform.position;
+        if (FXManager.Shared != null)
+            FXManager.Shared.SpawnDeathDebris(debrisPos);
+        else
+            SpawnDebrisFallback(debrisPos);
+
+        // SpriteSilhouette 쉐이더로 재질 교체 → 흰색 실루엣
+        var flashMat = GetDeathFlashMat();
+        if (sr != null && flashMat != null)
+            sr.material = flashMat;
+
+        float duration  = 0.4f;
+        float elapsed   = 0f;
         Vector3 initScale = transform.localScale;
-        float   spinSpeed = 520f; // deg/s
+        float spinSpeed = 600f; // deg/s
+        float flySpeed  = 4f;
 
         while (elapsed < duration)
         {
             float t = elapsed / duration;
-            transform.localScale    = Vector3.Lerp(initScale, Vector3.zero, t * t);
+            transform.localScale = Vector3.Lerp(initScale, Vector3.zero, t * t);
             transform.Rotate(0f, 0f, spinSpeed * Time.deltaTime);
+            transform.position += (Vector3)(_deathDir * flySpeed * (1f - t) * Time.deltaTime);
             elapsed += Time.deltaTime;
             yield return null;
         }
@@ -381,5 +409,73 @@ public class EnemyController : MonoBehaviour
         transform.localScale = Vector3.one;
         if (rb != null) rb.constraints = RigidbodyConstraints2D.FreezeRotation;
         enabled = true;
+    }
+
+    // ── FXManager 없을 때 파편 인라인 스폰 ──────────────────────
+    private static void SpawnDebrisFallback(Vector3 pos)
+    {
+        // 임시 호스트 GO에서 코루틴 실행 (적 오브젝트 파괴 후에도 유지)
+        var host = new GameObject("__DebrisHost");
+        host.AddComponent<DebrisHostComponent>().Run(pos);
+    }
+
+    private class DebrisHostComponent : MonoBehaviour
+    {
+        public void Run(Vector3 pos) => StartCoroutine(Routine(pos));
+
+        private static Sprite _spr;
+        private static Sprite GetSprite()
+        {
+            if (_spr != null) return _spr;
+            var tex = new Texture2D(4, 4, TextureFormat.RGBA32, false);
+            tex.filterMode = FilterMode.Point;
+            var pixels = new Color32[16];
+            for (int i = 0; i < 16; i++) pixels[i] = new Color32(160, 160, 160, 255);
+            tex.SetPixels32(pixels);
+            tex.Apply(false);
+            _spr = Sprite.Create(tex, new Rect(0, 0, 4, 4), Vector2.one * 0.5f, 16f);
+            return _spr;
+        }
+
+        private IEnumerator Routine(Vector3 pos)
+        {
+            const int count = 8;
+            var gos  = new GameObject[count];
+            var srs  = new SpriteRenderer[count];
+            var vels = new Vector2[count];
+            var spr  = GetSprite();
+
+            for (int i = 0; i < count; i++)
+            {
+                gos[i] = new GameObject("Debris");
+                gos[i].transform.position   = pos;
+                gos[i].transform.localScale = Vector3.one * Random.Range(0.06f, 0.18f);
+                srs[i] = gos[i].AddComponent<SpriteRenderer>();
+                srs[i].sprite       = spr;
+                srs[i].color        = new Color(0.55f, 0.55f, 0.55f, 1f);
+                srs[i].sortingOrder = 5;
+                float angle = Random.Range(0f, 360f) * Mathf.Deg2Rad;
+                float speed = Random.Range(2.5f, 6f);
+                vels[i] = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * speed;
+            }
+
+            float duration = 0.5f, elapsed = 0f;
+            while (elapsed < duration)
+            {
+                float t = elapsed / duration;
+                for (int i = 0; i < count; i++)
+                {
+                    if (gos[i] == null) continue;
+                    gos[i].transform.position += (Vector3)(vels[i] * Time.deltaTime);
+                    vels[i] *= 1f - 5f * Time.deltaTime;
+                    if (srs[i]) srs[i].color = new Color(0.55f, 0.55f, 0.55f, 1f - t);
+                }
+                elapsed += Time.deltaTime;
+                yield return null;
+            }
+            for (int i = 0; i < count; i++)
+                if (gos[i] != null) Destroy(gos[i]);
+            Destroy(gameObject);
+        }
     }
 }

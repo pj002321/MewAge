@@ -107,6 +107,7 @@ GameObject:
   - component: {fileID: 8996041560601723129}
   - component: {fileID: 7898899542233151354}
   - component: {fileID: 6010619227854902422}
+  - component: {fileID: 8716578301786351003}
   m_Layer: 7
   m_Name: ch1_m_9
   m_TagString: Untagged
@@ -365,3 +366,17 @@ CapsuleCollider2D:
   m_Offset: {x: 0, y: 0}
   m_Size: {x: 2.8, y: 4.6666665}
   m_Direction: 0
+--- !u!114 &8716578301786351003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8067283199427079352}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8dbca1b53536a2b47a8964120af00539, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitFlash
+  flashColor: {r: 1, g: 0.2, b: 0.2, a: 1}
+  flashDuration: 0.12

@@ -130,8 +130,8 @@ public class PlayerController : MonoBehaviour
 
     private void SyncHPUI()
     {
-        float norm = currentHP / maxHP;
-        GameManager.Shared?.UpdateHP(norm);
+        float norm = maxHP > 0f ? currentHP / maxHP : 0f;
+        GameManager.Shared?.UpdateHP(currentHP, maxHP);
         if (playerHpSlider) playerHpSlider.value = norm;
     }
 

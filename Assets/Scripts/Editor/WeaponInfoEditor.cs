@@ -18,11 +18,13 @@ public class WeaponInfoEditor : Editor
     SerializedProperty p_attackRange;
 
     // 근거리
-    SerializedProperty p_pullbackSpeed;
     SerializedProperty p_strikeSpeed;
     SerializedProperty p_returnSpeed;
     SerializedProperty p_hitDistance;
-    SerializedProperty p_pullbackDistance;
+    SerializedProperty p_areaHitRadius;
+    SerializedProperty p_areaHitDamageRatio;
+    SerializedProperty p_overshootDistance;
+    SerializedProperty p_overshootSpeed;
 
     // 원거리 / 부메랑 공통
     SerializedProperty p_projectilePrefab;
@@ -46,11 +48,13 @@ public class WeaponInfoEditor : Editor
         p_attackCooldown   = serializedObject.FindProperty("attackCooldown");
         p_attackRange      = serializedObject.FindProperty("attackRange");
 
-        p_pullbackSpeed    = serializedObject.FindProperty("pullbackSpeed");
-        p_strikeSpeed      = serializedObject.FindProperty("strikeSpeed");
-        p_returnSpeed      = serializedObject.FindProperty("returnSpeed");
-        p_hitDistance      = serializedObject.FindProperty("hitDistance");
-        p_pullbackDistance = serializedObject.FindProperty("pullbackDistance");
+        p_strikeSpeed       = serializedObject.FindProperty("strikeSpeed");
+        p_returnSpeed       = serializedObject.FindProperty("returnSpeed");
+        p_hitDistance       = serializedObject.FindProperty("hitDistance");
+        p_areaHitRadius      = serializedObject.FindProperty("areaHitRadius");
+        p_areaHitDamageRatio = serializedObject.FindProperty("areaHitDamageRatio");
+        p_overshootDistance  = serializedObject.FindProperty("overshootDistance");
+        p_overshootSpeed    = serializedObject.FindProperty("overshootSpeed");
 
         p_projectilePrefab     = serializedObject.FindProperty("projectilePrefab");
         p_projectileSpeed      = serializedObject.FindProperty("projectileSpeed");
@@ -82,11 +86,13 @@ public class WeaponInfoEditor : Editor
         {
             EditorGUILayout.Space(6);
             EditorGUILayout.LabelField("근거리 전용 (Melee)", EditorStyles.boldLabel);
-            EditorGUILayout.PropertyField(p_pullbackSpeed,    new GUIContent("풀백 속도"));
-            EditorGUILayout.PropertyField(p_strikeSpeed,      new GUIContent("돌진 속도"));
-            EditorGUILayout.PropertyField(p_returnSpeed,      new GUIContent("복귀 속도"));
-            EditorGUILayout.PropertyField(p_hitDistance,      new GUIContent("타격 판정 거리"));
-            EditorGUILayout.PropertyField(p_pullbackDistance, new GUIContent("풀백 거리"));
+            EditorGUILayout.PropertyField(p_strikeSpeed,       new GUIContent("돌진 속도"));
+            EditorGUILayout.PropertyField(p_returnSpeed,       new GUIContent("복귀 속도"));
+            EditorGUILayout.PropertyField(p_hitDistance,       new GUIContent("타격 판정 거리"));
+            EditorGUILayout.PropertyField(p_areaHitRadius,      new GUIContent("범위 타격 반경"));
+            EditorGUILayout.PropertyField(p_areaHitDamageRatio, new GUIContent("주변 데미지 배율"));
+            EditorGUILayout.PropertyField(p_overshootDistance, new GUIContent("오버슛 거리"));
+            EditorGUILayout.PropertyField(p_overshootSpeed,    new GUIContent("오버슛 속도"));
         }
         else if (type == WeaponType.Boomerang)
         {

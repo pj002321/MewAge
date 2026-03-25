@@ -19,6 +19,7 @@ GameObject:
   - component: {fileID: 663066454348744953}
   - component: {fileID: -698592309618619773}
   - component: {fileID: -9219699967725519467}
+  - component: {fileID: 6397333588183594770}
   m_Layer: 7
   m_Name: ch1_m_b_1
   m_TagString: Untagged
@@ -321,6 +322,20 @@ MonoBehaviour:
   betweenDelay: 0.2
   slashTrigger: tAttack
   slashVfxPrefab: {fileID: 8243363023818174369, guid: a179f453a8a211a42b5427427e735f79, type: 3}
+--- !u!114 &6397333588183594770
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4510239993999273466}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8dbca1b53536a2b47a8964120af00539, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitFlash
+  flashColor: {r: 1, g: 0.2, b: 0.2, a: 1}
+  flashDuration: 0.12
 --- !u!1 &5233518724168949262
 GameObject:
   m_ObjectHideFlags: 0

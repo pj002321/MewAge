@@ -28,8 +28,22 @@ Override `DontDestroy => false` in scene-specific singletons (managers that shou
 1. **ImprovManager / ImprovPanel** — augment picker, 3 random buffs drawn from `DB_증강` by weighted random.
 2. **UpgradeManager / UpgradePanel** — weapon shop; draws 4 weapon cards from `DB_무기` using grade probabilities from `DB_확률`.
 
+### Player Progression
+- **PlayerStats** (singleton, `DontDestroy => false`) — gold, XP, level. `AddGold` / `SpendGold` / `AddExp` each call `SyncUI()` which updates `GameManager`. Gold and XP are separate from `PlayerController` HP.
+- Level formula: `expToNext = baseExpPerLevel + (level-1) * expGrowthPerLevel`. Max level caps at 20.
+
+### Weapon Synergy System
+- **WeaponSynergyTag** (enum) + **`DB_시너지`** table keyed by `f_챕터` — each chapter row holds up to 4 synergy tags with icons/descriptions.
+- **SynergyHelper** — static utility: `CountEquippedTag(tag)` checks `PlayerInventory.Shared.Equipped`, `GetTierColor(count)` returns Bronze/Silver/Gold color thresholds (1/3/5).
+- **SynergyInfoPanel** — UI display of active synergies.
+- **WeaponStatRegistry** — static; lazily loads stat-id templates from `DB_무기` (`f_속성ID` / `f_속성내용`). `ApplyBonus(WeaponData, WeaponStarBonus)` applies percentage-based boosts (`ATK_ADD`, `CD_RED`, `RNG_ADD`, `CRIT_ADD`, `BLEED_ADD`, `LIFESTEAL`).
+- **WeaponStarBonus** — struct holding `statId`, `value`, `description`. Built via `WeaponStatRegistry.Build()`.
+
+### Chapter Roster ScriptableObject
+**ChapterRosterSO** (`Assets/Scripts/Game/ChapterRosterSO.cs`) — ScriptableObject per chapter, stored in `Assets/Data/`. Holds normal-enemy spawn entries (with weight/minWave/maxWave), boss prefab, and `WaveSpawnRule` list. Edit via **`MuAge/Enemy Preset Editor`** window. `GetRuleForWave(wave)` returns the highest-`fromWave` matching rule.
+
 ### Data / Database
-Uses **BansheeGz** (BgDatabase) for tabular game data. Tables accessed as `DB_무기`, `DB_확률`, `DB_증강`, etc. with Korean field names prefixed `f_`. Data is loaded in `Awake` of the relevant manager.
+Uses **BansheeGz** (BgDatabase) for tabular game data. Tables accessed as `DB_무기`, `DB_확률`, `DB_증강`, `DB_시너지`, `DB_캐릭터`, `DB_웨이브`, etc. with Korean field names prefixed `f_`. Data is loaded in `Awake` of the relevant manager.
 
 ### Structure System (new, in progress)
 Tower/placement system. Key classes all in [Assets/Scripts/Game/](Assets/Scripts/Game/):
@@ -49,6 +63,9 @@ Lobby screen built via Editor tools — do **not** hand-edit the scene file.
 - **`Tools/Build Equipment Panel`** — populates `Panel_장비` with character view, 6 equip slots (left 3 / right 3), inner tab bar (장비/성물), and a scrollable inventory grid. Attaches **HomeEquipPanel**.
 - **HomeUIManager** (`Assets/Scripts/Game/HomeUIManager.cs`) — owns `panels[]` + `tabButtons[]`, calls `ShowTab(index)`. `StartGame()` loads `stage@scene`.
 - **HomeEquipPanel** (`Assets/Scripts/Game/HomeEquipPanel.cs`) — drives equip slot visuals from `PlayerInventory.Shared`, handles inner tab switching between `weaponContent` / `artifactContent` grids.
+- **HomeMemberPanel** (`Assets/Scripts/Game/HomeMemberPanel.cs`) — character roster panel with 캐릭터/룬 tabs. Each slot is a **CharacterSlotView** that binds `DB_캐릭터`; owned/unowned state toggles equip vs. buy button. **CharacterGradeColor** maps `f_등급` (S/A/B/C) to slot background color.
+- **HomeShopPanel** (`Assets/Scripts/Game/HomeShopPanel.cs`) — gacha/IAP shop. **GachaDrawButton** wires itself to `TryDraw(gemCost)` via parent lookup. **GachaResultPopup** overlay reparents itself to the root Canvas on open.
+- **StageSelectPanel** (`Assets/Scripts/Game/StageSelectPanel.cs`) — carousel of stage cards (`StageCardView`) with dot indicators and snap animation. `OnStartClicked()` loads `stage@scene`.
 
 ### Editor Tools
 [Assets/Scripts/Editor/SceneToolMenu.cs](Assets/Scripts/Editor/SceneToolMenu.cs) adds a Unity toolbar with quick-launch buttons for `home@scene`, `loading@scene`, `stage@scene`, and `dev@*` scenes.

@@ -137,13 +137,21 @@ public class UpgradePanel : MonoBehaviour
     public void Refresh(WeaponData[] drawnCards, int rerollPrice, int buyExpPrice,
                         int ownedCount, int maxOwned, int wave,
                         float pNormal = 0f, float pRare = 0f, float pElite = 0f,
-                        float pEpic  = 0f, float pLegend = 0f)
+                        float pEpic  = 0f, float pLegend = 0f, WeaponData adCardData = null)
     {
         isFirstWave = (wave == 0);
 
         for (int i = 0; i < cards.Length; i++)
         {
-            if (i < drawnCards.Length && drawnCards[i] != null)
+            bool isAdSlot = (i == cards.Length - 1);
+            if (isAdSlot)
+            {
+                if (adCardData != null)
+                    cards[i].SetupAdCard(adCardData, () => UpgradeManager.Shared?.TryClaimAdCard());
+                else
+                    cards[i].SetEmpty();
+            }
+            else if (i < drawnCards.Length && drawnCards[i] != null)
                 cards[i].Setup(drawnCards[i]);
             else
                 cards[i].SetEmpty();
