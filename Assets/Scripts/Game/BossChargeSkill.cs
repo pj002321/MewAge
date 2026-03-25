@@ -3,57 +3,47 @@ using UnityEngine;
 
 /// <summary>
 /// 보스 스킬: 돌진 (Charge).
-/// 플레이어 방향으로 빠르게 돌진하며, 스폰 영역 경계에 닿으면 즉시 중단합니다.
+/// 플레이어 방향으로 빠르게 돌진하며, MovementBounds 경계에 닿으면 즉시 중단합니다.
+///
+/// Fix: 게임오버 상태이거나 플레이어가 null이면 루프를 즉시 종료합니다.
 /// </summary>
 public class BossChargeSkill : BossSkillBase
 {
     [Header("돌진")]
-    [SerializeField] private float   chargeSpeed      = 12f;
-    [SerializeField] private float   chargeDuration   = 0.55f;
-    [Tooltip("스폰 영역이 없을 때 사용할 폴백 경계 중심")]
-    [SerializeField] private Vector2 chargeBoundsCenter = Vector2.zero;
-    [Tooltip("스폰 영역이 없을 때 사용할 폴백 경계 크기")]
-    [SerializeField] private Vector2 chargeBoundsSize   = new(10f, 18f);
+    [SerializeField] private float chargeSpeed    = 18f;
+    [SerializeField] private float chargeDuration = 0.4f;
 
     protected override IEnumerator OnExecute()
     {
+        // 플레이어 없음 또는 게임오버 → 즉시 중단
         if (Owner.PlayerTransform == null) yield break;
+        if (GameManager.Shared != null && GameManager.Shared.IsGameOver) yield break;
 
         float   speed   = chargeSpeed * (Boss != null && Boss.IsEnraged ? Boss.EnrageSpeedMult : 1f);
+        // 시작 시점의 플레이어 방향을 고정으로 사용 (방향이 도중에 바뀌지 않도록)
         Vector2 dir     = ((Vector2)Owner.PlayerTransform.position - (Vector2)Owner.transform.position).normalized;
         float   elapsed = 0f;
 
-        // 경계 계산 — EnemySpawner 영역 우선, 없으면 직렬화 필드 폴백
-        var     spawner  = EnemySpawner.Shared;
-        Vector2 ac       = spawner != null ? spawner.AreaCenter : chargeBoundsCenter;
-        Vector2 aSize    = spawner != null ? spawner.AreaSize   : chargeBoundsSize;
-        Vector2 half     = aSize * 0.5f;
-        float   minX = ac.x - half.x, maxX = ac.x + half.x;
-        float   minY = ac.y - half.y, maxY = ac.y + half.y;
-
         while (elapsed < chargeDuration)
         {
-            Vector2 pos  = Owner.Rb.position;
-            Vector2 next = pos + dir * speed * Time.fixedDeltaTime;
+            // 루프 중 게임오버 또는 PlayerTransform 소멸 시 즉시 중단
+            if (GameManager.Shared != null && GameManager.Shared.IsGameOver) yield break;
+            if (Owner == null || Owner.PlayerTransform == null) yield break;
 
-            // 경계를 넘으면 경계 안쪽으로 클램프 후 중단
-            bool hitBound = next.x <= minX || next.x >= maxX ||
-                            next.y <= minY || next.y >= maxY;
-            if (hitBound)
+            Vector2 next = Owner.Rb.position + dir * speed * Time.fixedDeltaTime;
+
+            // MovementBounds 밖으로 나가면 경계에서 멈춤
+            var mb = MovementBounds.Shared;
+            if (mb != null && !mb.IsInside(next))
             {
-                next = new Vector2(Mathf.Clamp(next.x, minX, maxX),
-                                   Mathf.Clamp(next.y, minY, maxY));
-                Owner.Rb.MovePosition(next);
+                Owner.Rb.MovePosition(mb.ClosestPointOnBoundary(next));
                 Owner.FlipToward(dir);
-                break;
+                yield break;   // break → yield break: 완전 종료
             }
 
             Owner.MoveInDirection(dir, speed);
             elapsed += Time.fixedDeltaTime;
             yield return new WaitForFixedUpdate();
         }
-
-        // 돌진 후 짧은 경직
-        yield return new WaitForSeconds(0.2f);
     }
 }

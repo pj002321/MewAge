@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
@@ -14,6 +15,9 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
     [SerializeField] private GameObject expOrbDebrisPrefab;
 
     protected override bool DontDestroy => false;
+
+    // 파편 오브젝트 추적 (웨이브 종료 시 일괄 제거용)
+    private readonly List<GameObject> activeDebris = new();
 
     public void SpawnDamageText(Vector3 worldPos, float damage, bool isCritical = false)
     {
@@ -51,6 +55,28 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
         StartCoroutine(DebrisRoutine(pos, debrisPrefab));
     }
 
+    /// <summary>
+    /// 웨이브 종료 시 호출 — 진행 중인 모든 파편 코루틴과 투사체 오브젝트를 즉시 정리합니다.
+    /// GameManager.WaveClearRoutine()에서 호출하세요.
+    /// </summary>
+    public void ClearAllFX()
+    {
+        StopAllCoroutines();
+        foreach (var go in activeDebris)
+            if (go != null) Destroy(go);
+        activeDebris.Clear();
+
+        // 씬에 남아있는 투사체 일괄 제거
+        foreach (var p in Object.FindObjectsByType<Projectile>(FindObjectsSortMode.None))
+            Destroy(p.gameObject);
+        foreach (var p in Object.FindObjectsByType<EnemyProjectile>(FindObjectsSortMode.None))
+            Destroy(p.gameObject);
+        foreach (var p in Object.FindObjectsByType<BoomerangProjectile>(FindObjectsSortMode.None))
+            Destroy(p.gameObject);
+
+        this.DLog("[FXManager] ClearAllFX — 파편·투사체 정리 완료");
+    }
+
     private IEnumerator DebrisRoutine(Vector3 pos, GameObject prefab)
     {
         const int count = 8;
@@ -61,6 +87,7 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
         {
             gos[i] = Instantiate(prefab, pos, Quaternion.identity);
             gos[i].transform.localScale *= Random.Range(0.7f, 1.0f);
+            activeDebris.Add(gos[i]);  // 추적 목록 등록
 
             float angle = Random.Range(0f, 360f) * Mathf.Deg2Rad;
             float speed = Random.Range(2f, 5f);
@@ -83,6 +110,12 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
         }
 
         for (int i = 0; i < count; i++)
-            if (gos[i] != null) Destroy(gos[i]);
+        {
+            if (gos[i] != null)
+            {
+                activeDebris.Remove(gos[i]);
+                Destroy(gos[i]);
+            }
+        }
     }
 }

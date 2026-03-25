@@ -1,6 +1,7 @@
 using System.Collections;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 /// <summary>
@@ -29,6 +30,10 @@ public class UpgradePanel : MonoBehaviour
 
     [Header("타이머 색상")]
     [SerializeField] private Color timerWarningColor = Color.red;
+
+    [Header("EXP 구매 롱프레스")]
+    [SerializeField] private float buyExpHoldDelay    = 0.5f;   // 처음 반복까지 대기 시간
+    [SerializeField] private float buyExpRepeatInterval = 0.12f; // 반복 구매 간격
 
     [Header("다음 웨이브 시작 딜레이")]
     [SerializeField] private float nextWaveDelay = 1f;
@@ -61,6 +66,7 @@ public class UpgradePanel : MonoBehaviour
     // ── 내부 상태 ────────────────────────────────────────────────────
     private Coroutine          notifCoroutine;
     private Coroutine          autoStartCoroutine;
+    private Coroutine          buyExpHoldCoroutine;
     private int                selectedInvenIndex  = -1;
     private int                selectedEquipIndex  = -1;
     private bool               isFirstWave         = false;
@@ -73,8 +79,20 @@ public class UpgradePanel : MonoBehaviour
     private void Awake()
     {
         rerollButton? .onClick.AddListener(() => UpgradeManager.Shared?.TryReroll());
-        buyExpButton? .onClick.AddListener(() => UpgradeManager.Shared?.TryBuyExp());
         nextWaveButton?.onClick.AddListener(OnNextWaveClicked);
+
+        // EXP 구매 버튼: 롱프레스 지원 (EventTrigger로 PointerDown/Up 처리)
+        if (buyExpButton != null)
+        {
+            var trigger = buyExpButton.GetComponent<EventTrigger>()
+                       ?? buyExpButton.gameObject.AddComponent<EventTrigger>();
+            var down = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
+            down.callback.AddListener(_ => OnBuyExpPointerDown());
+            trigger.triggers.Add(down);
+            var up = new EventTrigger.Entry { eventID = EventTriggerType.PointerUp };
+            up.callback.AddListener(_ => OnBuyExpPointerUp());
+            trigger.triggers.Add(up);
+        }
 
         for (int i = 0; i < synergySlotImages.Length; i++)
         {
@@ -127,6 +145,9 @@ public class UpgradePanel : MonoBehaviour
     private void OnDisable()
     {
         if (autoStartCoroutine != null) StopCoroutine(autoStartCoroutine);
+        if (notifCoroutine != null) { StopCoroutine(notifCoroutine); notifCoroutine = null; }
+        if (buyExpHoldCoroutine != null) { StopCoroutine(buyExpHoldCoroutine); buyExpHoldCoroutine = null; }
+        if (notificationRoot) notificationRoot.SetActive(false);
         if (PlayerInventory.Shared != null)
             PlayerInventory.Shared.OnChanged -= RefreshInventoryUI;
     }
@@ -435,6 +456,31 @@ public class UpgradePanel : MonoBehaviour
             yield return null;
         }
         Destroy(ghostGO);
+    }
+
+    // ────────────────────────────────────────────────────────────────
+    // EXP 구매 롱프레스
+    // ────────────────────────────────────────────────────────────────
+    private void OnBuyExpPointerDown()
+    {
+        UpgradeManager.Shared?.TryBuyExp();
+        if (buyExpHoldCoroutine != null) StopCoroutine(buyExpHoldCoroutine);
+        buyExpHoldCoroutine = StartCoroutine(BuyExpHoldRoutine());
+    }
+
+    private void OnBuyExpPointerUp()
+    {
+        if (buyExpHoldCoroutine != null) { StopCoroutine(buyExpHoldCoroutine); buyExpHoldCoroutine = null; }
+    }
+
+    private IEnumerator BuyExpHoldRoutine()
+    {
+        yield return new WaitForSecondsRealtime(buyExpHoldDelay);
+        while (true)
+        {
+            UpgradeManager.Shared?.TryBuyExp();
+            yield return new WaitForSecondsRealtime(buyExpRepeatInterval);
+        }
     }
 
     // ────────────────────────────────────────────────────────────────

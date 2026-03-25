@@ -44,6 +44,10 @@ public class EnemyController : MonoBehaviour
     [SerializeField] private int goldDrop = 5;
     [SerializeField] private int expDrop  = 10;
 
+    [Header("넉백 면역")]
+    [SerializeField] private bool knockbackImmune = false;
+    public bool KnockbackImmune { get => knockbackImmune; set => knockbackImmune = value; }
+
     [Header("분리 (간격 유지)")]
     [Tooltip("주변 적과 이 거리 이내면 밀어냅니다. 0 = 비활성")]
     [SerializeField] private float separationRadius   = 1.2f;
@@ -277,8 +281,15 @@ public class EnemyController : MonoBehaviour
 
         while (elapsed < duration)
         {
-            float t = elapsed / duration;
-            rb?.MovePosition(rb.position + dir * force * (1f - t) * Time.fixedDeltaTime);
+            float t    = elapsed / duration;
+            Vector2 next = rb.position + dir * force * (1f - t) * Time.fixedDeltaTime;
+
+            // MovementBounds 밖으로는 밀려나지 않도록 클램프
+            var bounds = MovementBounds.Shared;
+            if (bounds != null && !bounds.IsInside(next))
+                next = bounds.ClosestPointOnBoundary(next);
+
+            rb?.MovePosition(next);
             elapsed += Time.fixedDeltaTime;
             yield return new WaitForFixedUpdate();
         }
@@ -301,7 +312,7 @@ public class EnemyController : MonoBehaviour
         FXManager.Shared?.SpawnHitEffect(transform.position);
         hitFlash?.Flash();
 
-        if (knockbackDir != Vector2.zero && knockbackForce > 0f)
+        if (!knockbackImmune && knockbackDir != Vector2.zero && knockbackForce > 0f)
             Knockback(knockbackDir, knockbackForce);
 
         if (currentHP <= 0f)

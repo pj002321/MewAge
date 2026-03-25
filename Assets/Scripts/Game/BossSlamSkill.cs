@@ -14,6 +14,8 @@ public class BossSlamSkill : BossSkillBase
     [SerializeField] private float      slamRiseTime     = 0.4f;
     [SerializeField] private float      slamHangTime     = 0.8f;
     [SerializeField] private float      slamFallSpeed    = 25f;
+    [Tooltip("낙하 최대 시간(초) — 거리와 무관하게 이 시간 안에 내려찍습니다.")]
+    [SerializeField] private float      slamFallDuration = 0.5f;
     [SerializeField] private GameObject slamMarkerPrefab;
     [SerializeField] private string     slamLandTrigger  = "SlamLand";
 
@@ -50,11 +52,14 @@ public class BossSlamSkill : BossSkillBase
 
         yield return new WaitForSeconds(slamHangTime);
 
-        // 3) 내려꽂기
-        while (Vector3.Distance(Owner.transform.position, slamTarget) > 0.05f)
+        // 3) 내려꽂기 — 거리 상관없이 slamFallDuration 안에 도달
+        float fallElapsed = 0f;
+        while (fallElapsed < slamFallDuration)
         {
             Owner.transform.position = Vector3.MoveTowards(
                 Owner.transform.position, slamTarget, slamFallSpeed * Time.deltaTime);
+            fallElapsed += Time.deltaTime;
+            if (Vector3.Distance(Owner.transform.position, slamTarget) <= 0.05f) break;
             yield return null;
         }
         Owner.transform.position = slamTarget;

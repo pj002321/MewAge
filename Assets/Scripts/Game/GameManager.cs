@@ -18,10 +18,11 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     [SerializeField] private TextMeshProUGUI hpText;
     [SerializeField] private GameObject      gameOverPanel;
     [SerializeField] private GameObject      waveInfoProgress;
+    [SerializeField] private GameClearPanel  gameClearPanel;
 
     [Header("Wave 타이머")]
-    [SerializeField] private float baseWaveDuration    = 20f;
-    [SerializeField] private float waveDurationIncrease = 2f;
+    // Normal wave durations: Wave 1~9=20s, 11~19=30s, 21~29=35s. Boss wave: 90s.
+    [SerializeField] private float bossWaveTimeLimit = 90f;  // 보스 웨이브 제한 시간 (초)
 
     [Header("Wave Clear 노티")]
     [SerializeField] private GameObject waveClearPanel;
@@ -38,12 +39,17 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     private bool  waitingForUpgrade;
     private bool  bossWaveActive;
 
+    // Session stats (accumulated during a single run for the Clear Panel)
+    private int sessionExpGained  = 0;
+    private int sessionGoldGained = 0;
+
     protected override bool DontDestroy => false;
 
     private void Start()
     {
-        if (gameOverPanel) gameOverPanel.SetActive(false);
-        if (waveClearPanel) waveClearPanel.SetActive(false);
+        if (gameOverPanel)               gameOverPanel.SetActive(false);
+        if (waveClearPanel)              waveClearPanel.SetActive(false);
+        if (gameClearPanel != null)      gameClearPanel.gameObject.SetActive(false);
 
         // 시작 시 Normal 무기 1개 지급 후 바로 Wave 1 시작
         UpgradeManager.Shared?.GiveStarterWeapon();
@@ -53,15 +59,23 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     private void Update()
     {
         if (isGameOver) return;
-        if (bossWaveActive) return;   // 보스 생존 중 타이머 동결
 
         waveTimer -= Time.deltaTime;
         UpdateTimerUI();
 
         if (waveTimer <= 0f && !waitingForUpgrade)
         {
-            waitingForUpgrade = true;
-            StartCoroutine(WaveClearRoutine());
+            if (bossWaveActive)
+            {
+                // Boss wave timeout → Game Over
+                this.DLog("[GameManager] Boss wave time limit reached! Game Over.");
+                TriggerGameOver();
+            }
+            else
+            {
+                waitingForUpgrade = true;
+                StartCoroutine(WaveClearRoutine());
+            }
         }
     }
 
@@ -103,8 +117,19 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     {
         if (waveClearPanel) waveClearPanel.SetActive(true);
         EnemySpawner.Shared?.StopSpawning();
-        EnemySpawner.Shared?.ClearAllEnemies(); // 이전 웨이브 잔여 적 제거
+        EnemySpawner.Shared?.ClearAllEnemies();
+        FXManager.Shared?.ClearAllFX();   // 투사체·파편 즉시 제거
+
+        // 필드에 남은 드롭 아이템 → 플레이어 방향으로 유도
+        foreach (var drop in Object.FindObjectsByType<DropItem>(FindObjectsSortMode.None))
+            drop.ForceAttract();
+
         yield return new WaitForSeconds(waveClearDuration);
+
+        // 유도 후 미수집 아이템 강제 수집
+        foreach (var drop in Object.FindObjectsByType<DropItem>(FindObjectsSortMode.None))
+            if (drop != null) drop.Collect();
+
         if (waveClearPanel) waveClearPanel.SetActive(false);
 
         if (ImprovManager.Shared != null)
@@ -115,7 +140,14 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
             StartNextWave();
     }
 
-    private float WaveDuration(int w) => baseWaveDuration + Mathf.Max(0, w - 1) * waveDurationIncrease;
+    /// <summary>웨이브 번호에 따른 제한 시간 반환. 보스 웨이브는 호출 전에 별도 처리.</summary>
+    private float WaveDuration(int w)
+    {
+        // Boss wave: handled separately in StartNextWave
+        if      (w >= 21) return 35f;  // Wave 21~29+
+        else if (w >= 11) return 30f;  // Wave 11~19
+        else              return 20f;  // Wave 1~9
+    }
 
     private void UpdateTimerUI()
     {
@@ -158,6 +190,23 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         isGameOver = true;
         EnemySpawner.Shared?.StopSpawning();
         if (gameOverPanel) gameOverPanel.SetActive(true);
+        // GameOverPanel.cs will count down 5 s, shrink itself, then call ShowGameClearAfterGameOver()
+    }
+
+    /// <summary>
+    /// GameOverPanel 카운트다운 + 축소 연출이 끝난 뒤 호출됩니다.
+    /// GameClear 패널을 표시합니다.
+    /// </summary>
+    public void ShowGameClearAfterGameOver()
+    {
+        if (gameClearPanel != null)
+        {
+            gameClearPanel.Show(wave, sessionExpGained, sessionGoldGained);
+        }
+        else
+        {
+            this.DLog("[GameManager] ShowGameClearAfterGameOver: gameClearPanel not assigned.");
+        }
     }
 
     public void Revive()
@@ -171,20 +220,18 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 
     public void RestartGame()
     {
-        UnityEngine.SceneManagement.SceneManager.LoadScene(
-            UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex);
+        SceneLoadManager.LoadScene("stage@scene");
     }
 
     public void GoHome()
     {
         Time.timeScale = 1f;
-        UnityEngine.SceneManagement.SceneManager.LoadScene("home@scene");
+        SceneLoadManager.LoadScene("home@scene");
     }
 
     public void StartNextWave()
     {
         wave++;
-        waveTimer         = WaveDuration(wave);
         waitingForUpgrade = false;
 
         // WaveHealHP 패시브 — 웨이브 시작 시 축적된 회복량만큼 체력 회복
@@ -192,9 +239,27 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         if (player != null && player.WaveHealAmount > 0f)
             player.HealHP(player.WaveHealAmount);
 
+        // 보스 웨이브이고 인트로 시퀀스가 있으면 컷씬 먼저 재생
+        bool isBossWave = EnemySpawner.Shared?.GetNextBossWave(wave - 1) == wave;
+        // Boss wave gets its own time limit; normal waves use stepped duration
+        waveTimer = isBossWave ? bossWaveTimeLimit : WaveDuration(wave);
+
+        this.DLog($"[GameManager] StartNextWave wave={wave} | isBossWave={isBossWave} | timer={waveTimer}s | BossIntro={(BossIntroSequence.Shared != null ? "있음" : "없음")}");
+
+        UpdateWaveUI();
+
+        if (isBossWave && BossIntroSequence.Shared != null)
+        {
+            WaveEnvironmentSwitcher.Shared?.SetWave(wave); // 일반 맵 유지 (출구 연출용)
+            BossIntroSequence.Shared.Play(() =>
+            {
+                EnemySpawner.Shared?.ResumeSpawning(wave);
+            });
+            return;
+        }
+
         EnemySpawner.Shared?.ResumeSpawning(wave);
         WaveEnvironmentSwitcher.Shared?.SetWave(wave);
-        UpdateWaveUI();
     }
 
     public bool IsGameOver  => isGameOver;
@@ -213,16 +278,60 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         WaveEnvironmentSwitcher.Shared?.SetBoss();
     }
 
+    [Header("보스 처치 후 Orb 수집 대기")]
+    [SerializeField] private float orbCollectWait = 5f;   // 업그레이드 패널 전 대기 시간(초)
+
     public void OnBossDefeated()
     {
         bossWaveActive = false;
         WaveEnvironmentSwitcher.Shared?.SetNormal();
-        if (!waitingForUpgrade)
+        if (waitingForUpgrade) return;
+        waitingForUpgrade = true;
+
+        int nextBoss = GetNextBossWave(wave);
+        this.DLog($"[GameManager] OnBossDefeated wave={wave} nextBoss={nextBoss}");
+
+        // Orb 수집 대기 카운트다운 후 분기
+        StartCoroutine(BossOrbCollectRoutine(nextBoss));
+    }
+
+    /// <summary>
+    /// 보스 처치 후 orbCollectWait 초 동안 타이머 UI로 카운트다운을 보여주고,
+    /// 종료 후 중간 보스면 WaveClearRoutine, 마지막 보스면 ShowGameClear를 호출합니다.
+    /// </summary>
+    private IEnumerator BossOrbCollectRoutine(int nextBoss)
+    {
+        // 타이머를 수집 대기 시간으로 덮어써 Update가 카운트다운 UI를 그리게 함
+        waveTimer = orbCollectWait;
+
+        this.DLog($"[GameManager] Orb 수집 대기 {orbCollectWait}s 시작");
+        yield return new WaitForSeconds(orbCollectWait);
+
+        if (nextBoss > 0)
+            StartCoroutine(WaveClearRoutine());   // 중간 보스 → 업그레이드 패널
+        else
+            ShowGameClear();                      // 마지막 보스 → 게임 클리어
+    }
+
+    private void ShowGameClear()
+    {
+        EnemySpawner.Shared?.StopSpawning();
+        EnemySpawner.Shared?.ClearAllEnemies();
+
+        if (gameClearPanel != null)
         {
-            waitingForUpgrade = true;
-            StartCoroutine(WaveClearRoutine());
+            gameClearPanel.Show(wave, sessionExpGained, sessionGoldGained);
+        }
+        else
+        {
+            this.DLog("[GameManager] GameClearPanel not assigned — showing GameOver as fallback.");
+            if (gameOverPanel) gameOverPanel.SetActive(true);
         }
     }
+
+    /// <summary>인게임 획득 골드/경험치를 누적합니다. ItemDropManager, EXP 지급 측에서 호출하세요.</summary>
+    public void AddSessionGold(int amount) => sessionGoldGained += amount;
+    public void AddSessionExp (int amount) => sessionExpGained  += amount;
 
     // ── 디버그 전용 ──────────────────────────────────────────────
     /// <summary>현재 웨이브를 즉시 종료합니다. 패널이 열려 있어도 강제 작동합니다.</summary>

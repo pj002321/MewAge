@@ -5,23 +5,31 @@ using UnityEngine;
 /// <summary>
 /// 보스 행동: 고정 순서 패턴.
 /// 인스펙터에서 등록한 스킬 순서대로 반복 실행합니다.
-///   예) [BossChargeSkill, BossComboSlashSkill] → 돌진 → 콤보 → 돌진 → 콤보 …
 ///
-/// BossBehaviour 대신 이 컴포넌트를 프리팹에 붙이세요.
-/// BossController + BossSkillBase 파생 스킬들도 함께 붙여야 합니다.
+/// chain = true로 체크된 항목은 Idle + Chase를 건너뛰고 바로 실행합니다.
+/// 예) [Charge, chain:Combo, chain:Combo, Slam, chain:Charge, chain:Combo …]
 /// </summary>
 public class BossPatternBehaviour : EnemyBehaviourBase
 {
+    [System.Serializable]
+    public struct PatternEntry
+    {
+        public BossSkillBase skill;
+        [Tooltip("체크하면 Idle+Chase 없이 즉시 실행 (연계용).")]
+        public bool  chain;
+        [Tooltip("chain=true일 때 실행 전 대기 시간 (0이면 즉시).")]
+        public float chainDelay;
+    }
+
     [Header("고정 패턴 순서")]
-    [Tooltip("실행할 스킬을 순서대로 등록합니다. 끝에 도달하면 처음으로 돌아갑니다.")]
-    [SerializeField] private List<BossSkillBase> pattern = new();
+    [SerializeField] private List<PatternEntry> pattern = new();
 
     [Header("스킬 사이 추적")]
     [SerializeField] private float chaseStopDistance = 1.8f;
-    [SerializeField] private float chaseDuration     = 2.0f;
+    [SerializeField] private float chaseDuration     = 1.5f;
 
     [Header("대기")]
-    [SerializeField] private float idleDuration = 0.5f;
+    [SerializeField] private float idleDuration = 0.4f;
 
     private BossController boss;
     private bool           isRunning;
@@ -42,28 +50,28 @@ public class BossPatternBehaviour : EnemyBehaviourBase
         Owner.StartCoroutine(PatternRoutine());
     }
 
-    // ══════════════════════════════════════════════════════════════
-    //  패턴 루프
-    // ══════════════════════════════════════════════════════════════
     private IEnumerator PatternRoutine()
     {
         isRunning = true;
 
-        // 1) Idle
-        yield return new WaitForSeconds(IdleTime());
+        if (pattern == null || pattern.Count == 0) { isRunning = false; yield break; }
 
-        // 2) 플레이어 방향으로 짧게 추적
-        yield return ChaseRoutine();
+        var entry = pattern[patternIndex % pattern.Count];
+        patternIndex++;
 
-        // 3) 패턴에서 다음 스킬 실행
-        if (pattern != null && pattern.Count > 0)
+        if (entry.chain)
         {
-            var skill = pattern[patternIndex % pattern.Count];
-            patternIndex++;
-
-            if (skill != null)
-                yield return skill.Execute();
+            if (entry.chainDelay > 0f)
+                yield return new WaitForSeconds(entry.chainDelay);
         }
+        else
+        {
+            yield return new WaitForSeconds(IdleTime());
+            yield return ChaseRoutine();
+        }
+
+        if (entry.skill != null)
+            yield return entry.skill.Execute();
 
         isRunning = false;
     }
@@ -76,7 +84,6 @@ public class BossPatternBehaviour : EnemyBehaviourBase
         while (elapsed < chaseDuration)
         {
             elapsed += Time.fixedDeltaTime;
-
             if (Owner.PlayerTransform == null) { yield return new WaitForFixedUpdate(); continue; }
 
             float dist = Vector2.Distance(Owner.transform.position, Owner.PlayerTransform.position);
@@ -89,8 +96,8 @@ public class BossPatternBehaviour : EnemyBehaviourBase
 
     private void OnBossEnraged()
     {
-        idleDuration  = Mathf.Max(0.2f, idleDuration  * 0.5f);
-        chaseDuration = Mathf.Max(0.5f, chaseDuration * 0.7f);
+        idleDuration  = Mathf.Max(0.15f, idleDuration  * 0.5f);
+        chaseDuration = Mathf.Max(0.4f,  chaseDuration * 0.7f);
     }
 
     private float IdleTime() => boss != null && boss.IsEnraged ? idleDuration * 0.6f : idleDuration;

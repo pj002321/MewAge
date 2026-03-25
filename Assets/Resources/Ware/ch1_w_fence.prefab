@@ -106,7 +106,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 950b3648ca2da9a41b6361b5ed16fd5a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StructureController
-  duration: 15
+  duration: 10
 --- !u!61 &-855020708500994693
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -151,7 +151,7 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 1.46, y: 0.93}
+  m_Size: {x: 1.67, y: 0.93}
   m_EdgeRadius: 0
 --- !u!114 &-8361462678321122859
 MonoBehaviour:
@@ -169,4 +169,6 @@ MonoBehaviour:
   subValue: 1
   radius: 1.5
   tickInterval: 1
-  fenceSpacing: 0.8
+  fenceSpacing: 1
+  colliderWidth: 1.71
+  colliderHeight: 1

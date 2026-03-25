@@ -195,16 +195,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 05b90058a78bdf242ada91d00c9db68b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyController
-  moveSpeed: 2
+  moveSpeed: 3
   maxHP: 200
-  contactDamage: 20
+  contactDamage: 30
   scoreValue: 0
   damageCooldown: 1
   contactMaxDist: 0.8
   goldDrop: 2
   expDrop: 2
-  separationRadius: 3
-  separationStrength: 8
+  knockbackImmune: 0
+  separationRadius: 1.2
+  separationStrength: 4
   waveBreakpoints:
   - fromWave: 10
     moveSpeed: 2

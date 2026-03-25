@@ -125,7 +125,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.7, y: 0.7, z: 0.7}
+  m_LocalScale: {x: 0.35, y: 0.35, z: 0.35}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 6232997806021152094}
@@ -259,8 +259,9 @@ MonoBehaviour:
   contactMaxDist: 0.8
   goldDrop: 5
   expDrop: 10
-  separationRadius: 5
-  separationStrength: 10
+  knockbackImmune: 0
+  separationRadius: 4
+  separationStrength: 7
   waveBreakpoints:
   - fromWave: 10
     moveSpeed: 2

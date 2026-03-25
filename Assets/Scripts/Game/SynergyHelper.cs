@@ -42,7 +42,7 @@ public static class SynergyHelper
         AddIfValid(result, row.f_시너지1, row.f_시너지1_아이콘, row.f_설명_1);
         AddIfValid(result, row.f_시너지2, row.f_시너지2_아이콘, row.f_설명_2);
         AddIfValid(result, row.f_시너지3, row.f_시너지3_아이콘, row.f_설명_3);
-        AddIfValid(result, row.f_시너지4, row.f_시너지4_아이콘, row.f_설명_4);
+       // AddIfValid(result, row.f_시너지4, row.f_시너지4_아이콘, row.f_설명_4);
 
         return result;
     }

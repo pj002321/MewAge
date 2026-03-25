@@ -12,6 +12,7 @@ public class StructureButton : MonoBehaviour
     [SerializeField] private Button   button;
     [SerializeField] private Image    iconImage;
     [SerializeField] private TMP_Text countText;
+    [SerializeField] private GameObject indicator;
 
     private bool subscribed;
 
@@ -26,7 +27,8 @@ public class StructureButton : MonoBehaviour
         // StructureInventory가 늦게 초기화될 수 있어 매 프레임 구독 시도
         if (!subscribed && StructureInventory.Shared != null)
         {
-            StructureInventory.Shared.OnChanged += Refresh;
+            StructureInventory.Shared.OnChanged     += Refresh;
+            StructureInventory.Shared.OnAutoChanged += RefreshIndicator;
             subscribed = true;
             Refresh();
         }
@@ -35,7 +37,10 @@ public class StructureButton : MonoBehaviour
     private void OnDisable()
     {
         if (subscribed && StructureInventory.Shared != null)
-            StructureInventory.Shared.OnChanged -= Refresh;
+        {
+            StructureInventory.Shared.OnChanged     -= Refresh;
+            StructureInventory.Shared.OnAutoChanged -= RefreshIndicator;
+        }
         subscribed = false;
     }
 
@@ -59,6 +64,19 @@ public class StructureButton : MonoBehaviour
         {
             SetEmpty();
         }
+
+        RefreshIndicator();
+    }
+
+    private void RefreshIndicator()
+    {
+        if (indicator == null) return;
+        var inv = StructureInventory.Shared;
+        bool active = inv != null
+                   && inv.IsAutoMode
+                   && inv.ActiveAutoSlot == slotIndex
+                   && inv.GetCount(slotIndex) > 0;
+        indicator.SetActive(active);
     }
 
     private void SetEmpty()

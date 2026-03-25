@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 620458224344999017}
   - component: {fileID: 7126575762079559211}
   - component: {fileID: -855020708500994693}
+  - component: {fileID: 8228743044539037241}
   m_Layer: 0
   m_Name: ch1_w_fire
   m_TagString: Untagged
@@ -105,13 +106,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 950b3648ca2da9a41b6361b5ed16fd5a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StructureController
-  structureType: 2
-  mainValue: 10
-  subValue: 0
-  duration: 15
-  radius: 1.5
-  tickInterval: 1
-  fenceSpacing: 0.8
+  duration: 10
 --- !u!61 &-855020708500994693
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -158,3 +153,24 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 1.46, y: 0.93}
   m_EdgeRadius: 0
+--- !u!114 &8228743044539037241
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7968452166247501650}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fa6a9ccb6459f8b49aed86a674b856b9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FireSpreadSkill
+  mainValue: 10
+  subValue: 1
+  radius: 1.5
+  tickInterval: 1
+  fireTilePrefab: {fileID: 38222733961658620, guid: 0ebbd7c7ca572c7418fb960c48b39412, type: 3}
+  spreadLength: 6
+  cellSize: 1.33
+  spreadDelay: 0.05
+  fireDuration: 5

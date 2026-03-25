@@ -40,6 +40,7 @@ public class PlayerStats : MonoBehaviourSingleton<PlayerStats>
     public void AddGold(int amount)
     {
         gold += amount;
+        GameManager.Shared?.AddSessionGold(amount);  // session tracker for Clear Panel
         SoundManager.Shared?.Play(SoundKey.Pickup_Gold);
         SyncUI();
     }
@@ -57,6 +58,7 @@ public class PlayerStats : MonoBehaviourSingleton<PlayerStats>
         if (level >= maxLevel) return;
 
         SoundManager.Shared?.Play(SoundKey.Pickup_Exp);
+        GameManager.Shared?.AddSessionExp(amount);    // session tracker for Clear Panel
         exp += amount;
         while (exp >= expToNext && level < maxLevel)
         {

@@ -8,12 +8,12 @@ using UnityEngine;
 public class BossComboSlashSkill : BossSkillBase
 {
     [Header("콤보 설정")]
-    [SerializeField] private int   hitCount       = 2;
+    [SerializeField] private int   hitCount       = 3;
     [SerializeField] private float slashDamage    = 12f;
     [SerializeField] private float slashRange     = 1.8f;   // 피해 판정 거리
     [SerializeField] private float lungeSpeed     = 8f;     // 한 타당 이동 속도
     [SerializeField] private float lungeDuration  = 0.15f;  // 한 타 이동 시간
-    [SerializeField] private float betweenDelay   = 0.2f;   // 타 사이 딜레이
+    [SerializeField] private float betweenDelay   = 0.55f;  // 타 사이 딜레이 (애니메이션 0.7s 기준: 0.7 - lungeDuration)
     [SerializeField] private string slashTrigger  = "tAttack";
 
     [Header("VFX")]

@@ -279,7 +279,7 @@ public class StageSelectPanel : MonoBehaviour
                 dots[i].color = i == currentIndex ? dotActive : dotInactive;
     }
 
-    public void OnStartClicked() => SceneManager.LoadScene("stage@scene");
+    public void OnStartClicked() => SceneLoadManager.LoadScene("stage@scene");
 
     // ── 헬퍼 ─────────────────────────────────────────────────────────
 

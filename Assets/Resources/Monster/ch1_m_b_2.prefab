@@ -199,14 +199,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 05b90058a78bdf242ada91d00c9db68b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyController
-  moveSpeed: 1.25
-  maxHP: 200000
+  moveSpeed: 2
+  maxHP: 50000
   contactDamage: 150
   scoreValue: 0
   damageCooldown: 1
   contactMaxDist: 0.8
   goldDrop: 20
   expDrop: 20
+  knockbackImmune: 0
   separationRadius: 0.7
   separationStrength: 2
   waveBreakpoints: []
@@ -261,6 +262,10 @@ MonoBehaviour:
   enrageSpeedMult: 1.5
   enrageDamageMult: 1.5
   bossName: "\uAD76\uC8FC\uB9B0 \uB09C\uD3ED\uD55C \uACF0"
+  bossGoldCount: 20
+  bossGoldValue: 10
+  bossExpCount: 20
+  bossExpValue: 15
 --- !u!114 &-4795778387774695082
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -274,10 +279,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossPatternBehaviour
   pattern:
-  - {fileID: -5139031544374371366}
-  - {fileID: 592259709488289790}
-  - {fileID: 592259709488289790}
-  - {fileID: 0}
+  - skill: {fileID: -5139031544374371366}
+    chain: 1
+    chainDelay: 1
+  - skill: {fileID: -5139031544374371366}
+    chain: 1
+    chainDelay: 1
+  - skill: {fileID: 592259709488289790}
+    chain: 1
+    chainDelay: 1
   chaseStopDistance: 1
   chaseDuration: 2
   idleDuration: 0.5
@@ -293,13 +303,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4f59276fb7dc5c04c8aeaf3aafa5f594, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossChargeSkill
-  cooldown: 5
+  cooldown: 2
   enrageCooldownMult: 0.7
-  maxRange: 0
+  maxRange: 5
   chargeSpeed: 12
   chargeDuration: 0.55
-  chargeBoundsCenter: {x: 0, y: 0}
-  chargeBoundsSize: {x: 10, y: 18}
 --- !u!114 &592259709488289790
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -312,10 +320,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 28cecd35150c5f24bae8b168320a0d24, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossDashComboSkill
-  cooldown: 5
+  cooldown: 2
   enrageCooldownMult: 0.7
-  maxRange: 0
-  dashSpeed: 10
+  maxRange: 5
+  dashSpeed: 12
   dashDuration: 0.6
   hitCount: 3
   hitInterval: 0.18

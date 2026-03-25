@@ -32,6 +32,8 @@ public class WaveEnvironmentSwitcher : MonoBehaviourSingleton<WaveEnvironmentSwi
         public int        fromWave;
         [Tooltip("활성화할 배경 오브젝트 (NormalEnvironment 하위에 배치)")]
         public GameObject background;
+        [Tooltip("보스 인트로 시 플레이어가 걸어갈 출구 위치 (없으면 이동 생략)")]
+        public Transform  bossExitPoint;
     }
 
     [Header("일반 웨이브")]
@@ -49,11 +51,17 @@ public class WaveEnvironmentSwitcher : MonoBehaviourSingleton<WaveEnvironmentSwi
 
     [Header("보스 웨이브")]
     [SerializeField] private GameObject   bossEnvironment;
+    [SerializeField] private Transform    bossEnterPoint;   // 보스 맵에서 플레이어 입장 위치
     [SerializeField] private CameraConfig bossCamera = new()
     {
         followPlayer = false,
         useBounds    = false,
     };
+
+    /// <summary>현재 활성 배경의 보스 출구 위치 (null이면 이동 생략).</summary>
+    public Transform CurrentBossExitPoint  { get; private set; }
+    /// <summary>보스 맵 플레이어 입장 위치.</summary>
+    public Transform CurrentBossEnterPoint => bossEnterPoint;
 
     protected override bool DontDestroy => false;
 
@@ -105,7 +113,9 @@ public class WaveEnvironmentSwitcher : MonoBehaviourSingleton<WaveEnvironmentSwi
         foreach (var entry in waveBackgrounds)
             entry.background?.SetActive(false);
 
-        if (!matched.HasValue) return;
+        if (!matched.HasValue) { CurrentBossExitPoint = null; return; }
+
+        CurrentBossExitPoint = matched.Value.bossExitPoint;
 
         var bg = matched.Value.background;
         bg?.SetActive(true);

@@ -33,6 +33,12 @@ public class BossController : MonoBehaviour
     [Header("보스 HUD")]
     [SerializeField] private string bossName = "BOSS";
 
+    [Header("처치 드롭")]
+    [SerializeField] private int bossGoldCount = 20;
+    [SerializeField] private int bossGoldValue = 10;
+    [SerializeField] private int bossExpCount  = 20;
+    [SerializeField] private int bossExpValue  = 15;
+
     // ── 공개 프로퍼티 ──────────────────────────────────────────────
     public bool   IsEnraged      { get; private set; }
     public float  HPRatio        => enemy != null ? enemy.HPRatio : 0f;
@@ -61,6 +67,7 @@ public class BossController : MonoBehaviour
         foreach (var s in skills)
             s.Init(this, enemy);
 
+        enemy.KnockbackImmune = true;  // 보스는 넉백 없음
         enemy.OnDeath += OnOwnerDeath;
     }
 
@@ -125,6 +132,8 @@ public class BossController : MonoBehaviour
 
     private void OnOwnerDeath()
     {
+        ItemDropManager.Shared?.SpawnBossDrops(
+            transform.position, bossGoldCount, bossGoldValue, bossExpCount, bossExpValue);
         BossHUDPanel.Shared?.Hide();
         GameManager.Shared?.OnBossDefeated();
     }

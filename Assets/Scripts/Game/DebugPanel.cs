@@ -16,7 +16,7 @@ public class DebugPanel : MonoBehaviour
 
     [Header("웨이브 점프 버튼 (jumpWaves 와 1:1 대응)")]
     [SerializeField] private Button[] jumpButtons;
-    [SerializeField] private int[]    jumpWaves = { 10, 20, 30, 40 };
+    [SerializeField] private int[]    jumpWaves = { 9, 10, 19, 20, 29, 30, 40 };
 
     private void Awake()
     {

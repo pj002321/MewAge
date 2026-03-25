@@ -59,6 +59,6 @@ public class HomeUIManager : MonoBehaviour
 
     public void StartGame()
     {
-        SceneManager.LoadScene("stage@scene");
+        SceneLoadManager.LoadScene("stage@scene");
     }
 }

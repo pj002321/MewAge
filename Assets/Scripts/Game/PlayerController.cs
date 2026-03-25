@@ -92,9 +92,12 @@ public class PlayerController : MonoBehaviour
         return bounds.ClosestPointOnBoundary(desired);
     }
 
+    /// <summary>true이면 조이스틱 입력을 무시 (컷씬용).</summary>
+    public bool InputLocked { get; set; }
+
     private void HandleInput()
     {
-        moveDirection = VirtualJoystick.Instance != null
+        moveDirection = (!InputLocked && VirtualJoystick.Instance != null)
             ? VirtualJoystick.Instance.Direction
             : Vector2.zero;
     }
@@ -119,6 +122,7 @@ public class PlayerController : MonoBehaviour
         hitFlash?.Flash();
         hitShake?.Shake();
         CameraFollow.Shared?.Shake();
+        TriggerHaptic();
 
         // 피격 후 짧은 무적 (여러 적에 동시에 맞는 것 방지)
         if (hitInvincibleDuration > 0f)
@@ -267,4 +271,31 @@ public class PlayerController : MonoBehaviour
 
     public Vector2 Position => transform.position;
     public Vector2 MoveDirection => moveDirection;
+
+    /// <summary>피격 시 짧은 햅틱 진동 (모바일 전용).</summary>
+    private static void TriggerHaptic()
+    {
+#if UNITY_ANDROID && !UNITY_EDITOR
+        try
+        {
+            using var player   = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
+            using var activity = player.GetStatic<AndroidJavaObject>("currentActivity");
+            using var vibrator = activity.Call<AndroidJavaObject>("getSystemService", "vibrator");
+            int sdk = new AndroidJavaClass("android.os.Build$VERSION").GetStatic<int>("SDK_INT");
+            if (sdk >= 26)
+            {
+                using var veClass = new AndroidJavaClass("android.os.VibrationEffect");
+                using var effect  = veClass.CallStatic<AndroidJavaObject>("createOneShot", 40L, 180);
+                vibrator.Call("vibrate", effect);
+            }
+            else
+            {
+                vibrator.Call("vibrate", 40L);
+            }
+        }
+        catch { /* 진동 실패 시 무시 */ }
+#elif UNITY_IOS && !UNITY_EDITOR
+        Handheld.Vibrate();
+#endif
+    }
 }

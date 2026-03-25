@@ -200,14 +200,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 05b90058a78bdf242ada91d00c9db68b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyController
-  moveSpeed: 1
-  maxHP: 50000
+  moveSpeed: 2
+  maxHP: 20000
   contactDamage: 100
   scoreValue: 0
   damageCooldown: 1
   contactMaxDist: 1
   goldDrop: 10
   expDrop: 10
+  knockbackImmune: 0
   separationRadius: 0.7
   separationStrength: 2
   waveBreakpoints: []
@@ -262,6 +263,10 @@ MonoBehaviour:
   enrageSpeedMult: 1.5
   enrageDamageMult: 1.5
   bossName: "\uC0AC\uB0E5\uC758 \uC11D\uC0C1"
+  bossGoldCount: 20
+  bossGoldValue: 2
+  bossExpCount: 20
+  bossExpValue: 2
 --- !u!114 &663066454348744953
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -275,11 +280,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossPatternBehaviour
   pattern:
-  - {fileID: -9219699967725519467}
-  - {fileID: -698592309618619773}
+  - skill: {fileID: -698592309618619773}
+    chain: 1
+    chainDelay: 1
+  - skill: {fileID: -9219699967725519467}
+    chain: 1
+    chainDelay: 1
   chaseStopDistance: 1
-  chaseDuration: 2
-  idleDuration: 1
+  chaseDuration: 5
+  idleDuration: 0.75
 --- !u!114 &-698592309618619773
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -297,8 +306,6 @@ MonoBehaviour:
   maxRange: 5
   chargeSpeed: 12
   chargeDuration: 1
-  chargeBoundsCenter: {x: 0, y: 0}
-  chargeBoundsSize: {x: 10, y: 18}
 --- !u!114 &-9219699967725519467
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -313,8 +320,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BossComboSlashSkill
   cooldown: 5
   enrageCooldownMult: 0.7
-  maxRange: 0
-  hitCount: 2
+  maxRange: 5
+  hitCount: 3
   slashDamage: 12
   slashRange: 1.8
   lungeSpeed: 8

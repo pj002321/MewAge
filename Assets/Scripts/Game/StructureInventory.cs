@@ -16,20 +16,22 @@ public class StructureInventory : MonoBehaviourSingleton<StructureInventory>
 
     private readonly DB_기물[] slotData  = new DB_기물[SlotCount];
     private readonly int[]     slotCount = new int[SlotCount];
-    private readonly float[]   autoTimer = new float[SlotCount];
+    private float              autoTimer;
 
     protected override bool DontDestroy => false;
 
     public event System.Action OnChanged;
     public event System.Action OnAutoChanged;
 
-    public bool IsAutoMode { get; private set; }
+    public bool IsAutoMode     { get; private set; }
+    /// <summary>AutoMode에서 다음으로 사용될 슬롯 인덱스. 없으면 -1.</summary>
+    public int  ActiveAutoSlot { get; private set; } = -1;
 
     public void ToggleAuto()
     {
         IsAutoMode = !IsAutoMode;
-        // 오토 켤 때 타이머 리셋
-        for (int i = 0; i < SlotCount; i++) autoTimer[i] = 0f;
+        autoTimer  = 0f;
+        ActiveAutoSlot = IsAutoMode ? FindNextSlot(-1) : -1;
         OnAutoChanged?.Invoke();
     }
 
@@ -37,17 +39,35 @@ public class StructureInventory : MonoBehaviourSingleton<StructureInventory>
     {
         if (!IsAutoMode) return;
 
-        for (int i = 0; i < SlotCount; i++)
+        // 활성 슬롯이 없으면 (재고 소진 후 보충됐을 수 있으므로) 다시 탐색
+        if (ActiveAutoSlot < 0)
         {
-            if (slotData[i] == null || slotCount[i] <= 0) continue;
-
-            autoTimer[i] += Time.deltaTime;
-            if (autoTimer[i] >= slotAutoInterval)
-            {
-                autoTimer[i] = 0f;
-                UseAt(i);
-            }
+            ActiveAutoSlot = FindNextSlot(-1);
+            if (ActiveAutoSlot < 0) return;
+            autoTimer = 0f;
+            OnAutoChanged?.Invoke();
         }
+
+        autoTimer += Time.deltaTime;
+        if (autoTimer >= slotAutoInterval)
+        {
+            autoTimer = 0f;
+            int used = ActiveAutoSlot;
+            UseAt(used);                                   // UseAt → OnChanged 발생
+            ActiveAutoSlot = FindNextSlot(used);           // 다음 슬롯으로
+            OnAutoChanged?.Invoke();
+        }
+    }
+
+    /// <summary>from 다음부터 순환 탐색해 보유량이 있는 첫 슬롯 인덱스를 반환. 없으면 -1.</summary>
+    private int FindNextSlot(int from)
+    {
+        for (int i = 1; i <= SlotCount; i++)
+        {
+            int idx = (from + i + SlotCount) % SlotCount;
+            if (slotData[idx] != null && slotCount[idx] > 0) return idx;
+        }
+        return -1;
     }
 
     // ── 조회 ────────────────────────────────────────────────────────
@@ -59,10 +79,15 @@ public class StructureInventory : MonoBehaviourSingleton<StructureInventory>
     {
         if (data == null) return;
 
-        // 같은 종류 슬롯이 있으면 누적
+        // 같은 종류(설치 프리팹이 같은) 기물이 있으면 누적
         for (int i = 0; i < SlotCount; i++)
         {
-            if (slotData[i] == data) { slotCount[i]++; OnChanged?.Invoke(); return; }
+            if (slotData[i] != null && slotData[i].f_설치프리팹 == data.f_설치프리팹) 
+            { 
+                slotCount[i]++; 
+                OnChanged?.Invoke(); 
+                return; 
+            }
         }
 
         // 빈 슬롯에 새로 추가
