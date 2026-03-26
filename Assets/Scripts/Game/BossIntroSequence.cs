@@ -43,18 +43,27 @@ public class BossIntroSequence : MonoBehaviourSingleton<BossIntroSequence>
         // 1. 입력 잠금
         if (player != null) player.InputLocked = true;
 
-        // 2. exitPoint 로 걸어서 이동
+        // 2. exitPoint 로 걸어서 이동 (Rigidbody2D 물리와 충돌하지 않도록 rb.MovePosition 사용)
         if (player != null && exitPoint != null)
         {
-            while (Vector2.Distance(player.transform.position, exitPoint.position) > 0.08f)
+            var walkRb = player.GetComponent<Rigidbody2D>();
+            Vector2 target = exitPoint.position;
+            while (true)
             {
-                player.transform.position = Vector3.MoveTowards(
-                    player.transform.position,
-                    exitPoint.position,
-                    walkSpeed * Time.deltaTime);
-                yield return null;
+                Vector2 cur = walkRb != null ? walkRb.position : (Vector2)player.transform.position;
+                if (Vector2.Distance(cur, target) <= 0.08f) break;
+                Vector2 next = Vector2.MoveTowards(cur, target, walkSpeed * Time.fixedDeltaTime);
+                if (walkRb != null)
+                    walkRb.MovePosition(next);
+                else
+                    player.transform.position = next;
+                yield return new WaitForFixedUpdate();
             }
-            player.transform.position = exitPoint.position;
+            if (walkRb != null)
+                walkRb.MovePosition(target);
+            else
+                player.transform.position = target;
+            yield return new WaitForFixedUpdate();
         }
 
         // 3. 페이드 아웃

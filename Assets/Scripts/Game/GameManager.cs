@@ -11,6 +11,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     [SerializeField] private TextMeshProUGUI goldText;
     [SerializeField] private TextMeshProUGUI reroll_goldText;
     [SerializeField] private TextMeshProUGUI levelText;
+    [SerializeField] private TextMeshProUGUI reroll_levelText;
     [SerializeField] private TextMeshProUGUI expText;
     [SerializeField] private Slider          expSlider;
     [SerializeField] private Slider          reroll_expSlider;
@@ -179,6 +180,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     public void UpdateExpUI(int exp, int expMax, int level)
     {
         if (levelText)        levelText.text         = $"lv {level}";
+        if (reroll_levelText) reroll_levelText.text  = $"lv {level}";
         if (expText)          expText.text          = $"{exp} / {expMax}";
         if (expSlider)        expSlider.value        = (float)exp / expMax;
         if (reroll_expSlider) reroll_expSlider.value = (float)exp / expMax;

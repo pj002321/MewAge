@@ -77,6 +77,13 @@ public class PlayerController : MonoBehaviour
             return;
         }
 
+        // InputLocked 중(컷씬 등)에는 외부 코드가 rb를 직접 제어하므로 물리 이동을 중단
+        if (InputLocked)
+        {
+            rb.linearVelocity = Vector2.zero;
+            return;
+        }
+
         Vector2 desired = rb.position + moveDirection * moveSpeed * Time.fixedDeltaTime;
         desired = ClampToBounds(desired);
 
