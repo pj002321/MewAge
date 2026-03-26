@@ -59,12 +59,14 @@ public class CharacterSlotView : MonoBehaviour
         if (slotBackground)
             slotBackground.color = CharacterGradeColor.Get(row.f_등급);
 
-        // 썸네일
+        // 썸네일 — f_캐릭ID를 소문자로 변환 → Resources/Character/ 에서 로드
         if (thumbnailImage)
         {
-            var spr = row.f_썸네일;
+            var spr = string.IsNullOrEmpty(row.f_캐릭ID)
+                ? null
+                : Resources.Load<Sprite>("Character/" + row.f_캐릭ID.ToLower());
             thumbnailImage.enabled = spr != null;
-            if (spr) thumbnailImage.sprite = spr;
+            if (spr != null) thumbnailImage.sprite = spr;
         }
 
         // 등급 텍스트
@@ -85,6 +87,7 @@ public class CharacterSlotView : MonoBehaviour
     void OnEquip()
     {
         if (data == null) return;
+        PlayerCharacterManager.Shared?.EquipCharacter(data);
         _panel?.SetPortrait(data);
     }
 

@@ -150,9 +150,11 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
             return;
         }
 
-        // 구매한 카드는 드로우에서 제거
+        // 구매한 카드는 드로우에서 제거 (일반 카드)
         for (int i = 0; i < currentDraw.Length; i++)
             if (currentDraw[i] == data) { currentDraw[i] = null; break; }
+        // 광고 카드 슬롯에서도 제거 (WeaponInfoPanel 통해 구매 시 카드가 안사라지는 버그 방지)
+        if (adCardData == data) adCardData = null;
 
         SoundManager.Shared?.Play(SoundKey.UI_Buy);
 

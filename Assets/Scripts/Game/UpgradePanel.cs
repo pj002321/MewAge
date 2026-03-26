@@ -16,6 +16,7 @@ public class UpgradePanel : MonoBehaviour
     [SerializeField] private Button          rerollButton;
     [SerializeField] private Button          buyExpButton;
     [SerializeField] private Button          nextWaveButton;
+    [SerializeField] private Button          statPanelButton;  // 능력치 보기 팝업 버튼
 
     [Header("정보 텍스트")]
     [SerializeField] private TextMeshProUGUI playerGoldText;
@@ -80,6 +81,7 @@ public class UpgradePanel : MonoBehaviour
     {
         rerollButton? .onClick.AddListener(() => UpgradeManager.Shared?.TryReroll());
         nextWaveButton?.onClick.AddListener(OnNextWaveClicked);
+        statPanelButton?.onClick.AddListener(() => StatPanelUI.Shared?.Show());
 
         // EXP 구매 버튼: 롱프레스 지원 (EventTrigger로 PointerDown/Up 처리)
         if (buyExpButton != null)
@@ -133,8 +135,14 @@ public class UpgradePanel : MonoBehaviour
         selectedEquipIndex  = -1;
         WeaponInfoPanel.Shared?.Hide();
 
-        if (characterPortraitImage && characterPortraitSprite)
-            characterPortraitImage.sprite = characterPortraitSprite;
+        if (characterPortraitImage)
+        {
+            string charID = PlayerCharacterManager.Shared?.EquippedCharID ?? "";
+            var spr = string.IsNullOrEmpty(charID)
+                ? characterPortraitSprite
+                : Resources.Load<Sprite>($"Character/{charID.ToLower()}") ?? characterPortraitSprite;
+            if (spr != null) characterPortraitImage.sprite = spr;
+        }
 
         if (PlayerInventory.Shared != null)
             PlayerInventory.Shared.OnChanged += RefreshInventoryUI;

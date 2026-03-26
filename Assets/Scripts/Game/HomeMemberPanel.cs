@@ -87,10 +87,12 @@ public class HomeMemberPanel : MonoBehaviour
     /// <summary>장착 버튼 클릭 시 CharacterSlotView → 여기로 전달.</summary>
     public void SetPortrait(DB_캐릭터 d)
     {
-        if (characterPortrait && d.f_썸네일)
+        // f_썸네일은 String (스프라이트 이름) → Resources 폴더에서 로드
+        if (characterPortrait)
         {
-            characterPortrait.sprite  = d.f_썸네일;
-            characterPortrait.enabled = true;
+            var spr = LoadSprite(d.f_캐릭ID);
+            characterPortrait.enabled = spr != null;
+            if (spr != null) characterPortrait.sprite = spr;
         }
         if (characterNameText)
             characterNameText.text = d.f_이름;
@@ -100,21 +102,33 @@ public class HomeMemberPanel : MonoBehaviour
     {
         if (characterNameText) characterNameText.text = d.f_이름;
 
-        // Lv1: f_능력치1 (설명 텍스트) + f_속성1ID / f_S1 (게임 로직용 수치)
-        if (augmentLv1Text) augmentLv1Text.text = BuildStatLine(d.f_능력치1, d.f_속성1ID, d.f_S1);
-        // Lv2~3: 속성ID + 수치값으로 표시
-        if (augmentLv2Text) augmentLv2Text.text = BuildStatLine(null, d.f_속성2ID, d.f_S2);
-        if (augmentLv3Text) augmentLv3Text.text = BuildStatLine(null, d.f_속성3ID, d.f_S3);
+        if (characterPortrait)
+        {
+            var spr = LoadSprite(d.f_캐릭ID);
+            characterPortrait.enabled = spr != null;
+            if (spr != null) characterPortrait.sprite = spr;
+        }
+
+        // Lv1~3: 속성ID + 수치값으로 표시 (f_능력치1 필드 제거됨)
+        if (augmentLv1Text) augmentLv1Text.text = BuildStatLine(d.f_속성1ID, d.f_S1);
+        if (augmentLv2Text) augmentLv2Text.text = BuildStatLine(d.f_속성2ID, d.f_S2);
+        if (augmentLv3Text) augmentLv3Text.text = BuildStatLine(d.f_속성3ID, d.f_S3);
         // Lv4: 특수 능력 (능력ID + 설명)
         if (augmentLv4Text) augmentLv4Text.text = BuildAbilityLine(d.f_능력ID, d.f_능력치설명);
     }
 
-    // 설명 텍스트가 있으면 우선 사용, 없으면 "속성 +수치" 형식으로 fallback
-    static string BuildStatLine(string desc, string attrId, string value)
+    // "속성ID +수치" 형식으로 표시
+    static string BuildStatLine(string attrId, string value)
     {
-        if (!string.IsNullOrEmpty(desc)) return desc;
         if (string.IsNullOrEmpty(attrId)) return string.Empty;
         return string.IsNullOrEmpty(value) ? attrId : $"{attrId} +{value}";
+    }
+
+    // f_썸네일(String) → Resources.Load<Sprite>
+    static Sprite LoadSprite(string name)
+    {
+        if (string.IsNullOrEmpty(name)) return null;
+        return Resources.Load<Sprite>("Character/" + name.ToLower());
     }
 
     static string BuildAbilityLine(string abilityId, string desc)

@@ -29,20 +29,21 @@ public class DropItem : MonoBehaviour
 
     // ── 초기화 ────────────────────────────────────────────────────
 
-    /// <summary>일반 적 드롭 초기화.</summary>
-    public void Init(ItemType type, int val)
+    /// <summary>일반 적 드롭 초기화. speedOverride가 0보다 크면 프리팹 기본값을 덮어씁니다.</summary>
+    public void Init(ItemType type, int val, float speedOverride = 0f)
     {
         orginScale = transform.localScale;
         itemType   = type;
         value      = val;
+        if (speedOverride > 0f) moveSpeed = speedOverride;
     }
 
     /// <summary>
     /// 보스 드롭 초기화 — 초기 속도를 줘 포물선처럼 퍼지게 합니다.
     /// </summary>
-    public void InitBurst(ItemType type, int val, Vector2 velocity, float friction = 8f)
+    public void InitBurst(ItemType type, int val, Vector2 velocity, float friction = 8f, float speedOverride = 0f)
     {
-        Init(type, val);
+        Init(type, val, speedOverride);
         burstVelocity = velocity;
         burstFriction = friction;
     }
@@ -92,7 +93,8 @@ public class DropItem : MonoBehaviour
         if (player == null) return;
 
         float dist = Vector2.Distance(transform.position, player.Position);
-        if (dist <= magnetRadius || attracted)
+        float effectiveRadius = magnetRadius + (PlayerStats.Shared?.MagnetRadiusBonus ?? 0f);
+        if (dist <= effectiveRadius || attracted)
         {
             attracted = true;
             transform.position = Vector3.MoveTowards(
@@ -111,8 +113,9 @@ public class DropItem : MonoBehaviour
     /// <summary>즉시 수집 (패널 열릴 때 강제 흡수용)</summary>
     public void Collect()
     {
-        if (itemType == ItemType.Gold) PlayerStats.Shared?.AddGold(value);
-        else                           PlayerStats.Shared?.AddExp(value);
+        var stats = PlayerStats.Shared;
+        if (itemType == ItemType.Gold) stats?.AddGold(value + (stats?.GoldBonus ?? 0));
+        else                           stats?.AddExp (value + (stats?.ExpBonus  ?? 0));
 
         if (itemType == ItemType.Gold) FXManager.Shared?.SpawnGoldOrbDebris(transform.position);
         else                           FXManager.Shared?.SpawnExpOrbDebris(transform.position);

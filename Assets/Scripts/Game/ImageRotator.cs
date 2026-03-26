@@ -15,7 +15,7 @@ public class ImageRotator : MonoBehaviour
 
     void Update()
     {
-        float delta = speed * Time.deltaTime;
+        float delta = speed * Time.unscaledDeltaTime;
         if (localRotation)
             transform.Rotate(0f, 0f, delta, Space.Self);
         else

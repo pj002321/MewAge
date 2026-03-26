@@ -7,11 +7,12 @@ using UnityEngine;
 /// 속성 설명 포맷 + 실제 스탯 적용 로직을 제공합니다.
 ///
 /// 속성 ID 규칙:
-///   ATK_ADD  → attackDamage   += base * value%
-///   CD_RED   → attackCooldown -= base * value%  (쿨다운 단축)
-///   RNG_ADD  → attackRange    += base * value%
-///   CRIT_ADD → criticalRate   += value / 100f   (절대값 추가)
-///   DOT_ADD  → dotDamage      += base * value%
+///   ATK_ADD   → attackDamage   += value            (절대값)
+///   CD_RED    → attackCooldown -= base * value%    (쿨다운 % 단축)
+///   RNG_ADD   → attackRange    += base * value%    (사거리 % 증가)
+///   CRIT_ADD  → criticalRate   += value / 100f     (절대값, %)
+///   BLEED_ADD → bleedDamage    += value            (절대값)
+///   LIFESTEAL → lifeSteal      += value / 100f     (절대값, %)
 /// </summary>
 public static class WeaponStatRegistry
 {
@@ -83,24 +84,22 @@ public static class WeaponStatRegistry
         switch (bonus.statId)
         {
             case "ATK_ADD":
-                data.attackDamage   += data.baseAttackDamage   * bonus.value / 100f;
+                data.attackDamage   += bonus.value;                              // 절대값 추가
                 break;
             case "CD_RED":
-                data.attackCooldown -= data.baseAttackCooldown * bonus.value / 100f;
+                data.attackCooldown -= data.baseAttackCooldown * bonus.value / 100f; // % 단축
                 break;
             case "RNG_ADD":
-                data.attackRange    += data.baseAttackRange    * bonus.value / 100f;
+                data.attackRange    += data.baseAttackRange    * bonus.value / 100f; // % 증가
                 break;
             case "CRIT_ADD":
-                data.criticalRate   += bonus.value / 100f;
+                data.criticalRate   += bonus.value / 100f;                       // % → fraction
                 break;
             case "BLEED_ADD":
-                data.bleedDamage  += data.baseBleedDamage > 0f
-                    ? data.baseBleedDamage * bonus.value / 100f
-                    : bonus.value;   // 기본 출혈이 0이면 절대값으로 추가
+                data.bleedDamage    += bonus.value;                              // 절대값 추가
                 break;
             case "LIFESTEAL":
-                data.lifeSteal    += bonus.value / 100f;   // 절대값 추가 (%)
+                data.lifeSteal      += bonus.value / 100f;                       // % → fraction
                 break;
         }
     }

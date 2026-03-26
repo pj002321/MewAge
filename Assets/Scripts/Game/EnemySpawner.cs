@@ -75,11 +75,7 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
     }
 
     private int CountActiveEnemies()
-    {
-        int enemies = Object.FindObjectsByType<EnemyController>(FindObjectsSortMode.None).Length;
-        int markers = Object.FindObjectsByType<SpawnMarker>(FindObjectsSortMode.None).Length;
-        return enemies + markers;
-    }
+        => EnemyController.ActiveCount + SpawnMarker.ActiveCount;
 
     // ── 일반 적 스폰 ────────────────────────────────────────────────
     private void SpawnEnemy()

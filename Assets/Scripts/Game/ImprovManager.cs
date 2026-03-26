@@ -5,6 +5,13 @@ using Mewage.DB;
 /// <summary>
 /// 증강 시스템 총괄 매니저.
 /// DB_증강 테이블에서 가중치 랜덤으로 3개를 뽑아 ImprovPanel에 전달합니다.
+///
+/// 증강 적용 원칙:
+/// · 능력치 계열 → PlayerStatManager.AddPctMod(statType, pct)
+///   최종값 = base × (1 + totalPct / 100)  (예: ATK 100 + 10% → 110)
+/// · 즉시 회복   → 현재 MaxHP 기준 % 회복
+/// · 처치 회복   → 주수치(%) 확률 / 최대체력의 보조수치(%) 회복
+/// · 회복 구슬   → 주수치(%) 확률 스폰 / 최대체력의 보조수치(%) 회복
 /// </summary>
 public class ImprovManager : MonoBehaviourSingleton<ImprovManager>
 {
@@ -31,7 +38,6 @@ public class ImprovManager : MonoBehaviourSingleton<ImprovManager>
         var draws = DrawImprovs(3);
         if (draws.Length == 0)
         {
-            // 증강 데이터 없음 → 패널 스킵하고 바로 다음으로
             OnNextClicked();
             return;
         }
@@ -45,15 +51,11 @@ public class ImprovManager : MonoBehaviourSingleton<ImprovManager>
     public void Reroll()
     {
         var stats = PlayerStats.Shared;
-        if (stats == null || stats.Gold < rerollPrice)
-        {
-            // 골드 부족 — 리롤 불가 (패널에서 버튼을 막거나 알림을 추가할 수 있음)
-            return;
-        }
+        if (stats == null || stats.Gold < rerollPrice) return;
 
         stats.SpendGold(rerollPrice);
         var draws = DrawImprovs(3);
-        improvPanel.Setup(draws);   // Setup 내부에서 RefreshGold() 호출됨
+        improvPanel.Setup(draws);
     }
 
     // ── 가중치 랜덤 추출 (중복 없이) ─────────────────────────────
@@ -62,7 +64,7 @@ public class ImprovManager : MonoBehaviourSingleton<ImprovManager>
         var pool = DB_증강.FindEntities(_ => true);
         if (pool == null || pool.Count == 0)
         {
-            Debug.LogWarning("[ImprovManager] DB_증강 데이터가 없습니다.");
+            this.DLog("[ImprovManager] DB_증강 데이터가 없습니다.");
             return new DB_증강[0];
         }
 
@@ -94,65 +96,100 @@ public class ImprovManager : MonoBehaviourSingleton<ImprovManager>
     {
         if (data == null) return;
 
+        var sm     = PlayerStatManager.Shared;
         var player = PlayerController.Instance;
-        if (player == null)
+
+        if (sm == null || player == null)
         {
-            Debug.LogWarning("[ImprovManager] PlayerController.Instance가 null입니다.");
+            this.DLog("[ImprovManager] PlayerStatManager 또는 PlayerController가 null입니다.");
             return;
         }
 
-        switch (data.f_효과타입)
-        {
-            case ImprovType.HealHP:           player.HealHP(data.f_주수치);                              break;
-            case ImprovType.IncreaseMaxHP:    player.IncreaseMaxHP(data.f_주수치);                       break;
-            case ImprovType.IncreaseAttack:   player.IncreaseAttack(data.f_주수치);                      break;
-            case ImprovType.IncreaseDefense:  player.IncreaseDefense(data.f_주수치);                     break;
-            case ImprovType.IncreaseMoveSpeed: player.IncreaseMoveSpeed(data.f_주수치);                  break;
-            case ImprovType.IncreaseSizeHP:   player.IncreaseSizeHP(data.f_주수치, data.f_보조수치);     break;
-            case ImprovType.DecreaseSizeHP:   player.DecreaseSizeHP(data.f_주수치, data.f_보조수치);     break;
-            case ImprovType.IncreaseAttackSpeed: player.IncreaseAttackSpeed(data.f_주수치);              break;
-            case ImprovType.IncreaseDodge:    player.IncreaseDodge(data.f_주수치);                       break;
+        float main = data.f_주수치;
+        float sub  = data.f_보조수치;
 
-            // 원거리 무기 전용 추가 공격력 (WeaponPoint.Init에서 반영됨)
-            case ImprovType.RangedDistanceBonus: player.IncreaseRangedAttackBonus(data.f_주수치); break;
-            // 근거리 무기 전용 추가 공격력 (WeaponPoint.Init에서 반영됨)
-            case ImprovType.MeleeAttackBonus:    player.IncreaseMeleeAttackBonus(data.f_주수치);  break;
-            // 주기적 넉백 — 주수치=간격(초), 보조수치=힘
-            case ImprovType.PeriodicKnockback:   player.StartPeriodicKnockback(data.f_주수치, data.f_보조수치); break;
-            // 패시브 — 웨이브 시작 시 자동 체력 회복 (GameManager.StartNextWave에서 적용)
-            case ImprovType.WaveHealHP:          player.IncreaseWaveHeal(data.f_주수치);          break;
-            // 장비창 무기 중 랜덤 1성 업그레이드 (최대 4성)
-            case ImprovType.UpgradeRandomEquipped: ApplyRandomEquipUpgrade(); break;
+        switch (data.f_증강ID)
+        {
+            // ── 능력치 계열: % 모디파이어 누적 ──────────────────────
+            case ImprovType.AUG_ATK:
+                sm.AddPctMod(StatType.ATK, main);
+                break;
+
+            case ImprovType.AUG_DEF:
+                sm.AddPctMod(StatType.DEF, main);
+                break;
+
+            case ImprovType.AUG_MAX_HP:
+                sm.AddPctMod(StatType.MaxHP, main);
+                break;
+
+            case ImprovType.AUG_SPD_MOV:
+                sm.AddPctMod(StatType.MoveSpeed, main);
+                break;
+
+            case ImprovType.AUG_SPD_ATK:
+                sm.AddPctMod(StatType.AtkSpeed, main);
+                break;
+
+            case ImprovType.AUG_EVA:
+                sm.AddPctMod(StatType.Evasion, main);
+                break;
+
+            case ImprovType.AUG_CRI_RATE:
+                sm.AddPctMod(StatType.CritChance, main);
+                break;
+
+            case ImprovType.AUG_CRI_DMG:
+                sm.AddPctMod(StatType.CritDmg, main);
+                break;
+
+            case ImprovType.AUG_DOT_DMG:
+                sm.AddPctMod(StatType.BleedPower, main);
+                break;
+
+            // 기물 쿨타임 단축: 주수치% 감소 → 음수 모디파이어
+            case ImprovType.AUG_SKL:
+                sm.AddPctMod(StatType.StructureCooldown, -main);
+                break;
+
+            // 흡수 반경 증가
+            case ImprovType.AUG_REWARD_RNG:
+                sm.AddPctMod(StatType.MagnetRadius, main);
+                break;
+
+            // 몸집 크기 변화 + 최대 체력 % 증감
+            case ImprovType.AUG_SIZE_HP_UP:
+                player.IncreaseSizeHP(main, 0f);   // 크기 배율
+                sm.AddPctMod(StatType.MaxHP, sub);  // 체력 %
+                break;
+
+            case ImprovType.AUG_SIZE_HP_DOWN:
+                player.DecreaseSizeHP(main, 0f);    // 크기 배율
+                sm.AddPctMod(StatType.MaxHP, -sub); // 체력 % 감소
+                break;
+
+            // ── 즉시 회복: 현재 MaxHP의 main% 즉시 회복 ─────────────
+            case ImprovType.AUG_HEAL:
+                float healAmount = player.MaxHPValue * (main / 100f);
+                player.HealHP(healAmount);
+                break;
+
+            // ── 처치 회복: main% 만큼 발동확률 스탯 누적 + 회복량(sub) 비율 추가 ─
+            case ImprovType.AUG_HEAL_DEAD:
+                sm.AddPctMod(StatType.HealOnKill, main);
+                player.IncreaseHealOnKillFactor(sub / 100f);
+                break;
+
+            // ── 회복 구슬: main% 확률 스폰 + MaxHP의 sub% 회복 ──────
+            case ImprovType.AUG_SPW_HP_SKL:
+                player.IncreaseHealOrbChance(
+                    chance:     main / 100f,   // 스폰 확률 (fraction)
+                    healFactor: sub  / 100f    // MaxHP 대비 회복 비율
+                );
+                break;
         }
 
-        Debug.Log($"[ImprovManager] 증강 적용: {data.f_이름} (type={data.f_효과타입}, 주수치={data.f_주수치})");
-    }
-
-    // ── 장비창 랜덤 1성 업그레이드 ────────────────────────────────
-    private void ApplyRandomEquipUpgrade()
-    {
-        var inv = PlayerInventory.Shared;
-        if (inv == null) return;
-
-        // 4성 미만인 장착 무기 인덱스 수집 (4성 제외, 우선 업그레이드 대상)
-        var candidates = new System.Collections.Generic.List<int>();
-        for (int i = 0; i < inv.Equipped.Count; i++)
-        {
-            var w = inv.Equipped[i];
-            if (w != null && w.star < 4) candidates.Add(i);
-        }
-
-        if (candidates.Count == 0)
-        {
-            Debug.Log("[ImprovManager] 업그레이드 대상 무기 없음 (모두 4성 이상)");
-            return;
-        }
-
-        int idx     = candidates[Random.Range(0, candidates.Count)];
-        var upgraded = inv.Equipped[idx].Upgraded();
-        inv.ReplaceEquipped(idx, upgraded);
-
-        Debug.Log($"[ImprovManager] 장착 슬롯 {idx} 무기 {upgraded.weaponName} → {upgraded.star}성 업그레이드");
+        this.DLog($"[ImprovManager] 증강 적용: {data.f_이름} (type={data.f_증강ID}, 주={main}, 보조={sub})");
     }
 
     // ── 다음 버튼 → UpgradePanel ─────────────────────────────────
@@ -169,3 +206,11 @@ public class ImprovManager : MonoBehaviourSingleton<ImprovManager>
         }
     }
 }
+
+// ── Unity 구현 가이드 ───────────────────────────────────────────────
+// 1. ImprovManager GameObject에 이 컴포넌트를 붙입니다.
+// 2. Inspector에서 improvPanel 슬롯에 ImprovPanel을 연결합니다.
+// 3. DB_증강 테이블에서 f_주수치 / f_보조수치를 % 단위로 입력합니다.
+//    예) AUG_ATK: 주수치=10 → 공격력 +10%
+//    예) AUG_HEAL: 주수치=20 → 최대체력의 20% 즉시 회복
+//    예) AUG_HEAL_DEAD: 주수치=30(확률), 보조수치=15(MaxHP의 15% 회복)

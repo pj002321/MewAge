@@ -72,12 +72,17 @@ public class WeaponPoint : MonoBehaviour
     private Vector3 overshootTarget;
     private float cooldownTimer;
 
+    private float _baseCooldown;      // Inspector 원본값 (변경 안 함)
+    private float _statMultiplier  = 1f; // PlayerStatManager.AtkSpeed에서 오는 배율
+    private float _bonusMultiplier = 1f; // MultiplyAttackSpeed 등 일회성 보너스 누적
+
     // Spin 전용
     private float currentAngle;
     private readonly Dictionary<EnemyController, float> spinHitTimers = new Dictionary<EnemyController, float>();
 
     private void Start()
     {
+        _baseCooldown = attackCooldown;
         originLocalPos = transform.localPosition;
         cooldownTimer = attackCooldown; // 시작할 때 쿨타임 한번 대기 (선택)
     }
@@ -379,10 +384,23 @@ public class WeaponPoint : MonoBehaviour
         return crit ? (baseDamage * criticalMultiplier, true) : (baseDamage, false);
     }
 
-    /// <summary>공격속도를 multiplier배 빠르게 합니다 (쿨타임 단축).</summary>
+    /// <summary>PlayerStatManager AtkSpeed % 값으로 쿨타임을 재계산합니다. ApplyStatSheet에서 호출.</summary>
+    public void SetStatSpeedPct(float pct)
+    {
+        _statMultiplier = 1f + pct / 100f;
+        RecalcCooldown();
+    }
+
+    /// <summary>공격속도를 multiplier배 빠르게 합니다 (일회성 보너스 누적).</summary>
     public void MultiplyAttackSpeed(float multiplier)
     {
-        attackCooldown = Mathf.Max(0.1f, attackCooldown / multiplier);
+        _bonusMultiplier *= multiplier;
+        RecalcCooldown();
+    }
+
+    private void RecalcCooldown()
+    {
+        attackCooldown = Mathf.Max(0.1f, _baseCooldown / (_statMultiplier * _bonusMultiplier));
     }
 
     private void OnDrawGizmosSelected()

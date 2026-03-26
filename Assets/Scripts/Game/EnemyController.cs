@@ -128,6 +128,23 @@ public class EnemyController : MonoBehaviour
         if (GameManager.Shared != null && GameManager.Shared.IsGameOver) return;
         if (isStunned) return;
         behaviour?.OnAttackUpdate();
+        CheckPlayerContact();
+    }
+
+    /// <summary>
+    /// 거리 기반 플레이어 접촉 데미지.
+    /// OnTriggerStay2D는 콜라이더 트리거 설정에 따라 발동하지 않을 수 있으므로
+    /// 프리팹 설정과 무관하게 작동하는 폴백으로 사용합니다.
+    /// </summary>
+    private void CheckPlayerContact()
+    {
+        if (damageTimer > 0f) return;
+        if (playerTransform == null) return;
+        if (Vector2.Distance(transform.position, playerTransform.position) > contactMaxDist) return;
+        var player = PlayerController.Instance;
+        if (player == null) return;
+        player.TakeDamage(contactDamage);
+        damageTimer = damageCooldown;
     }
 
     private void FixedUpdate()
@@ -151,6 +168,7 @@ public class EnemyController : MonoBehaviour
 
     // ── 분리: Physics 쿼리 없이 전체 목록에서 직접 계산 ─────────
     private static readonly List<EnemyController> _allEnemies = new List<EnemyController>();
+    public static int ActiveCount => _allEnemies.Count;
 
     private void ApplySeparation()
     {

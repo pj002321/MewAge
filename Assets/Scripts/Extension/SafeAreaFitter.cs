@@ -15,6 +15,10 @@ public class SafeAreaFitter : MonoBehaviour
     void Awake()
     {
         rt = GetComponent<RectTransform>();
+    }
+
+    void Start()
+    {
         Apply();
     }
 

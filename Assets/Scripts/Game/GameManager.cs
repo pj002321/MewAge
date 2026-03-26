@@ -44,6 +44,10 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     private int sessionExpGained  = 0;
     private int sessionGoldGained = 0;
 
+    // 앱 전환 / 알림바 등 시스템 인터럽트 대응
+    private bool  _systemPaused;
+    private float _savedTimeScale;
+
     protected override bool DontDestroy => false;
 
     private void Start()
@@ -51,6 +55,10 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         if (gameOverPanel)               gameOverPanel.SetActive(false);
         if (waveClearPanel)              waveClearPanel.SetActive(false);
         if (gameClearPanel != null)      gameClearPanel.gameObject.SetActive(false);
+
+        // 이전 판 증강 수치 초기화 후 캐릭터 기초 스탯 재적용
+        PlayerStatManager.Shared?.ResetMods();
+        PlayerCharacterManager.Shared?.ApplyCharacterStats();
 
         // 시작 시 Normal 무기 1개 지급 후 바로 Wave 1 시작
         UpgradeManager.Shared?.GiveStarterWeapon();
@@ -266,6 +274,32 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 
     public bool IsGameOver  => isGameOver;
     public int  CurrentWave => wave;
+
+    // ── 모바일 앱 생명주기 ────────────────────────────────────────
+    // OnApplicationFocus : 알림바 내리기, 알림바 롱프레스 미리보기 등 포커스 손실 처리
+    // OnApplicationPause : 앱 전환(백그라운드) 처리
+    // 두 이벤트 모두 _systemPaused 플래그로 중복 호출 방지
+    private void OnApplicationFocus(bool hasFocus)  => HandleSystemPause(!hasFocus);
+    private void OnApplicationPause(bool pauseStatus) => HandleSystemPause(pauseStatus);
+
+    private void HandleSystemPause(bool pausing)
+    {
+        if (pausing)
+        {
+            if (_systemPaused) return;           // 이미 시스템 일시정지 상태
+            _systemPaused   = true;
+            _savedTimeScale = Time.timeScale;
+            Time.timeScale  = 0f;
+            AudioListener.pause = true;
+        }
+        else
+        {
+            if (!_systemPaused) return;          // 시스템 일시정지가 아니면 무시
+            _systemPaused  = false;
+            Time.timeScale = _savedTimeScale;    // 패널이 열려있었으면 0 복원, 게임 중이었으면 1 복원
+            AudioListener.pause = false;
+        }
+    }
 
     /// <summary>현재 챕터의 ChapterRosterSO에서 fromWave보다 큰 가장 가까운 보스 웨이브 번호를 반환합니다. 없으면 -1.</summary>
     public int GetNextBossWave(int fromWave)

@@ -32,8 +32,8 @@ public class WaterScroll : MonoBehaviour
     void Update()
     {
         var r = rawImage.uvRect;
-        r.x += speedX * Time.deltaTime;
-        r.y += speedY * Time.deltaTime;
+        r.x += speedX * Time.unscaledDeltaTime;
+        r.y += speedY * Time.unscaledDeltaTime;
         rawImage.uvRect = r;
     }
 }

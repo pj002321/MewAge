@@ -30,8 +30,39 @@ public class PlayerController : MonoBehaviour
     private float waveHealAmount    = 0f;
     private Coroutine knockbackRoutine;
 
-    public float Attack            => attack;
-    public float Defense           => defense;
+    // 증강 추가 전투 스탯
+    private float critRateBonus;    // 치명타 확률 추가 (fraction, 예: 0.1 = 10%)
+    private float critDamageBonus;  // 치명타 데미지 배율 추가 (예: 0.5 = +50%)
+    private float bleedDamageBonus; // 출혈 데미지 추가 (flat)
+    private float healOnKillChance; // 적 처치 시 회복 확률 (fraction)
+    private float healOnKillFactor; // 적 처치 시 회복량 — MaxHP 기준 비율 (fraction)
+    private float healOrbChance;    // 회복 구슬 스폰 확률 (fraction)
+    private float healOrbFactor;    // 회복 구슬 1개가 회복하는 양 — MaxHP 기준 비율 (fraction)
+    private float _hpRegenRate;     // 초당 자동 회복량 (PlayerStatManager 설정)
+    private float _knockbackPower;  // 넉백 지수 (PlayerStatManager 설정)
+    private float _magnetRadius;    // 흡수 반경 (PlayerStatManager 설정)
+
+    public float CritRateBonus    => critRateBonus;
+    public float CritDamageBonus  => critDamageBonus;
+    public float BleedDamageBonus => bleedDamageBonus;
+    public float HealOnKillChance => healOnKillChance;
+    public float HealOnKillFactor => healOnKillFactor;
+    public float HealOrbChance    => healOrbChance;
+    public float HealOrbFactor    => healOrbFactor;
+    public float KnockbackPower   => _knockbackPower;
+    public float MagnetRadius     => _magnetRadius;
+    public float CurrentHP        => currentHP;
+    public float MaxHPValue       => maxHP;
+
+    // 시너지 보너스 (SynergyEffectManager가 재설정 — 재계산 가능)
+    private float _synergyAtk;
+    private float _synergyDef;
+    private float _synergySpeed;
+    private float _synergyMaxHp;
+
+    public float Attack            => attack  + _synergyAtk;
+    public float Defense           => defense + _synergyDef;
+    public float MoveSpeedBase     => moveSpeed; // 기초값 (시너지/캐릭터 보너스 제외)
     public float Dodge             => dodge;
     public float RangedAttackBonus => rangedAttackBonus;
     public float MeleeAttackBonus  => meleeAttackBonus;
@@ -60,6 +91,7 @@ public class PlayerController : MonoBehaviour
     private void Start()
     {
         SyncHPUI();
+        StartCoroutine(HPRegenRoutine());
     }
 
     private void Update()
@@ -84,7 +116,7 @@ public class PlayerController : MonoBehaviour
             return;
         }
 
-        Vector2 desired = rb.position + moveDirection * moveSpeed * Time.fixedDeltaTime;
+        Vector2 desired = rb.position + moveDirection * (moveSpeed + _synergySpeed) * Time.fixedDeltaTime;
         desired = ClampToBounds(desired);
 
         rb.linearVelocity = Vector2.zero;
@@ -147,6 +179,67 @@ public class PlayerController : MonoBehaviour
     }
 
     // ────────────────────────────────────────────────────────────────
+    // PlayerStatManager 연동 — 스탯 시트 일괄 적용
+    // ────────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// PlayerStatManager가 변경될 때 호출 — 모든 기본 스탯을 최종값으로 갱신합니다.
+    /// 시너지·처치 회복 등 별도 보너스는 그대로 유지됩니다.
+    /// </summary>
+    public void ApplyStatSheet(PlayerStatManager sm)
+    {
+        // 기본 전투 스탯
+        attack           = sm.GetFinal(StatType.ATK);
+        defense          = sm.GetFinal(StatType.DEF);
+        moveSpeed        = sm.GetFinal(StatType.MoveSpeed);
+        dodge            = Mathf.Clamp(sm.GetFinal(StatType.Evasion), 0f, 0.75f);
+        critRateBonus    = sm.GetFinal(StatType.CritChance) / 100f;
+        critDamageBonus  = sm.GetFinal(StatType.CritDmg)    / 100f;
+        bleedDamageBonus = sm.GetFinal(StatType.BleedPower);
+        healOnKillChance = Mathf.Clamp(sm.GetFinal(StatType.HealOnKill) / 100f, 0f, 1f);
+        _hpRegenRate     = sm.GetFinal(StatType.HPRegen);
+        _knockbackPower  = sm.GetFinal(StatType.Knockback);
+        _magnetRadius    = sm.GetFinal(StatType.MagnetRadius);
+
+        // 최대 체력 — 증가분만큼 현재 체력도 함께 올림
+        float newMaxHP = sm.GetFinal(StatType.MaxHP);
+        if (!Mathf.Approximately(newMaxHP, maxHP))
+        {
+            float delta = newMaxHP - maxHP;
+            maxHP     = Mathf.Max(1f, newMaxHP);
+            currentHP = delta > 0f
+                ? Mathf.Min(currentHP + delta, maxHP)
+                : Mathf.Min(currentHP, maxHP);
+            SyncHPUI();
+        }
+
+        // 공격속도(AtkSpeed) — 모든 WeaponPoint에 SM 배율 적용
+        float atkSpeedPct = sm.GetFinal(StatType.AtkSpeed);
+        foreach (var wp in GetComponentsInChildren<WeaponPoint>())
+            wp.SetStatSpeedPct(atkSpeedPct);
+
+        // 기물 쿨타임(StructureCooldown) — StructureInventory에서 직접 참조
+    }
+
+    // ────────────────────────────────────────────────────────────────
+    // 체력 자동 회복 (HPRegen)
+    // ────────────────────────────────────────────────────────────────
+
+    private IEnumerator HPRegenRoutine()
+    {
+        var wait = new WaitForSeconds(1f);
+        while (true)
+        {
+            yield return wait;
+            if (_hpRegenRate > 0f && currentHP < maxHP
+                && (GameManager.Shared == null || !GameManager.Shared.IsGameOver))
+            {
+                HealHP(_hpRegenRate);
+            }
+        }
+    }
+
+    // ────────────────────────────────────────────────────────────────
     // 증강 메서드 (ImprovManager에서 호출)
     // ────────────────────────────────────────────────────────────────
     public void HealHP(float amount)
@@ -160,6 +253,23 @@ public class PlayerController : MonoBehaviour
         maxHP     += amount;
         currentHP  = Mathf.Min(currentHP + amount, maxHP);
         SyncHPUI();
+    }
+
+    /// <summary>시너지 보너스를 재설정합니다. (SynergyEffectManager가 장착 변경 시 호출)</summary>
+    public void SetSynergyBonus(float atkAdd, float defAdd, float speedAdd, float maxHpAdd)
+    {
+        _synergyAtk   = atkAdd;
+        _synergyDef   = defAdd;
+        _synergySpeed = speedAdd;
+
+        float delta = maxHpAdd - _synergyMaxHp;
+        _synergyMaxHp = maxHpAdd;
+        if (!Mathf.Approximately(delta, 0f))
+        {
+            maxHP     = Mathf.Max(1f, maxHP + delta);
+            currentHP = Mathf.Min(currentHP, maxHP);
+            SyncHPUI();
+        }
     }
 
     public void IncreaseAttack(float amount)
@@ -196,7 +306,10 @@ public class PlayerController : MonoBehaviour
     {
         float newScale = Mathf.Max(transform.localScale.x / scaleMultiplier, minScale);
         transform.localScale = Vector3.one * newScale;
-        maxHP     = Mathf.Max(1f, maxHP - hpPenalty);
+        // 한 번 적용 시 maxHP가 현재의 20% 미만으로 떨어지지 않도록 하한선 적용
+        // (예: maxHP=50, penalty=50 → 기존 로직이면 maxHP=1 → currentHP=1 버그 발생)
+        float newMaxHP = Mathf.Max(maxHP * 0.2f, maxHP - hpPenalty);
+        maxHP     = Mathf.Max(1f, newMaxHP);
         currentHP = Mathf.Min(currentHP, maxHP);
         SyncHPUI();
     }
@@ -206,6 +319,47 @@ public class PlayerController : MonoBehaviour
     {
         dodge = Mathf.Clamp(dodge + amount, 0f, 0.75f);
     }
+
+    public void IncreaseCritRate(float amount)   => critRateBonus    = Mathf.Clamp(critRateBonus   + amount, 0f, 0.95f);
+    public void IncreaseCritDamage(float amount) => critDamageBonus  += amount;
+    public void IncreaseBleedDamage(float amount)=> bleedDamageBonus += amount;
+
+    /// <summary>
+    /// 적 처치 시 회복량 비율(MaxHP 기준) 추가.
+    /// 발동 확률은 PlayerStatManager.Shared.GetFinal(StatType.HealOnKill) 자동 동기화됨.
+    /// </summary>
+    public void IncreaseHealOnKillFactor(float healFactor)
+    {
+        healOnKillFactor += healFactor;
+    }
+
+    /// <summary>
+    /// 회복 구슬 스폰 설정.
+    /// chance = 0~1 확률 / healFactor = MaxHP 대비 회복 비율 (예: 0.10 = MaxHP의 10%)
+    /// </summary>
+    public void IncreaseHealOrbChance(float chance, float healFactor)
+    {
+        healOrbChance += chance;
+        healOrbFactor += healFactor;
+    }
+
+    /// <summary>적 처치 시 healOnKillChance 확률로 MaxHP의 healOnKillFactor 비율만큼 회복. (EnemyController.OnDeath에서 호출)</summary>
+    public void TryHealOnKill()
+    {
+        if (healOnKillChance <= 0f || healOnKillFactor <= 0f) return;
+        if (Random.value <= healOnKillChance)
+            HealHP(maxHP * healOnKillFactor);
+    }
+
+    /// <summary>회복 구슬 수집 시 MaxHP의 healOrbFactor 비율만큼 회복. (FXManager/HealOrb에서 호출)</summary>
+    public void HealFromOrb()
+    {
+        if (healOrbFactor <= 0f) return;
+        HealHP(maxHP * healOrbFactor);
+    }
+
+    /// <summary>회복 구슬 스폰 확률. (FXManager 또는 HealOrb 스포너에서 참조)</summary>
+    public float HealOrbSpawnChance => healOrbChance;
 
     private IEnumerator HitInvincibleRoutine(float duration)
     {

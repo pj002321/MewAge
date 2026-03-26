@@ -9,8 +9,14 @@ public class SpawnMarker : MonoBehaviour
     private GameObject spawnPrefab;
     private int        spawnWave;
 
+    private static int _activeCount;
+    public  static int ActiveCount => _activeCount;
+
+    private void OnDestroy() => _activeCount--;
+
     public void Init(GameObject prefab, int wave = 0)
     {
+        _activeCount++;
         spawnPrefab = prefab;
         spawnWave   = wave;
 

@@ -11,6 +11,10 @@ public class ItemDropManager : MonoBehaviourSingleton<ItemDropManager>
     [SerializeField] private GameObject goldPrefab;
     [SerializeField] private GameObject expPrefab;
 
+    [Header("Orb 흡수 속도 (0 = 프리팹 기본값 사용)")]
+    [SerializeField] private float goldMoveSpeed = 8f;
+    [SerializeField] private float expMoveSpeed  = 8f;
+
     [Header("드롭 확률 (0~1)")]
     [SerializeField] private float goldDropChance      = 0.5f;
     [SerializeField] private float expDropChance       = 1.0f;
@@ -51,7 +55,8 @@ public class ItemDropManager : MonoBehaviourSingleton<ItemDropManager>
         if (prefab == null) return;
         Vector3 offset = new(Random.Range(-0.3f, 0.3f), Random.Range(-0.3f, 0.3f), 0f);
         var go = Instantiate(prefab, pos + offset, Quaternion.identity);
-        go.GetComponent<DropItem>()?.Init(type, value);
+        float spd = type == DropItem.ItemType.Gold ? goldMoveSpeed : expMoveSpeed;
+        go.GetComponent<DropItem>()?.Init(type, value, spd);
     }
 
     /// <summary>보스 드롭 전용 — 360도 랜덤 방향 초기 속도로 사방으로 퍼집니다.</summary>
@@ -63,7 +68,8 @@ public class ItemDropManager : MonoBehaviourSingleton<ItemDropManager>
         float   angle    = Random.Range(0f, 360f) * Mathf.Deg2Rad;
         float   speed    = Random.Range(bossOrbBurstSpeedMin, bossOrbBurstSpeedMax);
         Vector2 velocity = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * speed;
-        go.GetComponent<DropItem>()?.InitBurst(type, value, velocity, bossOrbFriction);
+        float   spd      = type == DropItem.ItemType.Gold ? goldMoveSpeed : expMoveSpeed;
+        go.GetComponent<DropItem>()?.InitBurst(type, value, velocity, bossOrbFriction, spd);
     }
 
     private void SpawnStructureOrb(Vector3 pos)

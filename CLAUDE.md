@@ -25,12 +25,23 @@ Override `DontDestroy => false` in scene-specific singletons (managers that shou
 - **WeaponPoint** — per-weapon attack logic attached to weapon prefabs.
 
 ### Wave-Clear Screens (shown in order)
-1. **ImprovManager / ImprovPanel** — augment picker, 3 random buffs drawn from `DB_증강` by weighted random.
-2. **UpgradeManager / UpgradePanel** — weapon shop; draws 4 weapon cards from `DB_무기` using grade probabilities from `DB_확률`.
+1. **ImprovManager / ImprovPanel** — augment picker, 3 random buffs drawn from `DB_증강` by weighted random. On pick, routes all stat-type augments through `PlayerStatManager.AddPctMod()`. Non-stat augments (heal, heal-on-kill, heal-orb) call `PlayerController` directly.
+2. **UpgradeManager / UpgradePanel** — weapon shop; draws 4 weapon cards from `DB_무기` using grade probabilities from `DB_확률`. Has a `statPanelButton` wired to `StatPanelUI.Shared?.Show()`.
 
 ### Player Progression
 - **PlayerStats** (singleton, `DontDestroy => false`) — gold, XP, level. `AddGold` / `SpendGold` / `AddExp` each call `SyncUI()` which updates `GameManager`. Gold and XP are separate from `PlayerController` HP.
 - Level formula: `expToNext = baseExpPerLevel + (level-1) * expGrowthPerLevel`. Max level caps at 20.
+
+### Player Stat System
+Central hub for all 14 character combat stats, separate from `PlayerStats` (gold/XP/level).
+
+- **`StatType`** (enum) — `ATK, DEF, MaxHP, BleedPower, HPRegen, MoveSpeed, MagnetRadius, AtkSpeed, Evasion, CritChance, CritDmg, StructureCooldown, Knockback, HealOnKill`
+- **`PlayerStatManager`** (singleton, `DontDestroy => false`) — holds `baseXxx` SerializeFields + `_pctMods[]` array. `AddPctMod(stat, pct)` accumulates % bonuses, then calls `PlayerController.ApplyStatSheet(this)` and `StatPanelUI.Shared?.Refresh()`. Final value = `base × (1 + totalPct / 100)`. `GetStatName()` / `FormatValue()` are static UI helpers.
+- **`PlayerController.ApplyStatSheet(PlayerStatManager)`** — called automatically on every mod change; updates `attack`, `defense`, `moveSpeed`, `dodge`, crit fields, `_hpRegenRate` (drives built-in `HPRegenRoutine` coroutine that heals 1/s), `_knockbackPower`, `_magnetRadius`. Attack speed (`AtkSpeed`) and StructureCooldown are read by their respective systems via `PlayerStatManager.Shared.GetFinal()`.
+- **`StatPanelUI`** (singleton, `DontDestroy => false`) — popup that collects all child `StatFieldUI` components at Awake and calls `field.Refresh(sm)` on show/update. Inspector: `closeButton`, `backdrop`.
+- **`StatFieldUI`** — attach to each stat row GameObject. Set `statType` in Inspector; auto-finds child `stat_value` (TextMeshProUGUI) and writes final value + pct colour tag.
+
+**Augment % convention (`DB_증강`):** `f_주수치` = primary % bonus, `f_보조수치` = secondary. Example: `AUG_ATK` 주수치=10 → `+10%` attack (`baseATK × 1.10`). `AUG_HEAL` 주수치=20 → instant heal `MaxHP × 20%`. `AUG_SKL` sends `-주수치%` to reduce StructureCooldown.
 
 ### Weapon Synergy System
 - **WeaponSynergyTag** (enum) + **`DB_시너지`** table keyed by `f_챕터` — each chapter row holds up to 4 synergy tags with icons/descriptions.

@@ -9,7 +9,7 @@ public class PlayerStats : MonoBehaviourSingleton<PlayerStats>
     [Header("레벨 설정")]
     [SerializeField] private int maxLevel          = 20;  // 만렙
     [SerializeField] private int baseExpPerLevel   = 20;  // 레벨 1→2 필요 경험치
-    [SerializeField] private int expGrowthPerLevel = 300; // 레벨마다 증가량
+    [SerializeField] private int expGrowthPerLevel = 50;  // 레벨마다 증가량
 
     [Header("시작 골드")]
     [SerializeField] private int startingGold = 2;
@@ -18,6 +18,17 @@ public class PlayerStats : MonoBehaviourSingleton<PlayerStats>
     private int exp;
     private int level = 1;
     private int expToNext;
+
+    // 시너지 보너스 (픽업 시 flat 추가)
+    private int _synergyGoldBonus;
+    private int _synergyExpBonus;
+    public int GoldBonus => _synergyGoldBonus;
+    public int ExpBonus  => _synergyExpBonus;
+
+    // 흡수 반경 보너스 (AUG_REWARD_RNG)
+    private float _magnetRadiusBonus;
+    public float MagnetRadiusBonus => _magnetRadiusBonus;
+    public void IncreaseMagnetRadius(float amount) => _magnetRadiusBonus += amount;
 
     protected override bool DontDestroy => false;
 
@@ -82,6 +93,13 @@ public class PlayerStats : MonoBehaviourSingleton<PlayerStats>
     {
         GameManager.Shared?.UpdateGoldUI(gold);
         GameManager.Shared?.UpdateExpUI(exp, expToNext, level);
+    }
+
+    /// <summary>시너지 픽업 보너스를 재설정합니다. (SynergyEffectManager가 호출)</summary>
+    public void SetSynergyBonus(int goldBonus, int expBonus)
+    {
+        _synergyGoldBonus = goldBonus;
+        _synergyExpBonus  = expBonus;
     }
 
     public int Gold  => gold;
