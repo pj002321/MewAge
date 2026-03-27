@@ -15,6 +15,10 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
     [SerializeField] private GameObject goldOrbDebrisPrefab;
     [SerializeField] private GameObject expOrbDebrisPrefab;
 
+    [Header("Orb 파편 연출 on/off")]
+    [SerializeField] private bool showGoldOrbDebris = true;
+    [SerializeField] private bool showExpOrbDebris  = true;
+
     protected override bool DontDestroy => false;
 
     // 파편 오브젝트 추적 (웨이브 종료 시 일괄 제거용)
@@ -66,13 +70,13 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
     /// <summary>흡수 시 플레이어 머리 위로 수직 상승하며 사라지는 파편</summary>
     public void SpawnGoldOrbRise(Vector3 pos)
     {
-        if (goldOrbDebrisPrefab == null) return;
+        if (!showGoldOrbDebris || goldOrbDebrisPrefab == null) return;
         StartCoroutine(RiseDebrisRoutine(pos, goldOrbDebrisPrefab));
     }
 
     public void SpawnExpOrbRise(Vector3 pos)
     {
-        if (expOrbDebrisPrefab == null) return;
+        if (!showExpOrbDebris || expOrbDebrisPrefab == null) return;
         StartCoroutine(RiseDebrisRoutine(pos, expOrbDebrisPrefab));
     }
 
@@ -107,7 +111,7 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
     /// <summary>파편이 위로 상승하며 페이드아웃 (흡수 시 연출)</summary>
     private IEnumerator RiseDebrisRoutine(Vector3 pos, GameObject prefab)
     {
-        const int count = 6;
+        const int count = 8;
         var gos     = new GameObject[count];
         var vels    = new Vector2[count];
         var renders = new SpriteRenderer[count];
@@ -115,17 +119,17 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
         for (int i = 0; i < count; i++)
         {
             gos[i] = Instantiate(prefab, pos, Quaternion.identity);
-            gos[i].transform.localScale *= Random.Range(0.6f, 1.0f);
+            gos[i].transform.localScale *= Random.Range(0.15f, 0.3f);   // 아주 작게
             activeDebris.Add(gos[i]);
             renders[i] = gos[i].GetComponent<SpriteRenderer>();
 
-            // 위쪽 방향 + 약간의 좌우 분산
-            float spreadX = Random.Range(-0.4f, 0.4f);
-            float speedY  = Random.Range(2.5f, 4.5f);
-            vels[i] = new Vector2(spreadX, speedY);
+            // 360° 전방위 터짐 + 강한 속도
+            float angle  = Random.Range(0f, 360f) * Mathf.Deg2Rad;
+            float speed  = Random.Range(7f, 13f);
+            vels[i] = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * speed;
         }
 
-        float duration = 0.55f;
+        float duration = 0.28f;   // 빠르게 사라짐
         float elapsed  = 0f;
 
         while (elapsed < duration)
@@ -135,12 +139,12 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
             {
                 if (gos[i] == null) continue;
                 gos[i].transform.position += (Vector3)(vels[i] * Time.deltaTime);
-                vels[i].x *= 1f - 4f * Time.deltaTime; // 수평 감속
+                vels[i] *= 1f - 8f * Time.deltaTime; // 빠른 감속
 
-                // 후반 페이드아웃
-                if (renders[i] != null && t > 0.45f)
+                // 초반부터 페이드아웃
+                if (renders[i] != null)
                 {
-                    float alpha = Mathf.Lerp(1f, 0f, (t - 0.45f) / 0.55f);
+                    float alpha = Mathf.Lerp(1f, 0f, t);
                     var c = renders[i].color;
                     renders[i].color = new Color(c.r, c.g, c.b, alpha);
                 }
