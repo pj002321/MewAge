@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &3957459026361888905
+--- !u!1 &5346768120937077538
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,8 +8,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 687603576478220352}
-  - component: {fileID: 2379442757481886917}
+  - component: {fileID: 6232997806021152094}
+  - component: {fileID: 5116590130499197716}
   m_Layer: 7
   m_Name: decal
   m_TagString: Untagged
@@ -17,13 +17,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &687603576478220352
+--- !u!4 &6232997806021152094
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3957459026361888905}
+  m_GameObject: {fileID: 5346768120937077538}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0.02, y: -2, z: 0}
@@ -32,14 +32,14 @@ Transform:
   m_Children: []
   m_Father: {fileID: 8663768971914175293}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!212 &2379442757481886917
+--- !u!212 &5116590130499197716
 SpriteRenderer:
   serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3957459026361888905}
+  m_GameObject: {fileID: 5346768120937077538}
   m_Enabled: 1
   m_CastShadows: 0
   m_ReceiveShadows: 0
@@ -105,13 +105,11 @@ GameObject:
   - component: {fileID: 8582202678910449498}
   - component: {fileID: 5166204408043753986}
   - component: {fileID: 8996041560601723129}
-  - component: {fileID: 8231531305856615937}
-  - component: {fileID: 5661193446084583444}
-  - component: {fileID: 2063245544409043341}
-  - component: {fileID: 161268097173731193}
-  - component: {fileID: -4658155594815874080}
+  - component: {fileID: 7898899542233151354}
+  - component: {fileID: 6010619227854902422}
+  - component: {fileID: 8716578301786351003}
   m_Layer: 7
-  m_Name: ch1_m_b_0
+  m_Name: c1_m11
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -127,10 +125,10 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.35, y: 0.35, z: 0.35}
+  m_ConstrainProportionsScale: 1
   m_Children:
-  - {fileID: 687603576478220352}
+  - {fileID: 6232997806021152094}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &8663461231204485509
@@ -159,7 +157,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 47b83d84731d5f94ca4c43b16224c669, type: 2}
+  - {fileID: 2100000, guid: a97c105638bdf8b4a8650670310a4cd3, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -180,9 +178,9 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 5
+  m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -858121695126531662, guid: 5de2c6ae7c92c9d45922c08670b3b194, type: 3}
+  m_Sprite: {fileID: 8275315624985593109, guid: 5de2c6ae7c92c9d45922c08670b3b194, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -254,17 +252,29 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyController
   moveSpeed: 2
-  maxHP: 6000
-  contactDamage: 50
-  scoreValue: 0
+  maxHP: 2000
+  contactDamage: 70
+  scoreValue: 10
   damageCooldown: 1
   contactMaxDist: 0.8
-  goldDrop: 1
-  expDrop: 1
+  goldDrop: 5
+  expDrop: 10
   knockbackImmune: 0
-  separationRadius: 0.7
-  separationStrength: 2
-  waveBreakpoints: []
+  separationRadius: 4
+  separationStrength: 7
+  waveBreakpoints:
+  - fromWave: 10
+    moveSpeed: 2
+    maxHP: 5000
+    contactDamage: 100
+    goldDrop: 1
+    expDrop: 1
+  - fromWave: 20
+    moveSpeed: 2
+    maxHP: 7500
+    contactDamage: 150
+    goldDrop: 1
+    expDrop: 1
 --- !u!114 &8996041560601723129
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -283,9 +293,9 @@ MonoBehaviour:
     sfxClip: {fileID: 0}
     volume: 1
   onHit:
-    vfxPrefab: {fileID: 3063604705314726052, guid: 4af60bfb9e1b34c44888e1e4643fdb65, type: 3}
+    vfxPrefab: {fileID: 0}
     spawnOffset: {x: 0, y: 0}
-    sfxClip: {fileID: 8300000, guid: 0e5edb6bccf05984dad128fb1a9fc914, type: 3}
+    sfxClip: {fileID: 0}
     volume: 1
   onDeath:
     vfxPrefab: {fileID: 0}
@@ -297,7 +307,7 @@ MonoBehaviour:
     spawnOffset: {x: 0, y: 0}
     sfxClip: {fileID: 0}
     volume: 1
---- !u!114 &8231531305856615937
+--- !u!114 &7898899542233151354
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -306,21 +316,21 @@ MonoBehaviour:
   m_GameObject: {fileID: 8067283199427079352}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bfce9f499de271b4c8ab1d03e8957395, type: 3}
+  m_Script: {fileID: 11500000, guid: b4959e08f69e67545962601be639bd9d, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BossController
-  enrageThreshold: 0.5
-  outlineColorProperty: _SolidOutline
-  normalOutlineColor: {r: 1, g: 1, b: 1, a: 0}
-  enrageOutlineColor: {r: 1, g: 0, b: 0, a: 1}
-  enrageSpeedMult: 1.5
-  enrageDamageMult: 1.5
-  bossName: "\uAE68\uC5B4\uB09C \uC11D\uC0C1"
-  bossGoldCount: 20
-  bossGoldValue: 1
-  bossExpCount: 20
-  bossExpValue: 1
---- !u!70 &5661193446084583444
+  m_EditorClassIdentifier: Assembly-CSharp::SlamBehaviour
+  chaseSpeed: 2.5
+  slamRange: 2
+  slamDamage: 15
+  slamRadius: 1.8
+  slamCooldown: 4
+  slamJumpHeight: 8
+  slamRiseTime: 0.3
+  slamHangTime: 0.5
+  slamFallSpeed: 20
+  slamMarkerPrefab: {fileID: 7905823675861574758, guid: 8fa9636161b22c941a8491bc91090a7b, type: 3}
+  slamLandTrigger: SlamLand
+--- !u!70 &6010619227854902422
 CapsuleCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -355,48 +365,9 @@ CapsuleCollider2D:
   m_CompositeOperation: 0
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
-  m_Size: {x: 2.03, y: 4.6666665}
+  m_Size: {x: 2.8, y: 4.6666665}
   m_Direction: 0
---- !u!114 &2063245544409043341
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8067283199427079352}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: da84675d70655c74ebd7bbd511ddd983, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BossBehaviour
-  chaseStopDistance: 0.8
-  chaseDuration: 3
-  idleDuration: 1
---- !u!114 &161268097173731193
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8067283199427079352}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0fce8968cf717a2438582076ab21189b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BossSlamSkill
-  cooldown: 2.5
-  enrageCooldownMult: 0.7
-  maxRange: 5
-  slamDamage: 50
-  slamRadius: 2.5
-  slamJumpHeight: 6
-  slamRiseTime: 0.4
-  slamHangTime: 0.8
-  slamFallSpeed: 25
-  slamFallDuration: 0.5
-  slamMarkerPrefab: {fileID: 7905823675861574758, guid: 8fa9636161b22c941a8491bc91090a7b, type: 3}
-  slamLandTrigger: SlamLand
---- !u!114 &-4658155594815874080
+--- !u!114 &8716578301786351003
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

@@ -373,12 +373,18 @@ public class WeaponPoint : MonoBehaviour
         var player = PlayerController.Instance;
         if (player != null)
         {
-            // 공통 보너스 + 무기 타입별 보너스 적용
+            // 공통 보너스 + 무기 타입별 보너스 적용 (플랫 수치)
             attackDamage += player.Attack;
             attackDamage += weaponType == WeaponType.Melee    ? player.MeleeAttackBonus  : 0f;
             attackDamage += weaponType == WeaponType.Ranged   ? player.RangedAttackBonus : 0f;
             attackDamage += weaponType == WeaponType.Boomerang ? player.RangedAttackBonus : 0f;
             attackDamage += weaponType == WeaponType.Spin      ? player.MeleeAttackBonus  : 0f;
+
+            // 시너지 효과는 퍼센트(%)로 증가 (예: 25%면 1.25 곱셈)
+            if (player.SynergyAtkPct > 0f)
+            {
+                attackDamage *= (1f + player.SynergyAtkPct / 100f);
+            }
         }
 
         // 성 등급에 맞는 외곽선 적용

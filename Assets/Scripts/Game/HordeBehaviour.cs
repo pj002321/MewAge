@@ -61,7 +61,11 @@ public class HordeBehaviour : EnemyBehaviourBase
             clone.transform.localScale = targetScale;
 
             if (clone.TryGetComponent<EnemyController>(out var ec))
+            {
                 ec.enabled = true;
+                if (Owner.ActiveUnitData != null)
+                    ec.ApplyUnitData(Owner.ActiveUnitData);
+            }
 
             if (clone.TryGetComponent<HordeBehaviour>(out var hb))
                 hb.SetAsClone();

@@ -31,18 +31,18 @@ public class WaveStatBreakpoint
 public class EnemyController : MonoBehaviour
 {
     // ── 인스펙터 ────────────────────────────────────────────────
-    [Header("기본 스탯")]
-    [SerializeField] private float moveSpeed      = 2f;
-    [SerializeField] private float maxHP          = 30f;
-    [SerializeField] private float contactDamage  = 10f;
+    // DB_유닛에서 로드 (ApplyUnitData) — 인스펙터 노출 불필요
+    private float moveSpeed     = 2f;
+    private float maxHP         = 30f;
+    private float contactDamage = 10f;
+    private int   goldDrop      = 5;
+    private int   expDrop       = 10;
+
+    [Header("전투")]
     [SerializeField] private int   scoreValue     = 10;
     [SerializeField] private float damageCooldown = 1f;
     [Tooltip("OnTrigger 접촉 데미지 최대 거리 — 콜라이더가 스프라이트보다 클 때 보정.")]
     [SerializeField] private float contactMaxDist = 0.8f;
-
-    [Header("드롭")]
-    [SerializeField] private int goldDrop = 5;
-    [SerializeField] private int expDrop  = 10;
 
     [Header("넉백 면역")]
     [SerializeField] private bool knockbackImmune = false;
@@ -400,6 +400,38 @@ public class EnemyController : MonoBehaviour
     }
 
     public void ApplyWaveScaling(int wave) { }
+
+    // ── DB 데이터 적용 ───────────────────────────────────────────
+    public UnitData ActiveUnitData { get; private set; }
+
+    /// <summary>스폰 직후 UnitData 스탯을 적용합니다.</summary>
+    public void ApplyUnitData(UnitData data)
+    {
+        ActiveUnitData = data;
+        maxHP         = data.hp;
+        currentHP     = maxHP;
+        contactDamage = data.contactDamage;
+        moveSpeed     = data.moveSpeed;
+        baseSpeed     = data.moveSpeed;
+        goldDrop      = data.goldDrop;
+        expDrop       = data.expDrop;
+
+        // RANGED 타입 투사체 데이터 전달
+        if (data.projectile != null)
+            GetComponent<RangedBehaviour>()?.ApplyProjectileData(data.projectile);
+    }
+
+    /// <summary>보스 스탯을 적용합니다 (BossController.ApplyBossData 에서 호출).</summary>
+    public void ApplyBossStats(int hp, int contactDmg, float speed)
+    {
+        maxHP         = hp;
+        currentHP     = hp;
+        contactDamage = contactDmg;
+        moveSpeed     = speed;
+        baseSpeed     = speed;
+        goldDrop      = 0;  // 보스는 BossController에서 별도로 드롭 처리함
+        expDrop       = 0;
+    }
 
     // ── 스폰 연출 ────────────────────────────────────────────────
     public Vector3 SpawnScale { get; private set; } = Vector3.one;

@@ -30,14 +30,12 @@ public class BossController : MonoBehaviour
     [SerializeField] private float enrageSpeedMult  = 1.5f;
     [SerializeField] private float enrageDamageMult = 1.5f;
 
-    [Header("보스 HUD")]
-    [SerializeField] private string bossName = "BOSS";
-
-    [Header("처치 드롭")]
-    [SerializeField] private int bossGoldCount = 20;
-    [SerializeField] private int bossGoldValue = 10;
-    [SerializeField] private int bossExpCount  = 20;
-    [SerializeField] private int bossExpValue  = 15;
+    // DB_보스에서 로드 (ApplyBossData) — 인스펙터 노출 불필요
+    private string bossName      = "BOSS";
+    private int    bossGoldCount = 20;
+    private int    bossGoldValue = 1;
+    private int    bossExpCount  = 20;
+    private int    bossExpValue  = 1;
 
     // ── 공개 프로퍼티 ──────────────────────────────────────────────
     public bool   IsEnraged      { get; private set; }
@@ -141,6 +139,33 @@ public class BossController : MonoBehaviour
     // ══════════════════════════════════════════════════════════════
     //  아웃라인
     // ══════════════════════════════════════════════════════════════
+
+    // ══════════════════════════════════════════════════════════════
+    //  DB 데이터 적용
+    // ══════════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// BossData 스탯을 이 보스에 적용합니다.
+    /// EnemySpawner.SpawnBoss() 에서 Instantiate 직후 호출합니다.
+    /// </summary>
+    public void ApplyBossData(BossData data)
+    {
+        bossName      = data.bossName;
+        bossGoldCount = data.goldCount;
+        bossGoldValue = 1;
+        bossExpCount  = data.expCount;
+        bossExpValue  = 1;
+
+        // 기본 스탯
+        enemy?.ApplyBossStats(data.hp, data.contactDamage, data.moveSpeed);
+
+        // 스킬 시퀀스
+        GetComponent<BossPatternBehaviour>()?.ApplySequenceData(data, skills);
+
+        // RNG 스킬 보스 투사체
+        if (data.projectile != null)
+            GetComponent<BossVolleySkill>()?.ApplyProjectileData(data.projectile);
+    }
 
     private void SetOutlineColor(Color color)
     {

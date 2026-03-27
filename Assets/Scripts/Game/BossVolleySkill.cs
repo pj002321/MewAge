@@ -108,4 +108,12 @@ public class BossVolleySkill : BossSkillBase
 
         yield return new WaitForSeconds(0.2f);
     }
+
+    /// <summary>DB_보스 투사체 데이터를 적용합니다.</summary>
+    public void ApplyProjectileData(ProjectileData data)
+    {
+        if (data == null) return;
+        if (data.prefab  != null) shellPrefab = data.prefab;
+        if (data.damage  >  0f)  hitDamage   = data.damage;
+    }
 }

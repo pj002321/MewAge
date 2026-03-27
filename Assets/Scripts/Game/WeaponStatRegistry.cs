@@ -7,7 +7,7 @@ using UnityEngine;
 /// 속성 설명 포맷 + 실제 스탯 적용 로직을 제공합니다.
 ///
 /// 속성 ID 규칙:
-///   ATK_ADD   → attackDamage   += value            (절대값)
+///   ATK_ADD   → attackDamage   += base * value%    (기본값 대비 % 증가)
 ///   CD_RED    → attackCooldown -= base * value%    (쿨다운 % 단축)
 ///   RNG_ADD   → attackRange    += base * value%    (사거리 % 증가)
 ///   CRIT_ADD  → criticalRate   += value / 100f     (절대값, %)
@@ -84,7 +84,7 @@ public static class WeaponStatRegistry
         switch (bonus.statId)
         {
             case "ATK_ADD":
-                data.attackDamage   += bonus.value;                              // 절대값 추가
+                data.attackDamage   += data.baseAttackDamage * bonus.value / 100f; // % 증가
                 break;
             case "CD_RED":
                 data.attackCooldown -= data.baseAttackCooldown * bonus.value / 100f; // % 단축

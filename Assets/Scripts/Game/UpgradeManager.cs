@@ -282,9 +282,7 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
         WeaponData  picked = PickByGrade(pool, grade);
         if (picked == null) return null;
 
-        var ad = picked.Upgraded(); // 복사본
-        ad.star = 2;
-        return ad;
+        return picked.UpgradedTo(2);
     }
 
     /// <summary>광고 시청 완료 후 호출 — 광고 카드를 인벤토리에 무료로 지급합니다.</summary>
@@ -327,11 +325,7 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
         if (star >= 5) return null;
         foreach (var w in allWeapons)
             if (w != null && w.weaponName == weaponName)
-            {
-                var next  = w.Upgraded();  // 희귀도 유지, 복사
-                next.star = star + 1;      // allWeapons는 항상 star=1이므로 직접 지정
-                return next;
-            }
+                return w.UpgradedTo(star + 1);  // 목표 성까지 보너스 전부 적용
         return null;
     }
 

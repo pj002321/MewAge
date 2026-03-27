@@ -18,6 +18,9 @@ public class RangedBehaviour : EnemyBehaviourBase
     [Header("VFX")]
     [SerializeField] private GameObject attackVfxPrefab;
 
+    private float _projSpeed;
+    private float _projBonusDamage;
+    private bool  _projCanReflect;
     private float shootTimer;
 
     public override void ApplyWaveScaling(float multiplier)
@@ -55,6 +58,17 @@ public class RangedBehaviour : EnemyBehaviourBase
         Owner.FlipToward(toPlayer);
     }
 
+    /// <summary>DB_유닛 투사체 데이터를 적용합니다.</summary>
+    public void ApplyProjectileData(ProjectileData data)
+    {
+        if (data == null) return;
+        projectilePrefab = data.prefab;
+        if (data.damage > 0f) rangedDamage = data.damage;
+        if (data.speed  > 0f) _projSpeed   = data.speed;
+        _projBonusDamage = data.bonusDamage;
+        _projCanReflect  = data.canReflect;
+    }
+
     private void ShootProjectile()
     {
         if (projectilePrefab == null) return;
@@ -69,6 +83,9 @@ public class RangedBehaviour : EnemyBehaviourBase
 
         GameObject proj = Instantiate(projectilePrefab, spawnPos, Quaternion.identity);
         if (proj.TryGetComponent<Projectile>(out var p))
-            p.Init(dmg, dir);
+        {
+            float spd = _projSpeed > 0f ? _projSpeed : 6f;
+            p.Init(dmg, dir, spd);
+        }
     }
 }

@@ -24,16 +24,34 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
     private int   currentMaxOnMap;          // DB f_최대스폰 (0 = 무제한)
     private int   currentWave    = 1;
     private int   currentChapter = 1;
+    private int   currentStage   = 1;
     private bool  spawning       = true;
     private bool  isBossWave     = false;
 
     protected override bool DontDestroy => false;
 
-    /// <summary>현재 SpawnZone AABB — 돌진형/무리 적의 경계 클램프에 사용합니다.</summary>
     public Vector2 AreaCenter => SpawnZone.Shared != null ? SpawnZone.Shared.BoundsCenter : Vector2.zero;
     public Vector2 AreaSize   => SpawnZone.Shared != null ? SpawnZone.Shared.BoundsSize   : new Vector2(10f, 18f);
 
+    private readonly System.Collections.Generic.Dictionary<string, UnitData> _unitCache = new();
+    private readonly System.Collections.Generic.Dictionary<string, BossData> _bossCache = new();
+
     // ── 초기화 ──────────────────────────────────────────────────────
+    protected override void Awake()
+    {
+        base.Awake();
+        DB_유닛.ForEachEntity(row =>
+        {
+            var d = UnitData.FromDB(row);
+            if (!string.IsNullOrEmpty(d.unitId)) _unitCache[d.unitId] = d;
+        });
+        DB_보스.ForEachEntity(row =>
+        {
+            var d = BossData.FromDB(row);
+            if (!string.IsNullOrEmpty(d.bossId)) _bossCache[d.bossId] = d;
+        });
+    }
+
     private void Start()
     {
         ApplyRule(currentWave);
@@ -42,18 +60,29 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
     }
 
     // ── DB 조회 ─────────────────────────────────────────────────────
-    /// <summary>챕터 + 웨이브에 해당하는 DB_웨이브 행. 없으면 null.</summary>
-    private DB_웨이브 GetActiveRow(int chapter, int wave)
+    /// <summary>챕터+스테이지+웨이브에 해당하는 DB_웨이브 행. 없으면 null.</summary>
+    private DB_웨이브 GetActiveRow(int chapter, int stage, int wave)
     {
+        string targetId = $"C{chapter}_S{stage}_W{wave}";
         DB_웨이브 matched = null;
         DB_웨이브.ForEachEntity(row =>
         {
-            if (row.f_챕터 != chapter) return;
-            if (row.f_웨이브 > wave)   return;
-            if (matched == null || row.f_웨이브 > matched.f_웨이브)
+            if (row.f_웨이브ID == targetId)
                 matched = row;
         });
         return matched;
+    }
+
+    /// <summary>챕터+웨이브에 해당하는 BossData. waveIndex = wave/10-1 로 매핑. 없으면 null.</summary>
+    private BossData FindBossData(int chapter, int wave)
+    {
+        int expectedWaveIndex = wave / 10 - 1;
+        foreach (var kv in _bossCache)
+        {
+            if (kv.Value.chapter == chapter && kv.Value.waveIndex == expectedWaveIndex)
+                return kv.Value;
+        }
+        return null;
     }
 
     // ── 스폰 루프 ───────────────────────────────────────────────────
@@ -80,42 +109,43 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
     // ── 일반 적 스폰 ────────────────────────────────────────────────
     private void SpawnEnemy()
     {
-        var prefab = PickPrefab();
-        if (prefab == null) return;
-
-        DoSpawn(prefab, GetRandomEdgePosition());
+        var data = PickUnitData();
+        if (data?.prefab == null) return;
+        DoSpawn(data.prefab, GetRandomEdgePosition(), data);
     }
 
-    /// <summary>DB_웨이브 슬롯에서 비율 가중치 랜덤으로 프리팹 선택.</summary>
-    private GameObject PickPrefab()
+
+    /// <summary>DB_웨이브 슬롯에서 비율 가중치 랜덤으로 UnitData 선택.</summary>
+    private UnitData PickUnitData()
     {
-        var row = GetActiveRow(currentChapter, currentWave);
+        var row = GetActiveRow(currentChapter, currentStage, currentWave);
         if (row == null) return null;
 
-        // (유닛, 비율) 페어 수집 (null 유닛 제외)
-        var slots = new List<(DB_유닛 unit, float ratio)>
+        var slots = new List<(string unitId, float ratio)>
         {
             (row.f_유닛1, row.f_비율1),
             (row.f_유닛2, row.f_비율2),
             (row.f_유닛3, row.f_비율3),
             (row.f_유닛4, row.f_비율4),
-            (row.f_유닛5, row.f_비율5),
         };
 
         float total = 0f;
-        foreach (var (unit, ratio) in slots)
-            if (unit != null && unit.f_프리팹 != null && ratio > 0f)
-                total += ratio;
+        foreach (var (unitId, ratio) in slots)
+            if (!string.IsNullOrEmpty(unitId) && ratio > 0f) total += ratio;
 
         if (total <= 0f) return null;
 
         float roll = Random.value * total;
         float acc  = 0f;
-        foreach (var (unit, ratio) in slots)
+        foreach (var (unitId, ratio) in slots)
         {
-            if (unit == null || unit.f_프리팹 == null || ratio <= 0f) continue;
+            if (string.IsNullOrEmpty(unitId) || ratio <= 0f) continue;
             acc += ratio;
-            if (roll <= acc) return unit.f_프리팹;
+            if (roll <= acc)
+            {
+                _unitCache.TryGetValue(unitId, out var d);
+                return d;
+            }
         }
         return null;
     }
@@ -129,27 +159,33 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
             return;
         }
 
-        var row = GetActiveRow(currentChapter, currentWave);
-        if (row == null || row.f_보스 == null || row.f_보스.f_프리팹 == null)
+        var bossData = FindBossData(currentChapter, currentWave);
+        if (bossData == null || bossData.prefab == null)
         {
-            Debug.LogWarning($"[EnemySpawner] Wave {currentWave}: 보스 유닛 또는 프리팹이 DB에 없습니다.");
+            Debug.LogWarning($"[EnemySpawner] Wave {currentWave}: 보스 프리팹을 찾을 수 없습니다.");
             return;
         }
 
         Vector2 spawnPos = bossSpawnPoint != null
             ? (Vector2)bossSpawnPoint.position
             : GetRandomEdgePosition();
-        DoSpawn(row.f_보스.f_프리팹, spawnPos);
-        Debug.Log($"[EnemySpawner] 보스 스폰! Wave {currentWave} ({row.f_보스.f_이름})");
+
+        var obj = Instantiate(bossData.prefab, spawnPos, Quaternion.identity);
+        if (obj.TryGetComponent<BossController>(out var boss))
+        {
+            boss.ApplyBossData(bossData);
+        }
+
+        Debug.Log($"[EnemySpawner] 보스 스폰! Wave {currentWave} (ID={bossData.bossId})");
     }
 
-    private void DoSpawn(GameObject prefab, Vector2 pos)
+    private void DoSpawn(GameObject prefab, Vector2 pos, UnitData data = null)
     {
         if (spawnMarkerPrefab != null)
         {
             var markerObj = Instantiate(spawnMarkerPrefab, pos, Quaternion.identity);
             if (markerObj.TryGetComponent<SpawnMarker>(out var marker))
-                marker.Init(prefab, currentWave);
+                marker.Init(prefab, currentWave, data);
         }
         else
         {
@@ -157,6 +193,7 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
             if (obj.TryGetComponent<EnemyController>(out var enemy))
             {
                 enemy.InitForWave(currentWave);
+                if (data != null) enemy.ApplyUnitData(data);
                 enemy.PlaySpawnBounce();
             }
         }
@@ -165,21 +202,18 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
     // ── 웨이브 규칙 적용 ────────────────────────────────────────────
     private void ApplyRule(int wave)
     {
-        var row = GetActiveRow(currentChapter, wave);
+        isBossWave = (wave % 10 == 0);
+
+        var row = GetActiveRow(currentChapter, currentStage, wave);
         if (row == null)
         {
-            Debug.LogWarning($"[EnemySpawner] 챕터 {currentChapter} Wave {wave}에 해당하는 DB_웨이브 행 없음");
+            Debug.LogWarning($"[EnemySpawner] C{currentChapter}_S{currentStage}_W{wave} 해당하는 DB_웨이브 행 없음");
             return;
         }
 
-        isBossWave = row.f_보스웨이브;
-
-        if (!isBossWave)
-        {
-            currentInterval   = row.f_스폰간격 > 0f ? row.f_스폰간격 : 3f;
-            currentSpawnCount = row.f_동시스폰  > 0  ? row.f_동시스폰  : 3;
-            currentMaxOnMap   = row.f_최대스폰;
-        }
+        currentInterval   = row.f_스폰간격 > 0f ? row.f_스폰간격 : 3f;
+        currentSpawnCount = row.f_동시스폰  > 0  ? row.f_동시스폰  : 3;
+        currentMaxOnMap   = row.f_최대스폰;
 
         Debug.Log($"[EnemySpawner] Wave {wave} → 보스: {isBossWave}, 간격: {currentInterval:F1}s, 동시: {currentSpawnCount}, 최대: {currentMaxOnMap}");
     }
@@ -198,6 +232,7 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
     public void OnChapterUp(int chapter)
     {
         currentChapter = chapter;
+        currentStage   = 1;
         currentWave    = 1;
         ApplyRule(currentWave);
         StopAllCoroutines();
@@ -224,19 +259,10 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
         OnWaveUp(wave);
     }
 
-    /// <summary>fromWave보다 큰 가장 가까운 보스 웨이브 번호. 없으면 -1.</summary>
+    /// <summary>fromWave보다 큰 가장 가까운 보스 웨이브 번호.</summary>
     public int GetNextBossWave(int fromWave)
     {
-        int result = -1;
-        DB_웨이브.ForEachEntity(row =>
-        {
-            if (row.f_챕터 != currentChapter) return;
-            if (!row.f_보스웨이브)             return;
-            if (row.f_웨이브 <= fromWave)      return;
-            if (result < 0 || row.f_웨이브 < result)
-                result = row.f_웨이브;
-        });
-        return result;
+        return ((fromWave / 10) + 1) * 10;
     }
 
     // ── 스폰 위치 ────────────────────────────────────────────────────

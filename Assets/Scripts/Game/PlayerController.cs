@@ -62,7 +62,8 @@ public class PlayerController : MonoBehaviour
     private float _synergyBleed;
     private float _synergyCrit;
 
-    public float Attack            => attack  + _synergyAtk;
+    public float Attack            => attack; // 기초 스탯 + 증강
+    public float SynergyAtkPct     => _synergyAtk; // 시너지 공격력(%)
     public float Defense           => defense + _synergyDef;
     public float MoveSpeedBase     => moveSpeed; // 기초값 (시너지/캐릭터 보너스 제외)
     public float Dodge             => dodge;

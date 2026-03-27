@@ -66,7 +66,10 @@ public class WeaponData : ScriptableObject
     // ────────────────────────────────────────────────────────────────
     // 합성 — 같은 무기를 복사하고 성 1단계 올립니다
     // ────────────────────────────────────────────────────────────────
-    public WeaponData Upgraded()
+    public WeaponData Upgraded() => UpgradedTo(star + 1);
+
+    /// <summary>이 무기를 targetStar 성으로 복제합니다. 보너스는 해당 성 이하 전부 적용됩니다.</summary>
+    public WeaponData UpgradedTo(int targetStar)
     {
         var next              = CreateInstance<WeaponData>();
         next.weaponName       = weaponName;
@@ -76,7 +79,7 @@ public class WeaponData : ScriptableObject
         next.grade            = grade;
         next.price            = price;
         next.chapter          = chapter;
-        next.star             = star + 1;
+        next.star             = Mathf.Clamp(targetStar, 1, 5);
         next.tag1             = tag1;
         next.tag2             = tag2;
         next.storyDescription = storyDescription;
@@ -106,19 +109,28 @@ public class WeaponData : ScriptableObject
 
         var data              = CreateInstance<WeaponData>();
         data.weaponName       = row.f_이름;
-        data.grade            = row.f_등급;
+        data.grade            = ParseGrade(row.f_등급);
         data.star             = 1;
-        data.weaponType       = row.f_타입;
+        data.weaponType       = ParseWeaponType(row.f_타입);
         data.price            = row.f_가격;
         data.chapter          = row.f_챕터;
-        data.prefab           = row.f_프리팹;
-        data.tag1             = row.f_태그1;
-        data.tag2             = row.f_태그2;
+        data.tag1             = ParseSynergyTag(row.f_태그1);
+        data.tag2             = ParseSynergyTag(row.f_태그2);
         data.storyDescription = row.f_스토리설명;
 
         data.bonus2Star = WeaponStatRegistry.Build(row.f_속성2성ID, row.f_S1);
         data.bonus3Star = WeaponStatRegistry.Build(row.f_속성3성ID, row.f_S2);
         data.bonus4Star = WeaponStatRegistry.Build(row.f_속성4성ID, row.f_S3);
+
+        // 무기ID 기반으로 Resources에서 프리팹 로드 (예: Resources/Weapons/Ch1/ch1_n_00)
+        string weaponId = row.f_무기ID;
+        if (!string.IsNullOrEmpty(weaponId))
+        {
+            string path = $"Weapons/Ch{data.chapter}/{weaponId.ToLower()}";
+            data.prefab = Resources.Load<GameObject>(path);
+            if (data.prefab == null)
+                Debug.LogWarning($"[WeaponData] 프리팹 없음: Resources/{path}");
+        }
 
         if (data.prefab != null)
         {
@@ -139,6 +151,41 @@ public class WeaponData : ScriptableObject
 
         data.ResetToBase();
         return data;
+    }
+
+    private static WeaponGrade ParseGrade(string s)
+    {
+        if (System.Enum.TryParse<WeaponGrade>(s, true, out var g)) return g;
+        return s switch
+        {
+            "노멀"   => WeaponGrade.Normal,
+            "레어"   => WeaponGrade.Rare,
+            "엘리트" => WeaponGrade.Elite,
+            "에픽"   => WeaponGrade.Epic,
+            "신화"   => WeaponGrade.Legend,
+            _        => WeaponGrade.Normal,
+        };
+    }
+
+    private static WeaponType ParseWeaponType(string s)
+    {
+        if (System.Enum.TryParse<WeaponType>(s, true, out var t)) return t;
+        return s switch
+        {
+            "근거리" => WeaponType.Melee,
+            "원거리" => WeaponType.Ranged,
+            "마법"   => WeaponType.Magic,
+            "부메랑" => WeaponType.Boomerang,
+            "돌리기" => WeaponType.Spin,
+            _        => WeaponType.Melee,
+        };
+    }
+
+    private static WeaponSynergyTag ParseSynergyTag(string s)
+    {
+        if (string.IsNullOrEmpty(s)) return WeaponSynergyTag.None;
+        if (System.Enum.TryParse<WeaponSynergyTag>(s, out var tag)) return tag;
+        return WeaponSynergyTag.None;
     }
 
     // ────────────────────────────────────────────────────────────────

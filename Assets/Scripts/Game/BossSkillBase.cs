@@ -14,6 +14,10 @@ using UnityEngine;
 public abstract class BossSkillBase : MonoBehaviour
 {
     [Header("스킬 공통")]
+    [Tooltip("DB_보스 BS1/BS2/BS3 ID와 매핑. 예: TKD, CRG, ATK, RNG")]
+    [SerializeField] private   string skillId            = "";
+    public string SkillId => skillId;
+
     [SerializeField] protected float cooldown            = 5f;
     [Tooltip("분노 시 쿨다운에 곱하는 배율 (예: 0.7 = 30% 감소)")]
     [SerializeField] protected float enrageCooldownMult  = 0.7f;

@@ -8,17 +8,19 @@ public class SpawnMarker : MonoBehaviour
 
     private GameObject spawnPrefab;
     private int        spawnWave;
+    private UnitData   _unitData;
 
     private static int _activeCount;
     public  static int ActiveCount => _activeCount;
 
     private void OnDestroy() => _activeCount--;
 
-    public void Init(GameObject prefab, int wave = 0)
+    public void Init(GameObject prefab, int wave = 0, UnitData unitData = null)
     {
         _activeCount++;
         spawnPrefab = prefab;
         spawnWave   = wave;
+        _unitData   = unitData;
 
         if (sr == null) sr = GetComponent<SpriteRenderer>();
         SetAlpha(1f);
@@ -51,6 +53,7 @@ public class SpawnMarker : MonoBehaviour
             if (obj.TryGetComponent<EnemyController>(out var enemy))
             {
                 enemy.InitForWave(spawnWave);
+                if (_unitData != null) enemy.ApplyUnitData(_unitData);
                 enemy.PlaySpawnBounce();
             }
         }
