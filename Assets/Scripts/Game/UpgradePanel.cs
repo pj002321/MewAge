@@ -43,6 +43,10 @@ public class UpgradePanel : MonoBehaviour
     [SerializeField] private Image  characterPortraitImage;
     [SerializeField] private Sprite characterPortraitSprite;
 
+    [Header("판매 드롭존")]
+    [SerializeField] private RectTransform sellImg;
+    [SerializeField] private float         sellZoneHoverScale = 1.2f;
+
     [Header("장착 슬롯 (6개)")]
     [SerializeField] private EquipSlot[] equipSlots;
 
@@ -50,7 +54,9 @@ public class UpgradePanel : MonoBehaviour
     [SerializeField] private InvenSlot[] invenSlots;
 
     [Header("시너지 슬롯 (챕터별 4개)")]
-    [SerializeField] private Image[]  synergySlotImages   = new Image[4];
+    [SerializeField] private Image[]             synergySlotImages   = new Image[4];
+    [SerializeField] private TextMeshProUGUI[]   synergySlotNames    = new TextMeshProUGUI[4];
+    [SerializeField] private TextMeshProUGUI[]   synergySlotDescs    = new TextMeshProUGUI[4];
 
     [Header("등급 확률 텍스트 (Normal/Rare/Elite/Epic/Legend)")]
     [SerializeField] private TextMeshProUGUI normalProbText;
@@ -134,13 +140,12 @@ public class UpgradePanel : MonoBehaviour
         selectedInvenIndex  = -1;
         selectedEquipIndex  = -1;
         WeaponInfoPanel.Shared?.Hide();
+        if (sellImg) { sellImg.localScale = Vector3.one; sellImg.gameObject.SetActive(false); }
 
         if (characterPortraitImage)
         {
-            string charID = PlayerCharacterManager.Shared?.EquippedCharID ?? "";
-            var spr = string.IsNullOrEmpty(charID)
-                ? characterPortraitSprite
-                : Resources.Load<Sprite>($"Character/{charID.ToLower()}") ?? characterPortraitSprite;
+            var playerSr  = PlayerController.Instance?.GetComponent<SpriteRenderer>();
+            var spr       = playerSr?.sprite ?? characterPortraitSprite;
             if (spr != null) characterPortraitImage.sprite = spr;
         }
 
@@ -213,14 +218,23 @@ public class UpgradePanel : MonoBehaviour
 
             if (i < synergies.Count)
             {
-                synergySlotTags[i] = synergies[i].Tag;
-                img.sprite  = synergies[i].Icon;
-                img.enabled = synergies[i].Icon != null;
+                var entry = synergies[i];
+                synergySlotTags[i] = entry.Tag;
+                img.sprite  = entry.Icon;
+                img.enabled = entry.Icon != null;
+                if (i < synergySlotNames.Length && synergySlotNames[i])
+                    synergySlotNames[i].text = entry.Name;
+                if (i < synergySlotDescs.Length && synergySlotDescs[i])
+                    synergySlotDescs[i].text = entry.Description;
             }
             else
             {
                 synergySlotTags[i] = WeaponSynergyTag.None;
                 img.enabled = false;
+                if (i < synergySlotNames.Length && synergySlotNames[i])
+                    synergySlotNames[i].text = string.Empty;
+                if (i < synergySlotDescs.Length && synergySlotDescs[i])
+                    synergySlotDescs[i].text = string.Empty;
             }
         }
     }
@@ -362,6 +376,54 @@ public class UpgradePanel : MonoBehaviour
             );
         }
 
+        RefreshInventoryUI();
+    }
+
+    // ────────────────────────────────────────────────────────────────
+    // 슬롯 드래그 콜백 (InvenSlot / EquipSlot이 호출)
+    // ────────────────────────────────────────────────────────────────
+    public void NotifyDragBegin()
+    {
+        if (nextWaveButton) nextWaveButton.interactable = false;
+        if (sellImg) sellImg.gameObject.SetActive(true);
+    }
+
+    public void NotifyDragHover(Vector2 screenPos)
+    {
+        if (sellImg == null || !sellImg.gameObject.activeSelf) return;
+        Camera cam = rootCanvas != null && rootCanvas.renderMode != RenderMode.ScreenSpaceOverlay
+            ? rootCanvas.worldCamera : null;
+        bool over = RectTransformUtility.RectangleContainsScreenPoint(sellImg, screenPos, cam);
+        sellImg.localScale = Vector3.one * (over ? sellZoneHoverScale : 1f);
+    }
+
+    /// <summary>드래그 종료. sellImg 위면 true 반환 (판매 실행은 슬롯 쪽에서 호출).</summary>
+    public bool NotifyDragEnd(Vector2 screenPos)
+    {
+        bool overSell = false;
+        if (sellImg != null && sellImg.gameObject.activeSelf)
+        {
+            Camera cam = rootCanvas != null && rootCanvas.renderMode != RenderMode.ScreenSpaceOverlay
+                ? rootCanvas.worldCamera : null;
+            overSell = RectTransformUtility.RectangleContainsScreenPoint(sellImg, screenPos, cam);
+            sellImg.localScale = Vector3.one;
+            sellImg.gameObject.SetActive(false);
+        }
+        // 무기 장착 여부에 따라 다음 웨이브 버튼 복원
+        bool hasEquipped = PlayerInventory.Shared?.Equipped.Count > 0;
+        if (nextWaveButton) nextWaveButton.interactable = hasEquipped;
+        return overSell;
+    }
+
+    public void SellDraggedInven(int slotIndex)
+    {
+        DoSellInven(slotIndex);
+        RefreshInventoryUI();
+    }
+
+    public void SellDraggedEquip(int slotIndex)
+    {
+        DoSellEquip(slotIndex);
         RefreshInventoryUI();
     }
 

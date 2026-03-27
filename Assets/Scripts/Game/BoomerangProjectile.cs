@@ -18,6 +18,7 @@ public class BoomerangProjectile : MonoBehaviour
     private float   bounceRange;
     private bool    initialized;
     private bool    isCritical;
+    private float   lifeSteal;
 
     private enum State { Flying, Returning }
     private State state = State.Flying;
@@ -30,10 +31,11 @@ public class BoomerangProjectile : MonoBehaviour
     private Vector2 flyDir;
 
     public void Init(float damage, float speed, int maxBounces, float bounceRange,
-                     EnemyController firstTarget, Transform playerTf, bool isCritical = false)
+                     EnemyController firstTarget, Transform playerTf, bool isCritical = false, float lifeSteal = 0f)
     {
         this.damage          = damage;
         this.isCritical      = isCritical;
+        this.lifeSteal       = lifeSteal;
         this.speed           = speed;
         this.bouncesLeft     = maxBounces;
         this.bounceRange     = bounceRange;
@@ -113,6 +115,7 @@ public class BoomerangProjectile : MonoBehaviour
         hitEnemies.Add(enemy);
         Vector2 hitDir = (enemy.transform.position - transform.position).normalized;
         enemy.TakeDamage(damage, isCritical, hitDir, 6f);
+        if (lifeSteal > 0f) PlayerController.Instance?.HealHP(damage * lifeSteal);
         bouncesLeft--;
 
         if (bouncesLeft <= 0)

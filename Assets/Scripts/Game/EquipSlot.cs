@@ -126,16 +126,28 @@ public class EquipSlot : MonoBehaviour,
             return;
 
         dragStarted = true;
+        panel?.NotifyDragBegin();
         CreateGhost(eventData.position);
         Debug.Log($"[EquipSlot] OnBeginDrag slot={SlotIndex}");
     }
 
-    public void OnDrag(PointerEventData eventData) => MoveGhost(eventData.position);
+    public void OnDrag(PointerEventData eventData)
+    {
+        MoveGhost(eventData.position);
+        if (dragStarted) panel?.NotifyDragHover(eventData.position);
+    }
 
     public void OnEndDrag(PointerEventData eventData)
     {
         if (dragStarted)
         {
+            bool sold = panel?.NotifyDragEnd(eventData.position) ?? false;
+            if (sold)
+            {
+                panel?.SellDraggedEquip(SlotIndex);
+            }
+            else
+            {
             // RaycastAll로 포인터 아래 타겟을 직접 탐색
             var results = new List<RaycastResult>();
             EventSystem.current.RaycastAll(eventData, results);
@@ -159,6 +171,11 @@ public class EquipSlot : MonoBehaviour,
                     break;
                 }
             }
+            } // end else (not sold)
+        }
+        else
+        {
+            panel?.NotifyDragEnd(eventData.position);
         }
 
         dragStarted = false;

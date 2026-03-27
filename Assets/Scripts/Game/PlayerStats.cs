@@ -77,6 +77,8 @@ public class PlayerStats : MonoBehaviourSingleton<PlayerStats>
             level++;
             expToNext = CalcExpToNext(level);
             Debug.Log($"[PlayerStats] Level Up! → {level}");
+            PlayerController.Instance?.HealHP(10f);
+            FXManager.Shared?.SpawnPlayerText("+10", Color.green);
         }
 
         // 만렙 도달 시 exp 바를 0/200으로 고정

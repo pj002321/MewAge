@@ -19,15 +19,33 @@ public class StatFieldUI : MonoBehaviour
         float pct      = sm.GetPctMod(statType);
         float finalVal = sm.GetFinal(statType);
 
-        // 증강(%) 있으면 "최종값 (+pct%)" 형태로 표시
         if (!Mathf.Approximately(pct, 0f))
         {
-            string sign = pct > 0f ? "+" : "";
-            valueText.text = $"{PlayerStatManager.FormatValue(statType, finalVal)} <color=#88FF88>({sign}{pct:0.#}%)</color>";
+            string sign     = pct > 0f ? "+" : "";
+            string pctColor = pct < 0f ? "#FF8888" : "#88FF88";
+            valueText.text = $"{PlayerStatManager.FormatValue(statType, finalVal)} <color={pctColor}>({sign}{pct:0.#}%)</color>";
         }
         else
         {
             valueText.text = PlayerStatManager.FormatValue(statType, finalVal);
+        }
+    }
+
+    /// <summary>증강 미리보기 — 해당 스탯이면 하늘색으로 예상 수치를 표시합니다.</summary>
+    public void RefreshWithPreview(PlayerStatManager sm, StatType previewStat, float previewPct)
+    {
+        if (sm == null || valueText == null) return;
+
+        if (statType == previewStat && !Mathf.Approximately(previewPct, 0f))
+        {
+            float pct          = sm.GetPctMod(statType);
+            float previewFinal = sm.GetBase(statType) * (1f + (pct + previewPct) / 100f);
+            string previewSign = previewPct > 0f ? "+" : "";
+            valueText.text = $"<color=#88CCFF>{PlayerStatManager.FormatValue(statType, previewFinal)}</color> <color=#88CCFF>({previewSign}{previewPct:0.#}%)</color>";
+        }
+        else
+        {
+            Refresh(sm);
         }
     }
 }

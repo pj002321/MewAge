@@ -394,106 +394,94 @@ namespace Mewage.DB
 			get => _f_챕터[Index];
 			set => _f_챕터.SetValue(this, value);
 		}
-		public WeaponSynergyTag f_시너지1
+		public System.Int32 f_스테이지
 		{
-			get => (WeaponSynergyTag) _f_시너지1.GetStoredValue(Index);
-			set => _f_시너지1.SetStoredValue(Index, (System.Int32) value);
+			get => _f_스테이지[Index];
+			set => _f_스테이지.SetValue(this, value);
 		}
-		public UnityEngine.Sprite f_시너지1_아이콘 => _f_시너지1_아이콘[Index];
-		public System.Collections.Generic.List<System.Int32> f_스탯1
+		public System.String f_SY1
 		{
-			get => _f_스탯1[Index];
-			set => _f_스탯1[Index] = value;
+			get => _f_SY1[Index];
+			set => _f_SY1[Index] = value;
 		}
-		public System.String f_설명_1
+		public System.String f_SY2
 		{
-			get => _f_설명_1[Index];
-			set => _f_설명_1[Index] = value;
+			get => _f_SY2[Index];
+			set => _f_SY2[Index] = value;
 		}
-		public WeaponSynergyTag f_시너지2
+		public System.String f_SY3
 		{
-			get => (WeaponSynergyTag) _f_시너지2.GetStoredValue(Index);
-			set => _f_시너지2.SetStoredValue(Index, (System.Int32) value);
+			get => _f_SY3[Index];
+			set => _f_SY3[Index] = value;
 		}
-		public UnityEngine.Sprite f_시너지2_아이콘 => _f_시너지2_아이콘[Index];
-		public System.Collections.Generic.List<System.Int32> f_스탯2
+		public System.String f_SY4
 		{
-			get => _f_스탯2[Index];
-			set => _f_스탯2[Index] = value;
+			get => _f_SY4[Index];
+			set => _f_SY4[Index] = value;
 		}
-		public System.String f_설명_2
+		public System.Collections.Generic.List<System.Int32> f_S1
 		{
-			get => _f_설명_2[Index];
-			set => _f_설명_2[Index] = value;
+			get => _f_S1[Index];
+			set => _f_S1[Index] = value;
 		}
-		public WeaponSynergyTag f_시너지3
+		public System.Collections.Generic.List<System.Int32> f_S2
 		{
-			get => (WeaponSynergyTag) _f_시너지3.GetStoredValue(Index);
-			set => _f_시너지3.SetStoredValue(Index, (System.Int32) value);
+			get => _f_S2[Index];
+			set => _f_S2[Index] = value;
 		}
-		public UnityEngine.Sprite f_시너지3_아이콘 => _f_시너지3_아이콘[Index];
-		public System.Collections.Generic.List<System.Int32> f_스탯3
+		public System.Collections.Generic.List<System.Int32> f_S3
 		{
-			get => _f_스탯3[Index];
-			set => _f_스탯3[Index] = value;
+			get => _f_S3[Index];
+			set => _f_S3[Index] = value;
 		}
-		public System.String f_설명_3
+		public System.Collections.Generic.List<System.Int32> f_S4
 		{
-			get => _f_설명_3[Index];
-			set => _f_설명_3[Index] = value;
+			get => _f_S4[Index];
+			set => _f_S4[Index] = value;
 		}
-		public WeaponSynergyTag f_시너지4
+		public System.String f_이름
 		{
-			get => (WeaponSynergyTag) _f_시너지4.GetStoredValue(Index);
-			set => _f_시너지4.SetStoredValue(Index, (System.Int32) value);
+			get => _f_이름[Index];
+			set => _f_이름[Index] = value;
 		}
-		public UnityEngine.Sprite f_시너지4_아이콘 => _f_시너지4_아이콘[Index];
-		public System.Collections.Generic.List<System.Int32> f_스탯4
+		public System.String f_시너지ID
 		{
-			get => _f_스탯4[Index];
-			set => _f_스탯4[Index] = value;
+			get => _f_시너지ID[Index];
+			set => _f_시너지ID[Index] = value;
 		}
-		public System.String f_설명4
+		public System.String f_설명
 		{
-			get => _f_설명4[Index];
-			set => _f_설명4[Index] = value;
+			get => _f_설명[Index];
+			set => _f_설명[Index] = value;
 		}
 		private static BansheeGz.BGDatabase.BGFieldEntityName _ufle12jhs77_f_name;
 		public static BansheeGz.BGDatabase.BGFieldEntityName _f_name => _ufle12jhs77_f_name ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldEntityName>(MetaDefault, new BGId(5666015456627611948UL, 12221603386937517454UL), () => _ufle12jhs77_f_name = null);
 		private static BansheeGz.BGDatabase.BGFieldInt _ufle12jhs77_f_챕터;
-		public static BansheeGz.BGDatabase.BGFieldInt _f_챕터 => _ufle12jhs77_f_챕터 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(MetaDefault, new BGId(5468332647300328447UL, 18394058584960564641UL), () => _ufle12jhs77_f_챕터 = null);
-		private static BansheeGz.BGDatabase.BGFieldEnum _ufle12jhs77_f_시너지1;
-		public static BansheeGz.BGDatabase.BGFieldEnum _f_시너지1 => _ufle12jhs77_f_시너지1 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldEnum>(MetaDefault, new BGId(5278316397570485879UL, 7003271884293309591UL), () => _ufle12jhs77_f_시너지1 = null);
-		private static BansheeGz.BGDatabase.BGFieldUnitySprite _ufle12jhs77_f_시너지1_아이콘;
-		public static BansheeGz.BGDatabase.BGFieldUnitySprite _f_시너지1_아이콘 => _ufle12jhs77_f_시너지1_아이콘 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldUnitySprite>(MetaDefault, new BGId(5397162418455955457UL, 6571297949187675316UL), () => _ufle12jhs77_f_시너지1_아이콘 = null);
-		private static BansheeGz.BGDatabase.BGFieldListInt _ufle12jhs77_f_스탯1;
-		public static BansheeGz.BGDatabase.BGFieldListInt _f_스탯1 => _ufle12jhs77_f_스탯1 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldListInt>(MetaDefault, new BGId(5233209748953367348UL, 13273786827881120170UL), () => _ufle12jhs77_f_스탯1 = null);
-		private static BansheeGz.BGDatabase.BGFieldString _ufle12jhs77_f_설명_1;
-		public static BansheeGz.BGDatabase.BGFieldString _f_설명_1 => _ufle12jhs77_f_설명_1 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(MetaDefault, new BGId(5532330349489994582UL, 13676673871534470553UL), () => _ufle12jhs77_f_설명_1 = null);
-		private static BansheeGz.BGDatabase.BGFieldEnum _ufle12jhs77_f_시너지2;
-		public static BansheeGz.BGDatabase.BGFieldEnum _f_시너지2 => _ufle12jhs77_f_시너지2 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldEnum>(MetaDefault, new BGId(5478085701944393518UL, 5951565409710202813UL), () => _ufle12jhs77_f_시너지2 = null);
-		private static BansheeGz.BGDatabase.BGFieldUnitySprite _ufle12jhs77_f_시너지2_아이콘;
-		public static BansheeGz.BGDatabase.BGFieldUnitySprite _f_시너지2_아이콘 => _ufle12jhs77_f_시너지2_아이콘 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldUnitySprite>(MetaDefault, new BGId(4986268171246018254UL, 7290057173397949082UL), () => _ufle12jhs77_f_시너지2_아이콘 = null);
-		private static BansheeGz.BGDatabase.BGFieldListInt _ufle12jhs77_f_스탯2;
-		public static BansheeGz.BGDatabase.BGFieldListInt _f_스탯2 => _ufle12jhs77_f_스탯2 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldListInt>(MetaDefault, new BGId(5351579651681055932UL, 7242361045763083707UL), () => _ufle12jhs77_f_스탯2 = null);
-		private static BansheeGz.BGDatabase.BGFieldString _ufle12jhs77_f_설명_2;
-		public static BansheeGz.BGDatabase.BGFieldString _f_설명_2 => _ufle12jhs77_f_설명_2 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(MetaDefault, new BGId(5545902285759451103UL, 14541824051081698689UL), () => _ufle12jhs77_f_설명_2 = null);
-		private static BansheeGz.BGDatabase.BGFieldEnum _ufle12jhs77_f_시너지3;
-		public static BansheeGz.BGDatabase.BGFieldEnum _f_시너지3 => _ufle12jhs77_f_시너지3 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldEnum>(MetaDefault, new BGId(4670318875664813108UL, 11312711207774366611UL), () => _ufle12jhs77_f_시너지3 = null);
-		private static BansheeGz.BGDatabase.BGFieldUnitySprite _ufle12jhs77_f_시너지3_아이콘;
-		public static BansheeGz.BGDatabase.BGFieldUnitySprite _f_시너지3_아이콘 => _ufle12jhs77_f_시너지3_아이콘 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldUnitySprite>(MetaDefault, new BGId(5574198088690548750UL, 13629996574159576486UL), () => _ufle12jhs77_f_시너지3_아이콘 = null);
-		private static BansheeGz.BGDatabase.BGFieldListInt _ufle12jhs77_f_스탯3;
-		public static BansheeGz.BGDatabase.BGFieldListInt _f_스탯3 => _ufle12jhs77_f_스탯3 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldListInt>(MetaDefault, new BGId(4789221301109122770UL, 15935125760200276918UL), () => _ufle12jhs77_f_스탯3 = null);
-		private static BansheeGz.BGDatabase.BGFieldString _ufle12jhs77_f_설명_3;
-		public static BansheeGz.BGDatabase.BGFieldString _f_설명_3 => _ufle12jhs77_f_설명_3 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(MetaDefault, new BGId(4835875688517680423UL, 7667360966036400008UL), () => _ufle12jhs77_f_설명_3 = null);
-		private static BansheeGz.BGDatabase.BGFieldEnum _ufle12jhs77_f_시너지4;
-		public static BansheeGz.BGDatabase.BGFieldEnum _f_시너지4 => _ufle12jhs77_f_시너지4 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldEnum>(MetaDefault, new BGId(5192977973678305970UL, 496524803842267275UL), () => _ufle12jhs77_f_시너지4 = null);
-		private static BansheeGz.BGDatabase.BGFieldUnitySprite _ufle12jhs77_f_시너지4_아이콘;
-		public static BansheeGz.BGDatabase.BGFieldUnitySprite _f_시너지4_아이콘 => _ufle12jhs77_f_시너지4_아이콘 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldUnitySprite>(MetaDefault, new BGId(5706973327763285803UL, 10170647721613329300UL), () => _ufle12jhs77_f_시너지4_아이콘 = null);
-		private static BansheeGz.BGDatabase.BGFieldListInt _ufle12jhs77_f_스탯4;
-		public static BansheeGz.BGDatabase.BGFieldListInt _f_스탯4 => _ufle12jhs77_f_스탯4 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldListInt>(MetaDefault, new BGId(5384808469454566490UL, 17382437722867076262UL), () => _ufle12jhs77_f_스탯4 = null);
-		private static BansheeGz.BGDatabase.BGFieldString _ufle12jhs77_f_설명4;
-		public static BansheeGz.BGDatabase.BGFieldString _f_설명4 => _ufle12jhs77_f_설명4 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(MetaDefault, new BGId(4986946729959186727UL, 8247963004628094885UL), () => _ufle12jhs77_f_설명4 = null);
+		public static BansheeGz.BGDatabase.BGFieldInt _f_챕터 => _ufle12jhs77_f_챕터 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(MetaDefault, new BGId(5383530201138620385UL, 11037329016508647860UL), () => _ufle12jhs77_f_챕터 = null);
+		private static BansheeGz.BGDatabase.BGFieldInt _ufle12jhs77_f_스테이지;
+		public static BansheeGz.BGDatabase.BGFieldInt _f_스테이지 => _ufle12jhs77_f_스테이지 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(MetaDefault, new BGId(4965232352872772531UL, 16120266191097180600UL), () => _ufle12jhs77_f_스테이지 = null);
+		private static BansheeGz.BGDatabase.BGFieldString _ufle12jhs77_f_SY1;
+		public static BansheeGz.BGDatabase.BGFieldString _f_SY1 => _ufle12jhs77_f_SY1 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(MetaDefault, new BGId(4768543798991514242UL, 6256180303284794264UL), () => _ufle12jhs77_f_SY1 = null);
+		private static BansheeGz.BGDatabase.BGFieldString _ufle12jhs77_f_SY2;
+		public static BansheeGz.BGDatabase.BGFieldString _f_SY2 => _ufle12jhs77_f_SY2 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(MetaDefault, new BGId(5625378143081174702UL, 17486703981905246893UL), () => _ufle12jhs77_f_SY2 = null);
+		private static BansheeGz.BGDatabase.BGFieldString _ufle12jhs77_f_SY3;
+		public static BansheeGz.BGDatabase.BGFieldString _f_SY3 => _ufle12jhs77_f_SY3 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(MetaDefault, new BGId(4659535730869736948UL, 16995834177337497231UL), () => _ufle12jhs77_f_SY3 = null);
+		private static BansheeGz.BGDatabase.BGFieldString _ufle12jhs77_f_SY4;
+		public static BansheeGz.BGDatabase.BGFieldString _f_SY4 => _ufle12jhs77_f_SY4 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(MetaDefault, new BGId(5579605683096065248UL, 5050087918956697495UL), () => _ufle12jhs77_f_SY4 = null);
+		private static BansheeGz.BGDatabase.BGFieldListInt _ufle12jhs77_f_S1;
+		public static BansheeGz.BGDatabase.BGFieldListInt _f_S1 => _ufle12jhs77_f_S1 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldListInt>(MetaDefault, new BGId(5216439070559040185UL, 12991897461117294486UL), () => _ufle12jhs77_f_S1 = null);
+		private static BansheeGz.BGDatabase.BGFieldListInt _ufle12jhs77_f_S2;
+		public static BansheeGz.BGDatabase.BGFieldListInt _f_S2 => _ufle12jhs77_f_S2 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldListInt>(MetaDefault, new BGId(4967074391538003439UL, 5355369813853785015UL), () => _ufle12jhs77_f_S2 = null);
+		private static BansheeGz.BGDatabase.BGFieldListInt _ufle12jhs77_f_S3;
+		public static BansheeGz.BGDatabase.BGFieldListInt _f_S3 => _ufle12jhs77_f_S3 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldListInt>(MetaDefault, new BGId(4736891500364581675UL, 594921088825742239UL), () => _ufle12jhs77_f_S3 = null);
+		private static BansheeGz.BGDatabase.BGFieldListInt _ufle12jhs77_f_S4;
+		public static BansheeGz.BGDatabase.BGFieldListInt _f_S4 => _ufle12jhs77_f_S4 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldListInt>(MetaDefault, new BGId(5449686700710024943UL, 6241989722434591890UL), () => _ufle12jhs77_f_S4 = null);
+		private static BansheeGz.BGDatabase.BGFieldString _ufle12jhs77_f_이름;
+		public static BansheeGz.BGDatabase.BGFieldString _f_이름 => _ufle12jhs77_f_이름 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(MetaDefault, new BGId(4845037896024535066UL, 16187873674313072512UL), () => _ufle12jhs77_f_이름 = null);
+		private static BansheeGz.BGDatabase.BGFieldString _ufle12jhs77_f_시너지ID;
+		public static BansheeGz.BGDatabase.BGFieldString _f_시너지ID => _ufle12jhs77_f_시너지ID ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(MetaDefault, new BGId(5189512730722477183UL, 4342577251500564361UL), () => _ufle12jhs77_f_시너지ID = null);
+		private static BansheeGz.BGDatabase.BGFieldString _ufle12jhs77_f_설명;
+		public static BansheeGz.BGDatabase.BGFieldString _f_설명 => _ufle12jhs77_f_설명 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(MetaDefault, new BGId(5001324831412013622UL, 15322317218728873129UL), () => _ufle12jhs77_f_설명 = null);
 		private DB_시너지() : base(MetaDefault) {}
 		private DB_시너지(BGId id) : base(MetaDefault, id) {}
 		private DB_시너지(BGMetaEntity meta) : base(meta) {}
@@ -511,45 +499,37 @@ namespace Mewage.DB
 		{
 			_metaDefault = BGCodeGenUtils.GetMeta<BansheeGz.BGDatabase.BGMetaRow>(new BGId(5638412980678320811UL,2576174378780931004UL), ReleaseCodeGenRuntime);
 			_ufle12jhs77_f_name = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldEntityName>(_metaDefault, new BGId(5666015456627611948UL, 12221603386937517454UL));
-			_ufle12jhs77_f_챕터 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(_metaDefault, new BGId(5468332647300328447UL, 18394058584960564641UL));
-			_ufle12jhs77_f_시너지1 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldEnum>(_metaDefault, new BGId(5278316397570485879UL, 7003271884293309591UL));
-			_ufle12jhs77_f_시너지1_아이콘 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldUnitySprite>(_metaDefault, new BGId(5397162418455955457UL, 6571297949187675316UL));
-			_ufle12jhs77_f_스탯1 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldListInt>(_metaDefault, new BGId(5233209748953367348UL, 13273786827881120170UL));
-			_ufle12jhs77_f_설명_1 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(_metaDefault, new BGId(5532330349489994582UL, 13676673871534470553UL));
-			_ufle12jhs77_f_시너지2 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldEnum>(_metaDefault, new BGId(5478085701944393518UL, 5951565409710202813UL));
-			_ufle12jhs77_f_시너지2_아이콘 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldUnitySprite>(_metaDefault, new BGId(4986268171246018254UL, 7290057173397949082UL));
-			_ufle12jhs77_f_스탯2 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldListInt>(_metaDefault, new BGId(5351579651681055932UL, 7242361045763083707UL));
-			_ufle12jhs77_f_설명_2 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(_metaDefault, new BGId(5545902285759451103UL, 14541824051081698689UL));
-			_ufle12jhs77_f_시너지3 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldEnum>(_metaDefault, new BGId(4670318875664813108UL, 11312711207774366611UL));
-			_ufle12jhs77_f_시너지3_아이콘 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldUnitySprite>(_metaDefault, new BGId(5574198088690548750UL, 13629996574159576486UL));
-			_ufle12jhs77_f_스탯3 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldListInt>(_metaDefault, new BGId(4789221301109122770UL, 15935125760200276918UL));
-			_ufle12jhs77_f_설명_3 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(_metaDefault, new BGId(4835875688517680423UL, 7667360966036400008UL));
-			_ufle12jhs77_f_시너지4 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldEnum>(_metaDefault, new BGId(5192977973678305970UL, 496524803842267275UL));
-			_ufle12jhs77_f_시너지4_아이콘 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldUnitySprite>(_metaDefault, new BGId(5706973327763285803UL, 10170647721613329300UL));
-			_ufle12jhs77_f_스탯4 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldListInt>(_metaDefault, new BGId(5384808469454566490UL, 17382437722867076262UL));
-			_ufle12jhs77_f_설명4 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(_metaDefault, new BGId(4986946729959186727UL, 8247963004628094885UL));
+			_ufle12jhs77_f_챕터 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(_metaDefault, new BGId(5383530201138620385UL, 11037329016508647860UL));
+			_ufle12jhs77_f_스테이지 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(_metaDefault, new BGId(4965232352872772531UL, 16120266191097180600UL));
+			_ufle12jhs77_f_SY1 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(_metaDefault, new BGId(4768543798991514242UL, 6256180303284794264UL));
+			_ufle12jhs77_f_SY2 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(_metaDefault, new BGId(5625378143081174702UL, 17486703981905246893UL));
+			_ufle12jhs77_f_SY3 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(_metaDefault, new BGId(4659535730869736948UL, 16995834177337497231UL));
+			_ufle12jhs77_f_SY4 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(_metaDefault, new BGId(5579605683096065248UL, 5050087918956697495UL));
+			_ufle12jhs77_f_S1 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldListInt>(_metaDefault, new BGId(5216439070559040185UL, 12991897461117294486UL));
+			_ufle12jhs77_f_S2 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldListInt>(_metaDefault, new BGId(4967074391538003439UL, 5355369813853785015UL));
+			_ufle12jhs77_f_S3 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldListInt>(_metaDefault, new BGId(4736891500364581675UL, 594921088825742239UL));
+			_ufle12jhs77_f_S4 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldListInt>(_metaDefault, new BGId(5449686700710024943UL, 6241989722434591890UL));
+			_ufle12jhs77_f_이름 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(_metaDefault, new BGId(4845037896024535066UL, 16187873674313072512UL));
+			_ufle12jhs77_f_시너지ID = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(_metaDefault, new BGId(5189512730722477183UL, 4342577251500564361UL));
+			_ufle12jhs77_f_설명 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(_metaDefault, new BGId(5001324831412013622UL, 15322317218728873129UL));
 		}
 		public static void ReleaseCodeGenRuntime()
 		{
 			_metaDefault = null;
 			_ufle12jhs77_f_name = null;
 			_ufle12jhs77_f_챕터 = null;
-			_ufle12jhs77_f_시너지1 = null;
-			_ufle12jhs77_f_시너지1_아이콘 = null;
-			_ufle12jhs77_f_스탯1 = null;
-			_ufle12jhs77_f_설명_1 = null;
-			_ufle12jhs77_f_시너지2 = null;
-			_ufle12jhs77_f_시너지2_아이콘 = null;
-			_ufle12jhs77_f_스탯2 = null;
-			_ufle12jhs77_f_설명_2 = null;
-			_ufle12jhs77_f_시너지3 = null;
-			_ufle12jhs77_f_시너지3_아이콘 = null;
-			_ufle12jhs77_f_스탯3 = null;
-			_ufle12jhs77_f_설명_3 = null;
-			_ufle12jhs77_f_시너지4 = null;
-			_ufle12jhs77_f_시너지4_아이콘 = null;
-			_ufle12jhs77_f_스탯4 = null;
-			_ufle12jhs77_f_설명4 = null;
+			_ufle12jhs77_f_스테이지 = null;
+			_ufle12jhs77_f_SY1 = null;
+			_ufle12jhs77_f_SY2 = null;
+			_ufle12jhs77_f_SY3 = null;
+			_ufle12jhs77_f_SY4 = null;
+			_ufle12jhs77_f_S1 = null;
+			_ufle12jhs77_f_S2 = null;
+			_ufle12jhs77_f_S3 = null;
+			_ufle12jhs77_f_S4 = null;
+			_ufle12jhs77_f_이름 = null;
+			_ufle12jhs77_f_시너지ID = null;
+			_ufle12jhs77_f_설명 = null;
 		}
 
 		[Preserve]
@@ -564,22 +544,18 @@ namespace Mewage.DB
 			public const string Meta = "시너지";
 			public const string name = "name";
 			public const string 챕터 = "챕터";
-			public const string 시너지1 = "시너지1";
-			public const string 시너지1_아이콘 = "시너지1_아이콘";
-			public const string 스탯1 = "스탯1";
-			public const string 설명_1 = "설명_1";
-			public const string 시너지2 = "시너지2";
-			public const string 시너지2_아이콘 = "시너지2_아이콘";
-			public const string 스탯2 = "스탯2";
-			public const string 설명_2 = "설명_2";
-			public const string 시너지3 = "시너지3";
-			public const string 시너지3_아이콘 = "시너지3_아이콘";
-			public const string 스탯3 = "스탯3";
-			public const string 설명_3 = "설명_3";
-			public const string 시너지4 = "시너지4";
-			public const string 시너지4_아이콘 = "시너지4_아이콘";
-			public const string 스탯4 = "스탯4";
-			public const string 설명4 = "설명4";
+			public const string 스테이지 = "스테이지";
+			public const string SY1 = "SY1";
+			public const string SY2 = "SY2";
+			public const string SY3 = "SY3";
+			public const string SY4 = "SY4";
+			public const string S1 = "S1";
+			public const string S2 = "S2";
+			public const string S3 = "S3";
+			public const string S4 = "S4";
+			public const string 이름 = "이름";
+			public const string 시너지ID = "시너지ID";
+			public const string 설명 = "설명";
 		}
 	}
 

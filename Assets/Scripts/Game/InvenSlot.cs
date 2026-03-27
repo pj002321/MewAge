@@ -83,37 +83,54 @@ public class InvenSlot : MonoBehaviour,
             return;
         }
         dragStarted = true;
+        panel?.NotifyDragBegin();
         CreateGhost(eventData.position);
         Debug.Log($"[InvenSlot] OnBeginDrag OK slot={SlotIndex}");
     }
 
-    public void OnDrag(PointerEventData eventData) => MoveGhost(eventData.position);
+    public void OnDrag(PointerEventData eventData)
+    {
+        MoveGhost(eventData.position);
+        if (dragStarted) panel?.NotifyDragHover(eventData.position);
+    }
 
     public void OnEndDrag(PointerEventData eventData)
     {
         if (dragStarted)
         {
-            var results = new List<RaycastResult>();
-            EventSystem.current.RaycastAll(eventData, results);
-            Debug.Log($"[InvenSlot] OnEndDrag slot={SlotIndex}, hits={results.Count}");
-
-            foreach (var hit in results)
+            bool sold = panel?.NotifyDragEnd(eventData.position) ?? false;
+            if (sold)
             {
-                var equipTarget = hit.gameObject.GetComponentInParent<EquipSlot>();
-                if (equipTarget != null && equipTarget.IsInitialized)
+                panel?.SellDraggedInven(SlotIndex);
+            }
+            else
+            {
+                var results = new List<RaycastResult>();
+                EventSystem.current.RaycastAll(eventData, results);
+                Debug.Log($"[InvenSlot] OnEndDrag slot={SlotIndex}, hits={results.Count}");
+
+                foreach (var hit in results)
                 {
-                    Debug.Log($"[InvenSlot] MoveInvenToEquip inven{SlotIndex} → equip{equipTarget.SlotIndex}");
-                    PlayerInventory.Shared?.MoveInvenToEquip(SlotIndex, equipTarget.SlotIndex);
-                    break;
-                }
-                var invenTarget = hit.gameObject.GetComponentInParent<InvenSlot>();
-                if (invenTarget != null && invenTarget != this && invenTarget.IsInitialized)
-                {
-                    Debug.Log($"[InvenSlot] SwapInven {SlotIndex} ↔ {invenTarget.SlotIndex}");
-                    PlayerInventory.Shared?.SwapInvenToInven(SlotIndex, invenTarget.SlotIndex);
-                    break;
+                    var equipTarget = hit.gameObject.GetComponentInParent<EquipSlot>();
+                    if (equipTarget != null && equipTarget.IsInitialized)
+                    {
+                        Debug.Log($"[InvenSlot] MoveInvenToEquip inven{SlotIndex} → equip{equipTarget.SlotIndex}");
+                        PlayerInventory.Shared?.MoveInvenToEquip(SlotIndex, equipTarget.SlotIndex);
+                        break;
+                    }
+                    var invenTarget = hit.gameObject.GetComponentInParent<InvenSlot>();
+                    if (invenTarget != null && invenTarget != this && invenTarget.IsInitialized)
+                    {
+                        Debug.Log($"[InvenSlot] SwapInven {SlotIndex} ↔ {invenTarget.SlotIndex}");
+                        PlayerInventory.Shared?.SwapInvenToInven(SlotIndex, invenTarget.SlotIndex);
+                        break;
+                    }
                 }
             }
+        }
+        else
+        {
+            panel?.NotifyDragEnd(eventData.position);
         }
 
         dragStarted = false;

@@ -18,6 +18,10 @@ public class StatPanelUI : MonoBehaviourSingleton<StatPanelUI>
 
     private StatFieldUI[] _fields;
 
+    private bool     _hasPreview;
+    private StatType _previewStat;
+    private float    _previewPct;
+
     protected override void Awake()
     {
         base.Awake();
@@ -37,7 +41,7 @@ public class StatPanelUI : MonoBehaviourSingleton<StatPanelUI>
     public void Show()
     {
         gameObject.SetActive(true);
-        Refresh();
+        RefreshInternal();
     }
 
     public void Hide() => gameObject.SetActive(false);
@@ -45,12 +49,37 @@ public class StatPanelUI : MonoBehaviourSingleton<StatPanelUI>
     public void Refresh()
     {
         if (!gameObject.activeSelf) return;
+        RefreshInternal();
+    }
 
+    /// <summary>증강 미리보기를 설정합니다. 패널이 열려 있으면 즉시 갱신됩니다.</summary>
+    public void SetPreview(StatType stat, float pct)
+    {
+        _previewStat = stat;
+        _previewPct  = pct;
+        _hasPreview  = true;
+        if (gameObject.activeSelf) RefreshInternal();
+    }
+
+    /// <summary>미리보기를 해제하고 일반 수치로 복귀합니다.</summary>
+    public void ClearPreview()
+    {
+        _hasPreview = false;
+        if (gameObject.activeSelf) RefreshInternal();
+    }
+
+    private void RefreshInternal()
+    {
         var sm = PlayerStatManager.Shared;
         if (sm == null) return;
 
         foreach (var field in _fields)
-            field.Refresh(sm);
+        {
+            if (_hasPreview)
+                field.RefreshWithPreview(sm, _previewStat, _previewPct);
+            else
+                field.Refresh(sm);
+        }
     }
 }
 

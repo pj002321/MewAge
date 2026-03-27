@@ -4,15 +4,15 @@ using UnityEngine;
 
 /// <summary>
 /// DB_시너지 조회 유틸리티.
-/// 챕터별 시너지 태그·아이콘 조회, 장착 개수에 따른 등급 색상 제공.
+/// 챕터별 시너지 태그·설명 조회, 장착 개수에 따른 등급 색상 제공.
 /// </summary>
 public static class SynergyHelper
 {
     // ── 등급 컬러 ───────────────────────────────────────────────
-    public static readonly Color ColorNone   = new Color(0.35f, 0.35f, 0.35f, 0.5f); // 어두운 회색
-    public static readonly Color ColorBronze = new Color(0.80f, 0.50f, 0.20f, 1f);   // 동
-    public static readonly Color ColorSilver = new Color(0.78f, 0.78f, 0.78f, 1f);   // 은
-    public static readonly Color ColorGold   = new Color(1.00f, 0.85f, 0.10f, 1f);   // 금
+    public static readonly Color ColorNone   = new Color(0.35f, 0.35f, 0.35f, 0.5f);
+    public static readonly Color ColorBronze = new Color(0.80f, 0.50f, 0.20f, 1f);
+    public static readonly Color ColorSilver = new Color(0.78f, 0.78f, 0.78f, 1f);
+    public static readonly Color ColorGold   = new Color(1.00f, 0.85f, 0.10f, 1f);
 
     /// <summary>장착 수 → 시너지 등급 색상. 1이상=동, 3이상=은, 5이상=금</summary>
     public static Color GetTierColor(int count)
@@ -23,11 +23,39 @@ public static class SynergyHelper
         return ColorNone;
     }
 
+    // ── ID ↔ Tag 변환 ─────────────────────────────────────────
+    /// <summary>DB의 SY 문자열 ID → WeaponSynergyTag 변환</summary>
+    public static WeaponSynergyTag IDToTag(string id)
+    {
+        return id switch
+        {
+            "SY_FIELD"  => WeaponSynergyTag.야수,
+            "SY_GATH"   => WeaponSynergyTag.채집,
+            "SY_HUNTER" => WeaponSynergyTag.사냥꾼,
+            "SY_WISDOM" => WeaponSynergyTag.지혜,
+            _ => WeaponSynergyTag.None
+        };
+    }
+
+    /// <summary>WeaponSynergyTag → DB 문자열 ID 변환</summary>
+    public static string TagToID(WeaponSynergyTag tag)
+    {
+        return tag switch
+        {
+            WeaponSynergyTag.야수   => "SY_FIELD",
+            WeaponSynergyTag.채집   => "SY_GATH",
+            WeaponSynergyTag.사냥꾼 => "SY_HUNTER",
+            WeaponSynergyTag.지혜   => "SY_WISDOM",
+            _ => string.Empty
+        };
+    }
+
     // ── 챕터 시너지 목록 ─────────────────────────────────────────
     public struct SynergyEntry
     {
         public WeaponSynergyTag Tag;
         public Sprite           Icon;
+        public string           Name;
         public string           Description;
     }
 
@@ -36,31 +64,23 @@ public static class SynergyHelper
     {
         var result = new List<SynergyEntry>(4);
 
-        var row = DB_시너지.FindEntity(r => r.f_챕터 == chapter);
+        var row = DB_시너지.FindEntity(r => r.f_챕터 == chapter && !string.IsNullOrEmpty(r.f_SY1));
         if (row == null) return result;
 
-        AddIfValid(result, row.f_시너지1, row.f_시너지1_아이콘, row.f_설명_1);
-        AddIfValid(result, row.f_시너지2, row.f_시너지2_아이콘, row.f_설명_2);
-        AddIfValid(result, row.f_시너지3, row.f_시너지3_아이콘, row.f_설명_3);
-       // AddIfValid(result, row.f_시너지4, row.f_시너지4_아이콘, row.f_설명_4);
+        TryAddEntry(result, row.f_SY1, row.f_S1);
+        TryAddEntry(result, row.f_SY2, row.f_S2);
+        TryAddEntry(result, row.f_SY3, row.f_S3);
+        TryAddEntry(result, row.f_SY4, row.f_S4);
 
         return result;
     }
 
-    /// <summary>특정 태그의 아이콘을 챕터 DB에서 찾아 반환합니다.</summary>
-    public static Sprite GetIcon(WeaponSynergyTag tag, int chapter)
+    /// <summary>Resources/Synergy/{synergyID} 에서 아이콘 스프라이트를 로드합니다.</summary>
+    public static Sprite GetIcon(WeaponSynergyTag tag, int chapter = 0)
     {
-        if (tag == WeaponSynergyTag.None) return null;
-
-        var row = DB_시너지.FindEntity(r => r.f_챕터 == chapter);
-        if (row == null) return null;
-
-        if (row.f_시너지1 == tag) return row.f_시너지1_아이콘;
-        if (row.f_시너지2 == tag) return row.f_시너지2_아이콘;
-        if (row.f_시너지3 == tag) return row.f_시너지3_아이콘;
-        if (row.f_시너지4 == tag) return row.f_시너지4_아이콘;
-
-        return null;
+        string id = TagToID(tag);
+        if (string.IsNullOrEmpty(id)) return null;
+        return Resources.Load<Sprite>($"Synergy/{id.ToLower()}");
     }
 
     /// <summary>장착 무기 중 특정 태그를 보유한 개수를 반환합니다.</summary>
@@ -79,9 +99,41 @@ public static class SynergyHelper
     }
 
     // ── 내부 ────────────────────────────────────────────────────
-    private static void AddIfValid(List<SynergyEntry> list, WeaponSynergyTag tag, Sprite icon, string desc)
+    private static void TryAddEntry(List<SynergyEntry> list, string synergyID, List<int> statValues)
     {
-        if (tag != WeaponSynergyTag.None)
-            list.Add(new SynergyEntry { Tag = tag, Icon = icon, Description = desc ?? string.Empty });
+        if (string.IsNullOrEmpty(synergyID)) return;
+        var tag = IDToTag(synergyID);
+        if (tag == WeaponSynergyTag.None) return;
+
+        string name = GetDisplayName(tag);
+        string desc = FormatDescription(tag, statValues);
+        var icon = Resources.Load<Sprite>($"Synergy/{synergyID.ToLower()}");
+        list.Add(new SynergyEntry { Tag = tag, Icon = icon, Name = name, Description = desc });
+    }
+
+    private static string GetDisplayName(WeaponSynergyTag tag) => tag switch
+    {
+        WeaponSynergyTag.야수   => "야수",
+        WeaponSynergyTag.채집   => "채집",
+        WeaponSynergyTag.사냥꾼 => "사냥꾼",
+        WeaponSynergyTag.지혜   => "지혜",
+        _ => tag.ToString()
+    };
+
+    /// <summary>시너지 태그 + 수치 배열(동/은/금)로 설명 문자열 생성</summary>
+    private static string FormatDescription(WeaponSynergyTag tag, List<int> v)
+    {
+        if (v == null || v.Count < 3) return string.Empty;
+
+        (string label, string unit) = tag switch
+        {
+            WeaponSynergyTag.야수   => ("공격력 증가",     "%"),
+            WeaponSynergyTag.채집   => ("경험치 획득 증가", "배"),
+            WeaponSynergyTag.사냥꾼 => ("출혈 피해 증가",  ""),
+            WeaponSynergyTag.지혜   => ("치명타 확률 증가", "%"),
+            _ => ("스탯 증가", "")
+        };
+
+        return $"{label}\n동 +{v[0]}{unit}  /  은 +{v[1]}{unit}  /  금 +{v[2]}{unit}";
     }
 }

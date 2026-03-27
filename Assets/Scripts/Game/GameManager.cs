@@ -244,8 +244,16 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         wave++;
         waitingForUpgrade = false;
 
-        // WaveHealHP 패시브 — 웨이브 시작 시 축적된 회복량만큼 체력 회복
+        // 웨이브 시작 시 MaxHP의 10% 회복 (만땅이어도 텍스트 표시)
         var player = PlayerController.Instance;
+        if (player != null)
+        {
+            float waveHeal = player.MaxHPValue * 0.1f;
+            player.HealHP(waveHeal);
+            FXManager.Shared?.SpawnPlayerText("+10%", Color.green);
+        }
+
+        // WaveHealHP 패시브 — 추가 축적된 회복량
         if (player != null && player.WaveHealAmount > 0f)
             player.HealHP(player.WaveHealAmount);
 

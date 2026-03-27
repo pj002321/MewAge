@@ -117,8 +117,14 @@ public class DropItem : MonoBehaviour
         if (itemType == ItemType.Gold) stats?.AddGold(value + (stats?.GoldBonus ?? 0));
         else                           stats?.AddExp (value + (stats?.ExpBonus  ?? 0));
 
-        if (itemType == ItemType.Gold) FXManager.Shared?.SpawnGoldOrbDebris(transform.position);
-        else                           FXManager.Shared?.SpawnExpOrbDebris(transform.position);
+        var player = PlayerController.Instance;
+        Vector3 spawnPos = player != null
+            ? (Vector3)player.Position + new Vector3(0f, 0.3f, 0f)
+            : transform.position;
+
+        if (itemType == ItemType.Gold) FXManager.Shared?.SpawnGoldOrbRise(spawnPos);
+        else                           FXManager.Shared?.SpawnExpOrbRise(spawnPos);
+
         Destroy(gameObject);
     }
 

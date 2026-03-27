@@ -42,9 +42,9 @@ public class PlayerController : MonoBehaviour
     private float _knockbackPower;  // 넉백 지수 (PlayerStatManager 설정)
     private float _magnetRadius;    // 흡수 반경 (PlayerStatManager 설정)
 
-    public float CritRateBonus    => critRateBonus;
+    public float CritRateBonus    => critRateBonus    + _synergyCrit;
     public float CritDamageBonus  => critDamageBonus;
-    public float BleedDamageBonus => bleedDamageBonus;
+    public float BleedDamageBonus => bleedDamageBonus + _synergyBleed;
     public float HealOnKillChance => healOnKillChance;
     public float HealOnKillFactor => healOnKillFactor;
     public float HealOrbChance    => healOrbChance;
@@ -59,6 +59,8 @@ public class PlayerController : MonoBehaviour
     private float _synergyDef;
     private float _synergySpeed;
     private float _synergyMaxHp;
+    private float _synergyBleed;
+    private float _synergyCrit;
 
     public float Attack            => attack  + _synergyAtk;
     public float Defense           => defense + _synergyDef;
@@ -151,7 +153,11 @@ public class PlayerController : MonoBehaviour
     public void TakeDamage(float damage)
     {
         if (isInvincible) return;
-        if (dodge > 0f && Random.value < dodge) return;
+        if (dodge > 0f && Random.value < dodge)
+        {
+            FXManager.Shared?.SpawnPlayerText("회피", new Color(1f, 0.95f, 0.4f));
+            return;
+        }
 
         float reduced = Mathf.Max(0f, damage - defense);
         currentHP -= reduced;
@@ -256,11 +262,14 @@ public class PlayerController : MonoBehaviour
     }
 
     /// <summary>시너지 보너스를 재설정합니다. (SynergyEffectManager가 장착 변경 시 호출)</summary>
-    public void SetSynergyBonus(float atkAdd, float defAdd, float speedAdd, float maxHpAdd)
+    public void SetSynergyBonus(float atkAdd, float defAdd, float speedAdd, float maxHpAdd,
+                                float bleedAdd = 0f, float critAdd = 0f)
     {
         _synergyAtk   = atkAdd;
         _synergyDef   = defAdd;
         _synergySpeed = speedAdd;
+        _synergyBleed = bleedAdd;
+        _synergyCrit  = critAdd;
 
         float delta = maxHpAdd - _synergyMaxHp;
         _synergyMaxHp = maxHpAdd;
@@ -348,7 +357,11 @@ public class PlayerController : MonoBehaviour
     {
         if (healOnKillChance <= 0f || healOnKillFactor <= 0f) return;
         if (Random.value <= healOnKillChance)
-            HealHP(maxHP * healOnKillFactor);
+        {
+            float amount = maxHP * healOnKillFactor;
+            HealHP(amount);
+            FXManager.Shared?.SpawnPlayerText($"+{Mathf.RoundToInt(amount)}", Color.green);
+        }
     }
 
     /// <summary>회복 구슬 수집 시 MaxHP의 healOrbFactor 비율만큼 회복. (FXManager/HealOrb에서 호출)</summary>

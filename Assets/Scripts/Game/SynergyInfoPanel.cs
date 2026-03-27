@@ -71,7 +71,7 @@ public class SynergyInfoPanel : MonoBehaviourSingleton<SynergyInfoPanel>
                     row.icon.color   = color;
                 }
 
-                if (row.nameText) row.nameText.text = entry.Tag.ToString();
+                if (row.nameText) row.nameText.text = entry.Name;
                 if (row.descText) row.descText.text = entry.Description;
             }
             else

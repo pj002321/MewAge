@@ -351,7 +351,7 @@ public class EnemyController : MonoBehaviour
         // 사망 위치에 파편 스폰 (FXManager 없으면 인라인 실행)
         var debrisPos = transform.position;
         if (FXManager.Shared != null)
-            FXManager.Shared.SpawnDeathDebris(debrisPos);
+            FXManager.Shared.SpawnDeathDebris(debrisPos, _deathDir);
         else
             SpawnDebrisFallback(debrisPos);
 

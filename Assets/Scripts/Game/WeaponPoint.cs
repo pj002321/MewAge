@@ -142,6 +142,7 @@ public class WeaponPoint : MonoBehaviour
             var (finalDmg, isCrit) = RollCrit(attackDamage);
             Vector2 knockDir = (enemy.transform.position - transform.position).normalized;
             enemy.TakeDamage(finalDmg, isCrit, knockDir, spinKnockback);
+            ApplyLifeSteal(finalDmg);
 
             spinHitTimers[enemy] = spinHitCooldown;
         }
@@ -185,7 +186,7 @@ public class WeaponPoint : MonoBehaviour
         var (finalDmg, isCrit) = RollCrit(attackDamage);
         Vector2 dir = (target.transform.position - transform.position).normalized;
         var go = Instantiate(projectilePrefab, transform.position, Quaternion.identity);
-        go.GetComponent<Projectile>()?.Init(finalDmg, dir, projectileSpeed, isCritical: isCrit);
+        go.GetComponent<Projectile>()?.Init(finalDmg, dir, projectileSpeed, isCritical: isCrit, lifeSteal: lifeSteal);
     }
 
     private void ShootBoomerang(EnemyController firstTarget)
@@ -196,7 +197,7 @@ public class WeaponPoint : MonoBehaviour
         var go = Instantiate(projectilePrefab, transform.position, Quaternion.identity);
         if (go.TryGetComponent<BoomerangProjectile>(out var bm))
             bm.Init(finalDmg, projectileSpeed, boomerangMaxBounces, boomerangBounceRange,
-                    firstTarget, transform.parent, isCrit);
+                    firstTarget, transform.parent, isCrit, lifeSteal);
     }
 
     // ─────────────────────────────────────────
@@ -264,7 +265,14 @@ public class WeaponPoint : MonoBehaviour
             Vector2 knockDir = ((Vector2)enemy.transform.position - (Vector2)transform.position);
             if (knockDir.sqrMagnitude < 0.001f) knockDir = hitDir;
             enemy.TakeDamage(finalDmg, isCrit, knockDir.normalized, 8f);
+            ApplyLifeSteal(finalDmg);
         }
+    }
+
+    private void ApplyLifeSteal(float dealtDamage)
+    {
+        if (lifeSteal <= 0f) return;
+        PlayerController.Instance?.HealHP(dealtDamage * lifeSteal);
     }
 
     // ─────────────────────────────────────────
@@ -360,6 +368,7 @@ public class WeaponPoint : MonoBehaviour
     {
         weaponType   = data.weaponType;
         criticalRate = 0.05f + data.criticalRate;  // 기본 5% + 성 보너스 포함 크리티컬 확률
+        lifeSteal    = data.lifeSteal;
 
         var player = PlayerController.Instance;
         if (player != null)
