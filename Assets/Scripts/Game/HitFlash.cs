@@ -10,28 +10,28 @@ public class HitFlash : MonoBehaviour
     [SerializeField] private Color  flashColor    = new(1f, 0.2f, 0.2f, 1f);
     [SerializeField] private float  flashDuration = 0.12f;
 
-    private SpriteRenderer sr;
-    private Color          originalColor;
+    private SpriteRenderer[] srs;
+    [HideInInspector] public Color BaseColor = Color.white;
     private Coroutine      flashCoroutine;
 
     private void Awake()
     {
-        sr            = GetComponentInChildren<SpriteRenderer>(true);
-        if (sr == null) sr = GetComponentInParent<SpriteRenderer>();
-        if (sr != null) originalColor = sr.color;
+        srs = GetComponentsInChildren<SpriteRenderer>(true);
+        if (srs.Length == 0) srs = GetComponentsInParent<SpriteRenderer>();
+        if (srs.Length > 0) BaseColor = srs[0].color;
     }
 
     public void Flash()
     {
-        if (sr == null) return;
+        if (srs == null || srs.Length == 0) return;
         if (flashCoroutine != null) StopCoroutine(flashCoroutine);
         flashCoroutine = StartCoroutine(FlashRoutine());
     }
 
     private IEnumerator FlashRoutine()
     {
-        sr.color = flashColor;
+        foreach(var sr in srs) sr.color = flashColor;
         yield return new WaitForSeconds(flashDuration);
-        sr.color = originalColor;
+        foreach(var sr in srs) sr.color = BaseColor;
     }
 }

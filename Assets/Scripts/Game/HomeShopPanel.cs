@@ -1,6 +1,4 @@
 using UnityEngine;
-using UnityEngine.UI;
-using TMPro;
 
 /// <summary>
 /// 홈 상점 패널.
@@ -11,29 +9,33 @@ public class HomeShopPanel : MonoBehaviour
     [Header("가챠 결과 팝업")]
     public GachaResultPopup gachaPopup;
 
-    bool        _resultShown;
+    bool         _resultShown;
     EquipBoxType _pendingBox;
+    int          _pendingCount = 1;
 
     // ── 뽑기 흐름 ───────────────────────────────────────────────────
 
-    /// <summary>뽑기 버튼(1회 / 10회) 클릭 시 호출.</summary>
+    /// <summary>단일 뽑기 버튼 클릭 시 호출.</summary>
     public void TryDraw(int gemCost, EquipBoxType boxType = EquipBoxType.Normal)
+        => TryDrawMulti(gemCost, 1, boxType);
+
+    /// <summary>다중 뽑기 버튼 클릭 시 호출. count=10 등.</summary>
+    public void TryDrawMulti(int gemCost, int count, EquipBoxType boxType = EquipBoxType.Normal)
     {
         if (gachaPopup == null) { Debug.LogWarning("[Shop] gachaPopup 참조 없음"); return; }
-        _resultShown = false;
-        _pendingBox  = boxType;
+        _resultShown  = false;
+        _pendingBox   = boxType;
+        _pendingCount = count;
 
-        // 팝업을 루트 Canvas 바로 아래로 이동 → 전체 화면 오버레이
         MovePopupToRootCanvas();
 
-        gachaPopup.OnDrawRequested = null;
+        gachaPopup.OnDrawRequested  = null;
         gachaPopup.OnDrawRequested += OnGachaDrawPressed;
         gachaPopup.OpenForDraw(gemCost);
     }
 
     void MovePopupToRootCanvas()
     {
-        // 루트 Canvas 탐색 (가장 상위 Canvas)
         Canvas root = null;
         foreach (var c in FindObjectsOfType<Canvas>())
             if (c.transform.parent == null || c.transform.parent.GetComponent<Canvas>() == null)
@@ -43,10 +45,10 @@ public class HomeShopPanel : MonoBehaviour
         if (root == null) return;
 
         gachaPopup.transform.SetParent(root.transform, false);
-        var rt       = gachaPopup.GetComponent<RectTransform>();
-        rt.anchorMin = Vector2.zero;
-        rt.anchorMax = Vector2.one;
-        rt.offsetMin = rt.offsetMax = Vector2.zero;
+        var rt       = gachaPopup.GetComponent<UnityEngine.RectTransform>();
+        rt.anchorMin = UnityEngine.Vector2.zero;
+        rt.anchorMax = UnityEngine.Vector2.one;
+        rt.offsetMin = rt.offsetMax = UnityEngine.Vector2.zero;
     }
 
     void OnGachaDrawPressed()
@@ -54,11 +56,33 @@ public class HomeShopPanel : MonoBehaviour
         if (_resultShown) return;
         _resultShown = true;
 
-        var equip = EquipmentGacha.Draw(_pendingBox);
-        if (equip == null) { gachaPopup.ShowResult("?", "알 수 없음", null); return; }
+        if (EquipmentInventory.Shared == null)
+            MonoBehaviourSingleton<EquipmentInventory>.Create("EquipmentInventory");
 
-        EquipmentInventory.Shared?.TryAdd(equip);
-        gachaPopup.ShowResult(equip.grade, equip.name, null, equip);
+        if (_pendingCount <= 1)
+        {
+            var equip = EquipmentGacha.Draw(_pendingBox);
+            if (equip != null)
+                Debug.Log($"[Shop] 뽑기: {equip.equipId} | {equip.itemName} | {equip.grade} | {equip.StatDescription()}");
+            else
+                Debug.LogWarning("[Shop] 뽑기 결과: null (DB 확인 필요)");
+
+            EquipmentInventory.Shared?.TryAdd(equip);
+            Debug.Log($"[Shop] 인벤토리 보관함 수량: {EquipmentInventory.Shared?.Bag.Count}");
+            gachaPopup.ShowResult(equip);
+        }
+        else
+        {
+            var results = EquipmentGacha.DrawMulti(_pendingCount, _pendingBox);
+            foreach (var equip in results)
+            {
+                if (equip == null) continue;
+                Debug.Log($"[Shop] 뽑기: {equip.equipId} | {equip.itemName} | {equip.grade} | {equip.StatDescription()}");
+                EquipmentInventory.Shared?.TryAdd(equip);
+            }
+            Debug.Log($"[Shop] 인벤토리 보관함 수량: {EquipmentInventory.Shared?.Bag.Count}");
+            gachaPopup.ShowMultiResult(results);
+        }
     }
 
     // ── IAP / 재화 구매 ─────────────────────────────────────────────

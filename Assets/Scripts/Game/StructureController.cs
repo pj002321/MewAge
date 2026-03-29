@@ -12,7 +12,14 @@ public class StructureController : MonoBehaviour
 
     private System.Collections.IEnumerator Start()
     {
-        GetComponent<StructureSkillBase>()?.Activate();
+        var skill = GetComponent<StructureSkillBase>();
+        skill?.Activate();
+
+        if (skill != null && !skill.IsInstallation)
+        {
+            var srs = GetComponentsInChildren<SpriteRenderer>();
+            foreach (var sr in srs) sr.enabled = false;
+        }
 
         if (duration > 0f)
         {

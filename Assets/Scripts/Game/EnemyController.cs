@@ -69,7 +69,7 @@ public class EnemyController : MonoBehaviour
     private float          damageTimer;
     private Transform      playerTransform;
     private Rigidbody2D    rb;
-    private SpriteRenderer sr;
+    private SpriteRenderer[] srs;
     private HitFlash       hitFlash;
     private Animator       animator;
     private EnemyBehaviourBase behaviour;
@@ -101,7 +101,7 @@ public class EnemyController : MonoBehaviour
         currentHP = maxHP;
         baseSpeed = moveSpeed;
         rb        = GetComponent<Rigidbody2D>();
-        sr        = GetComponentInChildren<SpriteRenderer>(true);
+        srs       = GetComponentsInChildren<SpriteRenderer>(true);
         hitFlash  = GetComponentInChildren<HitFlash>(true);
         animator  = GetComponentInChildren<Animator>();
         behaviour = GetComponent<EnemyBehaviourBase>();
@@ -223,9 +223,9 @@ public class EnemyController : MonoBehaviour
     /// <summary>방향 벡터에 따라 스프라이트를 좌우 반전합니다.</summary>
     public void FlipToward(Vector2 dir)
     {
-        if (sr == null) return;
-        if (dir.x > 0.01f)       sr.flipX = false;
-        else if (dir.x < -0.01f) sr.flipX = true;
+        if (srs == null || srs.Length == 0) return;
+        if (dir.x > 0.01f)       { foreach(var sr in srs) sr.flipX = false; }
+        else if (dir.x < -0.01f) { foreach(var sr in srs) sr.flipX = true; }
     }
 
     // ── 충돌 접촉 피해 ──────────────────────────────────────────
@@ -246,6 +246,12 @@ public class EnemyController : MonoBehaviour
         if (Vector2.Distance(transform.position, p.transform.position) > contactMaxDist) return;
         p.TakeDamage(contactDamage);
         damageTimer = damageCooldown;
+    }
+
+    public void SetTint(Color color)
+    {
+        if (srs != null) { foreach(var sr in srs) sr.color = color; }
+        if (hitFlash != null) hitFlash.BaseColor = color;
     }
 
     // ── 상태 효과 ────────────────────────────────────────────────
@@ -274,13 +280,37 @@ public class EnemyController : MonoBehaviour
     {
         isStunned = true;
         if (rb != null) rb.linearVelocity = Vector2.zero;
-        Color originalColor = sr != null ? sr.color : Color.white;
-        if (sr != null) sr.color = new Color(1f, 0.92f, 0f, 1f); // 노란색
+        SetTint(new Color(1f, 0.92f, 0f, 1f)); // 노란색
 
         yield return new WaitForSeconds(seconds);
 
         isStunned = false;
-        if (sr != null) sr.color = originalColor;
+        SetTint(Color.white);
+    }
+
+    public void Freeze(float seconds, float damageOnThaw, Color freezeColor)
+    {
+        StopCoroutine(nameof(FreezeRoutine));
+        StopCoroutine(nameof(StunRoutine));
+        StartCoroutine(FreezeRoutine(seconds, damageOnThaw, freezeColor));
+    }
+
+    private IEnumerator FreezeRoutine(float seconds, float damageOnThaw, Color freezeColor)
+    {
+        isStunned = true;
+        if (rb != null) rb.linearVelocity = Vector2.zero;
+        SetTint(freezeColor);
+
+        var beh = GetComponent<EnemyBehaviourBase>();
+        bool wasOn = beh != null && beh.enabled;
+        if (beh) beh.enabled = false;
+
+        yield return new WaitForSeconds(seconds);
+
+        isStunned = false;
+        SetTint(Color.white);
+        if (beh && wasOn) beh.enabled = true;
+        TakeDamage(damageOnThaw);
     }
 
     /// <summary>지정 방향으로 순간적으로 밀어냅니다.</summary>
@@ -323,8 +353,8 @@ public class EnemyController : MonoBehaviour
 
         SoundManager.Shared?.Play(SoundKey.Enemy_Hit);
         // 스프라이트 상단 기준으로 스폰 (몸집이 커도 텍스트가 가려지지 않음)
-        Vector3 textPos = sr != null
-            ? new Vector3(transform.position.x, sr.bounds.max.y, transform.position.z)
+        Vector3 textPos = srs != null && srs.Length > 0
+            ? new Vector3(transform.position.x, srs[0].bounds.max.y, transform.position.z)
             : transform.position;
         FXManager.Shared?.SpawnDamageText(textPos, damage, isCritical);
         FXManager.Shared?.SpawnHitEffect(transform.position);
@@ -357,8 +387,8 @@ public class EnemyController : MonoBehaviour
 
         // SpriteSilhouette 쉐이더로 재질 교체 → 흰색 실루엣
         var flashMat = GetDeathFlashMat();
-        if (sr != null && flashMat != null)
-            sr.material = flashMat;
+        if (srs != null && flashMat != null)
+            foreach(var sr in srs) sr.material = flashMat;
 
         float duration  = 0.4f;
         float elapsed   = 0f;

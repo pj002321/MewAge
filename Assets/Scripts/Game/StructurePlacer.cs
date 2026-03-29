@@ -39,7 +39,7 @@ public class StructurePlacer : MonoBehaviourSingleton<StructurePlacer>
     /// <param name="launchOriginWorld">발사 시작점 (월드 좌표, 보통 UI 버튼을 변환한 위치)</param>
     public void Place(DB_기물 data, Vector3 launchOriginWorld)
     {
-        if (data?.f_설치프리팹 == null) return;
+        if (data == null) return;
         StartCoroutine(PlaceRoutine(data, launchOriginWorld));
     }
 
@@ -48,7 +48,7 @@ public class StructurePlacer : MonoBehaviourSingleton<StructurePlacer>
     private IEnumerator PlaceRoutine(DB_기물 data, Vector3 launchOrigin)
     {
         Vector3 target = GetTargetPosition();
-        Sprite  sprite = data.f_설치프리팹.GetComponentInChildren<SpriteRenderer>()?.sprite;
+        Sprite  sprite = LoadIconSprite(data.f_기물ID);
 
         // 1. 인디케이터 — 착지 위치를 즉시 표시
         GameObject indicator = SpawnIndicator(target, sprite);
@@ -56,9 +56,10 @@ public class StructurePlacer : MonoBehaviourSingleton<StructurePlacer>
         // 2. 발사체 — 버튼(launchOrigin)에서 target으로 날아감
         GameObject proj = CreateSpriteGO("StructureProj", launchOrigin, sprite, Color.white, 1f);
 
-        // 3. 포물선 이동
+        // 3. 포물선 이동 (수동/자동 모드 속도 차이를 줄이고 빠르게 통일)
         float dist     = Vector3.Distance(launchOrigin, target);
-        float duration = Mathf.Max(0.25f, dist / launchSpeed);
+        // 기존 속도 비례 대신 0.15 ~ 0.25초 사이의 고정 시간에 가까운 빠른 속도 사용
+        float duration = Mathf.Lerp(0.15f, 0.25f, Mathf.Clamp01(dist / 15f));
         float elapsed  = 0f;
 
         while (elapsed < duration)
@@ -70,11 +71,10 @@ public class StructurePlacer : MonoBehaviourSingleton<StructurePlacer>
 
             if (proj)
             {
-                // 진행 방향으로 회전
-                float   tNext    = Mathf.Clamp01((elapsed + Time.deltaTime) / duration);
-                float   arcNext  = Mathf.Sin(tNext * Mathf.PI) * arcHeight;
-                Vector3 posNext  = Vector3.Lerp(launchOrigin, target, tNext) + Vector3.up * arcNext;
-                Vector3 forward  = posNext - pos;
+                float   tNext   = Mathf.Clamp01((elapsed + Time.deltaTime) / duration);
+                float   arcNext = Mathf.Sin(tNext * Mathf.PI) * arcHeight;
+                Vector3 posNext = Vector3.Lerp(launchOrigin, target, tNext) + Vector3.up * arcNext;
+                Vector3 forward = posNext - pos;
                 if (forward.sqrMagnitude > 0.0001f)
                     proj.transform.up = forward.normalized;
 
@@ -88,11 +88,34 @@ public class StructurePlacer : MonoBehaviourSingleton<StructurePlacer>
         if (proj)      Destroy(proj);
         if (indicator) Destroy(indicator);
 
-        var go = Instantiate(data.f_설치프리팹, target, Quaternion.identity);
+        string installPath = GetInstallPath(data.f_기물ID);
+        var installPrefab  = Resources.Load<GameObject>(installPath);
+        if (installPrefab != null)
+            Instantiate(installPrefab, target, Quaternion.identity);
+        else
+            Debug.LogWarning($"[StructurePlacer] 설치 프리팹 없음: Resources/{installPath}");
 
-        // StructureZone 그리드 점유
         var zone = FindAnyObjectByType<StructureZone>();
         zone?.OccupyCell(target);
+    }
+
+    // ── 경로 헬퍼 ───────────────────────────────────────────────────
+
+    private static Sprite LoadIconSprite(string id)
+    {
+        if (string.IsNullOrEmpty(id)) return null;
+        string[] parts   = id.Split('_');
+        string   chapter = parts.Length > 0 ? parts[0] : id;
+        var prefab = Resources.Load<GameObject>($"Ware/{chapter}/{id.ToLower()}");
+        return prefab != null ? prefab.GetComponentInChildren<SpriteRenderer>()?.sprite : null;
+    }
+
+    private static string GetInstallPath(string id)
+    {
+        if (string.IsNullOrEmpty(id)) return string.Empty;
+        string[] parts   = id.Split('_');
+        string   chapter = parts.Length > 0 ? parts[0] : id;
+        return $"Ware/{chapter}/{id.ToLower()}_s";
     }
 
     // ── 설치 위치 결정 ───────────────────────────────────────────────

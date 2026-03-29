@@ -4,6 +4,8 @@ using UnityEngine;
 /// <summary>범위 내에 있는 플레이어를 주기적으로 회복합니다.</summary>
 public class HealZoneSkill : StructureSkillBase
 {
+
+
     public override void Activate() => StartCoroutine(HealRoutine());
 
     private IEnumerator HealRoutine()

@@ -25,6 +25,8 @@ public class FireSpreadSkill : StructureSkillBase
     [SerializeField] private float      spreadDelay  = 0.05f; // 칸마다 깔리는 연출 딜레이(초)
     [SerializeField] private float      fireDuration = 0f;    // 0 = 웨이브 종료까지 유지
 
+
+
     // 활성화된 화염 타일 목록 (적 DoT 판정 + 정리에 사용)
     private readonly List<GameObject> fireTiles = new();
 

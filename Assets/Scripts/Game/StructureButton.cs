@@ -52,9 +52,7 @@ public class StructureButton : MonoBehaviour
 
         if (data != null && count > 0)
         {
-            Sprite icon = data.f_설치프리팹 != null
-                ? data.f_설치프리팹.GetComponentInChildren<SpriteRenderer>()?.sprite
-                : null;
+            Sprite icon = LoadStructureIcon(data.f_기물ID);
 
             if (iconImage != null) { iconImage.sprite = icon; iconImage.enabled = icon != null; }
             if (countText != null) countText.text = count.ToString();
@@ -77,6 +75,16 @@ public class StructureButton : MonoBehaviour
                    && inv.ActiveAutoSlot == slotIndex
                    && inv.GetCount(slotIndex) > 0;
         indicator.SetActive(active);
+    }
+
+    private static Sprite LoadStructureIcon(string id)
+    {
+        if (string.IsNullOrEmpty(id)) return null;
+        string[] parts   = id.Split('_');
+        string   chapter = parts.Length > 0 ? parts[0] : id;
+        string   path    = $"Ware/{chapter}/{id.ToLower()}";
+        var prefab = Resources.Load<GameObject>(path);
+        return prefab != null ? prefab.GetComponentInChildren<SpriteRenderer>()?.sprite : null;
     }
 
     private void SetEmpty()

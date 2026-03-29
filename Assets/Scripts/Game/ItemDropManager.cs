@@ -74,19 +74,27 @@ public class ItemDropManager : MonoBehaviourSingleton<ItemDropManager>
 
     private void SpawnStructureOrb(Vector3 pos)
     {
-        var all  = DB_기물.FindEntities(_ => true);
-        var pool = DB_기물.FindEntities(e => e.f_챕터 <= currentChapter && e.f_프리팹 != null);
-
-        Debug.Log($"[ItemDrop] DB_기물 전체:{all?.Count} / 챕터·프리팹 필터 후:{pool?.Count}");
-
+        string prefix = $"C{currentChapter}_";
+        var pool = DB_기물.FindEntities(e => e.f_기물ID != null && e.f_기물ID.StartsWith(prefix));
         if (pool == null || pool.Count == 0) return;
 
-        var picked = pool[Random.Range(0, pool.Count)];
+        var picked  = pool[Random.Range(0, pool.Count)];
+        string id   = picked.f_기물ID;                               // e.g. C1_W0
+        string chapter = $"C{currentChapter}";
+        string path = $"Ware/{chapter}/{id.ToLower()}";             // Ware/C1/c1_w0
+
+        var prefab = Resources.Load<GameObject>(path);
+        if (prefab == null)
+        {
+            Debug.LogWarning($"[ItemDrop] 오브 프리팹 없음: Resources/{path}");
+            return;
+        }
+
         Vector3 offset = new(Random.Range(-0.3f, 0.3f), Random.Range(-0.3f, 0.3f), 0f);
-        var go = Instantiate(picked.f_프리팹, pos + offset, Quaternion.identity);
+        var go  = Instantiate(prefab, pos + offset, Quaternion.identity);
         var orb = go.GetComponent<StructureOrb>();
-        if (orb == null) Debug.LogWarning($"[ItemDrop] {picked.f_프리팹.name}에 StructureOrb 컴포넌트가 없습니다.");
-        else orb.Init(picked);
+        if (orb != null) orb.Init(picked);
+        else Debug.LogWarning($"[ItemDrop] {path} 프리팹에 StructureOrb 컴포넌트가 없습니다.");
     }
 
     public void OnChapterUp(int chapter) => currentChapter = chapter;

@@ -508,154 +508,254 @@ public class HomeUIBuilder
             return;
         }
         panelJangbi.SetActive(true);
+        // 기존 컴포넌트 및 자식 제거
+        var oldPanel = panelJangbi.GetComponent<HomeEquipPanel>();
+        if (oldPanel != null) Object.DestroyImmediate(oldPanel);
         while (panelJangbi.transform.childCount > 0)
             Object.DestroyImmediate(panelJangbi.transform.GetChild(0).gameObject);
 
         // ── 1. 캐릭터 뷰 (상단 55%) ──────────────────────────────────
-        // 전체 배경
         var charView = CreateRect("CharacterView", panelJangbi.transform);
         SetAnchors(charView, new Vector2(0f, 0.45f), Vector2.one, Vector2.zero, Vector2.zero);
-        charView.gameObject.AddComponent<Image>().color = new Color(0.85f, 0.55f, 0.10f, 1f); // 주황
+        charView.gameObject.AddComponent<Image>().color = new Color(0.85f, 0.55f, 0.10f, 1f);
 
-        // 스탯 바 (상단 중앙) — ATK | HP
-        var statsBar = CreateRect("StatsBar", charView);
-        SetAnchors(statsBar, new Vector2(0.15f, 0.85f), new Vector2(0.85f, 1f), Vector2.zero, Vector2.zero);
-        var statsHLG = statsBar.gameObject.AddComponent<HorizontalLayoutGroup>();
-        statsHLG.childControlWidth = statsHLG.childControlHeight = true;
-        statsHLG.childForceExpandWidth = statsHLG.childForceExpandHeight = true;
-        statsHLG.spacing = 12; statsHLG.padding = new RectOffset(8, 8, 4, 4);
-
-        // ATK 그룹
-        var atkGrp = CreateRect("ATK", statsBar);
-        var atkHLG = atkGrp.gameObject.AddComponent<HorizontalLayoutGroup>();
-        atkHLG.childControlWidth = atkHLG.childControlHeight = true;
-        atkHLG.childForceExpandWidth = atkHLG.childForceExpandHeight = true;
-        atkHLG.spacing = 6; atkHLG.padding = new RectOffset(4,4,2,2);
-        var atkBg = atkGrp.gameObject.AddComponent<Image>();
-        atkBg.color = new Color(0.15f, 0.15f, 0.20f, 0.85f);
-        var atkIconRT = CreateRect("Icon", atkGrp);
-        atkIconRT.gameObject.AddComponent<Image>().color = new Color(0.6f, 0.8f, 1f, 1f);
-        var atkLE = atkIconRT.gameObject.AddComponent<LayoutElement>(); atkLE.preferredWidth = 36; atkLE.preferredHeight = 36;
-        var attackText = CreateTMPText("Value", atkGrp, "—", 30f, TextAlignmentOptions.Center);
-        attackText.color = Color.white; attackText.fontStyle = FontStyles.Bold;
-
-        // HP 그룹
-        var hpGrp = CreateRect("HP", statsBar);
-        var hpHLG = hpGrp.gameObject.AddComponent<HorizontalLayoutGroup>();
-        hpHLG.childControlWidth = hpHLG.childControlHeight = true;
-        hpHLG.childForceExpandWidth = hpHLG.childForceExpandHeight = true;
-        hpHLG.spacing = 6; hpHLG.padding = new RectOffset(4,4,2,2);
-        var hpBg = hpGrp.gameObject.AddComponent<Image>();
-        hpBg.color = new Color(0.15f, 0.15f, 0.20f, 0.85f);
-        var hpIconRT = CreateRect("Icon", hpGrp);
-        hpIconRT.gameObject.AddComponent<Image>().color = new Color(1f, 0.35f, 0.35f, 1f);
-        var hpLE = hpIconRT.gameObject.AddComponent<LayoutElement>(); hpLE.preferredWidth = 36; hpLE.preferredHeight = 36;
-        var hpText = CreateTMPText("Value", hpGrp, "—", 30f, TextAlignmentOptions.Center);
-        hpText.color = Color.white; hpText.fontStyle = FontStyles.Bold;
-
-        // 장착 슬롯 6개 (좌3 우3) — VerticalLayoutGroup으로 균등 배치
+        // 장착 슬롯 6개 (좌3 우3)
         var leftSlots = CreateRect("SlotsLeft", charView);
-        SetAnchors(leftSlots, new Vector2(0f, 0.05f), new Vector2(0.22f, 0.85f), Vector2.zero, Vector2.zero);
+        SetAnchors(leftSlots, new Vector2(0f, 0.05f), new Vector2(0.22f, 0.95f), Vector2.zero, Vector2.zero);
         AddVLG(leftSlots.gameObject, 8, new RectOffset(8, 8, 6, 6));
 
         var rightSlots = CreateRect("SlotsRight", charView);
-        SetAnchors(rightSlots, new Vector2(0.78f, 0.05f), new Vector2(1f, 0.85f), Vector2.zero, Vector2.zero);
+        SetAnchors(rightSlots, new Vector2(0.78f, 0.05f), new Vector2(1f, 0.95f), Vector2.zero, Vector2.zero);
         AddVLG(rightSlots.gameObject, 8, new RectOffset(8, 8, 6, 6));
 
-        var equipFrames = new Image[6];
-        var equipIcons  = new Image[6];
+        var equipSlots = new EquipmentSlotView[6];
+
         for (int i = 0; i < 6; i++)
         {
-            var parent = i < 3 ? leftSlots : rightSlots;
-            var slot   = new GameObject($"EquipSlot_{i}");
-            slot.transform.SetParent(parent, false);
+            var parent  = i < 3 ? leftSlots : rightSlots;
+            var slotGO  = new GameObject($"EquipSlot_{i}");
+            slotGO.transform.SetParent(parent, false);
 
-            equipFrames[i]       = slot.AddComponent<Image>();
-            equipFrames[i].color = new Color(0.25f, 0.25f, 0.30f, 0.9f);
-
-            // LE: 정사각형 유지
-            var le = slot.AddComponent<LayoutElement>();
+            var le = slotGO.AddComponent<LayoutElement>();
             le.minWidth = le.minHeight = 10;
 
-            var iconGO   = new GameObject("Icon");
-            iconGO.transform.SetParent(slot.transform, false);
-            var iconRT   = iconGO.AddComponent<RectTransform>();
+            // 프레임 (배경 Image)
+            var frameImg   = slotGO.AddComponent<Image>();
+            frameImg.color = new Color(0.25f, 0.25f, 0.30f, 0.9f);
+            slotGO.AddComponent<Button>();
+
+            // 카테고리 아이콘
+            var catIconGO = new GameObject("CategoryIcon");
+            catIconGO.transform.SetParent(slotGO.transform, false);
+            var catIconRT      = catIconGO.AddComponent<RectTransform>();
+            catIconRT.anchorMin = new Vector2(0.05f, 0.55f);
+            catIconRT.anchorMax = new Vector2(0.45f, 0.95f);
+            catIconRT.offsetMin = catIconRT.offsetMax = Vector2.zero;
+            var catIconImg = catIconGO.AddComponent<Image>();
+            catIconImg.enabled = false;
+
+            // 아이콘
+            var iconGO = new GameObject("Icon");
+            iconGO.transform.SetParent(slotGO.transform, false);
+            var iconRT      = iconGO.AddComponent<RectTransform>();
             iconRT.anchorMin = new Vector2(0.08f, 0.08f);
             iconRT.anchorMax = new Vector2(0.92f, 0.92f);
             iconRT.offsetMin = iconRT.offsetMax = Vector2.zero;
-            equipIcons[i]         = iconGO.AddComponent<Image>();
-            equipIcons[i].enabled = false;
+            var iconImg = iconGO.AddComponent<Image>();
+            iconImg.enabled = false;
+
+            // 등급 텍스트
+            var gradeTxtGO = new GameObject("GradeText");
+            gradeTxtGO.transform.SetParent(slotGO.transform, false);
+            var gradeTxtRT      = gradeTxtGO.AddComponent<RectTransform>();
+            gradeTxtRT.anchorMin = new Vector2(0f, 0f);
+            gradeTxtRT.anchorMax = new Vector2(1f, 0.25f);
+            gradeTxtRT.offsetMin = gradeTxtRT.offsetMax = Vector2.zero;
+            var gradeTmp = gradeTxtGO.AddComponent<TextMeshProUGUI>();
+            gradeTmp.fontSize  = 18f;
+            gradeTmp.alignment = TextAlignmentOptions.Center;
+            gradeTmp.color     = Color.white;
+
+            // 문명 텍스트
+            var civTxtGO = new GameObject("CivText");
+            civTxtGO.transform.SetParent(slotGO.transform, false);
+            var civTxtRT      = civTxtGO.AddComponent<RectTransform>();
+            civTxtRT.anchorMin = new Vector2(0f, 0.75f);
+            civTxtRT.anchorMax = new Vector2(1f, 1f);
+            civTxtRT.offsetMin = civTxtRT.offsetMax = Vector2.zero;
+            var civTmp = civTxtGO.AddComponent<TextMeshProUGUI>();
+            civTmp.fontSize  = 16f;
+            civTmp.alignment = TextAlignmentOptions.Center;
+            civTmp.color     = Color.white;
+
+            var sv           = slotGO.AddComponent<EquipmentSlotView>();
+            sv.frameImage    = frameImg;
+            sv.iconImage     = iconImg;
+            sv.categoryIcon  = catIconImg;
+            sv.gradeText     = gradeTmp;
+            sv.civText       = civTmp;
+
+            equipSlots[i] = sv;
         }
 
         // 캐릭터 포트레이트 (가운데)
         var charHolder = CreateRect("CharacterHolder", charView);
-        SetAnchors(charHolder, new Vector2(0.20f, 0.05f), new Vector2(0.80f, 0.88f), Vector2.zero, Vector2.zero);
+        SetAnchors(charHolder, new Vector2(0.20f, 0.05f), new Vector2(0.80f, 0.95f), Vector2.zero, Vector2.zero);
         charHolder.gameObject.AddComponent<Image>().color = Color.clear;
 
         var charIcon = CreateRect("CharacterIcon", charHolder);
         SetAnchors(charIcon, new Vector2(0.05f, 0.12f), new Vector2(0.95f, 1f), Vector2.zero, Vector2.zero);
-        charIcon.gameObject.AddComponent<Image>().color = new Color(1f,1f,1f,0f); // 스프라이트 연결용
+        charIcon.gameObject.AddComponent<Image>().color = new Color(1f, 1f, 1f, 0f);
 
         var pedestal = CreateRect("Pedestal", charHolder);
-        SetAnchors(pedestal, new Vector2(0f, 0f), new Vector2(1f, 0.15f), Vector2.zero, Vector2.zero);
+        SetAnchors(pedestal, new Vector2(0f, 0f), new Vector2(1f, 0.12f), Vector2.zero, Vector2.zero);
         pedestal.gameObject.AddComponent<Image>().color = new Color(0.55f, 0.38f, 0.15f, 0.8f);
 
-        // ── 2. 탭 바 (등급별 · 나의 장비 · 합성) ─────────────────────
+        // ── 2. 탭 바 (전체 · 등급순 · 문명순) ───────────────────────
         var tabBar = CreateRect("TabBar", panelJangbi.transform);
         SetAnchors(tabBar, new Vector2(0f, 0.39f), new Vector2(1f, 0.45f), Vector2.zero, Vector2.zero);
         tabBar.gameObject.AddComponent<Image>().color = new Color(0.12f, 0.14f, 0.20f, 1f);
 
         var tabHLG = tabBar.gameObject.AddComponent<HorizontalLayoutGroup>();
-        tabHLG.childControlWidth = tabHLG.childControlHeight = true;
-        tabHLG.childForceExpandWidth = tabHLG.childForceExpandHeight = true;
+        tabHLG.childControlWidth      = tabHLG.childControlHeight     = true;
+        tabHLG.childForceExpandWidth  = tabHLG.childForceExpandHeight = true;
         tabHLG.spacing = 2; tabHLG.padding = new RectOffset(4, 4, 3, 3);
 
-        var tabGradeBtn   = CreateTabButton("Tab_등급별",  tabBar, "등급별",  false);
-        var tabMyEquipBtn = CreateTabButton("Tab_나의장비", tabBar, "나의 장비", true);
-        var tabSynthBtn   = CreateTabButton("Tab_합성",    tabBar, "합성",    false);
+        var tabAllBtn     = CreateTabButton("Tab_전체",  tabBar, "전체",  true);
+        var tabGradeBtn   = CreateTabButton("Tab_등급순", tabBar, "등급순", false);
+        var tabCivBtn     = CreateTabButton("Tab_문명순", tabBar, "문명순", false);
 
         // ── 3. 인벤토리 스크롤 (하단 39%) ────────────────────────────
-        var scrollGO  = new GameObject("InventoryScroll");
+        var scrollGO = new GameObject("InventoryScroll");
         scrollGO.transform.SetParent(panelJangbi.transform, false);
-        var scrollRT  = scrollGO.AddComponent<RectTransform>();
+        var scrollRT = scrollGO.AddComponent<RectTransform>();
         SetAnchors(scrollRT, Vector2.zero, new Vector2(1f, 0.39f), Vector2.zero, Vector2.zero);
         scrollGO.AddComponent<Image>().color = new Color(0.08f, 0.10f, 0.16f, 1f);
 
         var sr        = scrollGO.AddComponent<ScrollRect>();
         sr.horizontal = false; sr.vertical = true;
 
-        var viewport  = CreateRect("Viewport", scrollGO.transform);
+        var viewport = CreateRect("Viewport", scrollGO.transform);
         SetAnchors(viewport, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
         viewport.gameObject.AddComponent<RectMask2D>();
         sr.viewport = viewport;
 
-        var myEquipContent = CreateGridContent("MyEquipContent", viewport);
-        var gradeContent   = CreateGridContent("GradeContent",   viewport);
-        var synthContent   = CreateGridContent("SynthContent",   viewport);
-        gradeContent.gameObject.SetActive(false);
-        synthContent.gameObject.SetActive(false);
-        sr.content = myEquipContent;
+        var inventoryContent = CreateGridContent("InventoryContent", viewport);
+        sr.content = inventoryContent;
 
-        for (int i = 0; i < 12; i++)
-            CreateDummyItemSlot($"Slot_{i}", myEquipContent);
+        // ── 4. EquipmentDetailPopup 오버레이 ─────────────────────────
+        var popupGO = new GameObject("EquipmentDetailPopup");
+        popupGO.transform.SetParent(panelJangbi.transform, false);
+        var popupRT = popupGO.AddComponent<RectTransform>();
+        popupRT.anchorMin = Vector2.zero;
+        popupRT.anchorMax = Vector2.one;
+        popupRT.offsetMin = popupRT.offsetMax = Vector2.zero;
+        var detailPopup = popupGO.AddComponent<EquipmentDetailPopup>();
 
-        // ── 4. HomeEquipPanel 연결 ────────────────────────────────────
-        var equipPanel            = panelJangbi.AddComponent<HomeEquipPanel>();
-        equipPanel.equipFrames    = equipFrames;
-        equipPanel.equipIcons     = equipIcons;
-        equipPanel.attackText     = attackText;
-        equipPanel.hpText         = hpText;
-        equipPanel.tabGrade       = tabGradeBtn;
-        equipPanel.tabMyEquip     = tabMyEquipBtn;
-        equipPanel.tabSynth       = tabSynthBtn;
-        equipPanel.myEquipContent = myEquipContent;
-        equipPanel.gradeContent   = gradeContent;
-        equipPanel.synthContent   = synthContent;
+        // 배경 딤 (클릭하면 닫힘)
+        var backdrop       = popupGO.AddComponent<Image>();
+        backdrop.color     = new Color(0f, 0f, 0f, 0.65f);
+        var backdropBtn    = popupGO.AddComponent<Button>();
+        detailPopup.backdrop = backdropBtn;
+
+        // 중앙 카드
+        var cardGO  = new GameObject("Card");
+        cardGO.transform.SetParent(popupGO.transform, false);
+        var cardRT  = cardGO.AddComponent<RectTransform>();
+        cardRT.anchorMin        = new Vector2(0.1f, 0.25f);
+        cardRT.anchorMax        = new Vector2(0.9f, 0.78f);
+        cardRT.offsetMin        = cardRT.offsetMax = Vector2.zero;
+        cardGO.AddComponent<Image>().color = new Color(0.12f, 0.14f, 0.22f, 1f);
+
+        // 아이콘
+        var iconPopupRT = CreateRect("ItemIcon", cardGO.transform);
+        SetAnchors(iconPopupRT, new Vector2(0.05f, 0.60f), new Vector2(0.35f, 0.95f), Vector2.zero, Vector2.zero);
+        detailPopup.itemIcon = iconPopupRT.gameObject.AddComponent<Image>();
+        detailPopup.itemIcon.color = new Color(1f, 1f, 1f, 0f);
+
+        // 이름
+        var nameTxt  = CreateTMPText("NameText",  cardGO.transform, "장비 이름", 38f, TextAlignmentOptions.Left);
+        var nameRT   = nameTxt.GetComponent<RectTransform>();
+        SetAnchors(nameRT, new Vector2(0.38f, 0.78f), new Vector2(0.98f, 0.95f), Vector2.zero, Vector2.zero);
+        nameTxt.color = Color.white; nameTxt.fontStyle = FontStyles.Bold;
+        detailPopup.nameText = nameTxt;
+
+        // 등급
+        var gradeTxt = CreateTMPText("GradeText", cardGO.transform, "레어", 30f, TextAlignmentOptions.Left);
+        var gradeRT  = gradeTxt.GetComponent<RectTransform>();
+        SetAnchors(gradeRT, new Vector2(0.38f, 0.64f), new Vector2(0.98f, 0.78f), Vector2.zero, Vector2.zero);
+        gradeTxt.color = new Color(0.15f, 0.45f, 0.90f, 1f);
+        detailPopup.gradeText = gradeTxt;
+
+        // 문명·카테고리
+        var civTxt   = CreateTMPText("CivText",   cardGO.transform, "구석기  ·  반지", 26f, TextAlignmentOptions.Left);
+        var civRT    = civTxt.GetComponent<RectTransform>();
+        SetAnchors(civRT, new Vector2(0.38f, 0.52f), new Vector2(0.98f, 0.64f), Vector2.zero, Vector2.zero);
+        civTxt.color = new Color(0.85f, 0.85f, 0.85f, 1f);
+        detailPopup.civText = civTxt;
+
+        // 구분선
+        var divider     = CreateRect("Divider", cardGO.transform);
+        SetAnchors(divider, new Vector2(0.03f, 0.48f), new Vector2(0.97f, 0.49f), Vector2.zero, Vector2.zero);
+        divider.gameObject.AddComponent<Image>().color = new Color(1f, 1f, 1f, 0.15f);
+
+        // 스탯
+        var statTxt  = CreateTMPText("StatText",  cardGO.transform, "공격력 +40", 30f, TextAlignmentOptions.Left);
+        var statRT   = statTxt.GetComponent<RectTransform>();
+        SetAnchors(statRT, new Vector2(0.05f, 0.30f), new Vector2(0.95f, 0.46f), Vector2.zero, Vector2.zero);
+        statTxt.color = new Color(1f, 0.90f, 0.50f, 1f);
+        detailPopup.statText = statTxt;
+
+        // 설명
+        var descTxt  = CreateTMPText("DescText",  cardGO.transform, "장비 설명", 24f, TextAlignmentOptions.Left);
+        var descRT   = descTxt.GetComponent<RectTransform>();
+        SetAnchors(descRT, new Vector2(0.05f, 0.10f), new Vector2(0.95f, 0.30f), Vector2.zero, Vector2.zero);
+        descTxt.color = new Color(0.75f, 0.75f, 0.75f, 1f);
+        detailPopup.descText = descTxt;
+
+        // 장착/해제 버튼
+        var actionGO  = new GameObject("ActionButton");
+        actionGO.transform.SetParent(cardGO.transform, false);
+        var actionRT  = actionGO.AddComponent<RectTransform>();
+        SetAnchors(actionRT, new Vector2(0.15f, 0.01f), new Vector2(0.85f, 0.10f), Vector2.zero, Vector2.zero);
+        actionGO.AddComponent<Image>().color = new Color(0.20f, 0.60f, 0.25f, 1f);
+        detailPopup.actionButton = actionGO.AddComponent<Button>();
+        var actionLbl = CreateTMPText("Label", actionGO.transform, "장착", 32f, TextAlignmentOptions.Center);
+        actionLbl.color = Color.white; actionLbl.fontStyle = FontStyles.Bold;
+        var lRT = actionLbl.GetComponent<RectTransform>();
+        lRT.anchorMin = Vector2.zero; lRT.anchorMax = Vector2.one;
+        lRT.offsetMin = lRT.offsetMax = Vector2.zero;
+        detailPopup.actionLabel = actionLbl;
+
+        // 닫기 버튼 (카드 우상단 ×)
+        var closeGO  = new GameObject("CloseButton");
+        closeGO.transform.SetParent(cardGO.transform, false);
+        var closeRT  = closeGO.AddComponent<RectTransform>();
+        SetAnchors(closeRT, new Vector2(0.88f, 0.92f), new Vector2(1f, 1.02f), Vector2.zero, Vector2.zero);
+        closeGO.AddComponent<Image>().color = new Color(0.7f, 0.15f, 0.15f, 1f);
+        detailPopup.closeButton = closeGO.AddComponent<Button>();
+        var closeLbl = CreateTMPText("X", closeGO.transform, "✕", 28f, TextAlignmentOptions.Center);
+        closeLbl.color = Color.white;
+        var cRT = closeLbl.GetComponent<RectTransform>();
+        cRT.anchorMin = Vector2.zero; cRT.anchorMax = Vector2.one;
+        cRT.offsetMin = cRT.offsetMax = Vector2.zero;
+
+        popupGO.SetActive(false);
+
+        // ── 5. HomeEquipPanel 연결 ─────────────────────────────────────
+        var equipPanel              = panelJangbi.AddComponent<HomeEquipPanel>();
+        equipPanel.equipSlots       = equipSlots;
+        equipPanel.tabAll           = tabAllBtn;
+        equipPanel.tabByGrade       = tabGradeBtn;
+        equipPanel.tabByCiv         = tabCivBtn;
+        equipPanel.inventoryContent = inventoryContent;
+        equipPanel.detailPopup      = detailPopup;
+        // slotPrefab 은 프리팹 참조이므로 Inspector에서 직접 연결 필요
 
         panelJangbi.SetActive(false);
         EditorSceneManager.MarkSceneDirty(scene);
         EditorSceneManager.SaveScene(scene);
-        Debug.Log("[HomeUIBuilder] Equipment Panel 빌드 완료.");
+        Debug.Log("[HomeUIBuilder] Equipment Panel 빌드 완료. ※ slotPrefab 은 Inspector에서 직접 연결하세요.");
     }
 
     // ────────────────────────────────────────────────────────────────
@@ -1348,10 +1448,7 @@ public class HomeUIBuilder
         BuildDailyShopSection(msContent);
 
         BuildGachaSectionHeader(msContent, "장비 뽑기");
-        BuildGachaCard(msContent, "일반 장비 상자",
-            "일반, 고급 또는 레어 장비\n레어 장비 확률 증가", 80, 800);
-        BuildGachaCard(msContent, "레어 장비 상자",
-            "고급, 레어 또는 에픽 장비\nS급 에픽 장비 확률 증가", 400, 4000);
+        BuildGachaCardRow(msContent);
 
         BuildIAPSection(msContent, "골드", new Color(0.15f, 0.40f, 0.70f, 1f), new[]
         {
@@ -1457,14 +1554,33 @@ public class HomeUIBuilder
         closeHintTmp.alignment = TextAlignmentOptions.Center;
         closeHintTmp.color     = new Color(0.70f, 0.70f, 0.70f, 0.8f);
 
+        // 다중 결과 그리드 (10회 뽑기용, 평소엔 비활성)
+        var multiGridGO = CreateRect("MultiResultContent", popupGO.transform);
+        SetAnchors(multiGridGO, new Vector2(0.02f, 0.25f), new Vector2(0.98f, 0.70f), Vector2.zero, Vector2.zero);
+        var multiGrid = multiGridGO.gameObject.AddComponent<UnityEngine.UI.GridLayoutGroup>();
+        multiGrid.cellSize        = new Vector2(120f, 140f);
+        multiGrid.spacing         = new Vector2(8f, 8f);
+        multiGrid.padding         = new RectOffset(8, 8, 8, 8);
+        multiGrid.constraint      = UnityEngine.UI.GridLayoutGroup.Constraint.FixedColumnCount;
+        multiGrid.constraintCount = 5;
+        multiGridGO.gameObject.SetActive(false);
+
+        // 단일 슬롯 앵커 (팝업 정중앙)
+        var singleAnchorGO = CreateRect("SingleSlotAnchor", popupGO.transform);
+        SetAnchors(singleAnchorGO, new Vector2(0.3f, 0.30f), new Vector2(0.7f, 0.70f), Vector2.zero, Vector2.zero);
+
         // GachaResultPopup 컴포넌트 연결
-        var popup           = popupGO.AddComponent<GachaResultPopup>();
-        popup.gradeText     = gradeText;
-        popup.itemNameText  = itemNameTmp;
-        popup.itemIcon      = itemIconImg;
-        popup.drawButton    = drawBtn;
-        popup.drawCostText  = drawCostTmp;
-        popup.closeHitArea  = closeBtn;
+        var popup                  = popupGO.AddComponent<GachaResultPopup>();
+        popup.gradeText            = gradeText;
+        popup.itemNameText         = itemNameTmp;
+        popup.itemIcon             = itemIconImg;
+        popup.drawButton           = drawBtn;
+        popup.drawCostText         = drawCostTmp;
+        popup.closeHitArea         = closeBtn;
+        popup.multiResultContent   = multiGridGO;
+        popup.chestRect            = chestGO;
+        popup.singleSlotAnchor     = singleAnchorGO;
+        // popup.slotPrefab — Inspector에서 직접 연결 필요
 
         popupGO.SetActive(false);
 
@@ -1576,13 +1692,38 @@ public class HomeUIBuilder
         }
     }
 
+    // ── 가챠 카드 2열 행 래퍼 ─────────────────────────────────────────
+    static void BuildGachaCardRow(RectTransform parent)
+    {
+        var rowGO = new GameObject("GachaCardRow");
+        rowGO.transform.SetParent(parent, false);
+        rowGO.AddComponent<Image>().color = Color.clear;
+        var rowLE = rowGO.AddComponent<LayoutElement>();
+        rowLE.preferredHeight = 560;
+
+        var hlg = rowGO.AddComponent<HorizontalLayoutGroup>();
+        hlg.childControlWidth       = hlg.childControlHeight       = true;
+        hlg.childForceExpandWidth   = hlg.childForceExpandHeight   = true;
+        hlg.spacing = 12;
+        hlg.padding = new RectOffset(0, 0, 0, 0);
+
+        var rowRT = rowGO.GetComponent<RectTransform>();
+
+        BuildGachaCard(rowRT, "일반 장비 상자",
+            "일반 70% / 레어 30%", 80, 800,
+            EquipBoxType.Normal);
+        BuildGachaCard(rowRT, "레어 장비 상자",
+            "레어 50% / 에픽 10%", 200, 2000,
+            EquipBoxType.Rare);
+    }
+
     // ── 가챠 카드 ─────────────────────────────────────────────────────
-    static void BuildGachaCard(RectTransform parent, string title, string desc, int cost1, int cost10)
+    static void BuildGachaCard(RectTransform parent, string title, string desc, int cost1, int cost10,
+        EquipBoxType boxType = EquipBoxType.Normal)
     {
         var cardGO = new GameObject($"GachaCard_{title}");
         cardGO.transform.SetParent(parent, false);
-        var cardLE = cardGO.AddComponent<LayoutElement>();
-        cardLE.preferredHeight = 520;
+        cardGO.AddComponent<LayoutElement>();  // 부모 HLG가 크기 제어
         cardGO.AddComponent<Image>().color = new Color(0.18f, 0.12f, 0.45f, 1f);
 
         // 배너 (왼 60%)
@@ -1635,20 +1776,22 @@ public class HomeUIBuilder
         btnHLG.childForceExpandWidth = btnHLG.childForceExpandHeight = true;
         btnHLG.spacing = 12; btnHLG.padding = new RectOffset(20, 20, 12, 12);
 
-        foreach (var (label, cost) in new[] { ($"1회 뽑기\nx{cost1}", cost1), ($"10회 뽑기\nx{cost10}", cost10) })
+        foreach (var (label, cost, count) in new[] {
+            ($"1회 뽑기\nx{cost1}",  cost1,  1),
+            ($"10회 뽑기\nx{cost10}", cost10, 10) })
         {
             var btnGO  = new GameObject("DrawBtn");
             btnGO.transform.SetParent(btnRow, false);
             btnGO.AddComponent<Image>().color = new Color(0.15f, 0.65f, 0.20f, 1f);
             btnGO.AddComponent<Button>();
-            // GachaDrawButton: Start() 에서 부모 HomeShopPanel.TryDraw(cost) 를 연결
-            var gdb      = btnGO.AddComponent<GachaDrawButton>();
-            gdb.gemCost  = cost;
-            var btnTmp   = CreateTMPText("Label", btnGO.transform, label, 28f, TextAlignmentOptions.Center);
-            btnTmp.color = Color.white; btnTmp.fontStyle = FontStyles.Bold;
-            var btnTRT   = btnTmp.GetComponent<RectTransform>();
-            btnTRT.anchorMin = Vector2.zero; btnTRT.anchorMax = Vector2.one;
-            btnTRT.offsetMin = btnTRT.offsetMax = Vector2.zero;
+            var gdb           = btnGO.AddComponent<GachaDrawButton>();
+            gdb.drawCount     = count;
+            gdb.boxType       = boxType;
+            var btnTmp        = CreateTMPText("Label", btnGO.transform, label, 28f, TextAlignmentOptions.Center);
+            btnTmp.color      = Color.white; btnTmp.fontStyle = FontStyles.Bold;
+            var btnTRT        = btnTmp.GetComponent<RectTransform>();
+            btnTRT.anchorMin  = Vector2.zero; btnTRT.anchorMax = Vector2.one;
+            btnTRT.offsetMin  = btnTRT.offsetMax = Vector2.zero;
         }
     }
 

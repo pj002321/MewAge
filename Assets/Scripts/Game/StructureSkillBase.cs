@@ -14,6 +14,13 @@ public abstract class StructureSkillBase : MonoBehaviour
     [SerializeField] protected float radius       = 1.5f;  // 범위
     [SerializeField] protected float tickInterval = 1f;    // 틱 간격
 
+    [Header("시각 연출 설정 (설치형 여부)")]
+    [Tooltip("체크 시 발동 후에도 기물 스프라이트가 맵에 남습니다.\n체크 해제 시 얼음이나 스펠처럼 즉시 투명해집니다.")]
+    [SerializeField] protected bool isInstallation = false;
+
+    /// <summary>이 기물이 맵에 형체가 남는 설치형인지 여부. false면 발동 즉시 외형이 사라집니다.</summary>
+    public bool IsInstallation => isInstallation;
+
     /// <summary>StructureController.Start()에서 호출됩니다.</summary>
     public abstract void Activate();
 

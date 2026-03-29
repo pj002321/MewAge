@@ -60,6 +60,43 @@ public class StructureInventory : MonoBehaviourSingleton<StructureInventory>
     }
 
     /// <summary>from 다음부터 순환 탐색해 보유량이 있는 첫 슬롯 인덱스를 반환. 없으면 -1.</summary>
+    // ── 기물 설치 ────────────────────────────────────────────────────
+    /// <summary>
+    /// DB_기물 행에서 ID를 읽어 Resources/Ware/{챕터}/{id_s}.prefab 을 로드해 설치합니다.
+    /// ID 형식: C1_W0 → 챕터=C1, 경로=Ware/C1/c1_w0_s
+    /// </summary>
+    private static void SpawnStructure(DB_기물 data, Vector3 pos)
+    {
+        string id = GetStructureId(data);
+        if (string.IsNullOrEmpty(id))
+        {
+            Debug.LogWarning("[StructureInventory] 기물 ID를 찾을 수 없음");
+            return;
+        }
+
+        // C1_W0 → chapter=C1, filename=c1_w0
+        string[] parts   = id.Split('_');
+        string   chapter = parts.Length > 0 ? parts[0] : id;
+        string   path    = $"Ware/{chapter}/{id.ToLower()}_s";
+
+        var prefab = Resources.Load<GameObject>(path);
+        if (prefab == null)
+        {
+            Debug.LogWarning($"[StructureInventory] 설치 프리팹 없음: Resources/{path}");
+            return;
+        }
+
+        Object.Instantiate(prefab, pos, Quaternion.identity);
+        Debug.Log($"[StructureInventory] 기물 설치: {id} at {pos}");
+    }
+
+    /// <summary>DB_기물 행에서 ID 문자열을 가져옵니다.</summary>
+    private static string GetStructureId(DB_기물 data)
+    {
+        if (data == null) return null;
+        return data.f_기물ID;
+    }
+
     private int FindNextSlot(int from)
     {
         for (int i = 1; i <= SlotCount; i++)
@@ -79,10 +116,10 @@ public class StructureInventory : MonoBehaviourSingleton<StructureInventory>
     {
         if (data == null) return;
 
-        // 같은 종류(설치 프리팹이 같은) 기물이 있으면 누적
+        // 같은 종류(기물ID가 같은) 기물이 있으면 누적
         for (int i = 0; i < SlotCount; i++)
         {
-            if (slotData[i] != null && slotData[i].f_설치프리팹 == data.f_설치프리팹) 
+            if (slotData[i] != null && slotData[i].f_기물ID == data.f_기물ID) 
             { 
                 slotCount[i]++; 
                 OnChanged?.Invoke(); 
@@ -113,12 +150,8 @@ public class StructureInventory : MonoBehaviourSingleton<StructureInventory>
         slotCount[slot]--;
         if (slotCount[slot] <= 0) slotData[slot] = null;
 
-        Vector3 origin = launchOriginWorld ?? (Vector3)(Vector2)player.Position;
-
-        if (StructurePlacer.Shared != null)
-            StructurePlacer.Shared.Place(data, origin);
-        else if (data.f_설치프리팹 != null)
-            Object.Instantiate(data.f_설치프리팹, (Vector3)(Vector2)player.Position, Quaternion.identity);
+        Vector3 launchOrigin = launchOriginWorld ?? (Vector3)(Vector2)player.transform.position;
+        StructurePlacer.Shared?.Place(data, launchOrigin);
 
         OnChanged?.Invoke();
     }

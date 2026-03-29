@@ -33,6 +33,9 @@ public class PlayerStatManager : MonoBehaviourSingleton<PlayerStatManager>
     // 스탯별 % 모디파이어 누계 (예: 10 = +10%)
     private readonly float[] _pctMods = new float[StatCount];
 
+    // 장비 장착으로 누적된 플랫(고정값) 보너스
+    private readonly float[] _equipFlat = new float[StatCount];
+
     // ── 외부 API ────────────────────────────────────────────────────
 
     /// <summary>매 게임 시작 시 % 모디파이어를 전부 초기화합니다. (GameManager.Start에서 호출)</summary>
@@ -76,16 +79,36 @@ public class PlayerStatManager : MonoBehaviourSingleton<PlayerStatManager>
     /// <summary>기본값을 반환합니다.</summary>
     public float GetBase(StatType stat) => BaseValue(stat);
 
-    /// <summary>최종값 = base × (1 + totalPct / 100) 을 반환합니다.</summary>
+    /// <summary>최종값 = (base + equipFlat) × (1 + totalPct / 100) 을 반환합니다.</summary>
     public float GetFinal(StatType stat)
     {
-        float b   = BaseValue(stat);
-        float pct = _pctMods[(int)stat];
-        return b * (1f + pct / 100f);
+        float b    = BaseValue(stat);
+        float flat = _equipFlat[(int)stat];
+        float pct  = _pctMods[(int)stat];
+        return (b + flat) * (1f + pct / 100f);
+    }
+
+    /// <summary>장비 장착 플랫 보너스를 덮어씁니다. EquipmentInventory에서 호출.</summary>
+    public void SetEquipFlat(StatType stat, float value)
+    {
+        _equipFlat[(int)stat] = value;
+        ApplyToPlayer();
+        StatPanelUI.Shared?.Refresh();
+    }
+
+    /// <summary>모든 장비 플랫 보너스를 초기화합니다.</summary>
+    public void ResetEquipFlat()
+    {
+        System.Array.Clear(_equipFlat, 0, _equipFlat.Length);
+        ApplyToPlayer();
+        StatPanelUI.Shared?.Refresh();
     }
 
     /// <summary>현재 누적 % 모디파이어를 반환합니다.</summary>
     public float GetPctMod(StatType stat) => _pctMods[(int)stat];
+
+    /// <summary>현재 장비 플랫 보너스를 반환합니다.</summary>
+    public float GetEquipFlat(StatType stat) => _equipFlat[(int)stat];
 
     // ── 초기화 ──────────────────────────────────────────────────────
 

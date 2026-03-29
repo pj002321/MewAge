@@ -1,55 +1,74 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
 
 /// <summary>
 /// 홈 장비 패널.
-/// 상단: 캐릭터 뷰 + 장착 슬롯 6개 (좌3/우3) + ATK/HP 스탯
-/// 하단: 보유 장비 스크롤 목록 (탭: 등급별 · 나의 장비 · 합성)
+/// 상단: 장착 슬롯 6개 (EquipmentSlotView) — 좌3 / 우3
+/// 하단: 탭(전체 / 등급순 / 문명순) + 보유 장비 스크롤 목록
+///
+/// Inspector 연결:
+///   equipSlots[6]    — 장착 슬롯 EquipmentSlotView 6개
+///   tabAll / tabByGrade / tabByCiv — 탭 버튼
+///   inventoryContent — 인벤 그리드 Content
+///   slotPrefab       — EquipmentSlotView 프리팹
+///   detailPopup      — EquipmentDetailPopup
 /// </summary>
 public class HomeEquipPanel : MonoBehaviour
 {
     [Header("장착 슬롯 (0~2=왼쪽, 3~5=오른쪽)")]
-    public Image[] equipFrames = new Image[6];
-    public Image[] equipIcons  = new Image[6];
+    public EquipmentSlotView[] equipSlots = new EquipmentSlotView[6];
 
-    [Header("스탯")]
-    public TextMeshProUGUI attackText;
-    public TextMeshProUGUI hpText;
+    [Header("탭 버튼")]
+    public Button tabAll;
+    public Button tabByGrade;
+    public Button tabByCiv;
 
-    [Header("탭 버튼 (등급별 · 나의장비 · 합성)")]
-    public Button tabGrade;
-    public Button tabMyEquip;
-    public Button tabSynth;
-
-    [Header("탭 컬러")]
-    public Color tabActiveColor   = new Color(1f,  0.80f, 0.20f, 1f);
+    [Header("탭 색상")]
+    public Color tabActiveColor   = new Color(1f,    0.80f, 0.20f, 1f);
     public Color tabInactiveColor = new Color(0.25f, 0.25f, 0.25f, 1f);
 
-    [Header("인벤토리 Content")]
-    public Transform myEquipContent;   // GridLayoutGroup content
-    public Transform gradeContent;
-    public Transform synthContent;
+    [Header("인벤토리")]
+    public Transform            inventoryContent;
+    public EquipmentSlotView    slotPrefab;
+    public EquipmentDetailPopup detailPopup;
+
+    EquipSortMode _sortMode = EquipSortMode.None;
+
+    void Awake()
+    {
+        if (EquipmentInventory.Shared == null)
+            MonoBehaviourSingleton<EquipmentInventory>.Create("EquipmentInventory");
+    }
 
     void Start()
     {
-        tabGrade?  .onClick.AddListener(() => ShowTab(0));
-        tabMyEquip?.onClick.AddListener(() => ShowTab(1));
-        tabSynth?  .onClick.AddListener(() => ShowTab(2));
-        ShowTab(1);
+        tabAll?.onClick.AddListener(()     => SetSort(EquipSortMode.None));
+        tabByGrade?.onClick.AddListener(() => SetSort(EquipSortMode.ByGrade));
+        tabByCiv?.onClick.AddListener(()   => SetSort(EquipSortMode.ByCivilization));
+        SetSort(EquipSortMode.None);
     }
 
-    void OnEnable() => RefreshEquipSlots();
-
-    public void ShowTab(int index)
+    void OnEnable()
     {
-        gradeContent?  .gameObject.SetActive(index == 0);
-        myEquipContent?.gameObject.SetActive(index == 1);
-        synthContent?  .gameObject.SetActive(index == 2);
+        RefreshAll();
+        var inv = EquipmentInventory.Shared;
+        if (inv != null) inv.OnChanged += RefreshAll;
+    }
 
-        SetTabColor(tabGrade,   index == 0);
-        SetTabColor(tabMyEquip, index == 1);
-        SetTabColor(tabSynth,   index == 2);
+    void OnDisable()
+    {
+        var inv = EquipmentInventory.Shared;
+        if (inv != null) inv.OnChanged -= RefreshAll;
+    }
+
+    void SetSort(EquipSortMode mode)
+    {
+        _sortMode = mode;
+        SetTabColor(tabAll,     mode == EquipSortMode.None);
+        SetTabColor(tabByGrade, mode == EquipSortMode.ByGrade);
+        SetTabColor(tabByCiv,   mode == EquipSortMode.ByCivilization);
+        RefreshInventory();
     }
 
     void SetTabColor(Button btn, bool active)
@@ -59,25 +78,49 @@ public class HomeEquipPanel : MonoBehaviour
         if (img) img.color = active ? tabActiveColor : tabInactiveColor;
     }
 
-    public void RefreshEquipSlots()
+    void RefreshAll()
     {
-        var inv = PlayerInventory.Shared;
-        for (int i = 0; i < 6; i++)
+        RefreshEquipSlots();
+        RefreshInventory();
+    }
+
+    void RefreshEquipSlots()
+    {
+        var inv = EquipmentInventory.Shared;
+        for (int i = 0; i < equipSlots.Length; i++)
         {
+            var slot = equipSlots[i];
+            if (slot == null) continue;
             var data = inv != null && i < inv.Equipped.Count ? inv.Equipped[i] : null;
-            bool has = data != null;
-
-            if (equipIcons != null && i < equipIcons.Length && equipIcons[i] != null)
-            {
-                equipIcons[i].enabled = has;
-                if (has && data.icon != null) equipIcons[i].sprite = data.icon;
-            }
-            if (equipFrames != null && i < equipFrames.Length && equipFrames[i] != null)
-                equipFrames[i].color = has ? WeaponGradeColors.Get(data.grade)
-                                           : new Color(0.3f, 0.3f, 0.3f, 0.8f);
+            slot.Bind(data, OnEquipSlotClicked);
         }
+    }
 
-        if (attackText) attackText.text = "—";
-        if (hpText)     hpText.text     = "—";
+    void RefreshInventory()
+    {
+        if (inventoryContent == null || slotPrefab == null) return;
+
+        foreach (Transform child in inventoryContent)
+            Destroy(child.gameObject);
+
+        var inv = EquipmentInventory.Shared;
+        if (inv == null) return;
+
+        foreach (var data in inv.GetSortedBag(_sortMode))
+        {
+            var slot = Instantiate(slotPrefab, inventoryContent);
+            slot.Bind(data, OnBagSlotClicked);
+        }
+    }
+
+    void OnBagSlotClicked(EquipmentSlotView slot)
+    {
+        detailPopup?.ShowForBagItem(slot.Data);
+    }
+
+    void OnEquipSlotClicked(EquipmentSlotView slot)
+    {
+        if (slot.Data == null) return;
+        detailPopup?.ShowForEquippedItem(slot.Data);
     }
 }

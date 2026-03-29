@@ -23,6 +23,8 @@ public class FenceSkill : StructureSkillBase
     [SerializeField] private float colliderWidth  = 0.6f;
     [SerializeField] private float colliderHeight = 1.0f;
 
+
+
     private bool isFenceChild;
 
     // 현재 이 펜스에 걸려있는 적 목록
