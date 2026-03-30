@@ -91,9 +91,16 @@ public class StructurePlacer : MonoBehaviourSingleton<StructurePlacer>
         string installPath = GetInstallPath(data.f_기물ID);
         var installPrefab  = Resources.Load<GameObject>(installPath);
         if (installPrefab != null)
-            Instantiate(installPrefab, target, Quaternion.identity);
+        {
+            var go    = Instantiate(installPrefab, target, Quaternion.identity);
+            int star  = StructureWareManager.Shared?.GetStar(data.f_기물ID) ?? 1;
+            var skill = go.GetComponent<StructureSkillBase>();
+            skill?.Init(data, star);
+        }
         else
+        {
             Debug.LogWarning($"[StructurePlacer] 설치 프리팹 없음: Resources/{installPath}");
+        }
 
         var zone = FindAnyObjectByType<StructureZone>();
         zone?.OccupyCell(target);

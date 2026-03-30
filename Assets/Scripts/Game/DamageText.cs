@@ -25,11 +25,11 @@ public class DamageText : MonoBehaviour
     private Vector3 originPos;
 
     // ── 초기화 ──────────────────────────────────────────────────
-    public void Init(float damage, bool isCritical = false)
+    public void Init(float damage, bool isCritical = false, bool isBleed = false)
     {
         if (label == null) label = GetComponentInChildren<TMP_Text>();
-        label.text  = Mathf.RoundToInt(damage).ToString();
-        baseColor   = isCritical ? Color.red : label.color;
+        label.text  = isBleed ? $"-{Mathf.RoundToInt(damage)}" : Mathf.RoundToInt(damage).ToString();
+        baseColor   = (isCritical || isBleed) ? Color.red : label.color;
         label.color = baseColor;
         timer       = lifetime;
         originPos   = transform.position;

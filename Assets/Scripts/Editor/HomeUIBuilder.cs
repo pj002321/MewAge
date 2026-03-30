@@ -1441,7 +1441,7 @@ public class HomeUIBuilder
         msCSF.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
         msr.content       = msContent;
 
-        // ─ 섹션 순서: 패키지 → 일일상점 → 장비뽑기 → 골드 → 보석 ──
+        // ─ 섹션 순서: 패키지 → 일일상점 → 장비뽑기 → 기물뽑기 → 골드 → 보석 ──
         BuildGachaSectionHeader(msContent, "챕터 패키지");
         BuildChapterPackageCard(msContent);
 
@@ -1449,6 +1449,9 @@ public class HomeUIBuilder
 
         BuildGachaSectionHeader(msContent, "장비 뽑기");
         BuildGachaCardRow(msContent);
+
+        BuildGachaSectionHeader(msContent, "기물 캡슐");
+        BuildWareCapsuleRow(msContent);
 
         BuildIAPSection(msContent, "골드", new Color(0.15f, 0.40f, 0.70f, 1f), new[]
         {
@@ -1584,6 +1587,14 @@ public class HomeUIBuilder
 
         popupGO.SetActive(false);
 
+        // ── 기물 결과 팝업 ───────────────────────────────────────────
+        var shopFont2 = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>("Assets/Font/mona12-Bold SDF.asset");
+        var warePopup = BuildWareResultPopup(panelShop.transform, shopFont2);
+
+        // WareDrawButton 전부 찾아서 팝업 직접 연결
+        foreach (var wdb in panelShop.GetComponentsInChildren<WareDrawButton>(true))
+            wdb.resultPopup = warePopup;
+
         // ── HomeShopPanel 컴포넌트 연결 (중복 방지) ─────────────────
         var existingShop = panelShop.GetComponent<HomeShopPanel>();
         if (existingShop != null) Object.DestroyImmediate(existingShop);
@@ -1715,6 +1726,102 @@ public class HomeUIBuilder
         BuildGachaCard(rowRT, "레어 장비 상자",
             "레어 50% / 에픽 10%", 200, 2000,
             EquipBoxType.Rare);
+    }
+
+    // ── 기물 캡슐 2열 카드 (일반 / 레어) ─────────────────────────────
+    static void BuildWareCapsuleRow(RectTransform parent)
+    {
+        var rowGO = new GameObject("WareCapsuleRow");
+        rowGO.transform.SetParent(parent, false);
+        rowGO.AddComponent<Image>().color = Color.clear;
+        var rowLE = rowGO.AddComponent<LayoutElement>();
+        rowLE.preferredHeight = 560;
+
+        var hlg = rowGO.AddComponent<HorizontalLayoutGroup>();
+        hlg.childControlWidth = hlg.childControlHeight = true;
+        hlg.childForceExpandWidth = hlg.childForceExpandHeight = true;
+        hlg.spacing = 12;
+        hlg.padding = new RectOffset(0, 0, 0, 0);
+
+        var rowRT = rowGO.GetComponent<RectTransform>();
+
+        BuildWareCapsuleCard(rowRT,
+            "일반 기물 뽑기",
+            "현재 챕터 + 이전 챕터",
+            "NORMAL 70%  RARE 30%",
+            new Color(0.25f, 0.55f, 0.30f, 1f),
+            StructureGacha.KeyNormal, 300, 2700);
+
+        BuildWareCapsuleCard(rowRT,
+            "레어 기물 뽑기",
+            "현재 챕터 + 이전 챕터\n+5% 다음 챕터 선공개",
+            "RARE 70%  EPIC 30%",
+            new Color(0.50f, 0.18f, 0.72f, 1f),
+            StructureGacha.KeyEpic, 800, 7200);
+    }
+
+    static void BuildWareCapsuleCard(RectTransform parent, string title, string subDesc,
+        string probDesc, Color accentColor, string gachaKey, int cost1, int cost10)
+    {
+        var cardGO = new GameObject($"WareCard_{gachaKey}");
+        cardGO.transform.SetParent(parent, false);
+        cardGO.AddComponent<LayoutElement>();
+        cardGO.AddComponent<Image>().color = new Color(0.18f, 0.12f, 0.30f, 1f);
+
+        // 배너 (상단 55%)
+        var banner = CreateRect("Banner", cardGO.transform);
+        SetAnchors(banner, new Vector2(0f, 0.45f), Vector2.one, Vector2.zero, Vector2.zero);
+        banner.gameObject.AddComponent<Image>().color = accentColor;
+
+        var titleTmp = CreateTMPText("Title", banner, title, 30f, TextAlignmentOptions.Center);
+        titleTmp.color = Color.white; titleTmp.fontStyle = FontStyles.Bold;
+        titleTmp.enableWordWrapping = true;
+        var ttRT = titleTmp.GetComponent<RectTransform>();
+        ttRT.anchorMin = new Vector2(0.05f, 0.55f); ttRT.anchorMax = Vector2.one;
+        ttRT.offsetMin = ttRT.offsetMax = Vector2.zero;
+
+        var subTmp = CreateTMPText("Sub", banner, subDesc, 20f, TextAlignmentOptions.Center);
+        subTmp.color = new Color(1f, 1f, 1f, 0.80f);
+        subTmp.enableWordWrapping = true;
+        var stRT = subTmp.GetComponent<RectTransform>();
+        stRT.anchorMin = new Vector2(0.05f, 0.05f); stRT.anchorMax = new Vector2(0.95f, 0.52f);
+        stRT.offsetMin = stRT.offsetMax = Vector2.zero;
+
+        // 확률
+        var probTmp = CreateTMPText("Prob", cardGO.transform, probDesc, 20f, TextAlignmentOptions.Center);
+        probTmp.color = new Color(0.70f, 0.90f, 0.70f, 1f);
+        probTmp.enableWordWrapping = true;
+        var ptRT = probTmp.GetComponent<RectTransform>();
+        ptRT.anchorMin = new Vector2(0.05f, 0.32f); ptRT.anchorMax = new Vector2(0.95f, 0.45f);
+        ptRT.offsetMin = ptRT.offsetMax = Vector2.zero;
+
+        // 버튼 행
+        var btnRow = CreateRect("BtnRow", cardGO.transform);
+        SetAnchors(btnRow, Vector2.zero, new Vector2(1f, 0.32f), Vector2.zero, Vector2.zero);
+        var bHLG = btnRow.gameObject.AddComponent<HorizontalLayoutGroup>();
+        bHLG.childControlWidth = bHLG.childControlHeight = true;
+        bHLG.childForceExpandWidth = bHLG.childForceExpandHeight = true;
+        bHLG.spacing = 12; bHLG.padding = new RectOffset(20, 20, 12, 12);
+
+        foreach (var (label, cost, count) in new[]
+        {
+            ($"1회 뽑기\nx{cost1}",   cost1,  1),
+            ($"10회 뽑기\nx{cost10}", cost10, 10)
+        })
+        {
+            var btnGO = new GameObject($"DrawBtn_{count}");
+            btnGO.transform.SetParent(btnRow, false);
+            btnGO.AddComponent<Image>().color = new Color(0.15f, 0.60f, 0.20f, 1f);
+            btnGO.AddComponent<Button>();
+            var wdb       = btnGO.AddComponent<WareDrawButton>();
+            wdb.gachaKey  = gachaKey;
+            wdb.drawCount = count;
+            var btnTmp    = CreateTMPText("Label", btnGO.transform, label, 26f, TextAlignmentOptions.Center);
+            btnTmp.color = Color.white; btnTmp.fontStyle = FontStyles.Bold;
+            var bRT       = btnTmp.GetComponent<RectTransform>();
+            bRT.anchorMin = Vector2.zero; bRT.anchorMax = Vector2.one;
+            bRT.offsetMin = bRT.offsetMax = Vector2.zero;
+        }
     }
 
     // ── 가챠 카드 ─────────────────────────────────────────────────────
@@ -2077,5 +2184,522 @@ public class HomeUIBuilder
         rt.offsetMin = Vector2.zero;
         rt.offsetMax = Vector2.zero;
         iconGO.AddComponent<Image>().color = new Color(0.3f, 0.35f, 0.55f, 1f);
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // Panel_기물 빌드
+    // ════════════════════════════════════════════════════════════════
+
+    [MenuItem("Tools/Build Ware Panel")]
+    public static void BuildWarePanel()
+    {
+        var scene = EditorSceneManager.OpenScene(SCENE_PATH, OpenSceneMode.Single);
+        GameObject panelWare = null;
+        foreach (var go in Resources.FindObjectsOfTypeAll<GameObject>())
+            if (go.scene == scene && go.name == "Panel_기물") { panelWare = go; break; }
+
+        if (panelWare == null)
+        {
+            Debug.LogError("[HomeUIBuilder] Panel_기물 을 찾을 수 없습니다. 먼저 Build Home UI 를 실행하세요.");
+            return;
+        }
+
+        panelWare.SetActive(true);
+
+        // 기존 자식 및 컴포넌트 전부 제거
+        var old = panelWare.GetComponent<HomeWarePanel>();
+        if (old != null) Object.DestroyImmediate(old);
+        while (panelWare.transform.childCount > 0)
+            Object.DestroyImmediate(panelWare.transform.GetChild(0).gameObject);
+
+        var font       = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>("Assets/Font/mona12-Bold SDF.asset");
+        var ColBg      = new Color(0.08f, 0.10f, 0.18f, 1f);
+        var ColCard    = new Color(0.12f, 0.15f, 0.25f, 1f);
+        var ColAccent  = new Color(1f,    0.80f, 0.20f, 1f);
+        var ColUpgrade = new Color(0.20f, 0.70f, 0.30f, 1f);
+        var ColDiscard = new Color(0.70f, 0.25f, 0.20f, 1f);
+
+        var panelImg = panelWare.GetComponent<Image>() ?? panelWare.AddComponent<Image>();
+        panelImg.color = ColBg;
+
+        // ── 1. 상단: 프리셋 4슬롯 (30%) ──────────────────────────────
+        var presetArea = new GameObject("PresetArea");
+        presetArea.transform.SetParent(panelWare.transform, false);
+        var paRT = presetArea.AddComponent<RectTransform>();
+        SetAnchors(paRT, new Vector2(0f, 0.68f), Vector2.one, Vector2.zero, Vector2.zero);
+        presetArea.AddComponent<Image>().color = ColCard;
+
+        var presetTitle = CreateTMPText("PresetTitle", presetArea.transform, "전투 프리셋", 30f, TextAlignmentOptions.Left);
+        presetTitle.color = ColAccent;
+        if (font) presetTitle.font = font;
+        var ptRT = presetTitle.GetComponent<RectTransform>();
+        SetAnchors(ptRT, new Vector2(0f,0.78f), Vector2.one, new Vector2(24f,0f), Vector2.zero);
+
+        var presetRow = new GameObject("PresetRow");
+        presetRow.transform.SetParent(presetArea.transform, false);
+        var prRT = presetRow.AddComponent<RectTransform>();
+        SetAnchors(prRT, Vector2.zero, new Vector2(1f,0.78f), new Vector2(16f,8f), new Vector2(-16f,-4f));
+        var prHLG = presetRow.AddComponent<HorizontalLayoutGroup>();
+        prHLG.spacing = 12f;
+        prHLG.padding = new RectOffset(8, 8, 8, 8);
+        prHLG.childAlignment = TextAnchor.MiddleCenter;
+        prHLG.childForceExpandWidth = true;
+        prHLG.childForceExpandHeight = true;
+        prHLG.childControlWidth = true;
+        prHLG.childControlHeight = true;
+
+        var presetSlots = new WareSlotView[4];
+        for (int i = 0; i < 4; i++)
+        {
+            var slotGO = BuildWareSlotGO($"PresetSlot_{i}", presetRow.transform, font, ColCard);
+            var sv     = slotGO.AddComponent<WareSlotView>();
+            AssignWareSlotRefs(slotGO, sv);
+            presetSlots[i] = sv;
+        }
+
+        // ── 2. 하단: 인벤토리 스크롤 (68%) ──────────────────────────
+        var scrollGO = new GameObject("InventoryScroll");
+        scrollGO.transform.SetParent(panelWare.transform, false);
+        var scrollRT = scrollGO.AddComponent<RectTransform>();
+        SetAnchors(scrollRT, Vector2.zero, new Vector2(1f, 0.68f), Vector2.zero, Vector2.zero);
+        scrollGO.AddComponent<Image>().color = ColBg;
+
+        var sr = scrollGO.AddComponent<ScrollRect>();
+        sr.horizontal = false; sr.vertical = true;
+
+        var viewport = CreateRect("Viewport", scrollGO.transform);
+        SetAnchors(viewport, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+        viewport.gameObject.AddComponent<RectMask2D>();
+        sr.viewport = viewport;
+
+        var contentRT = CreateGridContent("Content", viewport);
+        sr.content = contentRT;
+
+        // ── 3. 슬롯 프리팹 (패널 루트에 비활성화로 배치) ─────────────
+        var slotPrefabGO = BuildWareSlotGO("WareSlotPrefab", panelWare.transform, font, ColCard);
+        slotPrefabGO.SetActive(false);
+        var slotPrefabSV = slotPrefabGO.AddComponent<WareSlotView>();
+        AssignWareSlotRefs(slotPrefabGO, slotPrefabSV);
+
+        // ── 4. WareDetailPopup ────────────────────────────────────────
+        var popup = BuildWareDetailPopup(panelWare.transform, font, ColCard, ColUpgrade, ColDiscard);
+
+        // ── 5. HomeWarePanel 연결 ─────────────────────────────────────
+        var warePanel = panelWare.AddComponent<HomeWarePanel>();
+        warePanel.presetSlots      = presetSlots;
+        warePanel.inventoryContent = contentRT;
+        warePanel.slotPrefab       = slotPrefabSV;
+        warePanel.detailPopup      = popup;
+
+        if (font)
+            foreach (var tmp in panelWare.GetComponentsInChildren<TextMeshProUGUI>(true))
+                tmp.font = font;
+
+        panelWare.SetActive(false);
+        EditorSceneManager.MarkSceneDirty(scene);
+        EditorSceneManager.SaveScene(scene);
+        Debug.Log("[HomeUIBuilder] Ware Panel 빌드 완료.");
+    }
+
+    // ── 시너지 칩 프리팹 ─────────────────────────────────────────────
+    static GameObject BuildSynergyChipPrefab(Transform root, TMP_FontAsset font)
+    {
+        // 씬 내부에 숨김 위치에 생성 (SetActive false)
+        var chipGO = new GameObject("SynergyChipPrefab");
+        chipGO.transform.SetParent(root, false);
+        chipGO.SetActive(false);
+
+        var chipRT = chipGO.AddComponent<RectTransform>();
+        chipRT.sizeDelta = new Vector2(240f, 72f);
+
+        var chipLE = chipGO.AddComponent<LayoutElement>();
+        chipLE.preferredWidth  = 240f;
+        chipLE.preferredHeight =  72f;
+
+        chipGO.AddComponent<Image>().color = new Color(0.15f, 0.20f, 0.35f, 1f);
+
+        var txt = CreateTMPText("Label", chipGO.transform, "구석기  ●●○○\n쿨타임 -15%", 20f, TextAlignmentOptions.Center);
+        txt.color = Color.white;
+        txt.lineSpacing = -10f;
+        if (font) txt.font = font;
+        SetAnchors(txt.GetComponent<RectTransform>(), new Vector2(0.05f,0f), new Vector2(0.95f,1f), Vector2.zero, Vector2.zero);
+
+        return chipGO;
+    }
+
+    // ── WareSlotView GameObject 생성 ─────────────────────────────────
+    static GameObject BuildWareSlotGO(string name, Transform parent, TMP_FontAsset font, Color cardCol)
+    {
+        var go = new GameObject(name);
+        go.transform.SetParent(parent, false);
+        go.layer = 5;
+
+        var rt = go.AddComponent<RectTransform>();
+        rt.sizeDelta     = new Vector2(180f, 220f); // 고정 크기
+        rt.localPosition = new Vector3(rt.localPosition.x, rt.localPosition.y, 0f);
+
+        var le             = go.AddComponent<LayoutElement>();
+        le.preferredWidth  = 180f;
+        le.preferredHeight = 220f;
+
+        // 배경 이미지 (Root)
+        var rootImg = go.AddComponent<Image>();
+        rootImg.color = cardCol;
+        rootImg.raycastTarget = true;
+
+        // frameImage — 슬롯 테두리 (슬롯 꽉 채움)
+        var frameGO = new GameObject("FrameImage");
+        frameGO.transform.SetParent(go.transform, false);
+        frameGO.layer = 5;
+        var frameRT = frameGO.AddComponent<RectTransform>();
+        SetAnchors(frameRT, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+        var fImg = frameGO.AddComponent<Image>();
+        fImg.color = new Color(1f,1f,1f,0.3f);
+        // fImg.sprite = ... (보통 테두리용 얇은 라인 스프라이트 사용)
+
+        // iconImage — 기물 아이콘 (중앙 상단)
+        var iconGO = new GameObject("IconImage");
+        iconGO.transform.SetParent(go.transform, false);
+        iconGO.layer = 5;
+        var iconRT = iconGO.AddComponent<RectTransform>();
+        SetAnchors(iconRT, new Vector2(0.5f, 0.65f), new Vector2(0.5f, 0.65f), Vector2.zero, Vector2.zero);
+        iconRT.sizeDelta = new Vector2(120f, 120f); // 아이콘 고정 크기
+        iconGO.AddComponent<Image>().color = Color.white;
+
+        // eraBadge — 좌상단 시대 표시
+        var eraBadgeGO = new GameObject("EraBadge");
+        eraBadgeGO.transform.SetParent(go.transform, false);
+        eraBadgeGO.layer = 5;
+        var ebRT = eraBadgeGO.AddComponent<RectTransform>();
+        ebRT.anchorMin = new Vector2(0f,1f); ebRT.anchorMax = new Vector2(0f,1f);
+        ebRT.pivot = new Vector2(0f,1f);
+        ebRT.anchoredPosition = new Vector2(8f,-8f); ebRT.sizeDelta = new Vector2(60f,30f);
+        eraBadgeGO.AddComponent<Image>().color = new Color(0.2f,0.2f,0.25f,0.9f);
+
+        var eraTxtGO = new GameObject("EraText");
+        eraTxtGO.transform.SetParent(eraBadgeGO.transform, false);
+        eraTxtGO.layer = 5;
+        SetAnchors(eraTxtGO.AddComponent<RectTransform>(), Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+        var eraTMP = eraTxtGO.AddComponent<TextMeshProUGUI>();
+        eraTMP.text = "구"; eraTMP.fontSize = 20f;
+        eraTMP.alignment = TextAlignmentOptions.Center; eraTMP.color = Color.white;
+        if (font) eraTMP.font = font;
+
+        // starText — 하단 별점 (강화도)
+        var starGO = new GameObject("StarText");
+        starGO.transform.SetParent(go.transform, false);
+        starGO.layer = 5;
+        var starRT = starGO.AddComponent<RectTransform>();
+        SetAnchors(starRT, new Vector2(0.5f, 0.08f), new Vector2(0.5f, 0.08f), Vector2.zero, Vector2.zero);
+        starRT.sizeDelta = new Vector2(160f, 24f);
+        var starTMP = starGO.AddComponent<TextMeshProUGUI>();
+        starTMP.text = "★"; starTMP.fontSize = 18f;
+        starTMP.alignment = TextAlignmentOptions.Center;
+        starTMP.color = new Color(1f,0.85f,0.2f,1f);
+        if (font) starTMP.font = font;
+
+        // nameText — 기물 이름 (아이콘 아래)
+        var nameGO = new GameObject("NameText");
+        nameGO.transform.SetParent(go.transform, false);
+        nameGO.layer = 5;
+        var nameRT = nameGO.AddComponent<RectTransform>();
+        SetAnchors(nameRT, new Vector2(0.05f, 0.42f), new Vector2(0.95f, 0.42f), Vector2.zero, Vector2.zero);
+        nameRT.sizeDelta = new Vector2(0f, 28f);
+        var nameTMP = nameGO.AddComponent<TextMeshProUGUI>();
+        nameTMP.text = "기물명"; nameTMP.fontSize = 16f;
+        nameTMP.alignment = TextAlignmentOptions.Center;
+        nameTMP.color = Color.white;
+        nameTMP.lineSpacing = -20f;
+        if (font) nameTMP.font = font;
+
+        // roleText — 역할 (왼쪽)
+        var roleGO = new GameObject("RoleText");
+        roleGO.transform.SetParent(go.transform, false);
+        roleGO.layer = 5;
+        var roleRT = roleGO.AddComponent<RectTransform>();
+        SetAnchors(roleRT, new Vector2(0.05f, 0.27f), new Vector2(0.5f, 0.27f), Vector2.zero, Vector2.zero);
+        roleRT.sizeDelta = new Vector2(0f, 20f);
+        var roleTMP = roleGO.AddComponent<TextMeshProUGUI>();
+        roleTMP.text = "역할"; roleTMP.fontSize = 14f;
+        roleTMP.alignment = TextAlignmentOptions.Left;
+        roleTMP.color = new Color(0.7f, 0.9f, 0.7f, 1f);
+        if (font) roleTMP.font = font;
+
+        // gradeText — 등급 (오른쪽)
+        var gradeGO = new GameObject("GradeText");
+        gradeGO.transform.SetParent(go.transform, false);
+        gradeGO.layer = 5;
+        var gradeRT = gradeGO.AddComponent<RectTransform>();
+        SetAnchors(gradeRT, new Vector2(0.5f, 0.27f), new Vector2(0.95f, 0.27f), Vector2.zero, Vector2.zero);
+        gradeRT.sizeDelta = new Vector2(0f, 20f);
+        var gradeTMP = gradeGO.AddComponent<TextMeshProUGUI>();
+        gradeTMP.text = "등급"; gradeTMP.fontSize = 14f;
+        gradeTMP.alignment = TextAlignmentOptions.Right;
+        gradeTMP.color = new Color(1f, 0.8f, 0.2f, 1f);
+        if (font) gradeTMP.font = font;
+
+        // countText — 우상단 수량
+        var cntGO = new GameObject("CountText");
+        cntGO.transform.SetParent(go.transform, false);
+        cntGO.layer = 5;
+        var cntRT = cntGO.AddComponent<RectTransform>();
+        SetAnchors(cntRT, new Vector2(1f, 1f), new Vector2(1f, 1f), Vector2.zero, Vector2.zero);
+        cntRT.anchoredPosition = new Vector2(-10f, -10f);
+        cntRT.sizeDelta = new Vector2(80f, 30f);
+        var cntTMP = cntGO.AddComponent<TextMeshProUGUI>();
+        cntTMP.text = "×1"; cntTMP.fontSize = 20f;
+        cntTMP.alignment = TextAlignmentOptions.Right;
+        cntTMP.color = new Color(1f,1f,1f,0.8f);
+        if (font) cntTMP.font = font;
+
+        go.AddComponent<Button>();
+        return go;
+    }
+
+    static void AssignWareSlotRefs(GameObject go, WareSlotView sv)
+    {
+        // Image들을 이름으로 찾기
+        var imgs = go.GetComponentsInChildren<Image>(true);
+        if (imgs.Length > 0) SetField(sv, "backgroundImage", imgs[0]);
+        foreach (var img in imgs)
+        {
+            if (img.gameObject.name == "FrameImage") SetField(sv, "frameImage", img);
+            if (img.gameObject.name == "IconImage")  SetField(sv, "iconImage", img);
+        }
+
+        // TMP들을 이름으로 찾기
+        var tmps = go.GetComponentsInChildren<TextMeshProUGUI>(true);
+        foreach (var tmp in tmps)
+        {
+            if (tmp.gameObject.name == "EraText")    SetField(sv, "eraText",   tmp);
+            if (tmp.gameObject.name == "NameText")   SetField(sv, "nameText",  tmp);
+            if (tmp.gameObject.name == "RoleText")   SetField(sv, "roleText",  tmp);
+            if (tmp.gameObject.name == "GradeText")  SetField(sv, "gradeText", tmp);
+            if (tmp.gameObject.name == "StarText")   SetField(sv, "starText",  tmp);
+            if (tmp.gameObject.name == "CountText")  SetField(sv, "countText", tmp);
+        }
+    }
+
+    static void SetField(object obj, string field, object value)
+    {
+        var f = obj.GetType().GetField(field,
+            System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        f?.SetValue(obj, value);
+    }
+
+    // ── 기물 결과 팝업 빌드 ──────────────────────────────────────────
+    static WareResultPopup BuildWareResultPopup(Transform parent, TMP_FontAsset font)
+    {
+        // 전체 화면 오버레이
+        var overlayGO = new GameObject("WareResultPopup");
+        overlayGO.transform.SetParent(parent, false);
+        var overlayRT = overlayGO.AddComponent<RectTransform>();
+        SetAnchors(overlayRT, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+        overlayGO.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.75f);
+
+        // 닫기 히트 에어리어 (전체)
+        var closeHit = overlayGO.AddComponent<Button>();
+
+        // 타이틀
+        var titleTmp = CreateTMPText("TitleText", overlayGO.transform, "기물 획득!", 52f, TextAlignmentOptions.Center);
+        titleTmp.color = new Color(1f, 0.85f, 0.20f, 1f);
+        titleTmp.fontStyle = FontStyles.Bold;
+        if (font) titleTmp.font = font;
+        var ttRT = titleTmp.GetComponent<RectTransform>();
+        SetAnchors(ttRT, new Vector2(0.1f, 0.82f), new Vector2(0.9f, 0.92f), Vector2.zero, Vector2.zero);
+
+        // 1회 결과 앵커 (중앙, 230×280 슬롯 1개)
+        var singleGO = new GameObject("SingleAnchor");
+        singleGO.transform.SetParent(overlayGO.transform, false);
+        var singleRT = singleGO.AddComponent<RectTransform>();
+        SetAnchors(singleRT, new Vector2(0.3f, 0.38f), new Vector2(0.7f, 0.78f), Vector2.zero, Vector2.zero);
+
+        // 10회 결과 그리드
+        var multiGO = new GameObject("MultiContent");
+        multiGO.transform.SetParent(overlayGO.transform, false);
+        var multiRT = multiGO.AddComponent<RectTransform>();
+        SetAnchors(multiRT, new Vector2(0.02f, 0.25f), new Vector2(0.98f, 0.80f), Vector2.zero, Vector2.zero);
+        var grid = multiGO.AddComponent<GridLayoutGroup>();
+        grid.cellSize        = new Vector2(180f, 220f);
+        grid.spacing         = new Vector2(10f, 10f);
+        grid.padding         = new RectOffset(8, 8, 8, 8);
+        grid.childAlignment  = TextAnchor.UpperCenter;
+        grid.constraint      = GridLayoutGroup.Constraint.FixedColumnCount;
+        grid.constraintCount = 5;
+        multiGO.SetActive(false);
+
+        // 닫기 힌트
+        var hintTmp = CreateTMPText("CloseHint", overlayGO.transform, "탭하여 닫기", 26f, TextAlignmentOptions.Center);
+        hintTmp.color = new Color(0.65f, 0.65f, 0.65f, 0.85f);
+        if (font) hintTmp.font = font;
+        var htRT = hintTmp.GetComponent<RectTransform>();
+        SetAnchors(htRT, new Vector2(0.1f, 0.18f), new Vector2(0.9f, 0.25f), Vector2.zero, Vector2.zero);
+
+        // 슬롯 프리팹 (비활성)
+        var slotPrefabGO = BuildWareSlotGO("WareSlotPrefab_Result", overlayGO.transform, font,
+            new Color(0.12f, 0.15f, 0.25f, 1f));
+        slotPrefabGO.SetActive(false);
+        var slotPrefabSV = slotPrefabGO.AddComponent<WareSlotView>();
+        AssignWareSlotRefs(slotPrefabGO, slotPrefabSV);
+
+        // WareResultPopup 연결
+        var warePopup = overlayGO.AddComponent<WareResultPopup>();
+        SetField(warePopup, "closeHitArea",  closeHit);
+        SetField(warePopup, "titleText",     titleTmp);
+        SetField(warePopup, "singleAnchor",  singleGO);
+        SetField(warePopup, "multiContent",  multiGO);
+        SetField(warePopup, "slotPrefab",    slotPrefabSV);
+
+        if (font)
+            foreach (var tmp in overlayGO.GetComponentsInChildren<TextMeshProUGUI>(true))
+                tmp.font = font;
+
+        overlayGO.SetActive(false);
+        return warePopup;
+    }
+
+    // ── WareDetailPopup 빌드 ─────────────────────────────────────────
+    static WareDetailPopup BuildWareDetailPopup(Transform parent, TMP_FontAsset font,
+        Color cardCol, Color upgradeCol, Color discardCol)
+    {
+        // 전체 화면 오버레이
+        var overlayGO = new GameObject("WareDetailPopup");
+        overlayGO.transform.SetParent(parent, false);
+        overlayGO.layer = 5; // UI Layer
+        var overlayRT = overlayGO.AddComponent<RectTransform>();
+        SetAnchors(overlayRT, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+        
+        var overlayLE = overlayGO.AddComponent<LayoutElement>();
+        overlayLE.ignoreLayout = true; // 레이아웃 무시
+        overlayGO.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.65f);
+        overlayGO.SetActive(false);
+
+        // 카드 패널
+        var cardGO = new GameObject("Card");
+        cardGO.transform.SetParent(overlayGO.transform, false);
+        var cardRT = cardGO.AddComponent<RectTransform>();
+        cardRT.anchorMin = new Vector2(0.05f, 0.12f);
+        cardRT.anchorMax = new Vector2(0.95f, 0.88f);
+        cardRT.offsetMin = cardRT.offsetMax = Vector2.zero;
+        cardGO.AddComponent<Image>().color = cardCol;
+
+        // 닫기 버튼
+        var closeGO  = new GameObject("CloseButton");
+        closeGO.transform.SetParent(cardGO.transform, false);
+        var closeRT  = closeGO.AddComponent<RectTransform>();
+        SetAnchors(closeRT, new Vector2(1f,1f), new Vector2(1f,1f),
+                   new Vector2(-80f,-80f), new Vector2(-8f,-8f));
+        closeGO.AddComponent<Image>().color = new Color(0.5f,0.2f,0.2f,1f);
+        var closeTMP = CreateTMPText("Label", closeGO.transform, "✕", 36f, TextAlignmentOptions.Center);
+        closeTMP.color = Color.white; if (font) closeTMP.font = font;
+        SetAnchors(closeTMP.GetComponent<RectTransform>(), Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+        var closeBtn = closeGO.AddComponent<Button>();
+
+        // 아이콘
+        var iconFrameGO = new GameObject("FrameImage");
+        iconFrameGO.transform.SetParent(cardGO.transform, false);
+        var iconFrameRT = iconFrameGO.AddComponent<RectTransform>();
+        SetAnchors(iconFrameRT, new Vector2(0.05f,0.60f), new Vector2(0.35f,0.97f), Vector2.zero, Vector2.zero);
+        iconFrameGO.AddComponent<Image>().color = Color.white;
+
+        var iconGO = new GameObject("IconImage");
+        iconGO.transform.SetParent(iconFrameGO.transform, false);
+        var iconRT = iconGO.AddComponent<RectTransform>();
+        SetAnchors(iconRT, new Vector2(0.1f,0.1f), new Vector2(0.9f,0.9f), Vector2.zero, Vector2.zero);
+        iconGO.AddComponent<Image>().color = Color.white;
+
+        // 텍스트 영역
+        TMP_Text MakeTxt(string n, Vector2 amin, Vector2 amax, Vector2 omin, Vector2 omax, float sz)
+        {
+            var t = CreateTMPText(n, cardGO.transform, n, sz, TextAlignmentOptions.Left);
+            t.color = Color.white; if (font) t.font = font;
+            SetAnchors(t.GetComponent<RectTransform>(), amin, amax, omin, omax);
+            return t;
+        }
+
+        var nameText    = MakeTxt("NameText",    new Vector2(0.38f,0.86f), new Vector2(0.95f,0.97f), Vector2.zero, Vector2.zero, 36f);
+        nameText.fontStyle = FontStyles.Bold;
+        var descText    = MakeTxt("DescriptionText", new Vector2(0.38f,0.78f), new Vector2(0.95f,0.85f), Vector2.zero, Vector2.zero, 20f);
+        descText.color = new Color(0.8f, 0.8f, 0.8f, 1f);
+        var eraRoleText = MakeTxt("EraRoleText", new Vector2(0.38f,0.70f), new Vector2(0.95f,0.77f), Vector2.zero, Vector2.zero, 24f);
+        eraRoleText.color = new Color(0.7f,0.9f,1f,1f);
+        var starText    = MakeTxt("StarText",    new Vector2(0.38f,0.62f), new Vector2(0.95f,0.69f), Vector2.zero, Vector2.zero, 30f);
+        starText.color = new Color(1f,0.84f,0f,1f);
+        var countText   = MakeTxt("CountText",   new Vector2(0.38f,0.54f), new Vector2(0.95f,0.61f), Vector2.zero, Vector2.zero, 24f);
+
+        // 구분선
+        var div1 = new GameObject("Div1"); div1.transform.SetParent(cardGO.transform, false);
+        var div1Img = div1.AddComponent<Image>(); div1Img.color = new Color(1f,1f,1f,0.1f);
+        SetAnchors(div1.GetComponent<RectTransform>(), new Vector2(0.05f,0.59f), new Vector2(0.95f,0.60f), Vector2.zero, Vector2.zero);
+
+        var statText     = MakeTxt("StatText",     new Vector2(0.05f,0.51f), new Vector2(0.95f,0.59f), Vector2.zero, Vector2.zero, 26f);
+        var nextStatText = MakeTxt("NextStatText", new Vector2(0.05f,0.43f), new Vector2(0.95f,0.51f), Vector2.zero, Vector2.zero, 24f);
+        nextStatText.color = new Color(0.6f,1f,0.6f,1f);
+
+        // 구분선2
+        var div2 = new GameObject("Div2"); div2.transform.SetParent(cardGO.transform, false);
+        var div2Img = div2.AddComponent<Image>(); div2Img.color = new Color(1f,1f,1f,0.1f);
+        SetAnchors(div2.GetComponent<RectTransform>(), new Vector2(0.05f,0.42f), new Vector2(0.95f,0.43f), Vector2.zero, Vector2.zero);
+
+        // 프리셋 버튼 4개
+        var presetBtns   = new Button[4];
+        var presetLabels = new TMP_Text[4];
+        float btnW = 0.215f;
+        for (int i = 0; i < 4; i++)
+        {
+            float x0 = 0.05f + i * (btnW + 0.013f);
+            var btnGO = new GameObject($"PresetBtn_{i + 1}");
+            btnGO.transform.SetParent(cardGO.transform, false);
+            var btnRT = btnGO.AddComponent<RectTransform>();
+            SetAnchors(btnRT, new Vector2(x0, 0.32f), new Vector2(x0 + btnW, 0.41f), Vector2.zero, Vector2.zero);
+            btnGO.AddComponent<Image>().color = new Color(0.25f, 0.35f, 0.55f, 1f);
+            presetBtns[i] = btnGO.AddComponent<Button>();
+            var lbl = CreateTMPText("Label", btnGO.transform, $"슬롯 {i+1}", 22f, TextAlignmentOptions.Center);
+            lbl.color = Color.white; if (font) lbl.font = font;
+            SetAnchors(lbl.GetComponent<RectTransform>(), Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            presetLabels[i] = lbl;
+        }
+
+        // 강화 버튼
+        var upgGO = new GameObject("UpgradeButton");
+        upgGO.transform.SetParent(cardGO.transform, false);
+        var upgRT = upgGO.AddComponent<RectTransform>();
+        SetAnchors(upgRT, new Vector2(0.05f,0.16f), new Vector2(0.57f,0.30f), Vector2.zero, Vector2.zero);
+        upgGO.AddComponent<Image>().color = upgradeCol;
+        var upgradeBtn = upgGO.AddComponent<Button>();
+        var upgLbl = CreateTMPText("Label", upgGO.transform, "강화  (0 / 3개)", 26f, TextAlignmentOptions.Center);
+        upgLbl.color = Color.white; if (font) upgLbl.font = font;
+        SetAnchors(upgLbl.GetComponent<RectTransform>(), Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+
+        // 분해 버튼
+        var disGO = new GameObject("DismantleButton");
+        disGO.transform.SetParent(cardGO.transform, false);
+        var disRT = disGO.AddComponent<RectTransform>();
+        SetAnchors(disRT, new Vector2(0.60f,0.16f), new Vector2(0.95f,0.30f), Vector2.zero, Vector2.zero);
+        disGO.AddComponent<Image>().color = discardCol;
+        var dismantleBtn = disGO.AddComponent<Button>();
+        var disLbl = CreateTMPText("Label", disGO.transform, "분해  +50골드", 26f, TextAlignmentOptions.Center);
+        disLbl.color = Color.white; if (font) disLbl.font = font;
+        SetAnchors(disLbl.GetComponent<RectTransform>(), Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+
+        // WareDetailPopup 컴포넌트 연결
+        var popup = overlayGO.AddComponent<WareDetailPopup>();
+        SetField(popup, "iconImage",      iconGO.GetComponent<Image>());
+        SetField(popup, "frameImage",     iconFrameGO.GetComponent<Image>());
+        SetField(popup, "nameText",       nameText);
+        SetField(popup, "descriptionText",descText);
+        SetField(popup, "eraRoleText",    eraRoleText);
+        SetField(popup, "starText",       starText);
+        SetField(popup, "countText",      countText);
+        SetField(popup, "statText",       statText);
+        SetField(popup, "nextStatText",   nextStatText);
+        SetField(popup, "upgradeButton",  upgradeBtn);
+        SetField(popup, "upgradeLabel",   upgLbl);
+        SetField(popup, "dismantleButton",dismantleBtn);
+        SetField(popup, "presetButtons",  presetBtns);
+        SetField(popup, "presetLabels",   presetLabels);
+        SetField(popup, "closeButton",    closeBtn);
+
+        return popup;
     }
 }

@@ -21,6 +21,10 @@ public class HomeUIManager : MonoBehaviour
 
     void Start()
     {
+        // StructureWareManager를 명시적으로 로드 (홈 씬에서 필요함)
+        var structwareMgr = StructureWareManager.Shared;
+        Debug.Log($"[HomeUIManager] StructureWareManager 로드: {(structwareMgr != null ? "성공" : "실패")}");
+
         // Register button click events
         for (int i = 0; i < tabButtons.Length; i++)
         {

@@ -53,7 +53,7 @@ Persistent across home→game scenes. All files in [Assets/Scripts/Game/](Assets
 - **`GachaDrawButton`** — reads unit cost from `DB_상점` (`f_상품ID` match), computes multi-draw price as `unitCost × (n−1)` (1 free). Routes click to `HomeShopPanel.TryDrawMulti()`.
 - **`GachaResultPopup`** — overlay that reparents to root Canvas on open. Shows single or multi-draw results.
 - **`EquipmentDetailPopup`** — shown on bag/equip slot click; "장착" calls `EquipmentInventory.EquipFromBag()`, "장착 해제" calls `UnequipToBag()`.
-- **`EquipmentSlotView`** — reusable slot UI; `Bind(data, callback)` updates icon/grade frame and wires click.
+- **`EquipmentSlotView`** — reusable slot UI; `Bind(data, callback)` updates icon/grade frame and wires click. `StartSpin(degreesPerSecond)` / `StopSpin()` activate a spin Image overlay (gacha result popup 전용).
 
 **DB stat ID → StatType mapping:**
 `STAT_ATK→ATK`, `STAT_DEF→DEF`, `STAT_HP→MaxHP`, `STAT_CRI_DMG→CritDmg`, `STAT_CRI_RATE→CritChance`, `STAT_EVA_RATE→Evasion`, `STAT_SPD_MOV→MoveSpeed`, `STAT_SPD_ATK→AtkSpeed`, `STAT_SKL_CD→StructureCooldown`, `STAT_DOT_DMG→BleedPower`
@@ -93,17 +93,49 @@ Tower/placement system. Key classes all in [Assets/Scripts/Game/](Assets/Scripts
 #### Structure Skill Extension
 `StructureSkillBase` — abstract base. Fields: `mainValue` (damage/heal), `subValue` (secondary), `radius`, `tickInterval`. Implement `Activate()` which is called by `StructureController.Start()`.
 
+- **`isInstallation` bool** (`[SerializeField] protected bool isInstallation`) — if `false`, `StructureController` immediately disables all child `SpriteRenderer`s after `Activate()`. Set `true` for skills that need persistent visuals (FireSpreadSkill, StoneTotemSkill).
+- **`StructureController.Duration`** — public property exposing the duration field. Skills that auto-complete (MeteorSkill) read this to divide work evenly within the lifespan.
+- **`OnDestroy()` cleanup rule** — any skill that spawns objects or modifies global state (e.g., `Light2D.intensity`) must implement `OnDestroy()` to restore state, because `StructureController` destroys the GameObject when duration expires, killing all coroutines mid-run.
+
 Concrete skills (all extensible — freeze/slow/projectile patterns reusable by other skills):
 | 스킬 | 클래스 | 동작 |
 |------|--------|------|
-| 메테오 | `MeteorSkill` | 사선으로 meteorsCount개 운석 낙하, 착지 시 범위 피해 |
-| 얼음 | `IceSkill` | 범위 적 파란색으로 동결(subValue초), 해제 후 mainValue 피해. `IceSkill.FreezeEnemy()` 정적 코루틴으로 다른 스킬에서 재사용 가능 |
+| 메테오 | `MeteorSkill` | `Camera.main` 뷰포트 내 랜덤 위치에 운석 낙하. `StructureController.Duration`으로 interval 자동 계산. 시작/종료 시 Global Light2D 어둡게. `OnDestroy`에서 조명 즉시 복구 |
+| 번개 | `ThunderSkill` | 모든 적 위치에 번개 스폰 (적 자식으로 부착 → 적 사망 시 자동 소멸). Global Light2D 페이드 |
+| 얼음 | `IceSkill` | **살아있는 모든 적** (`FindObjectsByType<EnemyController>`)에 필중 동결. `GetComponentInChildren<SpriteRenderer>()` 로 색상 변경. `IceSkill.FreezeEnemy()` 정적 코루틴으로 다른 스킬에서 재사용 가능 |
 | 돌벼락 | `StoneThunderSkill` | 돌이 좌→우로 굴러가며 맞은 적에게 피해 + 방향으로 밀침(Rigidbody2D AddForce) |
 | 둔화 | `SlowSkill` | 범위 내 적 이동속도 subValue% 감소, subValue 초 지속 |
-| 돌창토템 | `StoneTotemSkill` | 설치 후 일정 주기로 projectileCount개 방사형 투사체 발사 |
+| 돌창토템 | `StoneTotemSkill` | 설치 후 일정 주기로 projectileCount개 방사형 투사체 발사. `_activeProjectiles` 목록 관리 → `OnDestroy` 시 미비행 투사체 전부 제거 |
 
 기물 아이콘 프리팹: `Resources/Ware/{Chapter}/{id.lower()}.prefab`
 설치 프리팹: `Resources/Ware/{Chapter}/{id.lower()}_s.prefab`
+
+**기물 드롭 (`ItemDropManager.SpawnStructureOrb`)**: `DB_기물`을 `f_기물ID.StartsWith($"C{currentChapter}_")`로 필터, 아이콘/오브 프리팹은 `Resources/Ware/C{chapter}/{id.ToLower()}` 경로로 `Resources.Load`.
+
+#### 기물 장기 설계 (확립된 방향)
+
+**챕터 구성**: 구석기·중석기·신석기·중세·근대·현대·우주 (7챕터). 챕터당 기물 4개, 총 28개. 개발 순서는 3챕터씩 검증 후 확장.
+
+**시대별 역할 분담** — 각 시대가 고유 역할을 담당해 신챕터에서도 구형 기물이 필요하도록 설계:
+| 시대 | 역할 |
+|------|------|
+| 구석기 | CC (빙결·둔화) |
+| 중석기 | 광역 버스트 |
+| 신석기 | 지속 피해·회복 |
+| 중세 | 방어·막기 |
+| 근대 | 광역 둔화·함정 |
+| 현대 | 버프·생산 |
+| 우주 | 고급 디버프·차원 |
+
+**범용성**: 모든 기물은 모든 챕터에서 사용 가능. `StructureSkillBase.Activate()` 전에 웨이브 배율(`1f + wave * 0.05f`)을 `mainValue`에 적용해 스탯이 챕터에 뒤처지지 않게 유지.
+
+**강화 시스템**: 동일 기물 3개 합성 → ★ 상승 (★1~★3). 스탯 수치만 증가, 외형 스프라이트 교체 없음. ★ 등급별로 머티리얼/쉐이더 테두리 글로우 색상만 변경 (★1=기본, ★2=골드 글로우, ★3=퍼플 글로우). `DB_기물`에 `f_강화등급`, `f_S1/S2/S3`(등급별 수치) 필드 추가.
+
+**아웃게임 프리셋 시너지**: 아웃게임 기물 패널에서 4슬롯 구성 시 시대 조합에 따라 시너지 효과 미리보기 표시. 동일 시대 2개=쿨타임-15%, 4개=쿨타임-30%+수치+20%, 2시대 혼합=체력회복, 3시대=전역쿨타임-20%, 4시대("시대의 수렴")=전체+50%. 시너지는 인게임 시작 시 `PlayerStatManager`에 1회 반영.
+
+**잉여 기물 처리**: 합성 재료 우선. 합성 불가 잉여분은 골드로 분해.
+
+**가챠 풀**: 아웃게임 상점에 시대별 캡슐 분리 (`DB_확률` `f_가챠타입` = `EQ_WARE_C1` 등). 현재 챕터 캡슐 외 과거 챕터 캡슐도 항상 구매 가능.
 
 ### Boss Waves
 GameManager queries `DB_웨이브` (field `f_보스`) to find boss wave numbers. On boss wave: `StartBossWave()` freezes timer, calls `WaveEnvironmentSwitcher`. After defeat: `OnBossDefeated()` resumes `WaveClearRoutine`.
@@ -115,7 +147,7 @@ Lobby screen built via Editor tools — do **not** hand-edit the scene file.
 - **`Tools/Build Equipment Panel`** — populates `Panel_장비` with character view, 6 equip slots (left 3 / right 3), inner tab bar (장비/성물), and a scrollable inventory grid. Attaches **HomeEquipPanel**.
 - **HomeUIManager** (`Assets/Scripts/Game/HomeUIManager.cs`) — owns `panels[]` + `tabButtons[]`, calls `ShowTab(index)`. `StartGame()` loads `stage@scene`.
 - **HomeEquipPanel** (`Assets/Scripts/Game/HomeEquipPanel.cs`) — drives equip slot visuals from `EquipmentInventory.Shared`. `equipSlots[0~5]` must be wired in Inspector matching category order (RING=0 … HEAD=5).
-- **HomeMemberPanel** (`Assets/Scripts/Game/HomeMemberPanel.cs`) — character roster panel with 캐릭터/룬 tabs. Each slot is a **CharacterSlotView** that binds `DB_캐릭터`; owned/unowned state toggles equip vs. buy button. **CharacterGradeColor** maps `f_등급` (S/A/B/C) to slot background color.
+- **HomeMemberPanel** (`Assets/Scripts/Game/HomeMemberPanel.cs`) — character roster panel with 캐릭터/룬 tabs. Each slot is a **CharacterSlotView** that binds `DB_캐릭터`; owned/unowned state toggles equip vs. buy button. On `Select()`, equip button text changes to **"장착중"** if `PlayerCharacterManager.Shared.EquippedCharID == data.f_캐릭ID`. **CharacterGradeColor** maps `f_등급` (S/A/B/C) to slot background color.
 - **HomeShopPanel** (`Assets/Scripts/Game/HomeShopPanel.cs`) — gacha/IAP shop. Calls `EquipmentGacha.Draw()` / `DrawMulti()`, adds results to `EquipmentInventory`. **GachaDrawButton** reads price from `DB_상점` and wires itself to `TryDrawMulti()` via parent lookup. **GachaResultPopup** overlay reparents itself to the root Canvas on open.
 - **StageSelectPanel** (`Assets/Scripts/Game/StageSelectPanel.cs`) — carousel of stage cards (`StageCardView`) with dot indicators and snap animation. `OnStartClicked()` loads `stage@scene`.
 
@@ -133,6 +165,7 @@ Lobby screen built via Editor tools — do **not** hand-edit the scene file.
 - **SoundManager** (singleton) — `SoundManager.Shared.Play(SoundKey)`. Keys defined in `SoundKey.cs` enum. Key-clip pairs registered via Inspector. `minInterval` prevents rapid duplicate plays.
 - **FXManager** — pooled visual effects spawned on hit/death etc.
 - `UIButtonSound` — component for button click SFX, attaches to UI buttons.
+- **`UIButtonSoundAutoAttach`** — attach to a Canvas root to auto-wire all child `Button`s with click SFX via `btn.onClick.AddListener`. **Do not use `IPointerClickHandler` for sound on buttons** — it fires once per collider in the hierarchy causing duplicate sounds. `onClick.AddListener` fires exactly once per click.
 
 ### Debug Panel
 [Assets/Scripts/Game/DebugPanel.cs](Assets/Scripts/Game/DebugPanel.cs) — in-game debug UI. Calls `GameManager.DebugSkipWave()` and `GameManager.DebugJumpToBossWave()`. Methods on DebugPanel that are connected via Inspector Button OnClick must be `public`.
@@ -155,3 +188,6 @@ Lobby screen built via Editor tools — do **not** hand-edit the scene file.
 - **Editor scripts searching for inactive GameObjects** must use `Resources.FindObjectsOfTypeAll<GameObject>()` filtered by `go.scene`, not `GameObject.Find()` (which skips inactive objects).
 - Scene files follow the `name@scene` naming convention (e.g., `home@scene.unity`, `stage@scene.unity`).
 - `MainMenuHud.cs` lives in `Assets/` root (not `Assets/Scripts/Game/`); exit logic uses `Application.Quit()` in builds and `EditorApplication.isPlaying = false` in editor.
+- **Global Light2D 어둡게 패턴**: `Object.FindObjectsByType<Light2D>(FindObjectsSortMode.None)`로 탐색 후 `l.lightType == Light2D.LightType.Global` 체크. `using UnityEngine.Rendering.Universal;` 필요. 조명을 변경하는 스킬은 반드시 `OnDestroy()`에서 `intensity = 1f`로 복구.
+- **무기 상점에서 특정 등급이 안 나올 때**: `DB_확률`에서 해당 타입 행의 등급별 확률 필드(`f_에픽` 등)가 0인지 확인. BansheeGz 에디터에서 직접 수정 필요.
+- **`StructureInventory.Push()` 스태킹**: 동일 `f_기물ID`인 슬롯이 있으면 count 증가, 없으면 새 슬롯 생성.

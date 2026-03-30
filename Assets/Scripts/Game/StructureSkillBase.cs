@@ -21,6 +21,17 @@ public abstract class StructureSkillBase : MonoBehaviour
     /// <summary>이 기물이 맵에 형체가 남는 설치형인지 여부. false면 발동 즉시 외형이 사라집니다.</summary>
     public bool IsInstallation => isInstallation;
 
+    /// <summary>
+    /// StructurePlacer가 _s 프리팹을 설치한 직후 호출합니다.
+    /// DB의 ★ 등급별 수치로 mainValue / subValue를 덮어씁니다.
+    /// </summary>
+    public void Init(Mewage.DB.DB_기물 data, int starLevel)
+    {
+        if (data == null) return;
+        mainValue = StructureWareManager.Shared?.GetMainValue(data, starLevel) ?? data.f_주수치;
+        subValue  = data.f_보조수치;
+    }
+
     /// <summary>StructureController.Start()에서 호출됩니다.</summary>
     public abstract void Activate();
 

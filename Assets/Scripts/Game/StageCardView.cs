@@ -9,6 +9,7 @@ using UnityEngine.UI;
 public class StageCardView : MonoBehaviour
 {
     public Image           iconImage;
+    public Image           overlayImage; // 잠금 오버레이
     public TextMeshProUGUI stageNameText;
     public TextMeshProUGUI bestWaveText;
 
@@ -22,6 +23,10 @@ public class StageCardView : MonoBehaviour
                 iconImage.sprite = entry.icon;
                 iconImage.color  = Color.white;
             }
+        }
+        if (overlayImage != null)
+        {
+            overlayImage.gameObject.SetActive(entry.isLocked);
         }
         if (stageNameText != null) stageNameText.text = entry.stageName;
         if (bestWaveText  != null)

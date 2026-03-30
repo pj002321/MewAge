@@ -75,8 +75,24 @@ public class ItemDropManager : MonoBehaviourSingleton<ItemDropManager>
     private void SpawnStructureOrb(Vector3 pos)
     {
         string prefix = $"C{currentChapter}_";
-        var pool = DB_기물.FindEntities(e => e.f_기물ID != null && e.f_기물ID.StartsWith(prefix));
-        if (pool == null || pool.Count == 0) return;
+        var allPool = DB_기물.FindEntities(e => e.f_기물ID != null && e.f_기물ID.StartsWith(prefix));
+        if (allPool == null || allPool.Count == 0) return;
+
+        // 프리셋에 등록된 기물만 필터링
+        var wareMgr = StructureWareManager.Shared;
+        var pool = new System.Collections.Generic.List<DB_기물>();
+        foreach (var item in allPool)
+        {
+            for (int i = 0; i < 4; i++)
+            {
+                if (wareMgr?.GetPreset(i) == item.f_기물ID)
+                {
+                    pool.Add(item);
+                    break;
+                }
+            }
+        }
+        if (pool.Count == 0) return;
 
         var picked  = pool[Random.Range(0, pool.Count)];
         string id   = picked.f_기물ID;                               // e.g. C1_W0

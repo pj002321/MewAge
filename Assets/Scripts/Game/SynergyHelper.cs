@@ -83,19 +83,22 @@ public static class SynergyHelper
         return Resources.Load<Sprite>($"Synergy/{id.ToLower()}");
     }
 
-    /// <summary>장착 무기 중 특정 태그를 보유한 개수를 반환합니다.</summary>
+    /// <summary>장착 무기 중 특정 태그를 보유한 유니크 무기 개수를 반환합니다.</summary>
     public static int CountEquippedTag(WeaponSynergyTag tag)
     {
         var inv = PlayerInventory.Shared;
         if (inv == null || tag == WeaponSynergyTag.None) return 0;
 
-        int count = 0;
+        var uniqueNames = new System.Collections.Generic.HashSet<string>();
         foreach (var w in inv.Equipped)
         {
             if (w == null) continue;
-            if (w.tag1 == tag || w.tag2 == tag) count++;
+            if (w.tag1 == tag || w.tag2 == tag)
+            {
+                uniqueNames.Add(w.weaponName);
+            }
         }
-        return count;
+        return uniqueNames.Count;
     }
 
     // ── 내부 ────────────────────────────────────────────────────

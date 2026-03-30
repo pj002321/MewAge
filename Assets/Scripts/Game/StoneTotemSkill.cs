@@ -27,6 +27,7 @@ public class StoneTotemSkill : StructureSkillBase
     [SerializeField] private float      shotInterval     = 0.1f;   // 투사체 간 딜레이 (순차 발사)
 
     private float _currentAngle = 0f;   // 현재 발사 기준 각도
+    private readonly System.Collections.Generic.List<GameObject> _activeProjectiles = new();
 
     public override void Activate()
     {
@@ -94,10 +95,18 @@ public class StoneTotemSkill : StructureSkillBase
         transform.localScale = orig;
     }
 
+    private void OnDestroy()
+    {
+        foreach (var p in _activeProjectiles)
+            if (p != null) Destroy(p);
+        _activeProjectiles.Clear();
+    }
+
     IEnumerator ProjectileRoutine(Vector2 direction)
     {
         var go       = Instantiate(projectilePrefab, transform.position, Quaternion.identity);
         go.SetActive(true);
+        _activeProjectiles.Add(go);
         float travel = 0f;
         
         float actualSpeed = subValue > 0.01f ? subValue : 5f; // 안전 장치
@@ -128,7 +137,11 @@ public class StoneTotemSkill : StructureSkillBase
             yield return null;
         }
 
-        if (go != null) Destroy(go);
+        if (go != null)
+        {
+            _activeProjectiles.Remove(go);
+            Destroy(go);
+        }
     }
 
     protected override void OnDrawGizmosSelected()

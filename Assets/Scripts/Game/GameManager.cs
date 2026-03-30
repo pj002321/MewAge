@@ -39,6 +39,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     private bool  isGameOver;
     private bool  waitingForUpgrade;
     private bool  bossWaveActive;
+    private string currentChapterID = "C1_S1";
 
     // Session stats (accumulated during a single run for the Clear Panel)
     private int sessionExpGained  = 0;
@@ -55,6 +56,9 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         if (gameOverPanel)               gameOverPanel.SetActive(false);
         if (waveClearPanel)              waveClearPanel.SetActive(false);
         if (gameClearPanel != null)      gameClearPanel.gameObject.SetActive(false);
+
+        currentChapterID = PlayerPrefs.GetString("SelectedChapterID", "C1_S1");
+        UpgradeManager.Shared?.SetCurrentChapterID(currentChapterID);
 
         // 이전 판 증강 수치 초기화 후 캐릭터 기초 스탯 재적용
         PlayerStatManager.Shared?.ResetMods();
@@ -199,6 +203,16 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         if (isGameOver) return;
         isGameOver = true;
         EnemySpawner.Shared?.StopSpawning();
+
+        // 최고 웨이브 저장
+        string prefKey = $"BestWave_{currentChapterID}";
+        int currentBest = PlayerPrefs.GetInt(prefKey, 0);
+        if (wave > currentBest)
+        {
+            PlayerPrefs.SetInt(prefKey, wave);
+            PlayerPrefs.Save();
+        }
+
         if (gameOverPanel) gameOverPanel.SetActive(true);
         // GameOverPanel.cs will count down 5 s, shrink itself, then call ShowGameClearAfterGameOver()
     }

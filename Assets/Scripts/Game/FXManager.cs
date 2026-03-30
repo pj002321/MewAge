@@ -24,14 +24,14 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
     // 파편 오브젝트 추적 (웨이브 종료 시 일괄 제거용)
     private readonly List<GameObject> activeDebris = new();
 
-    public void SpawnDamageText(Vector3 worldPos, float damage, bool isCritical = false)
+    public void SpawnDamageText(Vector3 worldPos, float damage, bool isCritical = false, bool isBleed = false)
     {
         if (damageTextPrefab == null) return;
 
         // 여러 텍스트가 겹치지 않도록 수평 랜덤 오프셋
         Vector3 offset = new(Random.Range(-0.2f, 0.2f), 0.3f, 0f);
         var go = Instantiate(damageTextPrefab, worldPos + offset, Quaternion.identity);
-        go.GetComponent<DamageText>()?.Init(damage, isCritical);
+        go.GetComponent<DamageText>()?.Init(damage, isCritical, isBleed);
     }
 
     /// <summary>플레이어 머리 위에 상승 텍스트를 표시합니다. (획득/회복/회피 피드백)</summary>

@@ -38,8 +38,13 @@ public class StatFieldUI : MonoBehaviour
 
         if (statType == previewStat && !Mathf.Approximately(previewPct, 0f))
         {
+            float b            = sm.GetBase(statType) + sm.GetEquipFlat(statType);
             float pct          = sm.GetPctMod(statType);
-            float previewFinal = sm.GetBase(statType) * (1f + (pct + previewPct) / 100f);
+
+            float previewFinal = (statType == StatType.CritChance || statType == StatType.Evasion || statType == StatType.HealOnKill)
+                ? b + pct + previewPct
+                : b * (1f + (pct + previewPct) / 100f);
+
             string previewSign = previewPct > 0f ? "+" : "";
             valueText.text = $"<color=#88CCFF>{PlayerStatManager.FormatValue(statType, previewFinal)}</color> <color=#88CCFF>({previewSign}{previewPct:0.#}%)</color>";
         }

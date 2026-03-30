@@ -23,6 +23,8 @@ public class StructureInventory : MonoBehaviourSingleton<StructureInventory>
     public event System.Action OnChanged;
     public event System.Action OnAutoChanged;
 
+    private void Start() => LoadFromPresets();
+
     public bool IsAutoMode     { get; private set; }
     /// <summary>AutoMode에서 다음으로 사용될 슬롯 인덱스. 없으면 -1.</summary>
     public int  ActiveAutoSlot { get; private set; } = -1;
@@ -60,6 +62,23 @@ public class StructureInventory : MonoBehaviourSingleton<StructureInventory>
     }
 
     /// <summary>from 다음부터 순환 탐색해 보유량이 있는 첫 슬롯 인덱스를 반환. 없으면 -1.</summary>
+    // ── 프리셋 로드 ──────────────────────────────────────────────────
+
+    /// <summary>아웃게임 프리셋에 등록된 기물을 인게임 슬롯에 1개씩 채웁니다.</summary>
+    private void LoadFromPresets()
+    {
+        var ware = StructureWareManager.Shared;
+        if (ware == null) return;
+
+        for (int i = 0; i < SlotCount; i++)
+        {
+            string id = ware.GetPreset(i);
+            if (string.IsNullOrEmpty(id)) continue;
+            var data = Mewage.DB.DB_기물.FindEntity(r => r.f_기물ID == id);
+            if (data != null) Push(data);
+        }
+    }
+
     // ── 기물 설치 ────────────────────────────────────────────────────
     /// <summary>
     /// DB_기물 행에서 ID를 읽어 Resources/Ware/{챕터}/{id_s}.prefab 을 로드해 설치합니다.

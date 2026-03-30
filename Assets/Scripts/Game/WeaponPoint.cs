@@ -143,6 +143,7 @@ public class WeaponPoint : MonoBehaviour
             Vector2 knockDir = (enemy.transform.position - transform.position).normalized;
             enemy.TakeDamage(finalDmg, isCrit, knockDir, spinKnockback);
             ApplyLifeSteal(finalDmg);
+            if (dotDamage > 0f) enemy.ApplyBleed(dotDamage);
 
             spinHitTimers[enemy] = spinHitCooldown;
         }
@@ -266,6 +267,8 @@ public class WeaponPoint : MonoBehaviour
             if (knockDir.sqrMagnitude < 0.001f) knockDir = hitDir;
             enemy.TakeDamage(finalDmg, isCrit, knockDir.normalized, 8f);
             ApplyLifeSteal(finalDmg);
+            if (dotDamage > 0f) enemy.ApplyBleed(dotDamage);
+            if (dotDamage > 0f) enemy.ApplyBleed(dotDamage);
         }
     }
 

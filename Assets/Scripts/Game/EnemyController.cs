@@ -48,6 +48,10 @@ public class EnemyController : MonoBehaviour
     [SerializeField] private bool knockbackImmune = false;
     public bool KnockbackImmune { get => knockbackImmune; set => knockbackImmune = value; }
 
+    [Header("출혈")]
+    [SerializeField] private float bleedDuration = 5f; // 출혈 지속 시간
+    [SerializeField] private float bleedInterval = 1f; // 출혈 간격
+
     [Header("분리 (간격 유지)")]
     [Tooltip("주변 적과 이 거리 이내면 밀어냅니다. 0 = 비활성")]
     [SerializeField] private float separationRadius   = 1.2f;
@@ -77,6 +81,7 @@ public class EnemyController : MonoBehaviour
     private bool      isStunned;
     private Vector2   _pendingMove;
     private Coroutine knockbackCoroutine;
+    private Coroutine bleedCoroutine;
     private float     baseSpeed; // 넉백/스턴 전 원본 속도
     private Vector2   _deathDir;  // 사망 시 날아갈 방향
 
@@ -347,6 +352,42 @@ public class EnemyController : MonoBehaviour
     }
 
     // ── 피격 / 사망 ──────────────────────────────────────────────
+    /// <summary>출혈 적용 (WeaponPoint에서 호출)</summary>
+    public void ApplyBleed(float damage)
+    {
+        if (damage <= 0f || bleedCoroutine != null) return;
+        bleedCoroutine = StartCoroutine(BleedRoutine(damage));
+    }
+
+    private IEnumerator BleedRoutine(float damage)
+    {
+        float elapsed = 0f;
+        while (elapsed < bleedDuration)
+        {
+            yield return new WaitForSeconds(bleedInterval);
+            elapsed += bleedInterval;
+            if (currentHP <= 0f) break; // 사망 시 중지
+
+            // 출혈 데미지 적용
+            currentHP -= damage;
+            SoundManager.Shared?.Play(SoundKey.Enemy_Hit);
+
+            // 데미지 텍스트 표시 (빨간색, - 기호)
+            Vector3 textPos = srs != null && srs.Length > 0
+                ? new Vector3(transform.position.x, srs[0].bounds.max.y, transform.position.z)
+                : transform.position;
+            FXManager.Shared?.SpawnDamageText(textPos, damage, false, true); // isBleed = true로 가정
+
+            if (currentHP <= 0f)
+            {
+                _deathDir = Vector2.up; // 출혈 사망 시 위쪽으로
+                OnDeath?.Invoke();
+                StartCoroutine(DieRoutine());
+            }
+        }
+        bleedCoroutine = null;
+    }
+
     public void TakeDamage(float damage, bool isCritical = false, Vector2 knockbackDir = default, float knockbackForce = 0f)
     {
         currentHP -= damage;

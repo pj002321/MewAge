@@ -25,6 +25,12 @@ public class PlayerStats : MonoBehaviourSingleton<PlayerStats>
     public int GoldBonus => _synergyGoldBonus;
     public int ExpBonus  => _synergyExpBonus;
 
+    // 시너지 % 보너스
+    private float _synergyGoldPct;
+    private float _synergyExpPct;
+    public float SynergyGoldPct => _synergyGoldPct;
+    public float SynergyExpPct  => _synergyExpPct;
+
     // 흡수 반경 보너스 (AUG_REWARD_RNG)
     private float _magnetRadiusBonus;
     public float MagnetRadiusBonus => _magnetRadiusBonus;
@@ -50,6 +56,7 @@ public class PlayerStats : MonoBehaviourSingleton<PlayerStats>
 
     public void AddGold(int amount)
     {
+        amount = (int)(amount * (1f + _synergyGoldPct / 100f));
         gold += amount;
         GameManager.Shared?.AddSessionGold(amount);  // session tracker for Clear Panel
         SoundManager.Shared?.Play(SoundKey.Pickup_Gold);
@@ -68,6 +75,7 @@ public class PlayerStats : MonoBehaviourSingleton<PlayerStats>
     {
         if (level >= maxLevel) return;
 
+        amount = (int)(amount * (1f + _synergyExpPct / 100f));
         SoundManager.Shared?.Play(SoundKey.Pickup_Exp);
         GameManager.Shared?.AddSessionExp(amount);    // session tracker for Clear Panel
         exp += amount;
@@ -102,6 +110,13 @@ public class PlayerStats : MonoBehaviourSingleton<PlayerStats>
     {
         _synergyGoldBonus = goldBonus;
         _synergyExpBonus  = expBonus;
+    }
+
+    /// <summary>시너지 % 보너스를 설정합니다.</summary>
+    public void SetSynergyPct(float goldPct, float expPct)
+    {
+        _synergyGoldPct = goldPct;
+        _synergyExpPct  = expPct;
     }
 
     public int Gold  => gold;

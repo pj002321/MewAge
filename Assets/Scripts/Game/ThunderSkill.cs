@@ -44,7 +44,7 @@ public class ThunderSkill : StructureSkillBase
         {
             if (enemy == null || !enemy.gameObject.activeInHierarchy) continue;
 
-            SpawnLightning(enemy.transform.position);
+            SpawnLightning(enemy.transform.position, enemy.transform);
             enemy.TakeDamage(mainValue);
             enemy.Stun(subValue);   // subValue = 마비 지속시간(초)
 
@@ -61,10 +61,11 @@ public class ThunderSkill : StructureSkillBase
     }
 
     // ── 번개 비주얼 스폰 ────────────────────────────────────────────
-    private void SpawnLightning(Vector3 worldPos)
+    private void SpawnLightning(Vector3 worldPos, Transform parent)
     {
         if (lightningPrefab == null) return;
-        Instantiate(lightningPrefab, worldPos, Quaternion.identity);
+        var go = Instantiate(lightningPrefab, worldPos, Quaternion.identity);
+        go.transform.SetParent(parent, true);   // 적 자식 → 적 사망 시 함께 소멸
     }
 
     // ── 조명 페이드 ─────────────────────────────────────────────────

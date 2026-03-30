@@ -15,18 +15,12 @@ public class StageSelectPanel : MonoBehaviour
     [System.Serializable]
     public class StageEntry
     {
-        public string stageName  = "스테이지";
-        public Sprite icon;
-        public int    bestWave   = 0;   // 최고 생존 웨이브
+        public string chapterID;  // DB_챕터.f_챕터ID
+        public string stageName;  // DB_챕터.f_이름
+        public Sprite icon;       // Resources/Chapter/Icon/{chapterID}.png
+        public int    bestWave;   // 최고 생존 웨이브 (PlayerPrefs에서 로드)
+        public bool   isLocked;   // 잠금 상태
     }
-
-    [Header("스테이지 데이터 (Inspector에서 추가/편집)")]
-    public StageEntry[] stages = new StageEntry[]
-    {
-        new StageEntry { stageName = "야생 거리" },
-        new StageEntry { stageName = "어둠의 숲" },
-        new StageEntry { stageName = "폐허 도시" },
-    };
 
     // ── UI 참조 (Builder가 자동 연결) ────────────────────────────────
     [Header("카드 프리팹 (연결하면 이걸 사용, 비우면 자동 생성)")]
@@ -59,8 +53,73 @@ public class StageSelectPanel : MonoBehaviour
 
     float cachedCardW = -1f;
 
+    StageEntry[] stages; // DB에서 로드
+
+    void LoadStagesFromDB()
+    {
+        var list = new System.Collections.Generic.List<StageEntry>();
+        Mewage.DB.DB_챕터.ForEachEntity(row =>
+        {
+            string chapterID = row.f_챕터ID;
+            string chapterPart = chapterID.Split('_')[0];
+            string stagePart = chapterID.Split('_')[1];
+            if (!int.TryParse(chapterPart.Substring(1), out int chapterNum) ||
+                !int.TryParse(stagePart.Substring(1), out int stageNum))
+            {
+                Debug.LogWarning($"[StageSelectPanel] Invalid chapterID: {chapterID}");
+                return;
+            }
+            string iconPath = $"Chapter/Icon/{chapterID}";
+            Sprite icon = Resources.Load<Sprite>(iconPath);
+
+            // 최고 웨이브 로드 (PlayerPrefs에서)
+            string prefKey = $"BestWave_{chapterID}";
+            int bestWave = PlayerPrefs.GetInt(prefKey, 0);
+
+            // 잠금 상태
+            bool isLocked = true;
+            if (chapterID == "C1_S1")
+            {
+                isLocked = false; // 1-1은 항상 열림
+            }
+            else if (chapterPart == "C1")
+            {
+                // 1챕터 내 이전 스테이지 클리어 확인
+                string prevID = $"C1_S{stageNum - 1}";
+                int prevBest = PlayerPrefs.GetInt($"BestWave_{prevID}", 0);
+                isLocked = prevBest <= 0;
+            }
+            else
+            {
+                // 다른 챕터: 1챕터 클리어 확인 (C1_S3 클리어)
+                int prevBest = PlayerPrefs.GetInt("BestWave_C1_S3", 0);
+                isLocked = prevBest <= 0;
+            }
+
+            list.Add(new StageEntry
+            {
+                chapterID = chapterID,
+                stageName = $"{chapterNum}-{stageNum} {row.f_이름}",
+                icon = icon,
+                bestWave = bestWave,
+                isLocked = isLocked
+            });
+        });
+        if (list.Count == 0)
+        {
+            // DB에 데이터가 없으면 테스트용 하드코딩
+            list.Add(new StageEntry { chapterID = "C1", stageName = "1챕터 야생 거리", icon = null, bestWave = 0, isLocked = false });
+            list.Add(new StageEntry { chapterID = "C2", stageName = "2챕터 어둠의 숲", icon = null, bestWave = 0, isLocked = true });
+            list.Add(new StageEntry { chapterID = "C3", stageName = "3챕터 폐허 도시", icon = null, bestWave = 0, isLocked = true });
+            Debug.Log("[StageSelectPanel] No stages in DB, using hardcoded test data");
+        }
+        stages = list.ToArray();
+        Debug.Log($"[StageSelectPanel] Loaded {stages.Length} stages from DB");
+    }
+
     void Start()
     {
+        LoadStagesFromDB();
         BuildCards();
         BuildDots();
 
@@ -109,7 +168,12 @@ public class StageSelectPanel : MonoBehaviour
 
     void BuildCards()
     {
-        if (content == null) return;
+        if (content == null)
+        {
+            Debug.LogError("[StageSelectPanel] content is null - cannot build cards");
+            return;
+        }
+        Debug.Log($"[StageSelectPanel] Building {stages.Length} cards");
 
         // 기존 자식 제거
         for (int i = content.childCount - 1; i >= 0; i--)
@@ -121,18 +185,23 @@ public class StageSelectPanel : MonoBehaviour
         {
             StageCardView cv;
 
-            if (cardPrefab != null)
-            {
-                // ── 프리팹 사용 ──────────────────────────────────────
-                cv = Instantiate(cardPrefab, content);
-                var le        = cv.GetComponent<LayoutElement>();
-                if (le == null) le = cv.gameObject.AddComponent<LayoutElement>();
-                le.preferredWidth = cardWidth;
-                le.minWidth       = cardWidth;
-                cv.Bind(stages[i]);
-                cardViews[i] = cv;
-                continue;   // 아래 자동 생성 코드 건너뜀
-            }
+    if (cardPrefab != null)
+    {
+        // ── 프리팹 사용 ──────────────────────────────────────
+        cv = Instantiate(cardPrefab, content);
+        if (cv == null)
+        {
+            Debug.LogError($"[StageSelectPanel] Failed to instantiate cardPrefab for stage {i}");
+            continue;
+        }
+        var le        = cv.GetComponent<LayoutElement>();
+        if (le == null) le = cv.gameObject.AddComponent<LayoutElement>();
+        le.preferredWidth = cardWidth;
+        le.minWidth       = cardWidth;
+        cv.Bind(stages[i]);
+        cardViews[i] = cv;
+        continue;   // 아래 자동 생성 코드 건너뜀
+    }
 
             // ── 자동 생성 ────────────────────────────────────────────
             var card   = new GameObject($"Card_{i}");
@@ -279,7 +348,15 @@ public class StageSelectPanel : MonoBehaviour
                 dots[i].color = i == currentIndex ? dotActive : dotInactive;
     }
 
-    public void OnStartClicked() => SceneLoadManager.LoadScene("stage@scene");
+    public void OnStartClicked()
+    {
+        if (currentIndex < 0 || currentIndex >= stages.Length) return;
+        if (stages[currentIndex].isLocked) return; // 잠금 시 시작 불가
+        string selectedChapterID = stages[currentIndex].chapterID;
+        PlayerPrefs.SetString("SelectedChapterID", selectedChapterID);
+        PlayerPrefs.Save();
+        SceneLoadManager.LoadScene("stage@scene");
+    }
 
     // ── 헬퍼 ─────────────────────────────────────────────────────────
 

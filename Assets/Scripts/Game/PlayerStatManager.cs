@@ -80,13 +80,26 @@ public class PlayerStatManager : MonoBehaviourSingleton<PlayerStatManager>
     public float GetBase(StatType stat) => BaseValue(stat);
 
     /// <summary>최종값 = (base + equipFlat) × (1 + totalPct / 100) 을 반환합니다.</summary>
+    /// <remarks>확률형 스탯(Crit, Evasion, HealOnKill)은 합산(base + flat + pct)으로 계산합니다.</remarks>
     public float GetFinal(StatType stat)
     {
         float b    = BaseValue(stat);
         float flat = _equipFlat[(int)stat];
         float pct  = _pctMods[(int)stat];
+
+        if (IsAdditiveStat(stat))
+            return b + flat + pct;
+
         return (b + flat) * (1f + pct / 100f);
     }
+
+    private bool IsAdditiveStat(StatType stat) => stat switch
+    {
+        StatType.CritChance => true,
+        StatType.Evasion    => true,
+        StatType.HealOnKill => true,
+        _                   => false
+    };
 
     /// <summary>장비 장착 플랫 보너스를 덮어씁니다. EquipmentInventory에서 호출.</summary>
     public void SetEquipFlat(StatType stat, float value)
@@ -169,7 +182,7 @@ public class PlayerStatManager : MonoBehaviourSingleton<PlayerStatManager>
     /// <summary>스탯 값 포맷 (단위 포함). UI 표시용.</summary>
     public static string FormatValue(StatType stat, float value) => stat switch
     {
-        StatType.Evasion           => $"{value * 100f:0.#}%",          // fraction → %
+        StatType.Evasion           => $"{value:0.#}%",                 // 0~100 기준
         StatType.CritChance        => $"{value:0.#}%",
         StatType.CritDmg           => $"+{value:0.#}%",
         StatType.AtkSpeed          => $"+{value:0.#}%",
