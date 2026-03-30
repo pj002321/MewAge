@@ -134,7 +134,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -162,7 +162,6 @@ GameObject:
   - component: {fileID: 2556780848545064426}
   - component: {fileID: 5982385828683250598}
   - component: {fileID: 6303685301072228888}
-  - component: {fileID: 1121046478288653789}
   m_Layer: 0
   m_Name: equip_icon
   m_TagString: Untagged
@@ -211,7 +210,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -271,24 +270,6 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
---- !u!114 &1121046478288653789
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5884454586227044646}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8d169bb5dd367c0498444c76790028bb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::EquipmentSlotView
-  frameImage: {fileID: 4931966189902758422}
-  iconImage: {fileID: 5982385828683250598}
-  categoryIcon: {fileID: 5956701723629690755}
-  civText: {fileID: 637709256798594284}
-  gradeText: {fileID: 0}
-  spinImage: {fileID: 0}
 --- !u!1 &7849499176718933547
 GameObject:
   m_ObjectHideFlags: 0
