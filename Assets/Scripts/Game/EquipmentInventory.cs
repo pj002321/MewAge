@@ -99,7 +99,7 @@ public class EquipmentInventory : MonoBehaviourSingleton<EquipmentInventory>
     }
 
     // ── 장착 스탯 → PlayerStatManager 적용 ────────────────────────────
-    private void RecalculateEquipStats()
+    public void RecalculateEquipStats()
     {
         var sm = PlayerStatManager.Shared;
         if (sm == null) return;
