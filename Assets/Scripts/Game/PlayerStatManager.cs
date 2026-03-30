@@ -19,10 +19,10 @@ public class PlayerStatManager : MonoBehaviourSingleton<PlayerStatManager>
     [SerializeField] private float baseHPRegen           = 0f;
     [SerializeField] private float baseMoveSpeed         = 5f;
     [SerializeField] private float baseMagnetRadius      = 1.5f;
-    [SerializeField] private float baseAtkSpeed          = 0f;    // 0% 가 기본
+    [SerializeField] private float baseAtkSpeed          = 100f;  // 100% 가 기본
     [SerializeField] private float baseEvasion           = 0f;
     [SerializeField] private float baseCritChance        = 0f;
-    [SerializeField] private float baseCritDmg           = 0f;
+    [SerializeField] private float baseCritDmg           = 100f;
     [SerializeField] private float baseStructureCooldown = 30f;
     [SerializeField] private float baseKnockback         = 0f;
     [SerializeField] private float baseHealOnKill        = 0f;
@@ -184,8 +184,8 @@ public class PlayerStatManager : MonoBehaviourSingleton<PlayerStatManager>
     {
         StatType.Evasion           => $"{value:0.#}%",                 // 0~100 기준
         StatType.CritChance        => $"{value:0.#}%",
-        StatType.CritDmg           => $"+{value:0.#}%",
-        StatType.AtkSpeed          => $"+{value:0.#}%",
+        StatType.CritDmg           => $"{value:0.#}%",
+        StatType.AtkSpeed          => $"{value:0.#}%",
         StatType.HPRegen           => $"{value:0.##}/s",
         StatType.HealOnKill        => $"{value:0.#}%",
         StatType.StructureCooldown => $"{value:0.#}s",
