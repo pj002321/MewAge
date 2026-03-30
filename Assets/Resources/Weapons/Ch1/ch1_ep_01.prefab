@@ -11,9 +11,9 @@ GameObject:
   - component: {fileID: 5374686351836354880}
   - component: {fileID: 2442180650331241265}
   - component: {fileID: -7691689357368657162}
-  - component: {fileID: -4924759175812654426}
+  - component: {fileID: -5742848553004821721}
   m_Layer: 0
-  m_Name: ch1_e_00
+  m_Name: ch1_ep_01
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -83,7 +83,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 2
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -4115283497915249717, guid: badaf08edcff8b349acea815a10d4aeb, type: 3}
+  m_Sprite: {fileID: -1373675538191815807, guid: 0ec53a77b475165469c8910ff43379a2, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -105,22 +105,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 80572d92ca6952f478c256b7ffc65d80, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponPoint
-  weaponType: 1
-  attackDamage: 65
+  weaponType: 0
+  attackDamage: 50
   attackCooldown: 0.5
   criticalRate: 0
   criticalMultiplier: 2
   dotDamage: 0
   lifeSteal: 0
-  attackRange: 6
-  strikeSpeed: 70
-  returnSpeed: 30
+  attackRange: 5
+  pullbackSpeed: 50
+  strikeSpeed: 100
+  returnSpeed: 100
   hitDistance: 0.25
-  areaHitRadius: 0.4
-  areaHitDamageRatio: 0.5
-  overshootDistance: 0.5
-  overshootSpeed: 60
-  projectilePrefab: {fileID: 6277426376135361209, guid: 4bc2218685218fe4eb7fb82986924e6a, type: 3}
+  pullbackDistance: 0.8
+  projectilePrefab: {fileID: 0}
   projectileSpeed: 8
   boomerangMaxBounces: 3
   boomerangBounceRange: 5
@@ -129,7 +127,7 @@ MonoBehaviour:
   spinHitRadius: 0.35
   spinHitCooldown: 0.5
   spinKnockback: 7
---- !u!114 &-4924759175812654426
+--- !u!114 &-5742848553004821721
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
