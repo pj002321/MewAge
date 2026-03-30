@@ -34,21 +34,20 @@ public class StoneThunderSkill : StructureSkillBase
 
     IEnumerator RollRoutine()
     {
-        Vector2 startPos = (Vector2)transform.position + Vector2.left  * (rollDistance * 0.5f);
-        Vector2 endPos   = (Vector2)transform.position + Vector2.right * (rollDistance * 0.5f);
-
-        var go       = Instantiate(stonePrefab, startPos, Quaternion.identity);
-        float travel = 0f;
-        var hitSet   = new System.Collections.Generic.HashSet<EnemyController>();
+        // 보이지 않는 스윕 포인트가 왼→오 이동하며 맞은 적 위에 stonePrefab을 자식으로 스폰.
+        // 적이 죽으면 자식 오브젝트도 함께 소멸됨.
+        Vector2 sweepPos = (Vector2)transform.position + Vector2.left * (rollDistance * 0.5f);
+        float   travel   = 0f;
+        var     hitSet   = new System.Collections.Generic.HashSet<EnemyController>();
 
         while (travel < rollDistance)
         {
             float step = rollSpeed * Time.deltaTime;
-            go.transform.Translate(Vector2.right * step);
-            travel += step;
+            sweepPos += Vector2.right * step;
+            travel   += step;
 
             // 충돌 판정
-            var cols = Physics2D.OverlapCircleAll(go.transform.position, radius);
+            var cols = Physics2D.OverlapCircleAll(sweepPos, radius);
             foreach (var col in cols)
             {
                 if (!col.TryGetComponent<EnemyController>(out var enemy)) continue;
@@ -56,6 +55,11 @@ public class StoneThunderSkill : StructureSkillBase
                 hitSet.Add(enemy);
 
                 enemy.TakeDamage(mainValue);
+
+                // 적 자식으로 스폰 → 적 사망 시 자동 소멸, 2초 후 백업 cleanup
+                var hitGo = Instantiate(stonePrefab, enemy.transform.position, Quaternion.identity);
+                hitGo.transform.SetParent(enemy.transform, true);
+                Destroy(hitGo, 2f);
 
                 // 오른쪽으로 넉백
                 var rb = enemy.GetComponent<Rigidbody2D>();
@@ -65,8 +69,6 @@ public class StoneThunderSkill : StructureSkillBase
 
             yield return null;
         }
-
-        Destroy(go);
     }
 
     protected override void OnDrawGizmosSelected()

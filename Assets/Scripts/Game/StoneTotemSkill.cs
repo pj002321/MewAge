@@ -24,8 +24,7 @@ public class StoneTotemSkill : StructureSkillBase
     [SerializeField] private int        projectileCount  = 4;      // 동시 발사 수
     [SerializeField] private float      rotationPerTick  = 45f;    // 틱마다 회전 (바람개비)
     [SerializeField] private float      projectileRadius = 0.15f;  // 적 충돌 감지 반경
-
-
+    [SerializeField] private float      shotInterval     = 0.1f;   // 투사체 간 딜레이 (순차 발사)
 
     private float _currentAngle = 0f;   // 현재 발사 기준 각도
 
@@ -54,22 +53,45 @@ public class StoneTotemSkill : StructureSkillBase
         var wait = new WaitForSeconds(tickInterval);
         while (true)
         {
-            FireVolley();
+            StartCoroutine(FireVolleyRoutine(_currentAngle));  // 현재 각도를 스냅샷으로 전달
+            StartCoroutine(ScalePulse());
             _currentAngle += rotationPerTick;
             yield return wait;
         }
     }
 
-    void FireVolley()
+    IEnumerator FireVolleyRoutine(float baseAngle)
     {
         float angleStep = 360f / projectileCount;
+        var delay = shotInterval > 0f ? new WaitForSeconds(shotInterval) : null;
+
         for (int i = 0; i < projectileCount; i++)
         {
-            float angle = _currentAngle + angleStep * i;
+            float angle = baseAngle + angleStep * i;  // 스냅샷 baseAngle 사용 — yield 사이에 _currentAngle이 바뀌어도 영향 없음
             float rad   = angle * Mathf.Deg2Rad;
             Vector2 dir = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad));
             StartCoroutine(ProjectileRoutine(dir));
+            if (delay != null) yield return delay;
         }
+    }
+
+    IEnumerator ScalePulse()
+    {
+        float half   = 0.08f;
+        Vector3 orig  = transform.localScale;
+        Vector3 small = orig * 0.75f;
+
+        for (float t = 0f; t < half; t += Time.deltaTime)
+        {
+            transform.localScale = Vector3.Lerp(orig, small, t / half);
+            yield return null;
+        }
+        for (float t = 0f; t < half; t += Time.deltaTime)
+        {
+            transform.localScale = Vector3.Lerp(small, orig, t / half);
+            yield return null;
+        }
+        transform.localScale = orig;
     }
 
     IEnumerator ProjectileRoutine(Vector2 direction)
@@ -80,9 +102,8 @@ public class StoneTotemSkill : StructureSkillBase
         
         float actualSpeed = subValue > 0.01f ? subValue : 5f; // 안전 장치
 
-        // 투사체 회전: 이동 방향으로 스프라이트 정렬
-        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
-        go.transform.rotation = Quaternion.Euler(0f, 0f, angle);
+        // 창 끝(스프라이트 위쪽)이 이동 방향을 향하도록 정렬
+        go.transform.up = (Vector3)direction;
 
         var hitSet = new System.Collections.Generic.HashSet<EnemyController>();
 
@@ -91,7 +112,7 @@ public class StoneTotemSkill : StructureSkillBase
             if (go == null) yield break;
 
             float step = actualSpeed * Time.deltaTime;
-            go.transform.Translate(Vector2.right * step, Space.Self);
+            go.transform.Translate(Vector2.up * step, Space.Self);
             travel += step;
 
             // 충돌 판정
