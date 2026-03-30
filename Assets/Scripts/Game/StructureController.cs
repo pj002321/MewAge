@@ -10,6 +10,8 @@ public class StructureController : MonoBehaviour
     [Header("기물 유지 시간 (0 = 영구)")]
     [SerializeField] private float duration = 15f;
 
+    public float Duration => duration;
+
     private System.Collections.IEnumerator Start()
     {
         var skill = GetComponent<StructureSkillBase>();

@@ -9,6 +9,12 @@ public class UIButtonSound : MonoBehaviour, IPointerEnterHandler, IPointerClickH
     [SerializeField] private SoundKey hoverKey = SoundKey.UI_Hover;
     [SerializeField] private SoundKey clickKey = SoundKey.UI_Click;
 
+    public void SetKeys(SoundKey hover, SoundKey click)
+    {
+        hoverKey = hover;
+        clickKey = click;
+    }
+
     public void OnPointerEnter(PointerEventData eventData)
     {
         SoundManager.Shared?.Play(hoverKey);

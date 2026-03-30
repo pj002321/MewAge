@@ -3376,6 +3376,47 @@ MonoBehaviour:
   m_Spacing: {x: 12, y: 12}
   m_Constraint: 1
   m_ConstraintCount: 5
+--- !u!21 &353217667
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: UI/RoundedCorners/RoundedCorners
+  m_Shader: {fileID: 4800000, guid: 0bd2ec5d73751e34a814274a454bec41, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _MainTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _ColorMask: 15
+    - _Stencil: 0
+    - _StencilComp: 8
+    - _StencilOp: 0
+    - _StencilReadMask: 255
+    - _StencilWriteMask: 255
+    - _UseUIAlphaClip: 0
+    m_Colors:
+    - _OuterUV: {r: 0, g: 0, b: 1, a: 1}
+    - _WidthHeightRadius: {r: 177.9298, g: 9.995298, b: 2, a: 0}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1
 --- !u!1 &380219796
 GameObject:
   m_ObjectHideFlags: 0
@@ -5748,47 +5789,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 605371907}
   m_CullTransparentMesh: 1
---- !u!21 &622218292
-Material:
-  serializedVersion: 8
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: UI/RoundedCorners/RoundedCorners
-  m_Shader: {fileID: 4800000, guid: 0bd2ec5d73751e34a814274a454bec41, type: 3}
-  m_Parent: {fileID: 0}
-  m_ModifiedSerializedProperties: 0
-  m_ValidKeywords: []
-  m_InvalidKeywords: []
-  m_LightmapFlags: 4
-  m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
-  m_CustomRenderQueue: -1
-  stringTagMap: {}
-  disabledShaderPasses: []
-  m_LockedProperties: 
-  m_SavedProperties:
-    serializedVersion: 3
-    m_TexEnvs:
-    - _MainTex:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    m_Ints: []
-    m_Floats:
-    - _ColorMask: 15
-    - _Stencil: 0
-    - _StencilComp: 8
-    - _StencilOp: 0
-    - _StencilReadMask: 255
-    - _StencilWriteMask: 255
-    - _UseUIAlphaClip: 0
-    m_Colors:
-    - _OuterUV: {r: 0, g: 0, b: 1, a: 1}
-    - _WidthHeightRadius: {r: 319.39337, g: 80.07991, b: 80, a: 0}
-  m_BuildTextureStacks: []
-  m_AllowLocking: 1
 --- !u!1 &634208061
 GameObject:
   m_ObjectHideFlags: 0
@@ -13235,7 +13235,12 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1501521654}
   m_CullTransparentMesh: 1
---- !u!21 &1505910060
+--- !u!224 &1542248891 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 3989486296675370100, guid: 7baef96f52718dc4b9a61e4e7db93df9, type: 3}
+  m_PrefabInstance: {fileID: 1933599918}
+  m_PrefabAsset: {fileID: 0}
+--- !u!21 &1542878378
 Material:
   serializedVersion: 8
   m_ObjectHideFlags: 0
@@ -13273,14 +13278,9 @@ Material:
     - _UseUIAlphaClip: 0
     m_Colors:
     - _OuterUV: {r: 0, g: 0, b: 1, a: 1}
-    - _WidthHeightRadius: {r: 177.9298, g: 9.995298, b: 2, a: 0}
+    - _WidthHeightRadius: {r: 319.39337, g: 80.07991, b: 80, a: 0}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
---- !u!224 &1542248891 stripped
-RectTransform:
-  m_CorrespondingSourceObject: {fileID: 3989486296675370100, guid: 7baef96f52718dc4b9a61e4e7db93df9, type: 3}
-  m_PrefabInstance: {fileID: 1933599918}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1548791975
 GameObject:
   m_ObjectHideFlags: 0
@@ -16049,6 +16049,63 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
+--- !u!1001 &1793438060
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 451592549504540181, guid: 6762f7bdcc5f50f47b840f43d6c534bd, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 481.09262
+      objectReference: {fileID: 0}
+    - target: {fileID: 451592549504540181, guid: 6762f7bdcc5f50f47b840f43d6c534bd, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 1355.8074
+      objectReference: {fileID: 0}
+    - target: {fileID: 451592549504540181, guid: 6762f7bdcc5f50f47b840f43d6c534bd, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 451592549504540181, guid: 6762f7bdcc5f50f47b840f43d6c534bd, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 451592549504540181, guid: 6762f7bdcc5f50f47b840f43d6c534bd, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 451592549504540181, guid: 6762f7bdcc5f50f47b840f43d6c534bd, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 451592549504540181, guid: 6762f7bdcc5f50f47b840f43d6c534bd, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 451592549504540181, guid: 6762f7bdcc5f50f47b840f43d6c534bd, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 451592549504540181, guid: 6762f7bdcc5f50f47b840f43d6c534bd, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 451592549504540181, guid: 6762f7bdcc5f50f47b840f43d6c534bd, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3171192787301309996, guid: 6762f7bdcc5f50f47b840f43d6c534bd, type: 3}
+      propertyPath: m_Name
+      value: SoundManager
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 6762f7bdcc5f50f47b840f43d6c534bd, type: 3}
 --- !u!1001 &1799610869
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -27205,6 +27262,7 @@ GameObject:
   - component: {fileID: 9161486912060783703}
   - component: {fileID: 6577162930899954406}
   - component: {fileID: 9161486912060783704}
+  - component: {fileID: 9161486912060783705}
   m_Layer: 0
   m_Name: HomeUICanvas
   m_TagString: Untagged
@@ -29399,7 +29457,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: 1505910060}
+  m_Material: {fileID: 353217667}
   m_Color: {r: 0.5966425, g: 0.9811321, b: 0.31933072, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
@@ -30126,7 +30184,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: 622218292}
+  m_Material: {fileID: 1542878378}
   m_Color: {r: 0, g: 0, b: 0, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 29.9, w: 0}
@@ -30752,6 +30810,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d320b946b86629498a2bb6fe9c7527e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AutoCanvasScaler
+--- !u!114 &9161486912060783705
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6126696272833739850}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4c8c42db8ee6b449aa73fd76bf89fec, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIButtonSoundAutoAttach
+  clickKey: 1
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -30762,3 +30833,4 @@ SceneRoots:
   - {fileID: 2460377525244387676}
   - {fileID: 947401450}
   - {fileID: 1734133138}
+  - {fileID: 1793438060}

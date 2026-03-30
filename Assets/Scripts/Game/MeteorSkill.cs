@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.Rendering.Universal;
 
 /// <summary>
 /// 메테오 기물 스킬.
@@ -19,11 +20,14 @@ public class MeteorSkill : StructureSkillBase
     [Header("메테오 설정")]
     [SerializeField] private GameObject meteorPrefab;
     [SerializeField] private int        meteorsCount   = 5;
-    [SerializeField] private float      meteorInterval = 0.4f;
     [SerializeField] private float      impactRadius   = 1.2f;
     [SerializeField] private float      spreadRange    = 3f;     // 착지 지점 좌우 분산
     [SerializeField] private float      fallHeight     = 8f;     // 출발 높이 오프셋
     [SerializeField] private float      fallDuration   = 0.5f;   // 각 메테오 낙하 시간
+
+    [Header("조명 어둡게")]
+    [SerializeField] private float dimAmount   = 0.45f;   // 어두울 때 밝기 (0=완전어둠, 1=그대로)
+    [SerializeField] private float fadeDuration = 0.3f;   // 페이드 in/out 시간
 
     public override void Activate() => StartCoroutine(MeteorRoutine());
 
@@ -34,6 +38,16 @@ public class MeteorSkill : StructureSkillBase
             this.DError("[MeteorSkill] meteorPrefab이 연결되지 않았습니다.");
             yield break;
         }
+
+        Light2D globalLight = FindGlobalLight();
+        yield return StartCoroutine(FadeLight(globalLight, 1f, dimAmount, fadeDuration));
+
+        // duration 내에 모든 메테오가 떨어지도록 간격 자동 계산
+        float structDuration = GetComponent<StructureController>()?.Duration ?? 0f;
+        float available = structDuration > 0f
+            ? structDuration - fadeDuration * 2f - fallDuration
+            : meteorsCount * 0.4f;
+        float meteorInterval = Mathf.Max(0.05f, available / meteorsCount);
 
         var wait = new WaitForSeconds(meteorInterval);
         for (int i = 0; i < meteorsCount; i++)
@@ -46,34 +60,55 @@ public class MeteorSkill : StructureSkillBase
             StartCoroutine(FallRoutine(startPos, landPos));
             yield return wait;
         }
+
+        // 마지막 메테오 낙하 완료 대기 후 복구
+        yield return new WaitForSeconds(fallDuration);
+        yield return StartCoroutine(FadeLight(globalLight, dimAmount, 1f, fadeDuration));
     }
 
+    private IEnumerator FadeLight(Light2D light, float from, float to, float duration)
+    {
+        if (light == null) yield break;
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            light.intensity = Mathf.Lerp(from, to, elapsed / duration);
+            yield return null;
+        }
+        light.intensity = to;
+    }
+
+    private void OnDestroy()
+    {
+        // 코루틴이 중단되더라도 조명이 어두운 채로 남지 않도록 즉시 복구
+        var light = FindGlobalLight();
+        if (light != null) light.intensity = 1f;
+    }
+
+    private static Light2D FindGlobalLight()
+    {
+        foreach (var l in Object.FindObjectsByType<Light2D>(FindObjectsSortMode.None))
+            if (l.lightType == Light2D.LightType.Global) return l;
+        return null;
+    }
+
+    // 카메라 시야 안쪽에서 랜덤 착지 지점을 반환합니다.
     Vector2 GetRandomPointInBounds()
     {
-        var bounds = MovementBounds.Shared;
-        if (bounds == null || bounds.PointCount < 3)
+        var cam = Camera.main;
+        if (cam == null)
             return (Vector2)transform.position + new Vector2(Random.Range(-spreadRange, spreadRange), 0f);
 
-        // Bounds의 AABB를 구한 뒤 rejection sampling으로 폴리곤 내부 점 선택
-        float minX = float.MaxValue, maxX = float.MinValue;
-        float minY = float.MaxValue, maxY = float.MinValue;
-        for (int i = 0; i < bounds.PointCount; i++)
-        {
-            Vector2 w = bounds.GetWorld(i);
-            if (w.x < minX) minX = w.x;
-            if (w.x > maxX) maxX = w.x;
-            if (w.y < minY) minY = w.y;
-            if (w.y > maxY) maxY = w.y;
-        }
+        // 뷰포트 (0,0)~(1,1) → 월드 좌표 AABB
+        Vector3 bl = cam.ViewportToWorldPoint(new Vector3(0f, 0f, cam.nearClipPlane));
+        Vector3 tr = cam.ViewportToWorldPoint(new Vector3(1f, 1f, cam.nearClipPlane));
 
-        for (int attempt = 0; attempt < 30; attempt++)
-        {
-            Vector2 candidate = new(Random.Range(minX, maxX), Random.Range(minY, maxY));
-            if (bounds.IsInside(candidate)) return candidate;
-        }
-
-        // 30번 시도 실패 시 중심 반환
-        return new Vector2((minX + maxX) * 0.5f, (minY + maxY) * 0.5f);
+        // 가장자리 여백 (화면 끝에 붙어 떨어지지 않도록)
+        float margin = 0.5f;
+        float x = Random.Range(bl.x + margin, tr.x - margin);
+        float y = Random.Range(bl.y + margin, tr.y - margin);
+        return new Vector2(x, y);
     }
 
     IEnumerator FallRoutine(Vector2 from, Vector2 to)

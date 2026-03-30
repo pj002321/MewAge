@@ -105,8 +105,15 @@ public class CharacterSlotView : MonoBehaviour
         transform.localScale = Vector3.one * selectedScale;
 
         bool owned = data?.f_보유여부 ?? false;
-        if (equipButton) equipButton.gameObject.SetActive(owned);
-        if (buyButton)   buyButton  .gameObject.SetActive(!owned);
+        if (equipButton)
+        {
+            equipButton.gameObject.SetActive(owned);
+            bool isEquipped = data != null &&
+                              PlayerCharacterManager.Shared?.EquippedCharID == data.f_캐릭ID;
+            var label = equipButton.GetComponentInChildren<TextMeshProUGUI>();
+            if (label) label.text = isEquipped ? "장착중" : "장착";
+        }
+        if (buyButton) buyButton.gameObject.SetActive(!owned);
     }
 
     public void Deselect()
