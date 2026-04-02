@@ -105,7 +105,6 @@ public class PlayerStatManager : MonoBehaviourSingleton<PlayerStatManager>
     public void SetEquipFlat(StatType stat, float value)
     {
         _equipFlat[(int)stat] = value;
-        ApplyToPlayer();
         StatPanelUI.Shared?.Refresh();
     }
 
@@ -113,7 +112,6 @@ public class PlayerStatManager : MonoBehaviourSingleton<PlayerStatManager>
     public void ResetEquipFlat()
     {
         System.Array.Clear(_equipFlat, 0, _equipFlat.Length);
-        ApplyToPlayer();
         StatPanelUI.Shared?.Refresh();
     }
 

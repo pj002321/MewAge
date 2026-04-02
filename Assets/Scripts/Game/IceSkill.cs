@@ -32,7 +32,7 @@ public class IceSkill : StructureSkillBase
 
     IEnumerator IceRoutine()
     {
-        var enemies = Object.FindObjectsByType<EnemyController>(FindObjectsSortMode.None);
+        var enemies = Object.FindObjectsByType(typeof(EnemyController), FindObjectsInactive.Include, FindObjectsSortMode.None) as EnemyController[];
         foreach (var enemy in enemies)
         {
             if (enemy != null && enemy.gameObject.activeInHierarchy)

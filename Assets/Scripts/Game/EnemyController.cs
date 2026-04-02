@@ -132,7 +132,7 @@ public class EnemyController : MonoBehaviour
     {
         if (GameManager.Shared != null && GameManager.Shared.IsGameOver) return;
         if (isStunned) return;
-        behaviour?.OnAttackUpdate();
+        if (behaviour != null && behaviour.enabled) behaviour.OnAttackUpdate();
         CheckPlayerContact();
     }
 
@@ -155,7 +155,11 @@ public class EnemyController : MonoBehaviour
     private void FixedUpdate()
     {
         if (GameManager.Shared != null && GameManager.Shared.IsGameOver) return;
-        if (isStunned) return;
+        if (isStunned)
+        {
+            _pendingMove = Vector2.zero;
+            return;
+        }
 
         if (playerTransform == null)
         {
@@ -163,7 +167,7 @@ public class EnemyController : MonoBehaviour
             return;
         }
 
-        behaviour?.OnMoveFixedUpdate();
+        if (behaviour != null && behaviour.enabled) behaviour.OnMoveFixedUpdate();
         ApplySeparation();
 
         if (_pendingMove != Vector2.zero && rb != null)
@@ -310,12 +314,13 @@ public class EnemyController : MonoBehaviour
         bool wasOn = beh != null && beh.enabled;
         if (beh) beh.enabled = false;
 
+        if (seconds <= 0) seconds = 1f; // 최소 1초 빙결
         yield return new WaitForSeconds(seconds);
 
         isStunned = false;
         SetTint(Color.white);
         if (beh && wasOn) beh.enabled = true;
-        TakeDamage(damageOnThaw);
+        // 빙결 해제 시 피해 제거
     }
 
     /// <summary>지정 방향으로 순간적으로 밀어냅니다.</summary>
