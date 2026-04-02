@@ -39,9 +39,10 @@ public class ThunderSkill : StructureSkillBase
         yield return StartCoroutine(FadeLight(globalLight, 1f, dimAmount, fadeDuration));
 
         // 2) 모든 적에게 번개
-        var enemies = Object.FindObjectsByType<EnemyController>(FindObjectsSortMode.None);
-        foreach (var enemy in enemies)
+        var enemies = EnemyController.All;
+        for (int i = enemies.Count - 1; i >= 0; i--)
         {
+            var enemy = enemies[i];
             if (enemy == null || !enemy.gameObject.activeInHierarchy) continue;
 
             SpawnLightning(enemy.transform.position, enemy.transform);
@@ -52,7 +53,7 @@ public class ThunderSkill : StructureSkillBase
         }
 
         // 조명이 어두운 상태 잠깐 유지
-        float remaining = dimDuration - fadeDuration - (enemies.Length * strikeDelay);
+        float remaining = dimDuration - fadeDuration - (enemies.Count * strikeDelay);
         if (remaining > 0f)
             yield return new WaitForSeconds(remaining);
 

@@ -412,7 +412,7 @@ public class PlayerController : MonoBehaviour
         while (true)
         {
             yield return wait;
-            foreach (var enemy in Object.FindObjectsByType<EnemyController>(FindObjectsSortMode.None))
+            foreach (var enemy in EnemyController.All)
             {
                 Vector2 dir = (enemy.transform.position - transform.position);
                 if (dir.magnitude <= radius)

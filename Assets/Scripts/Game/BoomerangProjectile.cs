@@ -143,7 +143,7 @@ public class BoomerangProjectile : MonoBehaviour
         EnemyController nearest = null;
         float minDist = bounceRange;
 
-        foreach (var e in Object.FindObjectsByType<EnemyController>(FindObjectsSortMode.None))
+        foreach (var e in EnemyController.All)
         {
             if (hitEnemies.Contains(e)) continue;
             float d = Vector2.Distance(fromPos, e.transform.position);

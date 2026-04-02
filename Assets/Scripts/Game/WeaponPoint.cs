@@ -35,11 +35,13 @@ public class WeaponPoint : MonoBehaviour
     public float LifeSteal      => lifeSteal;
 
     [Header("근거리 이동 속도")]
-    [SerializeField] private float strikeSpeed = 50f;
-    [SerializeField] private float returnSpeed = 25f;
+    [SerializeField] private float pullbackDist     = 0.5f;  // 뒤로 빼는 거리 (로컬)
+    [SerializeField] private float anticipationTime = 0.08f; // 백스윙 후 멈추는 시간
+    [SerializeField] private float strikeSpeed   = 80f;
+    [SerializeField] private float returnSpeed   = 25f;
 
     [Header("근거리 타격 판정")]
-    [SerializeField] private float hitDistance = 0.25f;
+    [SerializeField] private float hitDistance = 0.4f;
 
     [Header("범위 타격 반경 (중거리 판정)")]
     [SerializeField] private float areaHitRadius      = 0.4f;
@@ -64,17 +66,22 @@ public class WeaponPoint : MonoBehaviour
     [SerializeField] private float spinHitCooldown = 0.5f;   // 동일 적 재타격 쿨타임
     [SerializeField] private float spinKnockback   = 7f;
 
-    private enum State { Idle, Striking, Overshooting, Returning }
+    private enum State { Idle, Pullback, Anticipation, Striking, Overshooting, Returning }
     private State state = State.Idle;
 
     private Vector3 originLocalPos;
+    private Vector3 pullbackLocalPos;  // 뒤로 뺀 로컬 목표
     private EnemyController targetEnemy;
     private Vector3 overshootTarget;
     private float cooldownTimer;
+    private float anticipationTimer;
 
     private float _baseCooldown;      // Inspector 원본값 (변경 안 함)
     private float _statMultiplier  = 1f; // PlayerStatManager.AtkSpeed에서 오는 배율
     private float _bonusMultiplier = 1f; // MultiplyAttackSpeed 등 일회성 보너스 누적
+
+    // Physics NonAlloc 버퍼 (매 프레임 배열 재할당 방지)
+    private static readonly Collider2D[] _hitBuffer = new Collider2D[32];
 
     // Spin 전용
     private float currentAngle;
@@ -104,6 +111,8 @@ public class WeaponPoint : MonoBehaviour
         switch (state)
         {
             case State.Idle:         UpdateIdle();         break;
+            case State.Pullback:     UpdatePullback();     break;
+            case State.Anticipation: UpdateAnticipation(); break;
             case State.Striking:     UpdateStriking();     break;
             case State.Overshooting: UpdateOvershooting(); break;
             case State.Returning:    UpdateReturning();    break;
@@ -132,9 +141,10 @@ public class WeaponPoint : MonoBehaviour
         }
 
         // 타격 판정
-        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, spinHitRadius);
-        foreach (var hit in hits)
+        int hitCount = Physics2D.OverlapCircleNonAlloc(transform.position, spinHitRadius, _hitBuffer);
+        for (int i = 0; i < hitCount; i++)
         {
+            var hit   = _hitBuffer[i];
             var enemy = hit.GetComponentInParent<EnemyController>();
             if (enemy == null || spinHitTimers.ContainsKey(enemy)) continue;
 
@@ -176,7 +186,10 @@ public class WeaponPoint : MonoBehaviour
         if (WeaponManager.Instance.TryClaim(nearest))
         {
             targetEnemy = nearest;
-            BeginStrike();
+            // 타겟 반대 방향(로컬)으로 pullbackDist만큼 뺀 위치 계산
+            Vector2 toTarget = (nearest.transform.position - transform.parent.position).normalized;
+            pullbackLocalPos = -(Vector3)toTarget * pullbackDist;
+            state = State.Pullback;
         }
     }
 
@@ -202,11 +215,34 @@ public class WeaponPoint : MonoBehaviour
     }
 
     // ─────────────────────────────────────────
+    // Pullback: 플레이어 중앙으로 땡겨짐
+    // ─────────────────────────────────────────
+    private void UpdatePullback()
+    {
+        // 타겟 반대 방향으로 뺌
+        transform.localPosition = Vector3.MoveTowards(transform.localPosition, pullbackLocalPos, returnSpeed * Time.deltaTime);
+
+        if ((transform.localPosition - pullbackLocalPos).sqrMagnitude <= 0.001f)
+        {
+            transform.localPosition = pullbackLocalPos;
+            anticipationTimer = anticipationTime;
+            state = State.Anticipation;
+        }
+    }
+
+    private void UpdateAnticipation()
+    {
+        // 제자리에서 잠깐 멈춤 → 시간 다 되면 팍! Strike
+        anticipationTimer -= Time.deltaTime;
+        if (anticipationTimer <= 0f)
+            BeginStrike();
+    }
+
+    // ─────────────────────────────────────────
     // BeginStrike: 무기를 플레이어 중심에 스냅 후 즉시 돌진 시작
     // ─────────────────────────────────────────
     private void BeginStrike()
     {
-        transform.position = transform.parent.position;
         SoundManager.Shared?.Play(SoundKey.Weapon_Attack);
         state = State.Striking;
     }
@@ -227,6 +263,7 @@ public class WeaponPoint : MonoBehaviour
         Vector3 targetPos = targetEnemy.transform.position;
         transform.position = Vector3.MoveTowards(transform.position, targetPos, strikeSpeed * Time.deltaTime);
 
+        // 매 프레임 타격 판정 (적 위치가 바뀌어도 따라가며 타격)
         if (Vector3.Distance(transform.position, targetPos) <= hitDistance)
         {
             Vector2 hitDir = (targetPos - transform.parent.position).normalized;
@@ -256,10 +293,10 @@ public class WeaponPoint : MonoBehaviour
     // ─────────────────────────────────────────
     private void HitArea(Vector2 hitDir, EnemyController primaryTarget)
     {
-        Collider2D[] cols = Physics2D.OverlapCircleAll(transform.position, areaHitRadius);
-        foreach (var col in cols)
+        int colCount = Physics2D.OverlapCircleNonAlloc(transform.position, areaHitRadius, _hitBuffer);
+        for (int i = 0; i < colCount; i++)
         {
-            if (!col.TryGetComponent<EnemyController>(out var enemy)) continue;
+            if (!_hitBuffer[i].TryGetComponent<EnemyController>(out var enemy)) continue;
             bool isPrimary = enemy == primaryTarget;
             float baseDmg = isPrimary ? attackDamage : attackDamage * areaHitDamageRatio;
             var (finalDmg, isCrit) = RollCrit(baseDmg);
@@ -267,7 +304,6 @@ public class WeaponPoint : MonoBehaviour
             if (knockDir.sqrMagnitude < 0.001f) knockDir = hitDir;
             enemy.TakeDamage(finalDmg, isCrit, knockDir.normalized, 8f);
             ApplyLifeSteal(finalDmg);
-            if (dotDamage > 0f) enemy.ApplyBleed(dotDamage);
             if (dotDamage > 0f) enemy.ApplyBleed(dotDamage);
         }
     }
@@ -283,13 +319,12 @@ public class WeaponPoint : MonoBehaviour
     // ─────────────────────────────────────────
     private void UpdateReturning()
     {
-        // 부모(앵커) 기준으로 (0,0,0) 위치로 되돌아갑니다.
-        // 플레이어가 아무리 빠르게 이동해도 localPosition 기준이므로 빗나가지 않습니다.
+        // 플레이어 중앙(0,0,0)으로 복귀
         transform.localPosition = Vector3.MoveTowards(transform.localPosition, Vector3.zero, returnSpeed * Time.deltaTime);
 
         if (transform.localPosition.sqrMagnitude <= 0.001f)
         {
-            transform.localPosition = Vector3.zero; // 완벽히 안착
+            transform.localPosition = Vector3.zero;
             cooldownTimer = attackCooldown;
             state = State.Idle;
         }
@@ -311,8 +346,8 @@ public class WeaponPoint : MonoBehaviour
 
     private Vector2 GetLookDirection()
     {
-        // Striking 중: 타겟 적 방향 고정
-        if (state == State.Striking && targetEnemy != null)
+        // Striking 또는 Pullback 중: 타겟 적 방향 고정
+        if ((state == State.Striking || state == State.Pullback) && targetEnemy != null)
             return (targetEnemy.transform.position - transform.position).normalized;
 
         // 적이 있으면 가장 가까운 적 방향
@@ -337,17 +372,17 @@ public class WeaponPoint : MonoBehaviour
     // ─────────────────────────────────────────
     private EnemyController FindNearestUnclaimed()
     {
-        EnemyController nearest = null;
-        float minDist = attackRange;
+        EnemyController nearest  = null;
+        float           minSqDist = attackRange * attackRange;
+        Vector2         origin   = transform.parent.position;
 
-        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.parent.position, attackRange);
-        foreach (var hit in hits)
+        foreach (var enemy in EnemyController.All)
         {
-            if (!hit.TryGetComponent<EnemyController>(out var enemy)) continue;
+            if (enemy == null) continue;
             if (WeaponManager.Instance.IsClaimed(enemy)) continue;
 
-            float dist = Vector2.Distance(transform.parent.position, enemy.transform.position);
-            if (dist < minDist) { minDist = dist; nearest = enemy; }
+            float sqDist = ((Vector2)enemy.transform.position - origin).sqrMagnitude;
+            if (sqDist < minSqDist) { minSqDist = sqDist; nearest = enemy; }
         }
         return nearest;
     }
@@ -355,13 +390,15 @@ public class WeaponPoint : MonoBehaviour
     // 거리 제한 없이 씬 전체에서 가장 가까운 적 (회전용)
     private EnemyController FindNearestAny()
     {
-        EnemyController nearest = null;
-        float minDist = float.MaxValue;
+        EnemyController nearest   = null;
+        float           minSqDist = float.MaxValue;
+        Vector2         origin    = transform.parent.position;
 
-        foreach (var enemy in Object.FindObjectsByType<EnemyController>(FindObjectsSortMode.None))
+        foreach (var enemy in EnemyController.All)
         {
-            float dist = Vector2.Distance(transform.parent.position, enemy.transform.position);
-            if (dist < minDist) { minDist = dist; nearest = enemy; }
+            if (enemy == null) continue;
+            float sqDist = ((Vector2)enemy.transform.position - origin).sqrMagnitude;
+            if (sqDist < minSqDist) { minSqDist = sqDist; nearest = enemy; }
         }
         return nearest;
     }

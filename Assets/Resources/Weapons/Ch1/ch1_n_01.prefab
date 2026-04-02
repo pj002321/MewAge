@@ -113,6 +113,8 @@ MonoBehaviour:
   dotDamage: 0
   lifeSteal: 0
   attackRange: 4.5
+  pullbackDist: 1
+  anticipationTime: 0.1
   strikeSpeed: 100
   returnSpeed: 100
   hitDistance: 0.25
@@ -141,7 +143,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d880b36e09b826b4aa4d33b07b710c84, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpriteOutline
-  colorProperty: _SolidOutline
   starColors:
   - {r: 1, g: 1, b: 1, a: 0}
   - {r: 0.504717, g: 0.9414869, b: 1, a: 1}

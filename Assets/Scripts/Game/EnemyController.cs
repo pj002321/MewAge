@@ -99,10 +99,12 @@ public class EnemyController : MonoBehaviour
 
     public event System.Action OnDeath;
 
+    // 원본 재질 캐시 (풀 반환 시 복구용)
+    private Material[] _originalMats;
+
     // ── 초기화 ──────────────────────────────────────────────────
     private void Awake()
     {
-        _allEnemies.Add(this);
         currentHP = maxHP;
         baseSpeed = moveSpeed;
         rb        = GetComponent<Rigidbody2D>();
@@ -110,6 +112,14 @@ public class EnemyController : MonoBehaviour
         hitFlash  = GetComponentInChildren<HitFlash>(true);
         animator  = GetComponentInChildren<Animator>();
         behaviour = GetComponent<EnemyBehaviourBase>();
+
+        // 원본 재질 캐시 (사망 연출 후 복구용)
+        if (srs != null)
+        {
+            _originalMats = new Material[srs.Length];
+            for (int i = 0; i < srs.Length; i++)
+                _originalMats[i] = srs[i].material;
+        }
 
         if (rb != null)
         {
@@ -124,6 +134,7 @@ public class EnemyController : MonoBehaviour
 
     private void Start()
     {
+        All.Add(this);   // 최초 생성 시 등록 (풀 재사용은 WakeFromPool에서)
         playerTransform = PlayerController.Instance?.transform;
     }
 
@@ -176,8 +187,8 @@ public class EnemyController : MonoBehaviour
     }
 
     // ── 분리: Physics 쿼리 없이 전체 목록에서 직접 계산 ─────────
-    private static readonly List<EnemyController> _allEnemies = new List<EnemyController>();
-    public static int ActiveCount => _allEnemies.Count;
+    public static readonly List<EnemyController> All = new List<EnemyController>();
+    public static int ActiveCount => All.Count;
 
     private void ApplySeparation()
     {
@@ -186,7 +197,7 @@ public class EnemyController : MonoBehaviour
         float   r2   = separationRadius * separationRadius;
         Vector2 push = Vector2.zero;
 
-        foreach (var other in _allEnemies)
+        foreach (var other in All)
         {
             if (other == this || other.rb == null) continue;
             Vector2 diff  = rb.position - other.rb.position;
@@ -204,7 +215,57 @@ public class EnemyController : MonoBehaviour
 
     private void OnDestroy()
     {
-        _allEnemies.Remove(this);
+        AllRemoveSwapBack(this); // 진짜 파괴될 때 안전망
+    }
+
+    // O(1) 리스트 제거 — 마지막 요소와 교환 후 RemoveAt
+    static void AllRemoveSwapBack(EnemyController e)
+    {
+        int idx = All.IndexOf(e);
+        if (idx < 0) return;
+        int last = All.Count - 1;
+        All[idx] = All[last];
+        All.RemoveAt(last);
+    }
+
+    /// <summary>EnemyPool이 풀에서 꺼낼 때 호출 — 렌더러·콜라이더 활성화 + All 등록.</summary>
+    public void WakeFromPool()
+    {
+        StopAllCoroutines();
+        enabled    = true;
+        damageTimer = 0f;
+        isStunned  = false;
+        moveSpeed  = baseSpeed;
+        if (rb != null) rb.linearVelocity = Vector2.zero;
+
+        // 재질 복구
+        if (srs != null && _originalMats != null)
+            for (int i = 0; i < srs.Length && i < _originalMats.Length; i++)
+                if (_originalMats[i] != null) srs[i].material = _originalMats[i];
+
+        foreach (var sr in srs)  sr.enabled = true;
+        foreach (var col in GetComponentsInChildren<Collider2D>(true)) col.enabled = true;
+
+        playerTransform = PlayerController.Instance?.transform;
+        All.Add(this);
+    }
+
+    /// <summary>EnemyPool이 풀로 반환하기 전 호출 — 렌더러·콜라이더 비활성화 + All 제거.</summary>
+    public void SleepToPool()
+    {
+        StopAllCoroutines();
+        enabled = false;
+        if (rb != null) rb.linearVelocity = Vector2.zero;
+
+        // 재질 복구 (사망 실루엣 해제)
+        if (srs != null && _originalMats != null)
+            for (int i = 0; i < srs.Length && i < _originalMats.Length; i++)
+                if (_originalMats[i] != null) srs[i].material = _originalMats[i];
+
+        foreach (var sr in srs)  sr.enabled = false;
+        foreach (var col in GetComponentsInChildren<Collider2D>(true)) col.enabled = false;
+
+        AllRemoveSwapBack(this);
     }
 
     private void LateUpdate()
@@ -452,7 +513,9 @@ public class EnemyController : MonoBehaviour
             yield return null;
         }
 
-        Destroy(gameObject);
+        // 풀이 있으면 반환, 없으면 파괴
+        if (EnemyPool.Shared != null) EnemyPool.Shared.Return(this);
+        else                          Destroy(gameObject);
     }
 
     // ── 웨이브 구간 스탯 적용 ────────────────────────────────────

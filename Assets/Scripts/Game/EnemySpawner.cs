@@ -189,8 +189,11 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
         }
         else
         {
-            var obj = Instantiate(prefab, pos, Quaternion.identity);
-            if (obj.TryGetComponent<EnemyController>(out var enemy))
+            var enemy = EnemyPool.Shared != null
+                ? EnemyPool.Shared.Get(prefab, pos)
+                : Instantiate(prefab, pos, Quaternion.identity).GetComponent<EnemyController>();
+
+            if (enemy != null)
             {
                 enemy.InitForWave(currentWave);
                 if (data != null) enemy.ApplyUnitData(data);
@@ -247,8 +250,10 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
 
     public void ClearAllEnemies()
     {
-        foreach (var enemy in Object.FindObjectsByType<EnemyController>(FindObjectsSortMode.None))
-            Destroy(enemy.gameObject);
+        if (EnemyPool.Shared != null) EnemyPool.Shared.ReturnAll();
+        else for (int i = EnemyController.All.Count - 1; i >= 0; i--)
+                 Destroy(EnemyController.All[i].gameObject);
+
         foreach (var marker in Object.FindObjectsByType<SpawnMarker>(FindObjectsSortMode.None))
             Destroy(marker.gameObject);
     }

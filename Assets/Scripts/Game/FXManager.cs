@@ -24,14 +24,64 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
     // 파편 오브젝트 추적 (웨이브 종료 시 일괄 제거용)
     private readonly List<GameObject> activeDebris = new();
 
+    // ── 오브젝트 풀 ──────────────────────────────────────────────
+    private readonly Dictionary<GameObject, Queue<GameObject>> _debrisPool    = new();
+    private readonly Queue<DamageText>                         _damageTextPool = new();
+
+    private GameObject GetDebris(GameObject prefab, Vector3 pos)
+    {
+        if (!_debrisPool.TryGetValue(prefab, out var q))
+            _debrisPool[prefab] = q = new Queue<GameObject>();
+
+        if (q.Count > 0)
+        {
+            var go = q.Dequeue();
+            go.transform.SetPositionAndRotation(pos, Quaternion.identity);
+            go.SetActive(true);
+            return go;
+        }
+        return Instantiate(prefab, pos, Quaternion.identity);
+    }
+
+    private void ReturnDebris(GameObject prefab, GameObject go)
+    {
+        if (go == null) return;
+        // 색상 알파 복구
+        var sr = go.GetComponent<SpriteRenderer>();
+        if (sr != null) { var c = sr.color; sr.color = new Color(c.r, c.g, c.b, 1f); }
+        go.transform.localScale = Vector3.one;
+        go.SetActive(false);
+        if (!_debrisPool.TryGetValue(prefab, out var q))
+            _debrisPool[prefab] = q = new Queue<GameObject>();
+        q.Enqueue(go);
+    }
+
+    public void ReturnDamageText(DamageText dt)
+    {
+        if (dt == null) return;
+        dt.gameObject.SetActive(false);
+        _damageTextPool.Enqueue(dt);
+    }
+
     public void SpawnDamageText(Vector3 worldPos, float damage, bool isCritical = false, bool isBleed = false)
     {
         if (damageTextPrefab == null) return;
 
-        // 여러 텍스트가 겹치지 않도록 수평 랜덤 오프셋
         Vector3 offset = new(Random.Range(-0.2f, 0.2f), 0.3f, 0f);
-        var go = Instantiate(damageTextPrefab, worldPos + offset, Quaternion.identity);
-        go.GetComponent<DamageText>()?.Init(damage, isCritical, isBleed);
+        Vector3 pos    = worldPos + offset;
+
+        DamageText dt;
+        if (_damageTextPool.Count > 0)
+        {
+            dt = _damageTextPool.Dequeue();
+            dt.transform.position = pos;
+            dt.gameObject.SetActive(true);
+        }
+        else
+        {
+            dt = Instantiate(damageTextPrefab, pos, Quaternion.identity).GetComponent<DamageText>();
+        }
+        dt?.Init(damage, isCritical, isBleed);
     }
 
     /// <summary>플레이어 머리 위에 상승 텍스트를 표시합니다. (획득/회복/회피 피드백)</summary>
@@ -118,8 +168,8 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
 
         for (int i = 0; i < count; i++)
         {
-            gos[i] = Instantiate(prefab, pos, Quaternion.identity);
-            gos[i].transform.localScale *= Random.Range(0.15f, 0.3f);   // 아주 작게
+            gos[i] = GetDebris(prefab, pos);
+            gos[i].transform.localScale = Vector3.one * Random.Range(0.15f, 0.3f);
             activeDebris.Add(gos[i]);
             renders[i] = gos[i].GetComponent<SpriteRenderer>();
 
@@ -158,7 +208,7 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
             if (gos[i] != null)
             {
                 activeDebris.Remove(gos[i]);
-                Destroy(gos[i]);
+                ReturnDebris(prefab, gos[i]);
             }
         }
     }
@@ -174,9 +224,9 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
 
         for (int i = 0; i < count; i++)
         {
-            gos[i] = Instantiate(prefab, pos, Quaternion.identity);
-            gos[i].transform.localScale *= Random.Range(0.7f, 1.0f);
-            activeDebris.Add(gos[i]);  // 추적 목록 등록
+            gos[i] = GetDebris(prefab, pos);
+            gos[i].transform.localScale = Vector3.one * Random.Range(0.7f, 1.0f);
+            activeDebris.Add(gos[i]);
 
             float angleDeg = hasDir
                 ? (baseRad + Random.Range(-70f, 70f)) * Mathf.Deg2Rad
@@ -205,7 +255,7 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
             if (gos[i] != null)
             {
                 activeDebris.Remove(gos[i]);
-                Destroy(gos[i]);
+                ReturnDebris(prefab, gos[i]);
             }
         }
     }

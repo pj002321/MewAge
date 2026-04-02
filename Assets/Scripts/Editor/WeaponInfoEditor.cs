@@ -20,6 +20,8 @@ public class WeaponInfoEditor : Editor
     // 근거리
     SerializedProperty p_strikeSpeed;
     SerializedProperty p_returnSpeed;
+    SerializedProperty p_pullbackDist;
+    SerializedProperty p_anticipationTime;
     SerializedProperty p_hitDistance;
     SerializedProperty p_areaHitRadius;
     SerializedProperty p_areaHitDamageRatio;
@@ -50,6 +52,8 @@ public class WeaponInfoEditor : Editor
 
         p_strikeSpeed       = serializedObject.FindProperty("strikeSpeed");
         p_returnSpeed       = serializedObject.FindProperty("returnSpeed");
+        p_pullbackDist      = serializedObject.FindProperty("pullbackDist");
+        p_anticipationTime  = serializedObject.FindProperty("anticipationTime");
         p_hitDistance       = serializedObject.FindProperty("hitDistance");
         p_areaHitRadius      = serializedObject.FindProperty("areaHitRadius");
         p_areaHitDamageRatio = serializedObject.FindProperty("areaHitDamageRatio");
@@ -88,6 +92,8 @@ public class WeaponInfoEditor : Editor
             EditorGUILayout.LabelField("근거리 전용 (Melee)", EditorStyles.boldLabel);
             EditorGUILayout.PropertyField(p_strikeSpeed,       new GUIContent("돌진 속도"));
             EditorGUILayout.PropertyField(p_returnSpeed,       new GUIContent("복귀 속도"));
+            EditorGUILayout.PropertyField(p_pullbackDist,      new GUIContent("백스윙 거리"));
+            EditorGUILayout.PropertyField(p_anticipationTime,  new GUIContent("백스윙 대기 시간"));
             EditorGUILayout.PropertyField(p_hitDistance,       new GUIContent("타격 판정 거리"));
             EditorGUILayout.PropertyField(p_areaHitRadius,      new GUIContent("범위 타격 반경"));
             EditorGUILayout.PropertyField(p_areaHitDamageRatio, new GUIContent("주변 데미지 배율"));

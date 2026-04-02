@@ -7,8 +7,8 @@ using UnityEngine;
 [RequireComponent(typeof(SpriteRenderer))]
 public class SpriteOutline : MonoBehaviour
 {
-    [Header("머티리얼 프로퍼티 이름")]
-    [SerializeField] private string colorProperty = "_OutlineColorBase";
+    
+    private string colorProperty = "_SolidOutline";
 
     [Header("성 등급별 색상 (1성~5성)")]
     [SerializeField] private Color[] starColors =

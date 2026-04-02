@@ -72,8 +72,11 @@ public class WaveEnvironmentSwitcher : MonoBehaviourSingleton<WaveEnvironmentSwi
     {
         if (bossEnvironment)   bossEnvironment.SetActive(false);
         if (normalEnvironment) normalEnvironment.SetActive(true);
-        ApplyCamera(normalCamera);
         ApplyWaveBackground(wave); // MovementBounds/SpawnZone 등록은 내부에서 처리
+
+        // MovementBounds에 맞춰 카메라 bounds 업데이트
+        UpdateCameraBoundsFromMovementBounds();
+        ApplyCamera(normalCamera);
     }
 
     /// <summary>보스 웨이브가 끝난 뒤 일반 환경으로 복귀 시 호출합니다.</summary>
@@ -89,6 +92,9 @@ public class WaveEnvironmentSwitcher : MonoBehaviourSingleton<WaveEnvironmentSwi
         if (bossEnvironment)   bossEnvironment.SetActive(true);
         bossEnvironment?.GetComponentInChildren<MovementBounds>(true)?.Register();
         bossEnvironment?.GetComponentInChildren<SpawnZone>(true)?.Register();
+
+        // MovementBounds에 맞춰 카메라 bounds 업데이트 (보스 카메라는 bounds 사용하지 않음)
+        // ApplyCamera(bossCamera); // bounds 사용하지 않으므로 그대로
         ApplyCamera(bossCamera);
     }
 
@@ -132,6 +138,16 @@ public class WaveEnvironmentSwitcher : MonoBehaviourSingleton<WaveEnvironmentSwi
             // 배경에 없으면 normalEnvironment 직속 자식에서 fallback
             normalEnvironment?.GetComponentInChildren<MovementBounds>(false)?.Register();
             normalEnvironment?.GetComponentInChildren<SpawnZone>(false)?.Register();
+        }
+    }
+
+    private void UpdateCameraBoundsFromMovementBounds()
+    {
+        if (MovementBounds.Shared != null)
+        {
+            MovementBounds.Shared.GetBoundsMinMax(out Vector2 min, out Vector2 max);
+            normalCamera.boundsMin = min;
+            normalCamera.boundsMax = max;
         }
     }
 

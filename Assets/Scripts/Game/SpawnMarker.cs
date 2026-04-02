@@ -49,8 +49,18 @@ public class SpawnMarker : MonoBehaviour
 
         if (spawnPrefab != null)
         {
-            var obj = Instantiate(spawnPrefab, transform.position, Quaternion.identity);
-            if (obj.TryGetComponent<EnemyController>(out var enemy))
+            EnemyController enemy;
+            if (EnemyPool.Shared != null)
+            {
+                enemy = EnemyPool.Shared.Get(spawnPrefab, transform.position);
+            }
+            else
+            {
+                var obj = Instantiate(spawnPrefab, transform.position, Quaternion.identity);
+                enemy   = obj.GetComponent<EnemyController>();
+            }
+
+            if (enemy != null)
             {
                 enemy.InitForWave(spawnWave);
                 if (_unitData != null) enemy.ApplyUnitData(_unitData);

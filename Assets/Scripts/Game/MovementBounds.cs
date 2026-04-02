@@ -63,6 +63,29 @@ public class MovementBounds : MonoBehaviour
         return closest + offset;
     }
 
+    /// <summary>폴리곤을 감싸는 직사각형의 min/max를 반환합니다.</summary>
+    public void GetBoundsMinMax(out Vector2 min, out Vector2 max)
+    {
+        if (localPoints == null || localPoints.Count == 0)
+        {
+            min = max = Vector2.zero;
+            return;
+        }
+
+        Vector2 offset = transform.position;
+        min = localPoints[0] + offset;
+        max = localPoints[0] + offset;
+
+        for (int i = 1; i < localPoints.Count; i++)
+        {
+            Vector2 worldPoint = localPoints[i] + offset;
+            min.x = Mathf.Min(min.x, worldPoint.x);
+            min.y = Mathf.Min(min.y, worldPoint.y);
+            max.x = Mathf.Max(max.x, worldPoint.x);
+            max.y = Mathf.Max(max.y, worldPoint.y);
+        }
+    }
+
     // ── Gizmo ──────────────────────────────────────────────────
     private void OnDrawGizmos()
     {
