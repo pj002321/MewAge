@@ -4,25 +4,24 @@ using TMPro;
 using Mewage.DB;
 
 /// <summary>
-/// 기물 상세 팝업.
-/// 아이콘 / 이름 / 시대·역할 / ★ 등급 / 수치 / 강화 / 분해 / 프리셋 등록
+/// 기물 상세 팝업. 정보 확인·강화·분해·프리셋 등록 담당.
+/// 합성은 HomeWarePanel 합성 탭에서 처리합니다.
 ///
 /// Inspector 연결:
 ///   iconImage, frameImage — 아이콘 영역
-///   nameText, docuText, eraRoleText, starText, countText — 정보 텍스트
-///   statText    — 현재 수치
-///   nextStatText — 다음 ★ 강화 시 수치 미리보기
-///   upgradeButton, upgradeLabel — 강화 (3개 필요)
+///   nameText, docuText, eraRoleText — 기본 정보
+///   levelText    — "Lv.5 / 20"
+///   countText    — "보유 3장"
+///   statText     — 현재 주수치
+///   nextStatText — 다음 레벨 강화 후 수치
+///   upgradeButton, upgradeLabel — 강화 버튼
 ///   dismantleButton — 분해 (+50골드)
+///   synergyText  — 현재 프리셋 시너지 설명
 ///   presetButtons[4], presetLabels[4] — 슬롯 1~4 등록/해제
-///   closeButton — 닫기
+///   closeButton  — 닫기
 /// </summary>
 public class WareDetailPopup : MonoBehaviour
 {
-    static readonly Color ColStar1 = Color.white;
-    static readonly Color ColStar2 = new Color(1f, 0.84f, 0f, 1f);
-    static readonly Color ColStar3 = new Color(0.6f, 0f,   1f, 1f);
-
     [Header("아이콘")]
     [SerializeField] Image    iconImage;
     [SerializeField] Image    frameImage;
@@ -31,7 +30,7 @@ public class WareDetailPopup : MonoBehaviour
     [SerializeField] TMP_Text nameText;
     [SerializeField] TMP_Text docuText;
     [SerializeField] TMP_Text eraRoleText;
-    [SerializeField] TMP_Text starText;
+    [SerializeField] TMP_Text levelText;
     [SerializeField] TMP_Text countText;
 
     [Header("수치")]
@@ -45,15 +44,18 @@ public class WareDetailPopup : MonoBehaviour
     [Header("분해")]
     [SerializeField] Button   dismantleButton;
 
+    [Header("시너지")]
+    [SerializeField] TMP_Text synergyText;
+
     [Header("프리셋 슬롯 (0~3)")]
-    [SerializeField] Button[]   presetButtons  = new Button[4];
-    [SerializeField] TMP_Text[] presetLabels   = new TMP_Text[4];
+    [SerializeField] Button[]   presetButtons = new Button[4];
+    [SerializeField] TMP_Text[] presetLabels  = new TMP_Text[4];
 
     [Header("닫기")]
     [SerializeField] Button closeButton;
 
-    string   _currentId;
-    DB_기물  _currentData;
+    string  _currentId;
+    DB_기물 _currentData;
 
     void Awake()
     {
@@ -80,40 +82,40 @@ public class WareDetailPopup : MonoBehaviour
         Refresh();
     }
 
-    // ── 갱신 ────────────────────────────────────────────────────────
+    // ── 갱신 ─────────────────────────────────────────────────────────
 
     void Refresh()
     {
         var mgr   = StructureWareManager.Shared;
-        int star  = mgr?.GetStar(_currentId) ?? 1;
+        int level = mgr?.GetLevel(_currentId) ?? 1;
         int count = mgr?.GetCount(_currentId) ?? 0;
-        bool can  = mgr?.CanUpgrade(_currentId) ?? false;
+        bool canUpg  = mgr?.CanUpgrade(_currentId) ?? false;
+        bool isMaxLv = level >= StructureWareManager.MaxLevel;
 
         // 아이콘
         var sprite = StructureWareManager.LoadIcon(_currentId);
         if (iconImage)  { iconImage.sprite = sprite; iconImage.enabled = sprite != null; }
-        if (frameImage)   frameImage.color = StarColor(star);
+        if (frameImage) frameImage.color   = WareSlotView.LevelColor(level);
 
         // 정보
         string era = StructureWareManager.EraOf(_currentId);
         if (nameText)    nameText.text    = _currentData.f_이름;
         if (docuText)    docuText.text    = _currentData.f_설명;
         if (eraRoleText) eraRoleText.text = $"{StructureWareManager.EraName(era)}  |  {_currentData.f_역할}";
-        if (starText)    starText.text    = Stars(star);
-        if (countText)   countText.text   = $"보유 {count}개";
+        if (levelText)   levelText.text   = isMaxLv ? "Lv.MAX" : $"Lv.{level} / {StructureWareManager.MaxLevel}";
+        if (countText)   countText.text   = $"보유 {count}장";
 
         // 수치
-        float main = mgr?.GetMainValue(_currentData, star) ?? _currentData.f_주수치;
-        float sub  = _currentData.f_보조수치;
-        if (statText) statText.text = $"주수치  {main:F0}     보조  {sub:F1}";
+        float main = mgr?.GetMainValue(_currentData, level) ?? _currentData.f_주수치;
+        if (statText) statText.text = $"주수치  {main:F0}     보조  {_currentData.f_보조수치:F1}";
 
-        // 다음 ★ 미리보기
+        // 다음 레벨 미리보기
         if (nextStatText)
         {
-            if (star < 3)
+            if (!isMaxLv)
             {
-                float nextMain = mgr?.GetMainValue(_currentData, star + 1) ?? main;
-                nextStatText.text = $"★{star + 1} 강화 시  주수치 → {nextMain:F0}";
+                float nextMain = mgr?.GetMainValue(_currentData, level + 1) ?? main;
+                nextStatText.text = $"Lv.{level + 1} 강화 시  →  {nextMain:F0}";
                 nextStatText.gameObject.SetActive(true);
             }
             else
@@ -123,11 +125,23 @@ public class WareDetailPopup : MonoBehaviour
         }
 
         // 강화 버튼
-        if (upgradeButton) upgradeButton.interactable = can;
+        int upgCost = StructureWareManager.GetUpgradeCost(level);
+        if (upgradeButton) upgradeButton.interactable = canUpg;
         if (upgradeLabel)
-            upgradeLabel.text = star >= 3
-                ? "최대 강화 달성"
-                : $"강화    ({count} / 3개)";
+            upgradeLabel.text = isMaxLv
+                ? "최대 레벨"
+                : $"강화  ({count} / {upgCost}장)";
+
+        // 시너지 정보
+        if (synergyText)
+        {
+            var sb = new System.Text.StringBuilder();
+            string eraSyn = mgr?.GetEraSynergyDescription();
+            if (!string.IsNullOrEmpty(eraSyn)) sb.AppendLine(eraSyn);
+            var tagSyns = mgr?.GetRoleTagSynergies();
+            if (tagSyns != null) foreach (var s in tagSyns) sb.AppendLine(s);
+            synergyText.text = sb.Length > 0 ? sb.ToString().TrimEnd() : "시너지 없음";
+        }
 
         // 프리셋 버튼
         for (int i = 0; i < presetButtons.Length && i < 4; i++)
@@ -135,7 +149,7 @@ public class WareDetailPopup : MonoBehaviour
             if (presetButtons[i] == null) continue;
             bool inSlot = mgr?.GetPreset(i) == _currentId;
             if (presetLabels != null && i < presetLabels.Length && presetLabels[i] != null)
-                presetLabels[i].text = inSlot ? $"슬롯 {i + 1}  해제" : $"슬롯 {i + 1}";
+                presetLabels[i].text = inSlot ? $"슬롯{i + 1} 해제" : $"슬롯{i + 1}";
         }
     }
 
@@ -150,25 +164,18 @@ public class WareDetailPopup : MonoBehaviour
     void OnDismantle()
     {
         StructureWareManager.Shared?.Dismantle(_currentId);
-        if ((StructureWareManager.Shared?.GetCount(_currentId) ?? 0) > 0)
-            Refresh();
-        else
-            gameObject.SetActive(false);
+        bool stillOwned = (StructureWareManager.Shared?.GetCount(_currentId) ?? 0) > 0
+                       || (StructureWareManager.Shared?.GetLevel(_currentId) ?? 1) > 1;
+        if (stillOwned) Refresh();
+        else            gameObject.SetActive(false);
     }
 
     void OnPreset(int slot)
     {
         var mgr = StructureWareManager.Shared;
         if (mgr == null) return;
-        if (mgr.GetPreset(slot) == _currentId)
-            mgr.ClearPreset(slot);
-        else
-            mgr.SetPreset(slot, _currentId);
+        if (mgr.GetPreset(slot) == _currentId) mgr.ClearPreset(slot);
+        else                                    mgr.SetPreset(slot, _currentId);
         Refresh();
     }
-
-    // ── 유틸 ────────────────────────────────────────────────────────
-
-    static Color  StarColor(int star) => star switch { 2 => ColStar2, 3 => ColStar3, _ => ColStar1 };
-    static string Stars(int star)     => new string('★', star) + new string('☆', 3 - star);
 }

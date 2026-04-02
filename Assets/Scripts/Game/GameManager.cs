@@ -63,6 +63,8 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         // 이전 판 증강 수치 초기화 후 캐릭터 기초 스탯 재적용
         PlayerStatManager.Shared?.ResetMods();
         PlayerCharacterManager.Shared?.ApplyCharacterStats();
+        // 기물 프리셋 시너지 적용 (캐릭터 스탯 이후, 증강 이전)
+        WareSynergySystem.ApplySynergies();
 
         // 시작 시 Normal 무기 1개 지급 후 바로 Wave 1 시작
         UpgradeManager.Shared?.GiveStarterWeapon();

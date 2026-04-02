@@ -197,7 +197,7 @@ public class UpgradePanel : MonoBehaviour
         // 등급 확률 텍스트
         if (normalProbText) normalProbText.text = $"{pNormal:0.#}%";
         if (rareProbText)   rareProbText.text   = $"{pRare:0.#}%";
-        if (eliteProbText)  eliteProbText.text  = $"{pElite:0.#}%";
+        if (eliteProbText)  { eliteProbText.text = $"{pElite:0.#}%"; eliteProbText.color = new Color(0.1f, 0.75f, 1f); }
         if (epicProbText)   epicProbText.text   = $"{pEpic:0.#}%";
         if (legendProbText) legendProbText.text = $"{pLegend:0.#}%";
 
