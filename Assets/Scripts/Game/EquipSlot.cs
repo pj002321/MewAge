@@ -75,7 +75,9 @@ public class EquipSlot : MonoBehaviour,
         bool useShimmer = has && data.star >= 3 && frameImg != null;
         int  targetStar = useShimmer ? data.star : 0;
 
-        if (targetStar != _shimmerStar)
+        // 성 수가 바뀌었거나, 반짝임이 켜져야 하는데 코루틴이 없는 경우 재시작
+        bool needsUpdate = (targetStar != _shimmerStar) || (useShimmer && _shimmerCoroutine == null);
+        if (needsUpdate)
         {
             StopShimmer();
             _shimmerStar = targetStar;

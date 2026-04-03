@@ -11,9 +11,15 @@ public class WeaponPoint : MonoBehaviour
     [Header("무기 타입")]
     [SerializeField] private WeaponType weaponType = WeaponType.Melee;
 
-    [Header("무기 스탯")]
-    [SerializeField] private float attackDamage   = 20f;
-    [SerializeField] private float attackCooldown = 1.5f;
+    // ── DB_무기에서 런타임 로드 (Inspector 설정 불필요) ─────────────
+    // f_기본공격력, f_공격속도, f_탐지범위, f_주변범위
+    private float attackDamage;
+    private float attackCooldown;
+    private float attackRange;
+    private float areaHitRadius;
+    // ────────────────────────────────────────────────────────────────
+
+    [Header("무기 고유 스탯 (프리팹별 Inspector 설정)")]
     [Tooltip("크리티컬 발동 확률 (0~1, 예: 0.1 = 10%)")]
     [SerializeField] private float criticalRate       = 0f;
     [Tooltip("크리티컬 데미지 배율 (예: 2 = 2배)")]
@@ -22,9 +28,6 @@ public class WeaponPoint : MonoBehaviour
     [SerializeField] private float dotDamage   = 0f;
     [Tooltip("흡혈 (공격 시 HP 회복 %, 0 = 없음)")]
     [SerializeField] private float lifeSteal   = 0f;
-
-    [Header("탐지 범위 (이 안의 적에게 날아감)")]
-    [SerializeField] private float attackRange = 3f;
 
     // ── 읽기 전용 프로퍼티 (WeaponInfoPanel용) ───────────────────
     public float AttackDamage   => attackDamage;
@@ -43,8 +46,7 @@ public class WeaponPoint : MonoBehaviour
     [Header("근거리 타격 판정")]
     [SerializeField] private float hitDistance = 0.4f;
 
-    [Header("범위 타격 반경 (중거리 판정)")]
-    [SerializeField] private float areaHitRadius      = 0.4f;
+    [Header("범위 타격 설정")]
     [SerializeField] private float areaHitDamageRatio = 0.5f; // 주변 적 데미지 배율 (0~1)
 
     [Header("오버슛 (타격 후 더 나아감)")]
@@ -441,18 +443,25 @@ public class WeaponPoint : MonoBehaviour
         return nearest;
     }
 
-    /// <summary>WeaponManager가 장착 시 호출 — 타입과 데미지 설정.</summary>
+    /// <summary>WeaponManager가 장착 시 호출 — DB 스탯 및 플레이어 보너스 적용.</summary>
     public void Init(WeaponData data)
     {
-        weaponType   = data.weaponType;
-        criticalRate = 0.05f + data.criticalRate;  // 기본 5% + 성 보너스 포함 크리티컬 확률
-        lifeSteal    = data.lifeSteal;
+        weaponType    = data.weaponType;
+        criticalRate  = 0.05f + data.criticalRate;  // 기본 5% + 성 보너스 포함 크리티컬 확률
+        lifeSteal     = data.lifeSteal;
+
+        // DB 기반 스탯 적용 (성 보너스 포함된 최종값)
+        attackCooldown = data.attackCooldown;
+        _baseCooldown  = data.attackCooldown;       // RecalcCooldown 기준값
+        attackRange    = data.attackRange;
+        areaHitRadius  = data.areaHitRadius;
 
         var player = PlayerController.Instance;
         if (player != null)
         {
             // 공통 보너스 + 무기 타입별 보너스 적용 (플랫 수치)
-            attackDamage += player.Attack;
+            // data.attackDamage에는 성 보너스가 포함된 최종 기본값이 들어있음
+            attackDamage = data.attackDamage + player.Attack;
             attackDamage += weaponType == WeaponType.Melee    ? player.MeleeAttackBonus  : 0f;
             attackDamage += weaponType == WeaponType.Ranged   ? player.RangedAttackBonus : 0f;
             attackDamage += weaponType == WeaponType.Boomerang ? player.RangedAttackBonus : 0f;

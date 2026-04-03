@@ -271,6 +271,18 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
 
         foreach (var marker in Object.FindObjectsByType<SpawnMarker>(FindObjectsSortMode.None))
             Destroy(marker.gameObject);
+
+        // 안전망: SpawnMarker가 이미 Instantiate했지만 Start()가 안 돌아 All에 미등록된 적 처리
+        // SetActive(false)인 풀 대기 적은 건드리지 않음
+        foreach (var enemy in Object.FindObjectsByType<EnemyController>(FindObjectsSortMode.None))
+        {
+            if (enemy.gameObject.activeSelf)
+            {
+                enemy.StopAllCoroutines();
+                enemy.gameObject.SetActive(false);
+                Destroy(enemy.gameObject);
+            }
+        }
     }
 
     public void ResumeSpawning(int wave)
@@ -279,10 +291,11 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
         OnWaveUp(wave);
     }
 
-    /// <summary>fromWave보다 큰 가장 가까운 보스 웨이브 번호.</summary>
+    /// <summary>fromWave보다 큰 가장 가까운 보스 웨이브 번호. DB에 해당 웨이브 행이 없으면 -1 반환.</summary>
     public int GetNextBossWave(int fromWave)
     {
-        return ((fromWave / 10) + 1) * 10;
+        int next = ((fromWave / 10) + 1) * 10;
+        return GetActiveRow(currentChapter, currentStage, next) != null ? next : -1;
     }
 
     // ── 스폰 위치 ────────────────────────────────────────────────────
