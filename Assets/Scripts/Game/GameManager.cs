@@ -57,6 +57,10 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         if (waveClearPanel)              waveClearPanel.SetActive(false);
         if (gameClearPanel != null)      gameClearPanel.gameObject.SetActive(false);
 
+        // Activate VirtualJoystick for in-game control
+        if (VirtualJoystick.Instance != null)
+            VirtualJoystick.Instance.gameObject.SetActive(true);
+
         currentChapterID = PlayerPrefs.GetString("SelectedChapterID", "C1_S1");
         UpgradeManager.Shared?.SetCurrentChapterID(currentChapterID);
 

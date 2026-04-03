@@ -17,7 +17,7 @@ public class ImprovCard : MonoBehaviour
 
     [Header("선택 애니메이션")]
     [SerializeField] private float selectLiftAmount = 30f;   // 올라갈 픽셀
-    [SerializeField] private float selectScale      = 1.12f; // 최종 스케일
+    [SerializeField] private float selectScale      = 1.02f; // 최종 스케일
     [SerializeField] private float animDuration     = 0.25f;
 
     [Header("딤 설정")]

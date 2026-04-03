@@ -18,12 +18,21 @@ public class HomeUIManager : MonoBehaviour
     public Color inactiveColor = new Color(0.5f, 0.5f, 0.5f, 1f);
 
     private int currentTab = -1;
+    private Vector3[] originalScales;
 
     void Start()
     {
         // StructureWareManager를 명시적으로 로드 (홈 씬에서 필요함)
         var structwareMgr = StructureWareManager.Shared;
         Debug.Log($"[HomeUIManager] StructureWareManager 로드: {(structwareMgr != null ? "성공" : "실패")}");
+
+        // Store original scales
+        originalScales = new Vector3[tabButtons.Length];
+        for (int i = 0; i < tabButtons.Length; i++)
+        {
+            if (tabButtons[i] != null)
+                originalScales[i] = tabButtons[i].transform.localScale;
+        }
 
         // Register button click events
         for (int i = 0; i < tabButtons.Length; i++)
@@ -49,7 +58,7 @@ public class HomeUIManager : MonoBehaviour
                 panels[i].SetActive(i == index);
         }
 
-        // Highlight active tab button
+        // Highlight active tab button and adjust scales
         for (int i = 0; i < tabButtons.Length; i++)
         {
             if (tabButtons[i] != null)
@@ -57,6 +66,10 @@ public class HomeUIManager : MonoBehaviour
                 var img = tabButtons[i].GetComponent<Image>();
                 if (img != null)
                     img.color = (i == index) ? activeColor : inactiveColor;
+
+                // Scale up active button, scale down others
+                float scaleFactor = (i == index) ? 1.1f : 0.9f;
+                tabButtons[i].transform.localScale = originalScales[i] * scaleFactor;
             }
         }
     }
