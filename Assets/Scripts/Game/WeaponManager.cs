@@ -72,15 +72,23 @@ public class WeaponManager : MonoBehaviour
                 weaponGO.transform.localPosition = Vector3.zero;
                 weaponGO.transform.localRotation = Quaternion.identity;
                 weaponGO.transform.localScale    = Vector3.one;
-                
+
                 // WeaponPoint 컴포넌트가 없으면 추가, 있으면 가져와서 Init
                 if (!weaponGO.TryGetComponent<WeaponPoint>(out var wp))
                     wp = weaponGO.AddComponent<WeaponPoint>();
                 wp.Init(equipped[i]);
-                
+
                 this.DLog($"[WeaponManager] 슬롯 [{i}]: '{equipped[i].weaponName}' 장착 완료 (부모: {anchor.name})");
             }
         }
+
+        // 무기 생성/교체 후 현재 스탯 시트를 즉시 재적용
+        // GameManager.Start()와 WeaponManager.Start() 실행 순서가 보장되지 않으므로
+        // 항상 SyncWeapons 직후에 최신 스탯을 반영해야 공격속도 등이 일관되게 적용됨
+        var sm = PlayerStatManager.Shared;
+        var player = PlayerController.Instance;
+        if (sm != null && player != null)
+            player.ApplyStatSheet(sm);
     }
 
     /// <summary>적을 예약합니다. 이미 다른 무기가 공격 중이면 false.</summary>
