@@ -30,7 +30,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}
@@ -84,7 +84,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 1
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 21300000, guid: e5fac707cd8fe8d499533bf5ed8525b5, type: 3}
+  m_Sprite: {fileID: 8364731343256898518, guid: a20d03f745f60be47a028ae6967707fe, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -129,7 +129,7 @@ CircleCollider2D:
   m_CompositeOperation: 0
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
-  m_Radius: 0.31
+  m_Radius: 0.58
 --- !u!114 &4214233975149698516
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -148,8 +148,14 @@ MonoBehaviour:
   magnetDelay: 0.4
   repelDuration: 0.5
   repelForce: 10
+  repelScaleUp: 1.6
   attractAccel: 28
   attractMaxSpeed: 30
+  attractScaleMin: 0.15
+  useGhost: 1
+  ghostInterval: 0.04
+  ghostLifetime: 0.12
+  ghostAlpha: 0.45
 --- !u!114 &8501108375560740984
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -163,9 +169,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Unity.RenderPipelines.Universal.2D.Runtime::UnityEngine.Rendering.Universal.Light2D
   m_ComponentVersion: 2
-  m_LightType: 1
+  m_LightType: 3
   m_BlendStyleIndex: 0
-  m_FalloffIntensity: 0.5
+  m_FalloffIntensity: 0.327
   m_Color: {r: 0.740566, g: 0.88117534, b: 1, a: 1}
   m_Intensity: 1
   m_LightVolumeIntensity: 1
@@ -179,23 +185,23 @@ MonoBehaviour:
   m_NormalMapDistance: 3
   m_NormalMapQuality: 2
   m_UseNormalMap: 0
-  m_ShadowsEnabled: 1
+  m_ShadowsEnabled: 0
   m_ShadowIntensity: 0.75
   m_ShadowSoftness: 0.3
   m_ShadowSoftnessFalloffIntensity: 0.5
   m_ShadowVolumeIntensityEnabled: 0
   m_ShadowVolumeIntensity: 0.75
   m_LocalBounds:
-    m_Center: {x: -0.00084999204, y: -0.004799992, z: 0}
-    m_Extent: {x: 0.66615, y: 0.83500004, z: 0}
+    m_Center: {x: 0, y: -0.00000011920929, z: 0}
+    m_Extent: {x: 0.9985302, y: 0.99853027, z: 0}
   m_PointLightInnerAngle: 360
   m_PointLightOuterAngle: 360
   m_PointLightInnerRadius: 0
-  m_PointLightOuterRadius: 1
+  m_PointLightOuterRadius: 0.63
   m_ShapeLightParametricSides: 5
   m_ShapeLightParametricAngleOffset: 0
   m_ShapeLightParametricRadius: 1
-  m_ShapeLightFalloffSize: 0.5
+  m_ShapeLightFalloffSize: 0.08
   m_ShapeLightFalloffOffset: {x: 0, y: 0}
   m_ShapePath:
   - {x: -0.16105032, y: -0.3252287, z: 0}
