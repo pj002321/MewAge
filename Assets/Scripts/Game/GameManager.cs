@@ -60,11 +60,14 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         currentChapterID = PlayerPrefs.GetString("SelectedChapterID", "C1_S1");
         UpgradeManager.Shared?.SetCurrentChapterID(currentChapterID);
 
-        // 이전 판 증강 수치 초기화 후 캐릭터 기초 스탯 재적용
-        PlayerStatManager.Shared?.ResetMods();
+        // 이전 판 증강 수치 초기화 후 캐릭터 기초 스탯 + 기물 시너지 일괄 반영
+        // BeginBatch ~ EndBatch 사이 SetBase/AddPctMod는 마지막 EndBatch에서 1회만 적용됨
+        var sm = PlayerStatManager.Shared;
+        sm?.ResetMods();
+        sm?.BeginBatch();
         PlayerCharacterManager.Shared?.ApplyCharacterStats();
-        // 기물 프리셋 시너지 적용 (캐릭터 스탯 이후, 증강 이전)
         WareSynergySystem.ApplySynergies();
+        sm?.EndBatch();
 
         // 시작 시 Normal 무기 1개 지급 후 바로 Wave 1 시작
         UpgradeManager.Shared?.GiveStarterWeapon();

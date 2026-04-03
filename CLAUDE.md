@@ -191,3 +191,63 @@ Lobby screen built via Editor tools — do **not** hand-edit the scene file.
 - **Global Light2D 어둡게 패턴**: `Object.FindObjectsByType<Light2D>(FindObjectsSortMode.None)`로 탐색 후 `l.lightType == Light2D.LightType.Global` 체크. `using UnityEngine.Rendering.Universal;` 필요. 조명을 변경하는 스킬은 반드시 `OnDestroy()`에서 `intensity = 1f`로 복구.
 - **무기 상점에서 특정 등급이 안 나올 때**: `DB_확률`에서 해당 타입 행의 등급별 확률 필드(`f_에픽` 등)가 0인지 확인. BansheeGz 에디터에서 직접 수정 필요.
 - **`StructureInventory.Push()` 스태킹**: 동일 `f_기물ID`인 슬롯이 있으면 count 증가, 없으면 새 슬롯 생성.
+
+## Memory Management Conventions
+
+메모리 누수 방지를 위한 프로젝트 규약. 새 컴포넌트 작성 시 반드시 준수.
+
+### 이벤트 구독 규칙
+- `+=` 구독은 반드시 대칭하는 `-=` 해제가 있어야 함
+- **생명주기별 패턴**:
+  - `Awake/Start`에서 구독 → `OnDestroy`에서 해제
+  - `OnEnable`에서 구독 → `OnDisable`에서 해제 (패널·팝업류)
+- static 이벤트나 싱글톤 이벤트(`PlayerInventory.OnChanged`, `BossController.OnEnraged` 등)는 특히 주의 — 구독 오브젝트가 파괴되어도 이벤트 홀더가 살아있으면 참조가 남음
+- 수정 이력: `BossBehaviour`, `BossPatternBehaviour` → `OnDestroy`에서 `boss.OnEnraged -= ...`, `BossController` → `OnDestroy`에서 `enemy.OnDeath -= ...`
+
+### static 컬렉션 규칙
+- static `List`/`Dictionary`에 오브젝트를 추가할 때는 반드시 제거 경로를 쌍으로 작성
+- 오브젝트 풀을 사용하는 경우: 풀에서 꺼낼 때(Wake) 추가, 풀로 돌려보낼 때(Sleep) 제거, `OnDestroy`는 안전망으로만 사용
+- 예시: `EnemyController.All` — `WakeFromPool()`에서 `All.Add`, `SleepToPool()`에서 `AllRemoveSwapBack`, `OnDestroy`에서 안전망 제거
+
+### 코루틴 규칙
+- 무한 루프(`while(true)`) 코루틴은 반드시 `OnDestroy`에서 `StopAllCoroutines()` 또는 개별 `StopCoroutine()` 호출
+- `static Instance` 패턴의 싱글톤은 `OnDestroy`에서 `Instance = null`도 함께 처리 (씬 재로드 후 stale 참조 방지)
+- 수정 이력: `PlayerController.OnDestroy` — `StopAllCoroutines()` + `Instance = null`
+
+### 동적 GameObject 생성 규칙
+- 런타임에 `new GameObject()` 또는 `Instantiate()`로 생성한 오브젝트는 **오브젝트 풀**로 관리
+- 풀 패턴: `Queue<T> _pool` + `List<T> _active`, 꺼낼 때 `SetActive(true)`, 반환할 때 `SetActive(false)` + `Enqueue`
+- `OnDisable`에서 active → pool 이동, `OnDestroy`에서 pool 전체 `Destroy` (씬 언로드 전 명시적 정리)
+- `List.RemoveAt`은 O(n) — 순서가 중요하지 않으면 스왑백(`list[i] = list[^1]; list.RemoveAt(list.Count-1)`)으로 O(1) 처리
+
+### 배치 스탯 변경 규칙
+- `PlayerStatManager.AddPctMod` / `SetBase`는 호출마다 `PlayerController.ApplyStatSheet` + `StatPanelUI.Refresh`를 실행함
+- 여러 스탯을 한꺼번에 변경할 때는 반드시 배치 모드를 사용:
+  ```csharp
+  sm.BeginBatch();
+  sm.SetBase(StatType.MaxHP, hp);
+  sm.AddPctMod(StatType.ATK, pct);
+  // ... 추가 변경
+  sm.EndBatch(); // 이 시점에 ApplyStatSheet 1회 실행
+  ```
+- `GameManager.Start()`의 캐릭터 스탯 + 기물 시너지 적용이 이 패턴을 따름
+
+### Resources.Load 규칙
+- `Resources.Load`는 메인 스레드를 블로킹하는 동기 작업 — 씬 시작 시 대량 호출 금지
+- 동일 경로를 반복 로드할 때는 로컬 필드에 캐시 (`_cachedSprite`, `_cachedSpriteCharId` 등)
+- `DontDestroy => true` 싱글톤에서는 처음 로드 이후 씬 전환을 넘어 캐시가 유지됨
+
+## Player Visual Effects
+
+### GhostTrail (`Assets/Scripts/Game/GhostTrail.cs`)
+플레이어 자식 오브젝트에 부착하는 이동 고스트 트레일 컴포넌트.
+
+- `customSprite`가 null이면 부모 `SpriteRenderer` 스프라이트를 자동 복사, 지정하면 해당 스프라이트 사용 (캐릭터별 커스텀 가능)
+- 내부 오브젝트 풀(`Queue<GhostItem>` + `List<GhostItem>`)로 동적 할당 최소화
+- `OnDisable` → active를 pool로 이동 / `OnDestroy` → pool 전체 `Destroy`
+- Inspector 주요 설정: `Spawn Interval`(생성 간격), `Ghost Lifetime`(페이드 시간), `Min Move Dist`(생성 최소 이동거리), `Ghost Color`(색조·초기 투명도)
+
+### Dust Trail (먼지 트레일)
+- `PlayerController`의 `[SerializeField] private ParticleSystem dustTrailEffect` 슬롯에 자식 ParticleSystem 연결
+- 이동 시작 → `Play()`, 정지 시 → `Stop(true, StopEmitting)` (기존 파티클은 자연 소멸)
+- 플레이어 좌우 반전 시 `dustTrailEffect.transform.localScale.x`도 반전 (`FlipSprite()`에서 처리)

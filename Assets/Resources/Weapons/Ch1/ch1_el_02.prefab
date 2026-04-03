@@ -83,7 +83,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 2
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 1881876684011919070, guid: 2eca6fe01314d11488cc962b67a9d50f, type: 3}
+  m_Sprite: {fileID: -7451997789655122833, guid: 78d61fd33e0f98e479b493b4683771cf, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -113,11 +113,15 @@ MonoBehaviour:
   dotDamage: 0
   lifeSteal: 0
   attackRange: 7
-  pullbackSpeed: 100
+  pullbackDist: 0.5
+  anticipationTime: 0.08
   strikeSpeed: 120
   returnSpeed: 120
   hitDistance: 0.25
-  pullbackDistance: 0.8
+  areaHitRadius: 0.4
+  areaHitDamageRatio: 0.5
+  overshootDistance: 0.5
+  overshootSpeed: 60
   projectilePrefab: {fileID: 0}
   projectileSpeed: 8
   boomerangMaxBounces: 3
@@ -139,7 +143,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d880b36e09b826b4aa4d33b07b710c84, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpriteOutline
-  colorProperty: _SolidOutline
   starColors:
   - {r: 1, g: 1, b: 1, a: 1}
   - {r: 1, g: 0.85, b: 0, a: 1}

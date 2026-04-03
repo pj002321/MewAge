@@ -19,6 +19,12 @@ public class BoomerangProjectile : MonoBehaviour
     private bool    initialized;
     private bool    isCritical;
     private float   lifeSteal;
+    private float   dotDamage;
+    private float   areaHitRadius;
+    private float   areaHitDamageRatio;
+    private float   criticalRate;
+    private float   criticalMultiplier;
+    private float   baseDamage;
 
     private enum State { Flying, Returning }
     private State state = State.Flying;
@@ -30,17 +36,28 @@ public class BoomerangProjectile : MonoBehaviour
     // 타겟이 없을 때 계속 날아갈 방향
     private Vector2 flyDir;
 
+    // Physics NonAlloc 버퍼
+    private static readonly Collider2D[] _hitBuffer = new Collider2D[32];
+
     public void Init(float damage, float speed, int maxBounces, float bounceRange,
-                     EnemyController firstTarget, Transform playerTf, bool isCritical = false, float lifeSteal = 0f)
+                     EnemyController firstTarget, Transform playerTf, bool isCritical = false, float lifeSteal = 0f,
+                     float dotDamage = 0f, float areaHitRadius = 0f, float areaHitDamageRatio = 0f,
+                     float criticalRate = 0f, float criticalMultiplier = 2f, float baseDamage = 0f)
     {
-        this.damage          = damage;
-        this.isCritical      = isCritical;
-        this.lifeSteal       = lifeSteal;
-        this.speed           = speed;
-        this.bouncesLeft     = maxBounces;
-        this.bounceRange     = bounceRange;
-        this.playerTransform = playerTf;
-        this.initialized     = true;
+        this.damage             = damage;
+        this.isCritical         = isCritical;
+        this.lifeSteal          = lifeSteal;
+        this.dotDamage          = dotDamage;
+        this.areaHitRadius      = areaHitRadius;
+        this.areaHitDamageRatio = areaHitDamageRatio;
+        this.criticalRate       = criticalRate;
+        this.criticalMultiplier = criticalMultiplier;
+        this.baseDamage         = baseDamage;
+        this.speed              = speed;
+        this.bouncesLeft        = maxBounces;
+        this.bounceRange        = bounceRange;
+        this.playerTransform    = playerTf;
+        this.initialized        = true;
 
         // Rigidbody2D가 있으면 물리 간섭 차단
         if (TryGetComponent<Rigidbody2D>(out var rb))
@@ -58,6 +75,12 @@ public class BoomerangProjectile : MonoBehaviour
             : Vector2.up;
 
         Destroy(gameObject, 10f);
+    }
+
+    private (float finalDamage, bool isCritical) RollCrit(float baseDamage)
+    {
+        bool crit = criticalRate > 0f && Random.value < criticalRate;
+        return crit ? (baseDamage * criticalMultiplier, true) : (baseDamage, false);
     }
 
     private void Update()
@@ -113,9 +136,28 @@ public class BoomerangProjectile : MonoBehaviour
         if (enemy == null || hitEnemies.Contains(enemy)) return;
 
         hitEnemies.Add(enemy);
-        Vector2 hitDir = (enemy.transform.position - transform.position).normalized;
-        enemy.TakeDamage(damage, isCritical, hitDir, 6f);
-        if (lifeSteal > 0f) PlayerController.Instance?.HealHP(damage * lifeSteal);
+
+        // 범위 데미지 적용
+        int colCount = Physics2D.OverlapCircleNonAlloc(transform.position, areaHitRadius, _hitBuffer);
+        for (int i = 0; i < colCount; i++)
+        {
+            if (!_hitBuffer[i].TryGetComponent<EnemyController>(out var areaEnemy)) continue;
+            bool isPrimary = areaEnemy == enemy;
+            float dmg = isPrimary ? damage : baseDamage * areaHitDamageRatio;
+            bool isCrit = isPrimary ? isCritical : RollCrit(dmg).isCritical;
+            if (!isPrimary)
+            {
+                var rolled = RollCrit(baseDamage * areaHitDamageRatio);
+                dmg = rolled.finalDamage;
+                isCrit = rolled.isCritical;
+            }
+            Vector2 knockDir = ((Vector2)areaEnemy.transform.position - (Vector2)transform.position);
+            if (knockDir.sqrMagnitude < 0.001f) knockDir = (enemy.transform.position - transform.position).normalized;
+            areaEnemy.TakeDamage(dmg, isCrit, knockDir.normalized, 6f);
+            if (lifeSteal > 0f) PlayerController.Instance?.HealHP(dmg * lifeSteal);
+            if (dotDamage > 0f) areaEnemy.ApplyBleed(dotDamage);
+        }
+
         bouncesLeft--;
 
         if (bouncesLeft <= 0)

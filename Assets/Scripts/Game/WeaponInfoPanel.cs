@@ -97,7 +97,11 @@ public class WeaponInfoPanel : MonoBehaviourSingleton<WeaponInfoPanel>
         buyButton?.gameObject.SetActive(onBuy       != null);
 
         // ── 프레임 / 아이콘 ──────────────────────────────────────
-        if (frameImage) frameImage.color = WeaponGradeColors.Get(data.grade);
+        if (frameImage)
+        {
+            frameImage.sprite = Resources.Load<Sprite>("Weapons/grade/" + data.grade.ToString().ToLower());
+            frameImage.color  = Color.white;
+        }
 
         if (iconImage)
         {

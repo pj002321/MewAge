@@ -12,9 +12,9 @@ GameObject:
   - component: {fileID: 3654482283022973475}
   - component: {fileID: 8002682025674257742}
   - component: {fileID: 3617123723406393827}
-  - component: {fileID: -4920670175925249118}
+  - component: {fileID: 1480170418650151700}
   m_Layer: 0
-  m_Name: ch1_ep_02_proj
+  m_Name: ch1_n_03_proj
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -84,7 +84,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 2
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -5077670462544438334, guid: bbd46cfc30debec438f7812fc65d3b5c, type: 3}
+  m_Sprite: {fileID: -8473109692979294653, guid: 78d61fd33e0f98e479b493b4683771cf, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -159,7 +159,7 @@ BoxCollider2D:
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 1.6, y: 1.8}
+    oldSize: {x: 1.6, y: 1.6}
     newSize: {x: 1, y: 1}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
@@ -167,7 +167,7 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 0.4, y: 1.25}
   m_EdgeRadius: 0
---- !u!114 &-4920670175925249118
+--- !u!114 &1480170418650151700
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -176,8 +176,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 6277426376135361209}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0f9564b0bc4e80e4580f1a2bd3acd5ce, type: 3}
+  m_Script: {fileID: 11500000, guid: bcd28d2215110a84fa537520f5149113, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BoomerangProjectile
-  spinSpeed: 720
-  returnRange: 0.35
+  m_EditorClassIdentifier: Assembly-CSharp::Projectile
+  targetLayer:
+    serializedVersion: 2
+    m_Bits: 128

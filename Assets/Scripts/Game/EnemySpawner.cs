@@ -250,9 +250,24 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
 
     public void ClearAllEnemies()
     {
-        if (EnemyPool.Shared != null) EnemyPool.Shared.ReturnAll();
-        else for (int i = EnemyController.All.Count - 1; i >= 0; i--)
-                 Destroy(EnemyController.All[i].gameObject);
+        // All 리스트 기반 처리 — StopAllCoroutines로 DieRoutine 중단, SetActive(false)로 즉시 숨김
+        for (int i = EnemyController.All.Count - 1; i >= 0; i--)
+        {
+            var enemy = EnemyController.All[i];
+            if (enemy == null) continue;
+            enemy.StopAllCoroutines();
+            enemy.gameObject.SetActive(false);
+            Destroy(enemy.gameObject);
+        }
+        EnemyController.All.Clear();
+
+        // 안전망: Start() 미호출 등으로 All에 등록되지 않은 적도 처리
+        foreach (var enemy in Object.FindObjectsByType<EnemyController>(FindObjectsSortMode.None))
+        {
+            if (enemy == null) continue;
+            enemy.StopAllCoroutines();
+            Destroy(enemy.gameObject);
+        }
 
         foreach (var marker in Object.FindObjectsByType<SpawnMarker>(FindObjectsSortMode.None))
             Destroy(marker.gameObject);

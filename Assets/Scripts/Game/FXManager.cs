@@ -218,8 +218,9 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
         const int count = 14;
         var gos  = new GameObject[count];
         var vels = new Vector2[count];
+        var srs  = new SpriteRenderer[count];
 
-        bool hasDir   = deathDir.sqrMagnitude > 0.001f;
+        bool  hasDir  = deathDir.sqrMagnitude > 0.001f;
         float baseRad = hasDir ? Mathf.Atan2(deathDir.y, deathDir.x) * Mathf.Rad2Deg : 0f;
 
         for (int i = 0; i < count; i++)
@@ -227,24 +228,57 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
             gos[i] = GetDebris(prefab, pos);
             gos[i].transform.localScale = Vector3.one * Random.Range(0.7f, 1.0f);
             activeDebris.Add(gos[i]);
+            srs[i] = gos[i].GetComponent<SpriteRenderer>();
 
-            float angleDeg = hasDir
-                ? (baseRad + Random.Range(-70f, 70f)) * Mathf.Deg2Rad
-                : Random.Range(0f, 360f) * Mathf.Deg2Rad;
-            float speed = Random.Range(3f, 7f);
-            vels[i] = new Vector2(Mathf.Cos(angleDeg), Mathf.Sin(angleDeg)) * speed;
+            float angleDeg, speed;
+            if (hasDir)
+            {
+                // 앞 절반: deathDir 방향 ±40° 좁은 cone — 빠르게 쌔게
+                // 뒤 절반: ±140° 넓게 퍼지는 잔해 — 느리게
+                if (i < count * 0.6f)
+                {
+                    angleDeg = baseRad + Random.Range(-40f, 40f);
+                    speed    = Random.Range(10f, 18f);
+                }
+                else
+                {
+                    angleDeg = baseRad + Random.Range(-140f, 140f);
+                    speed    = Random.Range(4f, 9f);
+                }
+            }
+            else
+            {
+                angleDeg = Random.Range(0f, 360f);
+                speed    = Random.Range(5f, 12f);
+            }
+
+            float rad = angleDeg * Mathf.Deg2Rad;
+            vels[i]   = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad)) * speed;
+
+            // deathDir 방향 전체에 추가 부스트 (모든 파편이 그 방향으로 쏠림)
+            if (hasDir)
+                vels[i] += deathDir * Random.Range(3f, 6f);
         }
 
-        float duration = 0.5f;
+        float duration = 0.55f;
         float elapsed  = 0f;
 
         while (elapsed < duration)
         {
+            float t = elapsed / duration;
             for (int i = 0; i < count; i++)
             {
                 if (gos[i] == null) continue;
                 gos[i].transform.position += (Vector3)(vels[i] * Time.deltaTime);
-                vels[i] *= 1f - 5f * Time.deltaTime;
+                vels[i] *= 1f - 6f * Time.deltaTime; // 감속
+
+                // 후반부터 페이드아웃
+                if (srs[i] != null && t > 0.4f)
+                {
+                    float alpha = Mathf.Lerp(1f, 0f, (t - 0.4f) / 0.6f);
+                    var c = srs[i].color;
+                    srs[i].color = new Color(c.r, c.g, c.b, alpha);
+                }
             }
             elapsed += Time.deltaTime;
             yield return null;

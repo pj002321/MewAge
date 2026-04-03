@@ -58,7 +58,20 @@ public class EquipSlot : MonoBehaviour,
         }
         transform.localScale = Vector3.one * (has && selected ? 1.15f : 1f);
 
-        // 3성 이상이면 shimmer 시작, 미만이면 직접 색상 적용
+        if (frameImg)
+        {
+            if (has)
+            {
+                frameImg.sprite = Resources.Load<Sprite>("Weapons/grade/" + data.grade.ToString().ToLower());
+            }
+            else
+            {
+                frameImg.sprite = Resources.Load<Sprite>("Weapons/grade/normal");
+            }
+            frameImg.color = Color.white;
+        }
+
+        // 3성 이상이면 shimmer 시작
         bool useShimmer = has && data.star >= 3 && frameImg != null;
         int  targetStar = useShimmer ? data.star : 0;
 
@@ -69,9 +82,6 @@ public class EquipSlot : MonoBehaviour,
             if (useShimmer)
                 _shimmerCoroutine = StartCoroutine(ShimmerRoutine(targetStar));
         }
-
-        if (!useShimmer && frameImg != null)
-            frameImg.color = has ? WeaponGradeColors.Get(data.grade) : Color.white;
     }
 
     private void StopShimmer()

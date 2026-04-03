@@ -36,7 +36,21 @@ public class PlayerStatManager : MonoBehaviourSingleton<PlayerStatManager>
     // 장비 장착으로 누적된 플랫(고정값) 보너스
     private readonly float[] _equipFlat = new float[StatCount];
 
+    // 배치 모드 — true이면 개별 SetBase/AddPctMod 호출 시 ApplyToPlayer를 억제
+    private bool _batching;
+
     // ── 외부 API ────────────────────────────────────────────────────
+
+    /// <summary>배치 시작 — EndBatch() 전까지 ApplyToPlayer/Refresh 호출을 억제합니다.</summary>
+    public void BeginBatch() => _batching = true;
+
+    /// <summary>배치 종료 — ApplyToPlayer와 StatPanelUI.Refresh를 한 번만 실행합니다.</summary>
+    public void EndBatch()
+    {
+        _batching = false;
+        ApplyToPlayer();
+        StatPanelUI.Shared?.Refresh();
+    }
 
     /// <summary>매 게임 시작 시 % 모디파이어를 전부 초기화합니다. (GameManager.Start에서 호출)</summary>
     public void ResetMods()
@@ -64,6 +78,7 @@ public class PlayerStatManager : MonoBehaviourSingleton<PlayerStatManager>
             case StatType.Knockback:         baseKnockback         = value; break;
             case StatType.HealOnKill:        baseHealOnKill        = value; break;
         }
+        if (_batching) return;
         ApplyToPlayer();
         StatPanelUI.Shared?.Refresh();
     }
@@ -72,6 +87,7 @@ public class PlayerStatManager : MonoBehaviourSingleton<PlayerStatManager>
     public void AddPctMod(StatType stat, float pct)
     {
         _pctMods[(int)stat] += pct;
+        if (_batching) return;
         ApplyToPlayer();
         StatPanelUI.Shared?.Refresh();
     }

@@ -12,8 +12,7 @@ GameObject:
   - component: {fileID: 3654482283022973475}
   - component: {fileID: 8002682025674257742}
   - component: {fileID: 3617123723406393827}
-  - component: {fileID: 1988008754126552034}
-  - component: {fileID: 4417328654287409675}
+  - component: {fileID: -4920670175925249118}
   m_Layer: 0
   m_Name: ch1_l_02_proj
   m_TagString: Untagged
@@ -31,7 +30,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.5, y: 0.47975, z: 0.5}
+  m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}
@@ -83,9 +82,9 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 5
+  m_SortingOrder: 2
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -7725523683831290659, guid: bbd46cfc30debec438f7812fc65d3b5c, type: 3}
+  m_Sprite: {fileID: -4466614299496379760, guid: 78d61fd33e0f98e479b493b4683771cf, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -160,7 +159,7 @@ BoxCollider2D:
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 1.6, y: 1.67}
+    oldSize: {x: 1.6, y: 1.6}
     newSize: {x: 1, y: 1}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
@@ -168,7 +167,7 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 0.4, y: 1.25}
   m_EdgeRadius: 0
---- !u!114 &1988008754126552034
+--- !u!114 &-4920670175925249118
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -177,64 +176,8 @@ MonoBehaviour:
   m_GameObject: {fileID: 6277426376135361209}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bcd28d2215110a84fa537520f5149113, type: 3}
+  m_Script: {fileID: 11500000, guid: 0f9564b0bc4e80e4580f1a2bd3acd5ce, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Projectile
-  targetLayer:
-    serializedVersion: 2
-    m_Bits: 128
---- !u!114 &4417328654287409675
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6277426376135361209}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 073797afb82c5a1438f328866b10b3f0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.2D.Runtime::UnityEngine.Rendering.Universal.Light2D
-  m_ComponentVersion: 2
-  m_LightType: 1
-  m_BlendStyleIndex: 0
-  m_FalloffIntensity: 0.877
-  m_Color: {r: 0.3066038, g: 1, b: 0.8983744, a: 1}
-  m_Intensity: 19.43
-  m_LightVolumeIntensity: 1
-  m_LightVolumeEnabled: 0
-  m_ApplyToSortingLayers: 00000000
-  m_LightCookieSprite: {fileID: -7725523683831290659, guid: bbd46cfc30debec438f7812fc65d3b5c, type: 3}
-  m_DeprecatedPointLightCookieSprite: {fileID: 0}
-  m_LightOrder: 0
-  m_AlphaBlendOnOverlap: 0
-  m_OverlapOperation: 0
-  m_NormalMapDistance: 3
-  m_NormalMapQuality: 2
-  m_UseNormalMap: 0
-  m_ShadowsEnabled: 1
-  m_ShadowIntensity: 0.75
-  m_ShadowSoftness: 0.3
-  m_ShadowSoftnessFalloffIntensity: 0.5
-  m_ShadowVolumeIntensityEnabled: 0
-  m_ShadowVolumeIntensity: 0.75
-  m_LocalBounds:
-    m_Center: {x: -0.00060001016, y: -0.016550004, z: 0}
-    m_Extent: {x: 0.8543, y: 1.2655499, z: 0}
-  m_PointLightInnerAngle: 360
-  m_PointLightOuterAngle: 360
-  m_PointLightInnerRadius: 0
-  m_PointLightOuterRadius: 1
-  m_ShapeLightParametricSides: 5
-  m_ShapeLightParametricAngleOffset: 0
-  m_ShapeLightParametricRadius: 1
-  m_ShapeLightFalloffSize: 0.64
-  m_ShapeLightFalloffOffset: {x: 0, y: 0}
-  m_ShapePath:
-  - {x: -0.1073761, y: -0.6411028, z: 0}
-  - {x: 0.1073761, y: -0.6411018, z: 0}
-  - {x: 0.12745285, y: -0.18107295, z: 0}
-  - {x: 0.21568298, y: 0.1895749, z: 0}
-  - {x: 0.03268051, y: 0.60910064, z: 0}
-  - {x: -0.2156868, y: 0.2177955, z: 0}
-  - {x: -0.08916855, y: -0.16696265, z: 0}
+  m_EditorClassIdentifier: Assembly-CSharp::BoomerangProjectile
+  spinSpeed: 720
+  returnRange: 0.35

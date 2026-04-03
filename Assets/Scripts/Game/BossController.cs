@@ -76,6 +76,11 @@ public class BossController : MonoBehaviour
         BossHUDPanel.Shared?.Show(this);
     }
 
+    private void OnDestroy()
+    {
+        if (enemy != null) enemy.OnDeath -= OnOwnerDeath;
+    }
+
     private void Update()
     {
         // 분노 체크

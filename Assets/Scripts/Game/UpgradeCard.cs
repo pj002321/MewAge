@@ -24,7 +24,11 @@ public class UpgradeCard : MonoBehaviour
         data = weaponData;
         gameObject.SetActive(true);
 
-        if (cardFrame)      cardFrame.color     = WeaponGradeColors.Get(weaponData.grade);
+        if (cardFrame)
+        {
+            cardFrame.sprite = Resources.Load<Sprite>("Weapons/grade/" + weaponData.grade.ToString().ToLower());
+            cardFrame.color  = Color.white;
+        }
         if (weaponIcon)
         {
             weaponIcon.sprite  = weaponData.icon;

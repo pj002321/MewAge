@@ -55,6 +55,11 @@ public class WeaponPoint : MonoBehaviour
     [SerializeField] private GameObject projectilePrefab;
     [SerializeField] private float      projectileSpeed = 8f;
 
+    [Header("발사 스케일 펄스")]
+    [SerializeField] private bool  shootScalePulse    = true;
+    [SerializeField] private float scalePulseMax      = 1.3f;   // 최대 배율
+    [SerializeField] private float scalePulseDuration = 0.12f;  // 총 지속 시간 (초)
+
     [Header("부메랑 설정")]
     [SerializeField] private int   boomerangMaxBounces = 3;
     [SerializeField] private float boomerangBounceRange = 5f;
@@ -80,6 +85,9 @@ public class WeaponPoint : MonoBehaviour
     private float _statMultiplier  = 1f; // PlayerStatManager.AtkSpeed에서 오는 배율
     private float _bonusMultiplier = 1f; // MultiplyAttackSpeed 등 일회성 보너스 누적
 
+    private Coroutine _scalePulseCoroutine;
+    private Vector3   _originalScale;
+
     // Physics NonAlloc 버퍼 (매 프레임 배열 재할당 방지)
     private static readonly Collider2D[] _hitBuffer = new Collider2D[32];
 
@@ -89,9 +97,10 @@ public class WeaponPoint : MonoBehaviour
 
     private void Start()
     {
-        _baseCooldown = attackCooldown;
+        _baseCooldown  = attackCooldown;
         originLocalPos = transform.localPosition;
-        cooldownTimer = attackCooldown; // 시작할 때 쿨타임 한번 대기 (선택)
+        _originalScale = transform.localScale;
+        cooldownTimer  = attackCooldown;
     }
 
     private void Update()
@@ -200,7 +209,8 @@ public class WeaponPoint : MonoBehaviour
         var (finalDmg, isCrit) = RollCrit(attackDamage);
         Vector2 dir = (target.transform.position - transform.position).normalized;
         var go = Instantiate(projectilePrefab, transform.position, Quaternion.identity);
-        go.GetComponent<Projectile>()?.Init(finalDmg, dir, projectileSpeed, isCritical: isCrit, lifeSteal: lifeSteal);
+        go.GetComponent<Projectile>()?.Init(finalDmg, dir, projectileSpeed, isPrimaryCritical: isCrit, lifeSteal: lifeSteal, dotDamage: dotDamage, areaHitRadius: areaHitRadius, areaHitDamageRatio: areaHitDamageRatio, criticalRate: criticalRate, criticalMultiplier: criticalMultiplier, baseDamage: attackDamage);
+        TriggerScalePulse();
     }
 
     private void ShootBoomerang(EnemyController firstTarget)
@@ -211,7 +221,35 @@ public class WeaponPoint : MonoBehaviour
         var go = Instantiate(projectilePrefab, transform.position, Quaternion.identity);
         if (go.TryGetComponent<BoomerangProjectile>(out var bm))
             bm.Init(finalDmg, projectileSpeed, boomerangMaxBounces, boomerangBounceRange,
-                    firstTarget, transform.parent, isCrit, lifeSteal);
+                    firstTarget, transform.parent, isCrit, lifeSteal, dotDamage, areaHitRadius, areaHitDamageRatio,
+                    criticalRate, criticalMultiplier, attackDamage);
+        TriggerScalePulse();
+    }
+
+    private void TriggerScalePulse()
+    {
+        if (!shootScalePulse) return;
+        if (_scalePulseCoroutine != null) StopCoroutine(_scalePulseCoroutine);
+        _scalePulseCoroutine = StartCoroutine(ScalePulseRoutine());
+    }
+
+    private System.Collections.IEnumerator ScalePulseRoutine()
+    {
+        Vector3 peak = _originalScale * scalePulseMax;
+        float   half = scalePulseDuration * 0.5f;
+
+        for (float t = 0f; t < half; t += Time.deltaTime)
+        {
+            transform.localScale = Vector3.Lerp(_originalScale, peak, t / half);
+            yield return null;
+        }
+        for (float t = 0f; t < half; t += Time.deltaTime)
+        {
+            transform.localScale = Vector3.Lerp(peak, _originalScale, t / half);
+            yield return null;
+        }
+        transform.localScale = _originalScale;
+        _scalePulseCoroutine = null;
     }
 
     // ─────────────────────────────────────────

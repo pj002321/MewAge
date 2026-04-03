@@ -122,6 +122,11 @@ public class BossPatternBehaviour : EnemyBehaviourBase
         }
     }
 
+    private void OnDestroy()
+    {
+        if (boss != null) boss.OnEnraged -= OnBossEnraged;
+    }
+
     private void OnBossEnraged()
     {
         idleDuration  = Mathf.Max(0.15f, idleDuration  * 0.5f);

@@ -645,6 +645,7 @@ Transform:
   - {fileID: 413821578078559620}
   - {fileID: 8995263650742941886}
   - {fileID: 2189030230229822359}
+  - {fileID: 273770511899644957}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &1593950739635730591
@@ -696,7 +697,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 10
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 2092910730545715685, guid: 7e0bb1e9f33460c4ab1c714427293e10, type: 3}
+  m_Sprite: {fileID: -4523733521947583689, guid: 48b2e535e63e6684384e2e7a73dfbeb1, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -790,6 +791,7 @@ MonoBehaviour:
   dodge: 0
   hitInvincibleDuration: 0.3
   playerHpSlider: {fileID: 1240669919749333213}
+  dustTrailEffect: {fileID: 0}
   minScale: 0.4
   maxScale: 3
 --- !u!114 &1824184353000959361
@@ -825,7 +827,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerStats
   maxLevel: 20
   baseExpPerLevel: 10
-  expGrowthPerLevel: 100
+  expGrowthPerLevel: 50
   startingGold: 2
 --- !u!114 &5686210844332902491
 MonoBehaviour:
@@ -841,6 +843,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HitFlash
   flashColor: {r: 1, g: 0.2, b: 0.2, a: 1}
   flashDuration: 0.12
+  BaseColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!114 &181986583636283700
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -861,7 +864,7 @@ Animator:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6088640636082143099}
-  m_Enabled: 0
+  m_Enabled: 1
   m_Avatar: {fileID: 0}
   m_Controller: {fileID: 9100000, guid: e47f7ff2c347c924e9b94387392c17b2, type: 2}
   m_CullingMode: 0
@@ -1183,6 +1186,55 @@ Transform:
   - {fileID: 329613308126255974}
   m_Father: {fileID: 3768263777332437215}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &7860499638759225908
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 273770511899644957}
+  - component: {fileID: 2476048550919662252}
+  m_Layer: 0
+  m_Name: GhostTrail
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &273770511899644957
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7860499638759225908}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: -0.859, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3768263777332437215}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2476048550919662252
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7860499638759225908}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9cf78efb66f36a43996f4d46b925181, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GhostTrail
+  customSprite: {fileID: 21300000, guid: 1f468d40a18c1f04d9fc5ae9e7b885e8, type: 3}
+  spawnInterval: 0.25
+  ghostLifetime: 0.5
+  minMoveDist: 0.05
+  ghostColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &8820539584375851935
 GameObject:
   m_ObjectHideFlags: 0
