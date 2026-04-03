@@ -181,6 +181,8 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
 
     private void DoSpawn(GameObject prefab, Vector2 pos, UnitData data = null)
     {
+        Debug.Log($"[EnemySpawner] 스폰 시도: prefab={prefab?.name}, pos={pos}, data={data?.unitId}");
+
         if (spawnMarkerPrefab != null)
         {
             var markerObj = Instantiate(spawnMarkerPrefab, pos, Quaternion.identity);
@@ -198,6 +200,10 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
                 enemy.InitForWave(currentWave);
                 if (data != null) enemy.ApplyUnitData(data);
                 enemy.PlaySpawnBounce();
+            }
+            else
+            {
+                Debug.LogWarning($"[EnemySpawner] EnemyController 컴포넌트를 찾을 수 없음: prefab={prefab?.name}");
             }
         }
     }
@@ -224,6 +230,7 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
     // ── 외부 호출 API ────────────────────────────────────────────────
     public void OnWaveUp(int wave)
     {
+        Debug.Log($"[EnemySpawner] OnWaveUp: wave={wave}, isBossWave={isBossWave}, spawning={spawning}");
         currentWave = wave;
         ApplyRule(wave);
         StopAllCoroutines();
@@ -250,24 +257,17 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
 
     public void ClearAllEnemies()
     {
-        // All 리스트 기반 처리 — StopAllCoroutines로 DieRoutine 중단, SetActive(false)로 즉시 숨김
+        // EnemyPool은 SetActive를 사용하지 않으므로 FindObjectsByType으로 접근하면
+        // 풀 대기 중인 적(-9999 위치)까지 Destroy되어 풀 큐가 깨짐 — All만 사용할 것
         for (int i = EnemyController.All.Count - 1; i >= 0; i--)
         {
             var enemy = EnemyController.All[i];
             if (enemy == null) continue;
-            enemy.StopAllCoroutines();
-            enemy.gameObject.SetActive(false);
+            enemy.StopAllCoroutines();   // DieRoutine 즉시 중단
+            enemy.gameObject.SetActive(false); // 시각적으로 즉시 숨김
             Destroy(enemy.gameObject);
         }
-        EnemyController.All.Clear();
-
-        // 안전망: Start() 미호출 등으로 All에 등록되지 않은 적도 처리
-        foreach (var enemy in Object.FindObjectsByType<EnemyController>(FindObjectsSortMode.None))
-        {
-            if (enemy == null) continue;
-            enemy.StopAllCoroutines();
-            Destroy(enemy.gameObject);
-        }
+        // All.Clear()는 호출하지 않음 — OnDestroy에서 AllRemoveSwapBack이 자연스럽게 처리
 
         foreach (var marker in Object.FindObjectsByType<SpawnMarker>(FindObjectsSortMode.None))
             Destroy(marker.gameObject);

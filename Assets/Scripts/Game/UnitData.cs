@@ -54,7 +54,27 @@ public class UnitData
             string path = $"Unit/Ch{d.chapter}/{d.unitId.ToLower()}";
             d.prefab = Resources.Load<GameObject>(path);
             if (d.prefab == null)
+            {
                 Debug.LogWarning($"[UnitData] 프리팹 없음: Resources/{path}");
+            }
+            else
+            {
+                var renderers = d.prefab.GetComponentsInChildren<SpriteRenderer>(true);
+                if (renderers == null || renderers.Length == 0)
+                {
+                    Debug.LogWarning($"[UnitData] 프리팹에 SpriteRenderer 없음: {path}");
+                }
+                else
+                {
+                    foreach (var sr in renderers)
+                    {
+                        if (sr.sprite == null)
+                        {
+                            Debug.LogWarning($"[UnitData] 프리팹 SpriteRenderer의 sprite null: {path}");
+                        }
+                    }
+                }
+            }
         }
 
         // RANGED 타입 투사체 데이터

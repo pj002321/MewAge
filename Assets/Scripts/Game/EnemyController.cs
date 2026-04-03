@@ -113,6 +113,22 @@ public class EnemyController : MonoBehaviour
         animator  = GetComponentInChildren<Animator>();
         behaviour = GetComponent<EnemyBehaviourBase>();
 
+        // 디버그: SpriteRenderer 확인
+        if (srs == null || srs.Length == 0)
+        {
+            Debug.LogWarning($"[EnemyController] {gameObject.name}: SpriteRenderer가 없습니다! 프리팹에 SpriteRenderer가 있는지 확인하세요.");
+        }
+        else
+        {
+            foreach (var sr in srs)
+            {
+                if (sr.sprite == null)
+                {
+                    Debug.LogWarning($"[EnemyController] {gameObject.name}: SpriteRenderer의 sprite가 null입니다. sprite를 할당하세요.");
+                }
+            }
+        }
+
         // 원본 재질 캐시 (사망 연출 후 복구용)
         if (srs != null)
         {
