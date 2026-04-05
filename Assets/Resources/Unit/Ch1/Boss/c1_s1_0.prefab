@@ -26,9 +26,9 @@ Transform:
   m_GameObject: {fileID: 3957459026361888905}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.02, y: -2, z: 0}
-  m_LocalScale: {x: 9.72, y: 7.518274, z: 6.778716}
-  m_ConstrainProportionsScale: 1
+  m_LocalPosition: {x: -0.012, y: -0.643, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 8663768971914175293}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -81,7 +81,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 4
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 4950603007265521166, guid: 954c462c0b7c5284fad2ea86f0428865, type: 3}
+  m_Sprite: {fileID: 6863293971250029137, guid: aae5a60f0a493f14da9a00ba91e73b06, type: 3}
   m_Color: {r: 0, g: 0, b: 0, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -91,6 +91,37 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!1 &4423835837989258071
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4475026578306635568}
+  m_Layer: 7
+  m_Name: firepoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4475026578306635568
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4423835837989258071}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.501, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8663768971914175293}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &8067283199427079352
 GameObject:
   m_ObjectHideFlags: 0
@@ -103,13 +134,9 @@ GameObject:
   - component: {fileID: 8663461231204485509}
   - component: {fileID: 2039225893543360154}
   - component: {fileID: 8582202678910449498}
-  - component: {fileID: 5166204408043753986}
-  - component: {fileID: 8996041560601723129}
-  - component: {fileID: 8231531305856615937}
-  - component: {fileID: 5661193446084583444}
-  - component: {fileID: 2063245544409043341}
-  - component: {fileID: 161268097173731193}
-  - component: {fileID: -4658155594815874080}
+  - component: {fileID: 5476740683754998544}
+  - component: {fileID: 1072981410219997983}
+  - component: {fileID: 2925710928678679702}
   m_Layer: 7
   m_Name: c1_s1_0
   m_TagString: Untagged
@@ -127,10 +154,11 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 2.5, y: 2.5, z: 2.5}
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 687603576478220352}
+  - {fileID: 4475026578306635568}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &8663461231204485509
@@ -182,7 +210,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 5
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -858121695126531662, guid: 5de2c6ae7c92c9d45922c08670b3b194, type: 3}
+  m_Sprite: {fileID: 21300000, guid: e9d5c02322930924c8f6238ff2e1e2fd, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -200,7 +228,7 @@ Animator:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8067283199427079352}
-  m_Enabled: 1
+  m_Enabled: 0
   m_Avatar: {fileID: 0}
   m_Controller: {fileID: 9100000, guid: 043a535b2b06613489937bc78284da6e, type: 2}
   m_CullingMode: 0
@@ -241,63 +269,7 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
---- !u!114 &5166204408043753986
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8067283199427079352}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 05b90058a78bdf242ada91d00c9db68b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::EnemyController
-  moveSpeed: 2
-  maxHP: 6000
-  contactDamage: 50
-  scoreValue: 0
-  damageCooldown: 1
-  contactMaxDist: 0.8
-  goldDrop: 1
-  expDrop: 1
-  knockbackImmune: 0
-  separationRadius: 0.7
-  separationStrength: 2
-  waveBreakpoints: []
---- !u!114 &8996041560601723129
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8067283199427079352}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bce05cdbf4c6c0d4b8e3a23bbeb3fb43, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::EnemyFXConfig
-  onAttack:
-    vfxPrefab: {fileID: 0}
-    spawnOffset: {x: 0, y: 0}
-    sfxClip: {fileID: 0}
-    volume: 1
-  onHit:
-    vfxPrefab: {fileID: 3063604705314726052, guid: 4af60bfb9e1b34c44888e1e4643fdb65, type: 3}
-    spawnOffset: {x: 0, y: 0}
-    sfxClip: {fileID: 8300000, guid: 0e5edb6bccf05984dad128fb1a9fc914, type: 3}
-    volume: 1
-  onDeath:
-    vfxPrefab: {fileID: 0}
-    spawnOffset: {x: 0, y: 0}
-    sfxClip: {fileID: 0}
-    volume: 1
-  onSpawn:
-    vfxPrefab: {fileID: 0}
-    spawnOffset: {x: 0, y: 0}
-    sfxClip: {fileID: 0}
-    volume: 1
---- !u!114 &8231531305856615937
+--- !u!114 &5476740683754998544
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -309,18 +281,56 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bfce9f499de271b4c8ab1d03e8957395, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossController
+  damageCooldown: 0.5
   enrageThreshold: 0.5
-  outlineColorProperty: _SolidOutline
-  normalOutlineColor: {r: 1, g: 1, b: 1, a: 0}
-  enrageOutlineColor: {r: 1, g: 0, b: 0, a: 1}
   enrageSpeedMult: 1.5
   enrageDamageMult: 1.5
-  bossName: "\uAE68\uC5B4\uB09C \uC11D\uC0C1"
-  bossGoldCount: 20
-  bossGoldValue: 1
-  bossExpCount: 20
-  bossExpValue: 1
---- !u!70 &5661193446084583444
+  outlineColorProperty: _SolidOutline
+  normalOutlineColor: {r: 1, g: 1, b: 1, a: 1}
+  enrageOutlineColor: {r: 1, g: 0, b: 0, a: 1}
+  flashColor: {r: 1, g: 0.2, b: 0.2, a: 1}
+  flashDuration: 0.12
+  onHitFX:
+    vfxPrefab: {fileID: 0}
+    spawnOffset: {x: 0, y: 0}
+    sfxClip: {fileID: 0}
+    volume: 1
+  onDeathFX:
+    vfxPrefab: {fileID: 0}
+    spawnOffset: {x: 0, y: 0}
+    sfxClip: {fileID: 0}
+    volume: 1
+--- !u!114 &1072981410219997983
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8067283199427079352}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 71ecc31d375a1534384e5b1844037cf7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BossProjectileCycleSkill
+  skillId: 
+  cooldown: 5
+  enrageCooldownMult: 0.7
+  maxRange: 0
+  projectilePrefab: {fileID: 7916182024222986910, guid: 9a4a33602c726e2489bec5dbb7160348, type: 3}
+  projectileSpeed: 7
+  projectileDamage: 50
+  firePoint: {fileID: 4475026578306635568}
+  linearDuration: 4
+  linearInterval: 0.4
+  chaseAfterLinear: 2
+  fanCount: 5
+  fanAngle: 120
+  fanRepeat: 3
+  fanRepeatDelay: 0.6
+  chaseAfterFan: 2
+  chaseStopDistance: 1.8
+  attackTrigger: tAttack
+--- !u!70 &2925710928678679702
 CapsuleCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -355,58 +365,5 @@ CapsuleCollider2D:
   m_CompositeOperation: 0
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
-  m_Size: {x: 2.03, y: 4.6666665}
+  m_Size: {x: 1.08, y: 1.44}
   m_Direction: 0
---- !u!114 &2063245544409043341
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8067283199427079352}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: da84675d70655c74ebd7bbd511ddd983, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BossBehaviour
-  chaseStopDistance: 0.8
-  chaseDuration: 3
-  idleDuration: 1
---- !u!114 &161268097173731193
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8067283199427079352}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0fce8968cf717a2438582076ab21189b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BossSlamSkill
-  cooldown: 2.5
-  enrageCooldownMult: 0.7
-  maxRange: 5
-  slamDamage: 50
-  slamRadius: 2.5
-  slamJumpHeight: 6
-  slamRiseTime: 0.4
-  slamHangTime: 0.8
-  slamFallSpeed: 25
-  slamFallDuration: 0.5
-  slamMarkerPrefab: {fileID: 7905823675861574758, guid: 8fa9636161b22c941a8491bc91090a7b, type: 3}
-  slamLandTrigger: SlamLand
---- !u!114 &-4658155594815874080
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8067283199427079352}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8dbca1b53536a2b47a8964120af00539, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HitFlash
-  flashColor: {r: 1, g: 0.2, b: 0.2, a: 1}
-  flashDuration: 0.12

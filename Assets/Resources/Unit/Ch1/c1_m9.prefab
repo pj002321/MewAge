@@ -87,9 +87,9 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 5
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 7629701832801358536, guid: 0204452b83279d54d9e5e78005f96fe7, type: 3}
+  m_Sprite: {fileID: 8628268860416664481, guid: 928aba95968418f4489920ae8759ccb5, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -196,14 +196,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 05b90058a78bdf242ada91d00c9db68b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyController
-  moveSpeed: 2
-  maxHP: 100
-  contactDamage: 25
   scoreValue: 0
   damageCooldown: 1
   contactMaxDist: 0.8
-  goldDrop: 1
-  expDrop: 1
+  knockbackImmune: 0
+  bleedDuration: 5
+  bleedInterval: 1
   separationRadius: 0.7
   separationStrength: 2
   waveBreakpoints:
@@ -280,6 +278,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HitFlash
   flashColor: {r: 1, g: 0.2, b: 0.2, a: 1}
   flashDuration: 0.12
+  BaseColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &7331466815635274731
 GameObject:
   m_ObjectHideFlags: 0
@@ -306,8 +305,8 @@ Transform:
   m_GameObject: {fileID: 7331466815635274731}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.02, y: -0.54, z: 0}
-  m_LocalScale: {x: 5.82, y: 4.5016823, z: 4.058861}
+  m_LocalPosition: {x: -0.181, y: -0.918, z: 0}
+  m_LocalScale: {x: 2.55, y: 2.55, z: 2.55}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 4357706455041314016}
@@ -361,7 +360,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 4
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 4950603007265521166, guid: 954c462c0b7c5284fad2ea86f0428865, type: 3}
+  m_Sprite: {fileID: 6863293971250029137, guid: aae5a60f0a493f14da9a00ba91e73b06, type: 3}
   m_Color: {r: 0, g: 0, b: 0, a: 1}
   m_FlipX: 0
   m_FlipY: 0

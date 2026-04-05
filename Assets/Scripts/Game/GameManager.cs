@@ -63,6 +63,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 
         currentChapterID = PlayerPrefs.GetString("SelectedChapterID", "C1_S1");
         UpgradeManager.Shared?.SetCurrentChapterID(currentChapterID);
+        WaveEnvironmentSwitcher.Shared?.SetStage(currentChapterID);
 
         // 이전 판 증강 수치 초기화 후 캐릭터 기초 스탯 + 기물 시너지 일괄 반영
         // BeginBatch ~ EndBatch 사이 SetBase/AddPctMod는 마지막 EndBatch에서 1회만 적용됨

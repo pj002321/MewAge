@@ -67,8 +67,8 @@ public class HomeUIManager : MonoBehaviour
                 if (img != null)
                     img.color = (i == index) ? activeColor : inactiveColor;
 
-                // Scale up active button, scale down others
-                float scaleFactor = (i == index) ? 1.1f : 0.9f;
+                // Scale up active button, restore others to original
+                float scaleFactor = (i == index) ? 1.1f : 1.0f;
                 tabButtons[i].transform.localScale = originalScales[i] * scaleFactor;
             }
         }
