@@ -2,26 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-/// <summary>
-/// 웨이브 구간별 스탯 오버라이드.
-/// fromWave 이하 중 가장 큰 값이 적용됩니다. -1은 기본값 유지.
-/// </summary>
-[System.Serializable]
-public class WaveStatBreakpoint
-{
-    [Tooltip("이 웨이브 이상부터 적용")]
-    public int   fromWave     = 10;
-    [Tooltip("-1 = 기본값 유지")]
-    public float moveSpeed    = -1f;
-    [Tooltip("-1 = 기본값 유지")]
-    public float maxHP        = -1f;
-    [Tooltip("-1 = 기본값 유지")]
-    public float contactDamage = -1f;
-    [Tooltip("-1 = 기본값 유지")]
-    public int   goldDrop     = -1;
-    [Tooltip("-1 = 기본값 유지")]
-    public int   expDrop      = -1;
-}
+
 
 /// <summary>
 /// 적의 핵심 컴포넌트 — 스탯, HP, 이동 헬퍼, 피격/사망을 담당합니다.
@@ -31,12 +12,12 @@ public class WaveStatBreakpoint
 public class EnemyController : MonoBehaviour
 {
     // ── 인스펙터 ────────────────────────────────────────────────
-    // DB_유닛에서 로드 (ApplyUnitData) — 인스펙터 노출 불필요
-    private float moveSpeed     = 2f;
-    private float maxHP         = 30f;
-    private float contactDamage = 10f;
-    private int   goldDrop      = 5;
-    private int   expDrop       = 10;
+    // DB_유닛에서 로드 (ApplyUnitData) — 인스펙터 편의 노출
+    [SerializeField] private float moveSpeed     = 2f;
+    [SerializeField] private float maxHP         = 30f;
+    [SerializeField] private float contactDamage = 10f;
+    [SerializeField] private int   goldDrop      = 5;
+    [SerializeField] private int   expDrop       = 10;
 
     [Header("전투")]
     [SerializeField] private int   scoreValue     = 10;
@@ -55,10 +36,10 @@ public class EnemyController : MonoBehaviour
     [Header("분리 (간격 유지)")]
     [Tooltip("주변 적과 이 거리 이내면 밀어냅니다. 0 = 비활성")]
     [SerializeField] private float separationRadius   = 1.2f;
-    [SerializeField] private float separationStrength = 8f;
+    [Tooltip("밀어내는 힘의 강도")]
+    [SerializeField] public float separationStrength = 8f;
 
-    [Header("웨이브 구간별 스탯 (fromWave 오름차순 권장)")]
-    [SerializeField] private List<WaveStatBreakpoint> waveBreakpoints = new();
+
 
     // ── 공개 프로퍼티 (EnemyBehaviourBase에서 사용) ────────────
     public float      MoveSpeed       => moveSpeed;
@@ -535,26 +516,27 @@ public class EnemyController : MonoBehaviour
     }
 
     // ── 웨이브 구간 스탯 적용 ────────────────────────────────────
-    /// <summary>스폰 시 EnemySpawner에서 호출 — 현재 웨이브에 맞는 breakpoint 적용.</summary>
-    public void InitForWave(int wave)
+    /// <summary>
+    /// 스폰 시 EnemySpawner에서 호출. ApplyUnitData() 이후에 호출해야 합니다.
+    /// globalWave      = (currentStage-1)*30 + currentWave
+    /// designGlobalWave = (designStage-1)*30 + designWave
+    /// </summary>
+    public void InitForWave(int globalWave, int designGlobalWave = 0)
     {
-        if (waveBreakpoints == null || waveBreakpoints.Count == 0) return;
 
-        WaveStatBreakpoint matched = null;
-        foreach (var bp in waveBreakpoints)
-            if (bp.fromWave <= wave && (matched == null || bp.fromWave > matched.fromWave))
-                matched = bp;
 
-        if (matched == null) return;
+        // 2) DB 비율 기반 스케일링 (ApplyUnitData 이후에 호출돼야 ActiveUnitData가 있음)
+        if (ActiveUnitData == null) return;
+        int delta = Mathf.Max(0, globalWave - designGlobalWave);
+        if (delta == 0) return;
 
-        if (matched.moveSpeed     >= 0f) moveSpeed     = matched.moveSpeed;
-        if (matched.maxHP         >= 0f) { maxHP = matched.maxHP; currentHP = maxHP; }
-        if (matched.contactDamage >= 0f) contactDamage = matched.contactDamage;
-        if (matched.goldDrop      >= 0)  goldDrop      = matched.goldDrop;
-        if (matched.expDrop       >= 0)  expDrop       = matched.expDrop;
+        float hpMult  = 1f + ActiveUnitData.hpGrowthRate  * delta;
+        float dmgMult = 1f + ActiveUnitData.dmgGrowthRate * delta;
+        maxHP         *= hpMult;
+        currentHP      = maxHP;
+        contactDamage *= dmgMult;
+        behaviour?.ApplyWaveScaling(dmgMult);
     }
-
-    public void ApplyWaveScaling(int wave) { }
 
     // ── DB 데이터 적용 ───────────────────────────────────────────
     public UnitData ActiveUnitData { get; private set; }

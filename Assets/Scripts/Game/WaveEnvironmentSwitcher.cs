@@ -16,6 +16,7 @@ public class WaveEnvironmentSwitcher : MonoBehaviourSingleton<WaveEnvironmentSwi
     private StageEnvironmentSO _currentStage;
     private GameObject         _activeBgInstance;      // 현재 인스턴스화된 일반 배경
     private GameObject         _activeBossInstance;    // 현재 인스턴스화된 보스 배경
+    private BossEntryGate      _currentGate;           // 현재 활성 ExitPoint 게이트
 
     /// <summary>현재 활성 일반 배경의 보스 출구 위치 (null이면 이동 생략).</summary>
     public Transform CurrentBossExitPoint  { get; private set; }
@@ -81,10 +82,49 @@ public class WaveEnvironmentSwitcher : MonoBehaviourSingleton<WaveEnvironmentSwi
         ApplyCameraFromBounds(_currentStage.bossFollowPlayer, _currentStage.useBounds);
     }
 
+    // ── 게이트 API ────────────────────────────────────────────────
+
+    /// <summary>
+    /// 현재 배경의 ExitPoint 게이트를 활성화합니다.
+    /// 게이트가 없으면 onEnter를 즉시 호출합니다.
+    /// </summary>
+    public void ActivateExitGate(System.Action onEnter)
+    {
+        DeactivateExitGate();
+
+        var envComp = _activeBgInstance != null
+            ? _activeBgInstance.GetComponentInChildren<EnvironmentBackground>(true)
+            : null;
+        _currentGate = envComp?.bossEntryGate;
+
+        if (_currentGate != null)
+        {
+            _currentGate.Activate(onEnter);
+        }
+        else
+        {
+            Debug.LogWarning("[WaveEnvironmentSwitcher] bossEntryGate 없음 — 즉시 진행합니다.");
+            onEnter?.Invoke();
+        }
+    }
+
+    /// <summary>현재 활성 게이트를 비활성화합니다.</summary>
+    public void DeactivateExitGate()
+    {
+        if (_currentGate != null)
+        {
+            _currentGate.Deactivate();
+            _currentGate = null;
+        }
+    }
+
     // ── 내부 ──────────────────────────────────────────────────────
 
     private void SpawnWaveBackground(StageEnvironmentSO stage, int wave)
     {
+        // 이전 배경 교체 전 게이트 해제
+        DeactivateExitGate();
+
         // 이전 일반 배경 제거
         if (_activeBgInstance != null)
         {

@@ -62,13 +62,34 @@ public class EquipSlot : MonoBehaviour,
         {
             if (has)
             {
-                frameImg.sprite = Resources.Load<Sprite>("Weapons/grade/" + data.grade.ToString().ToLower());
+                var path = "Weapons/grade/" + data.grade.ToString().ToLower();
+                var sprite = Resources.Load<Sprite>(path);
+                Debug.Log($"[EquipSlot] Loading grade sprite: {path}, result: {sprite != null}");
+                if (sprite != null)
+                {
+                    frameImg.sprite = sprite;
+                    frameImg.color = Color.white;
+                }
+                else
+                {
+                    Debug.LogWarning($"[EquipSlot] Grade sprite not found: {path}");
+                }
             }
             else
             {
-                frameImg.sprite = Resources.Load<Sprite>("Weapons/grade/normal");
+                var path = "Weapons/grade/normal";
+                var sprite = Resources.Load<Sprite>(path);
+                Debug.Log($"[EquipSlot] Loading normal sprite: {path}, result: {sprite != null}");
+                if (sprite != null)
+                {
+                    frameImg.sprite = sprite;
+                    frameImg.color = Color.white;
+                }
+                else
+                {
+                    Debug.LogWarning($"[EquipSlot] Normal sprite not found: {path}");
+                }
             }
-            frameImg.color = Color.white;
         }
 
         // 3성 이상이면 shimmer 시작

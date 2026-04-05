@@ -8,6 +8,7 @@ public class Projectile : MonoBehaviour
 {
     [SerializeField] private LayerMask targetLayer; // 인스펙터에서 설정 (Enemy 또는 Player)
 
+    private BossController _ownerBoss;   // 보스가 발사한 투사체면 설정 → 보스 자해 방지
     private float   primaryDmg;
     private Vector2 direction;
     private float   speed;
@@ -53,8 +54,21 @@ public class Projectile : MonoBehaviour
         transform.Translate(direction * speed * Time.deltaTime, Space.World);
     }
 
+    /// <summary>보스가 발사한 투사체임을 표시합니다. 보스 자해를 방지합니다.</summary>
+    public void SetOwnerBoss(BossController boss) => _ownerBoss = boss;
+
     private void OnTriggerEnter2D(Collider2D other)
     {
+        // 보스 타격 (레이어 무관) — 보스 자신이 발사한 투사체는 제외
+        var boss = _ownerBoss == null ? other.GetComponentInParent<BossController>() : null;
+        if (boss != null)
+        {
+            boss.TakeDamage(primaryDmg, isPrimaryCritical);
+            if (lifeSteal > 0f) PlayerController.Instance?.HealHP(primaryDmg * lifeSteal);
+            Destroy(gameObject);
+            return;
+        }
+
         if ((targetLayer.value & (1 << other.gameObject.layer)) == 0) return;
 
         var enemy  = other.GetComponentInParent<EnemyController>();

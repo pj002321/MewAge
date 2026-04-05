@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 1024632001936494239}
   - component: {fileID: 4675686539832168138}
   - component: {fileID: 6375221766088106765}
-  - component: {fileID: 7475050554124982076}
+  - component: {fileID: 6453839904366324668}
   - component: {fileID: 5650901321275164484}
   - component: {fileID: -5874366549243020845}
   - component: {fileID: 945605578375847875}
@@ -87,7 +87,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 5
   m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: e9d5c02322930924c8f6238ff2e1e2fd, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -148,8 +148,8 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
---- !u!58 &7475050554124982076
-CircleCollider2D:
+--- !u!70 &6453839904366324668
+CapsuleCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -182,8 +182,9 @@ CircleCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
-  m_Radius: 0.53
+  m_Offset: {x: 0, y: -0.08}
+  m_Size: {x: 0.74, y: 1.13}
+  m_Direction: 0
 --- !u!114 &5650901321275164484
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -196,6 +197,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 05b90058a78bdf242ada91d00c9db68b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyController
+  moveSpeed: 2
+  maxHP: 30
+  contactDamage: 10
+  goldDrop: 5
+  expDrop: 10
   scoreValue: 10
   damageCooldown: 1
   contactMaxDist: 0.8
@@ -203,7 +209,7 @@ MonoBehaviour:
   bleedDuration: 5
   bleedInterval: 1
   separationRadius: 1.2
-  separationStrength: 8
+  separationStrength: 1.5
   waveBreakpoints:
   - fromWave: 10
     moveSpeed: 2
@@ -306,7 +312,7 @@ Transform:
   m_GameObject: {fileID: 5355396286084888952}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.0216, y: -0.5748, z: 0}
+  m_LocalPosition: {x: -0.0216, y: -0.588, z: 0}
   m_LocalScale: {x: 0.62992394, y: 1.6337771, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

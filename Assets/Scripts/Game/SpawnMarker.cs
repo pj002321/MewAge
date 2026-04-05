@@ -7,7 +7,8 @@ public class SpawnMarker : MonoBehaviour
     [SerializeField] private float warningDuration = 1.5f;
 
     private GameObject spawnPrefab;
-    private int        spawnWave;
+    private int        _globalWave;
+    private int        _designGlobalWave;
     private UnitData   _unitData;
 
     private static int _activeCount;
@@ -15,12 +16,13 @@ public class SpawnMarker : MonoBehaviour
 
     private void OnDestroy() => _activeCount--;
 
-    public void Init(GameObject prefab, int wave = 0, UnitData unitData = null)
+    public void Init(GameObject prefab, int globalWave = 0, int designGlobalWave = 0, UnitData unitData = null)
     {
         _activeCount++;
-        spawnPrefab = prefab;
-        spawnWave   = wave;
-        _unitData   = unitData;
+        spawnPrefab       = prefab;
+        _globalWave       = globalWave;
+        _designGlobalWave = designGlobalWave;
+        _unitData         = unitData;
 
         if (sr == null) sr = GetComponent<SpriteRenderer>();
         SetAlpha(1f);
@@ -62,8 +64,8 @@ public class SpawnMarker : MonoBehaviour
 
             if (enemy != null)
             {
-                enemy.InitForWave(spawnWave);
-                if (_unitData != null) enemy.ApplyUnitData(_unitData);
+                if (_unitData != null) enemy.ApplyUnitData(_unitData);  // 먼저 — InitForWave가 ActiveUnitData 필요
+                enemy.InitForWave(_globalWave, _designGlobalWave);
                 enemy.PlaySpawnBounce();
             }
         }

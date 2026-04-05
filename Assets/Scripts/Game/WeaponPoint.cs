@@ -97,6 +97,10 @@ public class WeaponPoint : MonoBehaviour
     private float currentAngle;
     private readonly Dictionary<EnemyController, float> spinHitTimers = new Dictionary<EnemyController, float>();
 
+    // 보스 타겟
+    private BossController _targetBoss;
+    private float _bossSpinHitTimer;
+
     private void Start()
     {
         _baseCooldown  = attackCooldown;
@@ -144,6 +148,7 @@ public class WeaponPoint : MonoBehaviour
         transform.rotation = Quaternion.Euler(0f, 0f, currentAngle - 90f);
 
         // 피타격 쿨타임 감소 (Keys 복사 후 수정)
+        if (_bossSpinHitTimer > 0f) _bossSpinHitTimer -= Time.deltaTime;
         var keys = new List<EnemyController>(spinHitTimers.Keys);
         foreach (var k in keys)
         {
@@ -155,7 +160,21 @@ public class WeaponPoint : MonoBehaviour
         int hitCount = Physics2D.OverlapCircleNonAlloc(transform.position, spinHitRadius, _hitBuffer);
         for (int i = 0; i < hitCount; i++)
         {
-            var hit   = _hitBuffer[i];
+            var hit = _hitBuffer[i];
+
+            // 보스 타격
+            var boss = hit.GetComponentInParent<BossController>();
+            if (boss != null && _bossSpinHitTimer <= 0f)
+            {
+                SoundManager.Shared?.Play(SoundKey.Weapon_Attack);
+                var (bossDmg, bossCrit) = RollCrit(attackDamage);
+                Vector2 bossKnock = (boss.transform.position - transform.position).normalized;
+                boss.TakeDamage(bossDmg, bossCrit, bossKnock, spinKnockback);
+                ApplyLifeSteal(bossDmg);
+                _bossSpinHitTimer = spinHitCooldown;
+                continue;
+            }
+
             var enemy = hit.GetComponentInParent<EnemyController>();
             if (enemy == null || spinHitTimers.ContainsKey(enemy)) continue;
 
@@ -177,8 +196,37 @@ public class WeaponPoint : MonoBehaviour
     {
         if (cooldownTimer > 0f) return;
 
+        Vector2 origin = transform.parent != null ? (Vector2)transform.parent.position : (Vector2)transform.position;
+
+        // 보스 인식
+        var boss = BossController.Current;
+        bool bossInRange = boss != null &&
+            ((Vector2)boss.transform.position - origin).sqrMagnitude <= attackRange * attackRange;
+
         EnemyController nearest = FindNearestUnclaimed();
-        if (nearest == null) return;
+
+        if (nearest == null && !bossInRange) return;
+
+        // 보스가 더 가깝거나 일반 적이 없으면 보스 우선
+        bool preferBoss = bossInRange && (nearest == null ||
+            ((Vector2)boss.transform.position - origin).sqrMagnitude <
+            ((Vector2)nearest.transform.position - origin).sqrMagnitude);
+
+        if (preferBoss)
+        {
+            if (weaponType == WeaponType.Ranged || weaponType == WeaponType.Boomerang)
+            {
+                ShootAtBoss(boss);
+                cooldownTimer = attackCooldown;
+                return;
+            }
+            // Melee
+            _targetBoss = boss;
+            Vector2 toBoss = ((Vector2)boss.transform.position - origin).normalized;
+            pullbackLocalPos = -(Vector3)toBoss * pullbackDist;
+            state = State.Pullback;
+            return;
+        }
 
         if (weaponType == WeaponType.Ranged)
         {
@@ -197,11 +245,24 @@ public class WeaponPoint : MonoBehaviour
         if (WeaponManager.Instance.TryClaim(nearest))
         {
             targetEnemy = nearest;
-            // 타겟 반대 방향(로컬)으로 pullbackDist만큼 뺀 위치 계산
             Vector2 toTarget = (nearest.transform.position - transform.parent.position).normalized;
             pullbackLocalPos = -(Vector3)toTarget * pullbackDist;
             state = State.Pullback;
         }
+    }
+
+    private void ShootAtBoss(BossController boss)
+    {
+        if (projectilePrefab == null) return;
+        SoundManager.Shared?.Play(SoundKey.Weapon_Attack);
+        var (finalDmg, isCrit) = RollCrit(attackDamage);
+        Vector2 dir = ((Vector2)boss.transform.position - (Vector2)transform.position).normalized;
+        var go = Instantiate(projectilePrefab, transform.position, Quaternion.identity);
+        go.GetComponent<Projectile>()?.Init(finalDmg, dir, projectileSpeed, isPrimaryCritical: isCrit,
+            lifeSteal: lifeSteal, dotDamage: dotDamage, areaHitRadius: areaHitRadius,
+            areaHitDamageRatio: areaHitDamageRatio, criticalRate: criticalRate,
+            criticalMultiplier: criticalMultiplier, baseDamage: attackDamage);
+        TriggerScalePulse();
     }
 
     private void ShootAt(EnemyController target)
@@ -292,6 +353,28 @@ public class WeaponPoint : MonoBehaviour
     // ─────────────────────────────────────────
     private void UpdateStriking()
     {
+        // 보스 타겟 처리
+        if (_targetBoss != null)
+        {
+            if (!_targetBoss.gameObject.activeInHierarchy)
+            {
+                _targetBoss = null;
+                BeginReturn();
+                return;
+            }
+            Vector3 bossPos = _targetBoss.transform.position;
+            transform.position = Vector3.MoveTowards(transform.position, bossPos, strikeSpeed * Time.deltaTime);
+            if (Vector3.Distance(transform.position, bossPos) <= hitDistance)
+            {
+                Vector2 hitDir = (bossPos - transform.parent.position).normalized;
+                HitArea(hitDir, null);
+                overshootTarget = bossPos + (Vector3)(hitDir * overshootDistance);
+                _targetBoss = null;
+                state = State.Overshooting;
+            }
+            return;
+        }
+
         if (targetEnemy == null || !targetEnemy.gameObject.activeInHierarchy)
         {
             WeaponManager.Instance?.Release(targetEnemy);
@@ -303,13 +386,11 @@ public class WeaponPoint : MonoBehaviour
         Vector3 targetPos = targetEnemy.transform.position;
         transform.position = Vector3.MoveTowards(transform.position, targetPos, strikeSpeed * Time.deltaTime);
 
-        // 매 프레임 타격 판정 (적 위치가 바뀌어도 따라가며 타격)
         if (Vector3.Distance(transform.position, targetPos) <= hitDistance)
         {
             Vector2 hitDir = (targetPos - transform.parent.position).normalized;
             HitArea(hitDir, targetEnemy);
 
-            // 타격 지점 너머로 오버슛
             overshootTarget = targetPos + (Vector3)(hitDir * overshootDistance);
 
             WeaponManager.Instance?.Release(targetEnemy);
@@ -333,10 +414,29 @@ public class WeaponPoint : MonoBehaviour
     // ─────────────────────────────────────────
     private void HitArea(Vector2 hitDir, EnemyController primaryTarget)
     {
-        int colCount = Physics2D.OverlapCircleNonAlloc(transform.position, areaHitRadius, _hitBuffer);
+        int colCount = Physics2D.OverlapCircleNonAlloc(transform.position, Mathf.Max(areaHitRadius, hitDistance), _hitBuffer);
+        bool bossHit = false;
         for (int i = 0; i < colCount; i++)
         {
-            if (!_hitBuffer[i].TryGetComponent<EnemyController>(out var enemy)) continue;
+            var hit = _hitBuffer[i];
+
+            // 보스 타격
+            if (!bossHit)
+            {
+                var boss = hit.GetComponentInParent<BossController>();
+                if (boss != null)
+                {
+                    var (bossDmg, bossCrit) = RollCrit(attackDamage);
+                    Vector2 bossKnock = ((Vector2)boss.transform.position - (Vector2)transform.position);
+                    if (bossKnock.sqrMagnitude < 0.001f) bossKnock = hitDir;
+                    boss.TakeDamage(bossDmg, bossCrit, bossKnock.normalized, 8f);
+                    ApplyLifeSteal(bossDmg);
+                    bossHit = true;
+                    continue;
+                }
+            }
+
+            if (!hit.TryGetComponent<EnemyController>(out var enemy)) continue;
             bool isPrimary = enemy == primaryTarget;
             float baseDmg = isPrimary ? attackDamage : attackDamage * areaHitDamageRatio;
             var (finalDmg, isCrit) = RollCrit(baseDmg);
@@ -386,12 +486,28 @@ public class WeaponPoint : MonoBehaviour
 
     private Vector2 GetLookDirection()
     {
-        // Striking 또는 Pullback 중: 타겟 적 방향 고정
-        if ((state == State.Striking || state == State.Pullback) && targetEnemy != null)
-            return (targetEnemy.transform.position - transform.position).normalized;
+        // Striking 또는 Pullback 중: 타겟 방향 고정
+        if (state == State.Striking || state == State.Pullback)
+        {
+            if (_targetBoss != null)
+                return ((Vector2)_targetBoss.transform.position - (Vector2)transform.position).normalized;
+            if (targetEnemy != null)
+                return (targetEnemy.transform.position - transform.position).normalized;
+        }
 
         // 적이 있으면 가장 가까운 적 방향
         EnemyController nearest = FindNearestAny();
+        var boss = BossController.Current;
+        if (nearest != null && boss != null)
+        {
+            float eDist = ((Vector2)nearest.transform.position - (Vector2)transform.position).sqrMagnitude;
+            float bDist = ((Vector2)boss.transform.position - (Vector2)transform.position).sqrMagnitude;
+            return bDist < eDist
+                ? ((Vector2)boss.transform.position - (Vector2)transform.position).normalized
+                : (nearest.transform.position - transform.position).normalized;
+        }
+        if (boss != null)
+            return ((Vector2)boss.transform.position - (Vector2)transform.position).normalized;
         if (nearest != null)
             return (nearest.transform.position - transform.position).normalized;
 

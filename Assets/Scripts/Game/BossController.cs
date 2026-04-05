@@ -9,6 +9,8 @@ using UnityEngine;
 /// </summary>
 public class BossController : MonoBehaviour
 {
+    public static BossController Current { get; private set; }
+
     // ── 기본 스탯 (DB에서 로드) ───────────────────────────────────
     [SerializeField] private float damageCooldown = 0.5f;
     private float maxHP         = 500f;
@@ -71,6 +73,7 @@ public class BossController : MonoBehaviour
 
     private void Awake()
     {
+        Current      = this;
         Rb           = GetComponent<Rigidbody2D>();
         EnemyAnimator = GetComponentInChildren<Animator>();
         srs          = GetComponentsInChildren<SpriteRenderer>(true);
@@ -271,6 +274,11 @@ public class BossController : MonoBehaviour
         foreach (var sr in srs)
             if (sr != null && sr.material != null)
                 sr.material.SetColor(outlineColorProperty, color);
+    }
+
+    private void OnDestroy()
+    {
+        if (Current == this) Current = null;
     }
 
     // ── FX 유틸 ──────────────────────────────────────────────────

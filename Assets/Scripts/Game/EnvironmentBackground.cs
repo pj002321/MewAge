@@ -12,4 +12,7 @@ public class EnvironmentBackground : MonoBehaviour
 
     [Tooltip("보스 맵 플레이어 입장 위치 (보스 배경에 설정)")]
     public Transform bossEnterPoint;
+
+    [Tooltip("보스 진입/퇴장 게이트 (ExitPoint 오브젝트에 부착된 BossEntryGate)")]
+    public BossEntryGate bossEntryGate;
 }

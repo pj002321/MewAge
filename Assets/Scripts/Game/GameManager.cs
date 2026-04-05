@@ -64,6 +64,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         currentChapterID = PlayerPrefs.GetString("SelectedChapterID", "C1_S1");
         UpgradeManager.Shared?.SetCurrentChapterID(currentChapterID);
         WaveEnvironmentSwitcher.Shared?.SetStage(currentChapterID);
+        EnemySpawner.Shared?.SetChapterStage(currentChapterID);
 
         // 이전 판 증강 수치 초기화 후 캐릭터 기초 스탯 + 기물 시너지 일괄 반영
         // BeginBatch ~ EndBatch 사이 SetBase/AddPctMod는 마지막 EndBatch에서 1회만 적용됨
@@ -281,15 +282,33 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         if (player != null && player.WaveHealAmount > 0f)
             player.HealHP(player.WaveHealAmount);
 
-        // 보스 웨이브이고 인트로 시퀀스가 있으면 컷씬 먼저 재생
-        bool isBossWave = EnemySpawner.Shared?.GetNextBossWave(wave - 1) == wave;
+        bool isBossWave    = EnemySpawner.Shared?.GetNextBossWave(wave - 1) == wave;
+        bool needsExitGate = isBossWave;
+
         // Boss wave gets its own time limit; normal waves use stepped duration
         waveTimer = isBossWave ? bossWaveTimeLimit : WaveDuration(wave);
 
-        this.DLog($"[GameManager] StartNextWave wave={wave} | isBossWave={isBossWave} | timer={waveTimer}s | BossIntro={(BossIntroSequence.Shared != null ? "있음" : "없음")}");
+        this.DLog($"[GameManager] StartNextWave wave={wave} | isBossWave={isBossWave} | needsGate={needsExitGate} | timer={waveTimer}s");
 
         UpdateWaveUI();
 
+        // 보스 전/후: 업그레이드 패널 닫힘 → 게이트 활성화 → 플레이어 이동 → 실제 웨이브 시작
+        if (needsExitGate)
+        {
+            waitingForUpgrade = true;  // 타이머 카운트다운 억제
+            WaveEnvironmentSwitcher.Shared?.ActivateExitGate(() =>
+            {
+                waitingForUpgrade = false;
+                DoStartWave(isBossWave);
+            });
+            return;
+        }
+
+        DoStartWave(isBossWave);
+    }
+
+    private void DoStartWave(bool isBossWave)
+    {
         if (isBossWave && BossIntroSequence.Shared != null)
         {
             WaveEnvironmentSwitcher.Shared?.SetWave(wave); // 일반 맵 유지 (출구 연출용)
@@ -353,6 +372,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     {
         bossWaveActive = false;
         WaveEnvironmentSwitcher.Shared?.SetNormal();
+        EnemySpawner.Shared?.StopSpawning(); // 보스 죽음 즉시 스폰 중지
         if (waitingForUpgrade) return;
         waitingForUpgrade = true;
 
@@ -419,6 +439,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
             WaveEnvironmentSwitcher.Shared?.SetNormal();
             BossHUDPanel.Shared?.Hide();
         }
+        WaveEnvironmentSwitcher.Shared?.DeactivateExitGate();
 
         EnemySpawner.Shared?.StopSpawning();
         EnemySpawner.Shared?.ClearAllEnemies();

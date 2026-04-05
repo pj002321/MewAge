@@ -48,13 +48,33 @@ public class InvenSlot : MonoBehaviour,
         {
             if (has)
             {
-                frameImg.sprite = Resources.Load<Sprite>("Weapons/grade/" + data.grade.ToString().ToLower());
-                frameImg.color  = Color.white;
+                var path = "Weapons/grade/" + data.grade.ToString().ToLower();
+                var sprite = Resources.Load<Sprite>(path);
+                Debug.Log($"[InvenSlot] Loading grade sprite: {path}, result: {sprite != null}");
+                if (sprite != null)
+                {
+                    frameImg.sprite = sprite;
+                    frameImg.color  = Color.white;
+                }
+                else
+                {
+                    Debug.LogWarning($"[InvenSlot] Grade sprite not found: {path}");
+                }
             }
             else
             {
-                frameImg.sprite = Resources.Load<Sprite>("Weapons/grade/normal");
-                frameImg.color  = Color.white;
+                var path = "Weapons/grade/normal";
+                var sprite = Resources.Load<Sprite>(path);
+                Debug.Log($"[InvenSlot] Loading normal sprite: {path}, result: {sprite != null}");
+                if (sprite != null)
+                {
+                    frameImg.sprite = sprite;
+                    frameImg.color  = Color.white;
+                }
+                else
+                {
+                    Debug.LogWarning($"[InvenSlot] Normal sprite not found: {path}");
+                }
             }
         }
         if (has && iconImg && data.icon) iconImg.sprite = data.icon;

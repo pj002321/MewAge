@@ -44,6 +44,8 @@ public class BossProjectileCycleSkill : BossSkillBase
     [Header("애니메이션")]
     [SerializeField] private string attackTrigger = "tAttack";
 
+    private bool isChasing; // 추격 중인지 플래그
+
     private void Start()
     {
         // BossController.Awake에서 Init이 이미 호출되므로 바로 루프 시작
@@ -60,24 +62,24 @@ public class BossProjectileCycleSkill : BossSkillBase
     {
         while (true)
         {
+            // 게임오버 상태면 부활까지 대기 (보스는 살아있음)
+            if (GameManager.Shared != null && GameManager.Shared.IsGameOver)
+            {
+                yield return new WaitUntil(() =>
+                    GameManager.Shared == null || !GameManager.Shared.IsGameOver);
+            }
+
             if (IsInvalid()) yield break;
 
-            // 1) 직선 연사
             yield return LinearFirePhase();
-
             if (IsInvalid()) yield break;
 
-            // 2) 추격
             yield return ChasePhase(chaseAfterLinear);
-
             if (IsInvalid()) yield break;
 
-            // 3) 부채꼴 버스트
             yield return FanBurstPhase();
-
             if (IsInvalid()) yield break;
 
-            // 4) 추격
             yield return ChasePhase(chaseAfterFan);
         }
     }
@@ -91,15 +93,22 @@ public class BossProjectileCycleSkill : BossSkillBase
 
         while (elapsed < linearDuration)
         {
+            if (GameManager.Shared != null && GameManager.Shared.IsGameOver) yield break;
             if (IsInvalid()) yield break;
 
             timer   -= Time.deltaTime;
             elapsed += Time.deltaTime;
 
-            if (timer <= 0f)
+            if (timer <= 0f && !isChasing) // 추격 중이면 발사 금지
             {
                 timer = linearInterval;
-                FireTowardPlayer();
+
+                // 추격 거리 이내면 발사 금지
+                float dist = Owner.PlayerTransform != null
+                    ? Vector2.Distance(Owner.transform.position, Owner.PlayerTransform.position)
+                    : float.MaxValue;
+                if (dist > chaseStopDistance)
+                    FireTowardPlayer();
             }
 
             yield return null;
@@ -112,7 +121,14 @@ public class BossProjectileCycleSkill : BossSkillBase
         {
             if (IsInvalid()) yield break;
 
-            FireFan();
+            if (!isChasing) // 추격 중이면 발사 금지
+            {
+                float dist = Owner.PlayerTransform != null
+                    ? Vector2.Distance(Owner.transform.position, Owner.PlayerTransform.position)
+                    : float.MaxValue;
+                if (dist > chaseStopDistance)
+                    FireFan();
+            }
 
             if (i < fanRepeat - 1)
                 yield return new WaitForSeconds(fanRepeatDelay);
@@ -121,11 +137,13 @@ public class BossProjectileCycleSkill : BossSkillBase
 
     private IEnumerator ChasePhase(float duration)
     {
+        isChasing = true; // 추격 시작
         float elapsed   = 0f;
         float speedMult = Boss != null && Boss.IsEnraged ? Boss.EnrageSpeedMult : 1f;
 
         while (elapsed < duration)
         {
+            if (GameManager.Shared != null && GameManager.Shared.IsGameOver) yield break;
             if (IsInvalid()) yield break;
 
             if (Owner.PlayerTransform != null)
@@ -141,9 +159,16 @@ public class BossProjectileCycleSkill : BossSkillBase
             elapsed += Time.fixedDeltaTime;
             yield return new WaitForFixedUpdate();
         }
+
+        isChasing = false; // 추격 끝
     }
 
     // ── 발사 ─────────────────────────────────────────────────────
+
+    private Vector2 GetSpawnPos()
+        => firePoint != null
+            ? (Vector2)firePoint.position
+            : Owner.Rb != null ? Owner.Rb.position : (Vector2)Owner.transform.position;
 
     private void FireTowardPlayer()
     {
@@ -151,7 +176,7 @@ public class BossProjectileCycleSkill : BossSkillBase
 
         Owner.EnemyAnimator?.SetTrigger(attackTrigger);
 
-        Vector2 spawnPos = firePoint != null ? (Vector2)firePoint.position : Owner.Rb.position;
+        Vector2 spawnPos = GetSpawnPos();
         Vector2 dir      = ((Vector2)Owner.PlayerTransform.position - spawnPos).normalized;
 
         SpawnProjectile(spawnPos, dir);
@@ -163,7 +188,7 @@ public class BossProjectileCycleSkill : BossSkillBase
 
         Owner.EnemyAnimator?.SetTrigger(attackTrigger);
 
-        Vector2 spawnPos  = firePoint != null ? (Vector2)firePoint.position : Owner.Rb.position;
+        Vector2 spawnPos  = GetSpawnPos();
         Vector2 toPlayer  = ((Vector2)Owner.PlayerTransform.position - spawnPos).normalized;
         float   baseAngle = Mathf.Atan2(toPlayer.y, toPlayer.x) * Mathf.Rad2Deg;
 
@@ -187,12 +212,22 @@ public class BossProjectileCycleSkill : BossSkillBase
 
         var go = Instantiate(projectilePrefab, pos, Quaternion.identity);
         if (go.TryGetComponent<Projectile>(out var p))
+        {
             p.Init(dmg, dir, projectileSpeed);
+            p.SetOwnerBoss(Boss);   // 보스 자해 방지
+        }
     }
 
     // ── 유틸 ─────────────────────────────────────────────────────
 
-    private bool IsInvalid() =>
-        Owner == null ||
-        (GameManager.Shared != null && GameManager.Shared.IsGameOver);
+    // 보스가 파괴됐을 때만 코루틴 종료 (게임오버는 CycleLoop에서 대기 처리)
+    private bool IsInvalid()
+    {
+        if (Owner == null)
+        {
+            isChasing = false; // 보스 죽음 시 추격 플래그 리셋
+            return true;
+        }
+        return false;
+    }
 }

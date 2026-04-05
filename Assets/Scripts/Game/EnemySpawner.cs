@@ -25,8 +25,11 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
     private int   currentWave    = 1;
     private int   currentChapter = 1;
     private int   currentStage   = 1;
+    private int   wavesPerStage  = 30;      // DB_챕터.f_웨이브에서 로드
     private bool  spawning       = true;
     private bool  isBossWave     = false;
+
+    private int CalcGlobalWave(int stage, int wave) => (stage - 1) * wavesPerStage + wave;
 
     protected override bool DontDestroy => false;
 
@@ -183,11 +186,14 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
     {
         Debug.Log($"[EnemySpawner] 스폰 시도: prefab={prefab?.name}, pos={pos}, data={data?.unitId}");
 
+        int globalWave       = CalcGlobalWave(currentStage, currentWave);
+        int designGlobalWave = data != null ? data.designGlobalWave : globalWave;
+
         if (spawnMarkerPrefab != null)
         {
             var markerObj = Instantiate(spawnMarkerPrefab, pos, Quaternion.identity);
             if (markerObj.TryGetComponent<SpawnMarker>(out var marker))
-                marker.Init(prefab, currentWave, data);
+                marker.Init(prefab, globalWave, designGlobalWave, data);
         }
         else
         {
@@ -197,8 +203,8 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
 
             if (enemy != null)
             {
-                enemy.InitForWave(currentWave);
-                if (data != null) enemy.ApplyUnitData(data);
+                if (data != null) enemy.ApplyUnitData(data);      // 먼저 — InitForWave가 ActiveUnitData 필요
+                enemy.InitForWave(globalWave, designGlobalWave);
                 enemy.PlaySpawnBounce();
             }
             else
@@ -228,6 +234,42 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
     }
 
     // ── 외부 호출 API ────────────────────────────────────────────────
+
+    /// <summary>GameManager.Start()에서 선택된 챕터ID("C1_S2" 형식)로 초기화.</summary>
+    public void SetChapterStage(string chapterID)
+    {
+        var row = DB_챕터.FindEntity(r => r.f_챕터ID == chapterID);
+        if (row == null)
+        {
+            Debug.LogWarning($"[EnemySpawner] DB_챕터에서 '{chapterID}' 를 찾을 수 없습니다.");
+            return;
+        }
+
+        ParseChapterID(row.f_챕터ID, out int chapter, out int stage);
+        currentChapter = chapter;
+        currentStage   = stage;
+        wavesPerStage  = row.f_웨이브 > 0 ? row.f_웨이브 : 30;
+
+        currentWave = 1;
+        StopAllCoroutines();
+        ApplyRule(currentWave);
+        if (isBossWave) SpawnBoss();
+        else if (spawning) StartCoroutine(SpawnLoop());
+    }
+
+    private static void ParseChapterID(string chapterID, out int chapter, out int stage)
+    {
+        chapter = 1; stage = 1;
+        var parts = chapterID.Split('_');
+        if (parts.Length >= 2 &&
+            int.TryParse(parts[0].Substring(1), out int c) &&
+            int.TryParse(parts[1].Substring(1), out int s))
+        {
+            chapter = c;
+            stage   = s;
+        }
+    }
+
     public void OnWaveUp(int wave)
     {
         Debug.Log($"[EnemySpawner] OnWaveUp: wave={wave}, isBossWave={isBossWave}, spawning={spawning}");
