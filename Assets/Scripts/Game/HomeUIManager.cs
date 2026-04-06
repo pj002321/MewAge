@@ -76,6 +76,14 @@ public class HomeUIManager : MonoBehaviour
 
     public void StartGame()
     {
+        // StageSelectPanel의 현재 선택 스테이지를 저장 후 씬 전환
+        var stagePanel = FindFirstObjectByType<StageSelectPanel>();
+        if (stagePanel != null)
+        {
+            stagePanel.OnStartClicked();
+            return;
+        }
+        // StageSelectPanel이 없으면 저장된 값으로 그냥 시작
         SceneLoadManager.LoadScene("stage@scene");
     }
 }
