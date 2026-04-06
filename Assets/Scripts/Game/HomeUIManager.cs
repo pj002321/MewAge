@@ -19,6 +19,9 @@ public class HomeUIManager : MonoBehaviour
 
     private int currentTab = -1;
     private Vector3[] originalScales;
+    private Color[] originalColors;
+    private Vector3[] panelOriginalScales;
+    private Vector3[] panelOriginalPositions;
 
     void Start()
     {
@@ -26,12 +29,32 @@ public class HomeUIManager : MonoBehaviour
         var structwareMgr = StructureWareManager.Shared;
         Debug.Log($"[HomeUIManager] StructureWareManager 로드: {(structwareMgr != null ? "성공" : "실패")}");
 
-        // Store original scales
+
+
+        // Store original scales and colors
         originalScales = new Vector3[tabButtons.Length];
+        originalColors = new Color[tabButtons.Length];
         for (int i = 0; i < tabButtons.Length; i++)
         {
             if (tabButtons[i] != null)
+            {
                 originalScales[i] = tabButtons[i].transform.localScale;
+                var img = tabButtons[i].GetComponent<Image>();
+                if (img != null)
+                    originalColors[i] = img.color;
+            }
+        }
+
+        // Store original panel scales and positions
+        panelOriginalScales = new Vector3[panels.Length];
+        panelOriginalPositions = new Vector3[panels.Length];
+        for (int i = 0; i < panels.Length; i++)
+        {
+            if (panels[i] != null)
+            {
+                panelOriginalScales[i] = panels[i].transform.localScale;
+                panelOriginalPositions[i] = panels[i].transform.localPosition;
+            }
         }
 
         // Register button click events
@@ -51,11 +74,15 @@ public class HomeUIManager : MonoBehaviour
 
         currentTab = index;
 
-        // Hide all panels
+        // Hide all panels and reset transforms
         for (int i = 0; i < panels.Length; i++)
         {
             if (panels[i] != null)
+            {
+                panels[i].transform.localScale = panelOriginalScales[i];
+                panels[i].transform.localPosition = panelOriginalPositions[i];
                 panels[i].SetActive(i == index);
+            }
         }
 
         // Highlight active tab button and adjust scales
@@ -64,8 +91,8 @@ public class HomeUIManager : MonoBehaviour
             if (tabButtons[i] != null)
             {
                 var img = tabButtons[i].GetComponent<Image>();
-                if (img != null && i == index)
-                    img.color = activeColor;
+                if (img != null)
+                    img.color = (i == index) ? activeColor : originalColors[i];
 
                 // Scale up active button, restore others to original
                 float scaleFactor = (i == index) ? 1.1f : 1.0f;

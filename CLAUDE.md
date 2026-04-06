@@ -273,6 +273,8 @@ Lobby screen built via Editor tools — do **not** hand-edit the scene file.
 ### UI
 - **InvenSlot / EquipSlot 드래그 고스트**: `DestroyGhost()` → `ghost.SetActive(false)` 먼저 호출 후 `Destroy` — 프레임 말 삭제 전 고스트가 아이콘을 가리는 문제 수정
 - **바텀 탭 비활성 색상**: 비활성 탭에 `inactiveColor` 적용 제거 — 원본 색상 유지
+- **탭 전환 시 색상·스케일 복구**: 원본 색상·스케일 저장 후 복구
+- **패널 전환 시 스케일·위치 복구**: 원본 스케일·위치 저장 후 복구
 
 ### 게임 매니저 / 스폰
 - **웨이브 종료 후 플레이어 맵 중앙 이동**: `DoStartWave()`에서 `TeleportPlayerToMapCenter()` 호출
