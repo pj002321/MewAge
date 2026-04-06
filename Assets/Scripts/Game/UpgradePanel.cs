@@ -144,7 +144,7 @@ public class UpgradePanel : MonoBehaviour
 
         if (characterPortraitImage)
         {
-            var playerSr  = PlayerController.Instance?.GetComponent<SpriteRenderer>();
+            var playerSr  = PlayerController.Instance?.GetComponentInChildren<SpriteRenderer>();
             var spr       = playerSr?.sprite ?? characterPortraitSprite;
             if (spr != null) characterPortraitImage.sprite = spr;
         }

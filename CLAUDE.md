@@ -251,3 +251,33 @@ Lobby screen built via Editor tools — do **not** hand-edit the scene file.
 - `PlayerController`의 `[SerializeField] private ParticleSystem dustTrailEffect` 슬롯에 자식 ParticleSystem 연결
 - 이동 시작 → `Play()`, 정지 시 → `Stop(true, StopEmitting)` (기존 파티클은 자연 소멸)
 - 플레이어 좌우 반전 시 `dustTrailEffect.transform.localScale.x`도 반전 (`FlipSprite()`에서 처리)
+
+---
+
+## 진행 사항 (변경 이력)
+
+### 플레이어
+- **SpriteRenderer 자식 이동**: 플레이어 루트에서 자식 오브젝트로 이동 → `PlayerController`, `GhostTrail`, `UpgradePanel(OnEnable 초상화)` 모두 `GetComponentInChildren<SpriteRenderer>()` 로 변경
+
+### WeaponPoint (무기 로직)
+- **보스 사정거리 무시 버그 수정**: `preferBoss` 조건에 `bossInRange` 체크 추가 — 보스도 `attackRange` 이내에 있을 때만 타겟
+- **부메랑 타겟 소멸 버그 수정**: `_boomerangTarget`이 `object`타입이라 Unity fake-null 우회 → `IsBoomerangTargetGone()` 헬퍼로 파괴/비활성 타겟 감지 후 즉시 복귀
+- **부메랑 피해 0 수정**: Idle에서 타겟을 `_boomerangHitEnemies`에 선등록하던 코드 제거
+- **부메랑 반사 안됨 수정**: Striking에서 다음 타겟을 미리 `_boomerangHitEnemies`에 넣던 코드 제거
+- **부메랑/근접 보스 감지**: `TryGetComponent` → `GetComponentInParent`로 변경 (자식 콜라이더 대응)
+
+### FXManager
+- **Debris 원본 스케일 유지**: `_prefabScales` 딕셔너리로 프리팹별 원본 스케일 캐시 — 풀 반환/재사용 시 원본 스케일 복원, 루틴에서 랜덤 스케일 오버라이드 제거
+- **Death debris 튀는 정도 감소**: 파편 수 14→8, 속도 범위 감소, 각도 좁힘(±40°→±20°, ±140°→±70°), 추가 부스트 3-6→1-2
+
+### UI
+- **InvenSlot / EquipSlot 드래그 고스트**: `DestroyGhost()` → `ghost.SetActive(false)` 먼저 호출 후 `Destroy` — 프레임 말 삭제 전 고스트가 아이콘을 가리는 문제 수정
+- **바텀 탭 비활성 색상**: 비활성 탭에 `inactiveColor` 적용 제거 — 원본 색상 유지
+
+### 게임 매니저 / 스폰
+- **웨이브 종료 후 플레이어 맵 중앙 이동**: `DoStartWave()`에서 `TeleportPlayerToMapCenter()` 호출
+- **스테이지·웨이브 HP/데미지 성장 공식 개선**: 스테이지 델타와 웨이브 내 델타를 분리 계산 (`EnemyController`, `EnemySpawner`, `SpawnMarker`)
+- **로비 스테이지 선택 저장 수정**: `HomeUIManager.StartGame()` → `StageSelectPanel.OnStartClicked()` 위임으로 `SelectedChapterID` 정상 저장
+
+### 디버그
+- **WeaponDebugInspector**: 런타임 무기 장착용 Odin 인스펙터 MonoBehaviour (`Assets/Scripts/Game/WeaponDebugInspector.cs`)

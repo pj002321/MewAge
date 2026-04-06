@@ -27,6 +27,7 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
     // ── 오브젝트 풀 ──────────────────────────────────────────────
     private readonly Dictionary<GameObject, Queue<GameObject>> _debrisPool    = new();
     private readonly Queue<DamageText>                         _damageTextPool = new();
+    private readonly Dictionary<GameObject, Vector3>           _prefabScales  = new();
 
     private GameObject GetDebris(GameObject prefab, Vector3 pos)
     {
@@ -37,10 +38,13 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
         {
             var go = q.Dequeue();
             go.transform.SetPositionAndRotation(pos, Quaternion.identity);
+            go.transform.localScale = _prefabScales.TryGetValue(prefab, out var s) ? s : Vector3.one;
             go.SetActive(true);
             return go;
         }
-        return Instantiate(prefab, pos, Quaternion.identity);
+        var inst = Instantiate(prefab, pos, Quaternion.identity);
+        if (!_prefabScales.ContainsKey(prefab)) _prefabScales[prefab] = inst.transform.localScale;
+        return inst;
     }
 
     private void ReturnDebris(GameObject prefab, GameObject go)
@@ -49,7 +53,7 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
         // 색상 알파 복구
         var sr = go.GetComponent<SpriteRenderer>();
         if (sr != null) { var c = sr.color; sr.color = new Color(c.r, c.g, c.b, 1f); }
-        go.transform.localScale = Vector3.one;
+        go.transform.localScale = _prefabScales.TryGetValue(prefab, out var s) ? s : Vector3.one;
         go.SetActive(false);
         if (!_debrisPool.TryGetValue(prefab, out var q))
             _debrisPool[prefab] = q = new Queue<GameObject>();
@@ -169,7 +173,6 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
         for (int i = 0; i < count; i++)
         {
             gos[i] = GetDebris(prefab, pos);
-            gos[i].transform.localScale = Vector3.one * Random.Range(0.15f, 0.3f);
             activeDebris.Add(gos[i]);
             renders[i] = gos[i].GetComponent<SpriteRenderer>();
 
@@ -215,7 +218,7 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
 
     private IEnumerator DebrisRoutine(Vector3 pos, GameObject prefab, Vector2 deathDir = default)
     {
-        const int count = 14;
+        const int count = 8;
         var gos  = new GameObject[count];
         var vels = new Vector2[count];
         var srs  = new SpriteRenderer[count];
@@ -226,30 +229,29 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
         for (int i = 0; i < count; i++)
         {
             gos[i] = GetDebris(prefab, pos);
-            gos[i].transform.localScale = Vector3.one * Random.Range(0.7f, 1.0f);
             activeDebris.Add(gos[i]);
             srs[i] = gos[i].GetComponent<SpriteRenderer>();
 
             float angleDeg, speed;
             if (hasDir)
             {
-                // 앞 절반: deathDir 방향 ±40° 좁은 cone — 빠르게 쌔게
-                // 뒤 절반: ±140° 넓게 퍼지는 잔해 — 느리게
+                // 앞 절반: deathDir 방향 ±20° 좁은 cone — 빠르게 쌔게
+                // 뒤 절반: ±70° 넓게 퍼지는 잔해 — 느리게
                 if (i < count * 0.6f)
                 {
-                    angleDeg = baseRad + Random.Range(-40f, 40f);
-                    speed    = Random.Range(10f, 18f);
+                    angleDeg = baseRad + Random.Range(-20f, 20f);
+                    speed    = Random.Range(6f, 10f);
                 }
                 else
                 {
-                    angleDeg = baseRad + Random.Range(-140f, 140f);
-                    speed    = Random.Range(4f, 9f);
+                    angleDeg = baseRad + Random.Range(-70f, 70f);
+                    speed    = Random.Range(2f, 5f);
                 }
             }
             else
             {
                 angleDeg = Random.Range(0f, 360f);
-                speed    = Random.Range(5f, 12f);
+                speed    = Random.Range(3f, 7f);
             }
 
             float rad = angleDeg * Mathf.Deg2Rad;
@@ -257,7 +259,7 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
 
             // deathDir 방향 전체에 추가 부스트 (모든 파편이 그 방향으로 쏠림)
             if (hasDir)
-                vels[i] += deathDir * Random.Range(3f, 6f);
+                vels[i] += deathDir * Random.Range(1f, 2f);
         }
 
         float duration = 0.55f;

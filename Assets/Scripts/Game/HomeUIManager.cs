@@ -64,8 +64,8 @@ public class HomeUIManager : MonoBehaviour
             if (tabButtons[i] != null)
             {
                 var img = tabButtons[i].GetComponent<Image>();
-                if (img != null)
-                    img.color = (i == index) ? activeColor : inactiveColor;
+                if (img != null && i == index)
+                    img.color = activeColor;
 
                 // Scale up active button, restore others to original
                 float scaleFactor = (i == index) ? 1.1f : 1.0f;

@@ -207,6 +207,6 @@ public class InvenSlot : MonoBehaviour,
 
     private static void DestroyGhost()
     {
-        if (ghost != null) { Destroy(ghost); ghost = null; }
+        if (ghost != null) { ghost.SetActive(false); Destroy(ghost); ghost = null; }
     }
 }

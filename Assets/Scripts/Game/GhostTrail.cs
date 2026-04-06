@@ -44,7 +44,7 @@ public class GhostTrail : MonoBehaviour
     {
         _parentTr = transform.parent;
         if (_parentTr != null)
-            _parentSR = _parentTr.GetComponent<SpriteRenderer>();
+            _parentSR = _parentTr.GetComponentInChildren<SpriteRenderer>();
         _lastSpawnPos = _parentTr != null ? _parentTr.position : Vector3.zero;
     }
 

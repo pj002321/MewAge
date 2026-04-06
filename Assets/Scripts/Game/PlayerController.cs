@@ -88,7 +88,7 @@ public class PlayerController : MonoBehaviour
     {
         Instance      = this;
         rb            = GetComponent<Rigidbody2D>();
-        spriteRenderer = GetComponent<SpriteRenderer>();
+        spriteRenderer = GetComponentInChildren<SpriteRenderer>();
         hitFlash      = GetComponent<HitFlash>();
         hitShake      = GetComponent<HitShake>();
         currentHP     = maxHP;
