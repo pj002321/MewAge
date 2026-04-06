@@ -13,6 +13,7 @@ public class EquipSlot : MonoBehaviour,
     IPointerDownHandler, IPointerUpHandler,
     IBeginDragHandler, IDragHandler, IEndDragHandler
 {
+    [SerializeField] private Image           synergyhilightImg;
     [SerializeField] private Image           frameImg;
     [SerializeField] private Image           iconImg;
     [SerializeField] private TextMeshProUGUI starText;

@@ -277,6 +277,34 @@ public class UpgradePanel : MonoBehaviour
             if (img == null) continue;
             int count = SynergyHelper.CountEquippedTag(synergySlotTags[i]);
             img.color = SynergyHelper.GetTierColor(count);
+
+            // 바로 상위 부모의 Animator와 Image 활성화/비활성화
+            var parent = img.transform.parent;
+            if (parent != null)
+            {
+                var animator = parent.GetComponent<Animator>();
+                var parentImage = parent.GetComponent<Image>();
+                bool isAchieved = count >= 1;
+                if (animator != null)
+                {
+                    if (isAchieved)
+                    {
+                        animator.enabled = true;
+                        // 인스펙터에서 Controller 재할당과 동일한 효과로 강제 리셋
+                        var ctrl = animator.runtimeAnimatorController;
+                        animator.runtimeAnimatorController = null;
+                        animator.runtimeAnimatorController = ctrl;
+                    }
+                    else
+                    {
+                        animator.enabled = false;
+                    }
+                }
+                if (parentImage != null)
+                {
+                    parentImage.enabled = isAchieved; // 시너지가 달성되었을 때 활성화
+                }
+            }
         }
 
         // 시너지 정보 패널이 열려있으면 장착 수 반영

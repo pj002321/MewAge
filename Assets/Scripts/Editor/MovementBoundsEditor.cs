@@ -69,6 +69,17 @@ public class MovementBoundsEditor : Editor
         serializedObject.Update();
 
         EditorGUILayout.PropertyField(pointsProp, true);
+        EditorGUILayout.Space(4);
+        EditorGUILayout.LabelField("카메라 제한 패딩 (월드 단위)", EditorStyles.boldLabel);
+        var padProp = serializedObject.FindProperty("cameraPadding");
+        Vector4 pad = padProp.vector4Value;
+        EditorGUI.indentLevel++;
+        pad.w = EditorGUILayout.FloatField("Top   (↑)", Mathf.Max(0f, pad.w));
+        pad.z = EditorGUILayout.FloatField("Bottom(↓)", Mathf.Max(0f, pad.z));
+        pad.x = EditorGUILayout.FloatField("Left  (←)", Mathf.Max(0f, pad.x));
+        pad.y = EditorGUILayout.FloatField("Right (→)", Mathf.Max(0f, pad.y));
+        EditorGUI.indentLevel--;
+        padProp.vector4Value = pad;
 
         EditorGUILayout.Space(4);
 
@@ -78,7 +89,6 @@ public class MovementBoundsEditor : Editor
             pointsProp.InsertArrayElementAtIndex(pointsProp.arraySize);
             if (pointsProp.arraySize >= 2)
             {
-                // 마지막 두 점의 중간 위치로 초기화
                 Vector2 prev = pointsProp.GetArrayElementAtIndex(pointsProp.arraySize - 2).vector2Value;
                 pointsProp.GetArrayElementAtIndex(pointsProp.arraySize - 1).vector2Value = prev + Vector2.right;
             }

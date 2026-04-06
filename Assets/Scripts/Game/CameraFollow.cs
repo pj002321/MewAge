@@ -92,10 +92,17 @@ public class CameraFollow : MonoBehaviour
                 desiredPos = ClampToBounds(desiredPos);
 
             transform.position = Vector3.SmoothDamp(transform.position, desiredPos, ref velocity, smoothTime);
+
+            // SmoothDamp 관성으로 오버슛할 수 있으므로 최종 위치도 클램프
+            if (useBounds)
+                transform.position = ClampToBounds(transform.position);
         }
 
-        // 카메라 셰이크 오프셋 적용 (이전 오프셋 제거 후 새 오프셋 추가)
+        // 카메라 셰이크 오프셋 적용 (bounds 클램프 이후에 순수 화면 흔들림만 추가)
         transform.position -= (Vector3)shakeOffset;
+        if (useBounds)
+            transform.position = ClampToBounds(transform.position);
+
         if (shakeTimeLeft > 0f)
         {
             shakeOffset     = Random.insideUnitCircle * shakeMagnitudeCurrent;
@@ -110,14 +117,19 @@ public class CameraFollow : MonoBehaviour
 
     private Vector3 ClampToBounds(Vector3 pos)
     {
+        // 매 프레임 MovementBounds에서 직접 읽어 FitSpriteToScreen 스케일 변경을 즉시 반영
+        Vector2 min = boundsMin;
+        Vector2 max = boundsMax;
+        if (MovementBounds.Shared != null)
+            MovementBounds.Shared.GetBoundsMinMax(out min, out max);
+
         float halfH   = cam.orthographicSize;
         float halfW   = halfH * cam.aspect;
-        float centerX = (boundsMin.x + boundsMax.x) * 0.5f;
-        float centerY = (boundsMin.y + boundsMax.y) * 0.5f;
-        float rangeX  = (boundsMax.x - boundsMin.x) * 0.5f - halfW;
-        float rangeY  = (boundsMax.y - boundsMin.y) * 0.5f - halfH;
+        float centerX = (min.x + max.x) * 0.5f;
+        float centerY = (min.y + max.y) * 0.5f;
+        float rangeX  = (max.x - min.x) * 0.5f - halfW;
+        float rangeY  = (max.y - min.y) * 0.5f - halfH;
 
-        // 카메라 뷰가 bounds보다 크면 중앙 고정, 아니면 클램프
         pos.x = rangeX > 0f ? Mathf.Clamp(pos.x, centerX - rangeX, centerX + rangeX) : centerX;
         pos.y = rangeY > 0f ? Mathf.Clamp(pos.y, centerY - rangeY, centerY + rangeY) : centerY;
         return pos;
