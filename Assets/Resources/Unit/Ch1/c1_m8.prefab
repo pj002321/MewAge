@@ -180,12 +180,12 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 5
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -3754287678648780276, guid: 68005b20f982eaa4fa4fed1c92bcfe79, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 68005b20f982eaa4fa4fed1c92bcfe79, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 1.48, y: 1.32}
+  m_Size: {x: 1.81, y: 1.81}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
@@ -287,6 +287,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 05b90058a78bdf242ada91d00c9db68b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyController
+  moveSpeed: 2
+  maxHP: 30
+  contactDamage: 10
+  goldDrop: 5
+  expDrop: 10
   scoreValue: 0
   damageCooldown: 1
   contactMaxDist: 1
@@ -295,13 +300,6 @@ MonoBehaviour:
   bleedInterval: 1
   separationRadius: 2
   separationStrength: 8
-  waveBreakpoints:
-  - fromWave: 30
-    moveSpeed: 3
-    maxHP: 1000
-    contactDamage: 100
-    goldDrop: 1
-    expDrop: 1
 --- !u!114 &3248181880974036682
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -210,8 +210,10 @@ public class WeaponPoint : MonoBehaviour
 
         EnemyController nearest = FindNearestUnclaimed();
 
-        // 보스가 더 가깝거나 일반 적이 없으면 보스 우선
-        bool preferBoss = boss != null && (nearest == null ||
+        // 보스가 사정거리 내에 있고, 더 가깝거나 일반 적이 없으면 보스 우선
+        bool bossInRange = boss != null &&
+            ((Vector2)boss.transform.position - origin).sqrMagnitude <= attackRange * attackRange;
+        bool preferBoss = bossInRange && (nearest == null ||
             ((Vector2)boss.transform.position - origin).sqrMagnitude <
             ((Vector2)nearest.transform.position - origin).sqrMagnitude);
 
@@ -374,6 +376,14 @@ public class WeaponPoint : MonoBehaviour
         // 부메랑 모드 처리
         if (weaponType == WeaponType.Boomerang && _boomerangTarget != null)
         {
+            // 타겟이 파괴된 경우 즉시 복귀 (Unity fake-null 방어)
+            if (IsBoomerangTargetGone())
+            {
+                _boomerangTarget = null;
+                BeginReturn();
+                return;
+            }
+
             Vector3 boomerangTargetPos = GetTargetPos(_boomerangTarget);
             transform.position = Vector3.MoveTowards(transform.position, boomerangTargetPos, strikeSpeed * Time.deltaTime);
             if (Vector3.Distance(transform.position, boomerangTargetPos) <= hitDistance)
@@ -620,9 +630,19 @@ public class WeaponPoint : MonoBehaviour
 
     private Vector3 GetTargetPos(object target)
     {
-        if (target is EnemyController ec) return ec.transform.position;
-        if (target is BossController bc) return bc.transform.position;
+        if (target is EnemyController ec && ec != null) return ec.transform.position;
+        if (target is BossController bc && bc != null) return bc.transform.position;
         return Vector3.zero;
+    }
+
+    /// <summary>부메랑 타겟이 파괴/비활성화됐는지 확인. Unity fake-null 방어용.</summary>
+    private bool IsBoomerangTargetGone()
+    {
+        if (_boomerangTarget is EnemyController ec)
+            return ec == null || !ec.gameObject.activeInHierarchy;
+        if (_boomerangTarget is BossController bc)
+            return bc == null || !bc.gameObject.activeInHierarchy;
+        return true;
     }
 
     private Vector2 GetTargetDir(object target)
