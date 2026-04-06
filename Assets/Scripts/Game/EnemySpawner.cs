@@ -193,7 +193,7 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
         {
             var markerObj = Instantiate(spawnMarkerPrefab, pos, Quaternion.identity);
             if (markerObj.TryGetComponent<SpawnMarker>(out var marker))
-                marker.Init(prefab, globalWave, designGlobalWave, data);
+                marker.Init(prefab, globalWave, designGlobalWave, data, wavesPerStage);
         }
         else
         {
@@ -204,7 +204,7 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
             if (enemy != null)
             {
                 if (data != null) enemy.ApplyUnitData(data);      // 먼저 — InitForWave가 ActiveUnitData 필요
-                enemy.InitForWave(globalWave, designGlobalWave);
+                enemy.InitForWave(globalWave, designGlobalWave, wavesPerStage);
                 enemy.PlaySpawnBounce();
             }
             else

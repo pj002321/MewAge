@@ -9,7 +9,7 @@ using UnityEngine;
 public class BoomerangProjectile : MonoBehaviour
 {
     [Header("기본 설정 (Init()으로 덮어씀)")]
-    [SerializeField] private float spinSpeed   = 720f;  // deg/s
+    [SerializeField] private float spinSpeed   = -720f;  // deg/s (시계방향)
     [SerializeField] private float returnRange = 0.35f; // 플레이어와 이 거리 내 도달 시 소멸
 
     private float   damage;
@@ -29,9 +29,10 @@ public class BoomerangProjectile : MonoBehaviour
     private enum State { Flying, Returning }
     private State state = State.Flying;
 
-    private EnemyController                   currentTarget;
+    private object                             currentTarget;
     private Transform                         playerTransform;
-    private readonly HashSet<EnemyController> hitEnemies = new();
+    private readonly HashSet<EnemyController> hitEnemies  = new();
+    private readonly HashSet<BossController>  hitBosses   = new();
 
     // 타겟이 없을 때 계속 날아갈 방향
     private Vector2 flyDir;
@@ -39,10 +40,12 @@ public class BoomerangProjectile : MonoBehaviour
     // Physics NonAlloc 버퍼
     private static readonly Collider2D[] _hitBuffer = new Collider2D[32];
 
+    public event System.Action OnReturned;
+
     public void Init(float damage, float speed, int maxBounces, float bounceRange,
-                     EnemyController firstTarget, Transform playerTf, bool isCritical = false, float lifeSteal = 0f,
-                     float dotDamage = 0f, float areaHitRadius = 0f, float areaHitDamageRatio = 0f,
-                     float criticalRate = 0f, float criticalMultiplier = 2f, float baseDamage = 0f)
+                      object firstTarget, Transform playerTf, bool isCritical = false, float lifeSteal = 0f,
+                      float dotDamage = 0f, float areaHitRadius = 0f, float areaHitDamageRatio = 0f,
+                      float criticalRate = 0f, float criticalMultiplier = 2f, float baseDamage = 0f)
     {
         this.damage             = damage;
         this.isCritical         = isCritical;
@@ -71,10 +74,8 @@ public class BoomerangProjectile : MonoBehaviour
         currentTarget = firstTarget;
 
         flyDir = firstTarget != null
-            ? ((Vector2)firstTarget.transform.position - (Vector2)transform.position).normalized
+            ? ((Vector2)((firstTarget as Component)?.transform.position ?? Vector2.zero) - (Vector2)transform.position).normalized
             : Vector2.up;
-
-        Destroy(gameObject, 10f);
     }
 
     private (float finalDamage, bool isCritical) RollCrit(float baseDamage)
@@ -99,9 +100,22 @@ public class BoomerangProjectile : MonoBehaviour
 
     private void UpdateFlying()
     {
-        if (currentTarget != null && currentTarget.gameObject.activeInHierarchy)
+        bool targetActive = false;
+        Vector3 targetPos = Vector3.zero;
+        if (currentTarget is EnemyController ec && ec.gameObject.activeInHierarchy)
         {
-            MoveToward(currentTarget.transform.position);
+            targetActive = true;
+            targetPos = ec.transform.position;
+        }
+        else if (currentTarget is BossController bc && bc.gameObject.activeInHierarchy)
+        {
+            targetActive = true;
+            targetPos = bc.transform.position;
+        }
+
+        if (targetActive)
+        {
+            MoveToward(targetPos);
         }
         else
         {
@@ -113,12 +127,12 @@ public class BoomerangProjectile : MonoBehaviour
 
     private void UpdateReturning()
     {
-        if (playerTransform == null) { Destroy(gameObject); return; }
+        if (playerTransform == null) { OnReturned?.Invoke(); return; }
 
         MoveToward(playerTransform.position);
 
         if (Vector2.Distance(transform.position, playerTransform.position) <= returnRange)
-            Destroy(gameObject);
+            OnReturned?.Invoke();
     }
 
     private void MoveToward(Vector3 target)
@@ -133,29 +147,52 @@ public class BoomerangProjectile : MonoBehaviour
         if (state == State.Returning) return; // 귀환 중엔 적에 반응하지 않음
 
         var enemy = other.GetComponentInParent<EnemyController>();
-        if (enemy == null || hitEnemies.Contains(enemy)) return;
+        var boss = other.GetComponentInParent<BossController>();
+        if ((enemy == null || hitEnemies.Contains(enemy)) && (boss == null || hitBosses.Contains(boss))) return;
 
-        hitEnemies.Add(enemy);
+        if (enemy != null) hitEnemies.Add(enemy);
+        if (boss != null) hitBosses.Add(boss);
 
         // 범위 데미지 적용
         int colCount = Physics2D.OverlapCircleNonAlloc(transform.position, areaHitRadius, _hitBuffer);
         for (int i = 0; i < colCount; i++)
         {
-            if (!_hitBuffer[i].TryGetComponent<EnemyController>(out var areaEnemy)) continue;
-            bool isPrimary = areaEnemy == enemy;
-            float dmg = isPrimary ? damage : baseDamage * areaHitDamageRatio;
-            bool isCrit = isPrimary ? isCritical : RollCrit(dmg).isCritical;
-            if (!isPrimary)
+            EnemyController areaEnemy = null;
+            BossController areaBoss = null;
+            if (_hitBuffer[i].TryGetComponent<EnemyController>(out areaEnemy))
             {
-                var rolled = RollCrit(baseDamage * areaHitDamageRatio);
-                dmg = rolled.finalDamage;
-                isCrit = rolled.isCritical;
+                bool isPrimary = areaEnemy == enemy;
+                float dmg = isPrimary ? damage : baseDamage * areaHitDamageRatio;
+                bool isCrit = isPrimary ? isCritical : RollCrit(dmg).isCritical;
+                if (!isPrimary)
+                {
+                    var rolled = RollCrit(baseDamage * areaHitDamageRatio);
+                    dmg = rolled.finalDamage;
+                    isCrit = rolled.isCritical;
+                }
+                Vector2 knockDir = ((Vector2)areaEnemy.transform.position - (Vector2)transform.position);
+                if (knockDir.sqrMagnitude < 0.001f) knockDir = (areaEnemy.transform.position - transform.position).normalized;
+                areaEnemy.TakeDamage(dmg, isCrit, knockDir.normalized, 6f);
+                if (lifeSteal > 0f) PlayerController.Instance?.HealHP(dmg * lifeSteal);
+                if (dotDamage > 0f) areaEnemy.ApplyBleed(dotDamage);
             }
-            Vector2 knockDir = ((Vector2)areaEnemy.transform.position - (Vector2)transform.position);
-            if (knockDir.sqrMagnitude < 0.001f) knockDir = (enemy.transform.position - transform.position).normalized;
-            areaEnemy.TakeDamage(dmg, isCrit, knockDir.normalized, 6f);
-            if (lifeSteal > 0f) PlayerController.Instance?.HealHP(dmg * lifeSteal);
-            if (dotDamage > 0f) areaEnemy.ApplyBleed(dotDamage);
+            else if (_hitBuffer[i].TryGetComponent<BossController>(out areaBoss))
+            {
+                bool isPrimary = areaBoss == boss;
+                float dmg = isPrimary ? damage : baseDamage * areaHitDamageRatio;
+                bool isCrit = isPrimary ? isCritical : RollCrit(dmg).isCritical;
+                if (!isPrimary)
+                {
+                    var rolled = RollCrit(baseDamage * areaHitDamageRatio);
+                    dmg = rolled.finalDamage;
+                    isCrit = rolled.isCritical;
+                }
+                Vector2 knockDir = ((Vector2)areaBoss.transform.position - (Vector2)transform.position);
+                if (knockDir.sqrMagnitude < 0.001f) knockDir = (areaBoss.transform.position - transform.position).normalized;
+                areaBoss.TakeDamage(dmg, isCrit, knockDir.normalized, 6f);
+                if (lifeSteal > 0f) PlayerController.Instance?.HealHP(dmg * lifeSteal);
+                if (dotDamage > 0f) areaBoss.ApplyBleed(dotDamage);
+            }
         }
 
         bouncesLeft--;
@@ -167,7 +204,8 @@ public class BoomerangProjectile : MonoBehaviour
         }
 
         // 다음 튕길 적 탐색
-        EnemyController next = FindNextEnemy(enemy.transform.position);
+        Vector3 primaryPos = enemy != null ? enemy.transform.position : (boss != null ? boss.transform.position : transform.position);
+        object next = FindNextEnemy(primaryPos);
         if (next != null)
             currentTarget = next;
         else
@@ -180,17 +218,38 @@ public class BoomerangProjectile : MonoBehaviour
         currentTarget = null;
     }
 
-    private EnemyController FindNextEnemy(Vector2 fromPos)
+    private void OnDestroy()
     {
-        EnemyController nearest = null;
+        OnReturned?.Invoke();
+    }
+
+    private object FindNextEnemy(Vector2 fromPos)
+    {
+        EnemyController nearestEnemy = null;
+        BossController nearestBoss = null;
         float minDist = bounceRange;
 
         foreach (var e in EnemyController.All)
         {
             if (hitEnemies.Contains(e)) continue;
             float d = Vector2.Distance(fromPos, e.transform.position);
-            if (d < minDist) { minDist = d; nearest = e; }
+            if (d < minDist) { minDist = d; nearestEnemy = e; }
         }
-        return nearest;
+
+        if (BossController.Current != null && !hitBosses.Contains(BossController.Current))
+        {
+            float d = Vector2.Distance(fromPos, BossController.Current.transform.position);
+            if (d < minDist) { minDist = d; nearestBoss = BossController.Current; }
+        }
+
+        if (nearestEnemy != null && nearestBoss != null)
+        {
+            float dE = Vector2.Distance(fromPos, nearestEnemy.transform.position);
+            float dB = Vector2.Distance(fromPos, nearestBoss.transform.position);
+            return dE < dB ? nearestEnemy : nearestBoss;
+        }
+        else if (nearestEnemy != null) return nearestEnemy;
+        else if (nearestBoss != null) return nearestBoss;
+        else return null;
     }
 }

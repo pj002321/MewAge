@@ -521,17 +521,29 @@ public class EnemyController : MonoBehaviour
     /// globalWave      = (currentStage-1)*30 + currentWave
     /// designGlobalWave = (designStage-1)*30 + designWave
     /// </summary>
-    public void InitForWave(int globalWave, int designGlobalWave = 0)
+    public void InitForWave(int globalWave, int designGlobalWave = 0, int wavesPerStage = 30)
     {
-
-
-        // 2) DB 비율 기반 스케일링 (ApplyUnitData 이후에 호출돼야 ActiveUnitData가 있음)
+        // DB 비율 기반 스케일링 (ApplyUnitData 이후에 호출돼야 ActiveUnitData가 있음)
         if (ActiveUnitData == null) return;
-        int delta = Mathf.Max(0, globalWave - designGlobalWave);
-        if (delta == 0) return;
 
-        float hpMult  = 1f + ActiveUnitData.hpGrowthRate  * delta;
-        float dmgMult = 1f + ActiveUnitData.dmgGrowthRate * delta;
+        int totalDelta  = Mathf.Max(0, globalWave - designGlobalWave);
+        if (totalDelta == 0) return;
+
+        // 스테이지 단위 차이
+        int currentStage = (globalWave        - 1) / wavesPerStage + 1;
+        int designStage  = (designGlobalWave   - 1) / wavesPerStage + 1;
+        int stageDelta   = Mathf.Max(0, currentStage - designStage);
+
+        // 스테이지 점프 후 남은 웨이브 차이 (같은 스테이지 내 진행)
+        int waveOnlyDelta = Mathf.Max(0, totalDelta - stageDelta * wavesPerStage);
+
+        // 최초기준 체력 + 최초기준 * stageRate * stageDelta
+        //                  + 최초기준 * (stageRate / wavesPerStage) * waveOnlyDelta
+        float hpMult  = 1f + ActiveUnitData.hpGrowthRate  * stageDelta
+                           + ActiveUnitData.hpGrowthRate  / wavesPerStage * waveOnlyDelta;
+        float dmgMult = 1f + ActiveUnitData.dmgGrowthRate * stageDelta
+                           + ActiveUnitData.dmgGrowthRate / wavesPerStage * waveOnlyDelta;
+
         maxHP         *= hpMult;
         currentHP      = maxHP;
         contactDamage *= dmgMult;

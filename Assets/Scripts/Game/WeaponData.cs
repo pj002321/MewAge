@@ -44,6 +44,8 @@ public class WeaponData : ScriptableObject
     public float baseCriticalRate;
     public float baseBleedDamage;     // 출혈
     public float baseLifeSteal;       // 흡혈
+    public int   baseMaxBounces;      // 부메랑 튕김 횟수
+    public float baseBounceRange;     // 부메랑 튕김 범위
 
     // ────────────────────────────────────────────────────────────────
     // 현재 스탯 (성 보너스 적용 후)
@@ -56,6 +58,8 @@ public class WeaponData : ScriptableObject
     public float criticalRate;
     public float bleedDamage;    // 출혈
     public float lifeSteal;      // 흡혈
+    public int   maxBounces;     // 부메랑 튕김 횟수
+    public float bounceRange;    // 부메랑 튕김 범위
 
     // ────────────────────────────────────────────────────────────────
     // 성별 강화 보너스
@@ -96,6 +100,8 @@ public class WeaponData : ScriptableObject
         next.baseCriticalRate   = baseCriticalRate;
         next.baseBleedDamage    = baseBleedDamage;
         next.baseLifeSteal      = baseLifeSteal;
+        next.baseMaxBounces     = baseMaxBounces;
+        next.baseBounceRange    = baseBounceRange;
 
         next.ResetToBase();
         next.ApplyBonusesUpToStar();
@@ -131,6 +137,8 @@ public class WeaponData : ScriptableObject
         data.baseAttackCooldown = row.f_공격속도 > 0 ? row.f_공격속도 / 100f : 1f;
         data.baseAttackRange    = row.f_탐지범위;
         data.baseAreaHitRadius  = row.f_주변범위;
+        data.baseMaxBounces     = data.weaponType == WeaponType.Boomerang ? 3 : 0; // 예시, DB에서 로드 가능
+        data.baseBounceRange    = data.weaponType == WeaponType.Boomerang ? 5f : 0f;
 
         // 무기ID 기반으로 Resources에서 프리팹 로드 (예: Resources/Weapons/Ch1/ch1_n_00)
         string weaponId = row.f_무기ID;
@@ -209,6 +217,8 @@ public class WeaponData : ScriptableObject
         criticalRate   = baseCriticalRate;
         bleedDamage    = baseBleedDamage;
         lifeSteal      = baseLifeSteal;
+        maxBounces     = baseMaxBounces;
+        bounceRange    = baseBounceRange;
     }
 
     private void ApplyBonusesUpToStar()

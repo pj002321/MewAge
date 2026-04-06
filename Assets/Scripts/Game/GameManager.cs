@@ -319,8 +319,27 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
             return;
         }
 
+        // 일반 웨이브 시작 시 플레이어를 맵 중앙으로 이동
+        TeleportPlayerToMapCenter();
+
         EnemySpawner.Shared?.ResumeSpawning(wave);
         WaveEnvironmentSwitcher.Shared?.SetWave(wave);
+    }
+
+    private void TeleportPlayerToMapCenter()
+    {
+        var player = PlayerController.Instance;
+        if (player == null) return;
+
+        if (MovementBounds.Shared != null)
+        {
+            MovementBounds.Shared.GetBoundsMinMax(out Vector2 min, out Vector2 max);
+            player.transform.position = (Vector3)((min + max) * 0.5f);
+        }
+        else
+        {
+            player.transform.position = Vector3.zero;
+        }
     }
 
     public bool IsGameOver  => isGameOver;

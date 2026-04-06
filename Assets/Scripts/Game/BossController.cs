@@ -61,6 +61,8 @@ public class BossController : MonoBehaviour
     public event System.Action OnEnraged;
     public event System.Action OnDeath;
 
+    public void ApplyBleed(float damage) { } // Placeholder for compatibility
+
     // ── 내부 상태 ──────────────────────────────────────────────────
     private float            currentHP;
     private float            damageTimer;
