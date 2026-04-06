@@ -1,62 +1,5 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &1158616508623412742
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 4714948137921608386}
-  - component: {fileID: 1066656110621945637}
-  m_Layer: 0
-  m_Name: MoveArea
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &4714948137921608386
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1158616508623412742}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -1.0068616, y: 0.37533164, z: 0}
-  m_LocalScale: {x: 0.22209367, y: 0.22209367, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 7141213778163068944}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1066656110621945637
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1158616508623412742}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 71dfdaf2342746b40963f4623905443b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MovementBounds
-  localPoints:
-  - {x: 10.688857, y: 8.640609}
-  - {x: 8.7604475, y: 11.507233}
-  - {x: -4.1205416, y: 11.295865}
-  - {x: -9.28718, y: 9.641651}
-  - {x: -13.479462, y: 7.75573}
-  - {x: -13.2581, y: -10.031395}
-  - {x: -8.393424, y: -10.577752}
-  - {x: -3.8227315, y: -12.512554}
-  - {x: 7.6091614, y: -12.710825}
-  - {x: 12.043564, y: -11.27691}
-  - {x: 16.284536, y: -10.216037}
-  - {x: 15.80802, y: 8.6961975}
 --- !u!1 &6900160063066121858
 GameObject:
   m_ObjectHideFlags: 0
@@ -86,12 +29,12 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.45454547, y: 0.45454547, z: 1}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 4714948137921608386}
   - {fileID: 450568931050724900}
   - {fileID: 3586832563339069261}
+  - {fileID: 4737769897008048506}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &4422270327793839857
@@ -182,6 +125,63 @@ MonoBehaviour:
   bossExitPoint: {fileID: 0}
   bossEnterPoint: {fileID: 3586832563339069261}
   bossEntryGate: {fileID: 8511726348540898833}
+--- !u!1 &7081049383325651805
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4737769897008048506}
+  - component: {fileID: 6859581541683790993}
+  m_Layer: 0
+  m_Name: MoveArea (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4737769897008048506
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7081049383325651805}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7141213778163068944}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6859581541683790993
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7081049383325651805}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 71dfdaf2342746b40963f4623905443b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MovementBounds
+  localPoints:
+  - {x: 10.962387, y: 7.979328}
+  - {x: 5.705857, y: 9.980022}
+  - {x: -6.3026686, y: 10.234394}
+  - {x: -11.969332, y: 6.894876}
+  - {x: -12.507884, y: -1.8659635}
+  - {x: -11.461902, y: -8.683733}
+  - {x: -7.2871256, y: -9.659407}
+  - {x: -2.5033545, y: -9.773097}
+  - {x: 3.9625754, y: -9.809448}
+  - {x: 9.592434, y: -9.952528}
+  - {x: 11.616922, y: -7.494491}
+  - {x: 12.441554, y: 1.9926047}
 --- !u!1 &8153718871718567459
 GameObject:
   m_ObjectHideFlags: 0

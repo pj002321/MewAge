@@ -66,7 +66,11 @@ public class FitSpriteToScreen : MonoBehaviour
     }
 
 #if UNITY_EDITOR
-    // 에디터에서 해상도 바꿀 때 즉시 반영
-    private void OnValidate() => Fit();
+    // 씬에 올라간 인스턴스에서만 반영 (프리팹 에셋 자체의 스케일 오염 방지)
+    private void OnValidate()
+    {
+        if (!gameObject.scene.isLoaded) return;
+        Fit();
+    }
 #endif
 }
