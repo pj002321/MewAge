@@ -11,6 +11,10 @@ public class CameraFollow : MonoBehaviour
     [SerializeField] private Transform target;
     [SerializeField] private bool followPlayer = true;
 
+    [Header("카메라 줌")]
+    [Tooltip("0이면 씬에 설정된 값 그대로 사용. 값을 넣으면 모든 기기에서 동일한 크기로 고정.")]
+    [SerializeField] private float fixedOrthographicSize = 6.25f;
+
     [Header("부드러움 (0 = 즉시, 높을수록 느리게)")]
     [SerializeField] private float smoothTime = 0.15f;
 
@@ -35,6 +39,8 @@ public class CameraFollow : MonoBehaviour
     {
         Shared = this;
         cam    = GetComponent<Camera>();
+        if (fixedOrthographicSize > 0f)
+            cam.orthographicSize = fixedOrthographicSize;
         if (target == null && PlayerController.Instance != null)
             target = PlayerController.Instance.transform;
     }

@@ -53,11 +53,20 @@ public class HomeUIManager : MonoBehaviour
 
         currentTab = index;
 
-        // 패널 활성화만 관리 (트랜스폼은 건드리지 않음)
+        // 패널 활성화 + 위치·스케일 초기화 (씬에 잘못 저장된 값 방어)
         for (int i = 0; i < panels.Length; i++)
         {
-            if (panels[i] != null)
-                panels[i].SetActive(i == index);
+            if (panels[i] == null) continue;
+            panels[i].SetActive(i == index);
+            if (i == index)
+            {
+                var rt = panels[i].GetComponent<RectTransform>();
+                if (rt != null)
+                {
+                    rt.anchoredPosition = Vector2.zero;
+                    rt.localScale       = Vector3.one;
+                }
+            }
         }
 
         // 활성 탭 강조
