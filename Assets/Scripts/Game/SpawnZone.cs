@@ -26,7 +26,7 @@ public class SpawnZone : MonoBehaviour
 
     public int     PointCount      => localPoints.Count;
     public Vector2 GetLocal(int i) => localPoints[i];
-    public Vector2 GetWorld(int i) => (Vector2)transform.position + localPoints[i];
+    public Vector2 GetWorld(int i) => transform.TransformPoint(localPoints[i]);
 
     // ── AABB (ChargeBehaviour / HordeBehaviour 호환) ─────────────────
     /// <summary>폴리곤 AABB 중심 (월드 좌표)</summary>
@@ -34,9 +34,16 @@ public class SpawnZone : MonoBehaviour
     {
         get
         {
-            Vector2 mn = localPoints[0], mx = localPoints[0];
-            foreach (var p in localPoints) { mn = Vector2.Min(mn, p); mx = Vector2.Max(mx, p); }
-            return (mn + mx) * 0.5f + (Vector2)transform.position;
+            if (localPoints.Count == 0) return transform.position;
+            Vector2 mn = transform.TransformPoint(localPoints[0]);
+            Vector2 mx = mn;
+            foreach (var p in localPoints)
+            {
+                Vector2 wp = transform.TransformPoint(p);
+                mn = Vector2.Min(mn, wp);
+                mx = Vector2.Max(mx, wp);
+            }
+            return (mn + mx) * 0.5f;
         }
     }
 
@@ -45,8 +52,15 @@ public class SpawnZone : MonoBehaviour
     {
         get
         {
-            Vector2 mn = localPoints[0], mx = localPoints[0];
-            foreach (var p in localPoints) { mn = Vector2.Min(mn, p); mx = Vector2.Max(mx, p); }
+            if (localPoints.Count == 0) return Vector2.zero;
+            Vector2 mn = transform.TransformPoint(localPoints[0]);
+            Vector2 mx = mn;
+            foreach (var p in localPoints)
+            {
+                Vector2 wp = transform.TransformPoint(p);
+                mn = Vector2.Min(mn, wp);
+                mx = Vector2.Max(mx, wp);
+            }
             return mx - mn;
         }
     }
@@ -57,27 +71,26 @@ public class SpawnZone : MonoBehaviour
     {
         if (localPoints.Count < 2) return transform.position;
 
-        Vector2 offset   = transform.position;
         int     count    = localPoints.Count;
-        Vector2 centroid = Centroid() + offset;
+        Vector2 centroid = CentroidWorld();
 
-        // 엣지 길이를 가중치로 랜덤 엣지 선택 → 균등 분포
+        // 엣지 길이를 가중치로 랜덤 엣지 선택 → 균등 분포 (월드 좌표 기준)
         float total = 0f;
         for (int i = 0, j = count - 1; i < count; j = i++)
-            total += Vector2.Distance(localPoints[j], localPoints[i]);
+            total += Vector2.Distance(transform.TransformPoint(localPoints[j]), transform.TransformPoint(localPoints[i]));
 
         float roll = Random.Range(0f, total);
         float acc  = 0f;
         int ai = count - 1, bi = 0;
         for (int i = 0, j = count - 1; i < count; j = i++)
         {
-            float len = Vector2.Distance(localPoints[j], localPoints[i]);
+            float len = Vector2.Distance(transform.TransformPoint(localPoints[j]), transform.TransformPoint(localPoints[i]));
             acc += len;
             if (roll <= acc) { ai = j; bi = i; break; }
         }
 
-        Vector2 a     = localPoints[ai] + offset;
-        Vector2 b     = localPoints[bi] + offset;
+        Vector2 a     = transform.TransformPoint(localPoints[ai]);
+        Vector2 b     = transform.TransformPoint(localPoints[bi]);
         Vector2 point = Vector2.Lerp(a, b, Random.value);
 
         // 다각형 중심 기준 외곽 법선
@@ -90,10 +103,11 @@ public class SpawnZone : MonoBehaviour
     }
 
     // ── 내부 헬퍼 ─────────────────────────────────────────────────────
-    private Vector2 Centroid()
+    private Vector2 CentroidWorld()
     {
+        if (localPoints.Count == 0) return transform.position;
         Vector2 c = Vector2.zero;
-        foreach (var p in localPoints) c += p;
+        foreach (var p in localPoints) c += (Vector2)transform.TransformPoint(p);
         return c / localPoints.Count;
     }
 
@@ -102,19 +116,20 @@ public class SpawnZone : MonoBehaviour
     {
         if (localPoints == null || localPoints.Count < 2) return;
 
-        Vector2 offset   = transform.position;
         int     count    = localPoints.Count;
-        Vector2 centroid = Centroid() + offset;
+        Vector2 centroid = Vector2.zero;
+        foreach (var p in localPoints) centroid += (Vector2)LocalToWorldNoScale(p);
+        centroid /= count;
 
         // 내부 경계 (주황)
         Gizmos.color = new Color(1f, 0.45f, 0.1f, 0.9f);
         for (int i = 0, j = count - 1; i < count; j = i++)
-            Gizmos.DrawLine(localPoints[j] + offset, localPoints[i] + offset);
+            Gizmos.DrawLine(LocalToWorldNoScale(localPoints[j]), LocalToWorldNoScale(localPoints[i]));
 
         // 포인트 구체
         Gizmos.color = Color.yellow;
         for (int i = 0; i < count; i++)
-            Gizmos.DrawSphere(localPoints[i] + offset, 0.12f);
+            Gizmos.DrawSphere(LocalToWorldNoScale(localPoints[i]), 0.12f);
 
         // 외부 edgeOffset 경계 (빨강)
         if (edgeOffset > 0f)
@@ -122,8 +137,8 @@ public class SpawnZone : MonoBehaviour
             Gizmos.color = new Color(1f, 0.2f, 0.2f, 0.55f);
             for (int i = 0, j = count - 1; i < count; j = i++)
             {
-                Vector2 a    = localPoints[j] + offset;
-                Vector2 b    = localPoints[i] + offset;
+                Vector2 a    = LocalToWorldNoScale(localPoints[j]);
+                Vector2 b    = LocalToWorldNoScale(localPoints[i]);
                 Vector2 edge = b - a;
                 Vector2 n    = new Vector2(edge.y, -edge.x).normalized;
                 if (Vector2.Dot(n, (a + b) * 0.5f - centroid) < 0f) n = -n;
@@ -133,9 +148,26 @@ public class SpawnZone : MonoBehaviour
 
 #if UNITY_EDITOR
         UnityEditor.Handles.color = new Color(1f, 0.6f, 0.1f);
+        
+        // BoundsSize를 NoScale 기준으로 근사 계산하여 라벨 띄움
+        Vector2 mn = LocalToWorldNoScale(localPoints[0]);
+        Vector2 mx = mn;
+        foreach (var p in localPoints)
+        {
+            Vector2 wp = LocalToWorldNoScale(p);
+            mn = Vector2.Min(mn, wp);
+            mx = Vector2.Max(mx, wp);
+        }
+        
         UnityEditor.Handles.Label(
-            centroid + Vector2.up * (BoundsSize.y * 0.5f + edgeOffset + 0.2f),
+            centroid + Vector2.up * ((mx.y - mn.y) * 0.5f + edgeOffset + 0.2f),
             "[ Spawn Zone ]");
 #endif
+    }
+    
+    // MovementBounds.cs의 렌더링 유지 코드와 동일한 기능
+    private Vector3 LocalToWorldNoScale(Vector2 local)
+    {
+        return transform.position + (Vector3)local;
     }
 }

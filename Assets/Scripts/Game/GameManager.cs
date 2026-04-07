@@ -488,6 +488,11 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         bossWaveActive    = false;
         wave              = targetWave - 1;
         waitingForUpgrade = false;
+
+        // 보스 입장 게이트(Exit Point) 연출을 띄우려면, 활성화된 배경 맵이 해당 층(예: 9웨이브)의 맵이어야 합니다.
+        // 직전 맵으로 강제 세팅하여 보스 문이 정상 활성화되도록 패치
+        WaveEnvironmentSwitcher.Shared?.SetWave(wave);
+
         StartNextWave();
         Debug.Log($"[Debug] → Wave {targetWave}로 점프");
     }
@@ -516,6 +521,10 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         bossWaveActive    = false;
         wave              = targetWave - 1;
         waitingForUpgrade = false;
+
+        // 보스 입장 게이트(Exit Point) 연출을 띄우려면, 활성화된 배경 맵이 해당 층(예: 9웨이브)의 맵이어야 합니다.
+        WaveEnvironmentSwitcher.Shared?.SetWave(wave);
+
         StartNextWave();
     }
 }
