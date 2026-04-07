@@ -314,14 +314,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BossProjectileCycleSkill
   skillId: 
   cooldown: 5
-  enrageCooldownMult: 0.7
+  enrageCooldownMult: 1
   maxRange: 0
   projectilePrefab: {fileID: 7916182024222986910, guid: 9a4a33602c726e2489bec5dbb7160348, type: 3}
-  projectileSpeed: 7
+  projectileSpeed: 5
   projectileDamage: 50
   firePoint: {fileID: 4475026578306635568}
   linearDuration: 4
-  linearInterval: 0.4
+  linearInterval: 0.65
   chaseAfterLinear: 5
   fanCount: 5
   fanAngle: 120
@@ -364,6 +364,6 @@ CapsuleCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
-  m_Size: {x: 1.08, y: 1.44}
+  m_Offset: {x: 0.09, y: -0.05}
+  m_Size: {x: 0.78, y: 1.1}
   m_Direction: 0

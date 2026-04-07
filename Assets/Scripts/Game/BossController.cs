@@ -121,9 +121,6 @@ public class BossController : MonoBehaviour
         // 스킬 쿨다운 틱
         foreach (var s in skills)
             s.TickCooldown(Time.deltaTime);
-
-        // 접촉 데미지
-        CheckPlayerContact();
     }
 
     // ── 이동 API (스킬에서 사용) ────────────────────────────────────
@@ -173,16 +170,6 @@ public class BossController : MonoBehaviour
 
         if (currentHP <= 0f)
             StartCoroutine(DieRoutine());
-    }
-
-    private void CheckPlayerContact()
-    {
-        if (damageTimer > 0f || PlayerTransform == null) return;
-        if (Vector2.Distance(transform.position, PlayerTransform.position) > 1.0f) return;
-        var player = PlayerController.Instance;
-        if (player == null) return;
-        player.TakeDamage(contactDamage);
-        damageTimer = damageCooldown;
     }
 
     private IEnumerator DieRoutine()
@@ -294,12 +281,25 @@ public class BossController : MonoBehaviour
             AudioSource.PlayClipAtPoint(entry.sfxClip, transform.position, entry.volume);
     }
 
-    // ── 충돌 피격 (콜라이더 트리거) ──────────────────────────────
-
     private void OnTriggerStay2D(Collider2D other)
     {
         if (damageTimer > 0f) return;
+        
         var p = other.GetComponentInParent<PlayerController>();
+        if (p == null) return;
+
+        // 플레이어 본체(PlayerController가 있는 바로 그 오브젝트)의 콜라이더가 아니라
+        // 자식 오브젝트에 달려 있는 투명한 자석(Magnet)이나 공격 반경 트리거라면 무시!
+        if (other.gameObject != p.gameObject) return;
+
+        p.TakeDamage(contactDamage);
+        damageTimer = damageCooldown;
+    }
+
+    private void OnCollisionStay2D(Collision2D collision)
+    {
+        if (damageTimer > 0f) return;
+        var p = collision.collider.GetComponentInParent<PlayerController>();
         if (p == null) return;
         p.TakeDamage(contactDamage);
         damageTimer = damageCooldown;

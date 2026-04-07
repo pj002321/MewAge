@@ -44,19 +44,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 71dfdaf2342746b40963f4623905443b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MovementBounds
+  viewMode: 0
   localPoints:
   - {x: 11.789302, y: 8.766684}
   - {x: 5.705857, y: 9.443223}
   - {x: -6.3026686, y: 9.61501}
   - {x: -12.193513, y: 8.525794}
-  - {x: -12.640825, y: -1.8659635}
+  - {x: -11.960011, y: -1.8659635}
   - {x: -11.969934, y: -8.371116}
   - {x: -8.649109, y: -9.412723}
   - {x: -3.8108587, y: -9.065935}
   - {x: 3.9625754, y: -9.024895}
   - {x: 9.344681, y: -8.796345}
   - {x: 11.775168, y: -8.137857}
-  - {x: 12.611257, y: 0.90317535}
+  - {x: 12.513997, y: 0.90317535}
+  useCustomCameraBounds: 0
+  cameraBoundsRect:
+    serializedVersion: 2
+    x: -5
+    y: -9
+    width: 10
+    height: 18
   cameraPadding: {x: 1, y: 1, z: 1, w: 1}
 --- !u!1 &6900160063066121858
 GameObject:
@@ -144,12 +152,12 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: -1
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 4636923341778613495, guid: d58ff749b8dc2f24a9a1ad3854f23525, type: 3}
+  m_Sprite: {fileID: 21300000, guid: d58ff749b8dc2f24a9a1ad3854f23525, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 8.32, y: 12.48}
+  m_Size: {x: 28.16, y: 22}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
@@ -167,7 +175,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FitSpriteToScreen
   fitMode: 4
-  adjustCameraToSprite: 0
 --- !u!114 &974992375534760076
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -168,13 +168,23 @@ public class WaveEnvironmentSwitcher : MonoBehaviourSingleton<WaveEnvironmentSwi
         CurrentBossEnterPoint = null;
     }
 
-    private static void ApplyCameraFromBounds(bool followPlayer, bool useBounds)
+    private static void ApplyCameraFromBounds(bool soFollowPlayer, bool soUseBounds)
     {
-        var min = Vector2.zero;
-        var max = Vector2.zero;
-        if (useBounds && MovementBounds.Shared != null)
-            MovementBounds.Shared.GetBoundsMinMax(out min, out max);
+        if (CameraFollow.Shared == null) return;
 
-        CameraFollow.Shared?.ApplyConfig(followPlayer, useBounds, min, max);
+        var mb = MovementBounds.Shared;
+        if (mb == null)
+        {
+            // Fallback: no MovementBounds — use SO's legacy settings
+            CameraFollow.Shared?.ApplyConfig(soFollowPlayer, soUseBounds, Vector2.zero, Vector2.zero);
+            return;
+        }
+
+        mb.GetCameraBoundsMinMax(out var min, out var max);
+
+        if (mb.ViewMode == MovementBounds.CameraViewMode.FixedView)
+            CameraFollow.Shared.ApplyFixedView(min, max);
+        else
+            CameraFollow.Shared.ApplyDynamicFollow(min, max);
     }
 }

@@ -301,6 +301,10 @@ public class EnemyController : MonoBehaviour
         if (damageTimer > 0f) return;
         var p = other.GetComponentInParent<PlayerController>();
         if (p == null) return;
+        
+        // 플레이어 본체(PlayerController가 달린 오브젝트)가 아닌 자식의 투명 트리거(자석 등) 무시
+        if (other.gameObject != p.gameObject) return;
+        
         if (Vector2.Distance(transform.position, p.transform.position) > contactMaxDist) return;
         p.TakeDamage(contactDamage);
         damageTimer = damageCooldown;
@@ -310,6 +314,9 @@ public class EnemyController : MonoBehaviour
     {
         var p = other.GetComponentInParent<PlayerController>();
         if (p == null) return;
+
+        // 플레이어 본체(PlayerController가 달린 오브젝트)가 아닌 자식의 투명 트리거(자석 등) 무시
+        if (other.gameObject != p.gameObject) return;
         if (Vector2.Distance(transform.position, p.transform.position) > contactMaxDist) return;
         p.TakeDamage(contactDamage);
         damageTimer = damageCooldown;

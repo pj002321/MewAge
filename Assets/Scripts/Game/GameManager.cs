@@ -333,7 +333,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 
         if (MovementBounds.Shared != null)
         {
-            MovementBounds.Shared.GetBoundsMinMax(out Vector2 min, out Vector2 max);
+            MovementBounds.Shared.GetPlayerBoundsMinMax(out Vector2 min, out Vector2 max);
             player.transform.position = (Vector3)((min + max) * 0.5f);
         }
         else

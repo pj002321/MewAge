@@ -62,7 +62,7 @@ public class FireSpreadSkill : StructureSkillBase
     {
         int   level          = StructureLevel;
         int   effectiveLen   = CalcEffectiveLength(level);
-        bool  addDiagonals   = level >= 10;
+        bool  addDiagonals   = level >= 6;
 
         var waits = spreadDelay > 0f ? new WaitForSeconds(spreadDelay) : null;
 
@@ -94,17 +94,12 @@ public class FireSpreadSkill : StructureSkillBase
         }
     }
 
-    /// <summary>레벨에 따른 실제 확산 거리 계산</summary>
+    /// <summary>레벨에 따른 실제 확산 거리 계산 (Lv.2마다 +1칸)</summary>
     private int CalcEffectiveLength(int level)
     {
-        // 기본값 + 레벨마다 0.25씩 증가 (정수 반올림)
-        float bonus = (level - 1) * 0.25f;
-
-        // 레벨 구간별 추가 보너스
-        if      (level >= 20) bonus += 4f;
-        else if (level >= 15) bonus += 2f;
-
-        return Mathf.Max(1, spreadLength + Mathf.RoundToInt(bonus));
+        // Lv.2=+1, Lv.4=+2, Lv.6=+3 … (2레벨마다 1칸 증가, 레벨 1부터 즉시 체감)
+        int bonus = level / 2;
+        return Mathf.Max(1, spreadLength + bonus);
     }
 
     // ── DoT 판정 코루틴 ──────────────────────────────────────────────
@@ -162,7 +157,7 @@ public class FireSpreadSkill : StructureSkillBase
                 Gizmos.DrawWireCube(transform.position + (Vector3)(dir * cellSize * i),
                                     Vector3.one * cellSize * 0.9f);
 
-        if (StructureLevel >= 10)
+        if (StructureLevel >= 6)
         {
             Gizmos.color = new Color(1f, 0.6f, 0f, 0.4f);
             foreach (var dir in DiagDirs)
