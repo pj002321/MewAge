@@ -78,7 +78,8 @@ public class FitSpriteToScreen : MonoBehaviour
 #if UNITY_EDITOR
     private void OnValidate()
     {
-        if (!gameObject.scene.isLoaded) return;
+        // 플레이 중에만 실행 — 에디터 정지 상태에서는 카메라가 없어 scale이 오염됨
+        if (!Application.isPlaying) return;
         Fit();
     }
 #endif

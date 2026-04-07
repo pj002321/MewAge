@@ -169,9 +169,11 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
             return;
         }
 
-        Vector2 spawnPos = bossSpawnPoint != null
-            ? (Vector2)bossSpawnPoint.position
-            : GetRandomEdgePosition();
+        // 보스 배경 프리팹의 bossSpawnPoint 우선, 그 다음 Inspector 설정, 마지막으로 랜덤 엣지
+        Transform envSpawnPoint = WaveEnvironmentSwitcher.Shared?.CurrentBossSpawnPoint;
+        Vector2 spawnPos = envSpawnPoint != null  ? (Vector2)envSpawnPoint.position
+                         : bossSpawnPoint != null ? (Vector2)bossSpawnPoint.position
+                         : GetRandomEdgePosition();
 
         var obj = Instantiate(bossData.prefab, spawnPos, Quaternion.identity);
         if (obj.TryGetComponent<BossController>(out var boss))

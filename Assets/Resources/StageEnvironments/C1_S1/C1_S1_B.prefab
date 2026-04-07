@@ -35,6 +35,7 @@ Transform:
   - {fileID: 450568931050724900}
   - {fileID: 3586832563339069261}
   - {fileID: 4737769897008048506}
+  - {fileID: 8829371877270473594}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &4422270327793839857
@@ -121,8 +122,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d69a922e2226414094bc9982423792b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnvironmentBackground
-  bossExitPoint: {fileID: 0}
+  bossExitPoint: {fileID: 3586832563339069261}
   bossEnterPoint: {fileID: 3586832563339069261}
+  bossSpawnPoint: {fileID: 8829371877270473594}
   bossEntryGate: {fileID: 8511726348540898833}
 --- !u!1 &7081049383325651805
 GameObject:
@@ -209,7 +211,7 @@ Transform:
   m_GameObject: {fileID: 8153718871718567459}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.93, z: 0}
+  m_LocalPosition: {x: 0, y: -3.14, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -264,6 +266,37 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 88cddcdc2e2f4ab4a8c2d92d27b10cde, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossEntryGate
+--- !u!1 &8358622337577318972
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8829371877270473594}
+  m_Layer: 0
+  m_Name: BossSpawnPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8829371877270473594
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8358622337577318972}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 1.84, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7141213778163068944}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &8981706029215480247
 GameObject:
   m_ObjectHideFlags: 0
@@ -290,7 +323,7 @@ Transform:
   m_GameObject: {fileID: 8981706029215480247}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.008106419, y: -0.38288948, z: 0}
+  m_LocalPosition: {x: 0.008106419, y: 1.35, z: 0}
   m_LocalScale: {x: 0.22209367, y: 0.22209367, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

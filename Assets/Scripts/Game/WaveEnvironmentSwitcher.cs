@@ -20,8 +20,10 @@ public class WaveEnvironmentSwitcher : MonoBehaviourSingleton<WaveEnvironmentSwi
 
     /// <summary>현재 활성 일반 배경의 보스 출구 위치 (null이면 이동 생략).</summary>
     public Transform CurrentBossExitPoint  { get; private set; }
-    /// <summary>현재 활성 보스 배경의 입장 위치.</summary>
+    /// <summary>현재 활성 보스 배경의 플레이어 입장 위치.</summary>
     public Transform CurrentBossEnterPoint { get; private set; }
+    /// <summary>현재 활성 보스 배경의 보스 스폰 위치. null이면 EnemySpawner 기본값 사용.</summary>
+    public Transform CurrentBossSpawnPoint { get; private set; }
 
     protected override bool DontDestroy => false;
 
@@ -74,6 +76,7 @@ public class WaveEnvironmentSwitcher : MonoBehaviourSingleton<WaveEnvironmentSwi
 
             var envComp = _activeBossInstance.GetComponentInChildren<EnvironmentBackground>(true);
             CurrentBossEnterPoint = envComp?.bossEnterPoint;
+            CurrentBossSpawnPoint = envComp?.bossSpawnPoint;
 
             _activeBossInstance.GetComponentInChildren<MovementBounds>(true)?.Register();
             _activeBossInstance.GetComponentInChildren<SpawnZone>(true)?.Register();
@@ -166,6 +169,7 @@ public class WaveEnvironmentSwitcher : MonoBehaviourSingleton<WaveEnvironmentSwi
             _activeBossInstance = null;
         }
         CurrentBossEnterPoint = null;
+        CurrentBossSpawnPoint = null;
     }
 
     private static void ApplyCameraFromBounds(bool soFollowPlayer, bool soUseBounds)
