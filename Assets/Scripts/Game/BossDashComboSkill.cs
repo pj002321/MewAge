@@ -31,11 +31,21 @@ public class BossDashComboSkill : BossSkillBase
         Vector2 dir     = ((Vector2)Owner.PlayerTransform.position - Owner.Rb.position).normalized;
 
         // 경계 계산
-        var     spawner = EnemySpawner.Shared;
-        Vector2 ac      = spawner != null ? spawner.AreaCenter : Vector2.zero;
-        Vector2 half    = (spawner != null ? spawner.AreaSize : fallbackBoundsSize) * 0.5f;
-        float   minX = ac.x - half.x, maxX = ac.x + half.x;
-        float   minY = ac.y - half.y, maxY = ac.y + half.y;
+        float minX, maxX, minY, maxY;
+        if (MovementBounds.Shared != null)
+        {
+            MovementBounds.Shared.GetPlayerBoundsMinMax(out Vector2 min, out Vector2 max);
+            minX = min.x; maxX = max.x;
+            minY = min.y; maxY = max.y;
+        }
+        else
+        {
+            var     spawner = EnemySpawner.Shared;
+            Vector2 ac      = spawner != null ? spawner.AreaCenter : Vector2.zero;
+            Vector2 half    = (spawner != null ? spawner.AreaSize : fallbackBoundsSize) * 0.5f;
+            minX = ac.x - half.x; maxX = ac.x + half.x;
+            minY = ac.y - half.y; maxY = ac.y + half.y;
+        }
 
         // ── 돌진 (경계 클램프 포함) ─────────────────────────────
         float elapsed  = 0f;

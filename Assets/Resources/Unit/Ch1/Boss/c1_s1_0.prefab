@@ -300,6 +300,11 @@ MonoBehaviour:
     spawnOffset: {x: 0, y: 0}
     sfxClip: {fileID: 0}
     volume: 1
+  chaseStopDistance: 2.5
+  chaseDuration: 3.5
+  idleDuration: 1.5
+  skills:
+  - {fileID: 1072981410219997983}
 --- !u!114 &1072981410219997983
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -328,7 +333,7 @@ MonoBehaviour:
   fanRepeat: 3
   fanRepeatDelay: 0.6
   chaseAfterFan: 4
-  chaseStopDistance: 1.8
+  chaseStopDistance: 2.5
   attackTrigger: tAttack
 --- !u!70 &2925710928678679702
 CapsuleCollider2D:

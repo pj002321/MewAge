@@ -44,6 +44,15 @@ public class BossController : MonoBehaviour
     private int    bossGoldCount = 20;
     private int    bossExpCount  = 20;
 
+    [Header("행동 (Chase)")]
+    [SerializeField] private float chaseStopDistance = 1.8f;
+    [SerializeField] private float chaseDuration     = 2.5f;
+    [SerializeField] private float idleDuration      = 0.6f;
+
+    [Header("스킬 목록")]
+    [Tooltip("비워두면 시작 시 컴포넌트를 자동 탐색합니다.")]
+    [SerializeField] private BossSkillBase[] skills;
+
     // ── 공개 프로퍼티 ──────────────────────────────────────────────
     public bool   IsEnraged      { get; private set; }
     public float  HPRatio        => maxHP > 0f ? currentHP / maxHP : 0f;
@@ -67,7 +76,6 @@ public class BossController : MonoBehaviour
     private float            currentHP;
     private float            damageTimer;
     private SpriteRenderer[] srs;
-    private BossSkillBase[]  skills;
     private Coroutine        flashCoroutine;
     private bool             isDead;
 
@@ -79,7 +87,9 @@ public class BossController : MonoBehaviour
         Rb           = GetComponent<Rigidbody2D>();
         EnemyAnimator = GetComponentInChildren<Animator>();
         srs          = GetComponentsInChildren<SpriteRenderer>(true);
-        skills       = GetComponents<BossSkillBase>();
+        
+        if (skills == null || skills.Length == 0)
+            skills = GetComponents<BossSkillBase>();
 
         if (Rb != null)
         {
@@ -101,6 +111,53 @@ public class BossController : MonoBehaviour
         SetOutlineColor(normalOutlineColor);
         GameManager.Shared?.StartBossWave();
         BossHUDPanel.Shared?.Show(this);
+
+        StartCoroutine(PatternRoutine());
+    }
+
+    // ── 패턴 루프 ──────────────────────────────────────────────────
+
+    private IEnumerator PatternRoutine()
+    {
+        while (!isDead)
+        {
+            // 1) 대기
+            yield return new WaitForSeconds(IdleTime());
+            if (isDead) break;
+
+            // 2) 추격
+            yield return ChaseRoutine();
+            if (isDead) break;
+
+            // 3) 스킬 실행
+            var skill = RandomReadySkill();
+            if (skill != null)
+            {
+                yield return skill.Execute();
+            }
+        }
+    }
+
+    private float IdleTime() => IsEnraged ? idleDuration * 0.6f : idleDuration;
+
+    private IEnumerator ChaseRoutine()
+    {
+        float elapsed = 0f;
+        while (elapsed < chaseDuration)
+        {
+            elapsed += Time.fixedDeltaTime;
+
+            if (PlayerTransform != null)
+            {
+                float dist = Vector2.Distance(transform.position, PlayerTransform.position);
+                if (dist > chaseStopDistance)
+                {
+                    MoveTowardPlayer(MoveSpeed);
+                }
+            }
+
+            yield return new WaitForFixedUpdate();
+        }
     }
 
     private void Update()

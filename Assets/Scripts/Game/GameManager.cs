@@ -189,7 +189,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 
     private void UpdateWaveUI()
     {
-        if (waveText) waveText.text = $"Wave {wave}";
+        if (waveText) waveText.text = $"WAVE {wave}";
         if (timerText) timerText.color = timerNormalColor;
         WaveInfoProgress();
     }
@@ -212,8 +212,8 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 
     public void UpdateExpUI(int exp, int expMax, int level)
     {
-        if (levelText)        levelText.text         = $"lv {level}";
-        if (reroll_levelText) reroll_levelText.text  = $"lv {level}";
+        if (levelText)        levelText.text         = $"LV.{level}";
+        if (reroll_levelText) reroll_levelText.text  = $"LV.{level}";
         if (expText)          expText.text          = $"{exp} / {expMax}";
         if (expSlider)        expSlider.value        = (float)exp / expMax;
         if (reroll_expSlider) reroll_expSlider.value = (float)exp / expMax;
