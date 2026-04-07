@@ -20,7 +20,7 @@ public class WeaponInfoPanel : MonoBehaviourSingleton<WeaponInfoPanel>
     [Header("무기 기본 정보")]
     [SerializeField] private Image           frameImage;
     [SerializeField] private Image           iconImage;
-    [SerializeField] private TextMeshProUGUI starText;
+    [SerializeField] private Image           starImage;
     [SerializeField] private TextMeshProUGUI gradeText;   // 예: "레어"
     [SerializeField] private TextMeshProUGUI nameText;
 
@@ -110,7 +110,7 @@ public class WeaponInfoPanel : MonoBehaviourSingleton<WeaponInfoPanel>
         }
 
         // ── 이름 / 별 / 등급 ─────────────────────────────────────
-        if (starText)  starText.text  = new string('★', data.star);
+        SetStarImage(starImage, data.star);
         if (nameText)  nameText.text  = data.weaponName;
         if (gradeText)
         {
@@ -257,6 +257,15 @@ public class WeaponInfoPanel : MonoBehaviourSingleton<WeaponInfoPanel>
         var sprite  = SynergyHelper.GetIcon(tag, chapter);
         img.sprite  = sprite;
         img.enabled = sprite != null && tag != WeaponSynergyTag.None;
+    }
+
+    private static void SetStarImage(Image img, int star)
+    {
+        if (img == null) return;
+        if (star <= 0) { img.enabled = false; return; }
+        var sprite = Resources.Load<Sprite>($"UI/star_{star}");
+        if (sprite != null) { img.sprite = sprite; img.SetNativeSize(); img.enabled = true; }
+        else                  img.enabled = false;
     }
 
     /// <summary>WeaponGrade → 한글 이름</summary>

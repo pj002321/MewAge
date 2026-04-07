@@ -77,6 +77,12 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 
         // 시작 시 Normal 무기 1개 지급 후 바로 Wave 1 시작
         UpgradeManager.Shared?.GiveStarterWeapon();
+
+        // GameManager.Shared가 준비된 시점에 HP UI 강제 동기화
+        // (PlayerController.Start()가 먼저 실행되면 GameManager.Shared=null이라 누락될 수 있음)
+        if (PlayerController.Instance != null)
+            UpdateHP(PlayerController.Instance.CurrentHP, PlayerController.Instance.MaxHPValue);
+
         StartNextWave();
     }
 
@@ -190,9 +196,13 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 
     public void UpdateHP(float current, float max)
     {
-        float normalized = max > 0f ? current / max : 0f;
-        if (hpSlider) hpSlider.value = normalized;
-        if (hpText)   hpText.text    = $"{Mathf.CeilToInt(current)} / {Mathf.CeilToInt(max)}";
+        if (hpSlider)
+        {
+            hpSlider.minValue = 0f;
+            hpSlider.maxValue = Mathf.Max(1f, max);
+            hpSlider.value    = current;
+        }
+        if (hpText) hpText.text = $"{Mathf.CeilToInt(current)} / {Mathf.CeilToInt(max)}";
     }
 
     public void UpdateGoldUI(int gold)
@@ -462,10 +472,10 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 
         EnemySpawner.Shared?.StopSpawning();
         EnemySpawner.Shared?.ClearAllEnemies();
+        FXManager.Shared?.ClearAllFX();
 
-        waitingForUpgrade = true;
-        Debug.Log("[Debug] WaveClearRoutine 시작");
-        StartCoroutine(WaveClearRoutine());
+        Debug.Log("[Debug] 증강 스킵하고 바로 웨이브 시작");
+        StartNextWave();
     }
 
     /// <summary>지정한 웨이브로 즉시 이동합니다.</summary>

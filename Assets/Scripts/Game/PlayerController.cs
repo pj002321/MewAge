@@ -185,7 +185,9 @@ public class PlayerController : MonoBehaviour
             return;
         }
 
-        float reduced = Mathf.Max(0f, damage - defense);
+        // defense = 피해 감소율(%). defense=10 → 10% 감소, defense=70 → 70% 감소
+        float reduction = Mathf.Clamp01(defense / 100f);
+        float reduced   = damage * (1f - reduction);
         currentHP -= reduced;
         currentHP  = Mathf.Max(0f, currentHP);
         SyncHPUI();
@@ -205,9 +207,13 @@ public class PlayerController : MonoBehaviour
 
     private void SyncHPUI()
     {
-        float norm = maxHP > 0f ? currentHP / maxHP : 0f;
         GameManager.Shared?.UpdateHP(currentHP, maxHP);
-        if (playerHpSlider) playerHpSlider.value = norm;
+        if (playerHpSlider)
+        {
+            playerHpSlider.minValue = 0f;
+            playerHpSlider.maxValue = Mathf.Max(1f, maxHP);
+            playerHpSlider.value    = currentHP;
+        }
     }
 
     // ────────────────────────────────────────────────────────────────

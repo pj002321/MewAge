@@ -16,7 +16,7 @@ public class EquipSlot : MonoBehaviour,
     [SerializeField] private Image           synergyhilightImg;
     [SerializeField] private Image           frameImg;
     [SerializeField] private Image           iconImg;
-    [SerializeField] private TextMeshProUGUI starText;
+    [SerializeField] private Image           starImage;
 
     public int SlotIndex { get; set; }
 
@@ -52,10 +52,15 @@ public class EquipSlot : MonoBehaviour,
         bool has = data != null;
         if (iconImg)  iconImg.enabled = has;
         if (has && iconImg && data.icon) iconImg.sprite = data.icon;
-        if (starText)
+        if (starImage)
         {
-            starText.text = has ? new string('★', data.star) : string.Empty;
-            starText.gameObject.SetActive(has);
+            if (has && data.star > 0)
+            {
+                var sprite = Resources.Load<Sprite>($"UI/star_{data.star}");
+                if (sprite != null) { starImage.sprite = sprite; starImage.SetNativeSize(); starImage.enabled = true; }
+                else starImage.enabled = false;
+            }
+            else starImage.enabled = false;
         }
         transform.localScale = Vector3.one * (has && selected ? 1.15f : 1f);
 
