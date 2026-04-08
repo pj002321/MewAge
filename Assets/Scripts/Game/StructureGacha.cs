@@ -2,6 +2,12 @@ using System.Collections.Generic;
 using UnityEngine;
 using Mewage.DB;
 
+public enum WareBoxType
+{
+    Normal,
+    Epic,
+}
+
 /// <summary>
 /// 기물 캡슐 뽑기.
 ///
@@ -13,8 +19,11 @@ using Mewage.DB;
 /// </summary>
 public static class StructureGacha
 {
-    public const string KeyNormal = "SKL_NORMAL";
-    public const string KeyEpic   = "SKL_EPIC";
+    static string ToKey(WareBoxType t) => t switch
+    {
+        WareBoxType.Epic => "SKL_EPIC",
+        _                => "SKL_NORMAL",
+    };
 
     const int FallbackCostNormal = 300;
     const int FallbackCostEpic   = 800;
@@ -32,23 +41,23 @@ public static class StructureGacha
 
     // ── 공개 API ─────────────────────────────────────────────────────
 
-    public static DB_기물 Draw(string gachaKey)
+    public static DB_기물 Draw(WareBoxType boxType)
     {
-        if (!SpendHomeGold(GetCost(gachaKey))) return null;
+        if (!SpendHomeGold(GetCost(boxType))) return null;
 
-        var result = RollOne(gachaKey);
+        var result = RollOne(boxType);
         if (result != null) StructureWareManager.Shared?.AddWare(result.f_기물ID, 1);
         return result;
     }
 
-    public static List<DB_기물> DrawMulti(string gachaKey, int count)
+    public static List<DB_기물> DrawMulti(WareBoxType boxType, int count)
     {
-        if (!SpendHomeGold(GetCost(gachaKey) * count)) return null;
+        if (!SpendHomeGold(GetCost(boxType) * count)) return null;
 
         var results = new List<DB_기물>(count);
         for (int i = 0; i < count; i++)
         {
-            var r = RollOne(gachaKey);
+            var r = RollOne(boxType);
             if (r != null) { results.Add(r); StructureWareManager.Shared?.AddWare(r.f_기물ID, 1); }
         }
         return results;
@@ -61,18 +70,20 @@ public static class StructureGacha
         return true;
     }
 
-    public static int GetCost(string gachaKey)
+    public static int GetCost(WareBoxType boxType)
     {
-        var row = DB_상점.FindEntity(r => r.f_상품ID == gachaKey);
+        string key = ToKey(boxType);
+        var row = DB_상점.FindEntity(r => r.f_상품ID == key);
         if (row != null) return row.f_가격;
-        return gachaKey == KeyEpic ? FallbackCostEpic : FallbackCostNormal;
+        return boxType == WareBoxType.Epic ? FallbackCostEpic : FallbackCostNormal;
     }
 
     // ── 내부 로직 ─────────────────────────────────────────────────────
 
-    static DB_기물 RollOne(string gachaKey)
+    static DB_기물 RollOne(WareBoxType boxType)
     {
-        bool isEpic = gachaKey == KeyEpic;
+        bool isEpic = boxType == WareBoxType.Epic;
+        string gachaKey = ToKey(boxType);
 
         // 등급 결정
         int wNormal = 70, wRare = 30, wEpic = 0;

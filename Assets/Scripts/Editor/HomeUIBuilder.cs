@@ -1750,20 +1750,20 @@ public class HomeUIBuilder
             "현재 챕터 + 이전 챕터",
             "NORMAL 70%  RARE 30%",
             new Color(0.25f, 0.55f, 0.30f, 1f),
-            StructureGacha.KeyNormal, 300, 2700);
+            WareBoxType.Normal, 300, 2700);
 
         BuildWareCapsuleCard(rowRT,
             "레어 기물 뽑기",
             "현재 챕터 + 이전 챕터\n+5% 다음 챕터 선공개",
             "RARE 70%  EPIC 30%",
             new Color(0.50f, 0.18f, 0.72f, 1f),
-            StructureGacha.KeyEpic, 800, 7200);
+            WareBoxType.Epic, 800, 7200);
     }
 
     static void BuildWareCapsuleCard(RectTransform parent, string title, string subDesc,
-        string probDesc, Color accentColor, string gachaKey, int cost1, int cost10)
+        string probDesc, Color accentColor, WareBoxType boxType, int cost1, int cost10)
     {
-        var cardGO = new GameObject($"WareCard_{gachaKey}");
+        var cardGO = new GameObject($"WareCard_{boxType}");
         cardGO.transform.SetParent(parent, false);
         cardGO.AddComponent<LayoutElement>();
         cardGO.AddComponent<Image>().color = new Color(0.18f, 0.12f, 0.30f, 1f);
@@ -1813,8 +1813,8 @@ public class HomeUIBuilder
             btnGO.transform.SetParent(btnRow, false);
             btnGO.AddComponent<Image>().color = new Color(0.15f, 0.60f, 0.20f, 1f);
             btnGO.AddComponent<Button>();
-            var wdb       = btnGO.AddComponent<WareDrawButton>();
-            wdb.gachaKey  = gachaKey;
+            var wdb      = btnGO.AddComponent<WareDrawButton>();
+            wdb.boxType  = boxType;
             wdb.drawCount = count;
             var btnTmp    = CreateTMPText("Label", btnGO.transform, label, 26f, TextAlignmentOptions.Center);
             btnTmp.color = Color.white; btnTmp.fontStyle = FontStyles.Bold;

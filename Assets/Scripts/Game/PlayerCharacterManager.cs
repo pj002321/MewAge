@@ -137,7 +137,10 @@ public class PlayerCharacterManager : MonoBehaviourSingleton<PlayerCharacterMana
         if (tier >= 2) ApplyStatBonus(row.f_속성2ID, row.f_S2, baseHp, baseDef, baseAtk, player, stats, sm);
         if (tier >= 3) ApplyStatBonus(row.f_속성3ID, row.f_S3, baseHp, baseDef, baseAtk, player, stats, sm);
 
-        Debug.Log($"[CharMgr] 스탯 적용: {row.f_이름} (Tier {tier})");
+        // 3. 캐릭터 고유 스킬 등록
+        CharacterSkillManager.Shared?.Initialize(row.f_스킬ID);
+
+        Debug.Log($"[CharMgr] 스탯 적용: {row.f_이름} (Tier {tier}, 스킬: {row.f_스킬ID})");
     }
 
     // ─────────────────────────────────────────────────────────────

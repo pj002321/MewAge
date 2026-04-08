@@ -106,4 +106,17 @@ public class WeaponManager : MonoBehaviour
     }
 
     public bool IsClaimed(EnemyController enemy) => claimedEnemies.Contains(enemy);
+
+    /// <summary>현재 장착된 모든 WeaponPoint를 반환합니다.</summary>
+    public List<WeaponPoint> GetActiveWeaponPoints()
+    {
+        var result = new List<WeaponPoint>();
+        if (weaponAnchors == null) return result;
+        foreach (var anchor in weaponAnchors)
+        {
+            if (anchor == null) continue;
+            anchor.GetComponentsInChildren<WeaponPoint>(result);
+        }
+        return result;
+    }
 }

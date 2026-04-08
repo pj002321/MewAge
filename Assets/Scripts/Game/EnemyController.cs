@@ -452,6 +452,7 @@ public class EnemyController : MonoBehaviour
             {
                 _deathDir = Vector2.up; // 출혈 사망 시 위쪽으로
                 OnDeath?.Invoke();
+                CharacterSkillManager.Shared?.AddPoint(1);
                 StartCoroutine(DieRoutine());
             }
         }
@@ -478,6 +479,7 @@ public class EnemyController : MonoBehaviour
         {
             _deathDir = knockbackDir.sqrMagnitude > 0.001f ? knockbackDir.normalized : Vector2.up;
             OnDeath?.Invoke();
+            CharacterSkillManager.Shared?.AddPoint(1);
             ItemDropManager.Shared?.SpawnDrops(transform.position, goldDrop, expDrop);
             StartCoroutine(DieRoutine());
         }
