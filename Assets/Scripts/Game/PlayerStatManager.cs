@@ -52,10 +52,27 @@ public class PlayerStatManager : MonoBehaviourSingleton<PlayerStatManager>
         StatPanelUI.Shared?.Refresh();
     }
 
-    /// <summary>매 게임 시작 시 % 모디파이어를 전부 초기화합니다. (GameManager.Start에서 호출)</summary>
+    /// <summary>매 게임 시작 시 % 모디파이어와 base 스탯을 전부 초기화합니다. (GameManager.Start에서 호출)
+    /// DontDestroy=true라 씬 이동 후에도 이전 값이 남아있을 수 있으므로 명시적으로 초기화합니다.</summary>
     public void ResetMods()
     {
         System.Array.Clear(_pctMods, 0, _pctMods.Length);
+
+        // base 스탯 초기화 — Inspector 값이 이전 씬에서 오염됐을 경우 대비
+        baseATK               = 0f;
+        baseDEF               = 0f;
+        baseMaxHP             = 100f;
+        baseBleedPower        = 0f;
+        baseHPRegen           = 0f;
+        baseMoveSpeed         = 5f;
+        baseMagnetRadius      = 1.5f;
+        baseAtkSpeed          = 0f;
+        baseEvasion           = 0f;
+        baseCritChance        = 0f;
+        baseCritDmg           = 100f;
+        baseStructureCooldown = 0f;
+        baseKnockback         = 0f;
+        baseHealOnKill        = 0f;
     }
 
     /// <summary>기본값을 런타임에 설정하고 PlayerController에 즉시 반영합니다. (캐릭터 초기화 시 사용)</summary>

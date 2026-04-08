@@ -21,13 +21,21 @@ public class CharacterSkillManager : MonoBehaviourSingleton<CharacterSkillManage
     [SerializeField] private Slider skillGaugeSlider;
     [SerializeField] private GameObject skillReadyFX; // 꽉 찼을 때 표시할 이펙트 (선택)
 
+    [Header("기본 스킬 (프리팹 없을 때)")]
+    [SerializeField] private float      defaultSpeedMultiplier = 5f;
+    [SerializeField] private float      defaultDuration        = 3f;
+    [SerializeField] private int        defaultPointsRequired  = 10;
+    [SerializeField] private GameObject skillEffectPrefab;     // 스킬 발동 시 플레이어 위치에 스폰
+
     protected override bool DontDestroy => false;
 
     private CharacterSkillBase _skill;
-    private int   _currentPoints;
-    private int   _maxPoints;
-    private bool  _isActive;
-    private Coroutine _activeRoutine;
+    private int        _currentPoints;
+    private int        _maxPoints;
+    private bool       _isActive;
+    private bool       _defaultBoostActive;
+    private Coroutine  _activeRoutine;
+    private GameObject _spawnedEffect;
 
     // ── 초기화 ─────────────────────────────────────────────────────
 
@@ -44,32 +52,23 @@ public class CharacterSkillManager : MonoBehaviourSingleton<CharacterSkillManage
 
         _currentPoints = 0;
         _isActive      = false;
+        _skill         = null;
 
-        if (string.IsNullOrEmpty(skillId))
+        if (!string.IsNullOrEmpty(skillId))
         {
-            skillButton?.gameObject.SetActive(false);
-            if (skillGaugeSlider) skillGaugeSlider.gameObject.SetActive(false);
-            return;
+            var prefab = Resources.Load<GameObject>($"Skills/{skillId.ToLower()}");
+            if (prefab != null)
+            {
+                var parent = PlayerController.Instance != null
+                    ? PlayerController.Instance.transform
+                    : transform;
+                var go = Instantiate(prefab, parent);
+                go.transform.localPosition = Vector3.zero;
+                _skill = go.GetComponent<CharacterSkillBase>();
+            }
         }
 
-        var prefab = Resources.Load<GameObject>($"Skills/{skillId.ToLower()}");
-        if (prefab == null)
-        {
-            Debug.LogWarning($"[SkillManager] 스킬 프리팹 없음: Resources/Skills/{skillId.ToLower()}");
-            skillButton?.gameObject.SetActive(false);
-            if (skillGaugeSlider) skillGaugeSlider.gameObject.SetActive(false);
-            return;
-        }
-
-        // 스킬 오브젝트는 플레이어 자식으로 스폰 — 위치·이동을 자동으로 따라감
-        // 플레이어가 없으면 Manager 자식으로 fallback
-        var parent = PlayerController.Instance != null
-            ? PlayerController.Instance.transform
-            : transform;
-        var go = Instantiate(prefab, parent);
-        go.transform.localPosition = Vector3.zero;
-        _skill    = go.GetComponent<CharacterSkillBase>();
-        _maxPoints = _skill != null ? _skill.PointsRequired : 10;
+        _maxPoints = _skill != null ? _skill.PointsRequired : defaultPointsRequired;
 
         skillButton?.gameObject.SetActive(true);
         if (skillGaugeSlider)
@@ -88,6 +87,10 @@ public class CharacterSkillManager : MonoBehaviourSingleton<CharacterSkillManage
     {
         base.Awake();
         skillButton?.onClick.AddListener(TryActivate);
+
+        // 씬 시작 시 Initialize 전까지 숨김
+        skillButton?.gameObject.SetActive(false);
+        if (skillGaugeSlider) skillGaugeSlider.gameObject.SetActive(false);
     }
 
     // ── 포인트 관리 ─────────────────────────────────────────────────
@@ -95,7 +98,8 @@ public class CharacterSkillManager : MonoBehaviourSingleton<CharacterSkillManage
     /// <summary>적 처치 시 호출합니다. (EnemyController에서 호출)</summary>
     public void AddPoint(int amount = 1)
     {
-        if (_skill == null || _isActive) return;
+        if (_isActive) return;
+        if (_maxPoints <= 0) _maxPoints = defaultPointsRequired;
         if (_currentPoints >= _maxPoints) return;
 
         _currentPoints = Mathf.Min(_currentPoints + amount, _maxPoints);
@@ -110,7 +114,7 @@ public class CharacterSkillManager : MonoBehaviourSingleton<CharacterSkillManage
     /// <summary>스킬 버튼 클릭 시 호출됩니다.</summary>
     public void TryActivate()
     {
-        if (_skill == null || _isActive) return;
+        if (_isActive) return;
         if (_currentPoints < _maxPoints) return;
 
         _isActive      = true;
@@ -119,8 +123,19 @@ public class CharacterSkillManager : MonoBehaviourSingleton<CharacterSkillManage
         if (skillReadyFX) skillReadyFX.SetActive(false);
         RefreshUI();
 
-        _skill.Activate();
-        _activeRoutine = StartCoroutine(SkillDurationRoutine(_skill.Duration));
+        SpawnEffect();
+
+        if (_skill != null)
+        {
+            _skill.Activate();
+            _activeRoutine = StartCoroutine(SkillDurationRoutine(_skill.Duration));
+        }
+        else
+        {
+            // 프리팹 없을 때 기본 동작: 공격속도 부스트
+            ApplyDefaultBoost(true);
+            _activeRoutine = StartCoroutine(SkillDurationRoutine(defaultDuration));
+        }
     }
 
     /// <summary>스킬을 즉시 강제 종료합니다.</summary>
@@ -145,14 +160,45 @@ public class CharacterSkillManager : MonoBehaviourSingleton<CharacterSkillManage
             StopCoroutine(_activeRoutine);
             _activeRoutine = null;
         }
-        _skill?.Deactivate();
+        if (_skill != null)
+            _skill.Deactivate();
+        else
+            ApplyDefaultBoost(false);
+        DespawnEffect();
         _isActive = false;
+    }
+
+    private void SpawnEffect()
+    {
+        if (skillEffectPrefab == null) return;
+        if (_spawnedEffect != null) Destroy(_spawnedEffect);
+
+        var parent = PlayerController.Instance != null ? PlayerController.Instance.transform : transform;
+        _spawnedEffect = Instantiate(skillEffectPrefab, parent.position, Quaternion.identity, parent);
+    }
+
+    private void DespawnEffect()
+    {
+        if (_spawnedEffect == null) return;
+        Destroy(_spawnedEffect);
+        _spawnedEffect = null;
+    }
+
+    private void ApplyDefaultBoost(bool apply)
+    {
+        var wps = WeaponManager.Instance?.GetActiveWeaponPoints();
+if (wps == null || wps.Count == 0) return;
+        float mult = apply ? defaultSpeedMultiplier : 1f / defaultSpeedMultiplier;
+        foreach (var wp in wps)
+            wp.MultiplyAttackSpeed(mult);
+        _defaultBoostActive = apply;
     }
 
     private void OnGaugeFull()
     {
         SetButtonInteractable(true);
         if (skillReadyFX) skillReadyFX.SetActive(true);
+        TryActivate(); // 게이지 가득 차면 자동 발동
     }
 
     private void RefreshUI()

@@ -1746,11 +1746,6 @@ namespace Mewage.DB
 			get => _f_캐릭ID[Index];
 			set => _f_캐릭ID[Index] = value;
 		}
-		public System.String f_스킬ID
-		{
-			get => _f_스킬ID[Index];
-			set => _f_스킬ID[Index] = value;
-		}
 		public System.String f_고유능력
 		{
 			get => _f_고유능력[Index];
@@ -1821,6 +1816,16 @@ namespace Mewage.DB
 			get => _f_능력치설명[Index];
 			set => _f_능력치설명[Index] = value;
 		}
+		public System.String f_스킬ID
+		{
+			get => _f_스킬ID[Index];
+			set => _f_스킬ID[Index] = value;
+		}
+		public System.Int32 f_능력행수
+		{
+			get => _f_능력행수[Index];
+			set => _f_능력행수.SetValue(this, value);
+		}
 		private static BansheeGz.BGDatabase.BGFieldEntityName _ufle12jhs77_f_name;
 		public static BansheeGz.BGDatabase.BGFieldEntityName _f_name => _ufle12jhs77_f_name ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldEntityName>(MetaDefault, new BGId(4891015843578241108UL, 8229321223816846005UL), () => _ufle12jhs77_f_name = null);
 		private static BansheeGz.BGDatabase.BGFieldString _ufle12jhs77_f_이름;
@@ -1829,8 +1834,6 @@ namespace Mewage.DB
 		public static BansheeGz.BGDatabase.BGFieldString _f_등급 => _ufle12jhs77_f_등급 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(MetaDefault, new BGId(5229293891259047953UL, 216854564448490135UL), () => _ufle12jhs77_f_등급 = null);
 		private static BansheeGz.BGDatabase.BGFieldString _ufle12jhs77_f_캐릭ID;
 		public static BansheeGz.BGDatabase.BGFieldString _f_캐릭ID => _ufle12jhs77_f_캐릭ID ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(MetaDefault, new BGId(5418634385160004518UL, 13945281163803020211UL), () => _ufle12jhs77_f_캐릭ID = null);
-		private static BansheeGz.BGDatabase.BGFieldString _ufle12jhs77_f_스킬ID;
-		public static BansheeGz.BGDatabase.BGFieldString _f_스킬ID => _ufle12jhs77_f_스킬ID ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(MetaDefault, new BGId(5400967236259522771UL, 18230645446798652032UL), () => _ufle12jhs77_f_스킬ID = null);
 		private static BansheeGz.BGDatabase.BGFieldString _ufle12jhs77_f_고유능력;
 		public static BansheeGz.BGDatabase.BGFieldString _f_고유능력 => _ufle12jhs77_f_고유능력 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(MetaDefault, new BGId(4962029519170949928UL, 553338906059794354UL), () => _ufle12jhs77_f_고유능력 = null);
 		private static BansheeGz.BGDatabase.BGFieldBool _ufle12jhs77_f_보유여부;
@@ -1859,6 +1862,10 @@ namespace Mewage.DB
 		public static BansheeGz.BGDatabase.BGFieldString _f_능력ID => _ufle12jhs77_f_능력ID ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(MetaDefault, new BGId(4751244244858069506UL, 10364928103018884286UL), () => _ufle12jhs77_f_능력ID = null);
 		private static BansheeGz.BGDatabase.BGFieldString _ufle12jhs77_f_능력치설명;
 		public static BansheeGz.BGDatabase.BGFieldString _f_능력치설명 => _ufle12jhs77_f_능력치설명 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(MetaDefault, new BGId(4851910044861907790UL, 18127686838471431345UL), () => _ufle12jhs77_f_능력치설명 = null);
+		private static BansheeGz.BGDatabase.BGFieldString _ufle12jhs77_f_스킬ID;
+		public static BansheeGz.BGDatabase.BGFieldString _f_스킬ID => _ufle12jhs77_f_스킬ID ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(MetaDefault, new BGId(5018122086124500208UL, 6833629643338816640UL), () => _ufle12jhs77_f_스킬ID = null);
+		private static BansheeGz.BGDatabase.BGFieldInt _ufle12jhs77_f_능력행수;
+		public static BansheeGz.BGDatabase.BGFieldInt _f_능력행수 => _ufle12jhs77_f_능력행수 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(MetaDefault, new BGId(5059201594576964670UL, 11111148403268797883UL), () => _ufle12jhs77_f_능력행수 = null);
 		private DB_캐릭터() : base(MetaDefault) {}
 		private DB_캐릭터(BGId id) : base(MetaDefault, id) {}
 		private DB_캐릭터(BGMetaEntity meta) : base(meta) {}
@@ -1879,7 +1886,6 @@ namespace Mewage.DB
 			_ufle12jhs77_f_이름 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(_metaDefault, new BGId(4660564450710270058UL, 7679014943788794021UL));
 			_ufle12jhs77_f_등급 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(_metaDefault, new BGId(5229293891259047953UL, 216854564448490135UL));
 			_ufle12jhs77_f_캐릭ID = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(_metaDefault, new BGId(5418634385160004518UL, 13945281163803020211UL));
-			_ufle12jhs77_f_스킬ID = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(_metaDefault, new BGId(5400967236259522771UL, 18230645446798652032UL));
 			_ufle12jhs77_f_고유능력 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(_metaDefault, new BGId(4962029519170949928UL, 553338906059794354UL));
 			_ufle12jhs77_f_보유여부 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldBool>(_metaDefault, new BGId(5737439437541528387UL, 13376332798114342583UL));
 			_ufle12jhs77_f_가격 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(_metaDefault, new BGId(5536759165630509935UL, 9937488079184106431UL));
@@ -1894,6 +1900,8 @@ namespace Mewage.DB
 			_ufle12jhs77_f_기초공격력 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(_metaDefault, new BGId(5435363364682488031UL, 9238540771372627081UL));
 			_ufle12jhs77_f_능력ID = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(_metaDefault, new BGId(4751244244858069506UL, 10364928103018884286UL));
 			_ufle12jhs77_f_능력치설명 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(_metaDefault, new BGId(4851910044861907790UL, 18127686838471431345UL));
+			_ufle12jhs77_f_스킬ID = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(_metaDefault, new BGId(5018122086124500208UL, 6833629643338816640UL));
+			_ufle12jhs77_f_능력행수 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(_metaDefault, new BGId(5059201594576964670UL, 11111148403268797883UL));
 		}
 		public static void ReleaseCodeGenRuntime()
 		{
@@ -1902,7 +1910,6 @@ namespace Mewage.DB
 			_ufle12jhs77_f_이름 = null;
 			_ufle12jhs77_f_등급 = null;
 			_ufle12jhs77_f_캐릭ID = null;
-			_ufle12jhs77_f_스킬ID = null;
 			_ufle12jhs77_f_고유능력 = null;
 			_ufle12jhs77_f_보유여부 = null;
 			_ufle12jhs77_f_가격 = null;
@@ -1917,6 +1924,8 @@ namespace Mewage.DB
 			_ufle12jhs77_f_기초공격력 = null;
 			_ufle12jhs77_f_능력ID = null;
 			_ufle12jhs77_f_능력치설명 = null;
+			_ufle12jhs77_f_스킬ID = null;
+			_ufle12jhs77_f_능력행수 = null;
 		}
 
 		[Preserve]
@@ -1933,7 +1942,6 @@ namespace Mewage.DB
 			public const string 이름 = "이름";
 			public const string 등급 = "등급";
 			public const string 캐릭ID = "캐릭ID";
-			public const string 스킬ID = "스킬ID";
 			public const string 고유능력 = "고유능력";
 			public const string 보유여부 = "보유여부";
 			public const string 가격 = "가격";
@@ -1948,6 +1956,8 @@ namespace Mewage.DB
 			public const string 기초공격력 = "기초공격력";
 			public const string 능력ID = "능력ID";
 			public const string 능력치설명 = "능력치설명";
+			public const string 스킬ID = "스킬ID";
+			public const string 능력행수 = "능력행수";
 		}
 	}
 

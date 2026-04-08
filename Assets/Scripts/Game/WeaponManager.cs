@@ -112,10 +112,12 @@ public class WeaponManager : MonoBehaviour
     {
         var result = new List<WeaponPoint>();
         if (weaponAnchors == null) return result;
+        var temp = new List<WeaponPoint>();
         foreach (var anchor in weaponAnchors)
         {
             if (anchor == null) continue;
-            anchor.GetComponentsInChildren<WeaponPoint>(result);
+            anchor.GetComponentsInChildren<WeaponPoint>(temp);
+            result.AddRange(temp);
         }
         return result;
     }

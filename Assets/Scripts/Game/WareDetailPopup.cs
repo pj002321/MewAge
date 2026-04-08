@@ -93,7 +93,7 @@ public class WareDetailPopup : MonoBehaviour
         bool isMaxLv = level >= StructureWareManager.MaxLevel;
 
         // 아이콘
-        var sprite = StructureWareManager.LoadIcon(_currentId, outgame: true);
+        var sprite = StructureWareManager.LoadIcon(_currentId);
         if (iconImage)  { iconImage.sprite = sprite; iconImage.enabled = sprite != null; }
         if (frameImage) frameImage.color   = WareSlotView.LevelColor(level);
 

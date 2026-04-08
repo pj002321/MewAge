@@ -45,6 +45,12 @@ public class StageSelectPanel : MonoBehaviour
     Image[]         dots;
     int             currentIndex;
     bool            isSnapping;
+    float           _dragStartX;
+
+    [Header("스냅 설정")]
+    [Tooltip("이 픽셀 이상 드래그하면 카드 전환 (카드 너비 대비 비율)")]
+    [Range(0.05f, 0.5f)]
+    public float swipeThreshold = 0.2f;
 
     // ── 카드 스타일 (Inspector에서 조정 가능) ─────────────────────
     [Header("카드 크기 (기준 해상도 기준)")]
@@ -127,10 +133,27 @@ public class StageSelectPanel : MonoBehaviour
 
         if (scrollRect != null)
         {
+            scrollRect.inertia      = false;
+            scrollRect.movementType = ScrollRect.MovementType.Unrestricted;
+
+            // ScrollRect GameObject에 직접 EventTrigger 등록
             var trigger = scrollRect.gameObject.AddComponent<EventTrigger>();
-            var entry   = new EventTrigger.Entry { eventID = EventTriggerType.EndDrag };
-            entry.callback.AddListener(_ => SnapToNearest());
-            trigger.triggers.Add(entry);
+
+            var beginEntry = new EventTrigger.Entry { eventID = EventTriggerType.BeginDrag };
+            beginEntry.callback.AddListener(e => _dragStartX = ((PointerEventData)e).position.x);
+            trigger.triggers.Add(beginEntry);
+
+            var endEntry = new EventTrigger.Entry { eventID = EventTriggerType.EndDrag };
+            endEntry.callback.AddListener(e =>
+            {
+                float delta     = ((PointerEventData)e).position.x - _dragStartX;
+                float threshold = CardW() * swipeThreshold;
+                int   target    = currentIndex;
+                if      (delta < -threshold) target = currentIndex + 1;
+                else if (delta >  threshold) target = currentIndex - 1;
+                GoTo(Mathf.Clamp(target, 0, stages.Length - 1));
+            });
+            trigger.triggers.Add(endEntry);
         }
 
         // 한 프레임 후 레이아웃 확정 → 카드 너비 캐시 후 초기 위치 설정
@@ -302,13 +325,6 @@ public class StageSelectPanel : MonoBehaviour
         return cardWidth;
     }
 
-    void SnapToNearest()
-    {
-        if (scrollRect == null || content == null) return;
-        float w     = CardW();
-        int   index = Mathf.RoundToInt(-content.anchoredPosition.x / w);
-        GoTo(index);
-    }
 
     void SnapImmediate(int index)
     {

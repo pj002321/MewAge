@@ -17,7 +17,8 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     [SerializeField] private Slider          reroll_expSlider;
     [SerializeField] private Slider          hpSlider;
     [SerializeField] private TextMeshProUGUI hpText;
-    [SerializeField] private GameObject      gameOverPanel;
+    [SerializeField] private GameObject         gameOverPanel;       // 부활 패널
+    [SerializeField] private GameOverResultPanel gameOverResultPanel; // 게임오버 결과 패널
     [SerializeField] private GameObject      waveInfoProgress;
     [SerializeField] private GameClearPanel  gameClearPanel;
 
@@ -62,6 +63,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
             VirtualJoystick.Instance.gameObject.SetActive(true);
 
         currentChapterID = PlayerPrefs.GetString("SelectedChapterID", "C1_S1");
+        Debug.Log($"[GameManager] 입장 — ChapterID: {currentChapterID}");
         UpgradeManager.Shared?.SetCurrentChapterID(currentChapterID);
         WaveEnvironmentSwitcher.Shared?.SetStage(currentChapterID);
         EnemySpawner.Shared?.SetChapterStage(currentChapterID);
@@ -154,6 +156,16 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 
         if (waveClearPanel) waveClearPanel.SetActive(false);
 
+        // 최종 웨이브 클리어 → 게임 클리어 패널
+        if (wave >= GetMaxWave())
+        {
+            if (gameClearPanel != null)
+                gameClearPanel.Show(wave, sessionExpGained, sessionGoldGained);
+            else
+                GoHome();
+            yield break;
+        }
+
         if (ImprovManager.Shared != null)
             ImprovManager.Shared.ShowPanel(wave);
         else if (UpgradeManager.Shared != null)
@@ -231,26 +243,22 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     }
 
     /// <summary>
-    /// GameOverPanel 카운트다운 + 축소 연출이 끝난 뒤 호출됩니다.
-    /// GameClear 패널을 표시합니다.
+    /// 부활 패널 카운트다운 종료 후 호출 — 게임오버 결과 패널 표시.
     /// </summary>
-    public void ShowGameClearAfterGameOver()
+    public void ShowGameOverResult()
     {
-        if (gameClearPanel != null)
-        {
-            gameClearPanel.Show(wave, sessionExpGained, sessionGoldGained);
-        }
+        if (gameOverResultPanel != null)
+            gameOverResultPanel.Show(wave);
         else
-        {
-            this.DLog("[GameManager] ShowGameClearAfterGameOver: gameClearPanel not assigned.");
-        }
+            GoHome();
     }
 
     public void Revive()
     {
         if (!isGameOver) return;
         isGameOver = false;
-        if (gameOverPanel) gameOverPanel.SetActive(false);
+        if (gameOverPanel)       gameOverPanel.SetActive(false);
+        if (gameOverResultPanel) gameOverResultPanel.gameObject.SetActive(false);
         PlayerController.Instance?.Revive();
         EnemySpawner.Shared?.ResumeSpawning(wave);
     }
@@ -346,6 +354,24 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 
     public bool IsGameOver  => isGameOver;
     public int  CurrentWave => wave;
+
+    /// <summary>현재 챕터+스테이지의 DB_웨이브에서 최대 웨이브 번호를 반환합니다.</summary>
+    private int GetMaxWave()
+    {
+        // currentChapterID 형식: "C1_S1"
+        string prefix = currentChapterID + "_W";
+        int max = 0;
+        Mewage.DB.DB_웨이브.ForEachEntity(row =>
+        {
+            if (row.f_웨이브ID != null && row.f_웨이브ID.StartsWith(prefix))
+            {
+                string numStr = row.f_웨이브ID.Substring(prefix.Length);
+                if (int.TryParse(numStr, out int n) && n > max)
+                    max = n;
+            }
+        });
+        return max > 0 ? max : 30; // DB에 없으면 30 fallback
+    }
 
     // ── 모바일 앱 생명주기 ────────────────────────────────────────
     // OnApplicationFocus : 알림바 내리기, 알림바 롱프레스 미리보기 등 포커스 손실 처리

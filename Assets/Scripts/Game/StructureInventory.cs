@@ -64,19 +64,27 @@ public class StructureInventory : MonoBehaviourSingleton<StructureInventory>
     /// <summary>from 다음부터 순환 탐색해 보유량이 있는 첫 슬롯 인덱스를 반환. 없으면 -1.</summary>
     // ── 프리셋 로드 ──────────────────────────────────────────────────
 
-    /// <summary>아웃게임 프리셋에 등록된 기물을 인게임 슬롯에 1개씩 채웁니다.</summary>
+    /// <summary>아웃게임 프리셋에 등록된 기물을 인게임 슬롯에 1:1로 배정합니다.
+    /// Push() 스태킹 로직을 우회해 프리셋 슬롯 0→0, 1→1, 2→2, 3→3으로 직접 할당합니다.</summary>
     private void LoadFromPresets()
     {
         var ware = StructureWareManager.Shared;
         if (ware == null) return;
 
+        var assigned = new System.Collections.Generic.HashSet<string>();
         for (int i = 0; i < SlotCount; i++)
         {
             string id = ware.GetPreset(i);
             if (string.IsNullOrEmpty(id)) continue;
+            if (!assigned.Add(id)) continue; // 이미 다른 슬롯에 등록된 기물은 스킵
+
             var data = Mewage.DB.DB_기물.FindEntity(r => r.f_기물ID == id);
-            if (data != null) Push(data);
+            if (data == null) continue;
+
+            slotData[i]  = data;
+            slotCount[i] = 1;
         }
+        OnChanged?.Invoke();
     }
 
     // ── 기물 설치 ────────────────────────────────────────────────────

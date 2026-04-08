@@ -138,9 +138,12 @@ public class PlayerCharacterManager : MonoBehaviourSingleton<PlayerCharacterMana
         if (tier >= 3) ApplyStatBonus(row.f_속성3ID, row.f_S3, baseHp, baseDef, baseAtk, player, stats, sm);
 
         // 3. 캐릭터 고유 스킬 등록
-        CharacterSkillManager.Shared?.Initialize(row.f_스킬ID);
+        string skillId = "";
+        try { skillId = row.f_스킬ID ?? ""; }
+        catch { Debug.LogWarning("[CharMgr] f_스킬ID 필드를 읽을 수 없습니다. BansheeGz에서 필드를 추가하고 코드를 재생성하세요."); }
+        CharacterSkillManager.Shared?.Initialize(skillId);
 
-        Debug.Log($"[CharMgr] 스탯 적용: {row.f_이름} (Tier {tier}, 스킬: {row.f_스킬ID})");
+        Debug.Log($"[CharMgr] 스탯 적용: {row.f_이름} (Tier {tier}, 스킬: {skillId})");
     }
 
     // ─────────────────────────────────────────────────────────────

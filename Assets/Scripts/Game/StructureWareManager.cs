@@ -336,21 +336,12 @@ public class StructureWareManager : MonoBehaviourSingleton<StructureWareManager>
         _    => era
     };
 
-    /// <summary>기물 아이콘 로드.
-    /// outgame=true  → Resources/Ware/{chapter}/{id}_icon  (Sprite 직접 로드, 아웃게임 전용)
-    /// outgame=false → Resources/Ware/{chapter}/{id}       (인게임 프리팹에서 SpriteRenderer 추출)
-    /// </summary>
-    public static Sprite LoadIcon(string id, bool outgame = false)
+    /// <summary>기물 아이콘 로드. Resources/Ware/{chapter}/{id}_icon 스프라이트를 반환합니다.</summary>
+    public static Sprite LoadIcon(string id)
     {
         if (string.IsNullOrEmpty(id)) return null;
         string chapter = EraOf(id);
-        string basePath = $"Ware/{chapter}/{id.ToLower()}";
-
-        if (outgame)
-            return Resources.Load<Sprite>($"{basePath}_icon");
-
-        var prefab = Resources.Load<GameObject>(basePath);
-        return prefab?.GetComponentInChildren<SpriteRenderer>()?.sprite;
+        return Resources.Load<Sprite>($"Ware/{chapter}/{id.ToLower()}_icon");
     }
 
     // ── 디버그 ────────────────────────────────────────────────────────
@@ -404,7 +395,13 @@ public class StructureWareManager : MonoBehaviourSingleton<StructureWareManager>
             if (cnt > 0)  _counts[id] = cnt;
             if (level > 1) _levels[id] = level;
         });
+        var seen = new System.Collections.Generic.HashSet<string>();
         for (int i = 0; i < 4; i++)
-            _preset[i] = PlayerPrefs.GetString(PreKey + i, "");
+        {
+            string id = PlayerPrefs.GetString(PreKey + i, "");
+            if (!string.IsNullOrEmpty(id) && !seen.Add(id))
+                id = ""; // 중복 프리셋 제거
+            _preset[i] = id;
+        }
     }
 }
