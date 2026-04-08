@@ -123,10 +123,11 @@ public class WeaponInfoPanel : MonoBehaviourSingleton<WeaponInfoPanel>
         if (attackText) attackText.text = $"{Mathf.RoundToInt(data.attackDamage)}";
 
         // 공격속도: 쿨다운(초) → "회/s" 로 표기, 소수점 1자리 (AtkSpeed 증강 배율 포함)
+        // pct=100 → 1x, pct=110 → 1.1x (WeaponPoint.SetStatSpeedPct와 동일 공식)
         if (speedText)
         {
-            float atkSpeedPct = PlayerStatManager.Shared?.GetFinal(StatType.AtkSpeed) ?? 0f;
-            float mult        = 1f + atkSpeedPct / 100f;
+            float atkSpeedPct = PlayerStatManager.Shared?.GetFinal(StatType.AtkSpeed) ?? 100f;
+            float mult        = Mathf.Max(0.1f, atkSpeedPct / 100f);
             float effCooldown = data.attackCooldown > 0f ? data.attackCooldown / mult : 0f;
             speedText.text    = effCooldown > 0f ? $"{1f / effCooldown:0.#}" : "-";
         }
@@ -224,8 +225,8 @@ public class WeaponInfoPanel : MonoBehaviourSingleton<WeaponInfoPanel>
     {
         if (speedSub == null) return;
 
-        float atkSpeedPct = PlayerStatManager.Shared?.GetFinal(StatType.AtkSpeed) ?? 0f;
-        float mult        = 1f + atkSpeedPct / 100f;
+        float atkSpeedPct = PlayerStatManager.Shared?.GetFinal(StatType.AtkSpeed) ?? 100f;
+        float mult        = Mathf.Max(0.1f, atkSpeedPct / 100f);
 
         float baseAps    = data.baseAttackCooldown > 0f ? mult / data.baseAttackCooldown : 0f;
         float currentAps = data.attackCooldown     > 0f ? mult / data.attackCooldown     : 0f;

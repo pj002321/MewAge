@@ -770,10 +770,11 @@ public class WeaponPoint : MonoBehaviour
         return crit ? (baseDamage * criticalMultiplier, true) : (baseDamage, false);
     }
 
-    /// <summary>PlayerStatManager AtkSpeed % 값으로 쿨타임을 재계산합니다. ApplyStatSheet에서 호출.</summary>
+    /// <summary>PlayerStatManager AtkSpeed % 값으로 쿨타임을 재계산합니다. ApplyStatSheet에서 호출.
+    /// pct=100 → 1x(기본속도), pct=110 → 1.1x(10% 빠름).</summary>
     public void SetStatSpeedPct(float pct)
     {
-        _statMultiplier = 1f + pct / 100f;
+        _statMultiplier = Mathf.Max(0.1f, pct / 100f);
         RecalcCooldown();
     }
 
