@@ -167,7 +167,8 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
     {
         var normals = new List<WeaponData>();
         foreach (var w in allWeapons)
-            if (w != null && w.grade == WeaponGrade.Normal && w.chapter <= currentChapter)
+            if (w != null && w.grade == WeaponGrade.Normal && w.chapter <= currentChapter
+                && w.weaponType == WeaponType.Melee)
                 normals.Add(w);
 
         if (normals.Count == 0) { Debug.LogWarning("[UpgradeManager] 지급할 무기 없음"); return; }

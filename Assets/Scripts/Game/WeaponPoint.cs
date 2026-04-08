@@ -83,8 +83,12 @@ public class WeaponPoint : MonoBehaviour
     private float cooldownTimer;
     private float anticipationTimer;
 
-    private float _baseCooldown;      // Inspector 원본값 (변경 안 함)
-    private float _statMultiplier  = 1f; // PlayerStatManager.AtkSpeed에서 오는 배율
+    private float _baseCooldown;
+    private float _statMultiplier  = 1f;
+
+    // 미아 방지 — 비 Idle 상태에서 이 시간 초과 시 강제 복귀
+    private const float MaxStateTime = 4f;
+    private float _stateTimer;
     private float _bonusMultiplier = 1f; // MultiplyAttackSpeed 등 일회성 보너스 누적
 
     private Coroutine _scalePulseCoroutine;
@@ -129,6 +133,26 @@ public class WeaponPoint : MonoBehaviour
         cooldownTimer -= Time.deltaTime;
 
         UpdateRotation();
+
+        // 미아 방지: Idle/Returning 외 상태에서 너무 오래 머물면 강제 복귀
+        if (state != State.Idle && state != State.Returning)
+        {
+            _stateTimer += Time.deltaTime;
+            if (_stateTimer >= MaxStateTime)
+            {
+                WeaponManager.Instance?.Release(targetEnemy);
+                targetEnemy = null;
+                _targetBoss = null;
+                _boomerangTarget = null;
+                BeginReturn();
+                _stateTimer = 0f;
+                return;
+            }
+        }
+        else
+        {
+            _stateTimer = 0f;
+        }
 
         switch (state)
         {
@@ -573,7 +597,7 @@ public class WeaponPoint : MonoBehaviour
         }
     }
 
-    private void BeginReturn() => state = State.Returning;
+    private void BeginReturn() { state = State.Returning; _stateTimer = 0f; }
 
     // ─────────────────────────────────────────
     // 회전: 적 > 이동방향 > 위쪽 우선순위

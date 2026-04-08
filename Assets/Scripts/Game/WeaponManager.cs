@@ -94,18 +94,31 @@ public class WeaponManager : MonoBehaviour
     /// <summary>적을 예약합니다. 이미 다른 무기가 공격 중이면 false.</summary>
     public bool TryClaim(EnemyController enemy)
     {
-        if (enemy == null) return false;
+        // Unity fake-null 방어: object로 캐스트해서 실제 참조가 null인지 확인
+        if (enemy is null || !enemy) return false;
         return claimedEnemies.Add(enemy);
     }
 
     /// <summary>공격이 끝나면 예약 해제합니다.</summary>
     public void Release(EnemyController enemy)
     {
-        if (enemy != null)
-            claimedEnemies.Remove(enemy);
+        // Unity == 연산자를 우회해 실제 참조로 제거 (fake-null도 제거됨)
+        claimedEnemies.Remove(enemy);
     }
 
     public bool IsClaimed(EnemyController enemy) => claimedEnemies.Contains(enemy);
+
+    private void Update()
+    {
+        // 매 2초마다 claimedEnemies에서 파괴·비활성 적 정리
+        _cleanupTimer += Time.deltaTime;
+        if (_cleanupTimer >= 2f)
+        {
+            _cleanupTimer = 0f;
+            claimedEnemies.RemoveWhere(e => !e || !e.gameObject.activeInHierarchy);
+        }
+    }
+    private float _cleanupTimer;
 
     /// <summary>현재 장착된 모든 WeaponPoint를 반환합니다.</summary>
     public List<WeaponPoint> GetActiveWeaponPoints()
