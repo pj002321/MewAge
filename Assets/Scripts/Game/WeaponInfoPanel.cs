@@ -126,10 +126,11 @@ public class WeaponInfoPanel : MonoBehaviourSingleton<WeaponInfoPanel>
         // pct=100 → 1x, pct=110 → 1.1x (WeaponPoint.SetStatSpeedPct와 동일 공식)
         if (speedText)
         {
-            float atkSpeedPct = PlayerStatManager.Shared?.GetFinal(StatType.AtkSpeed) ?? 100f;
-            float mult        = Mathf.Max(0.1f, atkSpeedPct / 100f);
-            float effCooldown = data.attackCooldown > 0f ? data.attackCooldown / mult : 0f;
-            speedText.text    = effCooldown > 0f ? $"{1f / effCooldown:0.#}" : "-";
+            float reduction   = PlayerStatManager.Shared?.GetFinal(StatType.AtkSpeed) ?? 0f;
+            float effCooldown = data.attackCooldown > 0f
+                ? Mathf.Max(0.1f, data.attackCooldown - reduction)
+                : 0f;
+            speedText.text = effCooldown > 0f ? $"{1f / effCooldown:0.#}" : "-";
         }
 
         // 사거리: 소수점 1자리
@@ -225,11 +226,12 @@ public class WeaponInfoPanel : MonoBehaviourSingleton<WeaponInfoPanel>
     {
         if (speedSub == null) return;
 
-        float atkSpeedPct = PlayerStatManager.Shared?.GetFinal(StatType.AtkSpeed) ?? 100f;
-        float mult        = Mathf.Max(0.1f, atkSpeedPct / 100f);
+        float reduction  = PlayerStatManager.Shared?.GetFinal(StatType.AtkSpeed) ?? 0f;
 
-        float baseAps    = data.baseAttackCooldown > 0f ? mult / data.baseAttackCooldown : 0f;
-        float currentAps = data.attackCooldown     > 0f ? mult / data.attackCooldown     : 0f;
+        float baseAps    = data.baseAttackCooldown > 0f
+            ? 1f / Mathf.Max(0.1f, data.baseAttackCooldown - reduction) : 0f;
+        float currentAps = data.attackCooldown > 0f
+            ? 1f / Mathf.Max(0.1f, data.attackCooldown - reduction) : 0f;
         float apsDelta   = currentAps - baseAps;
 
         if (Mathf.Approximately(apsDelta, 0f)) { speedSub.text = string.Empty; return; }

@@ -19,7 +19,7 @@ public class PlayerStatManager : MonoBehaviourSingleton<PlayerStatManager>
     [SerializeField] private float baseHPRegen           = 0f;
     [SerializeField] private float baseMoveSpeed         = 5f;
     [SerializeField] private float baseMagnetRadius      = 1.5f;
-    [SerializeField] private float baseAtkSpeed          = 100f;  // 100 = 1x 배속 기준 (pct/100 = 배율)
+    [SerializeField] private float baseAtkSpeed          = 0f;   // 초 단위 쿨타임 감산량 (0 = 감산 없음)
     [SerializeField] private float baseEvasion           = 0f;
     [SerializeField] private float baseCritChance        = 0f;
     [SerializeField] private float baseCritDmg           = 100f;

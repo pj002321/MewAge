@@ -102,7 +102,7 @@ public class CharacterSlotView : MonoBehaviour
     public void Select()
     {
         if (highlight) highlight.SetActive(true);
-        transform.localScale = Vector3.one * selectedScale;
+        SetChildrenScale(1.1f);
 
         bool owned = data?.f_보유여부 ?? false;
         if (equipButton)
@@ -119,9 +119,15 @@ public class CharacterSlotView : MonoBehaviour
     public void Deselect()
     {
         if (highlight)   highlight  .SetActive(false);
-        transform.localScale = Vector3.one;
+        SetChildrenScale(1f);
 
         if (equipButton) equipButton.gameObject.SetActive(false);
         if (buyButton)   buyButton  .gameObject.SetActive(false);
+    }
+
+    void SetChildrenScale(float scale)
+    {
+        foreach (Transform child in transform)
+            child.localScale = Vector3.one * scale;
     }
 }

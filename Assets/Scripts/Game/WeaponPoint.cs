@@ -770,11 +770,11 @@ public class WeaponPoint : MonoBehaviour
         return crit ? (baseDamage * criticalMultiplier, true) : (baseDamage, false);
     }
 
-    /// <summary>PlayerStatManager AtkSpeed % 값으로 쿨타임을 재계산합니다. ApplyStatSheet에서 호출.
-    /// pct=100 → 1x(기본속도), pct=110 → 1.1x(10% 빠름).</summary>
-    public void SetStatSpeedPct(float pct)
+    /// <summary>PlayerStatManager AtkSpeed 값(초 감산량)으로 쿨타임을 재계산합니다.
+    /// 예: AtkSpeed=0.2 → 기본 쿨타임에서 0.2초 차감. 최소 0.1초 보장.</summary>
+    public void SetStatSpeedPct(float reduction)
     {
-        _statMultiplier = Mathf.Max(0.1f, pct / 100f);
+        _statMultiplier = reduction; // 감산값(초)으로 재사용
         RecalcCooldown();
     }
 
@@ -787,7 +787,9 @@ public class WeaponPoint : MonoBehaviour
 
     private void RecalcCooldown()
     {
-        attackCooldown = Mathf.Max(0.1f, _baseCooldown / (_statMultiplier * _bonusMultiplier));
+        // _statMultiplier = AtkSpeed 감산량(초), _bonusMultiplier = 배율 보너스
+        float reduced = _baseCooldown - _statMultiplier;
+        attackCooldown = Mathf.Max(0.1f, reduced / _bonusMultiplier);
     }
 
     private void OnDrawGizmosSelected()

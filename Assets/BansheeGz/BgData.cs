@@ -711,7 +711,7 @@ namespace Mewage.DB
 			get => _f_탐지범위[Index];
 			set => _f_탐지범위.SetValue(this, value);
 		}
-		public System.Int32 f_공격속도
+		public System.Single f_공격속도
 		{
 			get => _f_공격속도[Index];
 			set => _f_공격속도.SetValue(this, value);
@@ -776,8 +776,8 @@ namespace Mewage.DB
 		public static BansheeGz.BGDatabase.BGFieldInt _f_기본공격력 => _ufle12jhs77_f_기본공격력 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(MetaDefault, new BGId(5310768173916213808UL, 1430769049487233452UL), () => _ufle12jhs77_f_기본공격력 = null);
 		private static BansheeGz.BGDatabase.BGFieldInt _ufle12jhs77_f_탐지범위;
 		public static BansheeGz.BGDatabase.BGFieldInt _f_탐지범위 => _ufle12jhs77_f_탐지범위 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(MetaDefault, new BGId(5327444259250092911UL, 17833950105199722897UL), () => _ufle12jhs77_f_탐지범위 = null);
-		private static BansheeGz.BGDatabase.BGFieldInt _ufle12jhs77_f_공격속도;
-		public static BansheeGz.BGDatabase.BGFieldInt _f_공격속도 => _ufle12jhs77_f_공격속도 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(MetaDefault, new BGId(4742780274782028044UL, 9051665073353359783UL), () => _ufle12jhs77_f_공격속도 = null);
+		private static BansheeGz.BGDatabase.BGFieldFloat _ufle12jhs77_f_공격속도;
+		public static BansheeGz.BGDatabase.BGFieldFloat _f_공격속도 => _ufle12jhs77_f_공격속도 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldFloat>(MetaDefault, new BGId(4742780274782028044UL, 9051665073353359783UL), () => _ufle12jhs77_f_공격속도 = null);
 		private static BansheeGz.BGDatabase.BGFieldFloat _ufle12jhs77_f_주변범위;
 		public static BansheeGz.BGDatabase.BGFieldFloat _f_주변범위 => _ufle12jhs77_f_주변범위 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldFloat>(MetaDefault, new BGId(5268002655904743220UL, 6870000449621356713UL), () => _ufle12jhs77_f_주변범위 = null);
 		private static BansheeGz.BGDatabase.BGFieldInt _ufle12jhs77_f_S1;
@@ -821,7 +821,7 @@ namespace Mewage.DB
 			_ufle12jhs77_f_속성4성ID = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(_metaDefault, new BGId(4661619959503996646UL, 2249609405302149564UL));
 			_ufle12jhs77_f_기본공격력 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(_metaDefault, new BGId(5310768173916213808UL, 1430769049487233452UL));
 			_ufle12jhs77_f_탐지범위 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(_metaDefault, new BGId(5327444259250092911UL, 17833950105199722897UL));
-			_ufle12jhs77_f_공격속도 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(_metaDefault, new BGId(4742780274782028044UL, 9051665073353359783UL));
+			_ufle12jhs77_f_공격속도 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldFloat>(_metaDefault, new BGId(4742780274782028044UL, 9051665073353359783UL));
 			_ufle12jhs77_f_주변범위 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldFloat>(_metaDefault, new BGId(5268002655904743220UL, 6870000449621356713UL));
 			_ufle12jhs77_f_S1 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(_metaDefault, new BGId(5727904757366080107UL, 2759885641402136968UL));
 			_ufle12jhs77_f_S2 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(_metaDefault, new BGId(5471317026034581416UL, 15000735802131014531UL));

@@ -132,9 +132,9 @@ public class WeaponData : ScriptableObject
         data.bonus4Star = WeaponStatRegistry.Build(row.f_속성4성ID, row.f_S3);
 
         // DB에서 직접 기본 스탯 로드
-        // f_공격속도는 0~100 정수 — 100이 최대 (60 → 0.6초 쿨타임)
+        // f_공격속도는 float (초 단위 쿨타임) — 0.8 → 0.8초에 한 번 공격
         data.baseAttackDamage   = row.f_기본공격력;
-        data.baseAttackCooldown = row.f_공격속도 > 0 ? row.f_공격속도 / 100f : 1f;
+        data.baseAttackCooldown = row.f_공격속도 > 0 ? row.f_공격속도 : 1f;
         data.baseAttackRange    = row.f_탐지범위;
         data.baseAreaHitRadius  = row.f_주변범위;
         data.baseMaxBounces     = data.weaponType == WeaponType.Boomerang ? 3 : 0; // 예시, DB에서 로드 가능

@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 /// <summary>
@@ -78,8 +79,7 @@ public class WaveEnvironmentSwitcher : MonoBehaviourSingleton<WaveEnvironmentSwi
             CurrentBossEnterPoint = envComp?.bossEnterPoint;
             CurrentBossSpawnPoint = envComp?.bossSpawnPoint;
 
-            _activeBossInstance.GetComponentInChildren<MovementBounds>(true)?.Register();
-            _activeBossInstance.GetComponentInChildren<SpawnZone>(true)?.Register();
+            StartCoroutine(RegisterAfterFrame(_activeBossInstance));
         }
 
         ApplyCameraFromBounds(_currentStage.bossFollowPlayer, _currentStage.useBounds);
@@ -157,8 +157,20 @@ public class WaveEnvironmentSwitcher : MonoBehaviourSingleton<WaveEnvironmentSwi
         var envComp = _activeBgInstance.GetComponentInChildren<EnvironmentBackground>(true);
         CurrentBossExitPoint = envComp?.bossExitPoint;
 
-        _activeBgInstance.GetComponentInChildren<MovementBounds>(true)?.Register();
-        _activeBgInstance.GetComponentInChildren<SpawnZone>(true)?.Register();
+        // FitSpriteToScreen.Start()가 실행된 뒤(1프레임 후)에 Register — 스케일 반영 보장
+        StartCoroutine(RegisterAfterFrame(_activeBgInstance));
+    }
+
+    /// <summary>
+    /// FitSpriteToScreen.Start() 완료(1프레임) 후 MovementBounds·SpawnZone 을 등록합니다.
+    /// Instantiate 직후 바로 Register 하면 배경 스케일이 아직 1배라 스폰 영역이 틀어집니다.
+    /// </summary>
+    private IEnumerator RegisterAfterFrame(GameObject instance)
+    {
+        yield return null; // FitSpriteToScreen.Start() 실행 대기
+        if (instance == null) yield break;
+        instance.GetComponentInChildren<MovementBounds>(true)?.Register();
+        instance.GetComponentInChildren<SpawnZone>(true)?.Register();
     }
 
     private void DestroyBossInstance()
