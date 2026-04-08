@@ -107,9 +107,9 @@ Animator:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2860284734646843584}
-  m_Enabled: 0
+  m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 22100000, guid: 1b11dce95861ac14cb4b822f84b99eaa, type: 2}
+  m_Controller: {fileID: 9100000, guid: a6920aee78a3e5a4f9893b5fb6d09614, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -210,19 +210,6 @@ MonoBehaviour:
   bleedInterval: 1
   separationRadius: 1.2
   separationStrength: 1.5
-  waveBreakpoints:
-  - fromWave: 10
-    moveSpeed: 2
-    maxHP: 150
-    contactDamage: 20
-    goldDrop: 1
-    expDrop: 1
-  - fromWave: 20
-    moveSpeed: 2
-    maxHP: 600
-    contactDamage: 30
-    goldDrop: 1
-    expDrop: 1
 --- !u!114 &-5874366549243020845
 MonoBehaviour:
   m_ObjectHideFlags: 0
