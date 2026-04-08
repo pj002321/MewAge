@@ -150,15 +150,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         EnemySpawner.Shared?.ClearAllEnemies();
         FXManager.Shared?.ClearAllFX();   // 투사체·파편 즉시 제거
 
-        // 필드에 남은 드롭 아이템 → 플레이어 방향으로 유도
-        foreach (var drop in Object.FindObjectsByType<DropItem>(FindObjectsSortMode.None))
-            drop.ForceAttract();
-
         yield return new WaitForSeconds(waveClearDuration);
-
-        // 유도 후 미수집 아이템 강제 수집
-        foreach (var drop in Object.FindObjectsByType<DropItem>(FindObjectsSortMode.None))
-            if (drop != null) drop.Collect();
 
         if (waveClearPanel) waveClearPanel.SetActive(false);
 

@@ -122,11 +122,13 @@ public class WeaponInfoPanel : MonoBehaviourSingleton<WeaponInfoPanel>
         // 공격력: 정수
         if (attackText) attackText.text = $"{Mathf.RoundToInt(data.attackDamage)}";
 
-        // 공격속도: 쿨다운(초) → "회/s" 로 표기, 소수점 1자리
+        // 공격속도: 쿨다운(초) → "회/s" 로 표기, 소수점 1자리 (AtkSpeed 증강 배율 포함)
         if (speedText)
         {
-            float aps = data.attackCooldown > 0f ? 1f / data.attackCooldown : 0f;
-            speedText.text = $"{aps:0.#}";
+            float atkSpeedPct = PlayerStatManager.Shared?.GetFinal(StatType.AtkSpeed) ?? 0f;
+            float mult        = 1f + atkSpeedPct / 100f;
+            float effCooldown = data.attackCooldown > 0f ? data.attackCooldown / mult : 0f;
+            speedText.text    = effCooldown > 0f ? $"{1f / effCooldown:0.#}" : "-";
         }
 
         // 사거리: 소수점 1자리
@@ -217,12 +219,16 @@ public class WeaponInfoPanel : MonoBehaviourSingleton<WeaponInfoPanel>
             : $"<color=#EF9A9A>{s}{suffix}</color>";
     }
 
-    /// <summary>공격속도 서브값 — 쿨다운이 줄면 회/s가 오르므로 양수가 좋음.</summary>
+    /// <summary>공격속도 서브값 — 1성 기준(증강 배율 포함) 대비 현재 APS 델타.</summary>
     private static void SetSpeedSubText(TextMeshProUGUI speedSub, WeaponData data)
     {
         if (speedSub == null) return;
-        float baseAps    = data.baseAttackCooldown > 0f ? 1f / data.baseAttackCooldown : 0f;
-        float currentAps = data.attackCooldown     > 0f ? 1f / data.attackCooldown     : 0f;
+
+        float atkSpeedPct = PlayerStatManager.Shared?.GetFinal(StatType.AtkSpeed) ?? 0f;
+        float mult        = 1f + atkSpeedPct / 100f;
+
+        float baseAps    = data.baseAttackCooldown > 0f ? mult / data.baseAttackCooldown : 0f;
+        float currentAps = data.attackCooldown     > 0f ? mult / data.attackCooldown     : 0f;
         float apsDelta   = currentAps - baseAps;
 
         if (Mathf.Approximately(apsDelta, 0f)) { speedSub.text = string.Empty; return; }
