@@ -29,6 +29,10 @@ public class WareSlotView : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
     static readonly Color ColStar2 = new Color(1f, 0.84f, 0f, 1f);
     static readonly Color ColStar3 = new Color(0.6f, 0f,   1f, 1f);
 
+    [Header("아이콘 경로")]
+    [Tooltip("true = 아웃게임 전용 _icon 스프라이트 사용, false = 인게임 프리팹에서 추출")]
+    public bool useOutgameIcon = false;
+
     [Header("슬롯 UI (EquipmentSlotView 스타일)")]
     public Image           backgroundImage; // 전체적인 배경 (선택 사항)
     public Image           frameImage;      // ★ 등급 색상 테두리
@@ -140,12 +144,12 @@ public class WareSlotView : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         else Debug.LogWarning($"[WareSlotView] {gameObject.name}: frameImage가 연결되지 않았습니다.");
 
         // 3. 아이콘
-        var sprite = StructureWareManager.LoadIcon(id);
+        var sprite = StructureWareManager.LoadIcon(id, useOutgameIcon);
         if (iconImage)
         {
             iconImage.sprite  = sprite;
             iconImage.enabled = sprite != null;
-            if (sprite == null) Debug.LogWarning($"[WareSlotView] {id}의 아이콘을 로드할 수 없습니다.");
+            if (sprite == null) Debug.LogWarning($"[WareSlotView] {id}의 아이콘을 로드할 수 없습니다. (outgame={useOutgameIcon})");
         }
 
         // 4. 시대 텍스트

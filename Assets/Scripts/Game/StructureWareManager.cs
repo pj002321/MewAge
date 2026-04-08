@@ -336,11 +336,20 @@ public class StructureWareManager : MonoBehaviourSingleton<StructureWareManager>
         _    => era
     };
 
-    public static Sprite LoadIcon(string id)
+    /// <summary>기물 아이콘 로드.
+    /// outgame=true  → Resources/Ware/{chapter}/{id}_icon  (Sprite 직접 로드, 아웃게임 전용)
+    /// outgame=false → Resources/Ware/{chapter}/{id}       (인게임 프리팹에서 SpriteRenderer 추출)
+    /// </summary>
+    public static Sprite LoadIcon(string id, bool outgame = false)
     {
         if (string.IsNullOrEmpty(id)) return null;
         string chapter = EraOf(id);
-        var prefab = Resources.Load<GameObject>($"Ware/{chapter}/{id.ToLower()}");
+        string basePath = $"Ware/{chapter}/{id.ToLower()}";
+
+        if (outgame)
+            return Resources.Load<Sprite>($"{basePath}_icon");
+
+        var prefab = Resources.Load<GameObject>(basePath);
         return prefab?.GetComponentInChildren<SpriteRenderer>()?.sprite;
     }
 
