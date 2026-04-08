@@ -20,11 +20,12 @@ public class AutoCanvasScaler : MonoBehaviour
 
     void Apply()
     {
-        float refRatio    = _scaler.referenceResolution.x / _scaler.referenceResolution.y;
         float screenRatio = (float)Screen.width / Screen.height;
 
-        // 화면이 기준보다 세로로 길수록 → Width 기준
-        // 화면이 기준보다 가로로 넓을수록 → Height 기준
-        _scaler.matchWidthOrHeight = screenRatio < refRatio ? 0f : 1f;
+        // 세로 모드(portrait) → Width 기준(0f): 너비 1080px 고정, 기기가 길수록 세로 공간 확보
+        //   16:9  → 캔버스 1080×1920  (에뮬레이터 포함)
+        //   19.5:9 → 캔버스 1080×2340  (실제 기기)
+        // 가로 모드(landscape) → Height 기준(1f)
+        _scaler.matchWidthOrHeight = screenRatio < 1f ? 0f : 1f;
     }
 }
