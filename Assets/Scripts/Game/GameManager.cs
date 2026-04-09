@@ -233,7 +233,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
             hpSlider.maxValue = Mathf.Max(1f, max);
             hpSlider.value    = current;
         }
-        if (hpText) hpText.text = $"{Mathf.CeilToInt(current)} / {Mathf.CeilToInt(max)}";
+        if (hpText) hpText.text = $"{Mathf.CeilToInt(current)}";
     }
 
     public void UpdateGoldUI(int gold)

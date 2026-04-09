@@ -30,6 +30,7 @@ public class VirtualJoystick : MonoBehaviour
                               ? null
                               : parentCanvas?.worldCamera;
         backgroundOriginPos = background.anchoredPosition;
+        background.gameObject.SetActive(false);
     }
 
     private void Update()
@@ -80,6 +81,7 @@ public class VirtualJoystick : MonoBehaviour
     // ── 조이스틱 상태 제어 ─────────────────────────────
     private void BeginJoystick(Vector2 screenPos)
     {
+        background.gameObject.SetActive(true);
         if (parentCanvas != null)
         {
             RectTransformUtility.ScreenPointToLocalPointInRectangle(
@@ -110,5 +112,6 @@ public class VirtualJoystick : MonoBehaviour
         inputVector             = Vector2.zero;
         handle.anchoredPosition = Vector2.zero;
         background.anchoredPosition = backgroundOriginPos;
+        background.gameObject.SetActive(false);
     }
 }

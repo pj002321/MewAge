@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
@@ -17,30 +18,54 @@ public class HomeUIManager : MonoBehaviour
     public Color activeColor = new Color(1f, 0.8f, 0.2f, 1f);
     public Color inactiveColor = new Color(0.5f, 0.5f, 0.5f, 1f);
 
+    [Header("Tab Width (탕탕특공대 스타일)")]
+    [SerializeField] private float activeWidthMult   = 1.5f;   // 선택된 탭 너비 배율
+    [SerializeField] private float inactiveWidthMult = 0.85f;  // 나머지 탭 너비 배율
+    [SerializeField] private float widthAnimTime     = 0.15f;  // 전환 시간(초)
+
     private int currentTab = -1;
-    private Vector3[] tabOriginalScales;
-    private Color[]   tabOriginalColors;
+    private float[]      tabOriginalWidths;
+    private Color[]      tabOriginalColors;
+    private Coroutine[]  _widthCoroutines;
+    private LayoutElement[] _layoutElements;
 
     void Start()
     {
         var structwareMgr = StructureWareManager.Shared;
         Debug.Log($"[HomeUIManager] StructureWareManager 로드: {(structwareMgr != null ? "성공" : "실패")}");
 
-        // 탭 버튼 원본 스케일·색상 캡처
-        tabOriginalScales = new Vector3[tabButtons.Length];
-        tabOriginalColors = new Color[tabButtons.Length];
-        for (int i = 0; i < tabButtons.Length; i++)
+        int count = tabButtons.Length;
+        tabOriginalWidths = new float[count];
+        tabOriginalColors = new Color[count];
+        _widthCoroutines  = new Coroutine[count];
+        _layoutElements   = new LayoutElement[count];
+
+        for (int i = 0; i < count; i++)
         {
             if (tabButtons[i] == null) continue;
-            tabOriginalScales[i] = tabButtons[i].transform.localScale;
+
+            // 색상 캡처
             var img = tabButtons[i].GetComponent<Image>();
             if (img != null) tabOriginalColors[i] = img.color;
+
+            // LayoutElement 확보 (없으면 추가)
+            var le = tabButtons[i].GetComponent<LayoutElement>();
+            if (le == null) le = tabButtons[i].gameObject.AddComponent<LayoutElement>();
+            _layoutElements[i] = le;
+
+            // 현재 RectTransform 너비를 원본으로 캡처
+            var rt = tabButtons[i].GetComponent<RectTransform>();
+            float baseW = rt != null ? rt.rect.width : 100f;
+            // LayoutElement에 이미 preferredWidth가 있으면 그걸 사용
+            tabOriginalWidths[i] = (le.preferredWidth > 0f) ? le.preferredWidth : baseW;
+            le.preferredWidth = tabOriginalWidths[i];
         }
 
-        for (int i = 0; i < tabButtons.Length; i++)
+        for (int i = 0; i < count; i++)
         {
             int index = i;
-            tabButtons[i].onClick.AddListener(() => ShowTab(index));
+            if (tabButtons[i] != null)
+                tabButtons[i].onClick.AddListener(() => ShowTab(index));
         }
 
         // 전투 탭 기본
@@ -53,7 +78,7 @@ public class HomeUIManager : MonoBehaviour
 
         currentTab = index;
 
-        // 패널 활성화 + 위치·스케일 초기화 (씬에 잘못 저장된 값 방어)
+        // 패널 활성화 + 위치·스케일 초기화
         for (int i = 0; i < panels.Length; i++)
         {
             if (panels[i] == null) continue;
@@ -69,21 +94,34 @@ public class HomeUIManager : MonoBehaviour
             }
         }
 
-        // 활성 탭 강조
+        // 활성 탭 강조 (색상 + preferredWidth 애니메이션)
         for (int i = 0; i < tabButtons.Length; i++)
         {
             if (tabButtons[i] == null) continue;
 
+            // 색상
             var img = tabButtons[i].GetComponent<Image>();
-            if (img != null && i == index)
-                img.color = activeColor;
-            else if (img != null && tabOriginalColors != null)
-                img.color = tabOriginalColors[i];
+            if (img != null)
+                img.color = (i == index) ? activeColor : tabOriginalColors[i];
 
-            tabButtons[i].transform.localScale = tabOriginalScales != null
-                ? tabOriginalScales[i] * (i == index ? 1.1f : 1.0f)
-                : Vector3.one;
+            // 너비
+            float targetW = tabOriginalWidths[i] * ((i == index) ? activeWidthMult : inactiveWidthMult);
+            if (_widthCoroutines[i] != null) StopCoroutine(_widthCoroutines[i]);
+            _widthCoroutines[i] = StartCoroutine(LerpWidth(_layoutElements[i], targetW, widthAnimTime));
         }
+    }
+
+    private IEnumerator LerpWidth(LayoutElement le, float to, float duration)
+    {
+        float from    = le.preferredWidth;
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            le.preferredWidth = Mathf.Lerp(from, to, elapsed / duration);
+            yield return null;
+        }
+        le.preferredWidth = to;
     }
 
     public void StartGame()
