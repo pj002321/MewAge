@@ -28,7 +28,7 @@ Transform:
   m_GameObject: {fileID: 5416354146166037338}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 503.15234, y: 1514.9768, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -106,24 +106,23 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponPoint
   weaponType: 1
-  attackDamage: 65
-  attackCooldown: 0.5
   criticalRate: 0
   criticalMultiplier: 2
   dotDamage: 0
   lifeSteal: 0
-  attackRange: 6
   pullbackDist: 0.5
   anticipationTime: 0.08
   strikeSpeed: 70
   returnSpeed: 30
   hitDistance: 0.25
-  areaHitRadius: 0.4
   areaHitDamageRatio: 0.5
   overshootDistance: 0.5
   overshootSpeed: 60
   projectilePrefab: {fileID: 6277426376135361209, guid: a8ccf5feabbb98949a80aea29883bfb5, type: 3}
   projectileSpeed: 15
+  shootScalePulse: 1
+  scalePulseMax: 1.3
+  scalePulseDuration: 0.12
   boomerangMaxBounces: 3
   boomerangBounceRange: 5
   orbitRadius: 1.2

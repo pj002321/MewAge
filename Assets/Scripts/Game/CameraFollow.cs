@@ -39,11 +39,18 @@ public class CameraFollow : MonoBehaviour
     {
         Shared = this;
         cam    = GetComponent<Camera>();
-        
-        // 유닛 크기 유지를 위한 절대 고정 (어떤 맵, 어떤 보스방이든 동일)
+
+        // 세로형(Portrait) 게임 기준 (1080x1920 = 9:16 비율)
+        // 화면 가로 넓이를 일정하게 보장하여 캐릭터 비율이 거대해지지 않도록 방지
         if (fixedOrthographicSize > 0f)
-            cam.orthographicSize = fixedOrthographicSize;
-            
+        {
+            float targetAspect = 9f / 16f;
+            if (cam.aspect < targetAspect)
+                cam.orthographicSize = fixedOrthographicSize * (targetAspect / cam.aspect); // 모바일 등 길쭉한 화면
+            else
+                cam.orthographicSize = fixedOrthographicSize; // 태블릿, PC 등 넓은 화면
+        }
+
         if (target == null && PlayerController.Instance != null)
             target = PlayerController.Instance.transform;
     }

@@ -2,15 +2,11 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// Player에 부착. 모든 WeaponPoint를 관리하고
-/// 같은 적을 두 무기가 동시에 공격하지 않도록 조율합니다.
+/// Player에 부착. 모든 WeaponPoint를 관리합니다.
 /// </summary>
 public class WeaponManager : MonoBehaviour
 {
     public static WeaponManager Instance { get; private set; }
-
-    // 현재 어떤 무기가 공격 중인 적 목록
-    private readonly HashSet<EnemyController> claimedEnemies = new();
 
     [Header("무기 장착 위치 (최대 6개)")]
     [SerializeField] private Transform[] weaponAnchors;
@@ -83,42 +79,11 @@ public class WeaponManager : MonoBehaviour
         }
 
         // 무기 생성/교체 후 현재 스탯 시트를 즉시 재적용
-        // GameManager.Start()와 WeaponManager.Start() 실행 순서가 보장되지 않으므로
-        // 항상 SyncWeapons 직후에 최신 스탯을 반영해야 공격속도 등이 일관되게 적용됨
         var sm = PlayerStatManager.Shared;
         var player = PlayerController.Instance;
         if (sm != null && player != null)
             player.ApplyStatSheet(sm);
     }
-
-    /// <summary>적을 예약합니다. 이미 다른 무기가 공격 중이면 false.</summary>
-    public bool TryClaim(EnemyController enemy)
-    {
-        // Unity fake-null 방어: object로 캐스트해서 실제 참조가 null인지 확인
-        if (enemy is null || !enemy) return false;
-        return claimedEnemies.Add(enemy);
-    }
-
-    /// <summary>공격이 끝나면 예약 해제합니다.</summary>
-    public void Release(EnemyController enemy)
-    {
-        // Unity == 연산자를 우회해 실제 참조로 제거 (fake-null도 제거됨)
-        claimedEnemies.Remove(enemy);
-    }
-
-    public bool IsClaimed(EnemyController enemy) => claimedEnemies.Contains(enemy);
-
-    private void Update()
-    {
-        // 매 2초마다 claimedEnemies에서 파괴·비활성 적 정리
-        _cleanupTimer += Time.deltaTime;
-        if (_cleanupTimer >= 2f)
-        {
-            _cleanupTimer = 0f;
-            claimedEnemies.RemoveWhere(e => !e || !e.gameObject.activeInHierarchy);
-        }
-    }
-    private float _cleanupTimer;
 
     /// <summary>현재 장착된 모든 WeaponPoint를 반환합니다.</summary>
     public List<WeaponPoint> GetActiveWeaponPoints()

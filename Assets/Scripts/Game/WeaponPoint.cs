@@ -86,7 +86,7 @@ public class WeaponPoint : MonoBehaviour
     private float _baseCooldown;
     private float _statMultiplier  = 1f;
 
-    // 미아 방지 — 비 Idle 상태에서 이 시간 초과 시 강제 복귀
+    // 미아 방지 — 비 Idle 상태에서 이 시간 초과 시 강제 복귀 (최후 안전망)
     private const float MaxStateTime = 4f;
     private float _stateTimer;
     private float _bonusMultiplier = 1f; // MultiplyAttackSpeed 등 일회성 보너스 누적
@@ -140,7 +140,6 @@ public class WeaponPoint : MonoBehaviour
             _stateTimer += Time.deltaTime;
             if (_stateTimer >= MaxStateTime)
             {
-                WeaponManager.Instance?.Release(targetEnemy);
                 targetEnemy = null;
                 _targetBoss = null;
                 _boomerangTarget = null;
@@ -229,14 +228,26 @@ public class WeaponPoint : MonoBehaviour
 
         Vector2 origin = transform.parent != null ? (Vector2)transform.parent.position : (Vector2)transform.position;
 
-        // 보스 인식
-        var boss = BossController.Current;
+        // 보스 인식 (활성화 상태인지 확인)
+        var boss = BossController.Current != null && BossController.Current.gameObject.activeInHierarchy ? BossController.Current : null;
 
-        EnemyController nearest = FindNearestUnclaimed();
+        EnemyController nearest = FindNearestInRange();
 
         // 보스가 사정거리 내에 있고, 더 가깝거나 일반 적이 없으면 보스 우선
-        bool bossInRange = boss != null &&
-            ((Vector2)boss.transform.position - origin).sqrMagnitude <= attackRange * attackRange;
+        bool bossInRange = false;
+        if (boss != null)
+        {
+            var bossCol = boss.GetComponentInChildren<Collider2D>();
+            if (bossCol != null)
+            {
+                bossInRange = (bossCol.ClosestPoint(origin) - origin).sqrMagnitude <= attackRange * attackRange;
+            }
+            else
+            {
+                bossInRange = ((Vector2)boss.transform.position - origin).sqrMagnitude <= attackRange * attackRange;
+            }
+        }
+        
         bool preferBoss = bossInRange && (nearest == null ||
             ((Vector2)boss.transform.position - origin).sqrMagnitude <
             ((Vector2)nearest.transform.position - origin).sqrMagnitude);
@@ -297,7 +308,7 @@ public class WeaponPoint : MonoBehaviour
             return;
         }
 
-        if (WeaponManager.Instance.TryClaim(nearest))
+        if (nearest != null)
         {
             targetEnemy = nearest;
             Vector2 toTarget = (nearest.transform.position - transform.parent.position).normalized;
@@ -364,6 +375,14 @@ public class WeaponPoint : MonoBehaviour
     // ─────────────────────────────────────────
     private void UpdatePullback()
     {
+        // 타겟 유효성 조기 체크 — targetEnemy 소멸 시 즉시 복귀
+        if (_boomerangTarget == null && _targetBoss == null && !targetEnemy)
+        {
+            targetEnemy = null;
+            BeginReturn();
+            return;
+        }
+
         // 타겟 반대 방향으로 뺌
         transform.localPosition = Vector3.MoveTowards(transform.localPosition, pullbackLocalPos, returnSpeed * Time.deltaTime);
 
@@ -377,6 +396,14 @@ public class WeaponPoint : MonoBehaviour
 
     private void UpdateAnticipation()
     {
+        // 타겟 유효성 조기 체크 — targetEnemy 소멸 시 즉시 복귀
+        if (_boomerangTarget == null && _targetBoss == null && !targetEnemy)
+        {
+            targetEnemy = null;
+            BeginReturn();
+            return;
+        }
+
         // 제자리에서 잠깐 멈춤 → 시간 다 되면 팍! Strike
         anticipationTimer -= Time.deltaTime;
         if (anticipationTimer <= 0f)
@@ -461,13 +488,22 @@ public class WeaponPoint : MonoBehaviour
 
         if (targetEnemy == null || !targetEnemy.gameObject.activeInHierarchy)
         {
-            WeaponManager.Instance?.Release(targetEnemy);
             targetEnemy = null;
             BeginReturn();
             return;
         }
 
         Vector3 targetPos = targetEnemy.transform.position;
+
+        // 적이 플레이어 공격사거리 밖으로 나가면 추격 포기
+        float distToPlayerSq = ((Vector2)targetPos - (Vector2)transform.parent.position).sqrMagnitude;
+        if (distToPlayerSq > attackRange * attackRange)
+        {
+            targetEnemy = null;
+            BeginReturn();
+            return;
+        }
+
         transform.position = Vector3.MoveTowards(transform.position, targetPos, strikeSpeed * Time.deltaTime);
 
         if (Vector3.Distance(transform.position, targetPos) <= hitDistance)
@@ -477,7 +513,6 @@ public class WeaponPoint : MonoBehaviour
 
             overshootTarget = targetPos + (Vector3)(hitDir * overshootDistance);
 
-            WeaponManager.Instance?.Release(targetEnemy);
             targetEnemy = null;
             state = State.Overshooting;
         }
@@ -626,7 +661,7 @@ public class WeaponPoint : MonoBehaviour
 
         // 적이 있으면 가장 가까운 적 방향
         EnemyController nearest = FindNearestAny();
-        var boss = BossController.Current;
+        var boss = BossController.Current != null && BossController.Current.gameObject.activeInHierarchy ? BossController.Current : null;
         if (nearest != null && boss != null)
         {
             float eDist = ((Vector2)nearest.transform.position - (Vector2)transform.position).sqrMagnitude;
@@ -707,19 +742,26 @@ public class WeaponPoint : MonoBehaviour
     // ─────────────────────────────────────────
     // 적 탐색 유틸
     // ─────────────────────────────────────────
-    private EnemyController FindNearestUnclaimed()
+    private EnemyController FindNearestInRange()
     {
-        EnemyController nearest  = null;
-        float           minSqDist = attackRange * attackRange;
-        Vector2         origin   = transform.parent.position;
+        EnemyController nearest = null;
+        float minSqDist = float.MaxValue;
+        Vector2 origin = transform.parent != null ? transform.parent.position : transform.position;
 
-        foreach (var enemy in EnemyController.All)
+        int colCount = Physics2D.OverlapCircleNonAlloc(origin, attackRange, _hitBuffer);
+        for (int i = 0; i < colCount; i++)
         {
-            if (enemy == null || enemy.transform == null || !enemy.gameObject.activeInHierarchy) continue;
-            if (WeaponManager.Instance.IsClaimed(enemy)) continue;
+            var hit = _hitBuffer[i];
+            var enemy = hit.GetComponentInParent<EnemyController>();
+            
+            if (enemy == null || !enemy.gameObject.activeInHierarchy) continue;
 
             float sqDist = ((Vector2)enemy.transform.position - origin).sqrMagnitude;
-            if (sqDist < minSqDist) { minSqDist = sqDist; nearest = enemy; }
+            if (sqDist < minSqDist) 
+            { 
+                minSqDist = sqDist; 
+                nearest = enemy; 
+            }
         }
         return nearest;
     }

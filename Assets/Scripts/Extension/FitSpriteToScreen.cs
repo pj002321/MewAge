@@ -22,7 +22,7 @@ public class FitSpriteToScreen : MonoBehaviour
     /// <summary>Fitted sprite's world-space size (post-scale). Other scripts can read this.</summary>
     public Vector2 FittedWorldSize { get; private set; }
 
-    private void Start()
+    private void Awake()
     {
         Fit();
     }
