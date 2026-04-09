@@ -38,7 +38,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     private int   wave = 0;
     private float waveTimer;
     private bool  isGameOver;
-    private bool  waitingForUpgrade;
+    private bool  waitingForUpgrade = true; // 트랜지션/초기화 기간 중 0초 달성으로 증강이 뜨는 것 방지
     private bool  bossWaveActive;
     private string currentChapterID = "C1_S1";
 
@@ -54,6 +54,24 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 
     private void Start()
     {
+        StartCoroutine(InitAndStartRoutine());
+    }
+
+    private IEnumerator InitAndStartRoutine()
+    {
+        // 1. 유니티 엔진과 모바일 기기(Safe Area, 해상도 등)가 씬 로딩 직후 초기화될 시간을 1프레임 대기합니다.
+        yield return null;
+
+        // 2. 가장 민감한 화면 비율(Aspect)과 관련된 크기 계산을 명시적으로 실행합니다.
+        CameraFollow.Shared?.Init();
+
+        var fitSprites = FindObjectsOfType<FitSpriteToScreen>();
+        foreach (var fs in fitSprites)
+        {
+            fs.Fit();
+        }
+
+        // 3. 게임 시스템 및 UI 초기화
         if (gameOverPanel)               gameOverPanel.SetActive(false);
         if (waveClearPanel)              waveClearPanel.SetActive(false);
         if (gameClearPanel != null)      gameClearPanel.gameObject.SetActive(false);
@@ -77,14 +95,21 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         WareSynergySystem.ApplySynergies();
         sm?.EndBatch();
 
-        // 시작 시 Normal 무기 1개 지급 후 바로 Wave 1 시작
+        // 시작 시 Normal 무기 1개 지급 준비
         UpgradeManager.Shared?.GiveStarterWeapon();
 
         // GameManager.Shared가 준비된 시점에 HP UI 강제 동기화
-        // (PlayerController.Start()가 먼저 실행되면 GameManager.Shared=null이라 누락될 수 있음)
         if (PlayerController.Instance != null)
             UpdateHP(PlayerController.Instance.CurrentHP, PlayerController.Instance.MaxHPValue);
 
+        // 4. 모든 인게임 초기화가 끝났으므로 로딩 씬에게 내려가도 좋다고 신호를 보냅니다.
+        SceneLoadManager.NotifyStageReady();
+
+        // 5. 로딩 씬의 트랜지션 연출이 완전히 끝날 때까지 대기합니다. (게임 일시정지 효과)
+        while (SceneLoadManager.IsTransitioning)
+            yield return null;
+
+        // 6. 모든 준비 패널이 걷히고 나서 비로소 첫 웨이브를 시작합니다.
         StartNextWave();
     }
 
@@ -121,26 +146,28 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         float clipLength = stateInfo.length;
         if (clipLength <= 0f) return;
 
-        const float sliceTime = 1f;
-        int milestone = wave / 10; // 지나간 10웨이브 마일스톤 수
+        // 10웨이브 주기 내 위치 (0~9)
+        int cycleWave = (wave - 1) % 10;
+        // 2웨이브마다 1초씩 증가: 0~1→0s, 2~3→1s, 4~5→2s, 6~7→3s, 8~9→4s
+        float seconds = Mathf.Floor(cycleWave / 2f);
 
-        if (wave % 10 != 0)
+        // 새 구간 진입 웨이브 (wave 3, 5, 7, 9): 이전 위치에서 1초 재생 후 멈춤
+        if (cycleWave > 0 && cycleWave % 2 == 0)
         {
-            // 10의 배수가 아닌 웨이브: 마지막 마일스톤 위치에 멈춤
-            float pauseSec = milestone * sliceTime;
-            anim.Play(stateInfo.fullPathHash, 0, pauseSec / clipLength);
-            anim.speed = 0f;
-            return;
+            float startSec = seconds - 1f;
+            anim.Play(stateInfo.fullPathHash, 0, startSec / clipLength);
+            anim.speed = 1f;
+            StartCoroutine(PauseAnimAfterSeconds(anim, 1f));
         }
-
-        // 10의 배수 웨이브: 이전 마일스톤 위치에서 1초 재생 후 멈춤
-        float startSec = (milestone - 1) * sliceTime;
-        anim.Play(stateInfo.fullPathHash, 0, startSec / clipLength);
-        anim.speed = 1f;
-        StartCoroutine(PauseAnimAfterSlice(anim, sliceTime));
+        else
+        {
+            // 나머지 웨이브: 해당 위치에 고정
+            anim.Play(stateInfo.fullPathHash, 0, seconds / clipLength);
+            anim.speed = 0f;
+        }
     }
 
-    private IEnumerator PauseAnimAfterSlice(Animator anim, float delay)
+    private IEnumerator PauseAnimAfterSeconds(Animator anim, float delay)
     {
         yield return new WaitForSeconds(delay);
         if (anim != null) anim.speed = 0f;

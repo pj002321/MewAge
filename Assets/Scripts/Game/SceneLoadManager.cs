@@ -29,6 +29,15 @@ public class SceneLoadManager : MonoBehaviour
     private float scaleUpMultiplier = 1.15f; // 커지는 최대 비율
     private float scaleDownDuration = 0.35f; // 0으로 줄어드는 시간
 
+    public static bool IsWaitingForStage { get; private set; }
+    public static bool IsTransitioning { get; private set; }
+
+    /// <summary>게임 매니저 등에서 모든 초기화가 끝나면 호출하여 로딩 씬을 내립니다.</summary>
+    public static void NotifyStageReady()
+    {
+        IsWaitingForStage = false;
+    }
+
     /// <summary>지정한 이름의 씬으로 로딩 트랜지션을 시작합니다.</summary>
     public static void LoadScene(string sceneName)
     {
@@ -45,6 +54,8 @@ public class SceneLoadManager : MonoBehaviour
 
     private IEnumerator LoadRoutine()
     {
+        IsTransitioning = true;
+
         // 1. timeScale 정상화 (게임오버 시 0이었을 수 있음)
         Time.timeScale = 1f;
 
@@ -88,7 +99,18 @@ public class SceneLoadManager : MonoBehaviour
         yield return new WaitUntil(() => asyncOp.isDone);
 
         // 5. 타겟 씬이 완전히 켜지고 Awake/Start가 실행되는 동안 생기는 프레임 드랍(스파이크)을 화면 뒤에 숨김
-        yield return new WaitForSecondsRealtime(0.6f);
+        if (targetSceneName == "stage@scene")
+        {
+            IsWaitingForStage = true;
+            // GameManager에서 명시적으로 NotifyStageReady()를 호출할 때까지 무한 대기
+            while (IsWaitingForStage)
+                yield return null;
+        }
+        else
+        {
+            // 다른 씬들은 기본 시간 대기
+            yield return new WaitForSecondsRealtime(0.6f);
+        }
 
         // 6. 로딩 Canvas 연출 (확대하면서 오른쪽으로 슬라이드 아웃)
         if (loadingCanvas != null)
@@ -123,5 +145,7 @@ public class SceneLoadManager : MonoBehaviour
 
             Destroy(loadingCanvas.transform.root.gameObject);
         }
+
+        IsTransitioning = false;
     }
 }

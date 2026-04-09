@@ -102,6 +102,7 @@ public class PlayerController : MonoBehaviour
 
     private void Start()
     {
+        Debug.Log($"[PlayerController] Start — localScale={transform.localScale}, lossyScale={transform.lossyScale}, parent={transform.parent?.name ?? "none"}");
         SyncHPUI();
         StartCoroutine(HPRegenRoutine());
     }

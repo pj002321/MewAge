@@ -40,6 +40,21 @@ public class CameraFollow : MonoBehaviour
         Shared = this;
         cam    = GetComponent<Camera>();
 
+        if (target == null && PlayerController.Instance != null)
+            target = PlayerController.Instance.transform;
+    }
+
+    private void Start()
+    {
+        if (target == null && PlayerController.Instance != null)
+            target = PlayerController.Instance.transform;
+    }
+
+    /// <summary>
+    /// GameManager에서 전체 씬이 안정화된 후 (특히 모바일의 Safe Area, 해상도 초기화 이후) 명시적으로 호출합니다.
+    /// </summary>
+    public void Init()
+    {
         // 세로형(Portrait) 게임 기준 (1080x1920 = 9:16 비율)
         // 화면 가로 넓이를 일정하게 보장하여 캐릭터 비율이 거대해지지 않도록 방지
         if (fixedOrthographicSize > 0f)
@@ -51,14 +66,17 @@ public class CameraFollow : MonoBehaviour
                 cam.orthographicSize = fixedOrthographicSize; // 태블릿, PC 등 넓은 화면
         }
 
-        if (target == null && PlayerController.Instance != null)
-            target = PlayerController.Instance.transform;
-    }
-
-    private void Start()
-    {
-        if (target == null && PlayerController.Instance != null)
-            target = PlayerController.Instance.transform;
+        // --- PixelPerfectCamera 리프레시 로직 ---
+        // 인스펙터 상의 orthographicSize나 스케일이 정상임에도 비정상적으로 화면이 커 보이는 원인은 
+        // Pixel Perfect Camera가 내부적으로 잘못된 Pixel Ratio를 캡처하여 프로젝션 매트릭스를 고정시켜버렸기 때문입니다.
+        // 강제로 껐다 켜서 픽셀 배율을 현재 올바른 해상도에 맞게 재계산하도록 유도합니다.
+        // 컴파일 에러 방지를 위해 string 기반 Component 탐색 및 Behaviour 캐스팅을 사용합니다.
+        var ppc = GetComponent("PixelPerfectCamera") as Behaviour;
+        if (ppc != null && ppc.enabled)
+        {
+            ppc.enabled = false;
+            ppc.enabled = true;
+        }
     }
 
     // ── Public API ────────────────────────────────────────────────
@@ -114,6 +132,18 @@ public class CameraFollow : MonoBehaviour
     {
         shakeTimeLeft         = duration  > 0f ? duration  : shakeDefaultDuration;
         shakeMagnitudeCurrent = magnitude > 0f ? magnitude : shakeDefaultMagnitude;
+    }
+
+    private float lastAspect = -1f;
+
+    private void Update()
+    {
+        // 모바일 환경에서 씬 전환 직후 Screen 해상도는 동일하지만 Camera.aspect가 Unity 내부에 뒤늦게 세팅되는 현상 방지
+        if (Mathf.Abs(cam.aspect - lastAspect) > 0.001f)
+        {
+            lastAspect = cam.aspect;
+            Init();
+        }
     }
 
     // ── LateUpdate ────────────────────────────────────────────────

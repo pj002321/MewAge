@@ -22,12 +22,23 @@ public class FitSpriteToScreen : MonoBehaviour
     /// <summary>Fitted sprite's world-space size (post-scale). Other scripts can read this.</summary>
     public Vector2 FittedWorldSize { get; private set; }
 
-    private void Awake()
+    private float lastAspect = -1f;
+    private float lastOrtho = -1f;
+
+    private void LateUpdate()
     {
-        Fit();
+        Camera cam = Camera.main;
+        if (cam == null) return;
+
+        if (Mathf.Abs(cam.aspect - lastAspect) > 0.001f || Mathf.Abs(cam.orthographicSize - lastOrtho) > 0.001f)
+        {
+            lastAspect = cam.aspect;
+            lastOrtho  = cam.orthographicSize;
+            Fit();
+        }
     }
 
-    private void Fit()
+    public void Fit()
     {
         Camera cam = Camera.main;
         if (cam == null) return;
