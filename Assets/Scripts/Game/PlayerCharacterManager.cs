@@ -112,24 +112,7 @@ public class PlayerCharacterManager : MonoBehaviourSingleton<PlayerCharacterMana
             if (_cachedSprite != null)
             {
                 var sr = player.GetComponentInChildren<SpriteRenderer>();
-                if (sr != null)
-                {
-                    var prevSprite = sr.sprite;
-                    sr.sprite = _cachedSprite;
-                    // PPU 차이로 인한 크기 변화 보정
-                    if (prevSprite != null && prevSprite.pixelsPerUnit > 0f)
-                    {
-                        float ppuRatio = _cachedSprite.pixelsPerUnit / prevSprite.pixelsPerUnit;
-                        if (Mathf.Abs(ppuRatio - 1f) > 0.01f)
-                        {
-                            var t = sr.transform;
-                            t.localScale = new Vector3(
-                                t.localScale.x / ppuRatio,
-                                t.localScale.y / ppuRatio,
-                                t.localScale.z);
-                        }
-                    }
-                }
+                if (sr != null) sr.sprite = _cachedSprite;
             }
         }
 

@@ -10,8 +10,13 @@ using UnityEngine;
 /// </summary>
 public class GhostTrail : MonoBehaviour
 {
-    [Header("스프라이트")]
-    [Tooltip("비워두면 부모 SpriteRenderer 스프라이트를 자동으로 복사합니다.")]
+    [Header("스프라이트 / 프리팹")]
+    [Tooltip("연결하면 해당 프리팹을 풀로 사용. 비워두면 단일 스프라이트 모드.")]
+    [SerializeField] private GameObject ghostPrefab;
+    [Tooltip("ghostPrefab 사용 시 — 체크하면 캐릭터 현재 스프라이트를 프리팹 SpriteRenderer에 덮어씀.\n" +
+             "체크 해제 시 프리팹 자체 스프라이트/애니메이션을 그대로 사용.")]
+    [SerializeField] private bool copyCharacterSprite = true;
+    [Tooltip("ghostPrefab이 없을 때만 사용. 비워두면 부모 SpriteRenderer 스프라이트를 자동으로 복사합니다.")]
     [SerializeField] private Sprite customSprite;
 
     [Header("트레일 설정")]
@@ -73,53 +78,77 @@ public class GhostTrail : MonoBehaviour
 
     private void SpawnGhost()
     {
-        // 사용할 스프라이트 결정
-        Sprite sprite = customSprite;
-        bool   flipX  = false;
-
-        if (sprite == null)
-        {
-            if (_parentSR == null) return;
-            sprite = _parentSR.sprite;
-            flipX  = _parentSR.flipX;
-        }
-        if (sprite == null) return;
-
-        // 풀에서 꺼내거나 새로 생성
         GhostItem g;
-        if (_pool.Count > 0)
+
+        if (ghostPrefab != null)
         {
-            g = _pool.Dequeue();
-            g.go.SetActive(true);
+            // ── 프리팹 모드 ──────────────────────────────────────────
+            if (_pool.Count > 0)
+            {
+                g = _pool.Dequeue();
+                g.go.SetActive(true);
+            }
+            else
+            {
+                var go = Instantiate(ghostPrefab);
+                var sr = go.GetComponentInChildren<SpriteRenderer>();
+                g = new GhostItem { go = go, sr = sr };
+            }
+
+            if (g.sr != null && _parentSR != null)
+            {
+                if (copyCharacterSprite)
+                    g.sr.sprite = _parentSR.sprite; // 캐릭터 스프라이트 덮어쓰기
+                g.sr.flipX = _parentSR.flipX;
+            }
         }
         else
         {
-            var go = new GameObject("Ghost");
-            var sr = go.AddComponent<SpriteRenderer>();
-            g = new GhostItem { go = go, sr = sr };
+            // ── 단일 스프라이트 모드 ─────────────────────────────────
+            Sprite sprite = customSprite;
+            bool   flipX  = false;
+
+            if (sprite == null)
+            {
+                if (_parentSR == null) return;
+                sprite = _parentSR.sprite;
+                flipX  = _parentSR.flipX;
+            }
+            if (sprite == null) return;
+
+            if (_pool.Count > 0)
+            {
+                g = _pool.Dequeue();
+                g.go.SetActive(true);
+            }
+            else
+            {
+                var go = new GameObject("Ghost");
+                var sr = go.AddComponent<SpriteRenderer>();
+                g = new GhostItem { go = go, sr = sr };
+            }
+
+            g.sr.sprite = sprite;
+            g.sr.flipX  = flipX;
         }
 
-        // 스프라이트 설정
-        g.sr.sprite = sprite;
-        g.sr.flipX  = flipX;
-
-        // 정렬 순서 — 부모 SpriteRenderer가 있으면 그 바로 아래
-        if (_parentSR != null)
+        // 정렬 순서
+        if (g.sr != null && _parentSR != null)
         {
             g.sr.sortingLayerName = _parentSR.sortingLayerName;
             g.sr.sortingOrder     = _parentSR.sortingOrder - 1;
         }
 
-        // 위치·크기 복사 (스케일은 부모의 월드 스케일 그대로)
+        // 위치·크기
         g.go.transform.position   = _parentTr.position;
         g.go.transform.rotation   = _parentTr.rotation;
         g.go.transform.localScale = _parentTr.lossyScale;
 
         // 색상 초기화
         g.startColor = ghostColor;
-        g.sr.color   = ghostColor;
-        g.elapsed    = 0f;
-        g.lifetime   = ghostLifetime;
+        if (g.sr != null) g.sr.color = ghostColor;
+        g.elapsed  = 0f;
+        g.lifetime = ghostLifetime;
 
         _active.Add(g);
     }
