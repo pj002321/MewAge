@@ -7,18 +7,15 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 {
     [Header("UI")]
     [SerializeField] private TextMeshProUGUI waveText;
+    [SerializeField] private Image waveIconImg;
     [SerializeField] private TextMeshProUGUI timerText;
     [SerializeField] private TextMeshProUGUI goldText;
-    [SerializeField] private TextMeshProUGUI reroll_goldText;
     [SerializeField] private TextMeshProUGUI levelText;
-    [SerializeField] private TextMeshProUGUI reroll_levelText;
-    [SerializeField] private TextMeshProUGUI expText;
     [SerializeField] private Slider          expSlider;
-    [SerializeField] private Slider          reroll_expSlider;
     [SerializeField] private Slider          hpSlider;
     [SerializeField] private TextMeshProUGUI hpText;
-    [SerializeField] private GameObject      gameOverPanel;
-    [SerializeField] private GameObject      waveInfoProgress;
+    [SerializeField] private GameObject         gameOverPanel;       // 부활 패널
+    [SerializeField] private GameOverResultPanel gameOverResultPanel; // 게임오버 결과 패널
     [SerializeField] private GameClearPanel  gameClearPanel;
 
     [Header("Wave 타이머")]
@@ -37,7 +34,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     private int   wave = 0;
     private float waveTimer;
     private bool  isGameOver;
-    private bool  waitingForUpgrade;
+    private bool  waitingForUpgrade = true; // 트랜지션/초기화 기간 중 0초 달성으로 증강이 뜨는 것 방지
     private bool  bossWaveActive;
     private string currentChapterID = "C1_S1";
 
@@ -53,19 +50,62 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 
     private void Start()
     {
+        StartCoroutine(InitAndStartRoutine());
+    }
+
+    private IEnumerator InitAndStartRoutine()
+    {
+        // 1. 유니티 엔진과 모바일 기기(Safe Area, 해상도 등)가 씬 로딩 직후 초기화될 시간을 1프레임 대기합니다.
+        yield return null;
+
+        // 2. 가장 민감한 화면 비율(Aspect)과 관련된 크기 계산을 명시적으로 실행합니다.
+        CameraFollow.Shared?.Init();
+
+        var fitSprites = FindObjectsOfType<FitSpriteToScreen>();
+        foreach (var fs in fitSprites)
+        {
+            fs.Fit();
+        }
+
+        // 3. 게임 시스템 및 UI 초기화
         if (gameOverPanel)               gameOverPanel.SetActive(false);
         if (waveClearPanel)              waveClearPanel.SetActive(false);
         if (gameClearPanel != null)      gameClearPanel.gameObject.SetActive(false);
 
+        // Activate VirtualJoystick for in-game control
+        if (VirtualJoystick.Instance != null)
+            VirtualJoystick.Instance.gameObject.SetActive(true);
+
         currentChapterID = PlayerPrefs.GetString("SelectedChapterID", "C1_S1");
+        Debug.Log($"[GameManager] 입장 — ChapterID: {currentChapterID}");
         UpgradeManager.Shared?.SetCurrentChapterID(currentChapterID);
+        WaveEnvironmentSwitcher.Shared?.SetStage(currentChapterID);
+        EnemySpawner.Shared?.SetChapterStage(currentChapterID);
 
-        // 이전 판 증강 수치 초기화 후 캐릭터 기초 스탯 재적용
-        PlayerStatManager.Shared?.ResetMods();
+        // 이전 판 증강 수치 초기화 후 캐릭터 기초 스탯 + 기물 시너지 일괄 반영
+        // BeginBatch ~ EndBatch 사이 SetBase/AddPctMod는 마지막 EndBatch에서 1회만 적용됨
+        var sm = PlayerStatManager.Shared;
+        sm?.ResetMods();
+        sm?.BeginBatch();
         PlayerCharacterManager.Shared?.ApplyCharacterStats();
+        WareSynergySystem.ApplySynergies();
+        sm?.EndBatch();
 
-        // 시작 시 Normal 무기 1개 지급 후 바로 Wave 1 시작
+        // 시작 시 Normal 무기 1개 지급 준비
         UpgradeManager.Shared?.GiveStarterWeapon();
+
+        // GameManager.Shared가 준비된 시점에 HP UI 강제 동기화
+        if (PlayerController.Instance != null)
+            UpdateHP(PlayerController.Instance.CurrentHP, PlayerController.Instance.MaxHPValue);
+
+        // 4. 모든 인게임 초기화가 끝났으므로 로딩 씬에게 내려가도 좋다고 신호를 보냅니다.
+        SceneLoadManager.NotifyStageReady();
+
+        // 5. 로딩 씬의 트랜지션 연출이 완전히 끝날 때까지 대기합니다. (게임 일시정지 효과)
+        while (SceneLoadManager.IsTransitioning)
+            yield return null;
+
+        // 6. 모든 준비 패널이 걷히고 나서 비로소 첫 웨이브를 시작합니다.
         StartNextWave();
     }
 
@@ -92,36 +132,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         }
     }
 
-    private void WaveInfoProgress()
-    {
-        if (waveInfoProgress == null) return;
-        var anim = waveInfoProgress.GetComponent<Animator>();
-        if (anim == null) return;
-
-        var   stateInfo  = anim.GetCurrentAnimatorStateInfo(0);
-        float clipLength = stateInfo.length;
-        if (clipLength <= 0f) return;
-
-        const float sliceTime = 1f;
-        int milestone = wave / 10; // 지나간 10웨이브 마일스톤 수
-
-        if (wave % 10 != 0)
-        {
-            // 10의 배수가 아닌 웨이브: 마지막 마일스톤 위치에 멈춤
-            float pauseSec = milestone * sliceTime;
-            anim.Play(stateInfo.fullPathHash, 0, pauseSec / clipLength);
-            anim.speed = 0f;
-            return;
-        }
-
-        // 10의 배수 웨이브: 이전 마일스톤 위치에서 1초 재생 후 멈춤
-        float startSec = (milestone - 1) * sliceTime;
-        anim.Play(stateInfo.fullPathHash, 0, startSec / clipLength);
-        anim.speed = 1f;
-        StartCoroutine(PauseAnimAfterSlice(anim, sliceTime));
-    }
-
-    private IEnumerator PauseAnimAfterSlice(Animator anim, float delay)
+    private IEnumerator PauseAnimAfterSeconds(Animator anim, float delay)
     {
         yield return new WaitForSeconds(delay);
         if (anim != null) anim.speed = 0f;
@@ -133,17 +144,19 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         EnemySpawner.Shared?.ClearAllEnemies();
         FXManager.Shared?.ClearAllFX();   // 투사체·파편 즉시 제거
 
-        // 필드에 남은 드롭 아이템 → 플레이어 방향으로 유도
-        foreach (var drop in Object.FindObjectsByType<DropItem>(FindObjectsSortMode.None))
-            drop.ForceAttract();
-
         yield return new WaitForSeconds(waveClearDuration);
 
-        // 유도 후 미수집 아이템 강제 수집
-        foreach (var drop in Object.FindObjectsByType<DropItem>(FindObjectsSortMode.None))
-            if (drop != null) drop.Collect();
-
         if (waveClearPanel) waveClearPanel.SetActive(false);
+
+        // 최종 웨이브 클리어 → 게임 클리어 패널
+        if (wave >= GetMaxWave())
+        {
+            if (gameClearPanel != null)
+                gameClearPanel.Show(wave, sessionExpGained, sessionGoldGained);
+            else
+                GoHome();
+            yield break;
+        }
 
         if (ImprovManager.Shared != null)
             ImprovManager.Shared.ShowPanel(wave);
@@ -170,18 +183,78 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         timerText.color = waveTimer <= timerWarningThreshold ? timerWarningColor : timerNormalColor;
     }
 
-    private void UpdateWaveUI()
+    private static readonly Vector3 WaveTextNormalScale = Vector3.one;
+    private static readonly Vector3 WaveTextBigScale   = new Vector3(1.8f, 1.8f, 1f);
+    private Coroutine _waveTextAnim;
+
+    private Sprite _sprWaveNormal;
+    private Sprite _sprWaveBoss;
+
+    private void UpdateWaveUI(bool isBossWave = false)
     {
-        if (waveText) waveText.text = $"Wave {wave}";
+        if (waveText)
+        {
+            waveText.text = $"{wave}";
+            if (_waveTextAnim != null) StopCoroutine(_waveTextAnim);
+            _waveTextAnim = StartCoroutine(WaveTextBumpAnim());
+        }
         if (timerText) timerText.color = timerNormalColor;
-        WaveInfoProgress();
+
+        // 웨이브 아이콘 교체
+        if (waveIconImg != null)
+        {
+            if (isBossWave)
+            {
+                if (_sprWaveBoss == null)
+                    _sprWaveBoss = Resources.Load<Sprite>("UI/wave_boss");
+                if (_sprWaveBoss != null) waveIconImg.sprite = _sprWaveBoss;
+            }
+            else
+            {
+                if (_sprWaveNormal == null)
+                    _sprWaveNormal = Resources.Load<Sprite>("UI/wave_normal");
+                if (_sprWaveNormal != null) waveIconImg.sprite = _sprWaveNormal;
+            }
+        }
+    }
+
+    private IEnumerator WaveTextBumpAnim()
+    {
+        const float upTime   = 0.08f;
+        const float downTime = 0.18f;
+
+        var t = waveText.transform;
+        float elapsed = 0f;
+        // 확대
+        while (elapsed < upTime)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            t.localScale = Vector3.Lerp(WaveTextNormalScale, WaveTextBigScale, elapsed / upTime);
+            yield return null;
+        }
+        t.localScale = WaveTextBigScale;
+
+        elapsed = 0f;
+        // 원본 복구
+        while (elapsed < downTime)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            t.localScale = Vector3.Lerp(WaveTextBigScale, WaveTextNormalScale, elapsed / downTime);
+            yield return null;
+        }
+        t.localScale = WaveTextNormalScale;
+        _waveTextAnim = null;
     }
 
     public void UpdateHP(float current, float max)
     {
-        float normalized = max > 0f ? current / max : 0f;
-        if (hpSlider) hpSlider.value = normalized;
-        if (hpText)   hpText.text    = $"{Mathf.CeilToInt(current)} / {Mathf.CeilToInt(max)}";
+        if (hpSlider)
+        {
+            hpSlider.minValue = 0f;
+            hpSlider.maxValue = Mathf.Max(1f, max);
+            hpSlider.value    = current;
+        }
+        if (hpText) hpText.text = $"{Mathf.CeilToInt(current)}";
     }
 
     public void UpdateGoldUI(int gold)
@@ -191,11 +264,8 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 
     public void UpdateExpUI(int exp, int expMax, int level)
     {
-        if (levelText)        levelText.text         = $"lv {level}";
-        if (reroll_levelText) reroll_levelText.text  = $"lv {level}";
-        if (expText)          expText.text          = $"{exp} / {expMax}";
+        if (levelText)        levelText.text         = $"LV.{level}";
         if (expSlider)        expSlider.value        = (float)exp / expMax;
-        if (reroll_expSlider) reroll_expSlider.value = (float)exp / expMax;
     }
 
     public void TriggerGameOver()
@@ -218,26 +288,22 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     }
 
     /// <summary>
-    /// GameOverPanel 카운트다운 + 축소 연출이 끝난 뒤 호출됩니다.
-    /// GameClear 패널을 표시합니다.
+    /// 부활 패널 카운트다운 종료 후 호출 — 게임오버 결과 패널 표시.
     /// </summary>
-    public void ShowGameClearAfterGameOver()
+    public void ShowGameOverResult()
     {
-        if (gameClearPanel != null)
-        {
-            gameClearPanel.Show(wave, sessionExpGained, sessionGoldGained);
-        }
+        if (gameOverResultPanel != null)
+            gameOverResultPanel.Show(wave);
         else
-        {
-            this.DLog("[GameManager] ShowGameClearAfterGameOver: gameClearPanel not assigned.");
-        }
+            GoHome();
     }
 
     public void Revive()
     {
         if (!isGameOver) return;
         isGameOver = false;
-        if (gameOverPanel) gameOverPanel.SetActive(false);
+        if (gameOverPanel)       gameOverPanel.SetActive(false);
+        if (gameOverResultPanel) gameOverResultPanel.gameObject.SetActive(false);
         PlayerController.Instance?.Revive();
         EnemySpawner.Shared?.ResumeSpawning(wave);
     }
@@ -271,15 +337,33 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         if (player != null && player.WaveHealAmount > 0f)
             player.HealHP(player.WaveHealAmount);
 
-        // 보스 웨이브이고 인트로 시퀀스가 있으면 컷씬 먼저 재생
-        bool isBossWave = EnemySpawner.Shared?.GetNextBossWave(wave - 1) == wave;
+        bool isBossWave    = EnemySpawner.Shared?.GetNextBossWave(wave - 1) == wave;
+        bool needsExitGate = isBossWave;
+
         // Boss wave gets its own time limit; normal waves use stepped duration
         waveTimer = isBossWave ? bossWaveTimeLimit : WaveDuration(wave);
 
-        this.DLog($"[GameManager] StartNextWave wave={wave} | isBossWave={isBossWave} | timer={waveTimer}s | BossIntro={(BossIntroSequence.Shared != null ? "있음" : "없음")}");
+        this.DLog($"[GameManager] StartNextWave wave={wave} | isBossWave={isBossWave} | needsGate={needsExitGate} | timer={waveTimer}s");
 
-        UpdateWaveUI();
+        UpdateWaveUI(isBossWave);
 
+        // 보스 전/후: 업그레이드 패널 닫힘 → 게이트 활성화 → 플레이어 이동 → 실제 웨이브 시작
+        if (needsExitGate)
+        {
+            waitingForUpgrade = true;  // 타이머 카운트다운 억제
+            WaveEnvironmentSwitcher.Shared?.ActivateExitGate(() =>
+            {
+                waitingForUpgrade = false;
+                DoStartWave(isBossWave);
+            });
+            return;
+        }
+
+        DoStartWave(isBossWave);
+    }
+
+    private void DoStartWave(bool isBossWave)
+    {
         if (isBossWave && BossIntroSequence.Shared != null)
         {
             WaveEnvironmentSwitcher.Shared?.SetWave(wave); // 일반 맵 유지 (출구 연출용)
@@ -290,12 +374,49 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
             return;
         }
 
+        // 일반 웨이브 시작 시 플레이어를 맵 중앙으로 이동
+        TeleportPlayerToMapCenter();
+
         EnemySpawner.Shared?.ResumeSpawning(wave);
         WaveEnvironmentSwitcher.Shared?.SetWave(wave);
     }
 
+    private void TeleportPlayerToMapCenter()
+    {
+        var player = PlayerController.Instance;
+        if (player == null) return;
+
+        if (MovementBounds.Shared != null)
+        {
+            MovementBounds.Shared.GetPlayerBoundsMinMax(out Vector2 min, out Vector2 max);
+            player.transform.position = (Vector3)((min + max) * 0.5f);
+        }
+        else
+        {
+            player.transform.position = Vector3.zero;
+        }
+    }
+
     public bool IsGameOver  => isGameOver;
     public int  CurrentWave => wave;
+
+    /// <summary>현재 챕터+스테이지의 DB_웨이브에서 최대 웨이브 번호를 반환합니다.</summary>
+    private int GetMaxWave()
+    {
+        // currentChapterID 형식: "C1_S1"
+        string prefix = currentChapterID + "_W";
+        int max = 0;
+        Mewage.DB.DB_웨이브.ForEachEntity(row =>
+        {
+            if (row.f_웨이브ID != null && row.f_웨이브ID.StartsWith(prefix))
+            {
+                string numStr = row.f_웨이브ID.Substring(prefix.Length);
+                if (int.TryParse(numStr, out int n) && n > max)
+                    max = n;
+            }
+        });
+        return max > 0 ? max : 30; // DB에 없으면 30 fallback
+    }
 
     // ── 모바일 앱 생명주기 ────────────────────────────────────────
     // OnApplicationFocus : 알림바 내리기, 알림바 롱프레스 미리보기 등 포커스 손실 처리
@@ -343,6 +464,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     {
         bossWaveActive = false;
         WaveEnvironmentSwitcher.Shared?.SetNormal();
+        EnemySpawner.Shared?.StopSpawning(); // 보스 죽음 즉시 스폰 중지
         if (waitingForUpgrade) return;
         waitingForUpgrade = true;
 
@@ -409,13 +531,14 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
             WaveEnvironmentSwitcher.Shared?.SetNormal();
             BossHUDPanel.Shared?.Hide();
         }
+        WaveEnvironmentSwitcher.Shared?.DeactivateExitGate();
 
         EnemySpawner.Shared?.StopSpawning();
         EnemySpawner.Shared?.ClearAllEnemies();
+        FXManager.Shared?.ClearAllFX();
 
-        waitingForUpgrade = true;
-        Debug.Log("[Debug] WaveClearRoutine 시작");
-        StartCoroutine(WaveClearRoutine());
+        Debug.Log("[Debug] 증강 스킵하고 바로 웨이브 시작");
+        StartNextWave();
     }
 
     /// <summary>지정한 웨이브로 즉시 이동합니다.</summary>
@@ -438,6 +561,11 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         bossWaveActive    = false;
         wave              = targetWave - 1;
         waitingForUpgrade = false;
+
+        // 보스 입장 게이트(Exit Point) 연출을 띄우려면, 활성화된 배경 맵이 해당 층(예: 9웨이브)의 맵이어야 합니다.
+        // 직전 맵으로 강제 세팅하여 보스 문이 정상 활성화되도록 패치
+        WaveEnvironmentSwitcher.Shared?.SetWave(wave);
+
         StartNextWave();
         Debug.Log($"[Debug] → Wave {targetWave}로 점프");
     }
@@ -466,6 +594,10 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         bossWaveActive    = false;
         wave              = targetWave - 1;
         waitingForUpgrade = false;
+
+        // 보스 입장 게이트(Exit Point) 연출을 띄우려면, 활성화된 배경 맵이 해당 층(예: 9웨이브)의 맵이어야 합니다.
+        WaveEnvironmentSwitcher.Shared?.SetWave(wave);
+
         StartNextWave();
     }
 }

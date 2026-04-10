@@ -29,6 +29,9 @@ public class MeteorSkill : StructureSkillBase
     [SerializeField] private float dimAmount   = 0.45f;   // 어두울 때 밝기 (0=완전어둠, 1=그대로)
     [SerializeField] private float fadeDuration = 0.3f;   // 페이드 in/out 시간
 
+    // 낙하 중인 운석 오브젝트 추적 (OnDestroy에서 미완료분 정리용)
+    private readonly System.Collections.Generic.List<GameObject> _activeMeteorites = new();
+
     public override void Activate() => StartCoroutine(MeteorRoutine());
 
     IEnumerator MeteorRoutine()
@@ -84,6 +87,11 @@ public class MeteorSkill : StructureSkillBase
         // 코루틴이 중단되더라도 조명이 어두운 채로 남지 않도록 즉시 복구
         var light = FindGlobalLight();
         if (light != null) light.intensity = 1f;
+
+        // 낙하 도중 소멸된 운석 오브젝트 정리 (코루틴 중단 시 Destroy가 호출되지 않음)
+        foreach (var go in _activeMeteorites)
+            if (go != null) Destroy(go);
+        _activeMeteorites.Clear();
     }
 
     private static Light2D FindGlobalLight()
@@ -114,8 +122,9 @@ public class MeteorSkill : StructureSkillBase
     IEnumerator FallRoutine(Vector2 from, Vector2 to)
     {
         var go = Instantiate(meteorPrefab, from, Quaternion.identity);
-        float elapsed = 0f;
+        _activeMeteorites.Add(go);
 
+        float elapsed = 0f;
         while (elapsed < fallDuration)
         {
             elapsed += Time.deltaTime;
@@ -132,6 +141,7 @@ public class MeteorSkill : StructureSkillBase
             if (col.TryGetComponent<EnemyController>(out var enemy))
                 enemy.TakeDamage(mainValue);
 
+        _activeMeteorites.Remove(go);
         Destroy(go);
     }
 

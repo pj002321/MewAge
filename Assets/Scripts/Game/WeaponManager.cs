@@ -2,15 +2,11 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// Player에 부착. 모든 WeaponPoint를 관리하고
-/// 같은 적을 두 무기가 동시에 공격하지 않도록 조율합니다.
+/// Player에 부착. 모든 WeaponPoint를 관리합니다.
 /// </summary>
 public class WeaponManager : MonoBehaviour
 {
     public static WeaponManager Instance { get; private set; }
-
-    // 현재 어떤 무기가 공격 중인 적 목록
-    private readonly HashSet<EnemyController> claimedEnemies = new();
 
     [Header("무기 장착 위치 (최대 6개)")]
     [SerializeField] private Transform[] weaponAnchors;
@@ -72,30 +68,35 @@ public class WeaponManager : MonoBehaviour
                 weaponGO.transform.localPosition = Vector3.zero;
                 weaponGO.transform.localRotation = Quaternion.identity;
                 weaponGO.transform.localScale    = Vector3.one;
-                
+
                 // WeaponPoint 컴포넌트가 없으면 추가, 있으면 가져와서 Init
                 if (!weaponGO.TryGetComponent<WeaponPoint>(out var wp))
                     wp = weaponGO.AddComponent<WeaponPoint>();
                 wp.Init(equipped[i]);
-                
+
                 this.DLog($"[WeaponManager] 슬롯 [{i}]: '{equipped[i].weaponName}' 장착 완료 (부모: {anchor.name})");
             }
         }
+
+        // 무기 생성/교체 후 현재 스탯 시트를 즉시 재적용
+        var sm = PlayerStatManager.Shared;
+        var player = PlayerController.Instance;
+        if (sm != null && player != null)
+            player.ApplyStatSheet(sm);
     }
 
-    /// <summary>적을 예약합니다. 이미 다른 무기가 공격 중이면 false.</summary>
-    public bool TryClaim(EnemyController enemy)
+    /// <summary>현재 장착된 모든 WeaponPoint를 반환합니다.</summary>
+    public List<WeaponPoint> GetActiveWeaponPoints()
     {
-        if (enemy == null) return false;
-        return claimedEnemies.Add(enemy);
+        var result = new List<WeaponPoint>();
+        if (weaponAnchors == null) return result;
+        var temp = new List<WeaponPoint>();
+        foreach (var anchor in weaponAnchors)
+        {
+            if (anchor == null) continue;
+            anchor.GetComponentsInChildren<WeaponPoint>(temp);
+            result.AddRange(temp);
+        }
+        return result;
     }
-
-    /// <summary>공격이 끝나면 예약 해제합니다.</summary>
-    public void Release(EnemyController enemy)
-    {
-        if (enemy != null)
-            claimedEnemies.Remove(enemy);
-    }
-
-    public bool IsClaimed(EnemyController enemy) => claimedEnemies.Contains(enemy);
 }

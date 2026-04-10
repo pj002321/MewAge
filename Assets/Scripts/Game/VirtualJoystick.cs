@@ -18,16 +18,19 @@ public class VirtualJoystick : MonoBehaviour
     private int        activeTouchId = -1;
     private Canvas     parentCanvas;
     private Camera     uiCamera;
+    private Vector2    backgroundOriginPos;
 
     public Vector2 Direction => inputVector;
 
     private void Awake()
     {
-        Instance     = this;
-        parentCanvas = GetComponentInParent<Canvas>();
-        uiCamera     = parentCanvas?.renderMode == RenderMode.ScreenSpaceOverlay
-                       ? null
-                       : parentCanvas?.worldCamera;
+        Instance            = this;
+        parentCanvas        = GetComponentInParent<Canvas>();
+        uiCamera            = parentCanvas?.renderMode == RenderMode.ScreenSpaceOverlay
+                              ? null
+                              : parentCanvas?.worldCamera;
+        backgroundOriginPos = background.anchoredPosition;
+        background.gameObject.SetActive(false);
     }
 
     private void Update()
@@ -78,6 +81,7 @@ public class VirtualJoystick : MonoBehaviour
     // ── 조이스틱 상태 제어 ─────────────────────────────
     private void BeginJoystick(Vector2 screenPos)
     {
+        background.gameObject.SetActive(true);
         if (parentCanvas != null)
         {
             RectTransformUtility.ScreenPointToLocalPointInRectangle(
@@ -107,5 +111,7 @@ public class VirtualJoystick : MonoBehaviour
         activeTouchId           = -1;
         inputVector             = Vector2.zero;
         handle.anchoredPosition = Vector2.zero;
+        background.anchoredPosition = backgroundOriginPos;
+        background.gameObject.SetActive(false);
     }
 }

@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 971795ed98445fd42b659c79465cbde3, type: 3}
+  m_Name: C1_S2
+  m_EditorClassIdentifier: Assembly-CSharp::StageEnvironmentSO
+  waveBackgrounds:
+  - fromWave: 1
+    background: {fileID: 6900160063066121858, guid: 1847c1d79a452ac4bb1e8832c67c3f44, type: 3}
+  - fromWave: 11
+    background: {fileID: 6900160063066121858, guid: da8c6a53d8caa314c825af65c114b835, type: 3}
+  bossBackground: {fileID: 6900160063066121858, guid: 2941003a64f24b644908b7efcea461f6, type: 3}
+  followPlayer: 1
+  bossFollowPlayer: 0
+  useBounds: 1

@@ -1,4 +1,5 @@
 using Mewage.DB;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -6,12 +7,16 @@ using UnityEngine.UI;
 /// 뽑기 버튼에 붙이는 컴포넌트.
 /// Awake() 시 DB_상점에서 boxType에 맞는 가격을 자동으로 읽어옵니다.
 /// drawCount가 1 초과면 "정가×n에서 1회 공짜" 가격을 적용합니다.
+/// costText 슬롯에 TextMeshProUGUI를 연결하면 가격이 자동으로 표시됩니다.
 /// </summary>
 [RequireComponent(typeof(Button))]
 public class GachaDrawButton : MonoBehaviour
 {
-    public int          drawCount = 1;   // 1 또는 n
-    public EquipBoxType boxType   = EquipBoxType.Normal;
+    public int             drawCount = 1;   // 1 또는 n
+    public EquipBoxType    boxType   = EquipBoxType.Normal;
+
+    [Tooltip("버튼 안의 비용 텍스트 (선택). 연결하면 DB 가격이 자동 표시됩니다.")]
+    public TextMeshProUGUI costText;
 
     void Awake()
     {
@@ -22,10 +27,13 @@ public class GachaDrawButton : MonoBehaviour
             return;
         }
 
-        int unitCost = GetUnitCostFromDB(boxType);
+        int unitCost  = GetUnitCostFromDB(boxType);
         int totalCost = drawCount <= 1
             ? unitCost
             : unitCost * (drawCount - 1);  // n회 중 1회 공짜
+
+        if (costText != null)
+            costText.text = $"{totalCost}";
 
         GetComponent<Button>().onClick.AddListener(() => panel.TryDrawMulti(totalCost, drawCount, boxType));
     }

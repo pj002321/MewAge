@@ -21,10 +21,10 @@ public class BossSlamSkill : BossSkillBase
 
     private Animator anim;
 
-    public override void Init(BossController boss, EnemyController owner)
+    public override void Init(BossController boss)
     {
-        base.Init(boss, owner);
-        anim = owner.GetComponentInChildren<Animator>();
+        base.Init(boss);
+        anim = boss.EnemyAnimator;
     }
 
     protected override IEnumerator OnExecute()

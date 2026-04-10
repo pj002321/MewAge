@@ -35,6 +35,9 @@ public class PlayerCharacterManager : MonoBehaviourSingleton<PlayerCharacterMana
     private const string PrefKeyChar = "equipped_char";
     private const string PrefKeyTier = "char_tier_{0}"; // 캐릭터별 증강 단계 (1~3)
 
+    private Sprite _cachedSprite;
+    private string _cachedSpriteCharId;
+
     protected override bool DontDestroy => true; // 홈→게임 씬 이동 시 유지
 
     // ─────────────────────────────────────────────────────────────
@@ -97,30 +100,20 @@ public class PlayerCharacterManager : MonoBehaviourSingleton<PlayerCharacterMana
             return;
         }
 
-        // 0. 캐릭터 스프라이트 교체 — Resources/Character/{캐릭ID} 로드
+        // 0. 캐릭터 스프라이트 교체 — 동일 캐릭터면 캐시 재사용, 변경 시에만 Resources.Load
         if (!string.IsNullOrEmpty(row.f_캐릭ID))
         {
-            string spritePath = $"Character/{row.f_캐릭ID.ToLower()}";
-            var sprite = Resources.Load<Sprite>(spritePath);
-            if (sprite != null)
+            if (_cachedSprite == null || _cachedSpriteCharId != row.f_캐릭ID)
+            {
+                string spritePath = $"Character/{row.f_캐릭ID.ToLower()}";
+                _cachedSprite     = Resources.Load<Sprite>(spritePath);
+                _cachedSpriteCharId = row.f_캐릭ID;
+            }
+            if (_cachedSprite != null)
             {
                 var sr = player.GetComponentInChildren<SpriteRenderer>();
-                if (sr != null)
-                {
-                    sr.sprite = sprite;
-                    Debug.Log($"[CharMgr] 스프라이트 교체 완료: {spritePath}");
-                }
-                else
-                    Debug.LogWarning("[CharMgr] SpriteRenderer 를 찾지 못했음");
+                if (sr != null) sr.sprite = _cachedSprite;
             }
-            else
-            {
-                Debug.LogWarning($"[CharMgr] 스프라이트 없음: Resources/{spritePath}");
-            }
-        }
-        else
-        {
-            Debug.LogWarning($"[CharMgr] f_캐릭ID 가 비어있음: {row.f_이름}");
         }
 
         // 1. 기초 스탯 적용 — PlayerStatManager를 통해 설정하면 StatPanelUI에도 반영됨
@@ -144,7 +137,13 @@ public class PlayerCharacterManager : MonoBehaviourSingleton<PlayerCharacterMana
         if (tier >= 2) ApplyStatBonus(row.f_속성2ID, row.f_S2, baseHp, baseDef, baseAtk, player, stats, sm);
         if (tier >= 3) ApplyStatBonus(row.f_속성3ID, row.f_S3, baseHp, baseDef, baseAtk, player, stats, sm);
 
-        Debug.Log($"[CharMgr] 스탯 적용: {row.f_이름} (Tier {tier})");
+        // 3. 캐릭터 고유 스킬 등록
+        string skillId = "";
+        try { skillId = row.f_스킬ID ?? ""; }
+        catch { Debug.LogWarning("[CharMgr] f_스킬ID 필드를 읽을 수 없습니다. BansheeGz에서 필드를 추가하고 코드를 재생성하세요."); }
+        CharacterSkillManager.Shared?.Initialize(skillId);
+
+        Debug.Log($"[CharMgr] 스탯 적용: {row.f_이름} (Tier {tier}, 스킬: {skillId})");
     }
 
     // ─────────────────────────────────────────────────────────────

@@ -7,7 +7,9 @@ public class SpawnMarker : MonoBehaviour
     [SerializeField] private float warningDuration = 1.5f;
 
     private GameObject spawnPrefab;
-    private int        spawnWave;
+    private int        _globalWave;
+    private int        _designGlobalWave;
+    private int        _wavesPerStage;
     private UnitData   _unitData;
 
     private static int _activeCount;
@@ -15,12 +17,14 @@ public class SpawnMarker : MonoBehaviour
 
     private void OnDestroy() => _activeCount--;
 
-    public void Init(GameObject prefab, int wave = 0, UnitData unitData = null)
+    public void Init(GameObject prefab, int globalWave = 0, int designGlobalWave = 0, UnitData unitData = null, int wavesPerStage = 30)
     {
         _activeCount++;
-        spawnPrefab = prefab;
-        spawnWave   = wave;
-        _unitData   = unitData;
+        spawnPrefab       = prefab;
+        _globalWave       = globalWave;
+        _designGlobalWave = designGlobalWave;
+        _wavesPerStage    = wavesPerStage;
+        _unitData         = unitData;
 
         if (sr == null) sr = GetComponent<SpriteRenderer>();
         SetAlpha(1f);
@@ -49,11 +53,21 @@ public class SpawnMarker : MonoBehaviour
 
         if (spawnPrefab != null)
         {
-            var obj = Instantiate(spawnPrefab, transform.position, Quaternion.identity);
-            if (obj.TryGetComponent<EnemyController>(out var enemy))
+            EnemyController enemy;
+            if (EnemyPool.Shared != null)
             {
-                enemy.InitForWave(spawnWave);
-                if (_unitData != null) enemy.ApplyUnitData(_unitData);
+                enemy = EnemyPool.Shared.Get(spawnPrefab, transform.position);
+            }
+            else
+            {
+                var obj = Instantiate(spawnPrefab, transform.position, Quaternion.identity);
+                enemy   = obj.GetComponent<EnemyController>();
+            }
+
+            if (enemy != null)
+            {
+                if (_unitData != null) enemy.ApplyUnitData(_unitData);  // 먼저 — InitForWave가 ActiveUnitData 필요
+                enemy.InitForWave(_globalWave, _designGlobalWave, _wavesPerStage);
                 enemy.PlaySpawnBounce();
             }
         }

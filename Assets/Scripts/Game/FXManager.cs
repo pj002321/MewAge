@@ -24,14 +24,68 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
     // 파편 오브젝트 추적 (웨이브 종료 시 일괄 제거용)
     private readonly List<GameObject> activeDebris = new();
 
+    // ── 오브젝트 풀 ──────────────────────────────────────────────
+    private readonly Dictionary<GameObject, Queue<GameObject>> _debrisPool    = new();
+    private readonly Queue<DamageText>                         _damageTextPool = new();
+    private readonly Dictionary<GameObject, Vector3>           _prefabScales  = new();
+
+    private GameObject GetDebris(GameObject prefab, Vector3 pos)
+    {
+        if (!_debrisPool.TryGetValue(prefab, out var q))
+            _debrisPool[prefab] = q = new Queue<GameObject>();
+
+        if (q.Count > 0)
+        {
+            var go = q.Dequeue();
+            go.transform.SetPositionAndRotation(pos, Quaternion.identity);
+            go.transform.localScale = _prefabScales.TryGetValue(prefab, out var s) ? s : Vector3.one;
+            go.SetActive(true);
+            return go;
+        }
+        var inst = Instantiate(prefab, pos, Quaternion.identity);
+        if (!_prefabScales.ContainsKey(prefab)) _prefabScales[prefab] = inst.transform.localScale;
+        return inst;
+    }
+
+    private void ReturnDebris(GameObject prefab, GameObject go)
+    {
+        if (go == null) return;
+        // 색상 알파 복구
+        var sr = go.GetComponent<SpriteRenderer>();
+        if (sr != null) { var c = sr.color; sr.color = new Color(c.r, c.g, c.b, 1f); }
+        go.transform.localScale = _prefabScales.TryGetValue(prefab, out var s) ? s : Vector3.one;
+        go.SetActive(false);
+        if (!_debrisPool.TryGetValue(prefab, out var q))
+            _debrisPool[prefab] = q = new Queue<GameObject>();
+        q.Enqueue(go);
+    }
+
+    public void ReturnDamageText(DamageText dt)
+    {
+        if (dt == null) return;
+        dt.gameObject.SetActive(false);
+        _damageTextPool.Enqueue(dt);
+    }
+
     public void SpawnDamageText(Vector3 worldPos, float damage, bool isCritical = false, bool isBleed = false)
     {
         if (damageTextPrefab == null) return;
 
-        // 여러 텍스트가 겹치지 않도록 수평 랜덤 오프셋
         Vector3 offset = new(Random.Range(-0.2f, 0.2f), 0.3f, 0f);
-        var go = Instantiate(damageTextPrefab, worldPos + offset, Quaternion.identity);
-        go.GetComponent<DamageText>()?.Init(damage, isCritical, isBleed);
+        Vector3 pos    = worldPos + offset;
+
+        DamageText dt;
+        if (_damageTextPool.Count > 0)
+        {
+            dt = _damageTextPool.Dequeue();
+            dt.transform.position = pos;
+            dt.gameObject.SetActive(true);
+        }
+        else
+        {
+            dt = Instantiate(damageTextPrefab, pos, Quaternion.identity).GetComponent<DamageText>();
+        }
+        dt?.Init(damage, isCritical, isBleed);
     }
 
     /// <summary>플레이어 머리 위에 상승 텍스트를 표시합니다. (획득/회복/회피 피드백)</summary>
@@ -118,8 +172,7 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
 
         for (int i = 0; i < count; i++)
         {
-            gos[i] = Instantiate(prefab, pos, Quaternion.identity);
-            gos[i].transform.localScale *= Random.Range(0.15f, 0.3f);   // 아주 작게
+            gos[i] = GetDebris(prefab, pos);
             activeDebris.Add(gos[i]);
             renders[i] = gos[i].GetComponent<SpriteRenderer>();
 
@@ -158,43 +211,76 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
             if (gos[i] != null)
             {
                 activeDebris.Remove(gos[i]);
-                Destroy(gos[i]);
+                ReturnDebris(prefab, gos[i]);
             }
         }
     }
 
     private IEnumerator DebrisRoutine(Vector3 pos, GameObject prefab, Vector2 deathDir = default)
     {
-        const int count = 14;
+        const int count = 8;
         var gos  = new GameObject[count];
         var vels = new Vector2[count];
+        var srs  = new SpriteRenderer[count];
 
-        bool hasDir   = deathDir.sqrMagnitude > 0.001f;
+        bool  hasDir  = deathDir.sqrMagnitude > 0.001f;
         float baseRad = hasDir ? Mathf.Atan2(deathDir.y, deathDir.x) * Mathf.Rad2Deg : 0f;
 
         for (int i = 0; i < count; i++)
         {
-            gos[i] = Instantiate(prefab, pos, Quaternion.identity);
-            gos[i].transform.localScale *= Random.Range(0.7f, 1.0f);
-            activeDebris.Add(gos[i]);  // 추적 목록 등록
+            gos[i] = GetDebris(prefab, pos);
+            activeDebris.Add(gos[i]);
+            srs[i] = gos[i].GetComponent<SpriteRenderer>();
 
-            float angleDeg = hasDir
-                ? (baseRad + Random.Range(-70f, 70f)) * Mathf.Deg2Rad
-                : Random.Range(0f, 360f) * Mathf.Deg2Rad;
-            float speed = Random.Range(3f, 7f);
-            vels[i] = new Vector2(Mathf.Cos(angleDeg), Mathf.Sin(angleDeg)) * speed;
+            float angleDeg, speed;
+            if (hasDir)
+            {
+                // 앞 절반: deathDir 방향 ±20° 좁은 cone — 빠르게 쌔게
+                // 뒤 절반: ±70° 넓게 퍼지는 잔해 — 느리게
+                if (i < count * 0.6f)
+                {
+                    angleDeg = baseRad + Random.Range(-20f, 20f);
+                    speed    = Random.Range(6f, 10f);
+                }
+                else
+                {
+                    angleDeg = baseRad + Random.Range(-70f, 70f);
+                    speed    = Random.Range(2f, 5f);
+                }
+            }
+            else
+            {
+                angleDeg = Random.Range(0f, 360f);
+                speed    = Random.Range(3f, 7f);
+            }
+
+            float rad = angleDeg * Mathf.Deg2Rad;
+            vels[i]   = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad)) * speed;
+
+            // deathDir 방향 전체에 추가 부스트 (모든 파편이 그 방향으로 쏠림)
+            if (hasDir)
+                vels[i] += deathDir * Random.Range(1f, 2f);
         }
 
-        float duration = 0.5f;
+        float duration = 0.55f;
         float elapsed  = 0f;
 
         while (elapsed < duration)
         {
+            float t = elapsed / duration;
             for (int i = 0; i < count; i++)
             {
                 if (gos[i] == null) continue;
                 gos[i].transform.position += (Vector3)(vels[i] * Time.deltaTime);
-                vels[i] *= 1f - 5f * Time.deltaTime;
+                vels[i] *= 1f - 6f * Time.deltaTime; // 감속
+
+                // 후반부터 페이드아웃
+                if (srs[i] != null && t > 0.4f)
+                {
+                    float alpha = Mathf.Lerp(1f, 0f, (t - 0.4f) / 0.6f);
+                    var c = srs[i].color;
+                    srs[i].color = new Color(c.r, c.g, c.b, alpha);
+                }
             }
             elapsed += Time.deltaTime;
             yield return null;
@@ -205,7 +291,7 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
             if (gos[i] != null)
             {
                 activeDebris.Remove(gos[i]);
-                Destroy(gos[i]);
+                ReturnDebris(prefab, gos[i]);
             }
         }
     }

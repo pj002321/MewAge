@@ -34,16 +34,16 @@ public class BossIntroSequence : MonoBehaviourSingleton<BossIntroSequence>
 
     private IEnumerator Sequence(System.Action onComplete)
     {
-        var switcher   = WaveEnvironmentSwitcher.Shared;
-        var exitPoint  = switcher?.CurrentBossExitPoint;
-        var enterPoint = switcher?.CurrentBossEnterPoint;
+        var switcher  = WaveEnvironmentSwitcher.Shared;
+        var exitPoint = switcher?.CurrentBossExitPoint;
+        // enterPoint는 SetBoss() 이후에 세팅되므로 나중에 읽음
 
         var player = PlayerController.Instance;
 
         // 1. 입력 잠금
         if (player != null) player.InputLocked = true;
 
-        // 2. exitPoint 로 걸어서 이동 (Rigidbody2D 물리와 충돌하지 않도록 rb.MovePosition 사용)
+        // 2. exitPoint 로 걸어서 이동
         if (player != null && exitPoint != null)
         {
             var walkRb = player.GetComponent<Rigidbody2D>();
@@ -69,10 +69,11 @@ public class BossIntroSequence : MonoBehaviourSingleton<BossIntroSequence>
         // 3. 페이드 아웃
         yield return StartCoroutine(Fade(1f));
 
-        // 4. 보스 환경 전환
+        // 4. 보스 환경 전환 — 이 시점에 CurrentBossEnterPoint 세팅됨
         switcher?.SetBoss();
 
-        // 5. 플레이어 텔레포트
+        // 5. 플레이어 텔레포트 (SetBoss 이후에 읽어야 올바른 위치)
+        var enterPoint = switcher?.CurrentBossEnterPoint;
         if (player != null && enterPoint != null)
         {
             var rb = player.GetComponent<Rigidbody2D>();

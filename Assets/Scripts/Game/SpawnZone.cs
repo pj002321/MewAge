@@ -2,11 +2,8 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// 폴리곤으로 정의한 적 스폰 영역.
-/// NormalEnvironment / BossEnvironment 하위에 배치하고,
-/// WaveEnvironmentSwitcher가 환경 전환 시 Register()를 호출합니다.
-///
-/// Inspector에서 포인트를 추가하고, 씬 뷰에서 핸들을 드래그해 편집하세요.
+/// 적 스폰 영역. 자체 폴리곤으로 영역을 지정합니다.
+/// 부모 오브젝트의 스케일(FitSpriteToScreen 등)을 TransformPoint로 자동 반영합니다.
 /// </summary>
 public class SpawnZone : MonoBehaviour
 {
@@ -14,128 +11,107 @@ public class SpawnZone : MonoBehaviour
 
     [SerializeField] private List<Vector2> localPoints = new()
     {
-        new(-6f, -10f), new( 6f, -10f),
-        new( 6f,  10f), new(-6f,  10f),
+        new(-4f, -6f), new( 4f, -6f),
+        new( 4f,  6f), new(-4f,  6f),
     };
 
-    [Tooltip("폴리곤 경계 바깥으로 스폰 위치를 밀어낼 거리")]
-    [SerializeField] private float edgeOffset = 0.5f;
+    [Tooltip("폴리곤 경계 바깥으로 스폰 위치를 밀어낼 거리 (0 = 경계 위에 스폰)")]
+    [SerializeField] private float edgeOffset = 0f;
 
     private void OnEnable() => Shared = this;
     public  void Register() => Shared = this;
 
     public int     PointCount      => localPoints.Count;
     public Vector2 GetLocal(int i) => localPoints[i];
-    public Vector2 GetWorld(int i) => (Vector2)transform.position + localPoints[i];
+    public Vector2 GetWorld(int i) => transform.TransformPoint(localPoints[i]);
 
-    // ── AABB (ChargeBehaviour / HordeBehaviour 호환) ─────────────────
-    /// <summary>폴리곤 AABB 중심 (월드 좌표)</summary>
+    // ── AABB ─────────────────────────────────────────────────────────
     public Vector2 BoundsCenter
     {
-        get
-        {
-            Vector2 mn = localPoints[0], mx = localPoints[0];
-            foreach (var p in localPoints) { mn = Vector2.Min(mn, p); mx = Vector2.Max(mx, p); }
-            return (mn + mx) * 0.5f + (Vector2)transform.position;
-        }
+        get { GetAABB(out var mn, out var mx); return (mn + mx) * 0.5f; }
     }
-
-    /// <summary>폴리곤 AABB 크기</summary>
     public Vector2 BoundsSize
     {
-        get
+        get { GetAABB(out var mn, out var mx); return mx - mn; }
+    }
+
+    private void GetAABB(out Vector2 mn, out Vector2 mx)
+    {
+        mn = GetWorld(0); mx = mn;
+        for (int i = 1; i < localPoints.Count; i++)
         {
-            Vector2 mn = localPoints[0], mx = localPoints[0];
-            foreach (var p in localPoints) { mn = Vector2.Min(mn, p); mx = Vector2.Max(mx, p); }
-            return mx - mn;
+            Vector2 wp = GetWorld(i);
+            mn = Vector2.Min(mn, wp); mx = Vector2.Max(mx, wp);
         }
     }
 
-    // ── 스폰 위치 ─────────────────────────────────────────────────────
-    /// <summary>폴리곤 경계 위 랜덤 위치에서 edgeOffset 만큼 바깥으로 밀어낸 좌표를 반환합니다.</summary>
+    // ── 스폰 위치 ────────────────────────────────────────────────────
     public Vector2 GetRandomEdgePosition()
     {
         if (localPoints.Count < 2) return transform.position;
 
-        Vector2 offset   = transform.position;
         int     count    = localPoints.Count;
-        Vector2 centroid = Centroid() + offset;
+        Vector2 centroid = Vector2.zero;
+        for (int i = 0; i < count; i++) centroid += GetWorld(i);
+        centroid /= count;
 
-        // 엣지 길이를 가중치로 랜덤 엣지 선택 → 균등 분포
+        // 엣지 길이 가중치 랜덤 선택
         float total = 0f;
         for (int i = 0, j = count - 1; i < count; j = i++)
-            total += Vector2.Distance(localPoints[j], localPoints[i]);
+            total += Vector2.Distance(GetWorld(j), GetWorld(i));
 
         float roll = Random.Range(0f, total);
         float acc  = 0f;
         int ai = count - 1, bi = 0;
         for (int i = 0, j = count - 1; i < count; j = i++)
         {
-            float len = Vector2.Distance(localPoints[j], localPoints[i]);
+            float len = Vector2.Distance(GetWorld(j), GetWorld(i));
             acc += len;
             if (roll <= acc) { ai = j; bi = i; break; }
         }
 
-        Vector2 a     = localPoints[ai] + offset;
-        Vector2 b     = localPoints[bi] + offset;
+        Vector2 a     = GetWorld(ai);
+        Vector2 b     = GetWorld(bi);
         Vector2 point = Vector2.Lerp(a, b, Random.value);
 
-        // 다각형 중심 기준 외곽 법선
-        Vector2 edge   = b - a;
-        Vector2 normal = new Vector2(edge.y, -edge.x).normalized;
-        if (Vector2.Dot(normal, (a + b) * 0.5f - centroid) < 0f)
-            normal = -normal;
+        if (edgeOffset > 0f)
+        {
+            Vector2 n = new Vector2((b - a).y, -(b - a).x).normalized;
+            if (Vector2.Dot(n, (a + b) * 0.5f - centroid) < 0f) n = -n;
+            point += n * edgeOffset;
+        }
 
-        return point + normal * edgeOffset;
+        return point;
     }
 
-    // ── 내부 헬퍼 ─────────────────────────────────────────────────────
-    private Vector2 Centroid()
-    {
-        Vector2 c = Vector2.zero;
-        foreach (var p in localPoints) c += p;
-        return c / localPoints.Count;
-    }
-
-    // ── Gizmo ─────────────────────────────────────────────────────────
+    // ── Gizmo ────────────────────────────────────────────────────────
     private void OnDrawGizmos()
     {
         if (localPoints == null || localPoints.Count < 2) return;
 
-        Vector2 offset   = transform.position;
         int     count    = localPoints.Count;
-        Vector2 centroid = Centroid() + offset;
+        Vector2 centroid = Vector2.zero;
+        for (int i = 0; i < count; i++) centroid += GetWorld(i);
+        centroid /= count;
 
-        // 내부 경계 (주황)
         Gizmos.color = new Color(1f, 0.45f, 0.1f, 0.9f);
         for (int i = 0, j = count - 1; i < count; j = i++)
-            Gizmos.DrawLine(localPoints[j] + offset, localPoints[i] + offset);
+            Gizmos.DrawLine(GetWorld(j), GetWorld(i));
 
-        // 포인트 구체
         Gizmos.color = Color.yellow;
         for (int i = 0; i < count; i++)
-            Gizmos.DrawSphere(localPoints[i] + offset, 0.12f);
+            Gizmos.DrawSphere(GetWorld(i), 0.12f);
 
-        // 외부 edgeOffset 경계 (빨강)
         if (edgeOffset > 0f)
         {
             Gizmos.color = new Color(1f, 0.2f, 0.2f, 0.55f);
             for (int i = 0, j = count - 1; i < count; j = i++)
             {
-                Vector2 a    = localPoints[j] + offset;
-                Vector2 b    = localPoints[i] + offset;
-                Vector2 edge = b - a;
-                Vector2 n    = new Vector2(edge.y, -edge.x).normalized;
+                Vector2 a = GetWorld(j), b = GetWorld(i);
+                Vector2 n = new Vector2((b - a).y, -(b - a).x).normalized;
                 if (Vector2.Dot(n, (a + b) * 0.5f - centroid) < 0f) n = -n;
                 Gizmos.DrawLine(a + n * edgeOffset, b + n * edgeOffset);
             }
         }
-
-#if UNITY_EDITOR
-        UnityEditor.Handles.color = new Color(1f, 0.6f, 0.1f);
-        UnityEditor.Handles.Label(
-            centroid + Vector2.up * (BoundsSize.y * 0.5f + edgeOffset + 0.2f),
-            "[ Spawn Zone ]");
-#endif
     }
 }

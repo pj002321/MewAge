@@ -21,14 +21,18 @@ public abstract class StructureSkillBase : MonoBehaviour
     /// <summary>이 기물이 맵에 형체가 남는 설치형인지 여부. false면 발동 즉시 외형이 사라집니다.</summary>
     public bool IsInstallation => isInstallation;
 
+    /// <summary>기물의 현재 강화 레벨 (Lv.1~20). 스킬에서 레벨별 분기에 사용합니다.</summary>
+    public int StructureLevel { get; private set; } = 1;
+
     /// <summary>
     /// StructurePlacer가 _s 프리팹을 설치한 직후 호출합니다.
-    /// DB의 ★ 등급별 수치로 mainValue / subValue를 덮어씁니다.
+    /// 레벨별 수치로 mainValue / subValue를 덮어씁니다.
     /// </summary>
-    public void Init(Mewage.DB.DB_기물 data, int starLevel)
+    public void Init(Mewage.DB.DB_기물 data, int level)
     {
         if (data == null) return;
-        mainValue = StructureWareManager.Shared?.GetMainValue(data, starLevel) ?? data.f_주수치;
+        StructureLevel = level;
+        mainValue = StructureWareManager.Shared?.GetMainValue(data, level) ?? data.f_주수치;
         subValue  = data.f_보조수치;
     }
 

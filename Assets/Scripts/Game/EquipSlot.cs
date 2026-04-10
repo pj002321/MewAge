@@ -13,9 +13,10 @@ public class EquipSlot : MonoBehaviour,
     IPointerDownHandler, IPointerUpHandler,
     IBeginDragHandler, IDragHandler, IEndDragHandler
 {
+    [SerializeField] private Image           synergyhilightImg;
     [SerializeField] private Image           frameImg;
     [SerializeField] private Image           iconImg;
-    [SerializeField] private TextMeshProUGUI starText;
+    [SerializeField] private Image           starImage;
 
     public int SlotIndex { get; set; }
 
@@ -51,27 +52,65 @@ public class EquipSlot : MonoBehaviour,
         bool has = data != null;
         if (iconImg)  iconImg.enabled = has;
         if (has && iconImg && data.icon) iconImg.sprite = data.icon;
-        if (starText)
+        if (starImage)
         {
-            starText.text = has ? new string('★', data.star) : string.Empty;
-            starText.gameObject.SetActive(has);
+            if (has && data.star > 0)
+            {
+                var sprite = Resources.Load<Sprite>($"UI/star_{data.star}");
+                if (sprite != null) { starImage.sprite = sprite; starImage.SetNativeSize(); starImage.enabled = true; }
+                else starImage.enabled = false;
+            }
+            else starImage.enabled = false;
         }
         transform.localScale = Vector3.one * (has && selected ? 1.15f : 1f);
 
-        // 3성 이상이면 shimmer 시작, 미만이면 직접 색상 적용
+        if (frameImg)
+        {
+            if (has)
+            {
+                var path = "Weapons/grade/" + data.grade.ToString().ToLower();
+                var sprite = Resources.Load<Sprite>(path);
+                Debug.Log($"[EquipSlot] Loading grade sprite: {path}, result: {sprite != null}");
+                if (sprite != null)
+                {
+                    frameImg.sprite = sprite;
+                    frameImg.color = Color.white;
+                }
+                else
+                {
+                    Debug.LogWarning($"[EquipSlot] Grade sprite not found: {path}");
+                }
+            }
+            else
+            {
+                var path = "Weapons/grade/normal";
+                var sprite = Resources.Load<Sprite>(path);
+                Debug.Log($"[EquipSlot] Loading normal sprite: {path}, result: {sprite != null}");
+                if (sprite != null)
+                {
+                    frameImg.sprite = sprite;
+                    frameImg.color = Color.white;
+                }
+                else
+                {
+                    Debug.LogWarning($"[EquipSlot] Normal sprite not found: {path}");
+                }
+            }
+        }
+
+        // 3성 이상이면 shimmer 시작
         bool useShimmer = has && data.star >= 3 && frameImg != null;
         int  targetStar = useShimmer ? data.star : 0;
 
-        if (targetStar != _shimmerStar)
+        // 성 수가 바뀌었거나, 반짝임이 켜져야 하는데 코루틴이 없는 경우 재시작
+        bool needsUpdate = (targetStar != _shimmerStar) || (useShimmer && _shimmerCoroutine == null);
+        if (needsUpdate)
         {
             StopShimmer();
             _shimmerStar = targetStar;
             if (useShimmer)
                 _shimmerCoroutine = StartCoroutine(ShimmerRoutine(targetStar));
         }
-
-        if (!useShimmer && frameImg != null)
-            frameImg.color = has ? WeaponGradeColors.Get(data.grade) : Color.white;
     }
 
     private void StopShimmer()
@@ -218,6 +257,6 @@ public class EquipSlot : MonoBehaviour,
 
     private static void DestroyGhost()
     {
-        if (ghost != null) { Destroy(ghost); ghost = null; }
+        if (ghost != null) { ghost.SetActive(false); Destroy(ghost); ghost = null; }
     }
 }

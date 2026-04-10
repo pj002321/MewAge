@@ -44,7 +44,12 @@ public class ImprovManager : MonoBehaviourSingleton<ImprovManager>
 
         Time.timeScale = 0f;
         improvPanel.Setup(draws);
-        improvPanel.gameObject.SetActive(true);
+
+        var blur = improvPanel.GetComponentInChildren<BlurBackground>(true);
+        if (blur != null)
+            StartCoroutine(blur.Capture(improvPanel.gameObject));
+        else
+            improvPanel.gameObject.SetActive(true);
     }
 
     // ── 리롤 ──────────────────────────────────────────────────────

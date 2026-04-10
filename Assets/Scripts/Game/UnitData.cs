@@ -22,6 +22,11 @@ public class UnitData
     public string typeId;      // "MELEE", "RANGED", "CHARGE" …
     public int   rowCount;     // 스프라이트 시트 행 수
 
+    // ── 웨이브 스케일링 ────────────────────────────────────────
+    public float hpGrowthRate;      // 웨이브 delta당 HP 증가율
+    public float dmgGrowthRate;     // 웨이브 delta당 데미지 증가율
+    public int   designGlobalWave;  // 설계 기준 globalWave (f_최초기준)
+
     /// <summary>RANGED 타입일 때만 설정, 나머지는 null.</summary>
     public ProjectileData projectile;
 
@@ -47,6 +52,9 @@ public class UnitData
         d.moveSpeed     = row.f_U이속;
         d.typeId        = row.f_타입ID;
         d.rowCount      = row.f_U행수;
+        d.hpGrowthRate       = row.f_체력비율;
+        d.dmgGrowthRate      = row.f_데미지비율;
+        d.designGlobalWave   = row.f_최초기준 > 0 ? row.f_최초기준 : 1;
 
         // 프리팹 로드: Resources/Unit/Ch1/c1_m1
         if (!string.IsNullOrEmpty(d.unitId))
@@ -54,7 +62,27 @@ public class UnitData
             string path = $"Unit/Ch{d.chapter}/{d.unitId.ToLower()}";
             d.prefab = Resources.Load<GameObject>(path);
             if (d.prefab == null)
+            {
                 Debug.LogWarning($"[UnitData] 프리팹 없음: Resources/{path}");
+            }
+            else
+            {
+                var renderers = d.prefab.GetComponentsInChildren<SpriteRenderer>(true);
+                if (renderers == null || renderers.Length == 0)
+                {
+                    Debug.LogWarning($"[UnitData] 프리팹에 SpriteRenderer 없음: {path}");
+                }
+                else
+                {
+                    foreach (var sr in renderers)
+                    {
+                        if (sr.sprite == null)
+                        {
+                            Debug.LogWarning($"[UnitData] 프리팹 SpriteRenderer의 sprite null: {path}");
+                        }
+                    }
+                }
+            }
         }
 
         // RANGED 타입 투사체 데이터

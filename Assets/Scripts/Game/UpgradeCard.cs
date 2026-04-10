@@ -12,7 +12,7 @@ public class UpgradeCard : MonoBehaviour
     [SerializeField] private Image           weaponIcon;
     [SerializeField] private TextMeshProUGUI weaponNameText;
     [SerializeField] private TextMeshProUGUI priceText;
-    [SerializeField] private TextMeshProUGUI starText;
+    [SerializeField] private Image           starImage;
     [SerializeField] private Button          buyButton;
     [SerializeField] private Button          adButton;
     [SerializeField] private Button          infoButton;
@@ -24,7 +24,11 @@ public class UpgradeCard : MonoBehaviour
         data = weaponData;
         gameObject.SetActive(true);
 
-        if (cardFrame)      cardFrame.color     = WeaponGradeColors.Get(weaponData.grade);
+        if (cardFrame)
+        {
+            cardFrame.sprite = Resources.Load<Sprite>("Weapons/grade/" + weaponData.grade.ToString().ToLower());
+            cardFrame.color  = Color.white;
+        }
         if (weaponIcon)
         {
             weaponIcon.sprite  = weaponData.icon;
@@ -33,7 +37,7 @@ public class UpgradeCard : MonoBehaviour
         }
         if (weaponNameText) weaponNameText.text = weaponData.weaponName;
         if (priceText)      priceText.text      = $"{weaponData.price}";
-        if (starText)       starText.text       = new string('★', weaponData.star);
+        SetStarImage(starImage, weaponData.star);
 
         buyButton.gameObject.SetActive(true);
         buyButton.onClick.RemoveAllListeners();
@@ -60,4 +64,13 @@ public class UpgradeCard : MonoBehaviour
     private void OnClickBuy()  => UpgradeManager.Shared?.TryBuy(data);
     private void OnClickInfo() => WeaponInfoPanel.Shared?.Show(data,
         onBuy: () => UpgradeManager.Shared?.TryBuy(data));
+
+    private static void SetStarImage(Image img, int star)
+    {
+        if (img == null) return;
+        if (star <= 0) { img.enabled = false; return; }
+        var sprite = Resources.Load<Sprite>($"UI/star_{star}");
+        if (sprite != null) { img.sprite = sprite; img.SetNativeSize(); img.enabled = true; }
+        else                  img.enabled = false;
+    }
 }

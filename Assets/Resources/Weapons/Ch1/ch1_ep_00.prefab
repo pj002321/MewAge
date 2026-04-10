@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 5374686351836354880}
   - component: {fileID: 2442180650331241265}
   - component: {fileID: -7691689357368657162}
-  - component: {fileID: -4924759175812654426}
+  - component: {fileID: -5742848553004821721}
   m_Layer: 0
   m_Name: ch1_ep_00
   m_TagString: Untagged
@@ -28,7 +28,7 @@ Transform:
   m_GameObject: {fileID: 5416354146166037338}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 503.15234, y: 1514.9768, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -83,7 +83,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 2
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -4115283497915249717, guid: badaf08edcff8b349acea815a10d4aeb, type: 3}
+  m_Sprite: {fileID: 5462544555987826815, guid: 78d61fd33e0f98e479b493b4683771cf, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -105,31 +105,32 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 80572d92ca6952f478c256b7ffc65d80, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponPoint
-  weaponType: 1
-  attackDamage: 65
-  attackCooldown: 0.5
-  criticalRate: 0
+  weaponType: 4
+  criticalRate: 0.1
   criticalMultiplier: 2
   dotDamage: 0
   lifeSteal: 0
-  attackRange: 6
-  strikeSpeed: 70
-  returnSpeed: 30
+  pullbackDist: 0.5
+  anticipationTime: 0.08
+  strikeSpeed: 100
+  returnSpeed: 100
   hitDistance: 0.25
-  areaHitRadius: 0.4
   areaHitDamageRatio: 0.5
   overshootDistance: 0.5
   overshootSpeed: 60
-  projectilePrefab: {fileID: 6277426376135361209, guid: 4bc2218685218fe4eb7fb82986924e6a, type: 3}
+  projectilePrefab: {fileID: 0}
   projectileSpeed: 8
+  shootScalePulse: 1
+  scalePulseMax: 1.3
+  scalePulseDuration: 0.12
   boomerangMaxBounces: 3
   boomerangBounceRange: 5
-  orbitRadius: 1.2
+  orbitRadius: 2
   orbitSpeed: 200
   spinHitRadius: 0.35
   spinHitCooldown: 0.5
   spinKnockback: 7
---- !u!114 &-4924759175812654426
+--- !u!114 &-5742848553004821721
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -141,7 +142,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d880b36e09b826b4aa4d33b07b710c84, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpriteOutline
-  colorProperty: _SolidOutline
   starColors:
   - {r: 1, g: 1, b: 1, a: 0}
   - {r: 0.504717, g: 0.9414869, b: 1, a: 1}

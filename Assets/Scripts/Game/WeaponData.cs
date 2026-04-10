@@ -34,15 +34,18 @@ public class WeaponData : ScriptableObject
     public string storyDescription;
 
     // ────────────────────────────────────────────────────────────────
-    // 기본 스탯 (1성 기준, WeaponPoint에서 로드. 합성 중 변하지 않음)
+    // 기본 스탯 (1성 기준, DB_무기에서 로드. 합성 중 변하지 않음)
     // ────────────────────────────────────────────────────────────────
-    [Header("기본 스탯 (1성 기준, WeaponPoint)")]
+    [Header("기본 스탯 (1성 기준, DB)")]
     public float baseAttackDamage;
-    public float baseAttackCooldown;
+    public float baseAttackCooldown;  // DB f_공격속도(0~100) / 100 = 실제 쿨타임(초)
     public float baseAttackRange;
+    public float baseAreaHitRadius;   // DB f_주변범위
     public float baseCriticalRate;
-    public float baseBleedDamage;   // 출혈
-    public float baseLifeSteal;     // 흡혈
+    public float baseBleedDamage;     // 출혈
+    public float baseLifeSteal;       // 흡혈
+    public int   baseMaxBounces;      // 부메랑 튕김 횟수
+    public float baseBounceRange;     // 부메랑 튕김 범위
 
     // ────────────────────────────────────────────────────────────────
     // 현재 스탯 (성 보너스 적용 후)
@@ -51,9 +54,12 @@ public class WeaponData : ScriptableObject
     public float attackDamage;
     public float attackCooldown;
     public float attackRange;
+    public float areaHitRadius;
     public float criticalRate;
-    public float bleedDamage;   // 출혈
-    public float lifeSteal;     // 흡혈
+    public float bleedDamage;    // 출혈
+    public float lifeSteal;      // 흡혈
+    public int   maxBounces;     // 부메랑 튕김 횟수
+    public float bounceRange;    // 부메랑 튕김 범위
 
     // ────────────────────────────────────────────────────────────────
     // 성별 강화 보너스
@@ -90,9 +96,12 @@ public class WeaponData : ScriptableObject
         next.baseAttackDamage   = baseAttackDamage;
         next.baseAttackCooldown = baseAttackCooldown;
         next.baseAttackRange    = baseAttackRange;
+        next.baseAreaHitRadius  = baseAreaHitRadius;
         next.baseCriticalRate   = baseCriticalRate;
         next.baseBleedDamage    = baseBleedDamage;
         next.baseLifeSteal      = baseLifeSteal;
+        next.baseMaxBounces     = baseMaxBounces;
+        next.baseBounceRange    = baseBounceRange;
 
         next.ResetToBase();
         next.ApplyBonusesUpToStar();
@@ -122,6 +131,15 @@ public class WeaponData : ScriptableObject
         data.bonus3Star = WeaponStatRegistry.Build(row.f_속성3성ID, row.f_S2);
         data.bonus4Star = WeaponStatRegistry.Build(row.f_속성4성ID, row.f_S3);
 
+        // DB에서 직접 기본 스탯 로드
+        // f_공격속도는 float (초 단위 쿨타임) — 0.8 → 0.8초에 한 번 공격
+        data.baseAttackDamage   = row.f_기본공격력;
+        data.baseAttackCooldown = row.f_공격속도 > 0 ? row.f_공격속도 : 1f;
+        data.baseAttackRange    = row.f_탐지범위;
+        data.baseAreaHitRadius  = row.f_주변범위;
+        data.baseMaxBounces     = data.weaponType == WeaponType.Boomerang ? 3 : 0; // 예시, DB에서 로드 가능
+        data.baseBounceRange    = data.weaponType == WeaponType.Boomerang ? 5f : 0f;
+
         // 무기ID 기반으로 Resources에서 프리팹 로드 (예: Resources/Weapons/Ch1/ch1_n_00)
         string weaponId = row.f_무기ID;
         if (!string.IsNullOrEmpty(weaponId))
@@ -137,15 +155,13 @@ public class WeaponData : ScriptableObject
             data.icon = data.prefab.GetComponent<SpriteRenderer>()?.sprite
                      ?? data.prefab.GetComponentInChildren<SpriteRenderer>()?.sprite;
 
+            // criticalRate / bleedDamage / lifeSteal는 각 무기 프리팹 Inspector에서 설정
             var wp = data.prefab.GetComponentInChildren<WeaponPoint>();
             if (wp != null)
             {
-                data.baseAttackDamage   = wp.AttackDamage;
-                data.baseAttackCooldown = wp.AttackCooldown;
-                data.baseAttackRange    = wp.AttackRange;
-                data.baseCriticalRate   = wp.CriticalRate;
-                data.baseBleedDamage    = wp.BleedDamage;
-                data.baseLifeSteal      = wp.LifeSteal;
+                data.baseCriticalRate = wp.CriticalRate;
+                data.baseBleedDamage  = wp.BleedDamage;
+                data.baseLifeSteal    = wp.LifeSteal;
             }
         }
 
@@ -197,9 +213,12 @@ public class WeaponData : ScriptableObject
         attackDamage   = baseAttackDamage;
         attackCooldown = baseAttackCooldown;
         attackRange    = baseAttackRange;
+        areaHitRadius  = baseAreaHitRadius;
         criticalRate   = baseCriticalRate;
         bleedDamage    = baseBleedDamage;
         lifeSteal      = baseLifeSteal;
+        maxBounces     = baseMaxBounces;
+        bounceRange    = baseBounceRange;
     }
 
     private void ApplyBonusesUpToStar()

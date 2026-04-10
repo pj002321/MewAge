@@ -1588,7 +1588,7 @@ public class HomeUIBuilder
         popupGO.SetActive(false);
 
         // ── 기물 결과 팝업 ───────────────────────────────────────────
-        var shopFont2 = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>("Assets/Font/mona12-Bold SDF.asset");
+        var shopFont2 = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>("Assets/TextMesh Pro/Font/mona12-Bold SDF.asset");
         var warePopup = BuildWareResultPopup(panelShop.transform, shopFont2);
 
         // WareDrawButton 전부 찾아서 팝업 직접 연결
@@ -1602,7 +1602,7 @@ public class HomeUIBuilder
         shopPanel.gachaPopup = popup;
 
         // ── 커스텀 폰트 적용 ────────────────────────────────────────
-        var shopFont = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>("Assets/Font/mona12-Bold SDF.asset");
+        var shopFont = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>("Assets/TextMesh Pro/Font/mona12-Bold SDF.asset");
         if (shopFont != null)
         {
             foreach (var tmp in panelShop.GetComponentsInChildren<TextMeshProUGUI>(true))
@@ -1611,7 +1611,7 @@ public class HomeUIBuilder
         }
         else
         {
-            Debug.LogWarning("[HomeUIBuilder] 폰트를 찾을 수 없음: Assets/Font/mona12-Bold SDF.asset");
+            Debug.LogWarning("[HomeUIBuilder] 폰트를 찾을 수 없음: Assets/TextMesh Pro/Font/mona12-Bold SDF.asset");
         }
 
         panelShop.SetActive(false);
@@ -1750,20 +1750,20 @@ public class HomeUIBuilder
             "현재 챕터 + 이전 챕터",
             "NORMAL 70%  RARE 30%",
             new Color(0.25f, 0.55f, 0.30f, 1f),
-            StructureGacha.KeyNormal, 300, 2700);
+            WareBoxType.Normal, 300, 2700);
 
         BuildWareCapsuleCard(rowRT,
             "레어 기물 뽑기",
             "현재 챕터 + 이전 챕터\n+5% 다음 챕터 선공개",
             "RARE 70%  EPIC 30%",
             new Color(0.50f, 0.18f, 0.72f, 1f),
-            StructureGacha.KeyEpic, 800, 7200);
+            WareBoxType.Epic, 800, 7200);
     }
 
     static void BuildWareCapsuleCard(RectTransform parent, string title, string subDesc,
-        string probDesc, Color accentColor, string gachaKey, int cost1, int cost10)
+        string probDesc, Color accentColor, WareBoxType boxType, int cost1, int cost10)
     {
-        var cardGO = new GameObject($"WareCard_{gachaKey}");
+        var cardGO = new GameObject($"WareCard_{boxType}");
         cardGO.transform.SetParent(parent, false);
         cardGO.AddComponent<LayoutElement>();
         cardGO.AddComponent<Image>().color = new Color(0.18f, 0.12f, 0.30f, 1f);
@@ -1813,8 +1813,8 @@ public class HomeUIBuilder
             btnGO.transform.SetParent(btnRow, false);
             btnGO.AddComponent<Image>().color = new Color(0.15f, 0.60f, 0.20f, 1f);
             btnGO.AddComponent<Button>();
-            var wdb       = btnGO.AddComponent<WareDrawButton>();
-            wdb.gachaKey  = gachaKey;
+            var wdb      = btnGO.AddComponent<WareDrawButton>();
+            wdb.boxType  = boxType;
             wdb.drawCount = count;
             var btnTmp    = CreateTMPText("Label", btnGO.transform, label, 26f, TextAlignmentOptions.Center);
             btnTmp.color = Color.white; btnTmp.fontStyle = FontStyles.Bold;
@@ -2212,41 +2212,62 @@ public class HomeUIBuilder
         while (panelWare.transform.childCount > 0)
             Object.DestroyImmediate(panelWare.transform.GetChild(0).gameObject);
 
-        var font       = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>("Assets/Font/mona12-Bold SDF.asset");
-        var ColBg      = new Color(0.08f, 0.10f, 0.18f, 1f);
-        var ColCard    = new Color(0.12f, 0.15f, 0.25f, 1f);
-        var ColAccent  = new Color(1f,    0.80f, 0.20f, 1f);
-        var ColUpgrade = new Color(0.20f, 0.70f, 0.30f, 1f);
-        var ColDiscard = new Color(0.70f, 0.25f, 0.20f, 1f);
+        var font      = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>("Assets/TextMesh Pro/Font/mona12-Bold SDF.asset");
+        var ColBg     = new Color(0.08f, 0.10f, 0.18f, 1f);
+        var ColCard   = new Color(0.12f, 0.15f, 0.25f, 1f);
+        var ColSec    = new Color(0.10f, 0.13f, 0.22f, 1f);
+        var ColAccent = new Color(1f,    0.80f, 0.20f, 1f);
+        var ColUpg    = new Color(0.20f, 0.70f, 0.30f, 1f);
+        var ColDis    = new Color(0.70f, 0.25f, 0.20f, 1f);
+        var ColSynth  = new Color(0.35f, 0.20f, 0.65f, 1f);
+        var ColToggle = new Color(0.20f, 0.30f, 0.55f, 1f);
 
         var panelImg = panelWare.GetComponent<Image>() ?? panelWare.AddComponent<Image>();
         panelImg.color = ColBg;
 
-        // ── 1. 상단: 프리셋 4슬롯 (30%) ──────────────────────────────
-        var presetArea = new GameObject("PresetArea");
-        presetArea.transform.SetParent(panelWare.transform, false);
-        var paRT = presetArea.AddComponent<RectTransform>();
-        SetAnchors(paRT, new Vector2(0f, 0.68f), Vector2.one, Vector2.zero, Vector2.zero);
-        presetArea.AddComponent<Image>().color = ColCard;
+        // ── 1. TopModeBar (패널 제목 + 모드 전환) ─────────────────────
+        //   앵커: y = 0.94 ~ 1.0
+        var topBarRT = CreateRect("TopModeBar", panelWare.transform);
+        SetAnchors(topBarRT, new Vector2(0f, 0.94f), Vector2.one, Vector2.zero, Vector2.zero);
+        topBarRT.gameObject.AddComponent<Image>().color = ColSec;
 
-        var presetTitle = CreateTMPText("PresetTitle", presetArea.transform, "전투 프리셋", 30f, TextAlignmentOptions.Left);
-        presetTitle.color = ColAccent;
-        if (font) presetTitle.font = font;
-        var ptRT = presetTitle.GetComponent<RectTransform>();
-        SetAnchors(ptRT, new Vector2(0f,0.78f), Vector2.one, new Vector2(24f,0f), Vector2.zero);
+        var panelTitleTMP = CreateTMPText("PanelTitle", topBarRT, "기물", 36f, TextAlignmentOptions.Left);
+        panelTitleTMP.color = ColAccent; panelTitleTMP.fontStyle = FontStyles.Bold;
+        if (font) panelTitleTMP.font = font;
+        SetAnchors(panelTitleTMP.GetComponent<RectTransform>(),
+            new Vector2(0.02f, 0.1f), new Vector2(0.50f, 0.9f), Vector2.zero, Vector2.zero);
+
+        var toggleGO  = new GameObject("ModeToggleButton");
+        toggleGO.transform.SetParent(topBarRT, false);
+        var toggleRT  = toggleGO.AddComponent<RectTransform>();
+        SetAnchors(toggleRT, new Vector2(0.60f, 0.10f), new Vector2(0.97f, 0.90f), Vector2.zero, Vector2.zero);
+        toggleGO.AddComponent<Image>().color = ColToggle;
+        var toggleBtn = toggleGO.AddComponent<Button>();
+        var toggleLbl = CreateTMPText("Label", toggleGO.transform, "합성 탭", 26f, TextAlignmentOptions.Center);
+        toggleLbl.color = Color.white; if (font) toggleLbl.font = font;
+        SetAnchors(toggleLbl.GetComponent<RectTransform>(), Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+
+        // ── 2. PresetArea (y=0.62~0.94, 프리셋 모드) ─────────────────
+        var presetAreaGO = new GameObject("PresetArea");
+        presetAreaGO.transform.SetParent(panelWare.transform, false);
+        var paRT = presetAreaGO.AddComponent<RectTransform>();
+        SetAnchors(paRT, new Vector2(0f, 0.62f), new Vector2(1f, 0.94f), Vector2.zero, Vector2.zero);
+        presetAreaGO.AddComponent<Image>().color = ColCard;
+
+        var presetTitleTMP = CreateTMPText("PresetTitle", presetAreaGO.transform, "전투 프리셋", 28f, TextAlignmentOptions.Left);
+        presetTitleTMP.color = ColAccent; if (font) presetTitleTMP.font = font;
+        SetAnchors(presetTitleTMP.GetComponent<RectTransform>(),
+            new Vector2(0.02f, 0.80f), new Vector2(0.65f, 1f), Vector2.zero, Vector2.zero);
 
         var presetRow = new GameObject("PresetRow");
-        presetRow.transform.SetParent(presetArea.transform, false);
+        presetRow.transform.SetParent(presetAreaGO.transform, false);
         var prRT = presetRow.AddComponent<RectTransform>();
-        SetAnchors(prRT, Vector2.zero, new Vector2(1f,0.78f), new Vector2(16f,8f), new Vector2(-16f,-4f));
+        SetAnchors(prRT, Vector2.zero, new Vector2(1f, 0.80f), new Vector2(12f, 8f), new Vector2(-12f, -4f));
         var prHLG = presetRow.AddComponent<HorizontalLayoutGroup>();
-        prHLG.spacing = 12f;
-        prHLG.padding = new RectOffset(8, 8, 8, 8);
+        prHLG.spacing = 10f; prHLG.padding = new RectOffset(8, 8, 6, 6);
         prHLG.childAlignment = TextAnchor.MiddleCenter;
-        prHLG.childForceExpandWidth = true;
-        prHLG.childForceExpandHeight = true;
-        prHLG.childControlWidth = true;
-        prHLG.childControlHeight = true;
+        prHLG.childForceExpandWidth = true; prHLG.childForceExpandHeight = true;
+        prHLG.childControlWidth = true;     prHLG.childControlHeight = true;
 
         var presetSlots = new WareSlotView[4];
         for (int i = 0; i < 4; i++)
@@ -2257,43 +2278,144 @@ public class HomeUIBuilder
             presetSlots[i] = sv;
         }
 
-        // ── 2. 하단: 인벤토리 스크롤 (68%) ──────────────────────────
+        // ── 3. SynthArea (y=0.62~0.94, 합성 모드, 초기 비활성) ────────
+        var synthAreaGO = new GameObject("SynthArea");
+        synthAreaGO.transform.SetParent(panelWare.transform, false);
+        var saRT = synthAreaGO.AddComponent<RectTransform>();
+        SetAnchors(saRT, new Vector2(0f, 0.62f), new Vector2(1f, 0.94f), Vector2.zero, Vector2.zero);
+        synthAreaGO.AddComponent<Image>().color = new Color(0.09f, 0.07f, 0.17f, 1f);
+        synthAreaGO.SetActive(false);
+
+        // 3-a. 합성 헤더 (타이틀 + 시대 필터)
+        var synthHeaderRT = CreateRect("SynthHeader", synthAreaGO.transform);
+        SetAnchors(synthHeaderRT, new Vector2(0f, 0.85f), Vector2.one, new Vector2(8f, 0f), new Vector2(-8f, 0f));
+        synthHeaderRT.gameObject.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0f);
+
+        var synthTitleTMP = CreateTMPText("SynthTitle", synthHeaderRT, "합성", 28f, TextAlignmentOptions.Left);
+        synthTitleTMP.color = new Color(0.75f, 0.55f, 1f, 1f); synthTitleTMP.fontStyle = FontStyles.Bold;
+        if (font) synthTitleTMP.font = font;
+        SetAnchors(synthTitleTMP.GetComponent<RectTransform>(),
+            new Vector2(0f, 0f), new Vector2(0.35f, 1f), Vector2.zero, Vector2.zero);
+
+        var synthEraText = CreateTMPText("SynthEraFilterText", synthHeaderRT,
+            "시대 제한 없음", 20f, TextAlignmentOptions.Right);
+        synthEraText.color = new Color(0.65f, 0.65f, 0.65f, 1f);
+        if (font) synthEraText.font = font;
+        SetAnchors(synthEraText.GetComponent<RectTransform>(),
+            new Vector2(0.35f, 0f), new Vector2(1f, 1f), Vector2.zero, Vector2.zero);
+
+        // 3-b. 재료 슬롯 그리드 (5열 × 2행 = 10칸, 런타임에 slotPrefab 으로 채워짐)
+        var synthSlotsGO = new GameObject("SynthSlotsParent");
+        synthSlotsGO.transform.SetParent(synthAreaGO.transform, false);
+        var ssRT = synthSlotsGO.AddComponent<RectTransform>();
+        SetAnchors(ssRT, new Vector2(0f, 0.28f), new Vector2(1f, 0.85f),
+            new Vector2(8f, 4f), new Vector2(-8f, -4f));
+        var ssGLG = synthSlotsGO.AddComponent<GridLayoutGroup>();
+        ssGLG.cellSize        = new Vector2(175f, 110f);
+        ssGLG.spacing         = new Vector2(8f, 6f);
+        ssGLG.padding         = new RectOffset(6, 6, 4, 4);
+        ssGLG.childAlignment  = TextAnchor.UpperCenter;
+        ssGLG.constraint      = GridLayoutGroup.Constraint.FixedColumnCount;
+        ssGLG.constraintCount = 5;
+
+        // 3-c. 미리보기 텍스트 (왼쪽)
+        var synthPreviewTMP = CreateTMPText("SynthPreviewText", synthAreaGO.transform,
+            "카드를 3~10장 선택하세요\n(같은 시대만 가능)", 20f, TextAlignmentOptions.Left);
+        synthPreviewTMP.color = new Color(0.75f, 0.75f, 0.75f, 1f);
+        synthPreviewTMP.lineSpacing = -12f;
+        if (font) synthPreviewTMP.font = font;
+        SetAnchors(synthPreviewTMP.GetComponent<RectTransform>(),
+            new Vector2(0.02f, 0.02f), new Vector2(0.60f, 0.28f), Vector2.zero, Vector2.zero);
+
+        // 3-d. 합성 실행 버튼 (오른쪽)
+        var synthConfGO  = new GameObject("SynthConfirmButton");
+        synthConfGO.transform.SetParent(synthAreaGO.transform, false);
+        var scRT = synthConfGO.AddComponent<RectTransform>();
+        SetAnchors(scRT, new Vector2(0.62f, 0.04f), new Vector2(0.98f, 0.27f), Vector2.zero, Vector2.zero);
+        synthConfGO.AddComponent<Image>().color = ColSynth;
+        var synthConfBtn = synthConfGO.AddComponent<Button>();
+        var synthConfLbl = CreateTMPText("Label", synthConfGO.transform, "합성", 26f, TextAlignmentOptions.Center);
+        synthConfLbl.color = Color.white; if (font) synthConfLbl.font = font;
+        SetAnchors(synthConfLbl.GetComponent<RectTransform>(), Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+
+        // ── 4. SortTabsRow (y=0.56~0.62) ─────────────────────────────
+        var sortTabsGO = new GameObject("SortTabsRow");
+        sortTabsGO.transform.SetParent(panelWare.transform, false);
+        var stRT = sortTabsGO.AddComponent<RectTransform>();
+        SetAnchors(stRT, new Vector2(0f, 0.56f), new Vector2(1f, 0.62f), Vector2.zero, Vector2.zero);
+        sortTabsGO.AddComponent<Image>().color = new Color(0.07f, 0.09f, 0.15f, 1f);
+        var stHLG = sortTabsGO.AddComponent<HorizontalLayoutGroup>();
+        stHLG.childForceExpandWidth = true; stHLG.childForceExpandHeight = true;
+        stHLG.childControlWidth = true;     stHLG.childControlHeight = true;
+        stHLG.spacing = 2f; stHLG.padding = new RectOffset(4, 4, 4, 4);
+
+        string[] tabLabels = { "전체", "등급순", "시대순", "역할순" };
+        var tabBtns = new Button[4];
+        for (int i = 0; i < 4; i++)
+        {
+            var tGO = new GameObject($"Tab_{tabLabels[i]}");
+            tGO.transform.SetParent(sortTabsGO.transform, false);
+            tGO.AddComponent<RectTransform>();
+            tGO.AddComponent<Image>().color = i == 0 ? ColAccent : new Color(0.25f, 0.25f, 0.25f, 1f);
+            var tBtn = tGO.AddComponent<Button>();
+            var tLbl = CreateTMPText("Label", tGO.transform, tabLabels[i], 22f, TextAlignmentOptions.Center);
+            tLbl.color = i == 0 ? new Color(0.1f, 0.1f, 0.1f, 1f) : Color.white;
+            if (font) tLbl.font = font;
+            SetAnchors(tLbl.GetComponent<RectTransform>(), Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            tabBtns[i] = tBtn;
+        }
+
+        // ── 5. InventoryScroll (y=0~0.56) ────────────────────────────
         var scrollGO = new GameObject("InventoryScroll");
         scrollGO.transform.SetParent(panelWare.transform, false);
         var scrollRT = scrollGO.AddComponent<RectTransform>();
-        SetAnchors(scrollRT, Vector2.zero, new Vector2(1f, 0.68f), Vector2.zero, Vector2.zero);
+        SetAnchors(scrollRT, Vector2.zero, new Vector2(1f, 0.56f), Vector2.zero, Vector2.zero);
         scrollGO.AddComponent<Image>().color = ColBg;
-
         var sr = scrollGO.AddComponent<ScrollRect>();
         sr.horizontal = false; sr.vertical = true;
-
         var viewport = CreateRect("Viewport", scrollGO.transform);
         SetAnchors(viewport, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
         viewport.gameObject.AddComponent<RectMask2D>();
         sr.viewport = viewport;
-
         var contentRT = CreateGridContent("Content", viewport);
         sr.content = contentRT;
 
-        // ── 3. 슬롯 프리팹 (패널 루트에 비활성화로 배치) ─────────────
+        // ── 6. WareSlotPrefab (비활성, 프리셋·인벤·합성 재료 공용) ─────
         var slotPrefabGO = BuildWareSlotGO("WareSlotPrefab", panelWare.transform, font, ColCard);
         slotPrefabGO.SetActive(false);
         var slotPrefabSV = slotPrefabGO.AddComponent<WareSlotView>();
         AssignWareSlotRefs(slotPrefabGO, slotPrefabSV);
 
-        // ── 4. WareDetailPopup ────────────────────────────────────────
-        var popup = BuildWareDetailPopup(panelWare.transform, font, ColCard, ColUpgrade, ColDiscard);
+        // ── 7. WareDetailPopup ────────────────────────────────────────
+        var popup = BuildWareDetailPopup(panelWare.transform, font, ColCard, ColUpg, ColDis);
 
-        // ── 5. HomeWarePanel 연결 ─────────────────────────────────────
-        var warePanel = panelWare.AddComponent<HomeWarePanel>();
-        warePanel.presetSlots      = presetSlots;
-        warePanel.inventoryContent = contentRT;
-        warePanel.slotPrefab       = slotPrefabSV;
-        warePanel.detailPopup      = popup;
+        // ── 8. WareSynthResultPopup ───────────────────────────────────
+        var synthPopup = BuildWareSynthResultPopup(panelWare.transform, font, slotPrefabSV);
+
+        // ── 9. HomeWarePanel 연결 ─────────────────────────────────────
+        var warePanel                   = panelWare.AddComponent<HomeWarePanel>();
+        warePanel.presetArea            = presetAreaGO;
+        warePanel.presetSlots           = presetSlots;
+        warePanel.synthArea             = synthAreaGO;
+        warePanel.synthSlotsParent      = synthSlotsGO.transform;
+        warePanel.synthConfirmButton    = synthConfBtn;
+        warePanel.synthConfirmLabel     = synthConfLbl;
+        warePanel.synthPreviewText      = synthPreviewTMP;
+        warePanel.synthEraFilterText    = synthEraText;
+        warePanel.modeToggleButton      = toggleBtn;
+        warePanel.modeToggleLabel       = toggleLbl;
+        warePanel.tabAll                = tabBtns[0];
+        warePanel.tabByGrade            = tabBtns[1];
+        warePanel.tabByEra              = tabBtns[2];
+        warePanel.tabByRole             = tabBtns[3];
+        warePanel.inventoryContent      = contentRT;
+        warePanel.slotPrefab            = slotPrefabSV;
+        warePanel.detailPopup           = popup;
+        warePanel.synthResultPopup      = synthPopup;
 
         if (font)
             foreach (var tmp in panelWare.GetComponentsInChildren<TextMeshProUGUI>(true))
-                tmp.font = font;
+                if (tmp.font == null) tmp.font = font;
 
         panelWare.SetActive(false);
         EditorSceneManager.MarkSceneDirty(scene);
@@ -2565,141 +2687,242 @@ public class HomeUIBuilder
         // 전체 화면 오버레이
         var overlayGO = new GameObject("WareDetailPopup");
         overlayGO.transform.SetParent(parent, false);
-        overlayGO.layer = 5; // UI Layer
+        overlayGO.layer = 5;
         var overlayRT = overlayGO.AddComponent<RectTransform>();
         SetAnchors(overlayRT, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-        
-        var overlayLE = overlayGO.AddComponent<LayoutElement>();
-        overlayLE.ignoreLayout = true; // 레이아웃 무시
+        overlayGO.AddComponent<LayoutElement>().ignoreLayout = true;
         overlayGO.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.65f);
         overlayGO.SetActive(false);
 
-        // 카드 패널
+        // 카드 패널 (화면 중앙)
         var cardGO = new GameObject("Card");
         cardGO.transform.SetParent(overlayGO.transform, false);
         var cardRT = cardGO.AddComponent<RectTransform>();
-        cardRT.anchorMin = new Vector2(0.05f, 0.12f);
-        cardRT.anchorMax = new Vector2(0.95f, 0.88f);
+        cardRT.anchorMin = new Vector2(0.04f, 0.08f);
+        cardRT.anchorMax = new Vector2(0.96f, 0.92f);
         cardRT.offsetMin = cardRT.offsetMax = Vector2.zero;
         cardGO.AddComponent<Image>().color = cardCol;
 
-        // 닫기 버튼
-        var closeGO  = new GameObject("CloseButton");
+        // 닫기 버튼 (우상단)
+        var closeGO = new GameObject("CloseButton");
         closeGO.transform.SetParent(cardGO.transform, false);
-        var closeRT  = closeGO.AddComponent<RectTransform>();
-        SetAnchors(closeRT, new Vector2(1f,1f), new Vector2(1f,1f),
-                   new Vector2(-80f,-80f), new Vector2(-8f,-8f));
-        closeGO.AddComponent<Image>().color = new Color(0.5f,0.2f,0.2f,1f);
-        var closeTMP = CreateTMPText("Label", closeGO.transform, "✕", 36f, TextAlignmentOptions.Center);
-        closeTMP.color = Color.white; if (font) closeTMP.font = font;
-        SetAnchors(closeTMP.GetComponent<RectTransform>(), Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+        SetAnchors(closeGO.AddComponent<RectTransform>(),
+            new Vector2(1f, 1f), new Vector2(1f, 1f),
+            new Vector2(-76f, -76f), new Vector2(-6f, -6f));
+        closeGO.AddComponent<Image>().color = new Color(0.55f, 0.18f, 0.18f, 1f);
         var closeBtn = closeGO.AddComponent<Button>();
+        var closeLbl = CreateTMPText("Label", closeGO.transform, "✕", 34f, TextAlignmentOptions.Center);
+        closeLbl.color = Color.white; if (font) closeLbl.font = font;
+        SetAnchors(closeLbl.GetComponent<RectTransform>(), Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
 
-        // 아이콘
+        // ── 아이콘 영역 (좌상단) ─────────────────────────────────────
         var iconFrameGO = new GameObject("FrameImage");
         iconFrameGO.transform.SetParent(cardGO.transform, false);
-        var iconFrameRT = iconFrameGO.AddComponent<RectTransform>();
-        SetAnchors(iconFrameRT, new Vector2(0.05f,0.60f), new Vector2(0.35f,0.97f), Vector2.zero, Vector2.zero);
+        SetAnchors(iconFrameGO.AddComponent<RectTransform>(),
+            new Vector2(0.04f, 0.62f), new Vector2(0.34f, 0.98f), Vector2.zero, Vector2.zero);
         iconFrameGO.AddComponent<Image>().color = Color.white;
 
         var iconGO = new GameObject("IconImage");
         iconGO.transform.SetParent(iconFrameGO.transform, false);
-        var iconRT = iconGO.AddComponent<RectTransform>();
-        SetAnchors(iconRT, new Vector2(0.1f,0.1f), new Vector2(0.9f,0.9f), Vector2.zero, Vector2.zero);
+        SetAnchors(iconGO.AddComponent<RectTransform>(),
+            new Vector2(0.08f, 0.08f), new Vector2(0.92f, 0.92f), Vector2.zero, Vector2.zero);
         iconGO.AddComponent<Image>().color = Color.white;
 
-        // 텍스트 영역
-        TMP_Text MakeTxt(string n, Vector2 amin, Vector2 amax, Vector2 omin, Vector2 omax, float sz)
+        // ── 정보 텍스트 (아이콘 오른쪽) ─────────────────────────────
+        TMP_Text MakeTxt(string n, Transform p, Vector2 amin, Vector2 amax, float sz,
+            TextAlignmentOptions align = TextAlignmentOptions.Left)
         {
-            var t = CreateTMPText(n, cardGO.transform, n, sz, TextAlignmentOptions.Left);
+            var t = CreateTMPText(n, p, n, sz, align);
             t.color = Color.white; if (font) t.font = font;
-            SetAnchors(t.GetComponent<RectTransform>(), amin, amax, omin, omax);
+            SetAnchors(t.GetComponent<RectTransform>(), amin, amax, Vector2.zero, Vector2.zero);
             return t;
         }
 
-        var nameText    = MakeTxt("NameText",    new Vector2(0.38f,0.86f), new Vector2(0.95f,0.97f), Vector2.zero, Vector2.zero, 36f);
+        var nameText    = MakeTxt("NameText",    cardGO.transform, new Vector2(0.37f,0.88f), new Vector2(0.92f,0.98f), 34f);
         nameText.fontStyle = FontStyles.Bold;
-        var descText    = MakeTxt("DescriptionText", new Vector2(0.38f,0.78f), new Vector2(0.95f,0.85f), Vector2.zero, Vector2.zero, 20f);
-        descText.color = new Color(0.8f, 0.8f, 0.8f, 1f);
-        var eraRoleText = MakeTxt("EraRoleText", new Vector2(0.38f,0.70f), new Vector2(0.95f,0.77f), Vector2.zero, Vector2.zero, 24f);
-        eraRoleText.color = new Color(0.7f,0.9f,1f,1f);
-        var starText    = MakeTxt("StarText",    new Vector2(0.38f,0.62f), new Vector2(0.95f,0.69f), Vector2.zero, Vector2.zero, 30f);
-        starText.color = new Color(1f,0.84f,0f,1f);
-        var countText   = MakeTxt("CountText",   new Vector2(0.38f,0.54f), new Vector2(0.95f,0.61f), Vector2.zero, Vector2.zero, 24f);
+        var docuText    = MakeTxt("DocuText",    cardGO.transform, new Vector2(0.37f,0.80f), new Vector2(0.92f,0.88f), 19f);
+        docuText.color  = new Color(0.75f, 0.75f, 0.75f, 1f);
+        var eraRoleText = MakeTxt("EraRoleText", cardGO.transform, new Vector2(0.37f,0.72f), new Vector2(0.92f,0.80f), 22f);
+        eraRoleText.color = new Color(0.60f, 0.90f, 1.00f, 1f);
+        var levelText   = MakeTxt("LevelText",   cardGO.transform, new Vector2(0.37f,0.63f), new Vector2(0.75f,0.71f), 28f);
+        levelText.color = new Color(1f, 0.84f, 0f, 1f); levelText.fontStyle = FontStyles.Bold;
+        var countText   = MakeTxt("CountText",   cardGO.transform, new Vector2(0.75f,0.63f), new Vector2(0.92f,0.71f), 22f, TextAlignmentOptions.Right);
+        countText.color = new Color(0.80f, 0.80f, 0.80f, 1f);
 
-        // 구분선
-        var div1 = new GameObject("Div1"); div1.transform.SetParent(cardGO.transform, false);
-        var div1Img = div1.AddComponent<Image>(); div1Img.color = new Color(1f,1f,1f,0.1f);
-        SetAnchors(div1.GetComponent<RectTransform>(), new Vector2(0.05f,0.59f), new Vector2(0.95f,0.60f), Vector2.zero, Vector2.zero);
+        // ── 구분선 ───────────────────────────────────────────────────
+        void Divider(Vector2 y0, Vector2 y1)
+        {
+            var d = new GameObject("Divider"); d.transform.SetParent(cardGO.transform, false);
+            SetAnchors(d.AddComponent<RectTransform>(),
+                new Vector2(0.04f, y0.x), new Vector2(0.96f, y1.x), Vector2.zero, Vector2.zero);
+            d.AddComponent<Image>().color = new Color(1f, 1f, 1f, 0.10f);
+        }
+        Divider(new Vector2(0.61f, 0f), new Vector2(0.62f, 0f));
 
-        var statText     = MakeTxt("StatText",     new Vector2(0.05f,0.51f), new Vector2(0.95f,0.59f), Vector2.zero, Vector2.zero, 26f);
-        var nextStatText = MakeTxt("NextStatText", new Vector2(0.05f,0.43f), new Vector2(0.95f,0.51f), Vector2.zero, Vector2.zero, 24f);
-        nextStatText.color = new Color(0.6f,1f,0.6f,1f);
+        // ── 수치 ─────────────────────────────────────────────────────
+        var statText     = MakeTxt("StatText",     cardGO.transform, new Vector2(0.04f,0.53f), new Vector2(0.96f,0.61f), 24f);
+        var nextStatText = MakeTxt("NextStatText", cardGO.transform, new Vector2(0.04f,0.45f), new Vector2(0.96f,0.53f), 22f);
+        nextStatText.color = new Color(0.55f, 1f, 0.55f, 1f);
 
-        // 구분선2
-        var div2 = new GameObject("Div2"); div2.transform.SetParent(cardGO.transform, false);
-        var div2Img = div2.AddComponent<Image>(); div2Img.color = new Color(1f,1f,1f,0.1f);
-        SetAnchors(div2.GetComponent<RectTransform>(), new Vector2(0.05f,0.42f), new Vector2(0.95f,0.43f), Vector2.zero, Vector2.zero);
+        Divider(new Vector2(0.43f, 0f), new Vector2(0.44f, 0f));
 
-        // 프리셋 버튼 4개
+        // ── 프리셋 버튼 4개 ──────────────────────────────────────────
         var presetBtns   = new Button[4];
         var presetLabels = new TMP_Text[4];
-        float btnW = 0.215f;
+        float bw = 0.215f;
         for (int i = 0; i < 4; i++)
         {
-            float x0 = 0.05f + i * (btnW + 0.013f);
-            var btnGO = new GameObject($"PresetBtn_{i + 1}");
-            btnGO.transform.SetParent(cardGO.transform, false);
-            var btnRT = btnGO.AddComponent<RectTransform>();
-            SetAnchors(btnRT, new Vector2(x0, 0.32f), new Vector2(x0 + btnW, 0.41f), Vector2.zero, Vector2.zero);
-            btnGO.AddComponent<Image>().color = new Color(0.25f, 0.35f, 0.55f, 1f);
-            presetBtns[i] = btnGO.AddComponent<Button>();
-            var lbl = CreateTMPText("Label", btnGO.transform, $"슬롯 {i+1}", 22f, TextAlignmentOptions.Center);
+            float x0 = 0.04f + i * (bw + 0.013f);
+            var bGO = new GameObject($"PresetBtn_{i + 1}");
+            bGO.transform.SetParent(cardGO.transform, false);
+            SetAnchors(bGO.AddComponent<RectTransform>(),
+                new Vector2(x0, 0.31f), new Vector2(x0 + bw, 0.42f), Vector2.zero, Vector2.zero);
+            bGO.AddComponent<Image>().color = new Color(0.22f, 0.33f, 0.52f, 1f);
+            presetBtns[i] = bGO.AddComponent<Button>();
+            var lbl = CreateTMPText("Label", bGO.transform, $"슬롯{i+1}", 20f, TextAlignmentOptions.Center);
             lbl.color = Color.white; if (font) lbl.font = font;
             SetAnchors(lbl.GetComponent<RectTransform>(), Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             presetLabels[i] = lbl;
         }
 
-        // 강화 버튼
+        Divider(new Vector2(0.29f, 0f), new Vector2(0.30f, 0f));
+
+        // ── 시너지 텍스트 ────────────────────────────────────────────
+        var synergyText = MakeTxt("SynergyText", cardGO.transform,
+            new Vector2(0.04f, 0.17f), new Vector2(0.96f, 0.29f), 19f);
+        synergyText.color = new Color(0.70f, 0.90f, 0.70f, 1f);
+        synergyText.lineSpacing = -12f;
+
+        // ── 강화 버튼 ────────────────────────────────────────────────
         var upgGO = new GameObject("UpgradeButton");
         upgGO.transform.SetParent(cardGO.transform, false);
-        var upgRT = upgGO.AddComponent<RectTransform>();
-        SetAnchors(upgRT, new Vector2(0.05f,0.16f), new Vector2(0.57f,0.30f), Vector2.zero, Vector2.zero);
+        SetAnchors(upgGO.AddComponent<RectTransform>(),
+            new Vector2(0.04f, 0.04f), new Vector2(0.57f, 0.16f), Vector2.zero, Vector2.zero);
         upgGO.AddComponent<Image>().color = upgradeCol;
         var upgradeBtn = upgGO.AddComponent<Button>();
-        var upgLbl = CreateTMPText("Label", upgGO.transform, "강화  (0 / 3개)", 26f, TextAlignmentOptions.Center);
+        var upgLbl = CreateTMPText("Label", upgGO.transform, "강화 (0 / 2장)", 24f, TextAlignmentOptions.Center);
         upgLbl.color = Color.white; if (font) upgLbl.font = font;
         SetAnchors(upgLbl.GetComponent<RectTransform>(), Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
 
-        // 분해 버튼
+        // ── 분해 버튼 ────────────────────────────────────────────────
         var disGO = new GameObject("DismantleButton");
         disGO.transform.SetParent(cardGO.transform, false);
-        var disRT = disGO.AddComponent<RectTransform>();
-        SetAnchors(disRT, new Vector2(0.60f,0.16f), new Vector2(0.95f,0.30f), Vector2.zero, Vector2.zero);
+        SetAnchors(disGO.AddComponent<RectTransform>(),
+            new Vector2(0.60f, 0.04f), new Vector2(0.96f, 0.16f), Vector2.zero, Vector2.zero);
         disGO.AddComponent<Image>().color = discardCol;
         var dismantleBtn = disGO.AddComponent<Button>();
-        var disLbl = CreateTMPText("Label", disGO.transform, "분해  +50골드", 26f, TextAlignmentOptions.Center);
+        var disLbl = CreateTMPText("Label", disGO.transform, "분해 +50G", 24f, TextAlignmentOptions.Center);
         disLbl.color = Color.white; if (font) disLbl.font = font;
         SetAnchors(disLbl.GetComponent<RectTransform>(), Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
 
-        // WareDetailPopup 컴포넌트 연결
+        // ── WareDetailPopup 컴포넌트 연결 ─────────────────────────────
         var popup = overlayGO.AddComponent<WareDetailPopup>();
-        SetField(popup, "iconImage",      iconGO.GetComponent<Image>());
-        SetField(popup, "frameImage",     iconFrameGO.GetComponent<Image>());
-        SetField(popup, "nameText",       nameText);
-        SetField(popup, "descriptionText",descText);
-        SetField(popup, "eraRoleText",    eraRoleText);
-        SetField(popup, "starText",       starText);
-        SetField(popup, "countText",      countText);
-        SetField(popup, "statText",       statText);
-        SetField(popup, "nextStatText",   nextStatText);
-        SetField(popup, "upgradeButton",  upgradeBtn);
-        SetField(popup, "upgradeLabel",   upgLbl);
-        SetField(popup, "dismantleButton",dismantleBtn);
-        SetField(popup, "presetButtons",  presetBtns);
-        SetField(popup, "presetLabels",   presetLabels);
-        SetField(popup, "closeButton",    closeBtn);
+        SetField(popup, "iconImage",       iconGO.GetComponent<Image>());
+        SetField(popup, "frameImage",      iconFrameGO.GetComponent<Image>());
+        SetField(popup, "nameText",        nameText);
+        SetField(popup, "docuText",        docuText);
+        SetField(popup, "eraRoleText",     eraRoleText);
+        SetField(popup, "levelText",       levelText);
+        SetField(popup, "countText",       countText);
+        SetField(popup, "statText",        statText);
+        SetField(popup, "nextStatText",    nextStatText);
+        SetField(popup, "upgradeButton",   upgradeBtn);
+        SetField(popup, "upgradeLabel",    upgLbl);
+        SetField(popup, "dismantleButton", dismantleBtn);
+        SetField(popup, "synergyText",     synergyText);
+        SetField(popup, "presetButtons",   presetBtns);
+        SetField(popup, "presetLabels",    presetLabels);
+        SetField(popup, "closeButton",     closeBtn);
 
         return popup;
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // WareSynthResultPopup 빌드
+    // ════════════════════════════════════════════════════════════════
+
+    static WareSynthResultPopup BuildWareSynthResultPopup(
+        Transform parent, TMP_FontAsset font, WareSlotView slotPrefab)
+    {
+        var ColBg      = new Color(0f, 0f, 0f, 0.80f);
+        var ColCard    = new Color(0.10f, 0.12f, 0.22f, 1f);
+        var ColAccent  = new Color(0.75f, 0.55f, 1f, 1f);
+        var ColClose   = new Color(0.55f, 0.18f, 0.18f, 1f);
+
+        // 전체화면 반투명 오버레이
+        var overlayGO = new GameObject("WareSynthResultPopup");
+        overlayGO.transform.SetParent(parent, false);
+        overlayGO.layer = 5;
+        var overlayRT = overlayGO.AddComponent<RectTransform>();
+        SetAnchors(overlayRT, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+        overlayGO.AddComponent<LayoutElement>().ignoreLayout = true;
+        overlayGO.AddComponent<Image>().color = ColBg;
+        overlayGO.SetActive(false);
+
+        // 중앙 카드 패널
+        var cardGO = new GameObject("Card");
+        cardGO.transform.SetParent(overlayGO.transform, false);
+        var cardRT = cardGO.AddComponent<RectTransform>();
+        cardRT.anchorMin = new Vector2(0.05f, 0.12f);
+        cardRT.anchorMax = new Vector2(0.95f, 0.93f);
+        cardRT.offsetMin = cardRT.offsetMax = Vector2.zero;
+        cardGO.AddComponent<Image>().color = ColCard;
+
+        // 타이틀
+        var titleTMP = CreateTMPText("TitleText", cardGO.transform, "합성 결과!", 38f, TextAlignmentOptions.Center);
+        titleTMP.color = ColAccent; titleTMP.fontStyle = FontStyles.Bold;
+        if (font) titleTMP.font = font;
+        SetAnchors(titleTMP.GetComponent<RectTransform>(),
+            new Vector2(0.05f, 0.85f), new Vector2(0.85f, 1.00f), Vector2.zero, Vector2.zero);
+
+        // 닫기 버튼 (우상단)
+        var closeGO = new GameObject("CloseButton");
+        closeGO.transform.SetParent(cardGO.transform, false);
+        SetAnchors(closeGO.AddComponent<RectTransform>(),
+            new Vector2(0.87f, 0.87f), new Vector2(0.99f, 0.99f), Vector2.zero, Vector2.zero);
+        closeGO.AddComponent<Image>().color = ColClose;
+        var closeBtn = closeGO.AddComponent<Button>();
+        var closeLbl = CreateTMPText("Label", closeGO.transform, "✕", 32f, TextAlignmentOptions.Center);
+        closeLbl.color = Color.white; if (font) closeLbl.font = font;
+        SetAnchors(closeLbl.GetComponent<RectTransform>(), Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+
+        // singleSlotAnchor — 단일 결과 표시용 중앙 앵커
+        var singleAnchorGO = new GameObject("SingleSlotAnchor");
+        singleAnchorGO.transform.SetParent(cardGO.transform, false);
+        var saRT = singleAnchorGO.AddComponent<RectTransform>();
+        SetAnchors(saRT, new Vector2(0.15f, 0.30f), new Vector2(0.85f, 0.85f), Vector2.zero, Vector2.zero);
+
+        // resultContent — 다중 결과 GridLayoutGroup
+        var contentGO = new GameObject("ResultContent");
+        contentGO.transform.SetParent(cardGO.transform, false);
+        var contentRT = contentGO.AddComponent<RectTransform>();
+        SetAnchors(contentRT, new Vector2(0f, 0.28f), new Vector2(1f, 0.85f),
+            new Vector2(8f, 4f), new Vector2(-8f, -4f));
+        var glg = contentGO.AddComponent<GridLayoutGroup>();
+        glg.cellSize        = new Vector2(170f, 200f);
+        glg.spacing         = new Vector2(10f, 8f);
+        glg.padding         = new RectOffset(8, 8, 4, 4);
+        glg.childAlignment  = TextAnchor.MiddleCenter;
+        glg.constraint      = GridLayoutGroup.Constraint.Flexible;
+
+        // resultSummaryText — 결과 목록 (카드 이름 × 수량)
+        var summaryTMP = CreateTMPText("ResultSummaryText", cardGO.transform,
+            "", 21f, TextAlignmentOptions.Center);
+        summaryTMP.color = new Color(0.85f, 0.85f, 0.85f, 1f);
+        summaryTMP.lineSpacing = -10f;
+        if (font) summaryTMP.font = font;
+        SetAnchors(summaryTMP.GetComponent<RectTransform>(),
+            new Vector2(0.05f, 0.03f), new Vector2(0.95f, 0.27f), Vector2.zero, Vector2.zero);
+
+        // WareSynthResultPopup 컴포넌트 연결
+        var comp = overlayGO.AddComponent<WareSynthResultPopup>();
+        comp.resultContent    = contentRT;
+        comp.slotPrefab       = slotPrefab;
+        comp.singleSlotAnchor = saRT;
+        comp.titleText        = titleTMP;
+        comp.resultSummaryText = summaryTMP;
+        comp.closeButton      = closeBtn;
+
+        return comp;
     }
 }

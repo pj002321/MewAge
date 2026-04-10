@@ -60,7 +60,10 @@ public class DamageText : MonoBehaviour
         label.color = new Color(baseColor.r, baseColor.g, baseColor.b, alpha);
 
         if (timer <= 0f)
-            Destroy(gameObject);
+        {
+            if (FXManager.Shared != null) FXManager.Shared.ReturnDamageText(this);
+            else                          Destroy(gameObject);
+        }
     }
 
     // ── 기본 AnimationCurve ─────────────────────────────────────

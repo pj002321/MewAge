@@ -20,7 +20,7 @@ public class WeaponInfoPanel : MonoBehaviourSingleton<WeaponInfoPanel>
     [Header("무기 기본 정보")]
     [SerializeField] private Image           frameImage;
     [SerializeField] private Image           iconImage;
-    [SerializeField] private TextMeshProUGUI starText;
+    [SerializeField] private Image           starImage;
     [SerializeField] private TextMeshProUGUI gradeText;   // 예: "레어"
     [SerializeField] private TextMeshProUGUI nameText;
 
@@ -97,7 +97,11 @@ public class WeaponInfoPanel : MonoBehaviourSingleton<WeaponInfoPanel>
         buyButton?.gameObject.SetActive(onBuy       != null);
 
         // ── 프레임 / 아이콘 ──────────────────────────────────────
-        if (frameImage) frameImage.color = WeaponGradeColors.Get(data.grade);
+        if (frameImage)
+        {
+            frameImage.sprite = Resources.Load<Sprite>("Weapons/grade/" + data.grade.ToString().ToLower());
+            frameImage.color  = Color.white;
+        }
 
         if (iconImage)
         {
@@ -106,7 +110,7 @@ public class WeaponInfoPanel : MonoBehaviourSingleton<WeaponInfoPanel>
         }
 
         // ── 이름 / 별 / 등급 ─────────────────────────────────────
-        if (starText)  starText.text  = new string('★', data.star);
+        SetStarImage(starImage, data.star);
         if (nameText)  nameText.text  = data.weaponName;
         if (gradeText)
         {
@@ -115,22 +119,49 @@ public class WeaponInfoPanel : MonoBehaviourSingleton<WeaponInfoPanel>
         }
 
         // ── 스탯 메인값 ───────────────────────────────────────────
-        if (attackText) attackText.text = $"{data.attackDamage:0.#}";
+        // 공격력: 정수
+        if (attackText) attackText.text = $"{Mathf.RoundToInt(data.attackDamage)}";
 
+        // 공격속도: 쿨다운(초) → "회/s" 로 표기, 소수점 1자리 (AtkSpeed 증강 배율 포함)
+        // pct=100 → 1x, pct=110 → 1.1x (WeaponPoint.SetStatSpeedPct와 동일 공식)
         if (speedText)
-            speedText.text = $"{data.attackCooldown:0.##}s";
+        {
+            float reduction   = PlayerStatManager.Shared?.GetFinal(StatType.AtkSpeed) ?? 0f;
+            float effCooldown = data.attackCooldown > 0f
+                ? Mathf.Max(0.1f, data.attackCooldown - reduction)
+                : 0f;
+            speedText.text = effCooldown > 0f ? $"{1f / effCooldown:0.#}" : "-";
+        }
 
+        // 사거리: 소수점 1자리
         if (rangeText) rangeText.text = $"{data.attackRange:0.#}";
-        if (critText)      critText.text      = data.criticalRate > 0f ? $"{data.criticalRate:0.#}x" : "-";
-        if (bleedText)     bleedText.text     = data.bleedDamage  > 0f ? $"{data.bleedDamage:0.#}"  : "-";
-        if (lifeStealText) lifeStealText.text = data.lifeSteal    > 0f ? $"{data.lifeSteal * 100f:0.#}%" : "-";
 
-        // ── 스탯 서브값 (기본 스탯 대비 강화된 양) ────────────────
-        SetSubText(attackSubText,    data.attackDamage,  data.baseAttackDamage);
-        SetSubText(rangeSubText,     data.attackRange,   data.baseAttackRange);
-        SetSubText(critSubText,      data.criticalRate * 100f,  data.baseCriticalRate * 100f, isAbsolute: true);
-        SetSubText(bleedSubText,     data.bleedDamage,   data.baseBleedDamage);
-        SetSubText(lifeStealSubText, data.lifeSteal,     data.baseLifeSteal,    isAbsolute: true);
+        // 치명타확률: 소수점 2자리 %
+        if (critText)
+            critText.text = data.criticalRate > 0f
+                ? $"{data.criticalRate * 100f:0.##}%"
+                : "-";
+
+        // 출혈(지속피해): 소수점 1자리
+        if (bleedText)
+            bleedText.text = data.bleedDamage > 0f
+                ? $"{data.bleedDamage:0.#}"
+                : "-";
+
+        // 흡혈: 소수점 2자리 %
+        if (lifeStealText)
+            lifeStealText.text = data.lifeSteal > 0f
+                ? $"{data.lifeSteal * 100f:0.##}%"
+                : "-";
+
+        // ── 스탯 서브값 (성 강화로 추가된 양) ─────────────────────
+        // 정수형 (공격력, 사거리 등)
+        SetSubTextInt(attackSubText, data.attackDamage, data.baseAttackDamage);
+        SetSubTextInt(rangeSubText,  data.attackRange,  data.baseAttackRange);
+        // 소수형 (치명타확률, 흡혈)
+        SetSubTextDec(critSubText,      data.criticalRate * 100f, data.baseCriticalRate * 100f, "0.##", "%");
+        SetSubTextDec(bleedSubText,     data.bleedDamage,         data.baseBleedDamage,         "0.#",  "");
+        SetSubTextDec(lifeStealSubText, data.lifeSteal * 100f,    data.baseLifeSteal * 100f,    "0.##", "%");
         SetSpeedSubText(speedSubText, data);
 
         // ── 성별 강화 설명 ────────────────────────────────────────
@@ -166,31 +197,47 @@ public class WeaponInfoPanel : MonoBehaviourSingleton<WeaponInfoPanel>
     // 내부 헬퍼
     // ────────────────────────────────────────────────────────
 
-    /// <summary>서브텍스트에 기본값 대비 델타를 표시합니다. 차이가 없으면 숨깁니다.</summary>
-    private static void SetSubText(TextMeshProUGUI label, float current, float baseVal, bool isAbsolute = false)
+    /// <summary>정수형 서브텍스트. 강화로 추가된 양을 정수로 표시합니다.</summary>
+    private static void SetSubTextInt(TextMeshProUGUI label, float current, float baseVal)
+    {
+        if (label == null) return;
+        int delta = Mathf.RoundToInt(current - baseVal);
+        if (delta == 0) { label.text = string.Empty; return; }
+        label.text = delta > 0
+            ? $"<color=#4FC3F7>+{delta}</color>"
+            : $"<color=#EF9A9A>{delta}</color>";
+    }
+
+    /// <summary>소수형 서브텍스트. 강화로 추가된 양을 소수점으로 표시합니다.</summary>
+    private static void SetSubTextDec(TextMeshProUGUI label, float current, float baseVal,
+                                      string fmt = "0.##", string suffix = "")
     {
         if (label == null) return;
         float delta = current - baseVal;
         if (Mathf.Approximately(delta, 0f)) { label.text = string.Empty; return; }
-
-        if (isAbsolute)
-            label.text = delta > 0f ? $"<color=#4FC3F7>+{delta:0.##}</color>" : $"<color=#EF9A9A>{delta:0.##}</color>";
-        else
-            label.text = delta > 0f ? $"<color=#4FC3F7>+{delta:0.#}</color>" : $"<color=#EF9A9A>{delta:0.#}</color>";
+        string s = delta.ToString(fmt);
+        label.text = delta > 0f
+            ? $"<color=#4FC3F7>+{s}{suffix}</color>"
+            : $"<color=#EF9A9A>{s}{suffix}</color>";
     }
 
-    /// <summary>공격속도(aps) 서브값 — 쿨다운이 줄면 aps가 오르므로 양수가 좋음.</summary>
+    /// <summary>공격속도 서브값 — 1성 기준(증강 배율 포함) 대비 현재 APS 델타.</summary>
     private static void SetSpeedSubText(TextMeshProUGUI speedSub, WeaponData data)
     {
         if (speedSub == null) return;
-        float baseAps    = data.baseAttackCooldown > 0f ? 1f / data.baseAttackCooldown : 0f;
-        float currentAps = data.attackCooldown     > 0f ? 1f / data.attackCooldown     : 0f;
+
+        float reduction  = PlayerStatManager.Shared?.GetFinal(StatType.AtkSpeed) ?? 0f;
+
+        float baseAps    = data.baseAttackCooldown > 0f
+            ? 1f / Mathf.Max(0.1f, data.baseAttackCooldown - reduction) : 0f;
+        float currentAps = data.attackCooldown > 0f
+            ? 1f / Mathf.Max(0.1f, data.attackCooldown - reduction) : 0f;
         float apsDelta   = currentAps - baseAps;
 
         if (Mathf.Approximately(apsDelta, 0f)) { speedSub.text = string.Empty; return; }
         speedSub.text = apsDelta > 0f
-            ? $"<color=#4FC3F7>+{apsDelta:0.##}</color>"
-            : $"<color=#EF9A9A>{apsDelta:0.##}</color>";
+            ? $"<color=#4FC3F7>+{apsDelta:0.#}</color>"
+            : $"<color=#EF9A9A>{apsDelta:0.#}</color>";
     }
 
     /// <summary>성 강화 설명 텍스트를 설정합니다. 현재 성 이상이면 활성(밝게), 미달이면 흐리게 표시합니다.</summary>
@@ -219,6 +266,15 @@ public class WeaponInfoPanel : MonoBehaviourSingleton<WeaponInfoPanel>
         var sprite  = SynergyHelper.GetIcon(tag, chapter);
         img.sprite  = sprite;
         img.enabled = sprite != null && tag != WeaponSynergyTag.None;
+    }
+
+    private static void SetStarImage(Image img, int star)
+    {
+        if (img == null) return;
+        if (star <= 0) { img.enabled = false; return; }
+        var sprite = Resources.Load<Sprite>($"UI/star_{star}");
+        if (sprite != null) { img.sprite = sprite; img.SetNativeSize(); img.enabled = true; }
+        else                  img.enabled = false;
     }
 
     /// <summary>WeaponGrade → 한글 이름</summary>

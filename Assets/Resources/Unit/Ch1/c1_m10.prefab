@@ -26,9 +26,9 @@ Transform:
   m_GameObject: {fileID: 2564884055585582475}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.02, y: -0.54, z: 0}
-  m_LocalScale: {x: 4.688853, y: 3.626757, z: 3.27}
-  m_ConstrainProportionsScale: 1
+  m_LocalPosition: {x: 0.004, y: -0.844, z: 0}
+  m_LocalScale: {x: 1.15, y: 1.49, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 9161313412171669554}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -81,7 +81,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 4
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 4950603007265521166, guid: 954c462c0b7c5284fad2ea86f0428865, type: 3}
+  m_Sprite: {fileID: 6863293971250029137, guid: aae5a60f0a493f14da9a00ba91e73b06, type: 3}
   m_Color: {r: 0, g: 0, b: 0, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -91,37 +91,6 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
---- !u!1 &5249039244984989128
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 2625534722131631834}
-  m_Layer: 7
-  m_Name: GameObject
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &2625534722131631834
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5249039244984989128}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.443, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 9161313412171669554}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &6872330745170493892
 GameObject:
   m_ObjectHideFlags: 0
@@ -134,11 +103,11 @@ GameObject:
   - component: {fileID: 6673154977024379246}
   - component: {fileID: 7159488583059645062}
   - component: {fileID: 350663147606329290}
-  - component: {fileID: 7198463444141060789}
+  - component: {fileID: 7828306383268276600}
   - component: {fileID: 7956984884046668424}
   - component: {fileID: 818218120322630538}
-  - component: {fileID: 8766863770666966935}
   - component: {fileID: 2036998758936243981}
+  - component: {fileID: 6588250223469201823}
   m_Layer: 7
   m_Name: c1_m10
   m_TagString: Untagged
@@ -159,7 +128,6 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 2625534722131631834}
   - {fileID: 1082681437759257435}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -212,12 +180,12 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 5
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -9075692140918476292, guid: ad9a9b42b0e5b8e49b9f68efc747da44, type: 3}
+  m_Sprite: {fileID: 360348864808446448, guid: f4e829aeff172274dbf763ebc74e8c52, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 2.2, y: 1.62}
+  m_Size: {x: 5.1400003, y: 3.8108504}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
@@ -232,7 +200,7 @@ Animator:
   m_GameObject: {fileID: 6872330745170493892}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 22100000, guid: 1926f9effb4a6a141a7814f837e7cb59, type: 2}
+  m_Controller: {fileID: 9100000, guid: 65c7e700aafb41148b021143cd7bc037, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -271,8 +239,8 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
---- !u!58 &7198463444141060789
-CircleCollider2D:
+--- !u!70 &7828306383268276600
+CapsuleCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -306,7 +274,8 @@ CircleCollider2D:
   m_CompositeOperation: 0
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
-  m_Radius: 0.5
+  m_Size: {x: 1.1, y: 1.78}
+  m_Direction: 0
 --- !u!114 &7956984884046668424
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -320,16 +289,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyController
   moveSpeed: 2
-  maxHP: 700
+  maxHP: 30
   contactDamage: 10
+  goldDrop: 5
+  expDrop: 10
   scoreValue: 10
   damageCooldown: 1
   contactMaxDist: 0.8
-  goldDrop: 1
-  expDrop: 1
+  knockbackImmune: 0
+  bleedDuration: 5
+  bleedInterval: 1
   separationRadius: 0.7
   separationStrength: 2
-  waveBreakpoints: []
 --- !u!114 &818218120322630538
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -362,24 +333,6 @@ MonoBehaviour:
     spawnOffset: {x: 0, y: 0}
     sfxClip: {fileID: 0}
     volume: 1
---- !u!114 &8766863770666966935
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6872330745170493892}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 26ab6620137f93f4290148fd79412968, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::RangedBehaviour
-  projectilePrefab: {fileID: 7916182024222986910, guid: 8372c48897342ac47bdf08026dfd5595, type: 3}
-  preferredRange: 5
-  shootInterval: 2
-  rangedDamage: 150
-  firePoint: {fileID: 2625534722131631834}
-  attackVfxPrefab: {fileID: 0}
 --- !u!114 &2036998758936243981
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -394,3 +347,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HitFlash
   flashColor: {r: 1, g: 0.2, b: 0.2, a: 1}
   flashDuration: 0.12
+  BaseColor: {r: 1, g: 1, b: 1, a: 1}
+--- !u!114 &6588250223469201823
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6872330745170493892}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0ef9839f1a3088e4cad5cf9d4fc2f5ca, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MeleeBehaviour
+  attackRange: 1.2
+  meleeHitRange: 1.3
+  attackInterval: 1
+  attackVfxPrefab: {fileID: 0}

@@ -3,29 +3,37 @@ using Mewage.DB;
 using UnityEngine;
 
 /// <summary>
-/// DB_무기 내 속성 정의 행(f_속성ID / f_속성내용)을 로드해 캐싱합니다.
+/// DB_무기 내 속성 정의(f_속성ID / f_속성내용)를 캐싱합니다.
 /// 속성 설명 포맷 + 실제 스탯 적용 로직을 제공합니다.
 ///
 /// 속성 ID 규칙:
-///   ATK_ADD   → attackDamage   += base * value%    (기본값 대비 % 증가)
-///   CD_RED    → attackCooldown -= base * value%    (쿨다운 % 단축)
-///   RNG_ADD   → attackRange    += base * value%    (사거리 % 증가)
-///   CRIT_ADD  → criticalRate   += value / 100f     (절대값, %)
-///   BLEED_ADD → bleedDamage    += value            (절대값)
-///   LIFESTEAL → lifeSteal      += value / 100f     (절대값, %)
+///   ATK_ADD   → attackDamage   += base * value%    (정수 표기)
+///   CD_RED    → attackCooldown -= base * value%    (정수 표기)
+///   RNG_ADD   → attackRange    += base * value%    (정수 표기)
+///   DMG_RNG   → areaHitRadius  += base * value%    (정수 표기)
+///   NUK_ADD   → (넉백, 플레이어 스탯 반영용)        (정수 표기)
+///   CRIT_ADD  → criticalRate   += value / 100f     (정수 표기)
+///   DOT_AD    → bleedDamage    += value / 100f     (소수 표기)
+///   CRT_RATE  → criticalRate   += value / 100f     (소수 표기)
+///   HP_STL_ADD→ lifeSteal      += value / 100f     (소수 표기)
+///   HEAL_ADD  → (자가치유, PlayerStatManager 반영) (소수 표기)
 /// </summary>
 public static class WeaponStatRegistry
 {
+    // 소수점 표기 속성 ID 목록
+    private static readonly HashSet<string> DecimalStats = new()
+    {
+        "DOT_AD", "CRT_RATE", "HP_STL_ADD", "HEAL_ADD"
+    };
+
     // id → 설명 템플릿 (예: "ATK_ADD" → "공격력 +{0}%")
     private static Dictionary<string, string> _templates;
-
     private static bool _loaded;
 
     // ────────────────────────────────────────────────────────
     // 초기화
     // ────────────────────────────────────────────────────────
 
-    /// <summary>DB에서 속성 정의를 로드합니다. WeaponData.FromDB() 첫 호출 시 자동 실행됩니다.</summary>
     public static void EnsureLoaded()
     {
         if (_loaded) return;
@@ -42,24 +50,38 @@ public static class WeaponStatRegistry
     }
 
     // ────────────────────────────────────────────────────────
+    // 소수/정수 판별
+    // ────────────────────────────────────────────────────────
+
+    public static bool IsDecimalStat(string statId) => DecimalStats.Contains(statId);
+
+    // ────────────────────────────────────────────────────────
     // 설명 생성
     // ────────────────────────────────────────────────────────
 
     /// <summary>
     /// 속성 ID와 수치를 받아 포맷된 설명 문자열을 반환합니다.
-    /// 예) GetDescription("ATK_ADD", 25) → "공격력 +25%"
+    /// 소수형 속성은 소수점, 정수형은 정수로 표기합니다.
+    /// 예) "ATK_ADD", 25  → "공격력 +25%"
+    ///     "CRT_RATE", 2.5 → "치명타확률 +2.5%"
     /// </summary>
-    public static string GetDescription(string statId, int value)
+    public static string GetDescription(string statId, float value)
     {
         if (string.IsNullOrEmpty(statId)) return string.Empty;
         EnsureLoaded();
-        return _templates.TryGetValue(statId, out var tmpl)
-            ? string.Format(tmpl, value)
-            : $"{statId} +{value}";
+
+        string formatted = IsDecimalStat(statId)
+            ? value.ToString("0.##")
+            : Mathf.RoundToInt(value).ToString();
+
+        if (_templates.TryGetValue(statId, out var tmpl))
+            return tmpl.Replace("{0}", formatted);
+
+        return $"{statId} +{formatted}";
     }
 
     /// <summary>WeaponStarBonus를 채워 반환합니다.</summary>
-    public static WeaponStarBonus Build(string statId, int value)
+    public static WeaponStarBonus Build(string statId, float value)
     {
         return new WeaponStarBonus
         {
@@ -73,10 +95,6 @@ public static class WeaponStatRegistry
     // 스탯 적용 (WeaponData 직접 수정)
     // ────────────────────────────────────────────────────────
 
-    /// <summary>
-    /// bonus.statId에 따라 WeaponData의 스탯을 기본값 기준으로 누적 보정합니다.
-    /// (attackDamage += base * value%, attackCooldown -= base * value%, ...)
-    /// </summary>
     public static void ApplyBonus(WeaponData data, WeaponStarBonus bonus)
     {
         if (bonus.IsEmpty) return;
@@ -84,38 +102,30 @@ public static class WeaponStatRegistry
         switch (bonus.statId)
         {
             case "ATK_ADD":
-                data.attackDamage   += data.baseAttackDamage * bonus.value / 100f; // % 증가
+                data.attackDamage   += data.baseAttackDamage   * bonus.value / 100f;
                 break;
             case "CD_RED":
-                data.attackCooldown -= data.baseAttackCooldown * bonus.value / 100f; // % 단축
+                data.attackCooldown -= data.baseAttackCooldown  * bonus.value / 100f;
                 break;
             case "RNG_ADD":
-                data.attackRange    += data.baseAttackRange    * bonus.value / 100f; // % 증가
+                data.attackRange    += data.baseAttackRange     * bonus.value / 100f;
+                break;
+            case "DMG_RNG":
+                data.areaHitRadius  += data.baseAreaHitRadius   * bonus.value / 100f;
                 break;
             case "CRIT_ADD":
-                data.criticalRate   += bonus.value / 100f;                       // % → fraction
+                data.criticalRate   += bonus.value / 100f;
                 break;
-            case "BLEED_ADD":
-                data.bleedDamage    += bonus.value;                              // 절대값 추가
+            case "DOT_AD":
+                data.bleedDamage    += bonus.value;
                 break;
-            case "LIFESTEAL":
-                data.lifeSteal      += bonus.value / 100f;                       // % → fraction
+            case "CRT_RATE":
+                data.criticalRate   += bonus.value / 100f;
                 break;
+            case "HP_STL_ADD":
+                data.lifeSteal      += bonus.value / 100f;
+                break;
+            // NUK_ADD, HEAL_ADD는 PlayerStatManager에서 처리 (무기 자체 스탯 없음)
         }
-    }
-
-    // ────────────────────────────────────────────────────────
-    // 보너스 델타 텍스트 (UI 서브값용)
-    // ────────────────────────────────────────────────────────
-
-    /// <summary>
-    /// 현재 스탯(stat)과 기본 스탯(baseStat)의 차이를 서브값 문자열로 반환합니다.
-    /// 차이가 없으면 빈 문자열을 반환합니다.
-    /// </summary>
-    public static string DeltaText(float stat, float baseStat, string format = "+{0:0.#}")
-    {
-        float delta = stat - baseStat;
-        if (Mathf.Approximately(delta, 0f)) return string.Empty;
-        return string.Format(format, delta > 0f ? delta : delta); // 음수 포함
     }
 }

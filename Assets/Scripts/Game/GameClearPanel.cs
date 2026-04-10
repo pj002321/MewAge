@@ -73,7 +73,7 @@ public class GameClearPanel : MonoBehaviour
 
         // ── Headline ──────────────────────────────────
         if (finalWaveText != null)
-            finalWaveText.text = $"WAVE {finalWave} CLEAR!";
+            finalWaveText.text = $"WAVE {finalWave}";
 
         // ── 획득 EXP / Gold ───────────────────────────
         if (expGainedText  != null) expGainedText.text  = $"+{expGained}";

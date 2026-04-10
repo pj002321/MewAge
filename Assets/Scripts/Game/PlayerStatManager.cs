@@ -19,7 +19,7 @@ public class PlayerStatManager : MonoBehaviourSingleton<PlayerStatManager>
     [SerializeField] private float baseHPRegen           = 0f;
     [SerializeField] private float baseMoveSpeed         = 5f;
     [SerializeField] private float baseMagnetRadius      = 1.5f;
-    [SerializeField] private float baseAtkSpeed          = 100f;  // 100% 가 기본
+    [SerializeField] private float baseAtkSpeed          = 0f;   // 초 단위 쿨타임 감산량 (0 = 감산 없음)
     [SerializeField] private float baseEvasion           = 0f;
     [SerializeField] private float baseCritChance        = 0f;
     [SerializeField] private float baseCritDmg           = 100f;
@@ -36,12 +36,43 @@ public class PlayerStatManager : MonoBehaviourSingleton<PlayerStatManager>
     // 장비 장착으로 누적된 플랫(고정값) 보너스
     private readonly float[] _equipFlat = new float[StatCount];
 
+    // 배치 모드 — true이면 개별 SetBase/AddPctMod 호출 시 ApplyToPlayer를 억제
+    private bool _batching;
+
     // ── 외부 API ────────────────────────────────────────────────────
 
-    /// <summary>매 게임 시작 시 % 모디파이어를 전부 초기화합니다. (GameManager.Start에서 호출)</summary>
+    /// <summary>배치 시작 — EndBatch() 전까지 ApplyToPlayer/Refresh 호출을 억제합니다.</summary>
+    public void BeginBatch() => _batching = true;
+
+    /// <summary>배치 종료 — ApplyToPlayer와 StatPanelUI.Refresh를 한 번만 실행합니다.</summary>
+    public void EndBatch()
+    {
+        _batching = false;
+        ApplyToPlayer();
+        StatPanelUI.Shared?.Refresh();
+    }
+
+    /// <summary>매 게임 시작 시 % 모디파이어와 base 스탯을 전부 초기화합니다. (GameManager.Start에서 호출)
+    /// DontDestroy=true라 씬 이동 후에도 이전 값이 남아있을 수 있으므로 명시적으로 초기화합니다.</summary>
     public void ResetMods()
     {
         System.Array.Clear(_pctMods, 0, _pctMods.Length);
+
+        // base 스탯 초기화 — Inspector 값이 이전 씬에서 오염됐을 경우 대비
+        baseATK               = 0f;
+        baseDEF               = 0f;
+        baseMaxHP             = 100f;
+        baseBleedPower        = 0f;
+        baseHPRegen           = 0f;
+        baseMoveSpeed         = 5f;
+        baseMagnetRadius      = 1.5f;
+        baseAtkSpeed          = 0f;
+        baseEvasion           = 0f;
+        baseCritChance        = 0f;
+        baseCritDmg           = 100f;
+        baseStructureCooldown = 0f;
+        baseKnockback         = 0f;
+        baseHealOnKill        = 0f;
     }
 
     /// <summary>기본값을 런타임에 설정하고 PlayerController에 즉시 반영합니다. (캐릭터 초기화 시 사용)</summary>
@@ -64,6 +95,7 @@ public class PlayerStatManager : MonoBehaviourSingleton<PlayerStatManager>
             case StatType.Knockback:         baseKnockback         = value; break;
             case StatType.HealOnKill:        baseHealOnKill        = value; break;
         }
+        if (_batching) return;
         ApplyToPlayer();
         StatPanelUI.Shared?.Refresh();
     }
@@ -72,6 +104,7 @@ public class PlayerStatManager : MonoBehaviourSingleton<PlayerStatManager>
     public void AddPctMod(StatType stat, float pct)
     {
         _pctMods[(int)stat] += pct;
+        if (_batching) return;
         ApplyToPlayer();
         StatPanelUI.Shared?.Refresh();
     }

@@ -101,6 +101,22 @@ public static class SynergyHelper
         return uniqueNames.Count;
     }
 
+    /// <summary>장착 무기 중 특정 태그를 보유한 무기들의 아이콘 목록을 반환합니다.</summary>
+    public static List<Sprite> GetEquippedIconsForTag(WeaponSynergyTag tag)
+    {
+        var result = new List<Sprite>();
+        var inv = PlayerInventory.Shared;
+        if (inv == null || tag == WeaponSynergyTag.None) return result;
+
+        foreach (var w in inv.Equipped)
+        {
+            if (w == null) continue;
+            if (w.tag1 == tag || w.tag2 == tag)
+                result.Add(w.icon);
+        }
+        return result;
+    }
+
     // ── 내부 ────────────────────────────────────────────────────
     private static void TryAddEntry(List<SynergyEntry> list, string synergyID, List<int> statValues)
     {

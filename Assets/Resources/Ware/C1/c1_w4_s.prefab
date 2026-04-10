@@ -11,7 +11,8 @@ GameObject:
   - component: {fileID: 9093893709891787400}
   - component: {fileID: 620458224344999017}
   - component: {fileID: 7126575762079559211}
-  - component: {fileID: 3433289708257511928}
+  - component: {fileID: -855020708500994693}
+  - component: {fileID: 1713305681668405193}
   m_Layer: 0
   m_Name: c1_w4_s
   m_TagString: Untagged
@@ -83,7 +84,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 5
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -596934991378091677, guid: 2eca6fe01314d11488cc962b67a9d50f, type: 3}
+  m_Sprite: {fileID: 3388288949000748575, guid: badaf08edcff8b349acea815a10d4aeb, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -106,7 +107,53 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StructureController
   duration: 10
---- !u!114 &3433289708257511928
+--- !u!61 &-855020708500994693
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7968452166247501650}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0, y: 0}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0.5, y: 0.5}
+    oldSize: {x: 1.33, y: 0.975}
+    newSize: {x: 1.46, y: 0.93}
+    adaptiveTilingThreshold: 0.5
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  m_Size: {x: 1.46, y: 0.93}
+  m_EdgeRadius: 0
+--- !u!114 &1713305681668405193
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -115,11 +162,15 @@ MonoBehaviour:
   m_GameObject: {fileID: 7968452166247501650}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 66956d1e9e874f5409d9a579e87a292d, type: 3}
+  m_Script: {fileID: 11500000, guid: 8123af945e5fdfb42b956c25e15a515a, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ParalyzeSkill
+  m_EditorClassIdentifier: Assembly-CSharp::RadialShotSkill
   mainValue: 10
-  subValue: 1
-  radius: 5
+  subValue: 5
+  radius: 15
   tickInterval: 1
   isInstallation: 0
+  projectilePrefab: {fileID: 7968452166247501650, guid: c6fb54bdfbfd720418787f7f2c90d6d7, type: 3}
+  projectileSpeed: 8
+  projectileRadius: 0.2
+  repeatFire: 0

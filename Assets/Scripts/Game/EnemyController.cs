@@ -2,26 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-/// <summary>
-/// 웨이브 구간별 스탯 오버라이드.
-/// fromWave 이하 중 가장 큰 값이 적용됩니다. -1은 기본값 유지.
-/// </summary>
-[System.Serializable]
-public class WaveStatBreakpoint
-{
-    [Tooltip("이 웨이브 이상부터 적용")]
-    public int   fromWave     = 10;
-    [Tooltip("-1 = 기본값 유지")]
-    public float moveSpeed    = -1f;
-    [Tooltip("-1 = 기본값 유지")]
-    public float maxHP        = -1f;
-    [Tooltip("-1 = 기본값 유지")]
-    public float contactDamage = -1f;
-    [Tooltip("-1 = 기본값 유지")]
-    public int   goldDrop     = -1;
-    [Tooltip("-1 = 기본값 유지")]
-    public int   expDrop      = -1;
-}
+
 
 /// <summary>
 /// 적의 핵심 컴포넌트 — 스탯, HP, 이동 헬퍼, 피격/사망을 담당합니다.
@@ -31,12 +12,12 @@ public class WaveStatBreakpoint
 public class EnemyController : MonoBehaviour
 {
     // ── 인스펙터 ────────────────────────────────────────────────
-    // DB_유닛에서 로드 (ApplyUnitData) — 인스펙터 노출 불필요
-    private float moveSpeed     = 2f;
-    private float maxHP         = 30f;
-    private float contactDamage = 10f;
-    private int   goldDrop      = 5;
-    private int   expDrop       = 10;
+    // DB_유닛에서 로드 (ApplyUnitData) — 인스펙터 편의 노출
+    [SerializeField] private float moveSpeed     = 2f;
+    [SerializeField] private float maxHP         = 30f;
+    [SerializeField] private float contactDamage = 10f;
+    [SerializeField] private int   goldDrop      = 5;
+    [SerializeField] private int   expDrop       = 10;
 
     [Header("전투")]
     [SerializeField] private int   scoreValue     = 10;
@@ -55,10 +36,10 @@ public class EnemyController : MonoBehaviour
     [Header("분리 (간격 유지)")]
     [Tooltip("주변 적과 이 거리 이내면 밀어냅니다. 0 = 비활성")]
     [SerializeField] private float separationRadius   = 1.2f;
-    [SerializeField] private float separationStrength = 8f;
+    [Tooltip("밀어내는 힘의 강도")]
+    [SerializeField] public float separationStrength = 8f;
 
-    [Header("웨이브 구간별 스탯 (fromWave 오름차순 권장)")]
-    [SerializeField] private List<WaveStatBreakpoint> waveBreakpoints = new();
+
 
     // ── 공개 프로퍼티 (EnemyBehaviourBase에서 사용) ────────────
     public float      MoveSpeed       => moveSpeed;
@@ -99,10 +80,12 @@ public class EnemyController : MonoBehaviour
 
     public event System.Action OnDeath;
 
+    // 원본 재질 캐시 (풀 반환 시 복구용)
+    private Material[] _originalMats;
+
     // ── 초기화 ──────────────────────────────────────────────────
     private void Awake()
     {
-        _allEnemies.Add(this);
         currentHP = maxHP;
         baseSpeed = moveSpeed;
         rb        = GetComponent<Rigidbody2D>();
@@ -110,6 +93,30 @@ public class EnemyController : MonoBehaviour
         hitFlash  = GetComponentInChildren<HitFlash>(true);
         animator  = GetComponentInChildren<Animator>();
         behaviour = GetComponent<EnemyBehaviourBase>();
+
+        // 디버그: SpriteRenderer 확인
+        if (srs == null || srs.Length == 0)
+        {
+            Debug.LogWarning($"[EnemyController] {gameObject.name}: SpriteRenderer가 없습니다! 프리팹에 SpriteRenderer가 있는지 확인하세요.");
+        }
+        else
+        {
+            foreach (var sr in srs)
+            {
+                if (sr.sprite == null)
+                {
+                    Debug.LogWarning($"[EnemyController] {gameObject.name}: SpriteRenderer의 sprite가 null입니다. sprite를 할당하세요.");
+                }
+            }
+        }
+
+        // 원본 재질 캐시 (사망 연출 후 복구용)
+        if (srs != null)
+        {
+            _originalMats = new Material[srs.Length];
+            for (int i = 0; i < srs.Length; i++)
+                _originalMats[i] = srs[i].material;
+        }
 
         if (rb != null)
         {
@@ -124,6 +131,7 @@ public class EnemyController : MonoBehaviour
 
     private void Start()
     {
+        All.Add(this);   // 최초 생성 시 등록 (풀 재사용은 WakeFromPool에서)
         playerTransform = PlayerController.Instance?.transform;
     }
 
@@ -176,8 +184,8 @@ public class EnemyController : MonoBehaviour
     }
 
     // ── 분리: Physics 쿼리 없이 전체 목록에서 직접 계산 ─────────
-    private static readonly List<EnemyController> _allEnemies = new List<EnemyController>();
-    public static int ActiveCount => _allEnemies.Count;
+    public static readonly List<EnemyController> All = new List<EnemyController>();
+    public static int ActiveCount => All.Count;
 
     private void ApplySeparation()
     {
@@ -186,7 +194,7 @@ public class EnemyController : MonoBehaviour
         float   r2   = separationRadius * separationRadius;
         Vector2 push = Vector2.zero;
 
-        foreach (var other in _allEnemies)
+        foreach (var other in All)
         {
             if (other == this || other.rb == null) continue;
             Vector2 diff  = rb.position - other.rb.position;
@@ -204,7 +212,57 @@ public class EnemyController : MonoBehaviour
 
     private void OnDestroy()
     {
-        _allEnemies.Remove(this);
+        AllRemoveSwapBack(this); // 진짜 파괴될 때 안전망
+    }
+
+    // O(1) 리스트 제거 — 마지막 요소와 교환 후 RemoveAt
+    static void AllRemoveSwapBack(EnemyController e)
+    {
+        int idx = All.IndexOf(e);
+        if (idx < 0) return;
+        int last = All.Count - 1;
+        All[idx] = All[last];
+        All.RemoveAt(last);
+    }
+
+    /// <summary>EnemyPool이 풀에서 꺼낼 때 호출 — 렌더러·콜라이더 활성화 + All 등록.</summary>
+    public void WakeFromPool()
+    {
+        StopAllCoroutines();
+        enabled    = true;
+        damageTimer = 0f;
+        isStunned  = false;
+        moveSpeed  = baseSpeed;
+        if (rb != null) rb.linearVelocity = Vector2.zero;
+
+        // 재질 복구
+        if (srs != null && _originalMats != null)
+            for (int i = 0; i < srs.Length && i < _originalMats.Length; i++)
+                if (_originalMats[i] != null) srs[i].material = _originalMats[i];
+
+        foreach (var sr in srs)  sr.enabled = true;
+        foreach (var col in GetComponentsInChildren<Collider2D>(true)) col.enabled = true;
+
+        playerTransform = PlayerController.Instance?.transform;
+        All.Add(this);
+    }
+
+    /// <summary>EnemyPool이 풀로 반환하기 전 호출 — 렌더러·콜라이더 비활성화 + All 제거.</summary>
+    public void SleepToPool()
+    {
+        StopAllCoroutines();
+        enabled = false;
+        if (rb != null) rb.linearVelocity = Vector2.zero;
+
+        // 재질 복구 (사망 실루엣 해제)
+        if (srs != null && _originalMats != null)
+            for (int i = 0; i < srs.Length && i < _originalMats.Length; i++)
+                if (_originalMats[i] != null) srs[i].material = _originalMats[i];
+
+        foreach (var sr in srs)  sr.enabled = false;
+        foreach (var col in GetComponentsInChildren<Collider2D>(true)) col.enabled = false;
+
+        AllRemoveSwapBack(this);
     }
 
     private void LateUpdate()
@@ -243,6 +301,10 @@ public class EnemyController : MonoBehaviour
         if (damageTimer > 0f) return;
         var p = other.GetComponentInParent<PlayerController>();
         if (p == null) return;
+        
+        // 플레이어 본체(PlayerController가 달린 오브젝트)가 아닌 자식의 투명 트리거(자석 등) 무시
+        if (other.gameObject != p.gameObject) return;
+        
         if (Vector2.Distance(transform.position, p.transform.position) > contactMaxDist) return;
         p.TakeDamage(contactDamage);
         damageTimer = damageCooldown;
@@ -252,6 +314,9 @@ public class EnemyController : MonoBehaviour
     {
         var p = other.GetComponentInParent<PlayerController>();
         if (p == null) return;
+
+        // 플레이어 본체(PlayerController가 달린 오브젝트)가 아닌 자식의 투명 트리거(자석 등) 무시
+        if (other.gameObject != p.gameObject) return;
         if (Vector2.Distance(transform.position, p.transform.position) > contactMaxDist) return;
         p.TakeDamage(contactDamage);
         damageTimer = damageCooldown;
@@ -387,6 +452,7 @@ public class EnemyController : MonoBehaviour
             {
                 _deathDir = Vector2.up; // 출혈 사망 시 위쪽으로
                 OnDeath?.Invoke();
+                CharacterSkillManager.Shared?.AddPoint(1);
                 StartCoroutine(DieRoutine());
             }
         }
@@ -413,6 +479,7 @@ public class EnemyController : MonoBehaviour
         {
             _deathDir = knockbackDir.sqrMagnitude > 0.001f ? knockbackDir.normalized : Vector2.up;
             OnDeath?.Invoke();
+            CharacterSkillManager.Shared?.AddPoint(1);
             ItemDropManager.Shared?.SpawnDrops(transform.position, goldDrop, expDrop);
             StartCoroutine(DieRoutine());
         }
@@ -452,30 +519,45 @@ public class EnemyController : MonoBehaviour
             yield return null;
         }
 
-        Destroy(gameObject);
+        // 풀이 있으면 반환, 없으면 파괴
+        if (EnemyPool.Shared != null) EnemyPool.Shared.Return(this);
+        else                          Destroy(gameObject);
     }
 
     // ── 웨이브 구간 스탯 적용 ────────────────────────────────────
-    /// <summary>스폰 시 EnemySpawner에서 호출 — 현재 웨이브에 맞는 breakpoint 적용.</summary>
-    public void InitForWave(int wave)
+    /// <summary>
+    /// 스폰 시 EnemySpawner에서 호출. ApplyUnitData() 이후에 호출해야 합니다.
+    /// globalWave      = (currentStage-1)*30 + currentWave
+    /// designGlobalWave = (designStage-1)*30 + designWave
+    /// </summary>
+    public void InitForWave(int globalWave, int designGlobalWave = 0, int wavesPerStage = 30)
     {
-        if (waveBreakpoints == null || waveBreakpoints.Count == 0) return;
+        // DB 비율 기반 스케일링 (ApplyUnitData 이후에 호출돼야 ActiveUnitData가 있음)
+        if (ActiveUnitData == null) return;
 
-        WaveStatBreakpoint matched = null;
-        foreach (var bp in waveBreakpoints)
-            if (bp.fromWave <= wave && (matched == null || bp.fromWave > matched.fromWave))
-                matched = bp;
+        int totalDelta  = Mathf.Max(0, globalWave - designGlobalWave);
+        if (totalDelta == 0) return;
 
-        if (matched == null) return;
+        // 스테이지 단위 차이
+        int currentStage = (globalWave        - 1) / wavesPerStage + 1;
+        int designStage  = (designGlobalWave   - 1) / wavesPerStage + 1;
+        int stageDelta   = Mathf.Max(0, currentStage - designStage);
 
-        if (matched.moveSpeed     >= 0f) moveSpeed     = matched.moveSpeed;
-        if (matched.maxHP         >= 0f) { maxHP = matched.maxHP; currentHP = maxHP; }
-        if (matched.contactDamage >= 0f) contactDamage = matched.contactDamage;
-        if (matched.goldDrop      >= 0)  goldDrop      = matched.goldDrop;
-        if (matched.expDrop       >= 0)  expDrop       = matched.expDrop;
+        // 스테이지 점프 후 남은 웨이브 차이 (같은 스테이지 내 진행)
+        int waveOnlyDelta = Mathf.Max(0, totalDelta - stageDelta * wavesPerStage);
+
+        // 최초기준 체력 + 최초기준 * stageRate * stageDelta
+        //                  + 최초기준 * (stageRate / wavesPerStage) * waveOnlyDelta
+        float hpMult  = 1f + ActiveUnitData.hpGrowthRate  * stageDelta
+                           + ActiveUnitData.hpGrowthRate  / wavesPerStage * waveOnlyDelta;
+        float dmgMult = 1f + ActiveUnitData.dmgGrowthRate * stageDelta
+                           + ActiveUnitData.dmgGrowthRate / wavesPerStage * waveOnlyDelta;
+
+        maxHP         *= hpMult;
+        currentHP      = maxHP;
+        contactDamage *= dmgMult;
+        behaviour?.ApplyWaveScaling(dmgMult);
     }
-
-    public void ApplyWaveScaling(int wave) { }
 
     // ── DB 데이터 적용 ───────────────────────────────────────────
     public UnitData ActiveUnitData { get; private set; }

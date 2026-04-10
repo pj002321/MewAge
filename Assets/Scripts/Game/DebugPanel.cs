@@ -9,10 +9,16 @@ using TMPro;
 /// </summary>
 public class DebugPanel : MonoBehaviour
 {
+    [Header("가시성 토글 (선택)")]
+    [SerializeField] private Button          toggleVisibilityButton;
+    [SerializeField] private GameObject      buttonContainer;
+
     [Header("UI 연결")]
     [SerializeField] private Button          skipWaveButton;
     [SerializeField] private Button          bossWaveButton;
     [SerializeField] private TextMeshProUGUI waveLabel;
+
+    private bool isVisible = true;
 
     [Header("웨이브 점프 버튼 (jumpWaves 와 1:1 대응)")]
     [SerializeField] private Button[] jumpButtons;
@@ -20,6 +26,8 @@ public class DebugPanel : MonoBehaviour
 
     private void Awake()
     {
+        toggleVisibilityButton?.onClick.AddListener(OnToggleVisibility);
+
         skipWaveButton?.onClick.AddListener(OnSkipWave);
         bossWaveButton?.onClick.AddListener(OnBossWave);
 
@@ -54,6 +62,27 @@ public class DebugPanel : MonoBehaviour
     {
         Debug.Log($"[Debug] JumpToWave {wave} 버튼 클릭");
         GameManager.Shared?.DebugJumpToWave(wave);
+    }
+
+    private void OnToggleVisibility()
+    {
+        isVisible = !isVisible;
+        if (buttonContainer != null)
+        {
+            buttonContainer.SetActive(isVisible);
+        }
+        else
+        {
+            if (skipWaveButton) skipWaveButton.gameObject.SetActive(isVisible);
+            if (bossWaveButton) bossWaveButton.gameObject.SetActive(isVisible);
+            if (jumpButtons != null)
+            {
+                foreach (var btn in jumpButtons)
+                {
+                    if (btn) btn.gameObject.SetActive(isVisible);
+                }
+            }
+        }
     }
 
     private void RefreshLabel()

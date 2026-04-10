@@ -111,7 +111,7 @@ public class WareSlotView : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         }
 
         var mgr   = StructureWareManager.Shared;
-        int star  = starOverride ?? (mgr?.GetStar(id) ?? 1);
+        int star  = starOverride ?? (mgr?.GetLevel(id) ?? 1);
         int count = mgr?.GetCount(id) ?? 0;
         string era = StructureWareManager.EraOf(id);
 
@@ -181,12 +181,12 @@ public class WareSlotView : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
             nameText.text    = data.f_이름;
         }
 
-        // 8. 강화 별
+        // 8. 강화 레벨
         if (starText)
         {
             starText.enabled = true;
-            starText.text    = Stars(star);
-            starText.color   = StarColor(star);
+            starText.text    = LevelText(star);
+            starText.color   = LevelColor(star);
         }
 
         // 9. 수량
@@ -270,8 +270,18 @@ public class WareSlotView : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
 
     // ── 정적 유틸 ────────────────────────────────────────────────────
 
-    static Color  StarColor(int star) => star switch { 2 => ColStar2, 3 => ColStar3, _ => ColStar1 };
-    static string Stars(int star)     => new string('★', star);
+    // ── 레벨 표시 유틸 ───────────────────────────────────────────────
+
+    /// <summary>레벨 구간에 따른 텍스트 색상 (1-7=흰, 8-14=골드, 15-20=퍼플)</summary>
+    public static Color LevelColor(int level)
+    {
+        if (level >= 15) return ColStar3;
+        if (level >= 8)  return ColStar2;
+        return ColStar1;
+    }
+
+    static string LevelText(int level) =>
+        level >= StructureWareManager.MaxLevel ? $"Lv.MAX" : $"Lv.{level}";
 
     public static Color GradeColor(string grade) => grade switch
     {
@@ -279,16 +289,18 @@ public class WareSlotView : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         "RARE"   => new Color(0.2f, 0.5f, 1.0f, 1f),   // 파랑
         "EPIC"   => new Color(0.8f, 0.4f, 1.0f, 1f),   // 보라
         "LEGEND" => new Color(1.0f, 1.0f, 0.0f, 1f),   // 노랑
+        "S"      => new Color(1.0f, 0.4f, 0.1f, 1f),   // 주황-레드 (최상위)
         _        => new Color(0.8f, 0.8f, 0.8f, 1f),   // 기본 (흰색)
     };
 
     public static string GradeKorean(string grade) => grade switch
     {
-        "NORMAL"=>"일반",
-        "RARE" => "레어",
-        "EPIC" => "에픽",
+        "NORMAL" => "일반",
+        "RARE"   => "레어",
+        "EPIC"   => "에픽",
         "LEGEND" => "신화",
-        _  => "일반",
+        "S"      => "S등급",
+        _        => "일반",
     };
     public static Color EraColor(string era) => era switch
     {

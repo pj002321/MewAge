@@ -167,18 +167,24 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
     {
         var normals = new List<WeaponData>();
         foreach (var w in allWeapons)
-            if (w != null && w.grade == WeaponGrade.Normal && w.chapter <= currentChapter)
+            if (w != null && w.grade == WeaponGrade.Normal && w.chapter <= currentChapter
+                && w.weaponType == WeaponType.Melee)
                 normals.Add(w);
 
         if (normals.Count == 0) { Debug.LogWarning("[UpgradeManager] 지급할 무기 없음"); return; }
 
-        var starter = normals[Random.Range(0, normals.Count)];
-        var inv     = PlayerInventory.Shared;
+        var inv = PlayerInventory.Shared;
         if (inv == null) return;
 
-        if (!inv.TryAddToInventory(starter)) return;
-        inv.EquipFromInventory(0); // 인벤 0번 슬롯 → 장착 슬롯으로
-        Debug.Log($"[UpgradeManager] 시작 무기 지급: {starter.weaponName}");
+        for (int i = 0; i < 2; i++)
+        {
+            var starter = normals[Random.Range(0, normals.Count)];
+            if (inv.TryAddToInventory(starter))
+            {
+                inv.EquipFromInventory(0); // 인벤 0번 슬롯 → 장착 슬롯으로
+                Debug.Log($"[UpgradeManager] 시작 무기 지급 {i + 1}: {starter.weaponName}");
+            }
+        }
     }
 
     // ────────────────────────────────────────────────────────────────

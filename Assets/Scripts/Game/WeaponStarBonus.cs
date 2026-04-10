@@ -5,13 +5,13 @@
 [System.Serializable]
 public struct WeaponStarBonus
 {
-    /// <summary>속성 ID (예: "ATK_ADD", "CD_RED"). 빈 문자열이면 해당 성에 보너스 없음.</summary>
+    /// <summary>속성 ID (예: "ATK_ADD", "CRT_RATE"). 빈 문자열이면 해당 성에 보너스 없음.</summary>
     public string statId;
 
-    /// <summary>수치 (정수). 예: ATK_ADD 25 → 공격력 +25%.</summary>
-    public int value;
+    /// <summary>수치. 정수형 속성(ATK_ADD 등)은 25 → +25%, 소수형(CRT_RATE 등)은 2.5 → +2.5%.</summary>
+    public float value;
 
-    /// <summary>포맷된 설명 (예: "공격력 +25%"). WeaponStatRegistry에서 자동 생성.</summary>
+    /// <summary>포맷된 설명 (예: "공격력 +25%", "치명타확률 +2.5%"). WeaponStatRegistry에서 자동 생성.</summary>
     public string description;
 
     public bool IsEmpty => string.IsNullOrEmpty(statId);

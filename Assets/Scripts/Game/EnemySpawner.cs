@@ -25,8 +25,11 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
     private int   currentWave    = 1;
     private int   currentChapter = 1;
     private int   currentStage   = 1;
+    private int   wavesPerStage  = 30;      // DB_챕터.f_웨이브에서 로드
     private bool  spawning       = true;
     private bool  isBossWave     = false;
+
+    private int CalcGlobalWave(int stage, int wave) => (stage - 1) * wavesPerStage + wave;
 
     protected override bool DontDestroy => false;
 
@@ -166,9 +169,11 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
             return;
         }
 
-        Vector2 spawnPos = bossSpawnPoint != null
-            ? (Vector2)bossSpawnPoint.position
-            : GetRandomEdgePosition();
+        // 보스 배경 프리팹의 bossSpawnPoint 우선, 그 다음 Inspector 설정, 마지막으로 랜덤 엣지
+        Transform envSpawnPoint = WaveEnvironmentSwitcher.Shared?.CurrentBossSpawnPoint;
+        Vector2 spawnPos = envSpawnPoint != null  ? (Vector2)envSpawnPoint.position
+                         : bossSpawnPoint != null ? (Vector2)bossSpawnPoint.position
+                         : GetRandomEdgePosition();
 
         var obj = Instantiate(bossData.prefab, spawnPos, Quaternion.identity);
         if (obj.TryGetComponent<BossController>(out var boss))
@@ -181,20 +186,32 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
 
     private void DoSpawn(GameObject prefab, Vector2 pos, UnitData data = null)
     {
+        Debug.Log($"[EnemySpawner] 스폰 시도: prefab={prefab?.name}, pos={pos}, data={data?.unitId}");
+
+        int globalWave       = CalcGlobalWave(currentStage, currentWave);
+        int designGlobalWave = data != null ? data.designGlobalWave : globalWave;
+
         if (spawnMarkerPrefab != null)
         {
             var markerObj = Instantiate(spawnMarkerPrefab, pos, Quaternion.identity);
             if (markerObj.TryGetComponent<SpawnMarker>(out var marker))
-                marker.Init(prefab, currentWave, data);
+                marker.Init(prefab, globalWave, designGlobalWave, data, wavesPerStage);
         }
         else
         {
-            var obj = Instantiate(prefab, pos, Quaternion.identity);
-            if (obj.TryGetComponent<EnemyController>(out var enemy))
+            var enemy = EnemyPool.Shared != null
+                ? EnemyPool.Shared.Get(prefab, pos)
+                : Instantiate(prefab, pos, Quaternion.identity).GetComponent<EnemyController>();
+
+            if (enemy != null)
             {
-                enemy.InitForWave(currentWave);
-                if (data != null) enemy.ApplyUnitData(data);
+                if (data != null) enemy.ApplyUnitData(data);      // 먼저 — InitForWave가 ActiveUnitData 필요
+                enemy.InitForWave(globalWave, designGlobalWave, wavesPerStage);
                 enemy.PlaySpawnBounce();
+            }
+            else
+            {
+                Debug.LogWarning($"[EnemySpawner] EnemyController 컴포넌트를 찾을 수 없음: prefab={prefab?.name}");
             }
         }
     }
@@ -219,8 +236,45 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
     }
 
     // ── 외부 호출 API ────────────────────────────────────────────────
+
+    /// <summary>GameManager.Start()에서 선택된 챕터ID("C1_S2" 형식)로 초기화.</summary>
+    public void SetChapterStage(string chapterID)
+    {
+        var row = DB_챕터.FindEntity(r => r.f_챕터ID == chapterID);
+        if (row == null)
+        {
+            Debug.LogWarning($"[EnemySpawner] DB_챕터에서 '{chapterID}' 를 찾을 수 없습니다.");
+            return;
+        }
+
+        ParseChapterID(row.f_챕터ID, out int chapter, out int stage);
+        currentChapter = chapter;
+        currentStage   = stage;
+        wavesPerStage  = row.f_웨이브 > 0 ? row.f_웨이브 : 30;
+
+        currentWave = 1;
+        StopAllCoroutines();
+        ApplyRule(currentWave);
+        if (isBossWave) SpawnBoss();
+        else if (spawning) StartCoroutine(SpawnLoop());
+    }
+
+    private static void ParseChapterID(string chapterID, out int chapter, out int stage)
+    {
+        chapter = 1; stage = 1;
+        var parts = chapterID.Split('_');
+        if (parts.Length >= 2 &&
+            int.TryParse(parts[0].Substring(1), out int c) &&
+            int.TryParse(parts[1].Substring(1), out int s))
+        {
+            chapter = c;
+            stage   = s;
+        }
+    }
+
     public void OnWaveUp(int wave)
     {
+        Debug.Log($"[EnemySpawner] OnWaveUp: wave={wave}, isBossWave={isBossWave}, spawning={spawning}");
         currentWave = wave;
         ApplyRule(wave);
         StopAllCoroutines();
@@ -247,10 +301,32 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
 
     public void ClearAllEnemies()
     {
-        foreach (var enemy in Object.FindObjectsByType<EnemyController>(FindObjectsSortMode.None))
+        // EnemyPool은 SetActive를 사용하지 않으므로 FindObjectsByType으로 접근하면
+        // 풀 대기 중인 적(-9999 위치)까지 Destroy되어 풀 큐가 깨짐 — All만 사용할 것
+        for (int i = EnemyController.All.Count - 1; i >= 0; i--)
+        {
+            var enemy = EnemyController.All[i];
+            if (enemy == null) continue;
+            enemy.StopAllCoroutines();   // DieRoutine 즉시 중단
+            enemy.gameObject.SetActive(false); // 시각적으로 즉시 숨김
             Destroy(enemy.gameObject);
+        }
+        // All.Clear()는 호출하지 않음 — OnDestroy에서 AllRemoveSwapBack이 자연스럽게 처리
+
         foreach (var marker in Object.FindObjectsByType<SpawnMarker>(FindObjectsSortMode.None))
             Destroy(marker.gameObject);
+
+        // 안전망: SpawnMarker가 이미 Instantiate했지만 Start()가 안 돌아 All에 미등록된 적 처리
+        // SetActive(false)인 풀 대기 적은 건드리지 않음
+        foreach (var enemy in Object.FindObjectsByType<EnemyController>(FindObjectsSortMode.None))
+        {
+            if (enemy.gameObject.activeSelf)
+            {
+                enemy.StopAllCoroutines();
+                enemy.gameObject.SetActive(false);
+                Destroy(enemy.gameObject);
+            }
+        }
     }
 
     public void ResumeSpawning(int wave)
@@ -259,10 +335,11 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
         OnWaveUp(wave);
     }
 
-    /// <summary>fromWave보다 큰 가장 가까운 보스 웨이브 번호.</summary>
+    /// <summary>fromWave보다 큰 가장 가까운 보스 웨이브 번호. DB에 해당 웨이브 행이 없으면 -1 반환.</summary>
     public int GetNextBossWave(int fromWave)
     {
-        return ((fromWave / 10) + 1) * 10;
+        int next = ((fromWave / 10) + 1) * 10;
+        return GetActiveRow(currentChapter, currentStage, next) != null ? next : -1;
     }
 
     // ── 스폰 위치 ────────────────────────────────────────────────────

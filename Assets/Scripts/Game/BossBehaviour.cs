@@ -82,6 +82,11 @@ public class BossBehaviour : EnemyBehaviourBase
         }
     }
 
+    private void OnDestroy()
+    {
+        if (boss != null) boss.OnEnraged -= OnBossEnraged;
+    }
+
     // ── 이벤트 ────────────────────────────────────────────────────
     private void OnBossEnraged()
     {

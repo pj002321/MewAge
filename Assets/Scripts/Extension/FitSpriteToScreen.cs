@@ -1,8 +1,9 @@
 using UnityEngine;
 
 /// <summary>
-/// 부착된 SpriteRenderer를 카메라 화면에 꽉 차도록 스케일합니다.
-/// 배경 등 전체 화면을 채워야 하는 스프라이트에 사용하세요.
+/// Scales the attached SpriteRenderer to fit the camera view.
+/// Use this for backgrounds or full-screen sprites.
+/// This component is purely for sprite scaling — it does NOT modify the camera.
 /// </summary>
 [RequireComponent(typeof(SpriteRenderer))]
 public class FitSpriteToScreen : MonoBehaviour
@@ -18,15 +19,26 @@ public class FitSpriteToScreen : MonoBehaviour
 
     [SerializeField] private FitMode fitMode = FitMode.Fill;
 
-    [Tooltip("FitWidth 시 카메라 orthographicSize를 스프라이트 높이에 맞게 자동 조절 (위아래 여백 제거)")]
-    [SerializeField] private bool adjustCameraToSprite = false;
+    /// <summary>Fitted sprite's world-space size (post-scale). Other scripts can read this.</summary>
+    public Vector2 FittedWorldSize { get; private set; }
 
-    private void Start()
+    private float lastAspect = -1f;
+    private float lastOrtho = -1f;
+
+    private void LateUpdate()
     {
-        Fit();
+        Camera cam = Camera.main;
+        if (cam == null) return;
+
+        if (Mathf.Abs(cam.aspect - lastAspect) > 0.001f || Mathf.Abs(cam.orthographicSize - lastOrtho) > 0.001f)
+        {
+            lastAspect = cam.aspect;
+            lastOrtho  = cam.orthographicSize;
+            Fit();
+        }
     }
 
-    private void Fit()
+    public void Fit()
     {
         Camera cam = Camera.main;
         if (cam == null) return;
@@ -34,17 +46,30 @@ public class FitSpriteToScreen : MonoBehaviour
         SpriteRenderer sr = GetComponent<SpriteRenderer>();
         if (sr.sprite == null) return;
 
-        Vector2 spriteSize = sr.sprite.bounds.size;
+        // 1. 스프라이트의 순수 원본 크기 (스케일 무시)
+        Vector2 targetSize = new Vector2(sr.sprite.rect.width, sr.sprite.rect.height) / sr.sprite.pixelsPerUnit;
+
+        // 2. 만약 MovementBounds에서 직접 지정한 하늘색 영역이 있다면, 이 영역이 화면에 꽉 차도록 타겟 크기 교체
+        MovementBounds bounds = GetComponentInChildren<MovementBounds>();
+        if (bounds != null && (bounds.ViewMode == MovementBounds.CameraViewMode.FixedView || bounds.UseCustomCameraBounds))
+        {
+            // 에디터에서 핸들로 그린 크기 자체를 타겟으로 삼음
+            targetSize = new Vector2(bounds.CameraBoundsRect.width, bounds.CameraBoundsRect.height);
+        }
+
+        // zero div 방지
+        if (targetSize.x <= 0.001f || targetSize.y <= 0.001f) return;
 
         float camHeight = cam.orthographicSize * 2f;
         float camWidth  = camHeight * cam.aspect;
 
-        float scaleX = camWidth  / spriteSize.x;
-        float scaleY = camHeight / spriteSize.y;
+        float scaleX = camWidth  / targetSize.x;
+        float scaleY = camHeight / targetSize.y;
 
         if (fitMode == FitMode.Stretch)
         {
             transform.localScale = new Vector3(scaleX, scaleY, 1f);
+            FittedWorldSize = new Vector2(camWidth, camHeight);
             return;
         }
 
@@ -58,15 +83,15 @@ public class FitSpriteToScreen : MonoBehaviour
         };
 
         transform.localScale = new Vector3(scale, scale, 1f);
-
-        // 카메라 orthographicSize를 스케일된 스프라이트 높이에 맞게 조정 (여백 제거)
-        // OnValidate는 에디터 모드에서도 호출되므로, 카메라 값 변경은 플레이 중에만 허용
-        if (adjustCameraToSprite && Application.isPlaying)
-            cam.orthographicSize = spriteSize.y * scale / 2f;
+        FittedWorldSize = targetSize * scale;
     }
 
 #if UNITY_EDITOR
-    // 에디터에서 해상도 바꿀 때 즉시 반영
-    private void OnValidate() => Fit();
+    private void OnValidate()
+    {
+        // 플레이 중에만 실행 — 에디터 정지 상태에서는 카메라가 없어 scale이 오염됨
+        if (!Application.isPlaying) return;
+        Fit();
+    }
 #endif
 }

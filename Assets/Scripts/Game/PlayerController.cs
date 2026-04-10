@@ -74,6 +74,9 @@ public class PlayerController : MonoBehaviour
     [Header("플레이어 위 HP 슬라이더 (World Space)")]
     [SerializeField] private Slider playerHpSlider;
 
+    [Header("먼지 트레일")]
+    [SerializeField] private ParticleSystem dustTrailEffect;
+
     private Vector2        moveDirection;
     private Rigidbody2D    rb;
     private SpriteRenderer spriteRenderer;
@@ -85,14 +88,21 @@ public class PlayerController : MonoBehaviour
     {
         Instance      = this;
         rb            = GetComponent<Rigidbody2D>();
-        spriteRenderer = GetComponent<SpriteRenderer>();
+        spriteRenderer = GetComponentInChildren<SpriteRenderer>();
         hitFlash      = GetComponent<HitFlash>();
         hitShake      = GetComponent<HitShake>();
         currentHP     = maxHP;
     }
 
+    private void OnDestroy()
+    {
+        StopAllCoroutines();
+        if (Instance == this) Instance = null;
+    }
+
     private void Start()
     {
+        Debug.Log($"[PlayerController] Start — localScale={transform.localScale}, lossyScale={transform.lossyScale}, parent={transform.parent?.name ?? "none"}");
         SyncHPUI();
         StartCoroutine(HPRegenRoutine());
     }
@@ -124,6 +134,14 @@ public class PlayerController : MonoBehaviour
 
         rb.linearVelocity = Vector2.zero;
         rb.MovePosition(desired);
+
+        // 이동 중 먼지 트레일 재생
+        if (dustTrailEffect != null)
+        {
+            bool moving = moveDirection.sqrMagnitude > 0.001f;
+            if (moving && !dustTrailEffect.isPlaying) dustTrailEffect.Play();
+            else if (!moving && dustTrailEffect.isPlaying) dustTrailEffect.Stop();
+        }
     }
 
     private Vector2 ClampToBounds(Vector2 desired)
@@ -147,8 +165,16 @@ public class PlayerController : MonoBehaviour
     private void FlipSprite()
     {
         if (spriteRenderer == null) return;
-        if (moveDirection.x > 0.05f) spriteRenderer.flipX = false;
-        else if (moveDirection.x < -0.05f) spriteRenderer.flipX = true;
+        if (moveDirection.x > 0.05f)
+        {
+            spriteRenderer.flipX = false;
+            if (dustTrailEffect != null) dustTrailEffect.transform.localScale = Vector3.one;
+        }
+        else if (moveDirection.x < -0.05f)
+        {
+            spriteRenderer.flipX = true;
+            if (dustTrailEffect != null) dustTrailEffect.transform.localScale = new Vector3(-1f, 1f, 1f);
+        }
     }
 
     public void TakeDamage(float damage)
@@ -160,7 +186,9 @@ public class PlayerController : MonoBehaviour
             return;
         }
 
-        float reduced = Mathf.Max(0f, damage - defense);
+        // defense = 피해 감소율(%). defense=10 → 10% 감소, defense=70 → 70% 감소
+        float reduction = Mathf.Clamp01(defense / 100f);
+        float reduced   = damage * (1f - reduction);
         currentHP -= reduced;
         currentHP  = Mathf.Max(0f, currentHP);
         SyncHPUI();
@@ -180,9 +208,13 @@ public class PlayerController : MonoBehaviour
 
     private void SyncHPUI()
     {
-        float norm = maxHP > 0f ? currentHP / maxHP : 0f;
         GameManager.Shared?.UpdateHP(currentHP, maxHP);
-        if (playerHpSlider) playerHpSlider.value = norm;
+        if (playerHpSlider)
+        {
+            playerHpSlider.minValue = 0f;
+            playerHpSlider.maxValue = Mathf.Max(1f, maxHP);
+            playerHpSlider.value    = currentHP;
+        }
     }
 
     // ────────────────────────────────────────────────────────────────
@@ -412,7 +444,7 @@ public class PlayerController : MonoBehaviour
         while (true)
         {
             yield return wait;
-            foreach (var enemy in Object.FindObjectsByType<EnemyController>(FindObjectsSortMode.None))
+            foreach (var enemy in EnemyController.All)
             {
                 Vector2 dir = (enemy.transform.position - transform.position);
                 if (dir.magnitude <= radius)

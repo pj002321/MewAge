@@ -16,9 +16,13 @@ public class ImprovCard : MonoBehaviour
     [SerializeField] private Button          button;
 
     [Header("선택 애니메이션")]
-    [SerializeField] private float selectLiftAmount = 30f;   // 올라갈 픽셀
-    [SerializeField] private float selectScale      = 1.12f; // 최종 스케일
-    [SerializeField] private float animDuration     = 0.25f;
+    [SerializeField] private float spinDuration  = 0.35f;  // 회전 한 바퀴 시간
+    [SerializeField] private float selectScale   = 1.08f;  // 선택 카드 최종 스케일
+
+    [Header("비선택 애니메이션")]
+    [SerializeField] private Transform dimTarget  = null;   // 스케일 줄일 자식 (null이면 자기 자신)
+    [SerializeField] private float     dimScale   = 0.65f;
+    [SerializeField] private float     dimDuration = 0.2f;
 
     [Header("딤 설정")]
     [SerializeField] private float dimAlpha = 0.35f;
@@ -96,40 +100,73 @@ public class ImprovCard : MonoBehaviour
         canvasGroup.alpha = dimmed ? dimAlpha : 1f;
     }
 
+    /// <summary>선택된 카드: 360° 스핀 + 스케일 업</summary>
     public void PlaySelectAnimation()
     {
         StopAllCoroutines();
-        StartCoroutine(SelectRoutine());
+        StartCoroutine(SpinRoutine());
     }
 
-    /// <summary>선택 해제 시 위치·스케일을 즉시 원래대로 되돌립니다.</summary>
+    /// <summary>비선택 카드: 스케일 다운</summary>
+    public void PlayDimAnimation()
+    {
+        StopAllCoroutines();
+        var target = dimTarget != null ? dimTarget : transform;
+        StartCoroutine(ScaleRoutine(target, dimScale, dimDuration));
+    }
+
+    /// <summary>선택 해제 시 즉시 원래대로 복구</summary>
     public void ResetAnimation()
     {
         StopAllCoroutines();
         EnsureRt();
-        rt.anchoredPosition  = originPos;
-        transform.localScale = Vector3.one;
+        transform.localScale       = Vector3.one;
+        transform.localEulerAngles = Vector3.zero;
+        var target = dimTarget != null ? dimTarget : transform;
+        target.localScale = Vector3.one;
     }
 
-    private IEnumerator SelectRoutine()
+    private IEnumerator SpinRoutine()
     {
-        Vector2 targetPos   = originPos + Vector2.up * selectLiftAmount;
-        Vector3 targetScale = Vector3.one * selectScale;
-
         float elapsed = 0f;
-        while (elapsed < animDuration)
-        {
-            float t = elapsed / animDuration;
-            float ease = 1f - (1f - t) * (1f - t); // ease-out quad
+        Vector3 startScale = transform.localScale;
+        Vector3 endScale   = Vector3.one * selectScale;
 
-            rt.anchoredPosition  = Vector2.Lerp(originPos, targetPos, ease);
-            transform.localScale = Vector3.Lerp(Vector3.one, targetScale, ease);
+        while (elapsed < spinDuration)
+        {
+            float t    = elapsed / spinDuration;
+            float ease = t < 0.5f ? 2f * t * t : 1f - Mathf.Pow(-2f * t + 2f, 2f) / 2f; // ease in-out
+
+            // 360° 회전 (Y축)
+            float angle = Mathf.Lerp(0f, 360f, ease);
+            transform.localEulerAngles = new Vector3(0f, angle, 0f);
+
+            // 스케일 업
+            transform.localScale = Vector3.Lerp(startScale, endScale, ease);
 
             elapsed += Time.unscaledDeltaTime;
             yield return null;
         }
 
-        rt.anchoredPosition  = targetPos;
-        transform.localScale = targetScale;
+        transform.localEulerAngles = Vector3.zero;
+        transform.localScale       = endScale;
+    }
+
+    private IEnumerator ScaleRoutine(Transform target, float targetScale, float duration)
+    {
+        float elapsed     = 0f;
+        Vector3 fromScale = target.localScale;
+        Vector3 toScale   = Vector3.one * targetScale;
+
+        while (elapsed < duration)
+        {
+            float t    = elapsed / duration;
+            float ease = 1f - (1f - t) * (1f - t);
+            target.localScale = Vector3.Lerp(fromScale, toScale, ease);
+            elapsed += Time.unscaledDeltaTime;
+            yield return null;
+        }
+
+        target.localScale = toScale;
     }
 }
