@@ -148,11 +148,13 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 
         // 10웨이브 주기 내 위치 (0~9)
         int cycleWave = (wave - 1) % 10;
-        // 2웨이브마다 1초씩 증가: 0~1→0s, 2~3→1s, 4~5→2s, 6~7→3s, 8~9→4s
-        float seconds = Mathf.Floor(cycleWave / 2f);
 
-        // 새 구간 진입 웨이브 (wave 3, 5, 7, 9): 이전 위치에서 1초 재생 후 멈춤
-        if (cycleWave > 0 && cycleWave % 2 == 0)
+        // 1,2→0s / 3,4→1s / 5,6→2s / 7,8,9→3s / 10→4s
+        float seconds = cycleWave >= 9 ? 4f : Mathf.Min(Mathf.Floor(cycleWave / 2f), 3f);
+
+        // 새 구간 진입 웨이브 (wave 3,5,7,10 → cycleWave 2,4,6,9): 이전 위치에서 1초 재생 후 멈춤
+        bool shouldAnimate = cycleWave == 2 || cycleWave == 4 || cycleWave == 6 || cycleWave == 9;
+        if (shouldAnimate)
         {
             float startSec = seconds - 1f;
             anim.Play(stateInfo.fullPathHash, 0, startSec / clipLength);
@@ -220,7 +222,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 
     private void UpdateWaveUI()
     {
-        if (waveText) waveText.text = $"WAVE {wave}";
+        if (waveText) waveText.text = $"{wave}";
         if (timerText) timerText.color = timerNormalColor;
         WaveInfoProgress();
     }

@@ -91,6 +91,12 @@ public class WeaponPoint : MonoBehaviour
     private float _stateTimer;
     private float _bonusMultiplier = 1f; // MultiplyAttackSpeed 등 일회성 보너스 누적
 
+    // ── 진단용 ─────────────────────────────────────────────────────────
+    // 마지막 공격 이후 실제(unscaled) 경과 시간 — 공격 시에만 0으로 리셋
+    private float _noAttackDiagTimer;
+    private const float DiagLogInterval = 5f; // 이 초마다 로그 1회
+    private float _idleNoTargetTimer; // 구버전 호환용 (내부에서만 사용)
+
     private Coroutine _scalePulseCoroutine;
     private Vector3   _originalScale;
 
@@ -131,6 +137,33 @@ public class WeaponPoint : MonoBehaviour
         }
 
         cooldownTimer -= Time.deltaTime;
+
+        // ── 진단: 적이 있는데 일정 시간 공격이 없으면 상태 덤프 ─────────
+        // unscaledDeltaTime 사용 → timeScale=0 상황도 누적됨
+        // _noAttackDiagTimer는 공격 직전에만 리셋 (UpdateIdle이 안 건드림)
+        if (EnemyController.All.Count > 0 || BossController.Current != null)
+        {
+            _noAttackDiagTimer += Time.unscaledDeltaTime;
+            if (_noAttackDiagTimer >= DiagLogInterval)
+            {
+                _noAttackDiagTimer = 0f;
+                Vector2 diagOrigin = transform.parent != null
+                    ? (Vector2)transform.parent.position : (Vector2)transform.position;
+                EnemyController anyEnemy = FindNearestAny();
+                float nearestDist = anyEnemy != null
+                    ? Vector2.Distance(diagOrigin, anyEnemy.transform.position) : -1f;
+                Debug.LogWarning(
+                    $"[WeaponPoint] 미아 진단 — '{gameObject.name}'\n" +
+                    $"  state={state}  cooldownTimer={cooldownTimer:F2}  timeScale={Time.timeScale}\n" +
+                    $"  attackRange={attackRange}  weaponType={weaponType}\n" +
+                    $"  EnemyCount={EnemyController.All.Count}  Boss={BossController.Current != null}\n" +
+                    $"  가장가까운적(제한없음)={nearestDist:F2}  (공격범위={attackRange})");
+            }
+        }
+        else
+        {
+            _noAttackDiagTimer = 0f;
+        }
 
         UpdateRotation();
 
@@ -256,6 +289,7 @@ public class WeaponPoint : MonoBehaviour
         {
             if (weaponType == WeaponType.Ranged)
             {
+                _noAttackDiagTimer = 0f;
                 ShootAtBoss(boss);
                 cooldownTimer = attackCooldown;
                 return;
@@ -280,6 +314,7 @@ public class WeaponPoint : MonoBehaviour
 
         if (weaponType == WeaponType.Ranged && nearest != null)
         {
+            _noAttackDiagTimer = 0f;
             ShootAt(nearest);
             cooldownTimer = attackCooldown;
             return;
@@ -310,11 +345,14 @@ public class WeaponPoint : MonoBehaviour
 
         if (nearest != null)
         {
+            _noAttackDiagTimer = 0f;
             targetEnemy = nearest;
             Vector2 toTarget = (nearest.transform.position - transform.parent.position).normalized;
             pullbackLocalPos = -(Vector3)toTarget * pullbackDist;
             state = State.Pullback;
+            return;
         }
+
     }
 
     private void ShootAtBoss(BossController boss)
@@ -794,6 +832,10 @@ public class WeaponPoint : MonoBehaviour
         _baseCooldown  = data.attackCooldown;       // RecalcCooldown 기준값
         attackRange    = data.attackRange;
         areaHitRadius  = data.areaHitRadius;
+
+        // ── 진단: attackRange 0 이면 공격 불가 ──────────────────────────
+        if (attackRange <= 0f)
+            Debug.LogWarning($"[WeaponPoint] ⚠️ attackRange=0 — 무기 '{gameObject.name}' (DB f_탐지범위 확인 필요). 적을 절대 탐색 못합니다.");
 
         // Spin 타입은 시계방향으로 회전
         if (weaponType == WeaponType.Spin)
