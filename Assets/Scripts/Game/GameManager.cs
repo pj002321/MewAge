@@ -7,19 +7,15 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 {
     [Header("UI")]
     [SerializeField] private TextMeshProUGUI waveText;
+    [SerializeField] private Image waveIconImg;
     [SerializeField] private TextMeshProUGUI timerText;
     [SerializeField] private TextMeshProUGUI goldText;
-    [SerializeField] private TextMeshProUGUI reroll_goldText;
     [SerializeField] private TextMeshProUGUI levelText;
-    [SerializeField] private TextMeshProUGUI reroll_levelText;
-    [SerializeField] private TextMeshProUGUI expText;
     [SerializeField] private Slider          expSlider;
-    [SerializeField] private Slider          reroll_expSlider;
     [SerializeField] private Slider          hpSlider;
     [SerializeField] private TextMeshProUGUI hpText;
     [SerializeField] private GameObject         gameOverPanel;       // 부활 패널
     [SerializeField] private GameOverResultPanel gameOverResultPanel; // 게임오버 결과 패널
-    [SerializeField] private GameObject      waveInfoProgress;
     [SerializeField] private GameClearPanel  gameClearPanel;
 
     [Header("Wave 타이머")]
@@ -136,39 +132,6 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         }
     }
 
-    private void WaveInfoProgress()
-    {
-        if (waveInfoProgress == null) return;
-        var anim = waveInfoProgress.GetComponent<Animator>();
-        if (anim == null) return;
-
-        var   stateInfo  = anim.GetCurrentAnimatorStateInfo(0);
-        float clipLength = stateInfo.length;
-        if (clipLength <= 0f) return;
-
-        // 10웨이브 주기 내 위치 (0~9)
-        int cycleWave = (wave - 1) % 10;
-
-        // 1,2→0s / 3,4→1s / 5,6→2s / 7,8,9→3s / 10→4s
-        float seconds = cycleWave >= 9 ? 4f : Mathf.Min(Mathf.Floor(cycleWave / 2f), 3f);
-
-        // 새 구간 진입 웨이브 (wave 3,5,7,10 → cycleWave 2,4,6,9): 이전 위치에서 1초 재생 후 멈춤
-        bool shouldAnimate = cycleWave == 2 || cycleWave == 4 || cycleWave == 6 || cycleWave == 9;
-        if (shouldAnimate)
-        {
-            float startSec = seconds - 1f;
-            anim.Play(stateInfo.fullPathHash, 0, startSec / clipLength);
-            anim.speed = 1f;
-            StartCoroutine(PauseAnimAfterSeconds(anim, 1f));
-        }
-        else
-        {
-            // 나머지 웨이브: 해당 위치에 고정
-            anim.Play(stateInfo.fullPathHash, 0, seconds / clipLength);
-            anim.speed = 0f;
-        }
-    }
-
     private IEnumerator PauseAnimAfterSeconds(Animator anim, float delay)
     {
         yield return new WaitForSeconds(delay);
@@ -220,11 +183,67 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         timerText.color = waveTimer <= timerWarningThreshold ? timerWarningColor : timerNormalColor;
     }
 
-    private void UpdateWaveUI()
+    private static readonly Vector3 WaveTextNormalScale = Vector3.one;
+    private static readonly Vector3 WaveTextBigScale   = new Vector3(1.8f, 1.8f, 1f);
+    private Coroutine _waveTextAnim;
+
+    private Sprite _sprWaveNormal;
+    private Sprite _sprWaveBoss;
+
+    private void UpdateWaveUI(bool isBossWave = false)
     {
-        if (waveText) waveText.text = $"{wave}";
+        if (waveText)
+        {
+            waveText.text = $"{wave}";
+            if (_waveTextAnim != null) StopCoroutine(_waveTextAnim);
+            _waveTextAnim = StartCoroutine(WaveTextBumpAnim());
+        }
         if (timerText) timerText.color = timerNormalColor;
-        WaveInfoProgress();
+
+        // 웨이브 아이콘 교체
+        if (waveIconImg != null)
+        {
+            if (isBossWave)
+            {
+                if (_sprWaveBoss == null)
+                    _sprWaveBoss = Resources.Load<Sprite>("UI/wave_boss");
+                if (_sprWaveBoss != null) waveIconImg.sprite = _sprWaveBoss;
+            }
+            else
+            {
+                if (_sprWaveNormal == null)
+                    _sprWaveNormal = Resources.Load<Sprite>("UI/wave_normal");
+                if (_sprWaveNormal != null) waveIconImg.sprite = _sprWaveNormal;
+            }
+        }
+    }
+
+    private IEnumerator WaveTextBumpAnim()
+    {
+        const float upTime   = 0.08f;
+        const float downTime = 0.18f;
+
+        var t = waveText.transform;
+        float elapsed = 0f;
+        // 확대
+        while (elapsed < upTime)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            t.localScale = Vector3.Lerp(WaveTextNormalScale, WaveTextBigScale, elapsed / upTime);
+            yield return null;
+        }
+        t.localScale = WaveTextBigScale;
+
+        elapsed = 0f;
+        // 원본 복구
+        while (elapsed < downTime)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            t.localScale = Vector3.Lerp(WaveTextBigScale, WaveTextNormalScale, elapsed / downTime);
+            yield return null;
+        }
+        t.localScale = WaveTextNormalScale;
+        _waveTextAnim = null;
     }
 
     public void UpdateHP(float current, float max)
@@ -246,10 +265,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     public void UpdateExpUI(int exp, int expMax, int level)
     {
         if (levelText)        levelText.text         = $"LV.{level}";
-        if (reroll_levelText) reroll_levelText.text  = $"LV.{level}";
-        if (expText)          expText.text          = $"{exp} / {expMax}";
         if (expSlider)        expSlider.value        = (float)exp / expMax;
-        if (reroll_expSlider) reroll_expSlider.value = (float)exp / expMax;
     }
 
     public void TriggerGameOver()
@@ -329,7 +345,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 
         this.DLog($"[GameManager] StartNextWave wave={wave} | isBossWave={isBossWave} | needsGate={needsExitGate} | timer={waveTimer}s");
 
-        UpdateWaveUI();
+        UpdateWaveUI(isBossWave);
 
         // 보스 전/후: 업그레이드 패널 닫힘 → 게이트 활성화 → 플레이어 이동 → 실제 웨이브 시작
         if (needsExitGate)

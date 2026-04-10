@@ -1,3 +1,4 @@
+using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -13,6 +14,8 @@ public class ImprovPanel : MonoBehaviour
     [SerializeField] private Button           nextButton;
     [SerializeField] private Button           rerollButton;
     [SerializeField] private TextMeshProUGUI  goldText;
+
+    [SerializeField] private float autoNextDelay = 0.4f; // 카드 선택 후 자동 진행 딜레이
 
     private bool selectedOnce;
     private DB_증강 pendingData;
@@ -72,8 +75,13 @@ public class ImprovPanel : MonoBehaviour
         {
             if (c.gameObject.activeSelf)
             {
-                if (c != card) c.ResetAnimation();
-                c.SetDimmed(c != card);
+                if (c == card)
+                    c.PlaySelectAnimation();   // 선택 카드: 360° 스핀
+                else
+                {
+                    c.PlayDimAnimation();      // 비선택 카드: 스케일 다운
+                    c.SetDimmed(true);
+                }
             }
         }
 
@@ -86,6 +94,15 @@ public class ImprovPanel : MonoBehaviour
             StatPanelUI.Shared?.SetPreview(preview.Value.stat, preview.Value.pct);
         else
             StatPanelUI.Shared?.ClearPreview();
+
+        // 딜레이 후 자동으로 다음 패널로 이동
+        StartCoroutine(AutoNextRoutine());
+    }
+
+    private IEnumerator AutoNextRoutine()
+    {
+        yield return new WaitForSecondsRealtime(autoNextDelay);
+        OnNextButtonClicked();
     }
 
     private void OnNextButtonClicked()
