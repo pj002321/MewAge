@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -16,6 +17,7 @@ public class UpgradeCard : MonoBehaviour
     [SerializeField] private Button          buyButton;
     [SerializeField] private Button          adButton;
     [SerializeField] private Button          infoButton;
+    [SerializeField] private List<GameObject> starObjects; // 0=1성, 1=2성, 2=3성, 3=4성
 
     private WeaponData data;
 
@@ -37,7 +39,7 @@ public class UpgradeCard : MonoBehaviour
         }
         if (weaponNameText) weaponNameText.text = weaponData.weaponName;
         if (priceText)      priceText.text      = $"{weaponData.price}";
-        SetStarImage(starImage, weaponData.star);
+        SetStarObject(starObjects, weaponData.star);
 
         buyButton.gameObject.SetActive(true);
         buyButton.onClick.RemoveAllListeners();
@@ -65,12 +67,10 @@ public class UpgradeCard : MonoBehaviour
     private void OnClickInfo() => WeaponInfoPanel.Shared?.Show(data,
         onBuy: () => UpgradeManager.Shared?.TryBuy(data));
 
-    private static void SetStarImage(Image img, int star)
+    private static void SetStarObject(List<GameObject> objs, int star)
     {
-        if (img == null) return;
-        if (star <= 0) { img.enabled = false; return; }
-        var sprite = Resources.Load<Sprite>($"UI/star_{star}");
-        if (sprite != null) { img.sprite = sprite; img.SetNativeSize(); img.enabled = true; }
-        else                  img.enabled = false;
+        if (objs == null) return;
+        for (int i = 0; i < objs.Count; i++)
+            if (objs[i] != null) objs[i].SetActive(i == star - 1 && star > 0);
     }
 }

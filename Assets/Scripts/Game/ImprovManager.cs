@@ -202,13 +202,12 @@ public class ImprovManager : MonoBehaviourSingleton<ImprovManager>
     {
         improvPanel.gameObject.SetActive(false);
 
+        Time.timeScale = 1f;
+
         if (UpgradeManager.Shared != null)
             UpgradeManager.Shared.ShowPanel(pendingWave);
         else
-        {
-            Time.timeScale = 1f;
             GameManager.Shared?.StartNextWave();
-        }
     }
 }
 

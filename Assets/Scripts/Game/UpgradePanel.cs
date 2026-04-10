@@ -9,6 +9,8 @@ using UnityEngine.UI;
 /// </summary>
 public class UpgradePanel : MonoBehaviour
 {
+
+
     [Header("카드 슬롯 (4개)")]
     [SerializeField] private UpgradeCard[] cards;
 

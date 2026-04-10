@@ -16,7 +16,7 @@ public class EquipSlot : MonoBehaviour,
     [SerializeField] private Image           synergyhilightImg;
     [SerializeField] private Image           frameImg;
     [SerializeField] private Image           iconImg;
-    [SerializeField] private Image           starImage;
+    [SerializeField] private List<GameObject> starObjects; // 0=1성, 1=2성, 2=3성, 3=4성
 
     public int SlotIndex { get; set; }
 
@@ -52,16 +52,7 @@ public class EquipSlot : MonoBehaviour,
         bool has = data != null;
         if (iconImg)  iconImg.enabled = has;
         if (has && iconImg && data.icon) iconImg.sprite = data.icon;
-        if (starImage)
-        {
-            if (has && data.star > 0)
-            {
-                var sprite = Resources.Load<Sprite>($"UI/star_{data.star}");
-                if (sprite != null) { starImage.sprite = sprite; starImage.SetNativeSize(); starImage.enabled = true; }
-                else starImage.enabled = false;
-            }
-            else starImage.enabled = false;
-        }
+        SetStarObject(starObjects, has ? data.star : 0);
         transform.localScale = Vector3.one * (has && selected ? 1.15f : 1f);
 
         if (frameImg)
@@ -111,6 +102,13 @@ public class EquipSlot : MonoBehaviour,
             if (useShimmer)
                 _shimmerCoroutine = StartCoroutine(ShimmerRoutine(targetStar));
         }
+    }
+
+    private static void SetStarObject(List<GameObject> objs, int star)
+    {
+        if (objs == null) return;
+        for (int i = 0; i < objs.Count; i++)
+            if (objs[i] != null) objs[i].SetActive(i == star - 1 && star > 0);
     }
 
     private void StopShimmer()

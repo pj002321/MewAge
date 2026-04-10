@@ -193,7 +193,6 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
     public void ShowPanel(int wave)
     {
         CollectAllDropItems();
-        Time.timeScale = 0f;
         int         playerLevel = PlayerStats.Shared?.Level ?? 1;
         DrawProfile p           = GetCurrentProfile(playerLevel);
         currentDraw = DrawCards(3);
@@ -214,7 +213,6 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
     public void ClosePanel()
     {
         upgradePanel.gameObject.SetActive(false);
-        Time.timeScale = 1f;
         GameManager.Shared?.StartNextWave();
     }
 

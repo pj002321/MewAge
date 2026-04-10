@@ -14,7 +14,7 @@ public class InvenSlot : MonoBehaviour,
 {
     [SerializeField] private Image           frameImg;
     [SerializeField] private Image           iconImg;
-    [SerializeField] private Image           starImage;
+    [SerializeField] private List<GameObject> starObjects; // 0=1성, 1=2성, 2=3성, 3=4성
 
     [Header("선택 확대")]
     [SerializeField] private float selectedScale = 1.2f;
@@ -78,19 +78,17 @@ public class InvenSlot : MonoBehaviour,
             }
         }
         if (has && iconImg && data.icon) iconImg.sprite = data.icon;
-        if (starImage)
-        {
-            if (has && data.star > 0)
-            {
-                var sprite = Resources.Load<Sprite>($"UI/star_{data.star}");
-                if (sprite != null) { starImage.sprite = sprite; starImage.SetNativeSize(); starImage.enabled = true; }
-                else starImage.enabled = false;
-            }
-            else starImage.enabled = false;
-        }
+        SetStarObject(starObjects, has ? data.star : 0);
 
         float s = (has && selected) ? selectedScale : normalScale;
         transform.localScale = Vector3.one * s;
+    }
+
+    private static void SetStarObject(List<GameObject> objs, int star)
+    {
+        if (objs == null) return;
+        for (int i = 0; i < objs.Count; i++)
+            if (objs[i] != null) objs[i].SetActive(i == star - 1 && star > 0);
     }
 
     // ────────────────────────────────────────────────────────────────
