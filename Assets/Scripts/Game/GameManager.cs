@@ -31,6 +31,10 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     [SerializeField] private Color timerWarningColor = Color.red;
     [SerializeField] private float timerWarningThreshold = 5f;
 
+    [Header("웨이브 아이콘 색상")]
+    [SerializeField] private Color normalWaveColor = Color.cyan;
+    [SerializeField] private Color bossWaveColor = Color.red;
+
     private int   wave = 0;
     private float waveTimer;
     private bool  isGameOver;
@@ -208,12 +212,14 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
                 if (_sprWaveBoss == null)
                     _sprWaveBoss = Resources.Load<Sprite>("UI/wave_boss");
                 if (_sprWaveBoss != null) waveIconImg.sprite = _sprWaveBoss;
+                waveIconImg.color = bossWaveColor;
             }
             else
             {
                 if (_sprWaveNormal == null)
                     _sprWaveNormal = Resources.Load<Sprite>("UI/wave_normal");
                 if (_sprWaveNormal != null) waveIconImg.sprite = _sprWaveNormal;
+                waveIconImg.color = normalWaveColor;
             }
         }
     }

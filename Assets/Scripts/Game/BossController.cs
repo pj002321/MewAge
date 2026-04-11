@@ -56,6 +56,8 @@ public class BossController : MonoBehaviour
     // ── 공개 프로퍼티 ──────────────────────────────────────────────
     public bool   IsEnraged      { get; private set; }
     public float  HPRatio        => maxHP > 0f ? currentHP / maxHP : 0f;
+    public float  MaxHPValue    => maxHP;
+    public float  CurrentHPValue => currentHP;
     public string BossName       => bossName;
     public float  EnrageSpeedMult  => enrageSpeedMult;
     public float  EnrageDamageMult => enrageDamageMult;

@@ -13,9 +13,11 @@ public class EquipSlot : MonoBehaviour,
     IPointerDownHandler, IPointerUpHandler,
     IBeginDragHandler, IDragHandler, IEndDragHandler
 {
-    [SerializeField] private Image           synergyhilightImg;
-    [SerializeField] private Image           frameImg;
-    [SerializeField] private Image           iconImg;
+    [SerializeField] private Image            synergyhilightImg;
+    [SerializeField] private Image            frameImg;
+    [SerializeField] private Image            iconImg;
+    [SerializeField] private Image            synergyIconImg;
+    [SerializeField] private Image            weaponTypeImg;
     [SerializeField] private List<GameObject> starObjects; // 0=1성, 1=2성, 2=3성, 3=4성
 
     public int SlotIndex { get; set; }
@@ -28,12 +30,21 @@ public class EquipSlot : MonoBehaviour,
 
     // 반짝임 효과 (3성=골드, 4성=레인보우)
     private Coroutine _shimmerCoroutine;
-    private int       _shimmerStar;       // 현재 shimmer 중인 성 수 (0=없음)
+    private int       _shimmerStar;
+
+    // 하이라이트 효과
+    private Coroutine _highlightCoroutine;
+    private Vector3   _highlightOriginalScale;
 
     private void Awake()
     {
         var c = GetComponentInParent<Canvas>();
         rootCanvas = c != null ? c.rootCanvas : null;
+        if (synergyhilightImg)
+        {
+            _highlightOriginalScale = synergyhilightImg.transform.localScale;
+            synergyhilightImg.enabled = false;
+        }
     }
 
     public bool IsInitialized { get; private set; }
@@ -42,6 +53,63 @@ public class EquipSlot : MonoBehaviour,
     private void OnDisable()
     {
         StopShimmer();
+        StopHighlight();
+    }
+
+    // ────────────────────────────────────────────────────────────────
+    // 하이라이트
+    // ────────────────────────────────────────────────────────────────
+    public void ShowHighlight()
+    {
+        if (synergyhilightImg == null) return;
+        StopHighlight();
+        synergyhilightImg.enabled              = true;
+        synergyhilightImg.color                = new Color(1f, 1f, 1f, 1f);
+        synergyhilightImg.transform.localScale = _highlightOriginalScale;
+    }
+
+    public void HideHighlight()
+    {
+        StopHighlight();
+        if (synergyhilightImg) synergyhilightImg.enabled = false;
+    }
+
+    /// <summary>장착 확정 시 스케일업 + 페이드아웃 후 비활성화</summary>
+    public void PlayEquipEffect()
+    {
+        if (synergyhilightImg == null) return;
+        StopHighlight();
+        _highlightCoroutine = StartCoroutine(EquipEffectRoutine());
+    }
+
+    private void StopHighlight()
+    {
+        if (_highlightCoroutine != null) { StopCoroutine(_highlightCoroutine); _highlightCoroutine = null; }
+    }
+
+    private System.Collections.IEnumerator EquipEffectRoutine()
+    {
+        synergyhilightImg.enabled = true;
+        synergyhilightImg.color   = new Color(1f, 1f, 1f, 1f);
+        var t = synergyhilightImg.transform;
+        t.localScale = _highlightOriginalScale;
+
+        const float duration  = 0.45f;
+        const float scaleMult = 1.6f;
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float f    = elapsed / duration;
+            float ease = 1f - (1f - f) * (1f - f); // ease-out quad
+            t.localScale            = _highlightOriginalScale * Mathf.LerpUnclamped(1f, scaleMult, ease);
+            synergyhilightImg.color = new Color(1f, 1f, 1f, Mathf.Lerp(1f, 0f, ease));
+            yield return null;
+        }
+
+        synergyhilightImg.enabled = false;
+        t.localScale              = _highlightOriginalScale;
+        _highlightCoroutine       = null;
     }
 
     // ────────────────────────────────────────────────────────────────
@@ -52,40 +120,22 @@ public class EquipSlot : MonoBehaviour,
         bool has = data != null;
         if (iconImg)  iconImg.enabled = has;
         if (has && iconImg && data.icon) iconImg.sprite = data.icon;
+        Color synColor = (has && data.tag1 != WeaponSynergyTag.None)
+            ? SynergyHelper.GetTierColor(SynergyHelper.CountEquippedTag(data.tag1))
+            : SynergyHelper.ColorBronze;
+        ApplyWeaponOverlays(has ? data : null, synColor);
         SetStarObject(starObjects, has ? data.star : 0);
         transform.localScale = Vector3.one * (has && selected ? 1.15f : 1f);
 
         if (frameImg)
         {
-            if (has)
+            var gradeSprite = WeaponVisualConfig.Shared?.GetGradeSprite(
+                has ? data.grade : WeaponGrade.Normal);
+            if (gradeSprite != null)
             {
-                var path = "Weapons/grade/" + data.grade.ToString().ToLower();
-                var sprite = Resources.Load<Sprite>(path);
-                Debug.Log($"[EquipSlot] Loading grade sprite: {path}, result: {sprite != null}");
-                if (sprite != null)
-                {
-                    frameImg.sprite = sprite;
-                    frameImg.color = Color.white;
-                }
-                else
-                {
-                    Debug.LogWarning($"[EquipSlot] Grade sprite not found: {path}");
-                }
-            }
-            else
-            {
-                var path = "Weapons/grade/normal";
-                var sprite = Resources.Load<Sprite>(path);
-                Debug.Log($"[EquipSlot] Loading normal sprite: {path}, result: {sprite != null}");
-                if (sprite != null)
-                {
-                    frameImg.sprite = sprite;
-                    frameImg.color = Color.white;
-                }
-                else
-                {
-                    Debug.LogWarning($"[EquipSlot] Normal sprite not found: {path}");
-                }
+                frameImg.sprite = gradeSprite;
+                frameImg.type   = UnityEngine.UI.Image.Type.Simple;
+                frameImg.color  = Color.white;
             }
         }
 
@@ -115,6 +165,27 @@ public class EquipSlot : MonoBehaviour,
     {
         if (_shimmerCoroutine != null) { StopCoroutine(_shimmerCoroutine); _shimmerCoroutine = null; }
         _shimmerStar = 0;
+    }
+
+    private void ApplyWeaponOverlays(WeaponData data, Color synergyColor)
+    {
+        var cfg = WeaponVisualConfig.Shared;
+
+        if (synergyIconImg)
+        {
+            var sprite = data != null ? cfg?.GetSynergySprite(data.tag1) : null;
+            synergyIconImg.sprite  = sprite;
+            synergyIconImg.enabled = sprite != null;
+            if (sprite != null) synergyIconImg.color = synergyColor;
+        }
+
+        if (weaponTypeImg)
+        {
+            var sprite = data != null ? cfg?.GetTypeSprite(data.weaponType) : null;
+            weaponTypeImg.sprite  = sprite;
+            weaponTypeImg.enabled = sprite != null;
+            if (sprite != null) weaponTypeImg.color = WeaponGradeColors.Get(data.grade);
+        }
     }
 
     /// <summary>3성: 황금 펄스 / 4성 이상: 레인보우 사이클</summary>

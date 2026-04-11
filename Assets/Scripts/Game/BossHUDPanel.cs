@@ -15,6 +15,7 @@ public class BossHUDPanel : MonoBehaviourSingleton<BossHUDPanel>
     [SerializeField] private Image           bossImage;
     [SerializeField] private Slider          hpSlider;
     [SerializeField] private TextMeshProUGUI bossNameText;
+    [SerializeField] private TextMeshProUGUI hpText;
 
     private BossController trackedBoss;
 
@@ -58,5 +59,12 @@ public class BossHUDPanel : MonoBehaviourSingleton<BossHUDPanel>
     {
         if (trackedBoss == null) return;
         if (hpSlider) hpSlider.value = trackedBoss.HPRatio;
+
+        if (hpText && trackedBoss != null)
+        {
+            int currentHP = Mathf.CeilToInt(trackedBoss.CurrentHPValue);
+            int maxHP = Mathf.CeilToInt(trackedBoss.MaxHPValue);
+            hpText.text = $"{currentHP}/{maxHP}";
+        }
     }
 }

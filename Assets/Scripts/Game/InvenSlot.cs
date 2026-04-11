@@ -12,8 +12,10 @@ public class InvenSlot : MonoBehaviour,
     IPointerDownHandler, IPointerClickHandler,
     IBeginDragHandler, IDragHandler, IEndDragHandler
 {
-    [SerializeField] private Image           frameImg;
-    [SerializeField] private Image           iconImg;
+    [SerializeField] private Image            frameImg;
+    [SerializeField] private Image            iconImg;
+    [SerializeField] private Image            synergyIconImg;
+    [SerializeField] private Image            weaponTypeImg;
     [SerializeField] private List<GameObject> starObjects; // 0=1성, 1=2성, 2=3성, 3=4성
 
     [Header("선택 확대")]
@@ -27,6 +29,7 @@ public class InvenSlot : MonoBehaviour,
     private Canvas       rootCanvas;
     private UpgradePanel panel;
     private bool         dragStarted;
+    private EquipSlot    _hoveredEquipSlot;
 
     private void Awake()
     {
@@ -46,38 +49,17 @@ public class InvenSlot : MonoBehaviour,
         if (iconImg)  iconImg.enabled = has;
         if (frameImg)
         {
-            if (has)
+            var gradeSprite = WeaponVisualConfig.Shared?.GetGradeSprite(
+                has ? data.grade : WeaponGrade.Normal);
+            if (gradeSprite != null)
             {
-                var path = "Weapons/grade/" + data.grade.ToString().ToLower();
-                var sprite = Resources.Load<Sprite>(path);
-                Debug.Log($"[InvenSlot] Loading grade sprite: {path}, result: {sprite != null}");
-                if (sprite != null)
-                {
-                    frameImg.sprite = sprite;
-                    frameImg.color  = Color.white;
-                }
-                else
-                {
-                    Debug.LogWarning($"[InvenSlot] Grade sprite not found: {path}");
-                }
-            }
-            else
-            {
-                var path = "Weapons/grade/normal";
-                var sprite = Resources.Load<Sprite>(path);
-                Debug.Log($"[InvenSlot] Loading normal sprite: {path}, result: {sprite != null}");
-                if (sprite != null)
-                {
-                    frameImg.sprite = sprite;
-                    frameImg.color  = Color.white;
-                }
-                else
-                {
-                    Debug.LogWarning($"[InvenSlot] Normal sprite not found: {path}");
-                }
+                frameImg.sprite = gradeSprite;
+                frameImg.type   = UnityEngine.UI.Image.Type.Simple;
+                frameImg.color  = Color.white;
             }
         }
         if (has && iconImg && data.icon) iconImg.sprite = data.icon;
+        ApplyWeaponOverlays(has ? data : null, SynergyHelper.ColorBronze);
         SetStarObject(starObjects, has ? data.star : 0);
 
         float s = (has && selected) ? selectedScale : normalScale;
@@ -89,6 +71,27 @@ public class InvenSlot : MonoBehaviour,
         if (objs == null) return;
         for (int i = 0; i < objs.Count; i++)
             if (objs[i] != null) objs[i].SetActive(i == star - 1 && star > 0);
+    }
+
+    private void ApplyWeaponOverlays(WeaponData data, Color synergyColor)
+    {
+        var cfg = WeaponVisualConfig.Shared;
+
+        if (synergyIconImg)
+        {
+            var sprite = data != null ? cfg?.GetSynergySprite(data.tag1) : null;
+            synergyIconImg.sprite  = sprite;
+            synergyIconImg.enabled = sprite != null;
+            if (sprite != null) synergyIconImg.color = synergyColor;
+        }
+
+        if (weaponTypeImg)
+        {
+            var sprite = data != null ? cfg?.GetTypeSprite(data.weaponType) : null;
+            weaponTypeImg.sprite  = sprite;
+            weaponTypeImg.enabled = sprite != null;
+            if (sprite != null) weaponTypeImg.color = WeaponGradeColors.Get(data.grade);
+        }
     }
 
     // ────────────────────────────────────────────────────────────────
@@ -126,7 +129,19 @@ public class InvenSlot : MonoBehaviour,
     public void OnDrag(PointerEventData eventData)
     {
         MoveGhost(eventData.position);
-        if (dragStarted) panel?.NotifyDragHover(eventData.position);
+        if (!dragStarted) return;
+
+        panel?.NotifyDragHover(eventData.position);
+
+        // EquipSlot 호버 하이라이트 (RectTransform bounds 기준, raycastTarget 무관)
+        EquipSlot hovered = panel?.GetEquipSlotAtScreenPos(eventData.position);
+        Debug.Log($"[InvenSlot] hover={hovered?.SlotIndex.ToString() ?? "none"} pos={eventData.position}");
+        if (hovered != _hoveredEquipSlot)
+        {
+            _hoveredEquipSlot?.HideHighlight();
+            _hoveredEquipSlot = hovered;
+            _hoveredEquipSlot?.ShowHighlight();
+        }
     }
 
     public void OnEndDrag(PointerEventData eventData)
@@ -134,6 +149,8 @@ public class InvenSlot : MonoBehaviour,
         if (dragStarted)
         {
             bool sold = panel?.NotifyDragEnd(eventData.position) ?? false;
+            _hoveredEquipSlot?.HideHighlight();
+            _hoveredEquipSlot = null;
             if (sold)
             {
                 panel?.SellDraggedInven(SlotIndex);
@@ -150,6 +167,7 @@ public class InvenSlot : MonoBehaviour,
                     if (equipTarget != null && equipTarget.IsInitialized)
                     {
                         Debug.Log($"[InvenSlot] MoveInvenToEquip inven{SlotIndex} → equip{equipTarget.SlotIndex}");
+                        equipTarget.PlayEquipEffect();
                         PlayerInventory.Shared?.MoveInvenToEquip(SlotIndex, equipTarget.SlotIndex);
                         break;
                     }
@@ -161,6 +179,9 @@ public class InvenSlot : MonoBehaviour,
                         break;
                     }
                 }
+                // 드롭 후 호버 정리 (PlayEquipEffect가 없는 경우 HideHighlight)
+                _hoveredEquipSlot?.HideHighlight();
+                _hoveredEquipSlot = null;
             }
         }
         else

@@ -15,6 +15,18 @@ public class PlayerInventory : MonoBehaviourSingleton<PlayerInventory>
     /// <summary>장착/인벤 변경 시 발행됩니다. UpgradePanel이 구독합니다.</summary>
     public System.Action OnChanged;
 
+    /// <summary>합성 직전에 발행 — 애니메이션용. 실제 슬롯 변경 전에 호출됩니다.</summary>
+    public struct MergeAnimInfo
+    {
+        public List<int>        invenIndices;  // 소모되는 인벤 슬롯 인덱스
+        public List<int>        equipIndices;  // 소모되는 장착 슬롯 인덱스
+        public int              destEquipSlot; // 결과 장착 슬롯 (-1 = 인벤에 추가)
+        public int              destInvenSlot; // 결과 인벤 슬롯 (destEquipSlot >= 0이면 무시)
+        public Sprite           icon;
+        public List<WeaponData> consumed;      // 소모된 3개 무기 데이터 (아이콘 참조용)
+    }
+    public static event System.Action<MergeAnimInfo> OnBeforeMerge;
+
     protected override bool DontDestroy => false;
 
     public IReadOnlyList<WeaponData> Equipped  => equipped;
@@ -246,6 +258,19 @@ public class PlayerInventory : MonoBehaviourSingleton<PlayerInventory>
         int resultEquipSlot = equipIdx.Count > 0 ? equipIdx[0] : -1;
         for (int i = equipIdx.Count - 1; i >= 0; i--)
             equipped[equipIdx[i]] = null;
+
+        // 합성 애니메이션 이벤트 — 인벤 제거 후이므로 inventory.Count가 결과물이 추가될 인덱스
+        int destInvenSlot = resultEquipSlot < 0 ? inventory.Count : -1;
+
+        OnBeforeMerge?.Invoke(new MergeAnimInfo
+        {
+            invenIndices  = new List<int>(invenIdx),
+            equipIndices  = new List<int>(equipIdx),
+            destEquipSlot = resultEquipSlot,
+            destInvenSlot = destInvenSlot,
+            icon          = consumed.Count > 0 ? consumed[0].icon : null,
+            consumed      = new List<WeaponData>(consumed)
+        });
 
         // 결과 배치: 장착 슬롯에서 소모됐으면 그 슬롯에, 아니면 인벤에
         if (resultEquipSlot >= 0 && resultEquipSlot < equipped.Count)

@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -18,7 +19,6 @@ public class UpgradePanel : MonoBehaviour
     [SerializeField] private Button          rerollButton;
     [SerializeField] private Button          buyExpButton;
     [SerializeField] private Button          nextWaveButton;
-    [SerializeField] private Button          statPanelButton;  // 능력치 보기 팝업 버튼
 
     [Header("정보 텍스트")]
     [SerializeField] private TextMeshProUGUI playerGoldText;
@@ -28,11 +28,10 @@ public class UpgradePanel : MonoBehaviour
     [SerializeField] private TextMeshProUGUI notificationText;
     [SerializeField] private float           notificationDuration = 2f;
 
-    [Header("다음 웨이브 버튼 딜레이 텍스트")]
-    [SerializeField] private TextMeshProUGUI autoStartTimerText;
-
-    [Header("타이머 색상")]
-    [SerializeField] private Color timerWarningColor = Color.red;
+    [Header("EXP 정보")]
+    [SerializeField] private Slider          expSlider;
+    [SerializeField] private TextMeshProUGUI expText;
+    [SerializeField] private TextMeshProUGUI levelText;
 
     [Header("EXP 구매 롱프레스")]
     [SerializeField] private float buyExpHoldDelay    = 0.5f;   // 처음 반복까지 대기 시간
@@ -40,10 +39,6 @@ public class UpgradePanel : MonoBehaviour
 
     [Header("다음 웨이브 시작 딜레이")]
     [SerializeField] private float nextWaveDelay = 1f;
-
-    [Header("캐릭터 초상화")]
-    [SerializeField] private Image  characterPortraitImage;
-    [SerializeField] private Sprite characterPortraitSprite;
 
     [Header("판매 드롭존")]
     [SerializeField] private RectTransform sellImg;
@@ -55,10 +50,8 @@ public class UpgradePanel : MonoBehaviour
     [Header("인벤토리 슬롯 (10개)")]
     [SerializeField] private InvenSlot[] invenSlots;
 
-    [Header("시너지 슬롯 (챕터별 4개)")]
-    [SerializeField] private Image[]             synergySlotImages   = new Image[4];
-    [SerializeField] private TextMeshProUGUI[]   synergySlotNames    = new TextMeshProUGUI[4];
-    [SerializeField] private TextMeshProUGUI[]   synergySlotDescs    = new TextMeshProUGUI[4];
+    [Header("시너지 슬롯 컨테이너 (챕터별 4개, 배너 프리팹 인스턴스 부모)")]
+    [SerializeField] private RectTransform[] synergySlotRoots = new RectTransform[4];
 
     [Header("등급 확률 텍스트 (Normal/Rare/Elite/Epic/Legend)")]
     [SerializeField] private TextMeshProUGUI normalProbText;
@@ -79,7 +72,6 @@ public class UpgradePanel : MonoBehaviour
     private int                selectedInvenIndex  = -1;
     private int                selectedEquipIndex  = -1;
     private bool               isFirstWave         = false;
-    // 챕터 시너지 슬롯에 매핑된 태그 (Refresh 시 캐싱)
     private WeaponSynergyTag[] synergySlotTags = new WeaponSynergyTag[4];
 
     // ────────────────────────────────────────────────────────────────
@@ -89,7 +81,6 @@ public class UpgradePanel : MonoBehaviour
     {
         rerollButton? .onClick.AddListener(() => UpgradeManager.Shared?.TryReroll());
         nextWaveButton?.onClick.AddListener(OnNextWaveClicked);
-        statPanelButton?.onClick.AddListener(() => StatPanelUI.Shared?.Show());
 
         // EXP 구매 버튼: 롱프레스 지원 (EventTrigger로 PointerDown/Up 처리)
         if (buyExpButton != null)
@@ -104,17 +95,15 @@ public class UpgradePanel : MonoBehaviour
             trigger.triggers.Add(up);
         }
 
-        for (int i = 0; i < synergySlotImages.Length; i++)
+        synergySlotTags = new WeaponSynergyTag[synergySlotRoots.Length];
+        for (int i = 0; i < synergySlotRoots.Length; i++)
         {
             int idx = i;
-            var img = synergySlotImages[idx];
-            if (img == null) continue;
-            // 같은 오브젝트 또는 부모에서 Button 자동 검색
-            var btn = img.GetComponent<Button>() ?? img.GetComponentInParent<Button>();
+            var root = synergySlotRoots[idx];
+            if (root == null) continue;
+            var btn = root.GetComponent<Button>() ?? root.GetComponentInParent<Button>();
             if (btn != null)
                 btn.onClick.AddListener(() => OnSynergySlotClicked(idx));
-            else
-                Debug.LogWarning($"[UpgradePanel] synergySlotImages[{idx}] 에서 Button을 찾을 수 없습니다.");
         }
 
         for (int i = 0; i < invenSlots.Length; i++)
@@ -144,17 +133,13 @@ public class UpgradePanel : MonoBehaviour
         WeaponInfoPanel.Shared?.Hide();
         if (sellImg) { sellImg.localScale = Vector3.one; sellImg.gameObject.SetActive(false); }
 
-        if (characterPortraitImage)
-        {
-            var playerSr  = PlayerController.Instance?.GetComponentInChildren<SpriteRenderer>();
-            var spr       = playerSr?.sprite ?? characterPortraitSprite;
-            if (spr != null) characterPortraitImage.sprite = spr;
-        }
-
         if (PlayerInventory.Shared != null)
             PlayerInventory.Shared.OnChanged += RefreshInventoryUI;
 
+        PlayerInventory.OnBeforeMerge += OnBeforeMerge;
+
         RefreshInventoryUI();
+        RefreshExpUI();
     }
 
     private void OnDisable()
@@ -165,6 +150,8 @@ public class UpgradePanel : MonoBehaviour
         if (notificationRoot) notificationRoot.SetActive(false);
         if (PlayerInventory.Shared != null)
             PlayerInventory.Shared.OnChanged -= RefreshInventoryUI;
+
+        PlayerInventory.OnBeforeMerge -= OnBeforeMerge;
     }
 
     // ────────────────────────────────────────────────────────────────
@@ -206,37 +193,38 @@ public class UpgradePanel : MonoBehaviour
         RefreshGold();
         RefreshSynergySlots(wave);
         RefreshInventoryUI();
+        RefreshExpUI();
     }
 
     private void RefreshSynergySlots(int wave)
     {
-        int chapter = UpgradeManager.Shared?.CurrentChapter ?? 1;
+        int chapter   = UpgradeManager.Shared?.CurrentChapter ?? 1;
         var synergies = SynergyHelper.GetChapterSynergies(chapter);
+        var cfg       = WeaponVisualConfig.Shared;
 
-        for (int i = 0; i < synergySlotImages.Length; i++)
+        for (int i = 0; i < synergySlotRoots.Length; i++)
         {
-            var img = synergySlotImages[i];
-            if (img == null) continue;
+            var root = synergySlotRoots[i];
+            if (root == null) continue;
+
+            var img = root.GetComponent<Image>() ?? root.GetComponentInChildren<Image>();
 
             if (i < synergies.Count)
             {
-                var entry = synergies[i];
+                var entry  = synergies[i];
                 synergySlotTags[i] = entry.Tag;
-                img.sprite  = entry.Icon;
-                img.enabled = entry.Icon != null;
-                if (i < synergySlotNames.Length && synergySlotNames[i])
-                    synergySlotNames[i].text = entry.Name;
-                if (i < synergySlotDescs.Length && synergySlotDescs[i])
-                    synergySlotDescs[i].text = entry.Description;
+
+                var sprite = cfg?.GetSynergyBanner(entry.Tag);
+                if (img != null)
+                {
+                    img.sprite  = sprite;
+                    img.enabled = sprite != null;
+                }
             }
             else
             {
                 synergySlotTags[i] = WeaponSynergyTag.None;
-                img.enabled = false;
-                if (i < synergySlotNames.Length && synergySlotNames[i])
-                    synergySlotNames[i].text = string.Empty;
-                if (i < synergySlotDescs.Length && synergySlotDescs[i])
-                    synergySlotDescs[i].text = string.Empty;
+                if (img != null) img.enabled = false;
             }
         }
     }
@@ -245,6 +233,19 @@ public class UpgradePanel : MonoBehaviour
     {
         if (playerGoldText && PlayerStats.Shared != null)
             playerGoldText.text = $"{PlayerStats.Shared.Gold}";
+    }
+
+    public void RefreshExpUI()
+    {
+        var ps = PlayerStats.Shared;
+        if (ps == null) return;
+        int exp = ps.Exp;
+        int level = ps.Level;
+        int expToNext = 20 + (level - 1) * 50;
+
+        if (levelText) levelText.text = $"LV.{level}";
+        if (expSlider) expSlider.value = (float)exp / expToNext;
+        if (expText) expText.text = $"{exp}/{expToNext}";
     }
 
     // ────────────────────────────────────────────────────────────────
@@ -273,43 +274,35 @@ public class UpgradePanel : MonoBehaviour
 
     private void RefreshSynergyColors()
     {
-        for (int i = 0; i < synergySlotImages.Length; i++)
+        for (int i = 0; i < synergySlotRoots.Length; i++)
         {
-            var img = synergySlotImages[i];
-            if (img == null) continue;
-            int count = SynergyHelper.CountEquippedTag(synergySlotTags[i]);
-            img.color = SynergyHelper.GetTierColor(count);
+            var root = synergySlotRoots[i];
+            if (root == null) continue;
 
-            // 바로 상위 부모의 Animator와 Image 활성화/비활성화
-            var parent = img.transform.parent;
-            if (parent != null)
+            int  count      = SynergyHelper.CountEquippedTag(synergySlotTags[i]);
+            bool isAchieved = count >= 1;
+
+            var img = root.GetComponent<Image>() ?? root.GetComponentInChildren<Image>();
+            if (img != null && img.enabled)
+                img.color = isAchieved ? SynergyHelper.GetTierColor(count) : Color.white;
+
+            var animator = root.GetComponent<Animator>() ?? root.GetComponentInChildren<Animator>();
+            if (animator != null)
             {
-                var animator = parent.GetComponent<Animator>();
-                var parentImage = parent.GetComponent<Image>();
-                bool isAchieved = count >= 1;
-                if (animator != null)
+                if (isAchieved)
                 {
-                    if (isAchieved)
-                    {
-                        animator.enabled = true;
-                        // 인스펙터에서 Controller 재할당과 동일한 효과로 강제 리셋
-                        var ctrl = animator.runtimeAnimatorController;
-                        animator.runtimeAnimatorController = null;
-                        animator.runtimeAnimatorController = ctrl;
-                    }
-                    else
-                    {
-                        animator.enabled = false;
-                    }
+                    animator.enabled = true;
+                    var ctrl = animator.runtimeAnimatorController;
+                    animator.runtimeAnimatorController = null;
+                    animator.runtimeAnimatorController = ctrl;
                 }
-                if (parentImage != null)
+                else
                 {
-                    parentImage.enabled = isAchieved; // 시너지가 달성되었을 때 활성화
+                    animator.enabled = false;
                 }
             }
         }
 
-        // 시너지 정보 패널이 열려있으면 장착 수 반영
         SynergyInfoPanel.Shared?.Refresh();
     }
 
@@ -412,6 +405,24 @@ public class UpgradePanel : MonoBehaviour
     // ────────────────────────────────────────────────────────────────
     // 슬롯 드래그 콜백 (InvenSlot / EquipSlot이 호출)
     // ────────────────────────────────────────────────────────────────
+    /// <summary>스크린 좌표 기준으로 겹치는 EquipSlot 반환 (raycastTarget 무관)</summary>
+    public EquipSlot GetEquipSlotAtScreenPos(Vector2 screenPos)
+    {
+        foreach (var slot in equipSlots)
+        {
+            if (slot == null) continue;
+            var rt = slot.GetComponent<RectTransform>();
+            if (rt == null) continue;
+            var canvas = slot.GetComponentInParent<Canvas>();
+            if (canvas != null) canvas = canvas.rootCanvas;
+            Camera cam = (canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay)
+                ? canvas.worldCamera : null;
+            if (RectTransformUtility.RectangleContainsScreenPoint(rt, screenPos, cam))
+                return slot;
+        }
+        return null;
+    }
+
     public void NotifyDragBegin()
     {
         if (nextWaveButton) nextWaveButton.interactable = false;
@@ -595,18 +606,170 @@ public class UpgradePanel : MonoBehaviour
 
     private IEnumerator NextWaveDelayRoutine()
     {
-        float remaining = nextWaveDelay;
-        while (remaining > 0f)
-        {
-            if (autoStartTimerText)
-            {
-                autoStartTimerText.text  = Mathf.CeilToInt(remaining).ToString();
-                autoStartTimerText.color = timerWarningColor;
-            }
-            yield return new WaitForSecondsRealtime(0.1f);
-            remaining -= 0.1f;
-        }
+        yield return new WaitForSecondsRealtime(nextWaveDelay);
         UpgradeManager.Shared?.ClosePanel();
+    }
+
+    // ────────────────────────────────────────────────────────────────
+    // 합성 슈루룩 애니메이션
+    // ────────────────────────────────────────────────────────────────
+    private void OnBeforeMerge(PlayerInventory.MergeAnimInfo info)
+    {
+        if (!gameObject.activeInHierarchy) return;
+        if (coinImageSource == null || rootCanvas == null) return;
+        StartCoroutine(MergeAnimRoutine(info));
+    }
+
+    private IEnumerator MergeAnimRoutine(PlayerInventory.MergeAnimInfo info)
+    {
+        const float spreadDuration   = 0.18f;
+        const float convergeDuration = 0.38f;
+        const float staggerDelay     = 0.07f;
+
+        Camera cam = rootCanvas.renderMode != RenderMode.ScreenSpaceOverlay
+            ? rootCanvas.worldCamera : null;
+        var parentRt = (RectTransform)rootCanvas.transform;
+
+        // 목적지 슬롯 위치
+        RectTransform destRt = null;
+        if (info.destEquipSlot >= 0 && info.destEquipSlot < equipSlots.Length)
+            destRt = equipSlots[info.destEquipSlot].GetComponent<RectTransform>();
+        else if (info.destInvenSlot >= 0 && info.destInvenSlot < invenSlots.Length)
+            destRt = invenSlots[info.destInvenSlot].GetComponent<RectTransform>();
+        else if (invenSlots.Length > 0)
+            destRt = invenSlots[invenSlots.Length - 1].GetComponent<RectTransform>();
+        if (destRt == null) yield break;
+
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(
+            parentRt,
+            RectTransformUtility.WorldToScreenPoint(cam, destRt.position),
+            cam, out Vector2 destLocal);
+
+        // 소스 슬롯 목록 수집 (위치 + 크기 + 무기 데이터)
+        var sources  = new List<Vector2>();
+        var srcSizes = new List<Vector2>();
+        var consumed = info.consumed ?? new List<WeaponData>();
+
+        foreach (int i in info.invenIndices)
+            if (i < invenSlots.Length)
+            {
+                RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    parentRt,
+                    RectTransformUtility.WorldToScreenPoint(cam, invenSlots[i].transform.position),
+                    cam, out Vector2 p);
+                sources.Add(p);
+                srcSizes.Add(((RectTransform)invenSlots[i].transform).rect.size);
+            }
+        foreach (int i in info.equipIndices)
+            if (i < equipSlots.Length)
+            {
+                RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    parentRt,
+                    RectTransformUtility.WorldToScreenPoint(cam, equipSlots[i].transform.position),
+                    cam, out Vector2 p);
+                sources.Add(p);
+                srcSizes.Add(((RectTransform)equipSlots[i].transform).rect.size);
+            }
+
+        // 소스별 3-아이콘 버스트 발사
+        for (int s = 0; s < sources.Count; s++)
+        {
+            var weaponData = s < consumed.Count ? consumed[s] : null;
+            var slotSize   = s < srcSizes.Count ? srcSizes[s] : new Vector2(80f, 80f);
+            StartCoroutine(MergeIconBurstRoutine(
+                sources[s], destLocal, weaponData, slotSize,
+                spreadDuration, convergeDuration, s * staggerDelay));
+        }
+
+        yield return new WaitForSecondsRealtime(spreadDuration + convergeDuration + sources.Count * staggerDelay);
+    }
+
+    /// <summary>한 소스 슬롯의 weaponIcon·synergyIcon·typeIcon 3개가 바깥으로 벌어졌다가 dest로 빨려들어갑니다.</summary>
+    private IEnumerator MergeIconBurstRoutine(
+        Vector2 slotPos, Vector2 dest, WeaponData data, Vector2 slotSize,
+        float spreadDuration, float convergeDuration, float delay)
+    {
+        if (delay > 0f) yield return new WaitForSecondsRealtime(delay);
+
+        var cfg = WeaponVisualConfig.Shared;
+        // (sprite, sizeDelta)
+        var iconDefs = new (Sprite sprite, Vector2 size)[]
+        {
+            (data?.icon,                                                     slotSize),
+            (data != null ? cfg?.GetSynergySprite(data.tag1)    : null,     slotSize * 0.45f),
+            (data != null ? cfg?.GetTypeSprite(data.weaponType) : null,     slotSize * 0.45f),
+        };
+
+        // 3방향 벌어짐 각도 (120° 간격, 위쪽부터)
+        var ghosts = new List<(RectTransform rt, CanvasGroup cg, Vector2 spreadPos)>();
+        for (int i = 0; i < iconDefs.Length; i++)
+        {
+            var (sprite, size) = iconDefs[i];
+            if (sprite == null) continue;
+
+            float angle      = (90f + 120f * i) * Mathf.Deg2Rad;
+            float spreadDist = slotSize.x * 0.75f;
+            Vector2 spreadPos = slotPos + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * spreadDist;
+
+            var go = new GameObject("MergeGhost", typeof(RectTransform), typeof(CanvasGroup), typeof(Image));
+            go.transform.SetParent(rootCanvas.transform, false);
+            go.transform.SetAsLastSibling();
+
+            var img = go.GetComponent<Image>();
+            img.sprite = sprite;
+            img.raycastTarget = false;
+            img.color = Color.white;
+
+            var cg = go.GetComponent<CanvasGroup>();
+            cg.blocksRaycasts = false;
+            cg.alpha = 1f;
+
+            var rt = go.GetComponent<RectTransform>();
+            rt.sizeDelta = size;
+            rt.anchoredPosition = slotPos;
+            rt.localScale = Vector3.one * 0.8f;
+
+            ghosts.Add((rt, cg, spreadPos));
+        }
+
+        if (ghosts.Count == 0) yield break;
+
+        // Phase 1: 바깥으로 벌어짐
+        float elapsed = 0f;
+        while (elapsed < spreadDuration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float t    = Mathf.Clamp01(elapsed / spreadDuration);
+            float ease = 1f - (1f - t) * (1f - t); // ease-out
+            foreach (var (rt, cg, spreadPos) in ghosts)
+            {
+                rt.anchoredPosition = Vector2.LerpUnclamped(slotPos, spreadPos, ease);
+                rt.localScale       = Vector3.one * Mathf.Lerp(0.8f, 1.1f, ease);
+            }
+            yield return null;
+        }
+
+        // Phase 2: 목적지로 빨려들어감 (거의 정 사이즈 유지)
+        elapsed = 0f;
+        var spreadPositions = ghosts.ConvertAll(g => g.spreadPos);
+        while (elapsed < convergeDuration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float t    = Mathf.Clamp01(elapsed / convergeDuration);
+            float ease = t * t * (3f - 2f * t); // smoothstep
+            float alpha = t > 0.8f ? Mathf.Lerp(1f, 0f, (t - 0.8f) / 0.2f) : 1f;
+            for (int i = 0; i < ghosts.Count; i++)
+            {
+                var (rt, cg, _) = ghosts[i];
+                rt.anchoredPosition = Vector2.LerpUnclamped(spreadPositions[i], dest, ease);
+                rt.localScale       = Vector3.one * Mathf.Lerp(1.1f, 0.95f, ease);
+                cg.alpha            = alpha;
+            }
+            yield return null;
+        }
+
+        foreach (var (rt, _, _) in ghosts)
+            if (rt != null) Destroy(rt.gameObject);
     }
 
     // ────────────────────────────────────────────────────────────────
