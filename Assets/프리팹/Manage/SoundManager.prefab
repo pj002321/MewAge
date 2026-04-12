@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &3171192787301309996
+--- !u!1 &5793145652756537978
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,8 +8,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 451592549504540181}
-  - component: {fileID: 5110147476382946177}
+  - component: {fileID: 6077238226710550186}
+  - component: {fileID: 974444820013218462}
   m_Layer: 0
   m_Name: SoundManager
   m_TagString: Untagged
@@ -17,87 +17,79 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &451592549504540181
+--- !u!4 &6077238226710550186
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3171192787301309996}
+  m_GameObject: {fileID: 5793145652756537978}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -331.67627, y: -1624.938, z: 0}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &5110147476382946177
+--- !u!114 &974444820013218462
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3171192787301309996}
+  m_GameObject: {fileID: 5793145652756537978}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 304473a085129214c8d35a158f9cd15b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SoundManager
-  sounds:
-  - key: 8
-    clip: {fileID: 8300000, guid: c266e86e5ec11e344bf66dede26cbc46, type: 3}
-    volume: 1
-    minInterval: 0.05
-  - key: 7
-    clip: {fileID: 8300000, guid: c266e86e5ec11e344bf66dede26cbc46, type: 3}
-    volume: 1
-    minInterval: 0.05
+  soundList:
   - key: 0
-    clip: {fileID: 8300000, guid: cad11a4481c77fe4aabeb5563cb0bd6c, type: 3}
+    clip: {fileID: 8300000, guid: 1c77b822fb591824388cf03924126659, type: 3}
     volume: 1
     minInterval: 0.05
   - key: 1
-    clip: {fileID: 8300000, guid: cad11a4481c77fe4aabeb5563cb0bd6c, type: 3}
-    volume: 1
-    minInterval: 0.05
-  - key: 2
-    clip: {fileID: 8300000, guid: ab17b511be95f3c4399d02f711e564ea, type: 3}
-    volume: 1
-    minInterval: 0.05
-  - key: 3
-    clip: {fileID: 8300000, guid: cad11a4481c77fe4aabeb5563cb0bd6c, type: 3}
-    volume: 1
-    minInterval: 0.05
-  - key: 4
-    clip: {fileID: 8300000, guid: 41fe389abc552ae4ea67e78dcfbfa9fb, type: 3}
-    volume: 1
-    minInterval: 0.05
-  - key: 5
-    clip: {fileID: 8300000, guid: 41fe389abc552ae4ea67e78dcfbfa9fb, type: 3}
+    clip: {fileID: 8300000, guid: 1c77b822fb591824388cf03924126659, type: 3}
     volume: 1
     minInterval: 0.05
   - key: 6
-    clip: {fileID: 8300000, guid: d9753630d1a36b743ba0b6550e50aff1, type: 3}
+    clip: {fileID: 8300000, guid: c50d9e2851558f94cb34660e6e8633f1, type: 3}
     volume: 1
     minInterval: 0.05
-  - key: 9
-    clip: {fileID: 8300000, guid: 1cd9fbc4bb2c19749aa2e61afd72aaaa, type: 3}
+  - key: 2
+    clip: {fileID: 8300000, guid: 1c77b822fb591824388cf03924126659, type: 3}
+    volume: 1
+    minInterval: 0.05
+  - key: 15
+    clip: {fileID: 8300000, guid: e84fae50857848f488eae2f7ead862ac, type: 3}
+    volume: 1
+    minInterval: 0.05
+  - key: 8
+    clip: {fileID: 8300000, guid: dc7fd4338f30b9e47a572783f54308c4, type: 3}
     volume: 1
     minInterval: 0.05
   - key: 10
-    clip: {fileID: 8300000, guid: 644c5b1dfcfdf534caaa5a2b9e2c71da, type: 3}
+    clip: {fileID: 8300000, guid: 0675325915703be419fe0187016686f7, type: 3}
     volume: 1
     minInterval: 0.05
   - key: 11
-    clip: {fileID: 8300000, guid: 644c5b1dfcfdf534caaa5a2b9e2c71da, type: 3}
-    volume: 1
-    minInterval: 0.05
-  - key: 12
-    clip: {fileID: 8300000, guid: 0e5edb6bccf05984dad128fb1a9fc914, type: 3}
+    clip: {fileID: 8300000, guid: 13f99790c88d07646b5d098edb06a2b6, type: 3}
     volume: 1
     minInterval: 0.05
   - key: 13
+    clip: {fileID: 8300000, guid: 0e5edb6bccf05984dad128fb1a9fc914, type: 3}
+    volume: 1
+    minInterval: 0.05
+  - key: 14
     clip: {fileID: 8300000, guid: e34f1973a50072a4b8035ca7d64320ae, type: 3}
+    volume: 1
+    minInterval: 0.05
+  - key: 17
+    clip: {fileID: 8300000, guid: 10e11198b15197946a45768392a19465, type: 3}
+    volume: 1
+    minInterval: 0.05
+  - key: 9
+    clip: {fileID: 8300000, guid: 0675325915703be419fe0187016686f7, type: 3}
     volume: 1
     minInterval: 0.05

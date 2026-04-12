@@ -13,26 +13,27 @@ public enum SoundKey
     UI_Merge     = 7,
 
     // 전투
-    Weapon_Attack = 8,
-    Enemy_Hit     = 9,
+    Weapon_Shoot    = 8,   // 발사/근접 공격
+    Weapon_Attack   = 9,   // 적命中
+    Enemy_Hit       = 10,
 
     // 아이템 획득
-    Pickup_Gold  = 10,
-    Pickup_Exp   = 11,
+    Pickup_Gold  = 11,
+    Pickup_Exp   = 12,
 
     // 플레이어
-    Player_Hit   = 12,
+    Player_Hit   = 13,
 
     // 기물 스킬
-    Structure_Thunder = 13,
+    Structure_Thunder = 14,
 
     // 증강
-    Improv_Select     = 14,
-    Improv_Confirm   = 15,
+    Improv_Select     = 15,
+    Improv_Confirm   = 16,
 
     // 무기
-    Weapon_Equip     = 16,
+    Weapon_Equip     = 17,
 
     // 기물 설치
-    Structure_Place  = 17,
+    Structure_Place  = 18,
 }

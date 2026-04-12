@@ -229,7 +229,6 @@ public class WeaponPoint : MonoBehaviour
             var boss = hit.GetComponentInParent<BossController>();
             if (boss != null && _bossSpinHitTimer <= 0f)
             {
-                SoundManager.Shared?.Play(SoundKey.Weapon_Attack);
                 var (bossDmg, bossCrit) = RollCrit(attackDamage);
                 Vector2 bossKnock = (boss.transform.position - transform.position).normalized;
                 boss.TakeDamage(bossDmg, bossCrit, bossKnock, spinKnockback);
@@ -241,12 +240,12 @@ public class WeaponPoint : MonoBehaviour
             var enemy = hit.GetComponentInParent<EnemyController>();
             if (enemy == null || spinHitTimers.ContainsKey(enemy)) continue;
 
-            SoundManager.Shared?.Play(SoundKey.Weapon_Attack);
             var (finalDmg, isCrit) = RollCrit(attackDamage);
             Vector2 knockDir = (enemy.transform.position - transform.position).normalized;
             enemy.TakeDamage(finalDmg, isCrit, knockDir, spinKnockback);
             ApplyLifeSteal(finalDmg);
             if (dotDamage > 0f) enemy.ApplyBleed(dotDamage);
+            SoundManager.Shared?.Play(SoundKey.Weapon_Attack);
 
             spinHitTimers[enemy] = spinHitCooldown;
         }
@@ -358,7 +357,7 @@ public class WeaponPoint : MonoBehaviour
     private void ShootAtBoss(BossController boss)
     {
         if (projectilePrefab == null) return;
-        SoundManager.Shared?.Play(SoundKey.Weapon_Attack);
+        SoundManager.Shared?.Play(SoundKey.Weapon_Shoot);
         var (finalDmg, isCrit) = RollCrit(attackDamage);
         Vector2 dir = ((Vector2)boss.transform.position - (Vector2)transform.position).normalized;
         var go = Instantiate(projectilePrefab, transform.position, Quaternion.identity);
@@ -372,7 +371,7 @@ public class WeaponPoint : MonoBehaviour
     private void ShootAt(EnemyController target)
     {
         if (projectilePrefab == null) return;
-        SoundManager.Shared?.Play(SoundKey.Weapon_Attack);
+        SoundManager.Shared?.Play(SoundKey.Weapon_Shoot);
         var (finalDmg, isCrit) = RollCrit(attackDamage);
         Vector2 dir = (target.transform.position - transform.position).normalized;
         var go = Instantiate(projectilePrefab, transform.position, Quaternion.identity);
@@ -453,7 +452,7 @@ public class WeaponPoint : MonoBehaviour
     // ─────────────────────────────────────────
     private void BeginStrike()
     {
-        SoundManager.Shared?.Play(SoundKey.Weapon_Attack);
+        SoundManager.Shared?.Play(SoundKey.Weapon_Shoot);
         state = State.Striking;
     }
 
@@ -579,6 +578,7 @@ public class WeaponPoint : MonoBehaviour
     {
         int colCount = Physics2D.OverlapCircleNonAlloc(transform.position, Mathf.Max(areaHitRadius, hitDistance), _hitBuffer);
         bool bossHit = false;
+        bool anyHit = false;
         for (int i = 0; i < colCount; i++)
         {
             var hit = _hitBuffer[i];
@@ -595,6 +595,7 @@ public class WeaponPoint : MonoBehaviour
                     boss.TakeDamage(bossDmg, bossCrit, bossKnock.normalized, 8f);
                     ApplyLifeSteal(bossDmg);
                     bossHit = true;
+                    anyHit = true;
                     continue;
                 }
             }
@@ -608,12 +609,15 @@ public class WeaponPoint : MonoBehaviour
             enemy.TakeDamage(finalDmg, isCrit, knockDir.normalized, 8f);
             ApplyLifeSteal(finalDmg);
             if (dotDamage > 0f) enemy.ApplyBleed(dotDamage);
+            anyHit = true;
         }
+        if (anyHit) SoundManager.Shared?.Play(SoundKey.Weapon_Attack);
     }
 
     private void HitAreaBoomerang(Vector2 hitDir)
     {
         int colCount = Physics2D.OverlapCircleNonAlloc(transform.position, Mathf.Max(areaHitRadius, hitDistance), _hitBuffer);
+        bool anyHit = false;
         for (int i = 0; i < colCount; i++)
         {
             var hit = _hitBuffer[i];
@@ -631,6 +635,7 @@ public class WeaponPoint : MonoBehaviour
                 enemy.TakeDamage(finalDmg, isCrit, knockDir.normalized, 8f);
                 ApplyLifeSteal(finalDmg);
                 if (dotDamage > 0f) enemy.ApplyBleed(dotDamage);
+                anyHit = true;
             }
             boss = hit.GetComponentInParent<BossController>();
             if (boss != null && !_boomerangHitBosses.Contains(boss))
@@ -644,8 +649,10 @@ public class WeaponPoint : MonoBehaviour
                 boss.TakeDamage(finalDmg, isCrit, knockDir.normalized, 8f);
                 ApplyLifeSteal(finalDmg);
                 if (dotDamage > 0f) boss.ApplyBleed(dotDamage);
+                anyHit = true;
             }
         }
+        if (anyHit) SoundManager.Shared?.Play(SoundKey.Weapon_Attack);
     }
 
     private void ApplyLifeSteal(float dealtDamage)

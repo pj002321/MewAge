@@ -155,6 +155,7 @@ public class BoomerangProjectile : MonoBehaviour
 
         // 범위 데미지 적용
         int colCount = Physics2D.OverlapCircleNonAlloc(transform.position, areaHitRadius, _hitBuffer);
+        bool anyHit = false;
         for (int i = 0; i < colCount; i++)
         {
             EnemyController areaEnemy = null;
@@ -175,6 +176,7 @@ public class BoomerangProjectile : MonoBehaviour
                 areaEnemy.TakeDamage(dmg, isCrit, knockDir.normalized, 6f);
                 if (lifeSteal > 0f) PlayerController.Instance?.HealHP(dmg * lifeSteal);
                 if (dotDamage > 0f) areaEnemy.ApplyBleed(dotDamage);
+                anyHit = true;
             }
             else if (_hitBuffer[i].TryGetComponent<BossController>(out areaBoss))
             {
@@ -192,8 +194,11 @@ public class BoomerangProjectile : MonoBehaviour
                 areaBoss.TakeDamage(dmg, isCrit, knockDir.normalized, 6f);
                 if (lifeSteal > 0f) PlayerController.Instance?.HealHP(dmg * lifeSteal);
                 if (dotDamage > 0f) areaBoss.ApplyBleed(dotDamage);
+                anyHit = true;
             }
         }
+
+        if (anyHit) SoundManager.Shared?.Play(SoundKey.Weapon_Attack);
 
         bouncesLeft--;
 

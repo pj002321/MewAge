@@ -63,6 +63,7 @@ public class Projectile : MonoBehaviour
         var boss = _ownerBoss == null ? other.GetComponentInParent<BossController>() : null;
         if (boss != null)
         {
+            SoundManager.Shared?.Play(SoundKey.Weapon_Attack);
             boss.TakeDamage(primaryDmg, isPrimaryCritical);
             if (lifeSteal > 0f) PlayerController.Instance?.HealHP(primaryDmg * lifeSteal);
             Destroy(gameObject);
@@ -76,6 +77,7 @@ public class Projectile : MonoBehaviour
 
         if (enemy != null)
         {
+            SoundManager.Shared?.Play(SoundKey.Weapon_Attack);
             // 범위 데미지 적용
             int colCount = Physics2D.OverlapCircleNonAlloc(transform.position, areaHitRadius, _hitBuffer);
             for (int i = 0; i < colCount; i++)
