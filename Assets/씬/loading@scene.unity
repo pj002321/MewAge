@@ -131,7 +131,6 @@ GameObject:
   - component: {fileID: 434276929}
   - component: {fileID: 434276928}
   - component: {fileID: 434276927}
-  - component: {fileID: 434276926}
   m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
@@ -139,20 +138,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &434276926
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 434276925}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 86710e43de46f6f4bac7c8e50813a599, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.AspectRatioFitter
-  m_AspectMode: 3
-  m_AspectRatio: 1
 --- !u!114 &434276927
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -186,7 +171,7 @@ MonoBehaviour:
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
   m_ReferenceResolution: {x: 1080, y: 1920}
-  m_ScreenMatchMode: 0
+  m_ScreenMatchMode: 1
   m_MatchWidthOrHeight: 1
   m_PhysicalUnit: 3
   m_FallbackScreenDPI: 96
@@ -210,7 +195,7 @@ Canvas:
   m_OverrideSorting: 0
   m_OverridePixelPerfect: 0
   m_SortingBucketNormalizedSize: 0
-  m_VertexColorAlwaysGammaSpace: 0
+  m_VertexColorAlwaysGammaSpace: 1
   m_AdditionalShaderChannelsFlag: 0
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
@@ -326,8 +311,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::WaterScroll
   speedX: 0.3
   speedY: 0.05
-  tilingX: 3
-  tilingY: 5
+  tilingX: 1
+  tilingY: 1
 --- !u!114 &690681291
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -341,14 +326,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.RawImage
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.6037736, g: 0.6037736, b: 0.6037736, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Texture: {fileID: 2800000, guid: 9cfd99088c7bf9a4e86a221bd4b64f71, type: 3}
+  m_Texture: {fileID: 2800000, guid: 70848dee852da4a4fa6696442a650fba, type: 3}
   m_UVRect:
     serializedVersion: 2
     x: 0
@@ -411,7 +396,7 @@ Animator:
   m_GameObject: {fileID: 768710456}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: c3807992c21be8d489c0c65a18559e24, type: 2}
+  m_Controller: {fileID: 9100000, guid: 5557e9b9736d30e468f59ce36bfecd2a, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -581,15 +566,15 @@ RectTransform:
   m_GameObject: {fileID: 1325700860}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 2.5, y: 2.5, z: 2.5}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 605298710}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 137.82}
-  m_SizeDelta: {x: 250, y: 250}
+  m_SizeDelta: {x: 98, y: 118}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!95 &1325700862
 Animator:
@@ -633,7 +618,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 8615572976381409547, guid: c2e3f443a9280b34a883907ee771567f, type: 3}
+  m_Sprite: {fileID: 7452363374335274427, guid: 80ab8d495023c004581481a0f924e110, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1

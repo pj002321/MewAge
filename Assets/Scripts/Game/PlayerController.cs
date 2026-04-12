@@ -77,6 +77,11 @@ public class PlayerController : MonoBehaviour
     [Header("먼지 트레일")]
     [SerializeField] private ParticleSystem dustTrailEffect;
 
+    [Header("애니메이션")]
+    [SerializeField] private Animator playerAnimator;
+
+    private static readonly int MoveValueHash = Animator.StringToHash("moveValue");
+
     private Vector2        moveDirection;
     private Rigidbody2D    rb;
     private SpriteRenderer spriteRenderer;
@@ -112,6 +117,13 @@ public class PlayerController : MonoBehaviour
         if (GameManager.Shared != null && GameManager.Shared.IsGameOver) return;
         HandleInput();
         FlipSprite();
+        UpdateAnimator();
+    }
+
+    private void UpdateAnimator()
+    {
+        if (playerAnimator == null) return;
+        playerAnimator.SetFloat(MoveValueHash, moveDirection.magnitude);
     }
 
     private void FixedUpdate()
