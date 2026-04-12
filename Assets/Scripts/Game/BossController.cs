@@ -71,6 +71,10 @@ public class BossController : MonoBehaviour
 
     public event System.Action OnEnraged;
     public event System.Action OnDeath;
+    public event System.Action<float> OnSkillGaugeChanged;
+
+    public float SkillGauge { get; private set; }
+    public float MaxSkillGauge => 100f;
 
     public void ApplyBleed(float damage) { } // Placeholder for compatibility
 
@@ -216,6 +220,9 @@ public class BossController : MonoBehaviour
 
         currentHP -= damage;
 
+        // 스킬 게이지 증가
+        AddSkillGauge(damage);
+
         SoundManager.Shared?.Play(SoundKey.Enemy_Hit);
 
         Vector3 textPos = srs != null && srs.Length > 0
@@ -229,6 +236,33 @@ public class BossController : MonoBehaviour
 
         if (currentHP <= 0f)
             StartCoroutine(DieRoutine());
+    }
+
+    private void AddSkillGauge(float damage)
+    {
+        if (isDead) return;
+        SkillGauge = Mathf.Min(SkillGauge + damage, MaxSkillGauge);
+        OnSkillGaugeChanged?.Invoke(SkillGauge);
+
+        // 게이지 100% 시 즉시 스킬 발동
+        if (SkillGauge >= MaxSkillGauge)
+        {
+            StartCoroutine(TriggerSkillFromGauge());
+        }
+    }
+
+    private IEnumerator TriggerSkillFromGauge()
+    {
+        SkillGauge = 0f;
+        OnSkillGaugeChanged?.Invoke(0f);
+
+        // 현재 진행 중인 패턴이 있다면 대기 (대기 중일 때만 발동)
+        if (isDead) yield break;
+        var skill = RandomReadySkill();
+        if (skill != null)
+        {
+            yield return skill.Execute();
+        }
     }
 
     private IEnumerator DieRoutine()

@@ -5,10 +5,9 @@ using TMPro;
 
 /// <summary>
 /// 기물 슬롯 버튼 하나.
-/// Inspector: slotIndex(0~3), button, iconImage, countText, cooldownOverlay 연결
-///
-/// 쿨타임: 사용 후 baseCooldown초 동안 버튼 비활성 + 오버레이 fillAmount 감소
-/// 실제 쿨타임 = baseCooldown × (1 - StructureCooldown스탯 / 100)
+/// 아이콘은 Inspector에서 고정 설정 — 런타임에 변경하지 않습니다.
+/// Refresh는 카운트 텍스트 + 버튼 활성화만 담당합니다.
+/// 쿨타임 오버레이는 OnClick 시 자동 표시됩니다.
 /// </summary>
 public class StructureButton : MonoBehaviour
 {
@@ -19,29 +18,38 @@ public class StructureButton : MonoBehaviour
     [SerializeField] private GameObject indicator;
 
     [Header("쿨타임 오버레이")]
-    [Tooltip("Image (Fill Method: Radial360 또는 Filled). 쿨타임 중 fillAmount 0→1 감소.")]
     [SerializeField] private Image cooldownOverlay;
-    [Tooltip("기본 쿨타임 (초). StructureCooldown 스탯으로 감소됩니다.")]
     [SerializeField] private float baseCooldown = 5f;
+
+    [Header("습득 스케일 효과")]
+    [SerializeField] private float punchScale    = 1.35f;
+    [SerializeField] private float punchUpTime   = 0.12f;
+    [SerializeField] private float punchDownTime = 0.1f;
 
     private bool      _subscribed;
     private bool      _onCooldown;
     private Coroutine _cooldownRoutine;
+    private Coroutine _scaleRoutine;
+    private int       _prevCount = -1;
+    private Vector3   _baseScale;
 
     private void Awake()
     {
+        // iconImage가 Inspector에서 미할당이면 Button의 Image를 자동으로 사용
+        if (iconImage == null) iconImage = button?.image;
+
+        _baseScale = transform.localScale;
         button?.onClick.AddListener(OnClick);
-        if (cooldownOverlay) cooldownOverlay.fillAmount = 0f;
-        SetEmpty();
+        if (cooldownOverlay) { cooldownOverlay.fillAmount = 0f; cooldownOverlay.gameObject.SetActive(false); }
     }
 
     private void Update()
     {
-        // StructureInventory가 늦게 초기화될 수 있어 매 프레임 구독 시도
         if (!_subscribed && StructureInventory.Shared != null)
         {
             StructureInventory.Shared.OnChanged     += Refresh;
             StructureInventory.Shared.OnAutoChanged += RefreshIndicator;
+            StructureInventory.Shared.OnSlotUsed    += OnSlotUsed;
             _subscribed = true;
             Refresh();
         }
@@ -53,6 +61,7 @@ public class StructureButton : MonoBehaviour
         {
             StructureInventory.Shared.OnChanged     -= Refresh;
             StructureInventory.Shared.OnAutoChanged -= RefreshIndicator;
+            StructureInventory.Shared.OnSlotUsed    -= OnSlotUsed;
         }
         _subscribed = false;
     }
@@ -63,25 +72,52 @@ public class StructureButton : MonoBehaviour
         var data  = inv?.GetData(slotIndex);
         int count = inv?.GetCount(slotIndex) ?? 0;
 
-        if (data != null && count > 0)
+        if (iconImage != null)
         {
-            if (iconImage != null)
-            {
-                var icon = LoadStructureIcon(data.f_기물ID);
-                iconImage.sprite  = icon;
-                iconImage.enabled = icon != null;
-            }
-            if (countText != null) countText.text = count.ToString();
+            bool hasItem = data != null && count > 0;
+            iconImage.sprite  = hasItem ? StructureWareManager.LoadIcon(data.f_기물ID) : null;
+            iconImage.enabled = hasItem;
+        }
 
-            // 쿨타임 중이 아닐 때만 버튼 활성화
-            if (button != null) button.interactable = !_onCooldown;
-        }
-        else
-        {
-            SetEmpty();
-        }
+        // 개수가 늘었을 때(습득) 스케일 펀치
+        if (_prevCount >= 0 && count > _prevCount)
+            PlayPunch();
+        _prevCount = count;
+
+        if (countText) countText.text = count.ToString();
+        if (button)    button.interactable = count > 0 && !_onCooldown;
 
         RefreshIndicator();
+    }
+
+    private void PlayPunch()
+    {
+        if (_scaleRoutine != null) StopCoroutine(_scaleRoutine);
+        _scaleRoutine = StartCoroutine(PunchRoutine());
+    }
+
+    private IEnumerator PunchRoutine()
+    {
+        Vector3 big = _baseScale * punchScale;
+
+        float t = 0f;
+        while (t < punchUpTime)
+        {
+            t += Time.unscaledDeltaTime;
+            transform.localScale = Vector3.Lerp(_baseScale, big, t / punchUpTime);
+            yield return null;
+        }
+
+        t = 0f;
+        while (t < punchDownTime)
+        {
+            t += Time.unscaledDeltaTime;
+            transform.localScale = Vector3.Lerp(big, _baseScale, t / punchDownTime);
+            yield return null;
+        }
+
+        transform.localScale = _baseScale;
+        _scaleRoutine = null;
     }
 
     private void RefreshIndicator()
@@ -95,26 +131,20 @@ public class StructureButton : MonoBehaviour
         indicator.SetActive(active);
     }
 
-    private static Sprite LoadStructureIcon(string id)
-        => StructureWareManager.LoadIcon(id);
-
-    private void SetEmpty()
-    {
-        if (iconImage != null) { iconImage.sprite = null; iconImage.enabled = false; }
-        if (countText != null) countText.text = "";
-        if (button    != null) button.interactable = false;
-    }
-
     private void OnClick()
     {
         if (_onCooldown) return;
+        if (Time.timeScale == 0f) return;
 
         SoundManager.Shared?.Play(SoundKey.UI_Click);
         StructureInventory.Shared?.UseAt(slotIndex, GetButtonWorldPos());
-        StartCooldown();
+        // cooldown은 OnSlotUsed 이벤트에서 시작
     }
 
-    // ── 쿨타임 ─────────────────────────────────────────────────────────
+    private void OnSlotUsed(int slot)
+    {
+        if (slot == slotIndex) StartCooldown();
+    }
 
     private void StartCooldown()
     {
@@ -127,38 +157,30 @@ public class StructureButton : MonoBehaviour
         _onCooldown = true;
         if (button) button.interactable = false;
 
-        // StructureCooldown 스탯 (%) → 실제 쿨타임 계산
-        float reduction   = PlayerStatManager.Shared?.GetFinal(StatType.StructureCooldown) ?? 0f;
-        float duration    = baseCooldown * Mathf.Clamp01(1f - reduction / 100f);
-        duration          = Mathf.Max(0.5f, duration); // 최소 0.5초 보장
+        float reduction = PlayerStatManager.Shared?.GetFinal(StatType.StructureCooldown) ?? 0f;
+        float duration  = Mathf.Max(0.5f, baseCooldown * Mathf.Clamp01(1f - reduction / 100f));
 
-        if (cooldownOverlay) cooldownOverlay.fillAmount = 1f;
+        if (cooldownOverlay) { cooldownOverlay.gameObject.SetActive(true); cooldownOverlay.fillAmount = 1f; }
 
         float elapsed = 0f;
         while (elapsed < duration)
         {
             elapsed += Time.deltaTime;
-            if (cooldownOverlay)
-                cooldownOverlay.fillAmount = 1f - Mathf.Clamp01(elapsed / duration);
+            if (cooldownOverlay) cooldownOverlay.fillAmount = 1f - Mathf.Clamp01(elapsed / duration);
             yield return null;
         }
 
-        if (cooldownOverlay) cooldownOverlay.fillAmount = 0f;
+        if (cooldownOverlay) { cooldownOverlay.fillAmount = 0f; cooldownOverlay.gameObject.SetActive(false); }
         _onCooldown      = false;
         _cooldownRoutine = null;
 
-        // 쿨타임 종료 후 슬롯에 기물이 있으면 버튼 재활성화
         Refresh();
     }
 
-    // ── 유틸 ───────────────────────────────────────────────────────────
-
-    /// <summary>Screen Space – Overlay 버튼 위치를 게임 월드 좌표로 변환합니다.</summary>
     private Vector3 GetButtonWorldPos()
     {
         var cam = Camera.main;
         if (cam == null || button == null) return Vector3.zero;
-
         Vector3 screenPos = button.transform.position;
         float   depth     = Mathf.Abs(cam.transform.position.z);
         Vector3 world     = cam.ScreenToWorldPoint(new Vector3(screenPos.x, screenPos.y, depth));

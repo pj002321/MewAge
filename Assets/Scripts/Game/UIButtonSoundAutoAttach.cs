@@ -14,8 +14,10 @@ public class UIButtonSoundAutoAttach : MonoBehaviour
     {
         foreach (var btn in GetComponentsInChildren<Button>(includeInactive: true))
         {
-            SoundKey capturedClick = clickKey;
-            btn.onClick.AddListener(() => SoundManager.Shared?.Play(capturedClick));
+            if (btn.GetComponent<UIButtonSound>() != null) continue; // 중복 방지
+
+            var sound = btn.gameObject.AddComponent<UIButtonSound>();
+            sound.SetKeys(SoundKey.UI_Hover, clickKey);
         }
     }
 }

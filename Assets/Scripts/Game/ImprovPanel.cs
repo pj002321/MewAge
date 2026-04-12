@@ -1,29 +1,38 @@
 using System.Collections;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using Mewage.DB;
 
 /// <summary>
 /// 증강 선택 패널.
-/// Inspector 연결: cards (ImprovCard 배열 3개), nextButton, goldText
+/// Inspector 연결: cards (ImprovCard 배열 3개), statPanelHoldButton
 /// </summary>
 public class ImprovPanel : MonoBehaviour
 {
-    [SerializeField] private ImprovCard[]     cards;
-    [SerializeField] private Button           nextButton;
-    [SerializeField] private Button           rerollButton;
-    [SerializeField] private TextMeshProUGUI  goldText;
+    [SerializeField] private ImprovCard[] cards;
 
     [SerializeField] private float autoNextDelay = 0.4f; // 카드 선택 후 자동 진행 딜레이
 
-    private bool selectedOnce;
-    private DB_증강 pendingData;
+    [Header("스탯 패널 홀드 버튼 (누르는 동안 StatPanel 표시)")]
+    [SerializeField] private Button statPanelHoldButton;
 
     private void Awake()
     {
-        nextButton?.onClick.AddListener(OnNextButtonClicked);
-        rerollButton?.onClick.AddListener(OnRerollButtonClicked);
+        if (statPanelHoldButton != null)
+        {
+            var trigger = statPanelHoldButton.GetComponent<EventTrigger>()
+                       ?? statPanelHoldButton.gameObject.AddComponent<EventTrigger>();
+
+            var down = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
+            down.callback.AddListener(_ => StatPanelUI.Shared?.Show());
+            trigger.triggers.Add(down);
+
+            var up = new EventTrigger.Entry { eventID = EventTriggerType.PointerUp };
+            up.callback.AddListener(_ => StatPanelUI.Shared?.Hide());
+            trigger.triggers.Add(up);
+        }
     }
 
     private void OnEnable()
@@ -32,18 +41,9 @@ public class ImprovPanel : MonoBehaviour
             anim.updateMode = AnimatorUpdateMode.UnscaledTime;
     }
 
-    public void RefreshGold()
-    {
-        if (goldText && PlayerStats.Shared != null)
-            goldText.text = $"{PlayerStats.Shared.Gold}";
-    }
-
     public void Setup(DB_증강[] improvs)
     {
-        selectedOnce = false;
-        pendingData = null;
         StatPanelUI.Shared?.ClearPreview();
-        RefreshGold();
 
         int visibleCount = 0;
         for (int i = 0; i < cards.Length; i++)
@@ -58,68 +58,46 @@ public class ImprovPanel : MonoBehaviour
                 cards[i].SetEmpty();
             }
         }
-
-        // 카드가 없으면 바로 다음으로 진행 가능
-        if (nextButton) nextButton.interactable = (visibleCount == 0);
     }
 
     private void OnCardClicked(ImprovCard card, DB_증강 data)
     {
-        selectedOnce = true;
-        pendingData = data;
-
-        card.PlaySelectAnimation();
-
-        // 선택된 카드 외 나머지를 원위치로 리셋하고 어둡게
+        // 선택된 카드 외 나머지를 어둡게
         foreach (var c in cards)
         {
-            if (c.gameObject.activeSelf)
+            if (!c.gameObject.activeSelf) continue;
+
+            if (c == card)
+                c.PlaySelectAnimation();
+            else
             {
-                if (c == card)
-                    c.PlaySelectAnimation();   // 선택 카드: 360° 스핀
-                else
-                {
-                    c.PlayDimAnimation();      // 비선택 카드: 스케일 다운
-                    c.SetDimmed(true);
-                }
+                c.PlayDimAnimation();
+                c.SetDimmed(true);
             }
         }
 
         SoundManager.Shared?.Play(SoundKey.Improv_Select);
-        if (nextButton) nextButton.interactable = true;
 
-        // 스탯 미리보기 전달
+        // 스탯 미리보기
         var preview = GetPreviewStat(data);
         if (preview.HasValue)
             StatPanelUI.Shared?.SetPreview(preview.Value.stat, preview.Value.pct);
         else
             StatPanelUI.Shared?.ClearPreview();
 
-        // 딜레이 후 자동으로 다음 패널로 이동
-        StartCoroutine(AutoNextRoutine());
+        // 딜레이 후 자동 진행
+        StopAllCoroutines();
+        StartCoroutine(AutoNextRoutine(data));
     }
 
-    private IEnumerator AutoNextRoutine()
+    private IEnumerator AutoNextRoutine(DB_증강 data)
     {
         yield return new WaitForSecondsRealtime(autoNextDelay);
-        OnNextButtonClicked();
-    }
-
-    private void OnNextButtonClicked()
-    {
+        StatPanelUI.Shared?.Hide();
+        StatPanelUI.Shared?.ClearPreview();
         SoundManager.Shared?.Play(SoundKey.Improv_Confirm);
-        StatPanelUI.Shared?.ClearPreview();
-        ImprovManager.Shared?.OnImprovSelected(pendingData);
+        ImprovManager.Shared?.OnImprovSelected(data);
         ImprovManager.Shared?.OnNextClicked();
-    }
-
-    private void OnRerollButtonClicked()
-    {
-        selectedOnce = false;
-        if (nextButton) nextButton.interactable = false;
-        SoundManager.Shared?.Play(SoundKey.UI_Reroll);
-        StatPanelUI.Shared?.ClearPreview();
-        ImprovManager.Shared?.Reroll();
     }
 
     /// <summary>증강 데이터에서 미리볼 스탯 타입과 % 변화량을 추출합니다.</summary>

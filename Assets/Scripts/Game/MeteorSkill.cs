@@ -32,6 +32,8 @@ public class MeteorSkill : StructureSkillBase
     // 낙하 중인 운석 오브젝트 추적 (OnDestroy에서 미완료분 정리용)
     private readonly System.Collections.Generic.List<GameObject> _activeMeteorites = new();
 
+    private bool _registered = false;
+
     public override void Activate() => StartCoroutine(MeteorRoutine());
 
     IEnumerator MeteorRoutine()
@@ -42,8 +44,9 @@ public class MeteorSkill : StructureSkillBase
             yield break;
         }
 
-        Light2D globalLight = FindGlobalLight();
-        yield return StartCoroutine(FadeLight(globalLight, 1f, dimAmount, fadeDuration));
+        GlobalLightDimmer.Register();
+        _registered = true;
+        yield return StartCoroutine(FadeLight(1f, dimAmount, fadeDuration));
 
         // duration 내에 모든 메테오가 떨어지도록 간격 자동 계산
         float structDuration = GetComponent<StructureController>()?.Duration ?? 0f;
@@ -66,39 +69,32 @@ public class MeteorSkill : StructureSkillBase
 
         // 마지막 메테오 낙하 완료 대기 후 복구
         yield return new WaitForSeconds(fallDuration);
-        yield return StartCoroutine(FadeLight(globalLight, dimAmount, 1f, fadeDuration));
+        yield return StartCoroutine(FadeLight(dimAmount, 1f, fadeDuration));
+
+        if (_registered) { GlobalLightDimmer.Release(); _registered = false; }
     }
 
-    private IEnumerator FadeLight(Light2D light, float from, float to, float duration)
+    private IEnumerator FadeLight(float from, float to, float duration)
     {
-        if (light == null) yield break;
         float elapsed = 0f;
         while (elapsed < duration)
         {
             elapsed += Time.deltaTime;
-            light.intensity = Mathf.Lerp(from, to, elapsed / duration);
+            GlobalLightDimmer.SetIntensity(Mathf.Lerp(from, to, elapsed / duration));
             yield return null;
         }
-        light.intensity = to;
+        GlobalLightDimmer.SetIntensity(to);
     }
 
     private void OnDestroy()
     {
-        // 코루틴이 중단되더라도 조명이 어두운 채로 남지 않도록 즉시 복구
-        var light = FindGlobalLight();
-        if (light != null) light.intensity = 1f;
+        // 코루틴 중단 시에도 조명 복구 보장
+        if (_registered) { GlobalLightDimmer.Release(); _registered = false; }
 
-        // 낙하 도중 소멸된 운석 오브젝트 정리 (코루틴 중단 시 Destroy가 호출되지 않음)
+        // 낙하 도중 소멸된 운석 정리
         foreach (var go in _activeMeteorites)
             if (go != null) Destroy(go);
         _activeMeteorites.Clear();
-    }
-
-    private static Light2D FindGlobalLight()
-    {
-        foreach (var l in Object.FindObjectsByType<Light2D>(FindObjectsSortMode.None))
-            if (l.lightType == Light2D.LightType.Global) return l;
-        return null;
     }
 
     // 카메라 시야 안쪽에서 랜덤 착지 지점을 반환합니다.

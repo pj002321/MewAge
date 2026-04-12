@@ -109,6 +109,9 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         while (SceneLoadManager.IsTransitioning)
             yield return null;
 
+        // BGM 재생
+        SoundManager.Shared?.PlayGameBGM();
+
         // 6. 모든 준비 패널이 걷히고 나서 비로소 첫 웨이브를 시작합니다.
         StartNextWave();
     }

@@ -11,6 +11,10 @@ public class StatFieldUI : MonoBehaviour
     [SerializeField] public StatType statType;
     [SerializeField] private TextMeshProUGUI valueText;
 
+    // ── 가산 스탯: pct가 직접 더해지므로 base=0이어도 표시 의미 있음
+    private static bool IsAdditiveStat(StatType t) =>
+        t == StatType.CritChance || t == StatType.Evasion || t == StatType.HealOnKill;
+
     /// <summary>PlayerStatManager 값을 읽어 valueText를 갱신합니다.</summary>
     public void Refresh(PlayerStatManager sm)
     {
@@ -18,12 +22,18 @@ public class StatFieldUI : MonoBehaviour
 
         float pct      = sm.GetPctMod(statType);
         float finalVal = sm.GetFinal(statType);
+        float baseVal  = sm.GetBase(statType) + sm.GetEquipFlat(statType);
 
-        if (!Mathf.Approximately(pct, 0f))
+        // 곱산 스탯에서 base=0이면 pct가 결과에 영향을 주지 않음 → 표기 생략
+        bool showPct = !Mathf.Approximately(pct, 0f)
+                    && (IsAdditiveStat(statType) || !Mathf.Approximately(baseVal, 0f));
+
+        if (showPct)
         {
             string sign     = pct > 0f ? "+" : "";
             string pctColor = pct < 0f ? "#FF8888" : "#88FF88";
-            valueText.text = $"{PlayerStatManager.FormatValue(statType, finalVal)} <color={pctColor}>({sign}{pct:0.#}%)</color>";
+            valueText.text = $"{PlayerStatManager.FormatValue(statType, finalVal)}\n" +
+                             $"<size=70%><color={pctColor}>({sign}{pct:0.#}%)</color></size>";
         }
         else
         {
@@ -38,15 +48,23 @@ public class StatFieldUI : MonoBehaviour
 
         if (statType == previewStat && !Mathf.Approximately(previewPct, 0f))
         {
-            float b            = sm.GetBase(statType) + sm.GetEquipFlat(statType);
-            float pct          = sm.GetPctMod(statType);
+            float baseVal = sm.GetBase(statType) + sm.GetEquipFlat(statType);
+            float pct     = sm.GetPctMod(statType);
 
-            float previewFinal = (statType == StatType.CritChance || statType == StatType.Evasion || statType == StatType.HealOnKill)
-                ? b + pct + previewPct
-                : b * (1f + (pct + previewPct) / 100f);
+            // 곱산 스탯에서 base=0이면 미리보기 수치도 0이라 의미 없음 → 일반 표시로 폴백
+            if (!IsAdditiveStat(statType) && Mathf.Approximately(baseVal, 0f))
+            {
+                Refresh(sm);
+                return;
+            }
+
+            float previewFinal = IsAdditiveStat(statType)
+                ? baseVal + pct + previewPct
+                : baseVal * (1f + (pct + previewPct) / 100f);
 
             string previewSign = previewPct > 0f ? "+" : "";
-            valueText.text = $"<color=#88CCFF>{PlayerStatManager.FormatValue(statType, previewFinal)}</color> <color=#88CCFF>({previewSign}{previewPct:0.#}%)</color>";
+            valueText.text = $"<color=#88CCFF>{PlayerStatManager.FormatValue(statType, previewFinal)}</color>\n" +
+                             $"<size=70%><color=#88CCFF>({previewSign}{previewPct:0.#}%)</color></size>";
         }
         else
         {
@@ -54,8 +72,3 @@ public class StatFieldUI : MonoBehaviour
         }
     }
 }
-
-// ── Unity 구현 가이드 ───────────────────────────────────────────────
-// 1. 각 stat_field에 Add Component → StatFieldUI
-// 2. Inspector에서 Stat Type 선택 (ATK, DEF, MaxHP …)
-// 3. 끝. stat_value 텍스트는 자동으로 찾아서 업데이트합니다.

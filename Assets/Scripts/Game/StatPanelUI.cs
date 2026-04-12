@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -16,23 +17,30 @@ public class StatPanelUI : MonoBehaviourSingleton<StatPanelUI>
     [SerializeField] private Button closeButton;
     [SerializeField] private Button activeButton;
 
+    [Header("스케일 애니메이션")]
+    [SerializeField] private float openDuration  = 0.18f;
+    [SerializeField] private float closeDuration = 0.12f;
+
     private StatFieldUI[] _fields;
 
     private bool     _hasPreview;
     private StatType _previewStat;
     private float    _previewPct;
 
+    private Coroutine _scaleCoroutine;
+    private Vector3   _originalScale;
+
     protected override void Awake()
     {
         base.Awake();
+        _originalScale = transform.localScale;
+
         closeButton ?.onClick.AddListener(Hide);
         activeButton?.onClick.AddListener(Show);
 
-        // timeScale=0 상태에서도 애니메이션이 재생되도록 설정
         foreach (var anim in GetComponentsInChildren<Animator>(includeInactive: true))
             anim.updateMode = AnimatorUpdateMode.UnscaledTime;
 
-        // 자식에서 StatFieldUI 자동 수집
         _fields = GetComponentsInChildren<StatFieldUI>(includeInactive: true);
 
         gameObject.SetActive(false);
@@ -40,11 +48,19 @@ public class StatPanelUI : MonoBehaviourSingleton<StatPanelUI>
 
     public void Show()
     {
+        if (_scaleCoroutine != null) StopCoroutine(_scaleCoroutine);
+        transform.localScale = Vector3.zero;
         gameObject.SetActive(true);
         RefreshInternal();
+        _scaleCoroutine = StartCoroutine(ScaleRoutine(Vector3.zero, _originalScale, openDuration, easeOut: true));
     }
 
-    public void Hide() => gameObject.SetActive(false);
+    public void Hide()
+    {
+        if (!gameObject.activeSelf) return;
+        if (_scaleCoroutine != null) StopCoroutine(_scaleCoroutine);
+        _scaleCoroutine = StartCoroutine(ScaleRoutine(transform.localScale, Vector3.zero, closeDuration, easeOut: false, deactivateOnEnd: true));
+    }
 
     public void Refresh()
     {
@@ -81,9 +97,22 @@ public class StatPanelUI : MonoBehaviourSingleton<StatPanelUI>
                 field.Refresh(sm);
         }
     }
-}
 
-// ── Unity 구현 가이드 ───────────────────────────────────────────────
-// 1. 각 stat_field에 StatFieldUI 컴포넌트 추가 → StatType + valueText 지정
-// 2. 이 패널에 StatPanelUI 컴포넌트 추가 → closeButton / activeButton 연결
-// 3. UpgradePanel의 statPanelButton → StatPanelUI.Shared.Show() 자동 연결됨
+    private IEnumerator ScaleRoutine(Vector3 from, Vector3 to, float duration,
+                                     bool easeOut, bool deactivateOnEnd = false)
+    {
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            float t = elapsed / duration;
+            float ease = easeOut ? 1f - (1f - t) * (1f - t)  // ease-out
+                                 : t * t;                      // ease-in
+            transform.localScale = Vector3.LerpUnclamped(from, to, ease);
+            elapsed += Time.unscaledDeltaTime;
+            yield return null;
+        }
+        transform.localScale = to;
+        if (deactivateOnEnd) gameObject.SetActive(false);
+        _scaleCoroutine = null;
+    }
+}

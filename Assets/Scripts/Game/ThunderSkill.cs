@@ -22,6 +22,8 @@ public class ThunderSkill : StructureSkillBase
     [Header("번개 딜레이")]
     [SerializeField] private float strikeDelay = 0.1f;    // 적마다 번개 간격
 
+    private bool _registered = false;
+
     // ── 진입점 ─────────────────────────────────────────────────────
     public override void Activate()
     {
@@ -31,12 +33,12 @@ public class ThunderSkill : StructureSkillBase
     // ── 메인 루틴 ──────────────────────────────────────────────────
     private IEnumerator ThunderRoutine()
     {
-        // 씬의 글로벌 Light2D 찾기
-        Light2D globalLight = FindGlobalLight();
+        GlobalLightDimmer.Register();
+        _registered = true;
 
         // 1) 페이드 아웃 (어둡게) + 사운드
         SoundManager.Shared?.Play(SoundKey.Structure_Thunder);
-        yield return StartCoroutine(FadeLight(globalLight, 1f, dimAmount, fadeDuration));
+        yield return StartCoroutine(FadeLight(1f, dimAmount, fadeDuration));
 
         // 2) 모든 적에게 번개
         var enemies = EnemyController.All;
@@ -58,7 +60,9 @@ public class ThunderSkill : StructureSkillBase
             yield return new WaitForSeconds(remaining);
 
         // 3) 페이드 인 (복구)
-        yield return StartCoroutine(FadeLight(globalLight, dimAmount, 1f, fadeDuration));
+        yield return StartCoroutine(FadeLight(dimAmount, 1f, fadeDuration));
+
+        if (_registered) { GlobalLightDimmer.Release(); _registered = false; }
     }
 
     // ── 번개 비주얼 스폰 ────────────────────────────────────────────
@@ -66,32 +70,25 @@ public class ThunderSkill : StructureSkillBase
     {
         if (lightningPrefab == null) return;
         var go = Instantiate(lightningPrefab, worldPos, Quaternion.identity);
-        go.transform.SetParent(parent, true);   // 적 자식 → 적 사망 시 함께 소멸
+        go.transform.SetParent(parent, true);
     }
 
     // ── 조명 페이드 ─────────────────────────────────────────────────
-    private IEnumerator FadeLight(Light2D light, float from, float to, float duration)
+    private IEnumerator FadeLight(float from, float to, float duration)
     {
-        if (light == null) yield break;
-
         float elapsed = 0f;
         while (elapsed < duration)
         {
             elapsed += Time.deltaTime;
-            light.intensity = Mathf.Lerp(from, to, elapsed / duration);
+            GlobalLightDimmer.SetIntensity(Mathf.Lerp(from, to, elapsed / duration));
             yield return null;
         }
-        light.intensity = to;
+        GlobalLightDimmer.SetIntensity(to);
     }
 
-    // ── 글로벌 Light2D 탐색 ─────────────────────────────────────────
-    private static Light2D FindGlobalLight()
+    // ── 파괴 시 조명 복구 보장 ──────────────────────────────────────
+    private void OnDestroy()
     {
-        foreach (var l in Object.FindObjectsByType<Light2D>(FindObjectsSortMode.None))
-        {
-            if (l.lightType == Light2D.LightType.Global)
-                return l;
-        }
-        return null;
+        if (_registered) { GlobalLightDimmer.Release(); _registered = false; }
     }
 }

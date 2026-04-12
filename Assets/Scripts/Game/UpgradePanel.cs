@@ -82,7 +82,7 @@ public class UpgradePanel : MonoBehaviour
     // ────────────────────────────────────────────────────────────────
     private void Awake()
     {
-        rerollButton? .onClick.AddListener(() => UpgradeManager.Shared?.TryReroll());
+        rerollButton? .onClick.AddListener(OnRerollClicked);
         nextWaveButton?.onClick.AddListener(OnNextWaveClicked);
 
         // EXP 구매 버튼: 롱프레스 지원 (EventTrigger로 PointerDown/Up 처리)
@@ -121,6 +121,12 @@ public class UpgradePanel : MonoBehaviour
         }
 
         gameObject.SetActive(false);
+    }
+
+    private void OnRerollClicked()
+    {
+        SoundManager.Shared?.Play(SoundKey.UI_Reroll);
+        UpgradeManager.Shared?.TryReroll();
     }
 
     // ────────────────────────────────────────────────────────────────

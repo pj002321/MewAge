@@ -1,27 +1,22 @@
 using UnityEngine;
-using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 /// <summary>
-/// 버튼에 붙여서 Hover / Click 사운드를 재생합니다.
+/// 버튼에 붙여서 Click 사운드를 재생합니다.
+/// onClick.AddListener 방식으로 연결하므로 클릭 시 정확히 1회만 재생됩니다.
 /// </summary>
-public class UIButtonSound : MonoBehaviour, IPointerEnterHandler, IPointerClickHandler
+[RequireComponent(typeof(Button))]
+public class UIButtonSound : MonoBehaviour
 {
-    [SerializeField] private SoundKey hoverKey = SoundKey.UI_Hover;
     [SerializeField] private SoundKey clickKey = SoundKey.UI_Click;
 
     public void SetKeys(SoundKey hover, SoundKey click)
     {
-        hoverKey = hover;
         clickKey = click;
     }
 
-    public void OnPointerEnter(PointerEventData eventData)
+    private void Awake()
     {
-        SoundManager.Shared?.Play(hoverKey);
-    }
-
-    public void OnPointerClick(PointerEventData eventData)
-    {
-        SoundManager.Shared?.Play(clickKey);
+        GetComponent<Button>().onClick.AddListener(() => SoundManager.Shared?.Play(clickKey));
     }
 }

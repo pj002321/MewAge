@@ -334,7 +334,6 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
         DrawProfile p           = GetCurrentProfile(playerLevel);
         currentDraw = DrawCards(3);
         adCardData  = DrawAdCard(p);
-        SoundManager.Shared?.Play(SoundKey.UI_Reroll);
         RefreshPanel();
     }
 

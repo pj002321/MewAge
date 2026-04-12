@@ -31,6 +31,8 @@ public class HomeUIManager : MonoBehaviour
 
     void Start()
     {
+        SoundManager.Shared?.PlayHomeBGM();
+
         var structwareMgr = StructureWareManager.Shared;
         Debug.Log($"[HomeUIManager] StructureWareManager 로드: {(structwareMgr != null ? "성공" : "실패")}");
 

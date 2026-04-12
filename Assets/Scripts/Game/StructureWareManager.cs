@@ -39,21 +39,24 @@ public class StructureWareManager : MonoBehaviourSingleton<StructureWareManager>
         GiveStartingWares();
     }
 
-    /// <summary>최초 1회: 구석기 C등급 기물 2개 지급</summary>
+    /// <summary>최초 1회: 구석기 기물 4개 지급 + 프리셋 0~3 자동 세팅</summary>
     void GiveStartingWares()
     {
         const string InitKey = "WareStartingGiven";
         if (PlayerPrefs.GetInt(InitKey, 0) == 1) return;
 
-        int given = 0;
+        var given = new System.Collections.Generic.List<string>();
         DB_기물.ForEachEntity(row =>
         {
-            if (given >= 2) return;
+            if (given.Count >= 4) return;
             if (!row.f_기물ID.StartsWith("C1_")) return;
-            if (row.f_등급 != "NORMAL") return;
             AddWareInternal(row.f_기물ID, 1);
-            given++;
+            given.Add(row.f_기물ID);
         });
+
+        // 프리셋 자동 세팅
+        for (int i = 0; i < given.Count && i < 4; i++)
+            _preset[i] = given[i];
 
         Save();
         OnChanged?.Invoke();

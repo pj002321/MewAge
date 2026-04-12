@@ -20,8 +20,9 @@ public class StructureInventory : MonoBehaviourSingleton<StructureInventory>
 
     protected override bool DontDestroy => false;
 
-    public event System.Action OnChanged;
-    public event System.Action OnAutoChanged;
+    public event System.Action      OnChanged;
+    public event System.Action      OnAutoChanged;
+    public event System.Action<int> OnSlotUsed;   // 슬롯 사용 시 (수동/자동 공통)
 
     private void Start() => LoadFromPresets();
 
@@ -180,6 +181,7 @@ public class StructureInventory : MonoBehaviourSingleton<StructureInventory>
         Vector3 launchOrigin = launchOriginWorld ?? (Vector3)(Vector2)player.transform.position;
         StructurePlacer.Shared?.Place(data, launchOrigin);
 
+        OnSlotUsed?.Invoke(slot);
         OnChanged?.Invoke();
     }
 }

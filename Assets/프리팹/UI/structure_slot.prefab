@@ -32,9 +32,8 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 8876070731004865514}
   - {fileID: 3608266015712934269}
-  - {fileID: 8510754444966979880}
+  - {fileID: 8876070731004865514}
   m_Father: {fileID: 8790590569105497268}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
@@ -57,7 +56,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1413484137708900063}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
@@ -136,7 +135,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8e8ae4bf332b7ef4cb01dbbe627bdf8f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StructureButton
-  slotIndex: 1
+  slotIndex: 0
   button: {fileID: 6980741048053079498}
   iconImage: {fileID: 4999658698811240037}
   countText: {fileID: 5022702866745866723}
@@ -154,6 +153,7 @@ GameObject:
   - component: {fileID: 8876070731004865514}
   - component: {fileID: 5344214884196036069}
   - component: {fileID: 4999658698811240037}
+  - component: {fileID: 574640957374751012}
   m_Layer: 5
   m_Name: Image
   m_TagString: Untagged
@@ -173,6 +173,7 @@ RectTransform:
   m_LocalScale: {x: 1.35, y: 1.35, z: 1.35}
   m_ConstrainProportionsScale: 1
   m_Children:
+  - {fileID: 8510754444966979880}
   - {fileID: 6248557222533744760}
   m_Father: {fileID: 1846947785208957317}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -219,6 +220,20 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &574640957374751012
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2436485325639604255}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: adb30198aa32dd140b5750692dd48104, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Nobi.UiRoundedCorners::Nobi.UiRoundedCorners.ImageWithRoundedCorners
+  radius: 6.77
+  image: {fileID: 4999658698811240037}
 --- !u!1 &2760438568050627781
 GameObject:
   m_ObjectHideFlags: 0
@@ -289,7 +304,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -0.20000076, y: -34.7}
+  m_AnchoredPosition: {x: 0.099998474, y: -37.8}
   m_SizeDelta: {x: 53.1727, y: -53.659134}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &9156046784504722408
@@ -515,17 +530,17 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7801434501449887651}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1.5, y: 1.5, z: 1.5}
+  m_LocalScale: {x: 0.9, y: 0.9, z: 0.9}
   m_ConstrainProportionsScale: 1
   m_Children: []
-  m_Father: {fileID: 1846947785208957317}
+  m_Father: {fileID: 8876070731004865514}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0.5}
-  m_SizeDelta: {x: 100, y: 100}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 128, y: 128}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2901928024902795829
 CanvasRenderer:
@@ -555,10 +570,10 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 10911, guid: 0000000000000000f000000000000000, type: 0}
-  m_Type: 1
+  m_Sprite: {fileID: -3381480862818441153, guid: f3a1ad40d96842b4696e8bced903e8a0, type: 3}
+  m_Type: 3
   m_PreserveAspect: 0
-  m_FillCenter: 1
+  m_FillCenter: 0
   m_FillMethod: 4
   m_FillAmount: 1
   m_FillClockwise: 1

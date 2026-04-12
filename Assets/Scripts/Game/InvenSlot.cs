@@ -168,6 +168,7 @@ public class InvenSlot : MonoBehaviour,
                     {
                         Debug.Log($"[InvenSlot] MoveInvenToEquip inven{SlotIndex} → equip{equipTarget.SlotIndex}");
                         equipTarget.PlayEquipEffect();
+                        SoundManager.Shared?.Play(SoundKey.UI_Equip);
                         PlayerInventory.Shared?.MoveInvenToEquip(SlotIndex, equipTarget.SlotIndex);
                         break;
                     }

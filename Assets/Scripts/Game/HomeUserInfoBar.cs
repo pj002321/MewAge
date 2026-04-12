@@ -27,7 +27,7 @@ public class HomeUserInfoBar : MonoBehaviour
     /// <summary>표시 데이터를 갱신합니다. 실제 데이터 소스 연동 시 이 메서드를 수정하세요.</summary>
     public void Refresh()
     {
-        if (levelText != null) levelText.text = "Lv.1";
+        if (levelText != null) levelText.text = "1";
         if (nameText  != null) nameText.text  = "용사";
 
         if (expSlider != null)

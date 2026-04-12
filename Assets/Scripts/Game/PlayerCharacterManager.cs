@@ -74,10 +74,13 @@ public class PlayerCharacterManager : MonoBehaviourSingleton<PlayerCharacterMana
     /// <summary>장착된 캐릭터의 기초 스탯 + 증강 보너스를 PlayerController에 적용합니다.</summary>
     public void ApplyCharacterStats()
     {
+        string skillId = "";  // 캐릭터 미장착/오류 시에도 Initialize는 반드시 호출
+
         string charID = EquippedCharID;
         if (string.IsNullOrEmpty(charID))
         {
             Debug.LogWarning("[CharMgr] 장착된 캐릭터 없음 (PlayerPrefs 비어있음)");
+            CharacterSkillManager.Shared?.Initialize(skillId);
             return;
         }
 
@@ -85,6 +88,7 @@ public class PlayerCharacterManager : MonoBehaviourSingleton<PlayerCharacterMana
         if (row == null || !row.f_보유여부)
         {
             Debug.LogWarning($"[CharMgr] 장착 캐릭터를 찾을 수 없음: {charID}");
+            CharacterSkillManager.Shared?.Initialize(skillId);
             return;
         }
 
@@ -97,6 +101,7 @@ public class PlayerCharacterManager : MonoBehaviourSingleton<PlayerCharacterMana
         if (player == null)
         {
             Debug.LogWarning("[CharMgr] PlayerController.Instance 가 null — 스탯 적용 실패");
+            CharacterSkillManager.Shared?.Initialize(skillId);
             return;
         }
 
@@ -137,8 +142,7 @@ public class PlayerCharacterManager : MonoBehaviourSingleton<PlayerCharacterMana
         if (tier >= 2) ApplyStatBonus(row.f_속성2ID, row.f_S2, baseHp, baseDef, baseAtk, player, stats, sm);
         if (tier >= 3) ApplyStatBonus(row.f_속성3ID, row.f_S3, baseHp, baseDef, baseAtk, player, stats, sm);
 
-        // 3. 캐릭터 고유 스킬 등록
-        string skillId = "";
+        // 3. 캐릭터 고유 스킬 등록 (항상 호출)
         try { skillId = row.f_스킬ID ?? ""; }
         catch { Debug.LogWarning("[CharMgr] f_스킬ID 필드를 읽을 수 없습니다. BansheeGz에서 필드를 추가하고 코드를 재생성하세요."); }
         CharacterSkillManager.Shared?.Initialize(skillId);
