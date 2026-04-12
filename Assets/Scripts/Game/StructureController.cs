@@ -15,12 +15,22 @@ public class StructureController : MonoBehaviour
     private System.Collections.IEnumerator Start()
     {
         var skill = GetComponent<StructureSkillBase>();
-        skill?.Activate();
 
-        if (skill != null && !skill.IsInstallation)
+        if (skill != null && skill.IsInstallation)
         {
-            var srs = GetComponentsInChildren<SpriteRenderer>();
-            foreach (var sr in srs) sr.enabled = false;
+            // 설치형: 낙하 연출 완료 후 스킬 발동
+            yield return StartCoroutine(skill.PlayDropAnimation());
+            skill.Activate();
+        }
+        else
+        {
+            // 비설치형(즉발 스펠 등): 즉시 발동 후 스프라이트 숨김
+            skill?.Activate();
+            if (skill != null)
+            {
+                var srs = GetComponentsInChildren<SpriteRenderer>();
+                foreach (var sr in srs) sr.enabled = false;
+            }
         }
 
         if (duration > 0f)

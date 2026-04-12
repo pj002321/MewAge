@@ -25,4 +25,14 @@ public enum SoundKey
 
     // 기물 스킬
     Structure_Thunder = 13,
+
+    // 증강
+    Improv_Select     = 14,
+    Improv_Confirm   = 15,
+
+    // 무기
+    Weapon_Equip     = 16,
+
+    // 기물 설치
+    Structure_Place  = 17,
 }

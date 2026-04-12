@@ -65,6 +65,9 @@ public class UpgradePanel : MonoBehaviour
     [SerializeField] private RectTransform goldTextRect;     // 골드 텍스트 위치 (목적지)
     [SerializeField] private Canvas        rootCanvas;
 
+    [Header("초상화 연출")]
+    [SerializeField] private Animator      portraitAnimator;
+
     // ── 내부 상태 ────────────────────────────────────────────────────
     private Coroutine          notifCoroutine;
     private Coroutine          autoStartCoroutine;
@@ -140,6 +143,8 @@ public class UpgradePanel : MonoBehaviour
 
         RefreshInventoryUI();
         RefreshExpUI();
+
+        portraitAnimator?.Play("enter_portrait");
     }
 
     private void OnDisable()
@@ -606,6 +611,7 @@ public class UpgradePanel : MonoBehaviour
 
     private IEnumerator NextWaveDelayRoutine()
     {
+        portraitAnimator?.Play("exit_portrait");
         yield return new WaitForSecondsRealtime(nextWaveDelay);
         UpgradeManager.Shared?.ClosePanel();
     }

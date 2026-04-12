@@ -85,7 +85,7 @@ public class ImprovPanel : MonoBehaviour
             }
         }
 
-        SoundManager.Shared?.Play(SoundKey.UI_Click);
+        SoundManager.Shared?.Play(SoundKey.Improv_Select);
         if (nextButton) nextButton.interactable = true;
 
         // 스탯 미리보기 전달
@@ -107,7 +107,7 @@ public class ImprovPanel : MonoBehaviour
 
     private void OnNextButtonClicked()
     {
-        SoundManager.Shared?.Play(SoundKey.UI_Click);
+        SoundManager.Shared?.Play(SoundKey.Improv_Confirm);
         StatPanelUI.Shared?.ClearPreview();
         ImprovManager.Shared?.OnImprovSelected(pendingData);
         ImprovManager.Shared?.OnNextClicked();

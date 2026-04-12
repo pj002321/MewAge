@@ -18,9 +18,11 @@ public class SoundManager : MonoBehaviourSingleton<SoundManager>
         public float minInterval = 0.05f;
     }
 
-    [SerializeField] private SoundEntry[] sounds;
+    [Header("사운드 딕셔너리 (Inspector에서 편하게 편집)")]
+    [SerializeField] private List<SoundEntry> soundList = new();
 
     private AudioSource audioSource;
+    private readonly Dictionary<SoundKey, SoundEntry> soundDict = new();
     private readonly Dictionary<SoundKey, float> lastPlayTime = new();
 
     protected override void Awake()
@@ -28,24 +30,36 @@ public class SoundManager : MonoBehaviourSingleton<SoundManager>
         base.Awake();
         audioSource = gameObject.AddComponent<AudioSource>();
         audioSource.playOnAwake = false;
+
+        RebuildDictionary();
+    }
+
+    private void RebuildDictionary()
+    {
+        soundDict.Clear();
+        foreach (var entry in soundList)
+        {
+            if (entry != null && entry.clip != null)
+                soundDict[entry.key] = entry;
+        }
+    }
+
+    private void OnValidate()
+    {
+        RebuildDictionary();
     }
 
     /// <summary>등록된 키에 해당하는 사운드를 재생합니다. minInterval 안에 같은 키가 오면 무시합니다.</summary>
     public void Play(SoundKey key)
     {
-        foreach (var entry in sounds)
-        {
-            if (entry.key != key || entry.clip == null) continue;
+        if (!soundDict.TryGetValue(key, out var entry)) return;
 
-            if (entry.minInterval > 0f &&
-                lastPlayTime.TryGetValue(key, out float last) &&
-                Time.unscaledTime - last < entry.minInterval)
-                return;
-
-            audioSource.PlayOneShot(entry.clip, entry.volume);
-            lastPlayTime[key] = Time.unscaledTime;
+        if (entry.minInterval > 0f &&
+            lastPlayTime.TryGetValue(key, out float last) &&
+            Time.unscaledTime - last < entry.minInterval)
             return;
-        }
-        Debug.LogWarning($"[SoundManager] 사운드를 찾을 수 없음: '{key}'");
+
+        audioSource.PlayOneShot(entry.clip, entry.volume);
+        lastPlayTime[key] = Time.unscaledTime;
     }
 }

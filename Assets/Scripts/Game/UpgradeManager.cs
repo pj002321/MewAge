@@ -258,7 +258,7 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
         // 광고 카드 슬롯에서도 제거 (WeaponInfoPanel 통해 구매 시 카드가 안사라지는 버그 방지)
         if (adCardData == data) adCardData = null;
 
-        SoundManager.Shared?.Play(SoundKey.UI_Buy);
+        SoundManager.Shared?.Play(SoundKey.Weapon_Equip);
 
         // 자동 합성: 같은 이름+성이 3개 모이면 반복 합성
         AutoMerge(inv, data.weaponName, data.star);

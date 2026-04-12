@@ -65,7 +65,9 @@ public class ImprovCard : MonoBehaviour
 
         if (iconImg)
         {
-            var sprite = Resources.Load<Sprite>("AUG/" + data.f_증강ID.ToString().ToLower());
+            string augIdStr = data.f_증강ID.ToString();
+            Sprite sprite = ImprovVisualConfig.Shared?.GetSprite(augIdStr)
+                         ?? Resources.Load<Sprite>("AUG/" + augIdStr.ToLower());
             iconImg.sprite  = sprite;
             iconImg.enabled = sprite != null;
         }
