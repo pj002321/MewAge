@@ -881,7 +881,9 @@ public class WeaponPoint : MonoBehaviour
     /// <summary>크리티컬 판정. isCritical=true이면 데미지에 multiplier를 곱한 값 반환.</summary>
     private (float finalDamage, bool isCritical) RollCrit(float baseDamage)
     {
-        bool crit = criticalRate > 0f && Random.value < criticalRate;
+        float playerCrit = PlayerController.Instance?.CritRateBonus ?? 0f;
+        float totalCrit  = criticalRate + playerCrit;
+        bool  crit       = totalCrit > 0f && Random.value < totalCrit;
         return crit ? (baseDamage * criticalMultiplier, true) : (baseDamage, false);
     }
 

@@ -66,7 +66,7 @@ public class StructureWareManager : MonoBehaviourSingleton<StructureWareManager>
     }
 
     /// <summary>비어있는 프리셋 슬롯을 보유 기물(없으면 C1 기물 지급)로 채웁니다.</summary>
-    void EnsurePresetsNotEmpty()
+    public void EnsurePresetsNotEmpty()
     {
         // 이미 프리셋에 등록된 ID 집합 (중복 방지)
         var used = new HashSet<string>();

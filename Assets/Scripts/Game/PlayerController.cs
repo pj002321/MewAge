@@ -24,6 +24,17 @@ public class PlayerController : MonoBehaviour
     [Header("피격 무적 시간")]
     [SerializeField] private float hitInvincibleDuration = 0.3f;  // 피격 후 무적 시간(초)
 
+    [Header("플로팅 텍스트 앵커")]
+    [SerializeField] private Transform floatingTextAnchor;  // 플레이어 자식 오브젝트로 배치
+
+    /// <summary>플로팅 텍스트 앵커 Transform. 없으면 null.</summary>
+    public Transform FloatingTextAnchor => floatingTextAnchor;
+
+    /// <summary>플로팅 텍스트 스폰 위치. 앵커가 없으면 플레이어 머리 위 기본값.</summary>
+    public Vector3 FloatingTextPoint => floatingTextAnchor != null
+        ? floatingTextAnchor.position
+        : (Vector3)Position + Vector3.up * 0.8f;
+
     // 무기 타입별 보너스 (런타임 전용)
     private float rangedAttackBonus = 0f;
     private float meleeAttackBonus  = 0f;

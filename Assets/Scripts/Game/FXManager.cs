@@ -95,9 +95,22 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
         var player = PlayerController.Instance;
         if (player == null) return;
 
-        Vector3 pos = (Vector3)player.Position
-            + new Vector3(Random.Range(-0.25f, 0.25f), 0.8f, 0f);
-        var go = Instantiate(floatingTextPrefab, pos, Quaternion.identity);
+        // 앵커를 parent로 생성 → localPosition=(0,0,0)으로 정확히 앵커 위치에 배치
+        // 이후 즉시 detach → 플레이어가 움직여도 텍스트는 독립적으로 떠오름
+        var anchor = player.FloatingTextAnchor;
+        GameObject go;
+        if (anchor != null)
+        {
+            go = Instantiate(floatingTextPrefab, anchor);
+            go.transform.localPosition = new Vector3(Random.Range(-0.2f, 0.2f), 0f, 0f);
+            go.transform.localRotation = Quaternion.identity;
+            go.transform.SetParent(null, true); // worldPositionStays=true 로 detach
+        }
+        else
+        {
+            Vector3 pos = player.FloatingTextPoint + new Vector3(Random.Range(-0.2f, 0.2f), 0f, 0f);
+            go = Instantiate(floatingTextPrefab, pos, Quaternion.identity);
+        }
         go.GetComponent<FloatingText>()?.Init(text, color);
     }
 

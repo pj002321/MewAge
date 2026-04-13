@@ -30,7 +30,12 @@ public class StructureInventory : MonoBehaviourSingleton<StructureInventory>
     public event System.Action<int> OnSlotUsed;      // 슬롯 사용 시 (수동/자동 공통)
     public event System.Action<int> OnCooldownEnded; // 슬롯 쿨타임 종료 시
 
-    private void Start() => LoadFromPresets();
+    private void Start()
+    {
+        // 인게임 진입 시에도 빈 프리셋 슬롯 자동 채움 (아웃게임에서 변경됐을 수 있음)
+        StructureWareManager.Shared?.EnsurePresetsNotEmpty();
+        LoadFromPresets();
+    }
 
     public bool IsAutoMode     { get; private set; }
     /// <summary>AutoMode에서 다음으로 사용될 슬롯 인덱스. 없으면 -1.</summary>
