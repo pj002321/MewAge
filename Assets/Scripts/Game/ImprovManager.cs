@@ -25,6 +25,10 @@ public class ImprovManager : MonoBehaviourSingleton<ImprovManager>
 
     protected override bool DontDestroy => false;
 
+    // 획득한 증강 이력: 증강ID → (데이터, 횟수)
+    private readonly Dictionary<string, (DB_증강 data, int count)> _acquired = new();
+    public IReadOnlyDictionary<string, (DB_증강 data, int count)> Acquired => _acquired;
+
     private void Start()
     {
         if (improvPanel) improvPanel.gameObject.SetActive(false);
@@ -192,6 +196,16 @@ public class ImprovManager : MonoBehaviourSingleton<ImprovManager>
                     healFactor: sub  / 100f    // MaxHP 대비 회복 비율
                 );
                 break;
+        }
+
+        // 획득 이력 기록
+        string key = data.f_증강ID.ToString();
+        if (!string.IsNullOrEmpty(key))
+        {
+            if (_acquired.TryGetValue(key, out var entry))
+                _acquired[key] = (entry.data, entry.count + 1);
+            else
+                _acquired[key] = (data, 1);
         }
 
         this.DLog($"[ImprovManager] 증강 적용: {data.f_이름} (type={data.f_증강ID}, 주={main}, 보조={sub})");

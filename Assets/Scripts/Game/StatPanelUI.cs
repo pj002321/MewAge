@@ -1,6 +1,8 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 /// <summary>
 /// 인게임 능력치 팝업 패널.
@@ -21,7 +23,12 @@ public class StatPanelUI : MonoBehaviourSingleton<StatPanelUI>
     [SerializeField] private float openDuration  = 0.18f;
     [SerializeField] private float closeDuration = 0.12f;
 
+    [Header("획득 증강 목록")]
+    [SerializeField] private GameObject improvIconPrefab;
+    [SerializeField] private Transform  improvContents;
+
     private StatFieldUI[] _fields;
+    private readonly List<GameObject> _improvIcons = new();
 
     private bool     _hasPreview;
     private StatType _previewStat;
@@ -96,6 +103,61 @@ public class StatPanelUI : MonoBehaviourSingleton<StatPanelUI>
             else
                 field.Refresh(sm);
         }
+
+        RefreshImprovIcons();
+    }
+
+    private void RefreshImprovIcons()
+    {
+        if (improvIconPrefab == null || improvContents == null) return;
+
+        var mgr      = ImprovManager.Shared;
+        var acquired = mgr?.Acquired;
+
+        // 아이콘 재사용 또는 생성
+        int idx = 0;
+        if (acquired != null)
+        {
+            foreach (var kv in acquired)
+            {
+                var (data, count) = kv.Value;
+
+                // 아이콘 오브젝트 확보
+                GameObject icon;
+                if (idx < _improvIcons.Count)
+                {
+                    icon = _improvIcons[idx];
+                    icon.SetActive(true);
+                }
+                else
+                {
+                    icon = Instantiate(improvIconPrefab, improvContents);
+                    _improvIcons.Add(icon);
+                }
+
+                // Image 설정
+                var img = icon.GetComponentInChildren<Image>(true);
+                if (img != null)
+                {
+                    string augId = data.f_증강ID.ToString();
+                    Sprite sprite = ImprovVisualConfig.Shared?.GetSprite(augId)
+                                 ?? Resources.Load<Sprite>("AUG/" + augId.ToLower());
+                    img.sprite  = sprite;
+                    img.enabled = sprite != null;
+                }
+
+                // CountText 설정
+                var tmp = icon.GetComponentInChildren<TextMeshProUGUI>(true);
+                if (tmp != null)
+                    tmp.text = count > 1 ? $"×{count}" : "";
+
+                idx++;
+            }
+        }
+
+        // 남은 아이콘 비활성화
+        for (int i = idx; i < _improvIcons.Count; i++)
+            _improvIcons[i].SetActive(false);
     }
 
     private IEnumerator ScaleRoutine(Vector3 from, Vector3 to, float duration,

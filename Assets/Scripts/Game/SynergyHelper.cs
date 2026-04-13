@@ -57,6 +57,9 @@ public static class SynergyHelper
         public Sprite           Icon;
         public string           Name;
         public string           Description;
+        public string           Label;      // 효과 레이블 (예: "공격력 증가")
+        public string           Unit;       // 단위 (예: "%", "배", "")
+        public List<int>        StatValues; // [0]=동, [1]=은, [2]=금 수치
     }
 
     /// <summary>해당 챕터의 시너지 목록(최대 4개)을 반환합니다.</summary>
@@ -93,10 +96,8 @@ public static class SynergyHelper
         foreach (var w in inv.Equipped)
         {
             if (w == null) continue;
-            if (w.tag1 == tag || w.tag2 == tag)
-            {
+            if (w.tag1 == tag)
                 uniqueNames.Add(w.weaponName);
-            }
         }
         return uniqueNames.Count;
     }
@@ -111,8 +112,24 @@ public static class SynergyHelper
         foreach (var w in inv.Equipped)
         {
             if (w == null) continue;
-            if (w.tag1 == tag || w.tag2 == tag)
+            if (w.tag1 == tag)
                 result.Add(w.icon);
+        }
+        return result;
+    }
+
+    /// <summary>장착 무기 중 특정 태그를 보유한 WeaponData 목록을 반환합니다.</summary>
+    public static List<WeaponData> GetEquippedWeaponsForTag(WeaponSynergyTag tag)
+    {
+        var result = new List<WeaponData>();
+        var inv = PlayerInventory.Shared;
+        if (inv == null || tag == WeaponSynergyTag.None) return result;
+
+        foreach (var w in inv.Equipped)
+        {
+            if (w == null) continue;
+            if (w.tag1 == tag)
+                result.Add(w);
         }
         return result;
     }
@@ -127,7 +144,26 @@ public static class SynergyHelper
         string name = GetDisplayName(tag);
         string desc = FormatDescription(tag, statValues);
         var icon = Resources.Load<Sprite>($"Synergy/{synergyID.ToLower()}");
-        list.Add(new SynergyEntry { Tag = tag, Icon = icon, Name = name, Description = desc });
+
+        (string label, string unit) = tag switch
+        {
+            WeaponSynergyTag.야수   => ("공격력 증가",     "%"),
+            WeaponSynergyTag.채집   => ("경험치 획득 증가", "배"),
+            WeaponSynergyTag.사냥꾼 => ("출혈 피해 증가",  ""),
+            WeaponSynergyTag.지혜   => ("치명타 확률 증가", "%"),
+            _ => ("스탯 증가", "")
+        };
+
+        list.Add(new SynergyEntry
+        {
+            Tag        = tag,
+            Icon       = icon,
+            Name       = name,
+            Description = desc,
+            Label      = label,
+            Unit       = unit,
+            StatValues = statValues != null ? new List<int>(statValues) : new List<int>()
+        });
     }
 
     private static string GetDisplayName(WeaponSynergyTag tag) => tag switch

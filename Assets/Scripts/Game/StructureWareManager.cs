@@ -39,29 +39,95 @@ public class StructureWareManager : MonoBehaviourSingleton<StructureWareManager>
         GiveStartingWares();
     }
 
-    /// <summary>최초 1회: 구석기 기물 4개 지급 + 프리셋 0~3 자동 세팅</summary>
+    /// <summary>
+    /// 최초 1회 구석기 기물 랜덤 4개 지급.
+    /// 이후 매 실행마다 프리셋이 전부 비어있으면 보유 기물(없으면 C1 기물 지급)으로 자동 채웁니다.
+    /// </summary>
     void GiveStartingWares()
     {
         const string InitKey = "WareStartingGiven";
-        if (PlayerPrefs.GetInt(InitKey, 0) == 1) return;
-
-        var given = new System.Collections.Generic.List<string>();
-        DB_기물.ForEachEntity(row =>
+        if (PlayerPrefs.GetInt(InitKey, 0) == 0)
         {
-            if (given.Count >= 4) return;
-            if (!row.f_기물ID.StartsWith("C1_")) return;
-            AddWareInternal(row.f_기물ID, 1);
-            given.Add(row.f_기물ID);
-        });
+            // 신규 유저 — C1 기물 랜덤 셔플 후 최대 4개 지급
+            var c1 = GetC1IdsList();
+            Shuffle(c1);
+            foreach (var id in c1)
+                AddWareInternal(id, 1);
 
-        // 프리셋 자동 세팅
-        for (int i = 0; i < given.Count && i < 4; i++)
-            _preset[i] = given[i];
+            PlayerPrefs.SetInt(InitKey, 1);
+            PlayerPrefs.Save();
+        }
+
+        // 항상 실행: 프리셋이 하나도 없으면 자동 채움
+        EnsurePresetsNotEmpty();
 
         Save();
         OnChanged?.Invoke();
-        PlayerPrefs.SetInt(InitKey, 1);
-        PlayerPrefs.Save();
+    }
+
+    /// <summary>비어있는 프리셋 슬롯을 보유 기물(없으면 C1 기물 지급)로 채웁니다.</summary>
+    void EnsurePresetsNotEmpty()
+    {
+        // 이미 프리셋에 등록된 ID 집합 (중복 방지)
+        var used = new HashSet<string>();
+        for (int i = 0; i < 4; i++)
+            if (!string.IsNullOrEmpty(_preset[i])) used.Add(_preset[i]);
+
+        // 비어있는 슬롯 수 계산
+        int emptyCount = 0;
+        for (int i = 0; i < 4; i++)
+            if (string.IsNullOrEmpty(_preset[i])) emptyCount++;
+
+        if (emptyCount == 0) return;
+
+        // 프리셋에 없는 보유 기물 후보 수집
+        var candidates = new List<string>();
+        foreach (var id in GetOwnedIds())
+            if (!used.Contains(id)) candidates.Add(id);
+
+        // 후보가 부족하면 C1 기물을 랜덤 지급해서 보충
+        if (candidates.Count < emptyCount)
+        {
+            var c1 = GetC1IdsList();
+            Shuffle(c1);
+            foreach (var id in c1)
+            {
+                if (used.Contains(id) || candidates.Contains(id)) continue;
+                AddWareInternal(id, 1);
+                candidates.Add(id);
+                if (candidates.Count >= emptyCount) break;
+            }
+        }
+
+        // 빈 슬롯에 순서대로 채움
+        int ci = 0;
+        for (int i = 0; i < 4 && ci < candidates.Count; i++)
+        {
+            if (string.IsNullOrEmpty(_preset[i]))
+            {
+                _preset[i] = candidates[ci++];
+            }
+        }
+    }
+
+    List<string> GetC1IdsList()
+    {
+        var list = new List<string>();
+        DB_기물.ForEachEntity(row =>
+        {
+            if (!string.IsNullOrEmpty(row.f_기물ID) && row.f_기물ID.StartsWith("C1_"))
+                list.Add(row.f_기물ID);
+        });
+        return list;
+    }
+
+    static void Shuffle(List<string> list)
+    {
+        for (int i = list.Count - 1; i > 0; i--)
+        {
+            int j = UnityEngine.Random.Range(0, i + 1);
+            (list[i], list[j]) = (list[j], list[i]);
+        }
     }
 
     // ── 조회 ─────────────────────────────────────────────────────────

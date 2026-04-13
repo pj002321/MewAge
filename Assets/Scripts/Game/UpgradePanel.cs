@@ -19,6 +19,7 @@ public class UpgradePanel : MonoBehaviour
     [SerializeField] private Button          rerollButton;
     [SerializeField] private Button          buyExpButton;
     [SerializeField] private Button          nextWaveButton;
+    [SerializeField] private Button          infoButton;
 
     [Header("정보 텍스트")]
     [SerializeField] private TextMeshProUGUI playerGoldText;
@@ -85,6 +86,7 @@ public class UpgradePanel : MonoBehaviour
     {
         rerollButton? .onClick.AddListener(OnRerollClicked);
         nextWaveButton?.onClick.AddListener(OnNextWaveClicked);
+        infoButton?   .onClick.AddListener(OnInfoClicked);
 
         // EXP 구매 버튼: 롱프레스 지원 (EventTrigger로 PointerDown/Up 처리)
         if (buyExpButton != null)
@@ -328,6 +330,12 @@ public class UpgradePanel : MonoBehaviour
         }
 
         SynergyInfoPanel.Shared?.Refresh();
+    }
+
+    private void OnInfoClicked()
+    {
+        int chapter = UpgradeManager.Shared?.CurrentChapter ?? 1;
+        SynergyInfoPanel.Shared?.Show(chapter);
     }
 
     private void OnSynergySlotClicked(int index)

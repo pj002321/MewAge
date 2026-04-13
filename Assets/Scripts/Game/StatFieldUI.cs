@@ -32,8 +32,8 @@ public class StatFieldUI : MonoBehaviour
         {
             string sign     = pct > 0f ? "+" : "";
             string pctColor = pct < 0f ? "#FF8888" : "#88FF88";
-            valueText.text = $"{PlayerStatManager.FormatValue(statType, finalVal)}\n" +
-                             $"<size=70%><color={pctColor}>({sign}{pct:0.#}%)</color></size>";
+            valueText.text = $"{PlayerStatManager.FormatValue(statType, finalVal)} " +
+                             $"<color={pctColor}>({sign}{pct:0.#}%)</color>";
         }
         else
         {
@@ -63,8 +63,8 @@ public class StatFieldUI : MonoBehaviour
                 : baseVal * (1f + (pct + previewPct) / 100f);
 
             string previewSign = previewPct > 0f ? "+" : "";
-            valueText.text = $"<color=#88CCFF>{PlayerStatManager.FormatValue(statType, previewFinal)}</color>\n" +
-                             $"<size=70%><color=#88CCFF>({previewSign}{previewPct:0.#}%)</color></size>";
+            valueText.text = $"<color=#88CCFF>{PlayerStatManager.FormatValue(statType, previewFinal)}</color> " +
+                             $"<color=#88CCFF>({previewSign}{previewPct:0.#}%)</color>";
         }
         else
         {
