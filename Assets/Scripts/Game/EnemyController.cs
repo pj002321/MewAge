@@ -485,6 +485,15 @@ public class EnemyController : MonoBehaviour
         }
     }
 
+    /// <summary>웨이브 종료 시 드롭/포인트 없이 사망 연출만 재생합니다.</summary>
+    public void ForceDie()
+    {
+        if (!gameObject.activeInHierarchy) return;
+        _deathDir = new Vector2(Random.Range(-1f, 1f), 1f).normalized;
+        StopAllCoroutines();
+        StartCoroutine(DieRoutine());
+    }
+
     private IEnumerator DieRoutine()
     {
         // 이동·공격·충돌 데미지 비활성화

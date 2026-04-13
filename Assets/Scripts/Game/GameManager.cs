@@ -39,6 +39,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     private float waveTimer;
     private bool  isGameOver;
     private bool  waitingForUpgrade = true; // 트랜지션/초기화 기간 중 0초 달성으로 증강이 뜨는 것 방지
+    private bool  _pauseTimer;              // 웨이브 시작 연출 중 타이머 일시 정지
     private bool  bossWaveActive;
     private string currentChapterID = "C1_S1";
 
@@ -120,7 +121,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     {
         if (isGameOver) return;
 
-        waveTimer -= Time.deltaTime;
+        if (!_pauseTimer) waveTimer -= Time.deltaTime;
         UpdateTimerUI();
 
         if (waveTimer <= 0f && !waitingForUpgrade)
@@ -148,10 +149,18 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     {
         if (waveClearPanel) waveClearPanel.SetActive(true);
         EnemySpawner.Shared?.StopSpawning();
-        EnemySpawner.Shared?.ClearAllEnemies();
-        FXManager.Shared?.ClearAllFX();   // 투사체·파편 즉시 제거
+
+        // 적 사망 연출 + 기물 스케일다운 후 파괴 (DieRoutine 기준 0.45s)
+        yield return StartCoroutine(ClearAllWithScaleDown(0.45f));
+
+        FXManager.Shared?.ClearAllFX();          // 투사체·파편 즉시 제거
+        GlobalLightDimmer.ForceReset();           // 조명 즉시 복구
 
         yield return new WaitForSeconds(waveClearDuration);
+
+        // 남은 orb 위로 튕겨 올리고 잠깐 대기 후 패널 전환
+        ItemDropManager.Shared?.ThrowUpAll();
+        yield return new WaitForSeconds(0.55f);
 
         if (waveClearPanel) waveClearPanel.SetActive(false);
 
@@ -171,6 +180,48 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
             UpgradeManager.Shared.ShowPanel(wave);
         else
             StartNextWave();
+    }
+
+    /// <summary>
+    /// 적: 기존 사망 연출(흰색 실루엣·파편·날아가기) 재생.
+    /// 기물: 스케일다운 후 파괴.
+    /// duration은 DieRoutine(0.4f)보다 여유 있게 설정할 것.
+    /// </summary>
+    private IEnumerator ClearAllWithScaleDown(float duration)
+    {
+        // 적 — ForceDie()로 사망 연출 시작 (DieRoutine이 pool 반환까지 처리)
+        for (int i = EnemyController.All.Count - 1; i >= 0; i--)
+        {
+            var e = EnemyController.All[i];
+            if (e != null) e.ForceDie();
+        }
+
+        // 기물 — 스케일다운
+        var targets    = new System.Collections.Generic.List<Transform>();
+        var origScales = new System.Collections.Generic.List<Vector3>();
+        foreach (var sc in StructureController.All)
+        {
+            if (sc != null)
+            {
+                targets.Add(sc.transform);
+                origScales.Add(sc.transform.localScale);
+            }
+        }
+
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / duration);
+            for (int i = 0; i < targets.Count; i++)
+                if (targets[i] != null)
+                    targets[i].localScale = Vector3.Lerp(origScales[i], Vector3.zero, t);
+            yield return null;
+        }
+
+        // 기물 파괴 + 아직 남은 적 강제 정리
+        StructureController.DestroyAll();
+        EnemySpawner.Shared?.ClearAllEnemies();
     }
 
     /// <summary>웨이브 번호에 따른 제한 시간 반환. 보스 웨이브는 호출 전에 별도 처리.</summary>
@@ -388,6 +439,35 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 
         EnemySpawner.Shared?.ResumeSpawning(wave);
         WaveEnvironmentSwitcher.Shared?.SetWave(wave);
+
+        // 타이머 텍스트 확대→복귀 연출 후 카운트다운 시작
+        StartCoroutine(TimerStartAnimation());
+    }
+
+    private IEnumerator TimerStartAnimation()
+    {
+        if (timerText == null) yield break;
+
+        _pauseTimer = true;
+        var rt = timerText.rectTransform;
+        Vector3 baseScale = rt.localScale;
+        Vector3 bigScale  = baseScale * 1.4f;
+
+        // 즉시 확대
+        rt.localScale = bigScale;
+
+        // 빠르게 원본으로 복귀 (0.35s)
+        float elapsed = 0f;
+        const float dur = 0.35f;
+        while (elapsed < dur)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            rt.localScale = Vector3.Lerp(bigScale, baseScale, Mathf.Clamp01(elapsed / dur));
+            yield return null;
+        }
+        rt.localScale = baseScale;
+
+        _pauseTimer = false;
     }
 
     private void TeleportPlayerToMapCenter()

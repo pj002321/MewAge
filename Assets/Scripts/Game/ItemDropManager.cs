@@ -114,4 +114,11 @@ public class ItemDropManager : MonoBehaviourSingleton<ItemDropManager>
     }
 
     public void OnChapterUp(int chapter) => currentChapter = chapter;
+
+    /// <summary>웨이브 종료 시 맵에 남은 골드·경험치 orb를 전부 위로 튕겨 올립니다.</summary>
+    public void ThrowUpAll()
+    {
+        foreach (var drop in Object.FindObjectsByType<DropItem>(FindObjectsSortMode.None))
+            drop.ThrowUp();
+    }
 }

@@ -41,6 +41,7 @@ public class StructureInventory : MonoBehaviourSingleton<StructureInventory>
     private void Update()
     {
         if (!IsAutoMode) return;
+        if (Time.timeScale == 0f) return;
 
         // 활성 슬롯이 없으면 (재고 소진 후 보충됐을 수 있으므로) 다시 탐색
         if (ActiveAutoSlot < 0)

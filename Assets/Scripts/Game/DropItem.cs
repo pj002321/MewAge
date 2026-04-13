@@ -211,6 +211,36 @@ public class DropItem : MonoBehaviour
         }
     }
 
+    /// <summary>웨이브 종료 시 호출 — 살짝 아래로 내려갔다가 위로 슝 튕겨 올린 뒤 자동 수집합니다.</summary>
+    public void ThrowUp()
+    {
+        StopAllCoroutines();
+        _absorbState = AbsorbState.Idle;
+        timer        = 0f;
+        StartCoroutine(ThrowUpRoutine());
+    }
+
+    private IEnumerator ThrowUpRoutine()
+    {
+        // 1단계: 살짝 아래로
+        burstVelocity = new Vector2(Random.Range(-1f, 1f), Random.Range(-4f, -2f));
+        burstFriction = 0f;
+        yield return new WaitForSeconds(0.08f);
+
+        // 2단계: 위로 슝
+        burstVelocity = new Vector2(Random.Range(-3f, 3f), Random.Range(20f, 28f));
+        burstFriction = 8f;
+
+        yield return new WaitForSeconds(0.55f);
+        if (gameObject != null && gameObject.activeInHierarchy) Collect();
+    }
+
+    private IEnumerator AutoCollectDelayed(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        if (gameObject != null && gameObject.activeInHierarchy) Collect();
+    }
+
     /// <summary>웨이브 종료 시 호출 — 즉시 플레이어 방향으로 유도 시작.</summary>
     public void ForceAttract()
     {

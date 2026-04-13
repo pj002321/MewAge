@@ -28,6 +28,13 @@ public static class GlobalLightDimmer
     /// <summary>현재 활성 스킬이 있는지 여부.</summary>
     public static bool IsActive => _dimCount > 0;
 
+    /// <summary>웨이브 종료 등 즉시 복구가 필요할 때 카운트를 초기화하고 밝기를 1로 되돌립니다.</summary>
+    public static void ForceReset()
+    {
+        _dimCount = 0;
+        SetIntensity(1f);
+    }
+
     /// <summary>Global Light2D intensity를 직접 설정합니다 (페이드 코루틴용).</summary>
     public static void SetIntensity(float intensity)
     {

@@ -7,10 +7,22 @@ using UnityEngine;
 /// </summary>
 public class StructureController : MonoBehaviour
 {
+    public static readonly System.Collections.Generic.List<StructureController> All = new();
+
     [Header("기물 유지 시간 (0 = 영구)")]
     [SerializeField] private float duration = 15f;
 
     public float Duration => duration;
+
+    /// <summary>씬에 배치된 모든 기물을 즉시 파괴합니다 (웨이브 종료 시 호출).</summary>
+    public static void DestroyAll()
+    {
+        for (int i = All.Count - 1; i >= 0; i--)
+            if (All[i] != null) Destroy(All[i].gameObject);
+        All.Clear();
+    }
+
+    private void Awake() => All.Add(this);
 
     private System.Collections.IEnumerator Start()
     {
@@ -49,6 +61,7 @@ public class StructureController : MonoBehaviour
 
     private void OnDestroy()
     {
+        All.Remove(this);
         // 기물이 파괴(또는 수거)되면 점유하던 타일 영역을 반환합니다.
         var zone = FindAnyObjectByType<StructureZone>();
         if (zone != null) zone.ReleaseCell(transform.position);
