@@ -34,7 +34,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1.35, y: 1.35, z: 1.35}
+  m_LocalScale: {x: 2.9999998, y: 2.9999998, z: 2.9999998}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 4088361612343034944}
@@ -192,7 +192,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8dbca1b53536a2b47a8964120af00539, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HitFlash
-  flashColor: {r: 1, g: 0.2, b: 0.2, a: 1}
   flashDuration: 0.12
   BaseColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!70 &3654687307679448783
@@ -291,6 +290,10 @@ MonoBehaviour:
   hitRange: 1.6
   hitDamage: 50
   attackTrigger: tAttack
+  chargeColor: {r: 1, g: 0, b: 0, a: 1}
+  chargeScale: 0.85
+  preDashDuration: 0.3
+  ghostInterval: 0.06
   fallbackBoundsSize: {x: 10, y: 18}
 --- !u!1 &5233518724168949262
 GameObject:

@@ -220,7 +220,10 @@ public class BossController : MonoBehaviour
 
         currentHP -= damage;
 
-        // 스킬 게이지 증가
+        // 플레이어 스킬 게이지 증가
+        CharacterSkillManager.Shared?.AddPoint(1);
+
+        // 보스 스킬 게이지 증가
         AddSkillGauge(damage);
 
         SoundManager.Shared?.Play(SoundKey.Enemy_Hit);
