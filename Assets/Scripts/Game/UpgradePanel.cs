@@ -32,6 +32,7 @@ public class UpgradePanel : MonoBehaviour
     [SerializeField] private Slider          expSlider;
     [SerializeField] private TextMeshProUGUI expText;
     [SerializeField] private TextMeshProUGUI levelText;
+    [SerializeField] private TextMeshProUGUI expGainText;  // 한 번에 얻는 EXP량 (+30)
 
     [Header("EXP 구매 롱프레스")]
     [SerializeField] private float buyExpHoldDelay    = 0.5f;   // 처음 반복까지 대기 시간
@@ -134,6 +135,8 @@ public class UpgradePanel : MonoBehaviour
     // ────────────────────────────────────────────────────────────────
     private void OnEnable()
     {
+        StructureInventory.BlockAuto = true;
+
         foreach (var anim in GetComponentsInChildren<Animator>(true))
             anim.updateMode = AnimatorUpdateMode.UnscaledTime;
 
@@ -155,6 +158,8 @@ public class UpgradePanel : MonoBehaviour
 
     private void OnDisable()
     {
+        StructureInventory.BlockAuto = false;
+
         if (autoStartCoroutine != null) StopCoroutine(autoStartCoroutine);
         if (notifCoroutine != null) { StopCoroutine(notifCoroutine); notifCoroutine = null; }
         if (buyExpHoldCoroutine != null) { StopCoroutine(buyExpHoldCoroutine); buyExpHoldCoroutine = null; }
@@ -257,6 +262,14 @@ public class UpgradePanel : MonoBehaviour
         if (levelText) levelText.text = $"LV.{level}";
         if (expSlider) expSlider.value = (float)exp / expToNext;
         if (expText) expText.text = $"{exp}/{expToNext}";
+
+        if (expGainText)
+        {
+            int buyExpAmount = UpgradeManager.Shared?.BuyExpAmount ?? 30;
+            float synergyPct = ps.SynergyExpPct;
+            int actualGain = (int)(buyExpAmount * (1f + synergyPct / 100f));
+            expGainText.text = $"경험치 +{actualGain}";
+        }
     }
 
     // ────────────────────────────────────────────────────────────────

@@ -52,6 +52,11 @@ public class StageSelectPanel : MonoBehaviour
     [Range(0.05f, 0.5f)]
     public float swipeThreshold = 0.2f;
 
+    [Header("카드 스케일 (원근 효과)")]
+    public float centerScale = 1.0f;
+    [Range(0.5f, 1f)]
+    public float sideScale   = 0.82f;
+
     // ── 카드 스타일 (Inspector에서 조정 가능) ─────────────────────
     [Header("카드 크기 (기준 해상도 기준)")]
     public float cardWidth  = 1080f;
@@ -326,11 +331,25 @@ public class StageSelectPanel : MonoBehaviour
     }
 
 
+    /// <summary>가상 중심 위치(실수)를 기반으로 모든 카드 스케일을 업데이트합니다.</summary>
+    void ApplyCardScales(float virtualCenter)
+    {
+        if (cardViews == null) return;
+        for (int i = 0; i < cardViews.Length; i++)
+        {
+            if (cardViews[i] == null) continue;
+            float dist = Mathf.Abs(i - virtualCenter);
+            float s    = Mathf.Lerp(centerScale, sideScale, Mathf.Clamp01(dist));
+            cardViews[i].transform.localScale = Vector3.one * s;
+        }
+    }
+
     void SnapImmediate(int index)
     {
         if (scrollRect == null || content == null) return;
         float w = CardW();
         content.anchoredPosition = new Vector2(-index * w, content.anchoredPosition.y);
+        ApplyCardScales(index);
     }
 
     IEnumerator SnapCoroutine(int index)
@@ -338,21 +357,23 @@ public class StageSelectPanel : MonoBehaviour
         if (isSnapping || scrollRect == null || content == null) yield break;
         isSnapping = true;
 
-        float w       = CardW();
-        float targetX = -index * w;
-        float startX  = content.anchoredPosition.x;
-        float elapsed = 0f;
-        const float duration = 0.2f;
+        float w          = CardW();
+        float targetX    = -index * w;
+        float startX     = content.anchoredPosition.x;
+        float elapsed    = 0f;
+        const float duration = 0.18f;
 
         while (elapsed < duration)
         {
             elapsed += Time.unscaledDeltaTime;
-            float t = Mathf.SmoothStep(0f, 1f, elapsed / duration);
-            content.anchoredPosition = new Vector2(Mathf.Lerp(startX, targetX, t),
-                                                   content.anchoredPosition.y);
+            float t    = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / duration));
+            float newX = Mathf.Lerp(startX, targetX, t);
+            content.anchoredPosition = new Vector2(newX, content.anchoredPosition.y);
+            ApplyCardScales(-newX / Mathf.Max(1f, w));
             yield return null;
         }
         content.anchoredPosition = new Vector2(targetX, content.anchoredPosition.y);
+        ApplyCardScales(index);
         isSnapping = false;
     }
 

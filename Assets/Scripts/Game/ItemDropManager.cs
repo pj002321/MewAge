@@ -18,7 +18,7 @@ public class ItemDropManager : MonoBehaviourSingleton<ItemDropManager>
     [Header("드롭 확률 (0~1)")]
     [SerializeField] private float goldDropChance      = 0.5f;
     [SerializeField] private float expDropChance       = 1.0f;
-    [SerializeField] private float structureDropChance = 0.1f;
+    [SerializeField] private float structureDropChance = 0.04f;
 
     [Header("보스 Orb 버스트 설정")]
     [SerializeField] private float bossOrbBurstSpeedMin = 4f;

@@ -37,8 +37,14 @@ public class ImprovPanel : MonoBehaviour
 
     private void OnEnable()
     {
+        StructureInventory.BlockAuto = true;
         foreach (var anim in GetComponentsInChildren<Animator>(true))
             anim.updateMode = AnimatorUpdateMode.UnscaledTime;
+    }
+
+    private void OnDisable()
+    {
+        StructureInventory.BlockAuto = false;
     }
 
     public void Setup(DB_증강[] improvs)

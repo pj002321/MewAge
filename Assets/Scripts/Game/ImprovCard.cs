@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Text.RegularExpressions;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -80,6 +81,7 @@ public class ImprovCard : MonoBehaviour
             {
                 desc = desc.Replace("{0}", data.f_주수치.ToString());
                 desc = desc.Replace("{1}", data.f_보조수치.ToString());
+                desc = ColorizeNumbers(desc);
             }
             descText.text = desc ?? string.Empty;
         }
@@ -152,6 +154,37 @@ public class ImprovCard : MonoBehaviour
 
         transform.localEulerAngles = Vector3.zero;
         transform.localScale       = endScale;
+    }
+
+    /// <summary>설명 텍스트의 숫자를 맥락에 따라 녹색/빨강으로 채색합니다.</summary>
+    private static string ColorizeNumbers(string text)
+    {
+        return Regex.Replace(text, @"[+\-]?\d+(?:\.\d+)?", match =>
+        {
+            string num = match.Value;
+            bool isNegative = num.StartsWith("-");
+
+            // 숫자가 속한 절(쉼표·마침표·줄바꿈으로 구분)만 검사해 오탐 방지
+            string clause = GetClause(text, match.Index);
+            bool hasReduction = clause.Contains("감소") || clause.Contains("하락") || clause.Contains("커지");
+
+            string color = (isNegative || hasReduction) ? "#FF5555" : "#55FF88";
+            return $"<color={color}>{num}</color>";
+        });
+    }
+
+    /// <summary>pos가 속한 절을 반환합니다 (쉼표·마침표·줄바꿈을 경계로 분리).</summary>
+    private static string GetClause(string text, int pos)
+    {
+        int start = pos;
+        while (start > 0 && text[start - 1] != ',' && text[start - 1] != '.' && text[start - 1] != '\n')
+            start--;
+
+        int end = pos;
+        while (end < text.Length && text[end] != ',' && text[end] != '.' && text[end] != '\n')
+            end++;
+
+        return text.Substring(start, end - start);
     }
 
     private IEnumerator ScaleRoutine(Transform target, float targetScale, float duration)

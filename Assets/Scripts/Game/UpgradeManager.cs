@@ -16,6 +16,8 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
     [SerializeField] private int buyExpAmount = 30;
     [SerializeField] private int buyExpPrice  = 20;
 
+    public int BuyExpAmount => buyExpAmount;
+
     private struct DrawProfile
     {
         public int   minLevel;
