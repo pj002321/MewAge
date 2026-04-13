@@ -118,17 +118,18 @@ public static class SynergyHelper
         return result;
     }
 
-    /// <summary>장착 무기 중 특정 태그를 보유한 WeaponData 목록을 반환합니다.</summary>
+    /// <summary>장착 무기 중 특정 태그를 보유한 WeaponData 목록을 반환합니다. 같은 무기명은 중복 제거.</summary>
     public static List<WeaponData> GetEquippedWeaponsForTag(WeaponSynergyTag tag)
     {
         var result = new List<WeaponData>();
-        var inv = PlayerInventory.Shared;
+        var seen   = new System.Collections.Generic.HashSet<string>();
+        var inv    = PlayerInventory.Shared;
         if (inv == null || tag == WeaponSynergyTag.None) return result;
 
         foreach (var w in inv.Equipped)
         {
             if (w == null) continue;
-            if (w.tag1 == tag)
+            if (w.tag1 == tag && seen.Add(w.weaponName))
                 result.Add(w);
         }
         return result;
