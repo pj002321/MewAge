@@ -4,282 +4,427 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-MuAge is a 2D wave-based survival roguelite built in **Unity 6000.3.9f1 (Unity 6)** (C#). The player fights waves of enemies, earns gold/XP, and spends wave-clear time in a weapon shop. Between waves the player can also pick augments (증강).
+MuAge is a 2D wave-based survival roguelite built in **Unity 6000.3.9f1 (Unity 6)** (C#). The player fights waves of enemies, earns gold/XP, and spends wave-clear time in a weapon shop. Between waves the player can also pick augments (증강) and use structures (기물).
+
+---
+
+## Script Folder Structure
+
+All C# game scripts live under `Assets/Scripts/Game/` and are organized by feature:
+
+```
+Assets/Scripts/Game/
+  Core/        — 씬 전환, 게임 루프, 로딩
+  World/       — 카메라, 맵, 환경, 스폰존, 아이템 드롭
+  Player/      — 플레이어 컨트롤, 스탯, 인벤토리, 조이스틱
+  Character/   — 캐릭터 선택, 고유 스킬 (CharacterSkillBase 서브클래스)
+  Enemy/       — 적 컨트롤러, AI 비헤이비어, 스폰
+  Boss/        — 보스 컨트롤러, 보스 스킬
+  Weapon/      — 무기 데이터/로직, 투사체, 시너지 (무기)
+  Structure/   — 기물 인벤토리/배치, 기물 스킬
+  Equipment/   — 장비 아이템, 뽑기, 인벤토리
+  Augment/     — 증강(임프로브) 시스템
+  HomeUI/      — 홈 씬 패널 전체 (장비/기물/캐릭터/상점/스테이지)
+  GameUI/      — 인게임 UI (업그레이드, 게임오버, 스탯패널 등)
+  VFX/         — FXManager, 히트 이펙트, 조명 디머
+  Audio/       — SoundManager, 버튼 사운드
+  (Editor/)    — 에디터 전용 빌더·인스펙터 (Scripts/Editor/)
+  (Extension/) — MonoBehaviourSingleton, 유틸 확장 (Scripts/Extension/)
+```
+
+### 폴더별 주요 파일
+
+| 폴더 | 핵심 파일 |
+|------|----------|
+| Core | GameManager, SceneLoadManager, SceneLoadingCanvas, IntroLoadingManager |
+| World | CameraFollow, WaveEnvironmentSwitcher, StageEnvironmentSO, ItemDropManager, SpawnMarker/Zone |
+| Player | PlayerController, PlayerStatManager, PlayerStats, PlayerInventory, StatType, StatPanelUI |
+| Character | PlayerCharacterManager, CharacterSkillBase/Manager, SkillBerserker, SkillNormal |
+| Enemy | EnemyController, EnemyBehaviourBase, EnemySpawner, EnemyPool, ChapterRosterSO |
+| Boss | BossController, BossPatternBehaviour, BossSkillBase, 7개 Boss 스킬 |
+| Weapon | WeaponData/Manager/Point, Projectile, SynergyHelper, SynergyEffectManager |
+| Structure | StructureInventory/Controller/Ware, WareSynergySystem, 14개 기물 스킬 |
+| Equipment | EquipmentData/Inventory/Gacha, EquipSlot, InvenSlot |
+| Augment | ImprovManager/Panel/Card/Data |
+| HomeUI | HomeUIManager, HomeMemberPanel, HomeShopPanel, HomeWarePanel, HomeEquipPanel |
+| GameUI | UpgradeManager/Panel/Card, GameOverPanel/ResultPanel, GameClearPanel, DebugPanel |
+| VFX | FXManager, HitEffect/Flash/Shake, GlobalLightDimmer |
+| Audio | SoundManager, SoundKey, UIButtonSoundAutoAttach |
+
+---
 
 ## Architecture
 
 ### Singleton Pattern
-Most manager classes extend `MonoBehaviourSingleton<T>` (in [Assets/Scripts/Extension/MonoBehaviourSingleton.cs](Assets/Scripts/Extension/MonoBehaviourSingleton.cs)) and are accessed via `ClassName.Shared`. `PlayerController` and `WeaponManager` use a manual `static Instance` instead.
+`MonoBehaviourSingleton<T>` ([Assets/Scripts/Extension/MonoBehaviourSingleton.cs](Assets/Scripts/Extension/MonoBehaviourSingleton.cs)) → 접근은 `ClassName.Shared`. `PlayerController` / `WeaponManager`는 수동 `static Instance` 사용.
 
-Override `DontDestroy => false` in scene-specific singletons (managers that should reset on scene reload).
+씬 재로드 시 초기화가 필요한 싱글톤: `DontDestroy => false` 오버라이드.
 
-### Core Game Loop
-1. **GameManager** — wave timer, game-over, UI text/sliders. Drives the loop: wave start → timer countdown → `WaveClearRoutine` → augment panel → upgrade panel → next wave.
-2. **EnemySpawner** — spawns enemies per wave; stopped/resumed by GameManager.
-3. **PlayerController** — movement via VirtualJoystick, HP, combat stats. Calls `GameManager.TriggerGameOver()` on death.
+---
 
-### Weapon System
-- **WeaponData** — ScriptableObject-like runtime data loaded from BansheeGz DB (`DB_무기`).
-- **PlayerInventory** (singleton) — inventory (bag) + equipment slots (max 6). Fires `OnChanged` event.
-- **WeaponManager** — listens to `PlayerInventory.OnChanged`, instantiates weapon prefabs under `weaponAnchors` transforms on the player.
-- **WeaponPoint** — per-weapon attack logic attached to weapon prefabs.
+## Core Game Loop
 
-### Wave-Clear Screens (shown in order)
-1. **ImprovManager / ImprovPanel** — augment picker, 3 random buffs drawn from `DB_증강` by weighted random. On pick, routes all stat-type augments through `PlayerStatManager.AddPctMod()`. Non-stat augments (heal, heal-on-kill, heal-orb) call `PlayerController` directly.
-2. **UpgradeManager / UpgradePanel** — weapon shop; draws 4 weapon cards from `DB_무기` using grade probabilities from `DB_확률`. Has a `statPanelButton` wired to `StatPanelUI.Shared?.Show()`.
+1. **GameManager** (`Core/`) — wave 타이머, game-over, UI 슬라이더. 루프: wave start → 타이머 카운트다운 → `WaveClearRoutine` → 증강 패널 → 업그레이드 패널 → 다음 wave.
+2. **EnemySpawner** (`Enemy/`) — wave당 적 스폰; GameManager가 정지/재개.
+3. **PlayerController** (`Player/`) — VirtualJoystick 이동, HP, 전투 스탯. 사망 시 `GameManager.TriggerGameOver()`.
+4. **SceneLoadManager** (`Core/`) — `SceneLoadManager.LoadScene("stage@scene")` 로 로딩 오버레이 전환. `loading@scene`을 Additive 로드 → Single 모드 타겟씬 로드 → `GameManager.NotifyStageReady()` 대기 → `SceneLoadingCanvas.ThrowOut()` 연출.
 
-### Player Progression
-- **PlayerStats** (singleton, `DontDestroy => false`) — gold, XP, level. `AddGold` / `SpendGold` / `AddExp` each call `SyncUI()` which updates `GameManager`. Gold and XP are separate from `PlayerController` HP.
-- Level formula: `expToNext = baseExpPerLevel + (level-1) * expGrowthPerLevel`. Max level caps at 20.
-- **PlayerCharacterManager** (singleton, `DontDestroy => true`, persists home→game) — stores equipped character ID + augment tier in `PlayerPrefs`. `ApplyCharacterStats()` is called at game scene start (before `ImprovManager` init) to apply base stats and cumulative tier bonuses (Tiers 1–3 from `DB_캐릭터` `f_속성1ID`/`f_S1` …). Grade-based base stats: C=100/10/10, B=150/20/20, A=200/30/30, S=250/50/50, SS=300/70/70 (HP/DEF/ATK). Character sprite loaded from `Resources/Character/{캐릭ID.ToLower()}`.
+### Wave 타이머 규칙
+일반 웨이브: 1~9=20s, 11~19=30s, 21~29=35s. 보스 웨이브: `bossWaveTimeLimit=90s`.
 
-### Player Stat System
-Central hub for all 14 character combat stats, separate from `PlayerStats` (gold/XP/level).
+---
 
-- **`StatType`** (enum) — `ATK, DEF, MaxHP, BleedPower, HPRegen, MoveSpeed, MagnetRadius, AtkSpeed, Evasion, CritChance, CritDmg, StructureCooldown, Knockback, HealOnKill`
-- **`PlayerStatManager`** (singleton, `DontDestroy => true`) — holds `baseXxx` SerializeFields + `_pctMods[]` + `_equipFlat[]` arrays. `AddPctMod(stat, pct)` accumulates % bonuses. `SetEquipFlat(stat, value)` / `ResetEquipFlat()` manage flat equipment bonuses. Final value formula: `(base + equipFlat) × (1 + totalPct / 100)`. Every modification calls `PlayerController.ApplyStatSheet(this)` and `StatPanelUI.Shared?.Refresh()`.
-- **`PlayerController.ApplyStatSheet(PlayerStatManager)`** — called automatically on every mod change; updates `attack`, `defense`, `moveSpeed`, `dodge`, crit fields, `_hpRegenRate`, `_knockbackPower`, `_magnetRadius`. `AtkSpeed` and `StructureCooldown` are read by their respective systems via `PlayerStatManager.Shared.GetFinal()`.
-- **`StatPanelUI`** (singleton, `DontDestroy => false`) — popup that collects all child `StatFieldUI` components at Awake and calls `field.Refresh(sm)` on show/update.
-- **`StatFieldUI`** — attach to each stat row GameObject; set `statType` in Inspector; auto-finds child `stat_value` (TextMeshProUGUI).
+## Player System (`Player/`)
 
-**Augment % convention (`DB_증강`):** `f_주수치` = primary % bonus, `f_보조수치` = secondary. Example: `AUG_ATK` 주수치=10 → `+10%` attack. `AUG_HEAL` 주수치=20 → instant heal `MaxHP × 20%`. `AUG_SKL` sends `-주수치%` to reduce StructureCooldown.
+### PlayerStatManager
+14개 전투 스탯의 중심 허브. `PlayerStats` (골드/XP/레벨)와 별개.
 
-### Equipment System
-Persistent across home→game scenes. All files in [Assets/Scripts/Game/](Assets/Scripts/Game/).
+- **`StatType`** enum — `ATK, DEF, MaxHP, BleedPower, HPRegen, MoveSpeed, MagnetRadius, AtkSpeed, Evasion, CritChance, CritDmg, StructureCooldown, Knockback, HealOnKill`
+- `AddPctMod(stat, pct)` — % 보너스 누적. `SetEquipFlat(stat, value)` — 장비 플랫 보너스.
+- 최종값 공식: `(base + equipFlat) × (1 + totalPct / 100)`
+- 수정마다 `PlayerController.ApplyStatSheet(this)` + `StatPanelUI.Shared?.Refresh()` 호출.
 
-- **`EquipmentData`** — runtime copy of a `DB_장비` row. Static `FromDB(row)` builder, `StatIdToType(statId)` maps DB stat IDs (`STAT_ATK` etc.) to `StatType`. Categories: `RING/NECK/FOOT/TOP/CLOAK/HEAD`. Icon loaded from `Resources/Equip/{CivEng}/{Category}/{equipId.lower()}`.
-- **`EquipmentInventory`** (singleton, `DontDestroy => true`) — 6 fixed category-based slots (`equipSlots[0]=RING … [5]=HEAD`, index = `(int)EquipCategory`) + unlimited bag. `EquipFromBag(data)` places item in its category slot, displaces existing item to bag. `UnequipToBag(data)` by category slot. Every change calls `RecalculateEquipStats()` → `PlayerStatManager.SetEquipFlat()`.
-- **`EquipmentGacha`** — static class. `Draw(EquipBoxType)` / `DrawMulti(count, EquipBoxType)`. Reads weights and pity from `DB_확률` (keyed by `f_가챠타입`). Three box types: `Normal` (EQ_NORMAL), `Rare` (EQ_RARE), `Epic` (EQ_EPIC). Epic box has two-tier pity (epic pity / legendary pity) via static `_pityCount[3][2]` counters. Falls back to hardcoded weights if DB row missing.
-- **`GachaDrawButton`** — reads unit cost from `DB_상점` (`f_상품ID` match), computes multi-draw price as `unitCost × (n−1)` (1 free). Routes click to `HomeShopPanel.TryDrawMulti()`.
-- **`GachaResultPopup`** — overlay that reparents to root Canvas on open. Shows single or multi-draw results.
-- **`EquipmentDetailPopup`** — shown on bag/equip slot click; "장착" calls `EquipmentInventory.EquipFromBag()`, "장착 해제" calls `UnequipToBag()`.
-- **`EquipmentSlotView`** — reusable slot UI; `Bind(data, callback)` updates icon/grade frame and wires click. `StartSpin(degreesPerSecond)` / `StopSpin()` activate a spin Image overlay (gacha result popup 전용).
+**배치 모드 (여러 스탯 한번에 변경 시 필수):**
+```csharp
+sm.BeginBatch();
+sm.SetBase(StatType.MaxHP, hp);
+sm.AddPctMod(StatType.ATK, pct);
+sm.EndBatch();  // 이 시점에 ApplyStatSheet 1회 실행
+```
+`GameManager.Start()`의 캐릭터 스탯 + 기물 시너지 적용이 이 패턴을 따름.
 
-**DB stat ID → StatType mapping:**
+### PlayerController
+- `ApplyStatSheet(PlayerStatManager)` — 자동 호출됨. `attack`, `defense`, `moveSpeed`, `dodge`, crit, `_hpRegenRate`, `_knockbackPower`, `_magnetRadius` 갱신.
+- 방어 공식: `damage × (1 - defense/100)`. DEF=10 → 10% 감소.
+- `SetSynergyBonus(atk, def, speed, maxHp, bleed, crit)` — `SynergyEffectManager`에서 호출.
+- 사망 시 `StopAllCoroutines()` + `Instance = null` (씬 재로드 stale 참조 방지).
+
+### PlayerStats
+골드/XP/레벨 관리 (`DontDestroy => false`). `AddGold` / `AddExp` → `SyncUI()` → GameManager 업데이트.
+- 레벨 공식: `expToNext = baseExpPerLevel + (level-1) × expGrowthPerLevel`. 최대 레벨 20.
+
+### StatPanelUI / StatFieldUI
+`StatPanelUI` (`DontDestroy => false`) — Awake에 모든 자식 `StatFieldUI` 수집, `Show()`/`Refresh()` 시 `field.Refresh(sm)` 호출.
+`StatFieldUI` — Inspector에서 `statType` 설정; 자식 `stat_value` (TextMeshProUGUI) 자동 탐색.
+
+---
+
+## Character System (`Character/`)
+
+### PlayerCharacterManager
+`DontDestroy => true`, 홈→게임 씬 유지. `PlayerPrefs`에 장착 캐릭터 ID + 증강 티어 저장.
+
+`ApplyCharacterStats()` — 게임 씬 시작 시 1회 호출 (배치 모드 내에서). 등급 기반 기초 스탯 (C=100/10/10, B=150/20/20, A=200/30/30, S=250/50/50, SS=300/70/70 HP/DEF/ATK) + 누적 티어 보너스 적용. 캐릭터 스프라이트: `Resources/Character/{캐릭ID.ToLower()}`.
+
+`CharacterSkillManager.Initialize(skillId)` 호출 → 캐릭터별 스킬 로드.
+
+### CharacterSkillBase / CharacterSkillManager
+캐릭터 고유 스킬 시스템.
+
+- **`CharacterSkillBase`** — abstract. `SkillId`, `Activate()`, `Deactivate()`, `duration`, `pointsRequired`.
+- **`CharacterSkillManager`** (`DontDestroy => false`) — 적 처치 시 `AddPoint(1)` 호출. 게이지 충전 시 자동 발동 (`OnGaugeFull` → `TryActivate`). 프리팹: `Resources/Skills/{skillId.ToLower()}.prefab`.
+- 구현체: `SkillBerserker` (공격속도 +%), `SkillNormal` (공격속도 ×1.5).
+
+**호출 경로:** `EnemyController.Die()` → `CharacterSkillManager.Shared?.AddPoint(1)`
+
+---
+
+## Enemy System (`Enemy/`)
+
+### EnemyController
+- `static List<EnemyController> All` — 오브젝트 풀 패턴. `WakeFromPool()`에서 `All.Add`, `SleepToPool()`에서 스왑백 제거.
+- `OnDeath` 이벤트 — `BossController`, `SynergyEffectManager` 등에서 구독.
+- HP/데미지 성장: 스테이지 델타와 웨이브 내 델타를 분리 계산 (`EnemySpawner`, `SpawnMarker` 참조).
+
+### EnemyBehaviourBase
+추상 기반. 오버라이드: `OnAttackUpdate()` (Update), `OnMoveFixedUpdate()` (FixedUpdate), `ApplyWaveScaling(float)`.
+
+구현체: `MeleeBehaviour`, `RangedBehaviour`, `MagicBehaviour`, `HealerBehaviour`, `TankBehaviour`, `ChargeBehaviour`, `SlamBehaviour`, `HordeBehaviour`, `DashComboBehaviour`.
+
+### ChapterRosterSO
+ScriptableObject (`Assets/Data/`). 챕터별 일반 적 스폰 항목(가중치/minWave/maxWave), 보스 프리팹, `WaveSpawnRule` 목록. **`MuAge/Enemy Preset Editor`** 창으로 편집.
+
+---
+
+## Boss System (`Boss/`)
+
+`BossController` / `BossBehaviour` — 적 패턴과 동일한 구조. 보스 스킬은 `BossSkillBase`를 상속:
+
+| 스킬 | 클래스 |
+|------|--------|
+| 슬램 | `BossSlamSkill` |
+| 돌진 | `BossChargeSkill` |
+| 대시 콤보 | `BossDashComboSkill` |
+| 연속 베기 | `BossComboSlashSkill` |
+| 일제 사격 | `BossVolleySkill` |
+| 고속 추격 | `BossFastChaseSkill` |
+| 투사체 사이클 | `BossProjectileCycleSkill` (직선연사→추격→부채꼴→추격 반복) |
+
+**BossIntroSequence 타이밍**: `CurrentBossEnterPoint`는 `WaveEnvironmentSwitcher.SetBoss()` 이후에만 유효.
+
+보스 웨이브: `GameManager`가 `DB_웨이브` (`f_보스`)로 확인 → `StartBossWave()` → `WaveEnvironmentSwitcher` → 처치 후 `OnBossDefeated()` → `WaveClearRoutine` 재개.
+
+---
+
+## Weapon System (`Weapon/`)
+
+- **WeaponData** — `DB_무기`에서 로드된 런타임 데이터.
+- **PlayerInventory** (singleton) — 인벤토리(bag) + 장착 슬롯(최대 6). `OnChanged` 이벤트.
+- **WeaponManager** — `PlayerInventory.OnChanged` 구독, `weaponAnchors` 하위에 무기 프리팹 인스턴스화.
+- **WeaponPoint** — 무기 프리팹에 부착된 공격 로직.
+  - 보스 감지: `TryGetComponent` → `GetComponentInParent` (자식 콜라이더 대응).
+  - `MultiplyAttackSpeed(mult)` / `SetStatSpeedPct(pct)` — 캐릭터 스킬에서 속도 조작.
+
+### Wave-Clear Screens (순서)
+1. **ImprovManager/ImprovPanel** (`Augment/`) — `DB_증강` 가중치 랜덤 3개. 스탯형 → `PlayerStatManager.AddPctMod()`. AUG_HEAL → `MaxHP × f_주수치%` 즉시 회복.
+2. **UpgradeManager/UpgradePanel** (`GameUI/`) — `DB_무기` 무기 카드 4장. `statPanelButton` → `StatPanelUI.Shared?.Show()`.
+
+**증강 % 규칙:** `f_주수치`=10 → +10% ATK. `AUG_SKL` → `-f_주수치%` StructureCooldown.
+
+### Weapon Synergy (`Weapon/`)
+- **WeaponSynergyTag** (enum) + `DB_시너지` 챕터별 행 (f_SY1~4, f_S1~4).
+- **SynergyHelper** — `CountEquippedTag(tag)`, `TagToID(tag)`. 티어: 1개=동, 3개=은, 5개=금.
+- **SynergyEffectManager** (singleton, `DontDestroy => false`) — `PlayerInventory.OnChanged` 구독 → `RecalculateSynergies()`. `PlayerController.SetSynergyBonus()` + `PlayerStats.SetSynergyBonus()` 호출.
+- `SynergyStat` enum: `Attack, Defense, MoveSpeed, MaxHP, GoldBonus, ExpBonus, BleedBonus, CritBonus`.
+
+**태그 → 스탯 기본 매핑:** 야수=ATK, 채집=ExpBonus, 사냥꾼=BleedBonus, 지혜=CritBonus.
+
+---
+
+## Structure / Ware System (`Structure/`)
+
+### 인게임 기물 (StructureInventory)
+`DontDestroy => false`, 최대 4슬롯. 같은 ID 스태킹.
+- `Push(DB_기물)` — 오브 픽업 시. `UseAt(slot, pos)` — 배치.
+- 스폰: `Resources/Ware/{Chapter}/{id.lower()}_s.prefab`.
+
+### 아웃게임 기물 컬렉션 (StructureWareManager)
+`DontDestroy => true`, `PlayerPrefs` 저장.
+- 강화: 카드 수집으로 레벨업 (최대 Lv.20). Lv.1-5: 2장/레벨, 6-10: 3장, 11-15: 4장, 16-19: 5장.
+- 수치 공식: `f_주수치 × (1 + (level-1) × 0.15)`. Lv.20 = ×3.85.
+- 합성: 같은 시대 카드 3장→다음시대 1개, 5장→2개, 10장→5개. C7은 같은 시대 폴백.
+- 프리셋: 4슬롯. 인게임 시작 시 `StructureInventory`에 로드.
+- `EraOf(id)` — `"C1_W0" → "C1"`. `EraName("C1")` → `"구석기"`.
+- 아이콘: `Resources/Ware/{chapter}/{id.ToLower()}_icon`.
+
+### 기물 가챠 (StructureGacha)
+`WareBoxType`: `Normal` (SKL_NORMAL), `Epic` (SKL_EPIC). 챕터 1~현재 풀. Epic 뽑기: 5% 확률 다음 챕터 기물.
+
+### 기물 시너지 (WareSynergySystem + StructureSynergyFlags)
+`WareSynergySystem.ApplySynergies()` — 게임 씬 시작 1회 호출. 프리셋 태그+시대 시너지 적용.
+
+**역할 태그 시너지 (3개 이상):**
+| 태그 | 효과 |
+|------|------|
+| CC | `StructureSynergyFlags.CCSynergyActive = true` → 15% 확률 보스 그로기 |
+| 버스트 | ATK +25% |
+| 지속 | HPRegen +5% |
+| 버프 | ATK +20% |
+| 둔화 | `StructureSynergyFlags.SlowSynergyBonus = 0.30f` |
+
+**시대 시너지:** 동일 시대 2개=쿨타임-15%, 4개=쿨타임-30%+수치+20%, 2시대 혼합=HPRegen+3%, 3시대=쿨타임-20%, 4시대=ATK+50%.
+
+`StructureSynergyFlags` — static 플래그. `Reset()`은 반드시 씬 시작 전 호출.
+
+### 기물 스킬 (`Structure/`)
+`StructureSkillBase` — abstract. `mainValue`, `subValue`, `radius`, `tickInterval`. `Activate()` → `StructureController.Start()`에서 호출.
+
+- **`isInstallation` bool** — `false`면 `StructureController`가 `Activate()` 후 모든 SpriteRenderer 비활성화.
+- **`StructureController.Duration`** — public. `MeteorSkill` 등에서 interval 계산에 사용.
+- **`OnDestroy()` 규칙** — 전역 상태(Light2D 등) 수정 시 `OnDestroy()`에서 복구 필수.
+
+| 스킬 | 클래스 |
+|------|--------|
+| 메테오 | `MeteorSkill` — 뷰포트 내 랜덤 낙하, GlobalLight 어둡게, OnDestroy에서 즉시 복구 |
+| 번개 | `ThunderSkill` |
+| 얼음 | `IceSkill` — `FreezeEnemy()` 정적 코루틴으로 외부 재사용 가능 |
+| 돌벼락 | `StoneThunderSkill` |
+| 둔화 | `SlowSkill` — `StructureSynergyFlags.SlowSynergyBonus` 배율 적용 |
+| 돌창토템 | `StoneTotemSkill` — 방사형 투사체, `OnDestroy()`에서 미비행 투사체 전부 제거 |
+| 화염 확산 | `FireSpreadSkill` |
+| 치유 구역 | `HealZoneSkill` |
+| 방어벽 | `FenceSkill` |
+| 피해 구역 | `DamageZoneSkill` |
+| 지속 피해 | `DoTSkill` |
+| 방사형 발사 | `RadialShotSkill` |
+| 마비 | `ParalyzeSkill` |
+| 박격포탄 | `MortarShell` |
+
+**기물 드롭:** `ItemDropManager.SpawnStructureOrb` → `DB_기물`을 `f_기물ID.StartsWith($"C{chapter}_")`로 필터.
+**기물 아이콘 프리팹:** `Resources/Ware/{Chapter}/{id.lower()}.prefab`
+
+**시대별 역할 분담:**
+| 시대 | 역할 |
+|------|------|
+| C1 구석기 | CC (빙결·둔화) |
+| C2 중석기 | 광역 버스트 |
+| C3 신석기 | 지속 피해·회복 |
+| C4 중세 | 방어·막기 |
+| C5 근대 | 광역 둔화·함정 |
+| C6 현대 | 버프·생산 |
+| C7 우주 | 고급 디버프·차원 |
+
+---
+
+## Equipment System (`Equipment/`)
+
+`DontDestroy => true`, 홈→게임 씬 유지.
+
+- **`EquipmentData`** — `DB_장비` 런타임 복사본. `StatIdToType(statId)` 매핑. 카테고리: `RING/NECK/FOOT/TOP/CLOAK/HEAD`. 아이콘: `Resources/Equip/{CivEng}/{Category}/{equipId.lower()}`.
+- **`EquipmentInventory`** — 6개 고정 슬롯(카테고리 기반) + 무제한 bag. `EquipFromBag(data)` → `RecalculateEquipStats()` → `PlayerStatManager.SetEquipFlat()`.
+- **`EquipmentGacha`** — `Draw(EquipBoxType)` / `DrawMulti`. 박스: `Normal`(EQ_NORMAL), `Rare`(EQ_RARE), `Epic`(EQ_EPIC). Epic 2단계 pity (`_pityCount[3][2]`).
+
+**DB 스탯 ID → StatType:**
 `STAT_ATK→ATK`, `STAT_DEF→DEF`, `STAT_HP→MaxHP`, `STAT_CRI_DMG→CritDmg`, `STAT_CRI_RATE→CritChance`, `STAT_EVA_RATE→Evasion`, `STAT_SPD_MOV→MoveSpeed`, `STAT_SPD_ATK→AtkSpeed`, `STAT_SKL_CD→StructureCooldown`, `STAT_DOT_DMG→BleedPower`
 
-### Weapon Synergy System
-- **WeaponSynergyTag** (enum) + **`DB_시너지`** table keyed by `f_챕터` — each chapter row holds up to 4 synergy tags with icons/descriptions.
-- **SynergyHelper** — static utility: `CountEquippedTag(tag)` checks `PlayerInventory.Shared.Equipped`, `GetTierColor(count)` returns Bronze/Silver/Gold color thresholds (1/3/5).
-- **SynergyInfoPanel** — UI display of active synergies.
-- **WeaponStatRegistry** — static; lazily loads stat-id templates from `DB_무기` (`f_속성ID` / `f_속성내용`). `ApplyBonus(WeaponData, WeaponStarBonus)` applies percentage-based boosts (`ATK_ADD`, `CD_RED`, `RNG_ADD`, `CRIT_ADD`, `BLEED_ADD`, `LIFESTEAL`).
-- **WeaponStarBonus** — struct holding `statId`, `value`, `description`. Built via `WeaponStatRegistry.Build()`.
+---
 
-### Chapter Roster ScriptableObject
-**ChapterRosterSO** (`Assets/Scripts/Game/ChapterRosterSO.cs`) — ScriptableObject per chapter, stored in `Assets/Data/`. Holds normal-enemy spawn entries (with weight/minWave/maxWave), boss prefab, and `WaveSpawnRule` list. Edit via **`MuAge/Enemy Preset Editor`** window. `GetRuleForWave(wave)` returns the highest-`fromWave` matching rule.
+## Home Scene UI (`HomeUI/`)
 
-### Data / Database
-Uses **BansheeGz** (BgDatabase) for tabular game data. Generated classes in `Assets/BansheeGz/BgData.cs`, namespace `Mewage.DB`. All scripts that use DB classes need `using Mewage.DB;`.
+씬 파일 (`_Recovery/home@scene.unity`)은 **절대 직접 편집 금지**. Editor 도구 사용.
 
-Key tables:
+- **`Tools/Build Home UI`** — HomeUICanvas, 5개 패널(상점·대원·전투·장비·기물), TabBar 생성. **HomeUIManager** 부착.
+- **`Tools/Build Equipment Panel`** — Panel_장비에 캐릭터 뷰 + 6개 장비 슬롯 + 내부 탭바 + 인벤 그리드 생성.
+- **HomeUIManager** — `panels[]` + `tabButtons[]`, `ShowTab(index)`. `StartGame()` → `stage@scene` 로드.
+- **HomeMemberPanel** — 캐릭터 목록. `CharacterSlotView` 각 슬롯. `CharacterGradeColor`로 등급 배경색.
+- **HomeShopPanel** — 장비 가챠/IAP. `EquipmentGacha.Draw/DrawMulti`, `GachaDrawButton`, `GachaResultPopup`.
+- **HomeEquipPanel** — `EquipmentInventory.Shared`에서 장비 슬롯 시각화. `equipSlots[0~5]` Inspector 연결 필수.
+- **HomeWarePanel** — 기물 패널. 프리셋 탭(4슬롯) ↔ 합성 탭(10 재료슬롯) 전환. `WareSynergySystem` 시너지 미리보기. `StructureWareManager.TrySynthesize()` 호출.
+- **StageSelectPanel** — 스테이지 카드 캐러셀. `OnStartClicked()` → `PlayerPrefs.SetString("SelectedChapterID", ...)` 저장 후 `SceneLoadManager.LoadScene("stage@scene")`.
+- **HomeUserInfoBar** — 상단 유저 정보 바 (레벨, EXP, 재화).
+
+---
+
+## In-Game UI (`GameUI/`)
+
+- **UpgradeManager/UpgradePanel/UpgradeCard** — 무기 상점. `statPanelButton` → `StatPanelUI.Shared?.Show()`.
+- **GameOverPanel** — 부활 카운트다운. 종료 시 `GameOverResultPanel.Show(wave)`.
+- **GameClearPanel** — 최종 보스 처치 후. 획득 EXP/골드, 아웃게임 EXP 슬라이더 표시. 팝인 애니메이션.
+- **StatPanelUI / StatFieldUI** — 전투 스탯 팝업.
+- **DebugPanel** — `GameManager.DebugSkipWave()`, `DebugJumpToBossWave()`. Inspector 연결 메서드는 `public` 필수.
+
+---
+
+## VFX (`VFX/`)
+
+- **FXManager** — 풀링. `_prefabScales` 딕셔너리로 프리팹별 원본 스케일 캐시.
+- **GlobalLightDimmer** — static. 레퍼런스 카운트 방식으로 여러 스킬이 동시에 조명 어둡게 할 때 충돌 없이 관리. `Register()` / `Release()` / `SetIntensity()`.
+  - 사용법: 스킬 시작 시 `GlobalLightDimmer.Register()`, 종료/파괴 시 `GlobalLightDimmer.Release()`.
+
+---
+
+## Data / Database
+
+**BansheeGz** (BgDatabase). 생성 클래스: `Assets/BansheeGz/BgData.cs`, 네임스페이스 `Mewage.DB`. DB 클래스 사용 스크립트에 `using Mewage.DB;` 필수.
+
 | 테이블 | 주요 필드 | 용도 |
 |--------|----------|------|
 | `DB_장비` | `f_장비ID`, `f_카테고리`, `f_등급`, `f_스탯ID`, `f_수치`, `f_문명` | 장비 아이템 |
+| `DB_기물` | `f_기물ID` (형식: `C1_W0`), `f_등급`, `f_주수치`, `f_역할` | 기물 카드 |
 | `DB_확률` | `f_가챠타입`, `f_G일반/레어/에픽/전설`, `f_필중횟수(List<int>)` | 뽑기 확률 |
-| `DB_상점` | `f_상품ID`, `f_가격`, `f_수량`, `f_행수`, `f_챕터상품ID`, `f_T1~T4`, `f_V1~V4` | 상점 상품 |
-| `DB_기물` | `f_기물ID` (형식: `C1_W0`), `f_등급`, `f_설명` | 기물 |
+| `DB_상점` | `f_상품ID`, `f_가격`, `f_수량` | 상점 상품 |
 | `DB_무기` | `f_무기ID`, `f_등급`, `f_속성ID/내용` | 무기 |
 | `DB_증강` | `f_증강ID`, `f_주수치`, `f_보조수치` | 증강 |
-| `DB_캐릭터` | `f_캐릭ID`, `f_등급`, `f_속성1ID`, `f_S1` | 캐릭터 |
+| `DB_캐릭터` | `f_캐릭ID`, `f_등급`, `f_속성1ID`, `f_S1`, `f_스킬ID` | 캐릭터 |
+| `DB_시너지` | `f_챕터`, `f_SY1~4`, `f_S1~4(List<int>)` | 무기 시너지 등급별 수치 |
 | `DB_웨이브` | `f_보스` | 보스 웨이브 번호 |
 
-### Structure System
-Tower/placement system. Key classes all in [Assets/Scripts/Game/](Assets/Scripts/Game/):
-- **StructureInventory** — singleton (`DontDestroy => false`), max 4 slots, stacking same type. `Push(DB_기물)` on orb pickup, `UseAt(slot, pos)` to deploy. Spawns `Resources/Ware/{Chapter}/{id.lower()}_s.prefab` (e.g., `C1_W0 → Ware/C1/c1_w0_s`).
-- **StructurePlacer** — handles launch animation (parabolic arc) from UI button → world position.
-- **StructureZone** — grid-snap placement area using `BoxCollider2D`. `TryGetNearestCell()` / `OccupyCell()` / `ReleaseCell()`.
-- **StructureOrb** — enemy-drop collectible; auto-magnets to player after delay, calls `StructureInventory.Push()` on collision.
+**무기 상점 특정 등급 안 나올 때**: `DB_확률` 해당 타입 행의 등급 확률 필드가 0인지 확인. BansheeGz 에디터에서 직접 수정.
 
-#### Structure Skill Extension
-`StructureSkillBase` — abstract base. Fields: `mainValue` (damage/heal), `subValue` (secondary), `radius`, `tickInterval`. Implement `Activate()` which is called by `StructureController.Start()`.
-
-- **`isInstallation` bool** (`[SerializeField] protected bool isInstallation`) — if `false`, `StructureController` immediately disables all child `SpriteRenderer`s after `Activate()`. Set `true` for skills that need persistent visuals (FireSpreadSkill, StoneTotemSkill).
-- **`StructureController.Duration`** — public property exposing the duration field. Skills that auto-complete (MeteorSkill) read this to divide work evenly within the lifespan.
-- **`OnDestroy()` cleanup rule** — any skill that spawns objects or modifies global state (e.g., `Light2D.intensity`) must implement `OnDestroy()` to restore state, because `StructureController` destroys the GameObject when duration expires, killing all coroutines mid-run.
-
-Concrete skills (all extensible — freeze/slow/projectile patterns reusable by other skills):
-| 스킬 | 클래스 | 동작 |
-|------|--------|------|
-| 메테오 | `MeteorSkill` | `Camera.main` 뷰포트 내 랜덤 위치에 운석 낙하. `StructureController.Duration`으로 interval 자동 계산. 시작/종료 시 Global Light2D 어둡게. `OnDestroy`에서 조명 즉시 복구 |
-| 번개 | `ThunderSkill` | 모든 적 위치에 번개 스폰 (적 자식으로 부착 → 적 사망 시 자동 소멸). Global Light2D 페이드 |
-| 얼음 | `IceSkill` | **살아있는 모든 적** (`FindObjectsByType<EnemyController>`)에 필중 동결. `GetComponentInChildren<SpriteRenderer>()` 로 색상 변경. `IceSkill.FreezeEnemy()` 정적 코루틴으로 다른 스킬에서 재사용 가능 |
-| 돌벼락 | `StoneThunderSkill` | 돌이 좌→우로 굴러가며 맞은 적에게 피해 + 방향으로 밀침(Rigidbody2D AddForce) |
-| 둔화 | `SlowSkill` | 범위 내 적 이동속도 subValue% 감소, subValue 초 지속 |
-| 돌창토템 | `StoneTotemSkill` | 설치 후 일정 주기로 projectileCount개 방사형 투사체 발사. `_activeProjectiles` 목록 관리 → `OnDestroy` 시 미비행 투사체 전부 제거 |
-
-기물 아이콘 프리팹: `Resources/Ware/{Chapter}/{id.lower()}.prefab`
-설치 프리팹: `Resources/Ware/{Chapter}/{id.lower()}_s.prefab`
-
-**기물 드롭 (`ItemDropManager.SpawnStructureOrb`)**: `DB_기물`을 `f_기물ID.StartsWith($"C{currentChapter}_")`로 필터, 아이콘/오브 프리팹은 `Resources/Ware/C{chapter}/{id.ToLower()}` 경로로 `Resources.Load`.
-
-#### 기물 장기 설계 (확립된 방향)
-
-**챕터 구성**: 구석기·중석기·신석기·중세·근대·현대·우주 (7챕터). 챕터당 기물 4개, 총 28개. 개발 순서는 3챕터씩 검증 후 확장.
-
-**시대별 역할 분담** — 각 시대가 고유 역할을 담당해 신챕터에서도 구형 기물이 필요하도록 설계:
-| 시대 | 역할 |
-|------|------|
-| 구석기 | CC (빙결·둔화) |
-| 중석기 | 광역 버스트 |
-| 신석기 | 지속 피해·회복 |
-| 중세 | 방어·막기 |
-| 근대 | 광역 둔화·함정 |
-| 현대 | 버프·생산 |
-| 우주 | 고급 디버프·차원 |
-
-**범용성**: 모든 기물은 모든 챕터에서 사용 가능. `StructureSkillBase.Activate()` 전에 웨이브 배율(`1f + wave * 0.05f`)을 `mainValue`에 적용해 스탯이 챕터에 뒤처지지 않게 유지.
-
-**강화 시스템**: 동일 기물 3개 합성 → ★ 상승 (★1~★3). 스탯 수치만 증가, 외형 스프라이트 교체 없음. ★ 등급별로 머티리얼/쉐이더 테두리 글로우 색상만 변경 (★1=기본, ★2=골드 글로우, ★3=퍼플 글로우). `DB_기물`에 `f_강화등급`, `f_S1/S2/S3`(등급별 수치) 필드 추가.
-
-**아웃게임 프리셋 시너지**: 아웃게임 기물 패널에서 4슬롯 구성 시 시대 조합에 따라 시너지 효과 미리보기 표시. 동일 시대 2개=쿨타임-15%, 4개=쿨타임-30%+수치+20%, 2시대 혼합=체력회복, 3시대=전역쿨타임-20%, 4시대("시대의 수렴")=전체+50%. 시너지는 인게임 시작 시 `PlayerStatManager`에 1회 반영.
-
-**잉여 기물 처리**: 합성 재료 우선. 합성 불가 잉여분은 골드로 분해.
-
-**가챠 풀**: 아웃게임 상점에 시대별 캡슐 분리 (`DB_확률` `f_가챠타입` = `EQ_WARE_C1` 등). 현재 챕터 캡슐 외 과거 챕터 캡슐도 항상 구매 가능.
-
-### Boss Waves
-GameManager queries `DB_웨이브` (field `f_보스`) to find boss wave numbers. On boss wave: `StartBossWave()` freezes timer, calls `WaveEnvironmentSwitcher`. After defeat: `OnBossDefeated()` resumes `WaveClearRoutine`.
-
-### Home Scene (`Assets/_Recovery/Home.unity`)
-Lobby screen built via Editor tools — do **not** hand-edit the scene file.
-
-- **`Tools/Build Home UI`** — creates `HomeUICanvas` with 5 panels (상점·대원·전투·장비·기물) and a bottom `TabBar`. Attaches **HomeUIManager** to the canvas. `Panel_전투` is active by default; others start inactive.
-- **`Tools/Build Equipment Panel`** — populates `Panel_장비` with character view, 6 equip slots (left 3 / right 3), inner tab bar (장비/성물), and a scrollable inventory grid. Attaches **HomeEquipPanel**.
-- **HomeUIManager** (`Assets/Scripts/Game/HomeUIManager.cs`) — owns `panels[]` + `tabButtons[]`, calls `ShowTab(index)`. `StartGame()` loads `stage@scene`.
-- **HomeEquipPanel** (`Assets/Scripts/Game/HomeEquipPanel.cs`) — drives equip slot visuals from `EquipmentInventory.Shared`. `equipSlots[0~5]` must be wired in Inspector matching category order (RING=0 … HEAD=5).
-- **HomeMemberPanel** (`Assets/Scripts/Game/HomeMemberPanel.cs`) — character roster panel with 캐릭터/룬 tabs. Each slot is a **CharacterSlotView** that binds `DB_캐릭터`; owned/unowned state toggles equip vs. buy button. On `Select()`, equip button text changes to **"장착중"** if `PlayerCharacterManager.Shared.EquippedCharID == data.f_캐릭ID`. **CharacterGradeColor** maps `f_등급` (S/A/B/C) to slot background color.
-- **HomeShopPanel** (`Assets/Scripts/Game/HomeShopPanel.cs`) — gacha/IAP shop. Calls `EquipmentGacha.Draw()` / `DrawMulti()`, adds results to `EquipmentInventory`. **GachaDrawButton** reads price from `DB_상점` and wires itself to `TryDrawMulti()` via parent lookup. **GachaResultPopup** overlay reparents itself to the root Canvas on open.
-- **StageSelectPanel** (`Assets/Scripts/Game/StageSelectPanel.cs`) — carousel of stage cards (`StageCardView`) with dot indicators and snap animation. `OnStartClicked()` loads `stage@scene`.
-
-### Editor Tools
-[Assets/Scripts/Editor/SceneToolMenu.cs](Assets/Scripts/Editor/SceneToolMenu.cs) adds a Unity toolbar with quick-launch buttons for `home@scene`, `loading@scene`, `stage@scene`, and `dev@*` scenes.
-
-[Assets/Scripts/Editor/HomeUIBuilder.cs](Assets/Scripts/Editor/HomeUIBuilder.cs) — editor-only scene builders for the Home UI. `BuildGachaCardRow()` creates a 2-column HLG row with Normal/Rare gacha cards side-by-side.
-
-### Enemy System
-- **EnemyBehaviourBase** — abstract base; subclass to add new enemy types. Requires `EnemyController` on the same prefab. Overridable hooks: `OnAttackUpdate()` (Update), `OnMoveFixedUpdate()` (FixedUpdate), `ApplyWaveScaling(float)`.
-- Concrete behaviors: `MeleeBehaviour`, `RangedBehaviour`, `MagicBehaviour`, `HealerBehaviour`, `TankBehaviour`, `ChargeBehaviour`, `SlamBehaviour`, `HordeBehaviour`, `DashComboBehaviour`.
-- **BossController / BossBehaviour** — boss variant of the same pattern. Boss skills extend `BossSkillBase`: `BossSlamSkill`, `BossChargeSkill`, `BossDashComboSkill`, `BossComboSlashSkill`, `BossVolleySkill`.
-
-### Sound & FX
-- **SoundManager** (singleton) — `SoundManager.Shared.Play(SoundKey)`. Keys defined in `SoundKey.cs` enum. Key-clip pairs registered via Inspector. `minInterval` prevents rapid duplicate plays.
-- **FXManager** — pooled visual effects spawned on hit/death etc.
-- `UIButtonSound` — component for button click SFX, attaches to UI buttons.
-- **`UIButtonSoundAutoAttach`** — attach to a Canvas root to auto-wire all child `Button`s with click SFX via `btn.onClick.AddListener`. **Do not use `IPointerClickHandler` for sound on buttons** — it fires once per collider in the hierarchy causing duplicate sounds. `onClick.AddListener` fires exactly once per click.
-
-### Debug Panel
-[Assets/Scripts/Game/DebugPanel.cs](Assets/Scripts/Game/DebugPanel.cs) — in-game debug UI. Calls `GameManager.DebugSkipWave()` and `GameManager.DebugJumpToBossWave()`. Methods on DebugPanel that are connected via Inspector Button OnClick must be `public`.
-
-## Key Packages
-- **UniTask** (`com.cysharp.unitask`) — preferred async library; use `UniTask` instead of `Task`/coroutines for async flows.
-- **BansheeGz BgDatabase** — tabular game data; not in the standard package manifest (installed separately). Generated class namespace: `Mewage.DB`.
-- **Unity URP** — Universal Render Pipeline; shaders must target URP.
-- **Cinemachine** — camera follow system; `CameraFollow.cs` wraps it for the game camera.
-- **Unity Input System** — `VirtualJoystick` uses the new Input System package.
-
-## Key Conventions
-- Singletons accessed via `.Shared`; `PlayerController` / `WeaponManager` use `.Instance`.
-- UI updates go through GameManager public methods (`UpdateHP`, `UpdateGoldUI`, `UpdateExpUI`).
-- `Time.timeScale = 0f` to pause during panels; restore to `1f` on close.
-- Scene reload for restart: `SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex)`.
-- Scene transitions with loading screen: `SceneLoadManager.LoadScene("stage@scene")` — automatically overlays `loading@scene`, waits for load, then animates out. `loading@scene` must be registered in Build Settings.
-- Debug logging helpers `this.DLog` / `this.DError` are extension methods from [Assets/Scripts/Extension/StringExtension.cs](Assets/Scripts/Extension/StringExtension.cs).
-- Methods called by Unity Inspector Button OnClick events must be `public` — private methods are not invokable from the Inspector event system.
-- **Editor scripts searching for inactive GameObjects** must use `Resources.FindObjectsOfTypeAll<GameObject>()` filtered by `go.scene`, not `GameObject.Find()` (which skips inactive objects).
-- Scene files follow the `name@scene` naming convention (e.g., `home@scene.unity`, `stage@scene.unity`).
-- `MainMenuHud.cs` lives in `Assets/` root (not `Assets/Scripts/Game/`); exit logic uses `Application.Quit()` in builds and `EditorApplication.isPlaying = false` in editor.
-- **Global Light2D 어둡게 패턴**: `Object.FindObjectsByType<Light2D>(FindObjectsSortMode.None)`로 탐색 후 `l.lightType == Light2D.LightType.Global` 체크. `using UnityEngine.Rendering.Universal;` 필요. 조명을 변경하는 스킬은 반드시 `OnDestroy()`에서 `intensity = 1f`로 복구.
-- **무기 상점에서 특정 등급이 안 나올 때**: `DB_확률`에서 해당 타입 행의 등급별 확률 필드(`f_에픽` 등)가 0인지 확인. BansheeGz 에디터에서 직접 수정 필요.
-- **`StructureInventory.Push()` 스태킹**: 동일 `f_기물ID`인 슬롯이 있으면 count 증가, 없으면 새 슬롯 생성.
+---
 
 ## Memory Management Conventions
 
-메모리 누수 방지를 위한 프로젝트 규약. 새 컴포넌트 작성 시 반드시 준수.
-
 ### 이벤트 구독 규칙
-- `+=` 구독은 반드시 대칭하는 `-=` 해제가 있어야 함
-- **생명주기별 패턴**:
-  - `Awake/Start`에서 구독 → `OnDestroy`에서 해제
-  - `OnEnable`에서 구독 → `OnDisable`에서 해제 (패널·팝업류)
-- static 이벤트나 싱글톤 이벤트(`PlayerInventory.OnChanged`, `BossController.OnEnraged` 등)는 특히 주의 — 구독 오브젝트가 파괴되어도 이벤트 홀더가 살아있으면 참조가 남음
-- 수정 이력: `BossBehaviour`, `BossPatternBehaviour` → `OnDestroy`에서 `boss.OnEnraged -= ...`, `BossController` → `OnDestroy`에서 `enemy.OnDeath -= ...`
+- `+=` 구독 → 반드시 대칭 `-=` 해제.
+- `Awake/Start` 구독 → `OnDestroy` 해제.
+- `OnEnable` 구독 → `OnDisable` 해제 (패널·팝업류).
+- static 이벤트 / 싱글톤 이벤트 (`PlayerInventory.OnChanged`, `BossController.OnEnraged`) 특히 주의.
 
 ### static 컬렉션 규칙
-- static `List`/`Dictionary`에 오브젝트를 추가할 때는 반드시 제거 경로를 쌍으로 작성
-- 오브젝트 풀을 사용하는 경우: 풀에서 꺼낼 때(Wake) 추가, 풀로 돌려보낼 때(Sleep) 제거, `OnDestroy`는 안전망으로만 사용
-- 예시: `EnemyController.All` — `WakeFromPool()`에서 `All.Add`, `SleepToPool()`에서 `AllRemoveSwapBack`, `OnDestroy`에서 안전망 제거
+- `EnemyController.All` 패턴: `WakeFromPool()` → `All.Add`, `SleepToPool()` → 스왑백 제거, `OnDestroy` → 안전망.
 
 ### 코루틴 규칙
-- 무한 루프(`while(true)`) 코루틴은 반드시 `OnDestroy`에서 `StopAllCoroutines()` 또는 개별 `StopCoroutine()` 호출
-- `static Instance` 패턴의 싱글톤은 `OnDestroy`에서 `Instance = null`도 함께 처리 (씬 재로드 후 stale 참조 방지)
-- 수정 이력: `PlayerController.OnDestroy` — `StopAllCoroutines()` + `Instance = null`
+- 무한 루프 코루틴 → `OnDestroy()`에서 `StopAllCoroutines()`.
+- `static Instance` 싱글톤 → `OnDestroy()`에서 `Instance = null`.
 
-### 동적 GameObject 생성 규칙
-- 런타임에 `new GameObject()` 또는 `Instantiate()`로 생성한 오브젝트는 **오브젝트 풀**로 관리
-- 풀 패턴: `Queue<T> _pool` + `List<T> _active`, 꺼낼 때 `SetActive(true)`, 반환할 때 `SetActive(false)` + `Enqueue`
-- `OnDisable`에서 active → pool 이동, `OnDestroy`에서 pool 전체 `Destroy` (씬 언로드 전 명시적 정리)
-- `List.RemoveAt`은 O(n) — 순서가 중요하지 않으면 스왑백(`list[i] = list[^1]; list.RemoveAt(list.Count-1)`)으로 O(1) 처리
+### 오브젝트 풀 규칙
+- `Queue<T> _pool` + `List<T> _active`. 꺼낼 때 `SetActive(true)`, 반환 시 `SetActive(false)` + Enqueue.
+- `List.RemoveAt` → 순서 무관 시 스왑백으로 O(1) 처리.
 
-### 배치 스탯 변경 규칙
-- `PlayerStatManager.AddPctMod` / `SetBase`는 호출마다 `PlayerController.ApplyStatSheet` + `StatPanelUI.Refresh`를 실행함
-- 여러 스탯을 한꺼번에 변경할 때는 반드시 배치 모드를 사용:
-  ```csharp
-  sm.BeginBatch();
-  sm.SetBase(StatType.MaxHP, hp);
-  sm.AddPctMod(StatType.ATK, pct);
-  // ... 추가 변경
-  sm.EndBatch(); // 이 시점에 ApplyStatSheet 1회 실행
-  ```
-- `GameManager.Start()`의 캐릭터 스탯 + 기물 시너지 적용이 이 패턴을 따름
+### 배치 스탯 변경
+여러 스탯 한번에 변경 시 `BeginBatch()` / `EndBatch()` 필수 (호출마다 `ApplyStatSheet` 실행 방지).
 
 ### Resources.Load 규칙
-- `Resources.Load`는 메인 스레드를 블로킹하는 동기 작업 — 씬 시작 시 대량 호출 금지
-- 동일 경로를 반복 로드할 때는 로컬 필드에 캐시 (`_cachedSprite`, `_cachedSpriteCharId` 등)
-- `DontDestroy => true` 싱글톤에서는 처음 로드 이후 씬 전환을 넘어 캐시가 유지됨
+- 동일 경로 반복 로드 → 로컬 필드에 캐시 (`_cachedSprite` 등).
+- `DontDestroy => true` 싱글톤은 씬 전환 후에도 캐시 유지됨.
 
-## Player Visual Effects
+---
 
-### GhostTrail (`Assets/Scripts/Game/GhostTrail.cs`)
-플레이어 자식 오브젝트에 부착하는 이동 고스트 트레일 컴포넌트.
+## Key Conventions
 
-- `customSprite`가 null이면 부모 `SpriteRenderer` 스프라이트를 자동 복사, 지정하면 해당 스프라이트 사용 (캐릭터별 커스텀 가능)
-- 내부 오브젝트 풀(`Queue<GhostItem>` + `List<GhostItem>`)로 동적 할당 최소화
-- `OnDisable` → active를 pool로 이동 / `OnDestroy` → pool 전체 `Destroy`
-- Inspector 주요 설정: `Spawn Interval`(생성 간격), `Ghost Lifetime`(페이드 시간), `Min Move Dist`(생성 최소 이동거리), `Ghost Color`(색조·초기 투명도)
-
-### Dust Trail (먼지 트레일)
-- `PlayerController`의 `[SerializeField] private ParticleSystem dustTrailEffect` 슬롯에 자식 ParticleSystem 연결
-- 이동 시작 → `Play()`, 정지 시 → `Stop(true, StopEmitting)` (기존 파티클은 자연 소멸)
-- 플레이어 좌우 반전 시 `dustTrailEffect.transform.localScale.x`도 반전 (`FlipSprite()`에서 처리)
+- 싱글톤: `.Shared`. PlayerController/WeaponManager: `.Instance`.
+- DB 클래스: `using Mewage.DB;`.
+- 다중 스탯 변경: `BeginBatch()` / `EndBatch()`.
+- `MainMenuHud.cs`는 `Assets/` 루트. Exit: `Application.Quit()` (빌드), `EditorApplication.isPlaying = false` (에디터).
+- 씬 네이밍: `name@scene.unity`.
+- 씬 전환 (로딩 오버레이): `SceneLoadManager.LoadScene("stage@scene")`.
+- `Time.timeScale = 0f` 패널 일시정지 → 닫을 때 `1f` 복구.
+- Debug 헬퍼: `this.DLog()` / `this.DError()` ([Assets/Scripts/Extension/StringExtension.cs](Assets/Scripts/Extension/StringExtension.cs)).
+- Inspector Button OnClick 타겟 메서드 → `public` 필수.
+- 버튼 SFX: `IPointerClickHandler` 금지 → `UIButtonSoundAutoAttach`의 `onClick.AddListener` 사용.
+- **Global Light2D 어둡게 패턴**: `GlobalLightDimmer.Register()` / `Release()` 사용. 직접 수정 금지.
+- **에디터에서 비활성 GameObject 탐색**: `Resources.FindObjectsOfTypeAll<GameObject>()` + `go.scene` 필터 사용 (`GameObject.Find()` 비활성 스킵).
+- **SpriteRenderer**: 플레이어 루트가 아닌 자식 오브젝트에 있음 → `GetComponentInChildren<SpriteRenderer>()` 사용.
 
 ---
 
 ## 진행 사항 (변경 이력)
 
+### 폴더 구조 재편 (2026-04-14)
+`Assets/Scripts/Game/` 내 ~170개 파일을 14개 기능 서브폴더로 분류.
+Core / World / Player / Character / Enemy / Boss / Weapon / Structure / Equipment / Augment / HomeUI / GameUI / VFX / Audio.
+
+### 캐릭터 스킬 시스템 추가
+`CharacterSkillBase` / `CharacterSkillManager`. 적 처치 → 게이지 충전 → 자동 발동. 프리팹: `Resources/Skills/{skillId.ToLower()}`. 구현체: `SkillBerserker` (ATK 속도 +%), `SkillNormal` (속도 ×1.5).
+
+### 기물 아웃게임 시스템 추가
+`StructureWareManager` (DontDestroy=true) — 수집/강화/합성/프리셋. Lv.1~20, 수치 ×3.85.
+`StructureGacha` — Normal/Epic 뽑기.
+`HomeWarePanel` — 프리셋 탭 ↔ 합성 탭 전환 UI.
+`WareSynergySystem` — 역할 태그 + 시대 시너지 인게임 적용 (게임 씬 시작 시 1회).
+`StructureSynergyFlags` — static 플래그 저장소 (CCSynergyActive, SlowSynergyBonus).
+
+### 보스 스킬 추가
+`BossFastChaseSkill`, `BossProjectileCycleSkill` (직선연사→추격→부채꼴→추격 사이클).
+
+### 게임 결과 UI
+`GameClearPanel` — 최종 보스 처치 시 팝인 연출 + 획득 수치 표시.
+`GameOverResultPanel` — 부활 카운트다운 종료 후 도달 웨이브 표시.
+
+### VFX 개선
+`GlobalLightDimmer` — 레퍼런스 카운트 기반 Global Light2D 관리. 여러 스킬 동시 사용 시 충돌 없음.
+`FXManager` — `_prefabScales` 딕셔너리로 프리팹별 원본 스케일 캐시.
+
 ### 플레이어
-- **SpriteRenderer 자식 이동**: 플레이어 루트에서 자식 오브젝트로 이동 → `PlayerController`, `GhostTrail`, `UpgradePanel(OnEnable 초상화)` 모두 `GetComponentInChildren<SpriteRenderer>()` 로 변경
+- SpriteRenderer → 자식 오브젝트 이동. 참조 시 `GetComponentInChildren<SpriteRenderer>()` 사용.
+- 방어 공식: `damage × (1 - defense/100)`.
 
-### WeaponPoint (무기 로직)
-- **보스 사정거리 무시 버그 수정**: `preferBoss` 조건에 `bossInRange` 체크 추가 — 보스도 `attackRange` 이내에 있을 때만 타겟
-- **부메랑 타겟 소멸 버그 수정**: `_boomerangTarget`이 `object`타입이라 Unity fake-null 우회 → `IsBoomerangTargetGone()` 헬퍼로 파괴/비활성 타겟 감지 후 즉시 복귀
-- **부메랑 피해 0 수정**: Idle에서 타겟을 `_boomerangHitEnemies`에 선등록하던 코드 제거
-- **부메랑 반사 안됨 수정**: Striking에서 다음 타겟을 미리 `_boomerangHitEnemies`에 넣던 코드 제거
-- **부메랑/근접 보스 감지**: `TryGetComponent` → `GetComponentInParent`로 변경 (자식 콜라이더 대응)
-
-### FXManager
-- **Debris 원본 스케일 유지**: `_prefabScales` 딕셔너리로 프리팹별 원본 스케일 캐시 — 풀 반환/재사용 시 원본 스케일 복원, 루틴에서 랜덤 스케일 오버라이드 제거
-- **Death debris 튀는 정도 감소**: 파편 수 14→8, 속도 범위 감소, 각도 좁힘(±40°→±20°, ±140°→±70°), 추가 부스트 3-6→1-2
+### WeaponPoint
+- 보스 사정거리 무시 버그 수정 (`preferBoss` + `bossInRange` 체크).
+- 부메랑 타겟 소멸/피해 0/반사 안됨 버그 수정.
+- 보스/근접 감지: `TryGetComponent` → `GetComponentInParent`.
 
 ### UI
-- **InvenSlot / EquipSlot 드래그 고스트**: `DestroyGhost()` → `ghost.SetActive(false)` 먼저 호출 후 `Destroy` — 프레임 말 삭제 전 고스트가 아이콘을 가리는 문제 수정
-- **바텀 탭 비활성 색상**: 비활성 탭에 `inactiveColor` 적용 제거 — 원본 색상 유지
-- **탭 전환 시 색상·스케일 복구**: 원본 색상·스케일 저장 후 복구
-- **패널 전환 시 스케일·위치 복구**: 원본 스케일·위치 저장 후 복구
+- 드래그 고스트: `SetActive(false)` 후 `Destroy` (프레임 말 아이콘 가림 방지).
+- 별 표기: `TextMeshProUGUI starText` → `Image starImage`. `Resources/UI/star_{n}` 로드 + `SetNativeSize()`.
+- 탭/패널 전환 시 원본 색상·스케일·위치 저장 후 복구.
 
 ### 게임 매니저 / 스폰
-- **웨이브 종료 후 플레이어 맵 중앙 이동**: `DoStartWave()`에서 `TeleportPlayerToMapCenter()` 호출
-- **스테이지·웨이브 HP/데미지 성장 공식 개선**: 스테이지 델타와 웨이브 내 델타를 분리 계산 (`EnemyController`, `EnemySpawner`, `SpawnMarker`)
-- **로비 스테이지 선택 저장 수정**: `HomeUIManager.StartGame()` → `StageSelectPanel.OnStartClicked()` 위임으로 `SelectedChapterID` 정상 저장
+- 웨이브 종료 후 플레이어 맵 중앙 이동 (`TeleportPlayerToMapCenter()`).
+- 스테이지·웨이브 HP/데미지 성장 공식 분리 (`EnemyController`, `EnemySpawner`, `SpawnMarker`).
+- 스테이지 선택 저장: `StageSelectPanel.OnStartClicked()` → `SelectedChapterID` 정상 저장.
+- `InitAndStartRoutine()`: 초기화 완료 후 `NotifyStageReady()` → 로딩 씬 내려감 → 플레이어 낙하 입장 연출 병행.
 
 ### 디버그
-- **WeaponDebugInspector**: 런타임 무기 장착용 Odin 인스펙터 MonoBehaviour (`Assets/Scripts/Game/WeaponDebugInspector.cs`)
+`WeaponDebugInspector` — 런타임 무기 장착용 Odin Inspector MonoBehaviour.

@@ -209,7 +209,7 @@ MonoBehaviour:
   bleedDuration: 5
   bleedInterval: 1
   separationRadius: 0.7
-  separationStrength: 3.5
+  separationStrength: 2
 --- !u!114 &7100162927793639632
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -257,6 +257,10 @@ MonoBehaviour:
   chargeInterval: 3
   chargeDuration: 1
   chargeSpeedMultiplier: 5
+  chargeColor: {r: 1, g: 0, b: 0, a: 1}
+  chargeScale: 0.85
+  preChargeDuration: 0.25
+  ghostInterval: 0.06
 --- !u!114 &-3176993990728560225
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -269,7 +273,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8dbca1b53536a2b47a8964120af00539, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HitFlash
-  flashColor: {r: 1, g: 0.2, b: 0.2, a: 1}
   flashDuration: 0.12
   BaseColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &7331466815635274731

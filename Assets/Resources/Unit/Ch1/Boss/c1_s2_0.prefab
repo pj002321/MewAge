@@ -26,7 +26,7 @@ Transform:
   m_GameObject: {fileID: 3957459026361888905}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.012, y: -0.643, z: 0}
+  m_LocalPosition: {x: 0.036, y: -0.84, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -136,7 +136,7 @@ GameObject:
   - component: {fileID: 8582202678910449498}
   - component: {fileID: 5476740683754998544}
   - component: {fileID: 1072981410219997983}
-  - component: {fileID: 2925710928678679702}
+  - component: {fileID: 6646660141188298122}
   m_Layer: 7
   m_Name: c1_s2_0
   m_TagString: Untagged
@@ -154,7 +154,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 2.5, y: 2.5, z: 2.5}
+  m_LocalScale: {x: 2, y: 2, z: 2}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 687603576478220352}
@@ -210,7 +210,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 5
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 21300000, guid: e9d5c02322930924c8f6238ff2e1e2fd, type: 3}
+  m_Sprite: {fileID: -8768195563984226478, guid: 58b6aecd85a09324dbada7425b99df05, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -228,9 +228,9 @@ Animator:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8067283199427079352}
-  m_Enabled: 1
+  m_Enabled: 0
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: a6920aee78a3e5a4f9893b5fb6d09614, type: 2}
+  m_Controller: {fileID: 0}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -335,7 +335,7 @@ MonoBehaviour:
   chaseAfterFan: 4
   chaseStopDistance: 2.5
   attackTrigger: tAttack
---- !u!70 &2925710928678679702
+--- !u!70 &6646660141188298122
 CapsuleCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -369,6 +369,6 @@ CapsuleCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0.09, y: -0.05}
-  m_Size: {x: 0.78, y: 1.1}
+  m_Offset: {x: 0, y: 0}
+  m_Size: {x: 1.22, y: 1.78}
   m_Direction: 0
