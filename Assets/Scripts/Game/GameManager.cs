@@ -35,6 +35,14 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     [SerializeField] private Color normalWaveColor = Color.cyan;
     [SerializeField] private Color bossWaveColor = Color.red;
 
+    [Header("게임 시작 낙하 연출")]
+    [SerializeField] private float         dropHeight       = 6f;    // 맵 중앙 위로 몇 유닛 위에서 시작
+    [SerializeField] private float         dropGravity      = 28f;   // 낙하 가속도
+    [SerializeField] private TextMeshProUGUI notifyLabel;            // 알림 텍스트 레이블
+    [SerializeField] private float         notifyFadeIn     = 0.35f;
+    [SerializeField] private float         notifyHold       = 1.0f;
+    [SerializeField] private float         notifyFadeOut    = 0.45f;
+
     private int   wave = 0;
     private float waveTimer;
     private bool  isGameOver;
@@ -106,15 +114,12 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         // 4. 모든 인게임 초기화가 끝났으므로 로딩 씬에게 내려가도 좋다고 신호를 보냅니다.
         SceneLoadManager.NotifyStageReady();
 
-        // 5. 로딩 씬의 트랜지션 연출이 완전히 끝날 때까지 대기합니다. (게임 일시정지 효과)
-        while (SceneLoadManager.IsTransitioning)
-            yield return null;
-
         // BGM 재생
         SoundManager.Shared?.PlayGameBGM();
 
-        // 6. 모든 준비 패널이 걷히고 나서 비로소 첫 웨이브를 시작합니다.
-        StartNextWave();
+        // 5. 오버레이 연출 중 낙하 입장 연출을 시작합니다.
+        //    ThrowOut이 끝나기 전에 이미 연출이 진행되므로 자연스럽게 이어집니다.
+        StartCoroutine(PlayerLandingIntroRoutine());
     }
 
     private void Update()
@@ -411,6 +416,10 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         if (needsExitGate)
         {
             waitingForUpgrade = true;  // 타이머 카운트다운 억제
+
+            if (notifyLabel != null)
+                StartCoroutine(ShowNotifyRoutine("길을 따라 이동하세요"));
+
             WaveEnvironmentSwitcher.Shared?.ActivateExitGate(() =>
             {
                 waitingForUpgrade = false;
@@ -484,6 +493,143 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         {
             player.transform.position = Vector3.zero;
         }
+    }
+
+    // ── 게임 시작 낙하 입장 연출 ─────────────────────────────────────
+
+    /// <summary>
+    /// 첫 웨이브 시작 전 플레이어가 맵 중앙 위에서 낙하하는 입장 연출.
+    /// 착지 후 노티 텍스트를 표시하고 StartNextWave()를 호출합니다.
+    /// </summary>
+    private IEnumerator PlayerLandingIntroRoutine()
+    {
+        if (timerText) timerText.gameObject.SetActive(false);
+
+        var player = PlayerController.Instance;
+        if (player == null) { StartNextWave(); yield break; }
+
+        player.InputLocked = true;
+
+        // 맵 중앙 착지 위치 계산
+        Vector2 landPos = Vector2.zero;
+        if (MovementBounds.Shared != null)
+        {
+            MovementBounds.Shared.GetPlayerBoundsMinMax(out Vector2 bMin, out Vector2 bMax);
+            landPos = (bMin + bMax) * 0.5f;
+        }
+
+        // 1) 대기하기 '전에' 플레이어를 미리 공중에 띄워둠 (바닥에 서 있는 모습 노출 방지)
+        var rb = player.GetComponent<Rigidbody2D>();
+        Vector2 startPos = landPos + Vector2.up * dropHeight;
+        if (rb != null) { rb.position = startPos; rb.linearVelocity = Vector2.zero; }
+        else             player.transform.position = startPos;
+
+        // 2) 로딩 오버레이가 완전히 걷힐 때까지 대기
+        while (SceneLoadManager.IsTransitioning)
+        {
+            // 대기 중 물리 엔진이나 다른 로직으로 인해 떨어질 가능성을 대비하여 위치 고정
+            if (rb != null) rb.position = startPos;
+            else            player.transform.position = startPos;
+            yield return null;
+        }
+
+        if (timerText) timerText.gameObject.SetActive(true);
+
+        // 3) 가속하며 낙하 시작
+        float fallSpeed = 0f;
+        while (true)
+        {
+            yield return new WaitForFixedUpdate();
+            fallSpeed += dropGravity * Time.fixedDeltaTime;
+            Vector2 cur  = rb != null ? rb.position : (Vector2)player.transform.position;
+            Vector2 next = cur + Vector2.down * fallSpeed * Time.fixedDeltaTime;
+            if (next.y <= landPos.y)
+            {
+                if (rb != null) { rb.MovePosition(landPos); rb.linearVelocity = Vector2.zero; }
+                else              player.transform.position = landPos;
+                break;
+            }
+            if (rb != null) rb.MovePosition(next);
+            else             player.transform.position = next;
+        }
+
+        // 착지 스쿼시 연출
+        yield return StartCoroutine(LandingSquishRoutine(player.transform));
+
+        // 노티 텍스트 표시
+        if (notifyLabel != null)
+            yield return StartCoroutine(ShowNotifyRoutine());
+
+        player.InputLocked = false;
+        StartNextWave();
+    }
+
+    /// <summary>착지 시 Y 찌그러짐 → 복귀 바운스 연출.</summary>
+    private IEnumerator LandingSquishRoutine(Transform t)
+    {
+        Vector3 orig    = t.localScale;
+        Vector3 squish  = new Vector3(orig.x * 1.35f, orig.y * 0.5f,  orig.z);
+        Vector3 stretch = new Vector3(orig.x * 0.88f, orig.y * 1.22f, orig.z);
+
+        // 찌그러짐
+        for (float e = 0f; e < 0.07f; e += Time.deltaTime)
+        {
+            t.localScale = Vector3.Lerp(orig, squish, e / 0.07f);
+            yield return null;
+        }
+        t.localScale = squish;
+
+        // 위로 튀어오름
+        for (float e = 0f; e < 0.10f; e += Time.deltaTime)
+        {
+            t.localScale = Vector3.Lerp(squish, stretch, e / 0.10f);
+            yield return null;
+        }
+        t.localScale = stretch;
+
+        // 원본 복귀
+        for (float e = 0f; e < 0.14f; e += Time.deltaTime)
+        {
+            t.localScale = Vector3.Lerp(stretch, orig, e / 0.14f);
+            yield return null;
+        }
+        t.localScale = orig;
+    }
+
+    /// <summary>노티 패널 페이드인 → 유지 → 페이드아웃.</summary>
+    private IEnumerator ShowNotifyRoutine(string customMsg = null)
+    {
+        if (notifyLabel == null) yield break;
+
+        if (!string.IsNullOrEmpty(customMsg))
+            notifyLabel.text = customMsg;
+
+        notifyLabel.gameObject.SetActive(true);
+
+        Color c = notifyLabel.color;
+        c.a = 0f;
+        notifyLabel.color = c;
+
+        for (float e = 0f; e < notifyFadeIn; e += Time.unscaledDeltaTime)
+        {
+            c.a = e / notifyFadeIn;
+            notifyLabel.color = c;
+            yield return null;
+        }
+        c.a = 1f;
+        notifyLabel.color = c;
+
+        yield return new WaitForSecondsRealtime(notifyHold);
+
+        for (float e = 0f; e < notifyFadeOut; e += Time.unscaledDeltaTime)
+        {
+            c.a = 1f - e / notifyFadeOut;
+            notifyLabel.color = c;
+            yield return null;
+        }
+        c.a = 0f;
+        notifyLabel.color = c;
+        notifyLabel.gameObject.SetActive(false);
     }
 
     public bool IsGameOver  => isGameOver;
