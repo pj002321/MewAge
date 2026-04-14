@@ -52,7 +52,7 @@ public class GachaResultPopup : MonoBehaviour
 
     void OnDrawButtonClicked()
     {
-        if (_chestAnimator != null)
+        if (_chestAnimator != null && _chestAnimator.runtimeAnimatorController != null)
             _chestAnimator.SetBool("bResult", true);
         OnDrawRequested?.Invoke();
     }
@@ -65,7 +65,7 @@ public class GachaResultPopup : MonoBehaviour
         if (chestRect)
         {
             _chestAnimator = chestRect.GetComponentInChildren<Animator>();
-            if (_chestAnimator != null) _chestAnimator.SetBool("bResult", false);
+            if (_chestAnimator != null && _chestAnimator.runtimeAnimatorController != null) _chestAnimator.SetBool("bResult", false);
         }
         gameObject.SetActive(true);
     }
