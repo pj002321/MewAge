@@ -40,6 +40,12 @@ public class SceneLoadManager : MonoBehaviour
 
     public static void LoadScene(string sceneName)
     {
+        if (IsTransitioning)
+        {
+            Debug.LogWarning($"[SceneLoadManager] LoadScene({sceneName}) ignored because transition is already in progress.");
+            return;
+        }
+
         if (instance == null)
         {
             var go = new GameObject("SceneLoadManager");
@@ -68,6 +74,8 @@ public class SceneLoadManager : MonoBehaviour
             if (loadingCanvas != null) break;
         }
 
+        SceneLoadingCanvas loadingCanvasComp = null;
+
         if (loadingCanvas != null)
         {
             canvasGroup = loadingCanvas.GetComponent<CanvasGroup>();
@@ -77,6 +85,22 @@ public class SceneLoadManager : MonoBehaviour
             loadingCanvas.sortingOrder = 9999;
             loadingCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
             DontDestroyOnLoad(loadingCanvas.transform.root.gameObject);
+
+            loadingCanvasComp = loadingCanvas.GetComponentInChildren<SceneLoadingCanvas>();
+
+            // Disable animators except for the icon, and water scrolls to reduce stuttering
+            var animators = loadingCanvas.GetComponentsInChildren<Animator>();
+            foreach (var anim in animators)
+            {
+                if (loadingCanvasComp.iconImg && loadingCanvasComp.iconImg.TryGetComponent(out Animator iconAnim) && anim == iconAnim)
+                    continue; // Keep icon animator enabled
+                anim.enabled = false;
+            }
+            var waterScrolls = loadingCanvas.GetComponentsInChildren<UnityEngine.UI.RawImage>();
+            foreach (var ws in waterScrolls) {
+                var scroll = ws.GetComponent<WaterScroll>();
+                if (scroll) scroll.enabled = false;
+            }
 
             yield return new WaitForSecondsRealtime(0.5f);
         }
@@ -103,25 +127,25 @@ public class SceneLoadManager : MonoBehaviour
             yield return new WaitForSecondsRealtime(0.6f);
         }
 
-        // 6. 로딩 Canvas 옆으로 쓸 이동 (부드러운 전환)
-        if (loadingCanvas != null)
+        // 6. 아이콘 포물선 연출 → 완료 후 캔버스 제거
+        if (loadingCanvasComp != null)
+            yield return StartCoroutine(loadingCanvasComp.ThrowOut());
+        else if (loadingCanvas != null)
         {
-            RectTransform uiRect = loadingCanvas.transform.childCount > 0 
-                ? loadingCanvas.transform.GetChild(0) as RectTransform 
+            // SceneLoadingCanvas 없으면 기존 슬라이드 폴백
+            RectTransform uiRect = loadingCanvas.transform.childCount > 0
+                ? loadingCanvas.transform.GetChild(0) as RectTransform
                 : loadingCanvas.transform as RectTransform;
-
             if (uiRect != null)
             {
-                Vector2 origPos = uiRect.anchoredPosition;
-                float slideDist = Screen.width * 1.2f;
-                float elapsed = 0f;
-                
+                Vector2 origPos  = uiRect.anchoredPosition;
+                float   elapsed  = 0f;
                 while (elapsed < slideOutDuration)
                 {
                     elapsed += Time.unscaledDeltaTime;
-                    float t = elapsed / slideOutDuration;
+                    float t    = elapsed / slideOutDuration;
                     float ease = t * t * (3f - 2f * t);
-                    uiRect.anchoredPosition = origPos + Vector2.right * slideDist * ease;
+                    uiRect.anchoredPosition = origPos + Vector2.right * (Screen.width * 1.2f) * ease;
                     yield return null;
                 }
             }

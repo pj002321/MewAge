@@ -47,7 +47,7 @@ namespace Hades.Tool
             GUILayout.FlexibleSpace();
             if (GUILayout.Button(new GUIContent("Run Game", "Start Run Game"), commandButtonStyle))
             {
-                SceneHelper.StartScene("home@scene");
+                SceneHelper.StartScene("introloading@scene");
             }
           
         }
@@ -55,6 +55,14 @@ namespace Hades.Tool
         private static void BuildToolbarRight()
         {
             if (commandButtonStyle == null) CreateStyle();
+            if (GUILayout.Button(new GUIContent("Loading", "open loading scene"), commandButtonStyle))
+            {
+                SceneHelper.OpenScene("loading@scene");
+            }
+            if (GUILayout.Button(new GUIContent("Intro", "open Intro scene"), commandButtonStyle))
+            {
+                SceneHelper.OpenScene("introloading@scene");
+            }
             if (GUILayout.Button(new GUIContent("Home", "open Home scene"), commandButtonStyle))
             {
                 SceneHelper.OpenScene("home@scene");
@@ -63,6 +71,7 @@ namespace Hades.Tool
             {
                 SceneHelper.OpenScene("stage@scene");
             }
+           
 
             DrawSceneDropdown("dev", "open dev scene");
             GUILayout.FlexibleSpace();

@@ -140,15 +140,20 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
     private void LoadDrawProfiles()
     {
         var list = new List<DrawProfile>();
-        DB_확률.ForEachEntity(row => list.Add(new DrawProfile
+        DB_확률.ForEachEntity(row =>
         {
-            minLevel = row.f_레벨,
-            normal   = row.f_노멀,
-            rare     = row.f_레어,
-            elite    = row.f_엘리트,
-            epic     = row.f_에픽,
-            legend   = row.f_신화,
-        }));
+            // 장비 가챠 행(f_가챠타입이 설정된 행)은 무기 상점 드로우와 무관하므로 제외
+            if (!string.IsNullOrEmpty(row.f_가챠타입)) return;
+            list.Add(new DrawProfile
+            {
+                minLevel = row.f_레벨,
+                normal   = row.f_노멀,
+                rare     = row.f_레어,
+                elite    = row.f_엘리트,
+                epic     = row.f_에픽,
+                legend   = row.f_신화,
+            });
+        });
         list.Sort((a, b) => a.minLevel.CompareTo(b.minLevel));
         drawProfiles = list.ToArray();
     }
@@ -496,13 +501,19 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
 
     private static WeaponGrade RollGrade(DrawProfile p)
     {
-        float roll = Random.Range(0f, 100f);
+        // 총합 기준으로 정규화해서 롤 — DB 합계가 100이 아니어도 안전
+        float total = p.normal + p.rare + p.elite + p.epic + p.legend;
+        if (total <= 0f) return WeaponGrade.Normal;
+
+        float roll = Random.Range(0f, total);
         float acc  = 0f;
-        acc += p.normal; if (roll <= acc && p.normal > 0f) return WeaponGrade.Normal;
-        acc += p.rare;   if (roll <= acc && p.rare > 0f)   return WeaponGrade.Rare;
-        acc += p.elite;  if (roll <= acc && p.elite > 0f)  return WeaponGrade.Elite;
-        acc += p.epic;   if (roll <= acc && p.epic > 0f)   return WeaponGrade.Epic;
-        return WeaponGrade.Legend;
+        acc += p.normal; if (roll < acc) return WeaponGrade.Normal;
+        acc += p.rare;   if (roll < acc) return WeaponGrade.Rare;
+        acc += p.elite;  if (roll < acc) return WeaponGrade.Elite;
+        acc += p.epic;   if (roll < acc) return WeaponGrade.Epic;
+        if (p.legend > 0f)               return WeaponGrade.Legend;
+        // legend=0이면 Epic으로 폴백
+        return WeaponGrade.Epic;
     }
 
     private WeaponData PickByGrade(List<WeaponData> pool, WeaponGrade grade)

@@ -26,7 +26,7 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
     private int   currentChapter = 1;
     private int   currentStage   = 1;
     private int   wavesPerStage  = 30;      // DB_챕터.f_웨이브에서 로드
-    private bool  spawning       = true;
+    private bool  spawning       = false;   // 초기에는 스폰하지 않고 대기
     private bool  isBossWave     = false;
 
     private int CalcGlobalWave(int stage, int wave) => (stage - 1) * wavesPerStage + wave;
@@ -58,8 +58,6 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
     private void Start()
     {
         ApplyRule(currentWave);
-        if (isBossWave) SpawnBoss();
-        else            StartCoroutine(SpawnLoop());
     }
 
     // ── DB 조회 ─────────────────────────────────────────────────────
@@ -255,8 +253,6 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
         currentWave = 1;
         StopAllCoroutines();
         ApplyRule(currentWave);
-        if (isBossWave) SpawnBoss();
-        else if (spawning) StartCoroutine(SpawnLoop());
     }
 
     private static void ParseChapterID(string chapterID, out int chapter, out int stage)

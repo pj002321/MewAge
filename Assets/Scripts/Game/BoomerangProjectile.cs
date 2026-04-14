@@ -57,7 +57,19 @@ public class BoomerangProjectile : MonoBehaviour
         this.criticalMultiplier = criticalMultiplier;
         this.baseDamage         = baseDamage;
         this.speed              = speed;
-        this.bouncesLeft        = maxBounces;
+        
+        // DB 등에서 maxBounces가 명시적으로 지정되지 않았다면(-1 혹은 0)
+        // 맵에 존재하는 몬스터 수를 튕김 횟수로 할당하되 최소치(3)를 보장.
+        if (maxBounces <= 0)
+        {
+            int totalEnemies = EnemyController.ActiveCount + (BossController.Current != null ? 1 : 0);
+            this.bouncesLeft = Mathf.Max(3, totalEnemies);
+        }
+        else
+        {
+            this.bouncesLeft = maxBounces;
+        }
+
         this.bounceRange        = bounceRange;
         this.playerTransform    = playerTf;
         this.initialized        = true;

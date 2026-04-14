@@ -131,6 +131,7 @@ GameObject:
   - component: {fileID: 434276929}
   - component: {fileID: 434276928}
   - component: {fileID: 434276927}
+  - component: {fileID: 434276931}
   m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
@@ -222,6 +223,25 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!114 &434276931
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 434276925}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3fd7edfeda276e941ba6197e831936cc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: '::'
+  iconImg: {fileID: 1325700863}
+  throwDuration: 0.65
+  horizontalForce: 1.5
+  initialUpForce: 0.55
+  gravityForce: 2.8
+  spinSpeed: 600
+  fadeStartRatio: 0.55
 --- !u!1 &605298709
 GameObject:
   m_ObjectHideFlags: 0
@@ -326,7 +346,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.RawImage
   m_Material: {fileID: 0}
-  m_Color: {r: 0.6037736, g: 0.6037736, b: 0.6037736, a: 1}
+  m_Color: {r: 0.990566, g: 0.62789047, b: 0.3317462, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -566,7 +586,7 @@ RectTransform:
   m_GameObject: {fileID: 1325700860}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 2.5, y: 2.5, z: 2.5}
+  m_LocalScale: {x: 1.5, y: 1.5, z: 1.5}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 605298710}
@@ -574,7 +594,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 137.82}
-  m_SizeDelta: {x: 98, y: 118}
+  m_SizeDelta: {x: 118, y: 154}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!95 &1325700862
 Animator:
@@ -618,7 +638,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 7452363374335274427, guid: 80ab8d495023c004581481a0f924e110, type: 3}
+  m_Sprite: {fileID: -5422362209105889949, guid: 317cff1cdf1cc8d44a83f4757e0c16cd, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1

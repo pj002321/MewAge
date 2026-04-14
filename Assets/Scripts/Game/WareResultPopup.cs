@@ -56,7 +56,17 @@ public class WareResultPopup : MonoBehaviour
             ? singleAnchor?.transform
             : multiContent?.transform;
 
-        if (container == null || slotPrefab == null) { gameObject.SetActive(true); return; }
+        if (container == null || slotPrefab == null) {
+            // Reparent to root Canvas to ensure it's active
+            var rootCanvas = GameObject.Find("Canvas");
+            if (rootCanvas != null) transform.SetParent(rootCanvas.transform, false);
+            gameObject.SetActive(true);
+            return;
+        }
+
+        // Reparent to root Canvas to ensure it's active
+        var canvas = GameObject.Find("Canvas");
+        if (canvas != null) transform.SetParent(canvas.transform, false);
 
         gameObject.SetActive(true);
         StartCoroutine(SpawnSlotsWithAnimation(results, container));

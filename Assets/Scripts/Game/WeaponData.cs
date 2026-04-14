@@ -137,7 +137,9 @@ public class WeaponData : ScriptableObject
         data.baseAttackCooldown = row.f_공격속도 > 0 ? row.f_공격속도 : 1f;
         data.baseAttackRange    = row.f_탐지범위;
         data.baseAreaHitRadius  = row.f_주변범위;
-        data.baseMaxBounces     = data.weaponType == WeaponType.Boomerang ? 3 : 0; // 예시, DB에서 로드 가능
+        // f_튕김횟수 등 DB 칼럼이 추가되면 이 부분(0)을 row.f_튕김횟수 로 교체해 주세요.
+        // 현재는 0으로 넘겨주어 BoomerangProjectile에서 '맵 전체 몬스터 개수 (최소 3)'를 자동 적용받게 합니다.
+        data.baseMaxBounces     = 0; 
         data.baseBounceRange    = data.weaponType == WeaponType.Boomerang ? 5f : 0f;
 
         // 무기ID 기반으로 Resources에서 프리팹 로드 (예: Resources/Weapons/Ch1/ch1_n_00)
