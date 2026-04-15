@@ -23,6 +23,8 @@ public class BossProjectileCycleSkill : BossSkillBase
     [SerializeField] private Transform firePoint;
 
     [Header("1단계 — 직선 연사")]
+    [Tooltip("false로 끄면 직선 연사 페이즈를 완전히 건너뜁니다")]
+    [SerializeField] private bool  enableLinearFire = true;
     [SerializeField] private float linearDuration  = 4f;  // 연사 지속 시간 (초)
     [SerializeField] private float linearInterval  = 0.4f; // 발사 간격 (초)
 
@@ -92,50 +94,64 @@ public class BossProjectileCycleSkill : BossSkillBase
 
     private IEnumerator LinearFirePhase()
     {
-        float elapsed = 0f;
-        float timer   = 0f;
+        if (!enableLinearFire) yield break; // 직선 연사 비활성화 시 스킵
 
-        while (elapsed < linearDuration)
+        Boss.IsFiringSkill = true; // 발사 중 — 이동 정지
+        try
         {
-            if (GameManager.Shared != null && GameManager.Shared.IsGameOver) yield break;
-            if (IsInvalid()) yield break;
+            float elapsed = 0f;
+            float timer   = 0f;
 
-            timer   -= Time.deltaTime;
-            elapsed += Time.deltaTime;
-
-            if (timer <= 0f && !isChasing) // 추격 중이면 발사 금지
+            while (elapsed < linearDuration)
             {
-                timer = linearInterval;
+                if (GameManager.Shared != null && GameManager.Shared.IsGameOver) yield break;
+                if (IsInvalid()) yield break;
 
-                // 추격 거리 이내면 발사 금지
-                float dist = Owner.PlayerTransform != null
-                    ? Vector2.Distance(Owner.transform.position, Owner.PlayerTransform.position)
-                    : float.MaxValue;
-                if (dist > chaseStopDistance)
-                    FireTowardPlayer();
+                timer   -= Time.deltaTime;
+                elapsed += Time.deltaTime;
+
+                if (timer <= 0f)
+                {
+                    timer = linearInterval;
+
+                    float dist = Owner.PlayerTransform != null
+                        ? Vector2.Distance(Owner.transform.position, Owner.PlayerTransform.position)
+                        : float.MaxValue;
+                    if (dist > chaseStopDistance)
+                        FireTowardPlayer();
+                }
+
+                yield return null;
             }
-
-            yield return null;
+        }
+        finally
+        {
+            if (Boss != null) Boss.IsFiringSkill = false;
         }
     }
 
     private IEnumerator FanBurstPhase()
     {
-        for (int i = 0; i < fanRepeat; i++)
+        Boss.IsFiringSkill = true; // 발사 중 — 이동 정지
+        try
         {
-            if (IsInvalid()) yield break;
-
-            if (!isChasing) // 추격 중이면 발사 금지
+            for (int i = 0; i < fanRepeat; i++)
             {
+                if (IsInvalid()) yield break;
+
                 float dist = Owner.PlayerTransform != null
                     ? Vector2.Distance(Owner.transform.position, Owner.PlayerTransform.position)
                     : float.MaxValue;
                 if (dist > chaseStopDistance)
                     FireFan();
-            }
 
-            if (i < fanRepeat - 1)
-                yield return new WaitForSeconds(fanRepeatDelay);
+                if (i < fanRepeat - 1)
+                    yield return new WaitForSeconds(fanRepeatDelay);
+            }
+        }
+        finally
+        {
+            if (Boss != null) Boss.IsFiringSkill = false;
         }
     }
 

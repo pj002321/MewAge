@@ -95,7 +95,9 @@ public class BossController : MonoBehaviour
     private bool             _dropping;
     private bool             _skillExecuting;
 
-    public bool IsDropping => _dropping;
+    public bool IsDropping    => _dropping;
+    /// <summary>투사체 발사 페이즈 중임을 표시 — ChaseRoutine이 이동을 중단합니다.</summary>
+    public bool IsFiringSkill { get; set; }
 
     // ── Unity 생명주기 ─────────────────────────────────────────────
 
@@ -224,13 +226,12 @@ public class BossController : MonoBehaviour
         {
             elapsed += Time.fixedDeltaTime;
 
-            if (PlayerTransform != null)
+            // 스킬이 발사 중이면 이동 생략
+            if (!IsFiringSkill && PlayerTransform != null)
             {
                 float dist = Vector2.Distance(transform.position, PlayerTransform.position);
                 if (dist > chaseStopDistance)
-                {
                     MoveTowardPlayer(MoveSpeed);
-                }
             }
 
             yield return new WaitForFixedUpdate();

@@ -127,6 +127,9 @@ public class CharacterSkillManager : MonoBehaviourSingleton<CharacterSkillManage
 
         SpawnEffect();
 
+        // 플레이어 하이라이트 효과
+        PlayerController.Instance?.PlaySkillHighlight();
+
         if (_skill != null)
         {
             _skill.Activate();

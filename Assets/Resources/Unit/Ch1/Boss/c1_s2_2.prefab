@@ -15,8 +15,9 @@ GameObject:
   - component: {fileID: 8725922358913660577}
   - component: {fileID: 6397333588183594770}
   - component: {fileID: 6012793344544136166}
-  - component: {fileID: 7196183251120130808}
   - component: {fileID: 5821915655939214708}
+  - component: {fileID: 6776094281009757095}
+  - component: {fileID: 1037645356348669543}
   m_Layer: 7
   m_Name: c1_s2_2
   m_TagString: Untagged
@@ -38,6 +39,7 @@ Transform:
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 4088361612343034944}
+  - {fileID: 1096746335866290046}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &3195705286543801482
@@ -229,36 +231,13 @@ MonoBehaviour:
   chaseDuration: 2
   idleDuration: 1
   skills:
-  - {fileID: 7196183251120130808}
-  - {fileID: 7196183251120130808}
---- !u!114 &7196183251120130808
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4510239993999273466}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 28cecd35150c5f24bae8b168320a0d24, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BossDashComboSkill
-  skillId: 
-  cooldown: 5
-  enrageCooldownMult: 0.7
-  maxRange: 0
-  dashSpeed: 12
-  dashDuration: 0.6
-  hitCount: 3
-  hitInterval: 0.18
-  hitRange: 1.6
-  hitDamage: 50
-  attackTrigger: tAttack
-  chargeColor: {r: 1, g: 0, b: 0, a: 1}
-  chargeScale: 0.85
-  preDashDuration: 0.3
-  ghostInterval: 0.06
-  fallbackBoundsSize: {x: 10, y: 18}
+  - {fileID: 6776094281009757095}
+  - {fileID: 1037645356348669543}
+  entryDrop: 1
+  dropSpeed: 22
+  squashDuration: 0.08
+  stretchDuration: 0.1
+  settleDuration: 0.12
 --- !u!70 &5821915655939214708
 CapsuleCollider2D:
   m_ObjectHideFlags: 0
@@ -296,6 +275,54 @@ CapsuleCollider2D:
   m_Offset: {x: 0, y: 0}
   m_Size: {x: 0.8, y: 1.62}
   m_Direction: 0
+--- !u!114 &6776094281009757095
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4510239993999273466}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 147182f963a62a94d9c382a6e5dad514, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BossRollingBoulderSkill
+  skillId: 
+  cooldown: 5
+  enrageCooldownMult: 0.7
+  maxRange: 0
+  executeInPattern: 1
+  boulderPrefab: {fileID: 7916182024222986910, guid: dbedfad63a50e2a469e1a5b5b1c00790, type: 3}
+  boulderData: {fileID: 0}
+  boulderSpeed: 6
+  boulderLifetime: 6
+  rotateSpeed: 270
+  boulderDamage: 0
+  maxBounces: 3
+  firePoint: {fileID: 1096746335866290046}
+  preDelay: 0.6
+  rollCount: 2
+  rollInterval: 0.8
+  attackTrigger: tAttack
+--- !u!114 &1037645356348669543
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4510239993999273466}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f59276fb7dc5c04c8aeaf3aafa5f594, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BossChargeSkill
+  skillId: 
+  cooldown: 5
+  enrageCooldownMult: 0.7
+  maxRange: 0
+  executeInPattern: 1
+  chargeSpeed: 18
+  chargeDuration: 0.4
 --- !u!1 &5233518724168949262
 GameObject:
   m_ObjectHideFlags: 0
@@ -387,3 +414,34 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!1 &7555162888956710260
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1096746335866290046}
+  m_Layer: 7
+  m_Name: GameObject
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1096746335866290046
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7555162888956710260}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.636, y: -0.584, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7709635535999324975}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

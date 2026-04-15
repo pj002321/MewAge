@@ -116,7 +116,7 @@ Transform:
   m_GameObject: {fileID: 4423835837989258071}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.501, y: 0, z: 0}
+  m_LocalPosition: {x: 0.115, y: -0.237, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -135,7 +135,7 @@ GameObject:
   - component: {fileID: 2039225893543360154}
   - component: {fileID: 8582202678910449498}
   - component: {fileID: 5476740683754998544}
-  - component: {fileID: 1072981410219997983}
+  - component: {fileID: -443493507337899723}
   - component: {fileID: 6646660141188298122}
   m_Layer: 7
   m_Name: c1_s2_0
@@ -304,8 +304,13 @@ MonoBehaviour:
   chaseDuration: 3.5
   idleDuration: 1.5
   skills:
-  - {fileID: 1072981410219997983}
---- !u!114 &1072981410219997983
+  - {fileID: -443493507337899723}
+  entryDrop: 1
+  dropSpeed: 22
+  squashDuration: 0.08
+  stretchDuration: 0.1
+  settleDuration: 0.12
+--- !u!114 &-443493507337899723
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -314,26 +319,40 @@ MonoBehaviour:
   m_GameObject: {fileID: 8067283199427079352}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 71ecc31d375a1534384e5b1844037cf7, type: 3}
+  m_Script: {fileID: 11500000, guid: a233ce0baffc0ab48855a92a6a6bf5ee, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BossProjectileCycleSkill
+  m_EditorClassIdentifier: Assembly-CSharp::BossGroundSpikeSkill
   skillId: 
-  cooldown: 5
-  enrageCooldownMult: 1
+  cooldown: 3
+  enrageCooldownMult: 0.7
   maxRange: 0
-  projectilePrefab: {fileID: 7916182024222986910, guid: 9a4a33602c726e2489bec5dbb7160348, type: 3}
-  projectileSpeed: 5
+  executeInPattern: 1
+  spikeProjectilePrefab: {fileID: 109194795691363216, guid: 010a21617e468c04bbefb2c1908dac3a, type: 3}
+  spikeDropSpeed: 40
+  spikeHitRadius: 0.5
+  stickDuration: 0.8
+  spikeDamage: 50
+  spikeImpactVfx: {fileID: 6220896372230165779, guid: 6c4493b7955c99b42b25f630d3c23194, type: 3}
+  vfxLifetime: 1
+  projectilePrefab: {fileID: 7916182024222986910, guid: 626d85e8f1b7842468211300a67af973, type: 3}
+  projectileSpeed: 7
   projectileDamage: 50
   firePoint: {fileID: 4475026578306635568}
-  linearDuration: 4
-  linearInterval: 0.65
-  chaseAfterLinear: 5
+  spikeMarkerPrefab: {fileID: 7905823675861574758, guid: e965097e70b2e9d47807ebf0614a30a6, type: 3}
+  spikeWarningTime: 0.9
+  postMarkerDelay: 0.1
+  spikeCount: 3
+  spikeDistance: 1.2
+  spikeStrikeDelay: 0.25
+  spawnHeightOffset: 8
+  pivotToTipOffset: 0.5
+  chaseAfterSpike: 2
+  chaseAfterFan: 2
+  chaseStopDist: 1.8
   fanCount: 5
   fanAngle: 120
   fanRepeat: 3
   fanRepeatDelay: 0.6
-  chaseAfterFan: 4
-  chaseStopDistance: 2.5
   attackTrigger: tAttack
 --- !u!70 &6646660141188298122
 CapsuleCollider2D:

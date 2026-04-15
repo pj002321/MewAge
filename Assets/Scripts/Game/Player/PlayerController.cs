@@ -98,6 +98,9 @@ public class PlayerController : MonoBehaviour
     private SpriteRenderer spriteRenderer;
     private HitFlash       hitFlash;
     private HitShake       hitShake;
+
+    // 스킬 하이라이트 효과
+    private Coroutine _skillHighlightCoroutine;
     private bool           isInvincible;
 
     private void Awake()
@@ -509,6 +512,54 @@ public class PlayerController : MonoBehaviour
 
     public Vector2 Position => transform.position;
     public Vector2 MoveDirection => moveDirection;
+
+    /// <summary>스킬 시전 시 하이라이트 효과 (장착 효과와 유사).</summary>
+    public void PlaySkillHighlight()
+    {
+        if (spriteRenderer == null) return;
+        StopSkillHighlight();
+        _skillHighlightCoroutine = StartCoroutine(SkillHighlightRoutine());
+    }
+
+    private void StopSkillHighlight()
+    {
+        if (_skillHighlightCoroutine != null)
+        {
+            StopCoroutine(_skillHighlightCoroutine);
+            _skillHighlightCoroutine = null;
+        }
+    }
+
+    private System.Collections.IEnumerator SkillHighlightRoutine()
+    {
+        // 플레이어 스프라이트를 복사한 하이라이트 오브젝트 생성
+        var highlightGO = new GameObject("SkillHighlight");
+        highlightGO.transform.SetParent(transform, false);
+        highlightGO.transform.localPosition = Vector3.zero;
+        highlightGO.transform.localScale = Vector3.one;
+
+        var highlightSR = highlightGO.AddComponent<SpriteRenderer>();
+        highlightSR.sprite = spriteRenderer.sprite;
+        highlightSR.sortingLayerID = spriteRenderer.sortingLayerID;
+        highlightSR.sortingOrder = spriteRenderer.sortingOrder + 1; // 플레이어 위에 표시
+        highlightSR.color = new Color(1f, 1f, 1f, 1f);
+
+        const float duration = 0.45f;
+        const float scaleMult = 3.0f;
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float f = elapsed / duration;
+            float ease = 1f - (1f - f) * (1f - f); // ease-out quad
+            highlightGO.transform.localScale = Vector3.one * Mathf.LerpUnclamped(1f, scaleMult, ease);
+            highlightSR.color = new Color(1f, 1f, 1f, Mathf.Lerp(1f, 0f, ease));
+            yield return null;
+        }
+
+        Destroy(highlightGO);
+        _skillHighlightCoroutine = null;
+    }
 
     /// <summary>피격 시 짧은 햅틱 진동 (모바일 전용).</summary>
     private static void TriggerHaptic()

@@ -55,6 +55,16 @@ public class CameraFollow : MonoBehaviour
     /// </summary>
     public void Init()
     {
+        // PixelPerfectCamera는 해상도별 정수 픽셀 배율(2x, 3x...)로 projection matrix를 직접 덮어써서
+        // 같은 9:16 비율이어도 해상도가 다르면 오브젝트 크기가 달라지는 문제가 있습니다.
+        // 먼저 비활성화하고 projection matrix를 초기화한 뒤 orthographicSize를 설정해야 합니다.
+        var ppc = GetComponent("PixelPerfectCamera") as Behaviour;
+        if (ppc != null)
+        {
+            ppc.enabled = false;
+            cam.ResetProjectionMatrix();
+        }
+
         // 세로형(Portrait) 게임 기준 (1080x1920 = 9:16 비율)
         // 화면 가로 넓이를 일정하게 보장하여 캐릭터 비율이 거대해지지 않도록 방지
         if (fixedOrthographicSize > 0f)
@@ -64,18 +74,6 @@ public class CameraFollow : MonoBehaviour
                 cam.orthographicSize = fixedOrthographicSize * (targetAspect / cam.aspect); // 모바일 등 길쭉한 화면
             else
                 cam.orthographicSize = fixedOrthographicSize; // 태블릿, PC 등 넓은 화면
-        }
-
-        // --- PixelPerfectCamera 리프레시 로직 ---
-        // 인스펙터 상의 orthographicSize나 스케일이 정상임에도 비정상적으로 화면이 커 보이는 원인은 
-        // Pixel Perfect Camera가 내부적으로 잘못된 Pixel Ratio를 캡처하여 프로젝션 매트릭스를 고정시켜버렸기 때문입니다.
-        // 강제로 껐다 켜서 픽셀 배율을 현재 올바른 해상도에 맞게 재계산하도록 유도합니다.
-        // 컴파일 에러 방지를 위해 string 기반 Component 탐색 및 Behaviour 캐스팅을 사용합니다.
-        var ppc = GetComponent("PixelPerfectCamera") as Behaviour;
-        if (ppc != null && ppc.enabled)
-        {
-            ppc.enabled = false;
-            ppc.enabled = true;
         }
     }
 

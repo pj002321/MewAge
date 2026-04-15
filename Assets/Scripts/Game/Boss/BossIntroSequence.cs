@@ -25,6 +25,9 @@ public class BossIntroSequence : MonoBehaviourSingleton<BossIntroSequence>
     public CanvasGroup fadeCanvasGroup;
     public float       fadeDuration = 0.5f;
 
+    [Header("보스 알림 (선택 — 없으면 즉시 스폰)")]
+    [SerializeField] private GameObject bossNotiObject;
+
     protected override bool DontDestroy => false;
 
     public void Play(System.Action onComplete)
@@ -91,7 +94,21 @@ public class BossIntroSequence : MonoBehaviourSingleton<BossIntroSequence>
         // 6. 페이드 인
         yield return StartCoroutine(Fade(0f));
 
-        // 7. 입력 해제 + 콜백
+        // 7. BossNoti 활성화 → 애니메이션 종료 대기
+        if (bossNotiObject != null)
+        {
+            bossNotiObject.SetActive(true);
+            yield return null; // Animator 초기화 대기 (1프레임)
+            var anim = bossNotiObject.GetComponent<Animator>();
+            if (anim != null)
+            {
+                float clipLength = anim.GetCurrentAnimatorStateInfo(0).length;
+                yield return new WaitForSeconds(clipLength);
+            }
+            bossNotiObject.SetActive(false);
+        }
+
+        // 8. 입력 해제 + 콜백 (스폰 마커 활성화)
         if (player != null) player.InputLocked = false;
         onComplete?.Invoke();
     }
