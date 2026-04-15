@@ -20,30 +20,9 @@ public class StatFieldUI : MonoBehaviour
     {
         if (sm == null || valueText == null) return;
 
-        float pct      = sm.GetPctMod(statType);
-        float finalVal = sm.GetFinal(statType);
-        float baseVal  = sm.GetBase(statType) + sm.GetEquipFlat(statType);
-
-        // 무기 기여치 합산 (ATK, CritChance, BleedPower, HealOnKill)
+        float finalVal    = sm.GetFinal(statType);
         float weaponBonus = WeaponStatHelper.GetAverageBonus(statType);
-        finalVal += weaponBonus;
-        baseVal  += weaponBonus;
-
-        // 곱산 스탯에서 base=0이면 pct가 결과에 영향을 주지 않음 → 표기 생략
-        bool showPct = !Mathf.Approximately(pct, 0f)
-                    && (IsAdditiveStat(statType) || !Mathf.Approximately(baseVal, 0f));
-
-        if (showPct)
-        {
-            string sign     = pct > 0f ? "+" : "";
-            string pctColor = pct < 0f ? "#FF8888" : "#88FF88";
-            valueText.text = $"{PlayerStatManager.FormatValue(statType, finalVal)} " +
-                             $"<color={pctColor}>({sign}{pct:0.#}%)</color>";
-        }
-        else
-        {
-            valueText.text = PlayerStatManager.FormatValue(statType, finalVal);
-        }
+        valueText.text = PlayerStatManager.FormatValue(statType, finalVal + weaponBonus);
     }
 
     /// <summary>증강 미리보기 — 해당 스탯이면 하늘색으로 예상 수치를 표시합니다.</summary>

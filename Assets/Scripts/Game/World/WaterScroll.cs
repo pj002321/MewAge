@@ -32,11 +32,9 @@ public class WaterScroll : MonoBehaviour
     void Update()
     {
         float dt = Time.unscaledDeltaTime;
-        Debug.Log($"[WaterScroll] Update: dt={dt}, speedX={speedX}, speedY={speedY}, uvRect before={rawImage.uvRect}");
         var r = rawImage.uvRect;
         r.x += speedX * dt;
         r.y += speedY * dt;
         rawImage.uvRect = r;
-        Debug.Log($"[WaterScroll] uvRect after={rawImage.uvRect}");
     }
 }

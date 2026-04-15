@@ -11,7 +11,7 @@ public class HomeUIBuilder
     // 상수
     // ────────────────────────────────────────────────────────────────
 
-    const string SCENE_PATH  = "Assets/_Recovery/home@scene.unity";
+    const string SCENE_PATH  = "Assets/씬/home@scene.unity";
     const float  TOP_BAR_H   = 190f;   // 기준 해상도(1080×1920) 기준 상단 바 높이
     const float  TAB_BAR_H   = 120f;   // 하단 탭 바 높이
 

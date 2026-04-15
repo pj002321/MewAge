@@ -36,6 +36,11 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
     public  int          CurrentChapter => currentChapter;
     public  string       CurrentChapterID => currentChapterID;
 
+    // 이전에 PlayerStatManager에 적용한 시너지 누계 (재계산 시 차감용)
+    private float _prevSynergyAtk;
+    private float _prevSynergyBleed;
+    private float _prevSynergyCrit;
+
     protected override bool DontDestroy => false;
 
     protected override void Awake()
@@ -68,6 +73,15 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
     {
         var sm = PlayerStatManager.Shared;
         var ps = PlayerStats.Shared;
+
+        // 이전에 적용한 시너지 보너스를 먼저 차감
+        if (sm != null)
+        {
+            if (_prevSynergyAtk   != 0f) sm.AddPctMod(StatType.ATK,        -_prevSynergyAtk);
+            if (_prevSynergyBleed != 0f) sm.AddPctMod(StatType.BleedPower, -_prevSynergyBleed);
+            if (_prevSynergyCrit  != 0f) sm.AddPctMod(StatType.CritChance, -_prevSynergyCrit);
+        }
+        _prevSynergyAtk = _prevSynergyBleed = _prevSynergyCrit = 0f;
 
         // 시너지 계산
         var synergies = SynergyHelper.GetChapterSynergies(currentChapter);
@@ -128,6 +142,12 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
                     _ => StatType.ATK
                 };
                 sm?.AddPctMod(stat, pct);
+                switch (stat)
+                {
+                    case StatType.ATK:        _prevSynergyAtk   += pct; break;
+                    case StatType.BleedPower: _prevSynergyBleed += pct; break;
+                    case StatType.CritChance: _prevSynergyCrit  += pct; break;
+                }
             }
         }
     }
