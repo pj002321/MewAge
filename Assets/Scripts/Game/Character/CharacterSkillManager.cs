@@ -117,7 +117,7 @@ public class CharacterSkillManager : MonoBehaviourSingleton<CharacterSkillManage
         if (_isActive) return;
         if (_currentPoints < _maxPoints) return;
 
-        FXManager.Shared?.SpawnPlayerText("FEVER !!", Color.blue);
+        FXManager.Shared?.SpawnPlayerText("FEVER!", new Color(0.12f, 0.73f, 1f));
 
         _isActive      = true;
         _currentPoints = 0;
