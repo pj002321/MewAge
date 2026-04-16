@@ -24,6 +24,10 @@ public class StructureWareManager : MonoBehaviourSingleton<StructureWareManager>
     const int    DismantleGold = 50;
     public const int MaxLevel  = 20;
 
+    [Header("프리셋 강제 규칙")]
+    [SerializeField] private string[] alwaysInPreset = { };  // 무조건 포함 (예: "C1_W불ID")
+    [SerializeField] private string[] neverInPreset  = { };  // 무조건 제외 (예: "C1_W진흙ID")
+
     readonly Dictionary<string, int> _counts = new();
     readonly Dictionary<string, int> _levels  = new();
     readonly string[] _preset = new string[4];
@@ -65,34 +69,75 @@ public class StructureWareManager : MonoBehaviourSingleton<StructureWareManager>
         OnChanged?.Invoke();
     }
 
-    /// <summary>비어있는 프리셋 슬롯을 보유 기물(없으면 C1 기물 지급)로 채웁니다.</summary>
+    /// <summary>비어있는 프리셋 슬롯을 보유 기물(없으면 C1 기물 지급)로 채웁니다.
+    /// 빈 슬롯이 있을 때만 alwaysInPreset/neverInPreset 규칙을 적용합니다.
+    /// 4개 모두 채운 플레이어는 건드리지 않습니다.</summary>
     public void EnsurePresetsNotEmpty()
     {
-        // 이미 프리셋에 등록된 ID 집합 (중복 방지)
-        var used = new HashSet<string>();
-        for (int i = 0; i < 4; i++)
-            if (!string.IsNullOrEmpty(_preset[i])) used.Add(_preset[i]);
-
         // 비어있는 슬롯 수 계산
         int emptyCount = 0;
         for (int i = 0; i < 4; i++)
             if (string.IsNullOrEmpty(_preset[i])) emptyCount++;
 
+        if (emptyCount == 0) return; // 4개 다 채워진 경우 — 아무것도 건드리지 않음
+
+        var never = new HashSet<string>(neverInPreset ?? new string[0]);
+
+        // neverInPreset 항목이 프리셋에 있으면 제거 (빈 슬롯 있을 때만)
+        for (int i = 0; i < 4; i++)
+        {
+            if (!string.IsNullOrEmpty(_preset[i]) && never.Contains(_preset[i]))
+            {
+                _preset[i] = null;
+                emptyCount++;
+            }
+        }
+
+        // alwaysInPreset 항목이 프리셋에 없으면 빈 슬롯에 강제 삽입
+        foreach (var forceId in alwaysInPreset ?? new string[0])
+        {
+            if (string.IsNullOrEmpty(forceId)) continue;
+            bool alreadyIn = false;
+            for (int i = 0; i < 4; i++)
+                if (_preset[i] == forceId) { alreadyIn = true; break; }
+            if (alreadyIn) continue;
+
+            // 보유하지 않으면 지급
+            if (!_counts.ContainsKey(forceId) || _counts[forceId] <= 0)
+                AddWareInternal(forceId, 1);
+
+            // 첫 번째 빈 슬롯에 배치
+            for (int i = 0; i < 4; i++)
+            {
+                if (string.IsNullOrEmpty(_preset[i]))
+                {
+                    _preset[i] = forceId;
+                    emptyCount--;
+                    break;
+                }
+            }
+        }
+
         if (emptyCount == 0) return;
 
-        // 프리셋에 없는 보유 기물 후보 수집
+        // 이미 프리셋에 등록된 ID 집합 (중복 방지)
+        var used = new HashSet<string>();
+        for (int i = 0; i < 4; i++)
+            if (!string.IsNullOrEmpty(_preset[i])) used.Add(_preset[i]);
+
+        // 프리셋에 없는 보유 기물 후보 수집 (neverInPreset 제외)
         var candidates = new List<string>();
         foreach (var id in GetOwnedIds())
-            if (!used.Contains(id)) candidates.Add(id);
+            if (!used.Contains(id) && !never.Contains(id)) candidates.Add(id);
 
-        // 후보가 부족하면 C1 기물을 랜덤 지급해서 보충
+        // 후보가 부족하면 C1 기물을 랜덤 지급해서 보충 (neverInPreset 제외)
         if (candidates.Count < emptyCount)
         {
             var c1 = GetC1IdsList();
             Shuffle(c1);
             foreach (var id in c1)
             {
-                if (used.Contains(id) || candidates.Contains(id)) continue;
+                if (used.Contains(id) || candidates.Contains(id) || never.Contains(id)) continue;
                 AddWareInternal(id, 1);
                 candidates.Add(id);
                 if (candidates.Count >= emptyCount) break;

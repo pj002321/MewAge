@@ -4,7 +4,8 @@ using TMPro;
 
 /// <summary>
 /// 기물 자동 사용 토글 버튼.
-/// Inspector: button, onColor, offColor, labelText(옵션) 연결
+/// Inspector: button, onColor, offColor, labelText(옵션), autoOnAnimator(옵션) 연결
+/// 씬 시작 시 자동으로 AUTO ON 상태로 시작합니다.
 /// </summary>
 public class StructureAutoButton : MonoBehaviour
 {
@@ -20,6 +21,10 @@ public class StructureAutoButton : MonoBehaviour
     [SerializeField] private string onLabel  = "AUTO ON";
     [SerializeField] private string offLabel = "AUTO OFF";
 
+    [Header("애니메이션")]
+    [SerializeField] private Animator autoOnAnimator; // autoon 클립이 있는 Animator
+    [SerializeField] private string   autoOnClip = "autoon";
+
     private bool subscribed;
 
     private void Awake()
@@ -34,7 +39,12 @@ public class StructureAutoButton : MonoBehaviour
         {
             StructureInventory.Shared.OnAutoChanged += OnAutoChanged;
             subscribed = true;
-            RefreshVisual(StructureInventory.Shared.IsAutoMode);
+
+            // 아직 OFF 상태면 자동으로 켜줌
+            if (!StructureInventory.Shared.IsAutoMode)
+                StructureInventory.Shared.ToggleAuto();
+            else
+                RefreshVisual(true);
         }
     }
 
@@ -53,8 +63,15 @@ public class StructureAutoButton : MonoBehaviour
 
     private void OnAutoChanged()
     {
-        if (StructureInventory.Shared != null)
-            RefreshVisual(StructureInventory.Shared.IsAutoMode);
+        if (StructureInventory.Shared == null) return;
+        bool isOn = StructureInventory.Shared.IsAutoMode;
+        RefreshVisual(isOn);
+
+        if (autoOnAnimator == null) return;
+        if (isOn)
+            autoOnAnimator.Play(autoOnClip, 0, 0f);  // 처음부터 재생
+        else
+            autoOnAnimator.StopPlayback();            // 정지
     }
 
     private void RefreshVisual(bool isOn)

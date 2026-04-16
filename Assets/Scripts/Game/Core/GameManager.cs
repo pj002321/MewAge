@@ -9,6 +9,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     [SerializeField] private TextMeshProUGUI waveText;
     [SerializeField] private Image waveIconImg;
     [SerializeField] private TextMeshProUGUI timerText;
+    [SerializeField] private TextMeshProUGUI countdownText; // 시작 3,2,1 전용 (별도 오브젝트)
     [SerializeField] private TextMeshProUGUI goldText;
     [SerializeField] private TextMeshProUGUI levelText;
     [SerializeField] private Slider          expSlider;
@@ -368,14 +369,32 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
             GoHome();
     }
 
+    /// <summary>
+    /// 카운트다운 종료 시 GameOverPanel에서 호출.
+    /// 1프레임 지연 후 isGameOver를 확인해 부활 버튼 클릭과의 레이스 컨디션 방지.
+    /// </summary>
+    public void RequestGameOverResult()
+    {
+        StartCoroutine(GameOverResultRoutine());
+    }
+
+    private IEnumerator GameOverResultRoutine()
+    {
+        yield return null; // 버튼 클릭(Revive)이 이 프레임 안에 처리되도록 1프레임 대기
+        if (isGameOver)
+            ShowGameOverResult();
+    }
+
     public void Revive()
     {
-        if (!isGameOver) return;
+        Debug.Log($"[GameManager] Revive() 호출 — isGameOver={isGameOver}, PlayerController={PlayerController.Instance}");
+        if (!isGameOver) { Debug.LogWarning("[GameManager] Revive() 무시: isGameOver=false"); return; }
         isGameOver = false;
         if (gameOverPanel)       gameOverPanel.SetActive(false);
         if (gameOverResultPanel) gameOverResultPanel.gameObject.SetActive(false);
         PlayerController.Instance?.Revive();
         EnemySpawner.Shared?.ResumeSpawning(wave);
+        Debug.Log("[GameManager] Revive() 완료");
     }
 
     public void RestartGame()
@@ -546,7 +565,9 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
             yield return null;
         }
 
-        if (timerText) { timerText.text = ""; timerText.gameObject.SetActive(true); }
+        // timerText는 낙하 중 숨김 (countdownText가 있으면 timerText 계속 숨김)
+        if (timerText) timerText.gameObject.SetActive(false);
+        if (countdownText) countdownText.gameObject.SetActive(false);
         _isCountingDown = true; // 낙하 중 타이머 UI 업데이트 방지
 
         // 4) 가속하며 낙하 시작
@@ -648,22 +669,23 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     /// <summary>게임 시작 전 카운트다운 (3 → 1 → "00:00").</summary>
     private IEnumerator CountdownRoutine()
     {
-        if (timerText == null) yield break;
+        // countdownText가 연결돼 있으면 그걸 사용, 없으면 timerText로 폴백
+        var cdText = countdownText != null ? countdownText : timerText;
+        if (cdText == null) yield break;
 
         _isCountingDown = true;
-        timerText.gameObject.SetActive(true);
-        Color c = timerText.color;
-        c.a = 1f;
-        timerText.color = c;
+        cdText.gameObject.SetActive(true);
 
         for (int i = 3; i >= 1; i--)
         {
-            timerText.text = $"{i}";
+            cdText.text = $"{i}";
             yield return new WaitForSecondsRealtime(1f);
         }
 
-        // 1 이후 바로 00:00 포맷 표시
-        timerText.text = "00:00";
+        cdText.gameObject.SetActive(false);
+
+        // timerText로 00:00 표시
+        if (timerText) { timerText.gameObject.SetActive(true); timerText.text = "00:00"; }
 
         if (notifyLabel != null) notifyLabel.gameObject.SetActive(false);
         _isCountingDown = false;

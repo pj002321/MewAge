@@ -3,29 +3,12 @@ using Mewage.DB;
 using UnityEngine;
 
 /// <summary>
-/// 기물 설치 연출을 담당합니다.
-/// 1) 설치 위치에 인디케이터(반투명 마커) 표시
-/// 2) 기물 슬롯 UI 위치에서 설치 위치로 스프라이트를 포물선 발사
-/// 3) 착지 후 실제 기물 프리팹 설치
-///
-/// Inspector:
-///   indicatorPrefab — 설치 위치 미리보기 GameObject (없으면 기물 스프라이트 사용)
-///   launchSpeed     — 발사체 속도 (유닛/초)
-///   arcHeight       — 포물선 최대 높이
-///   placeRadius     — 플레이어 기준 설치 거리 (max)
-///   minRadius       — 최소 거리
+/// 기물 설치를 담당합니다.
+/// 버튼 사용 즉시 플레이어 주변에 기물 프리팹을 설치합니다.
+/// Inspector: placeRadius, minRadius
 /// </summary>
 public class StructurePlacer : MonoBehaviourSingleton<StructurePlacer>
 {
-    [Header("인디케이터 (설치 위치 미리보기)")]
-    [SerializeField] private GameObject indicatorPrefab;
-    [SerializeField] private Color      indicatorTint = new Color(0.4f, 0.9f, 1f, 0.45f);
-    [SerializeField] private float      indicatorScale = 1.15f;
-
-    [Header("발사체")]
-    [SerializeField] private float launchSpeed = 14f;
-    [SerializeField] private float arcHeight   = 3f;
-
     [Header("설치 위치 (플레이어 주변)")]
     [SerializeField] private float placeRadius = 2.5f;
     [SerializeField] private float minRadius   = 1.2f;
@@ -34,59 +17,16 @@ public class StructurePlacer : MonoBehaviourSingleton<StructurePlacer>
 
     // ── 외부 진입점 ─────────────────────────────────────────────────
 
-    /// <summary>기물을 발사 연출과 함께 설치합니다.</summary>
-    /// <param name="data">설치할 기물 DB 항목</param>
-    /// <param name="launchOriginWorld">발사 시작점 (월드 좌표, 보통 UI 버튼을 변환한 위치)</param>
+    /// <summary>기물을 즉시 설치합니다.</summary>
     public void Place(DB_기물 data, Vector3 launchOriginWorld)
     {
         if (data == null) return;
-        StartCoroutine(PlaceRoutine(data, launchOriginWorld));
+        StartCoroutine(PlaceRoutine(data));
     }
 
-    // ── 연출 코루틴 ─────────────────────────────────────────────────
-
-    private IEnumerator PlaceRoutine(DB_기물 data, Vector3 launchOrigin)
+    private IEnumerator PlaceRoutine(DB_기물 data)
     {
         Vector3 target = GetTargetPosition();
-        Sprite  sprite = LoadIconSprite(data.f_기물ID);
-
-        // 1. 인디케이터 — 착지 위치를 즉시 표시
-        GameObject indicator = SpawnIndicator(target, sprite);
-
-        // 2. 발사체 — 버튼(launchOrigin)에서 target으로 날아감
-        GameObject proj = CreateSpriteGO("StructureProj", launchOrigin, sprite, Color.white, 1f);
-
-        // 3. 포물선 이동 (수동/자동 모드 속도 차이를 줄이고 빠르게 통일)
-        float dist     = Vector3.Distance(launchOrigin, target);
-        // 기존 속도 비례 대신 0.15 ~ 0.25초 사이의 고정 시간에 가까운 빠른 속도 사용
-        float duration = Mathf.Lerp(0.15f, 0.25f, Mathf.Clamp01(dist / 15f));
-        float elapsed  = 0f;
-
-        while (elapsed < duration)
-        {
-            elapsed += Time.deltaTime;
-            float   t   = Mathf.Clamp01(elapsed / duration);
-            float   arc = Mathf.Sin(t * Mathf.PI) * arcHeight;
-            Vector3 pos = Vector3.Lerp(launchOrigin, target, t) + Vector3.up * arc;
-
-            if (proj)
-            {
-                float   tNext   = Mathf.Clamp01((elapsed + Time.deltaTime) / duration);
-                float   arcNext = Mathf.Sin(tNext * Mathf.PI) * arcHeight;
-                Vector3 posNext = Vector3.Lerp(launchOrigin, target, tNext) + Vector3.up * arcNext;
-                Vector3 forward = posNext - pos;
-                if (forward.sqrMagnitude > 0.0001f)
-                    proj.transform.up = forward.normalized;
-
-                proj.transform.position = pos;
-            }
-
-            yield return null;
-        }
-
-        // 4. 착지 — 연출 오브젝트 제거 후 실제 기물 설치
-        if (proj)      Destroy(proj);
-        if (indicator) Destroy(indicator);
 
         SoundManager.Shared?.Play(SoundKey.Structure_Place);
 
@@ -106,12 +46,10 @@ public class StructurePlacer : MonoBehaviourSingleton<StructurePlacer>
 
         var zone = FindAnyObjectByType<StructureZone>();
         zone?.OccupyCell(target);
+        yield break;
     }
 
     // ── 경로 헬퍼 ───────────────────────────────────────────────────
-
-    private static Sprite LoadIconSprite(string id) =>
-        WareVisualConfig.Shared?.GetIcon(id);
 
     private static string GetInstallPath(string id)
     {
@@ -152,30 +90,4 @@ public class StructurePlacer : MonoBehaviourSingleton<StructurePlacer>
         return candidate;
     }
 
-    // ── 헬퍼 ────────────────────────────────────────────────────────
-
-    private GameObject SpawnIndicator(Vector3 pos, Sprite sprite)
-    {
-        if (indicatorPrefab != null)
-            return Instantiate(indicatorPrefab, pos, Quaternion.identity);
-
-        // indicatorPrefab 미설정 시 기물 스프라이트로 대체
-        return CreateSpriteGO("Indicator", pos, sprite, indicatorTint, indicatorScale);
-    }
-
-    private static GameObject CreateSpriteGO(string name, Vector3 pos, Sprite sprite, Color color, float scale)
-    {
-        var go = new GameObject(name);
-        go.transform.position   = pos;
-        go.transform.localScale = Vector3.one * scale;
-
-        if (sprite != null)
-        {
-            var sr        = go.AddComponent<SpriteRenderer>();
-            sr.sprite       = sprite;
-            sr.color        = color;
-            sr.sortingOrder = 20;
-        }
-        return go;
-    }
 }

@@ -56,7 +56,7 @@ public class GameOverPanel : MonoBehaviour
     /// <summary>재화 소모 후 부활 버튼 핸들러</summary>
     private void OnRevivePaid()
     {
-        this.DLog("User requested Paid Revive.");
+        Debug.Log($"[GameOverPanel] OnRevivePaid 호출 — _revived={_revived}, GameManager={GameManager.Shared}");
         // [TODO] 재화(젬/다이아 등) 소모 로직 추가 필요. 성공 시에만 ExecuteRevive() 호출.
         ExecuteRevive();
     }
@@ -96,11 +96,10 @@ public class GameOverPanel : MonoBehaviour
         yield return StartCoroutine(ShrinkRoutine());
 
         gameObject.SetActive(false);
-        if (!_revived)
-        {
-            this.DLog("Countdown finished without revive — Showing Result panel.");
-            GameManager.Shared?.ShowGameOverResult();
-        }
+        // 버튼 클릭(Revive)이 같은 프레임에 처리될 수 있으므로
+        // GameManager에 1프레임 지연 요청 — isGameOver로 최종 판단
+        this.DLog("Countdown finished — requesting GameOverResult (1-frame deferred).");
+        GameManager.Shared?.RequestGameOverResult();
     }
 
     private IEnumerator ShrinkRoutine()
