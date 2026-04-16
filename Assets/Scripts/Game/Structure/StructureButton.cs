@@ -83,7 +83,7 @@ public class StructureButton : MonoBehaviour
         if (iconImage != null)
         {
             bool hasItem = data != null && count > 0;
-            iconImage.sprite  = hasItem ? StructureWareManager.LoadIcon(data.f_기물ID) : null;
+            iconImage.sprite  = hasItem ? WareVisualConfig.Shared?.GetIcon(data.f_기물ID) : null;
             iconImage.enabled = hasItem;
         }
 

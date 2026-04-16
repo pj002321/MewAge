@@ -110,14 +110,8 @@ public class StructurePlacer : MonoBehaviourSingleton<StructurePlacer>
 
     // ── 경로 헬퍼 ───────────────────────────────────────────────────
 
-    private static Sprite LoadIconSprite(string id)
-    {
-        if (string.IsNullOrEmpty(id)) return null;
-        string[] parts   = id.Split('_');
-        string   chapter = parts.Length > 0 ? parts[0] : id;
-        var prefab = Resources.Load<GameObject>($"Ware/{chapter}/{id.ToLower()}");
-        return prefab != null ? prefab.GetComponentInChildren<SpriteRenderer>()?.sprite : null;
-    }
+    private static Sprite LoadIconSprite(string id) =>
+        WareVisualConfig.Shared?.GetIcon(id);
 
     private static string GetInstallPath(string id)
     {

@@ -14,6 +14,9 @@ public class HomeUIManager : MonoBehaviour
     [Header("User Info")]
     public HomeUserInfoBar userInfoBar;
 
+    [Header("Specific Image for Battle Tab")]
+    public Image specificImage; // 특정 이미지를 Panel_전투에서만 비활성화
+
     [Header("Tab Colors")]
     public Color activeColor = new Color(1f, 0.8f, 0.2f, 1f);
     public Color inactiveColor = new Color(0.5f, 0.5f, 0.5f, 1f);
@@ -110,6 +113,12 @@ public class HomeUIManager : MonoBehaviour
             float targetW = tabOriginalWidths[i] * ((i == index) ? activeWidthMult : inactiveWidthMult);
             if (_widthCoroutines[i] != null) StopCoroutine(_widthCoroutines[i]);
             _widthCoroutines[i] = StartCoroutine(LerpWidth(_layoutElements[i], targetW, widthAnimTime));
+        }
+
+        // 특정 이미지를 Panel_전투에서만 비활성화
+        if (specificImage != null)
+        {
+            specificImage.gameObject.SetActive(index != 2); // 전투 탭(index 2)일 때만 비활성화, 다른 탭에서는 활성화
         }
     }
 

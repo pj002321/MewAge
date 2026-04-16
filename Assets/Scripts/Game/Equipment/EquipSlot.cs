@@ -124,7 +124,10 @@ public class EquipSlot : MonoBehaviour,
         int chapter = UpgradeManager.Shared?.CurrentChapter ?? 1;
         SetStarObject(starObjects, has ? data.star : 0);
         WeaponInfoPanel.SetSynergyIcon(synergyIconImg, has ? data.tag1 : WeaponSynergyTag.None, chapter);
-        WeaponInfoPanel.SetTypeIcon(weaponTypeImg, has ? data.weaponType : WeaponType.Melee, has ? data.grade : WeaponGrade.Normal);
+        if (has)
+            WeaponInfoPanel.SetTypeIcon(weaponTypeImg, data.weaponType, data.grade);
+        else if (weaponTypeImg)
+            weaponTypeImg.enabled = false;
         transform.localScale = Vector3.one * (has && selected ? 1.15f : 1f);
 
         if (frameImg)

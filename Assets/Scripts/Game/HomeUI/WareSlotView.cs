@@ -10,17 +10,16 @@ using Mewage.DB;
 /// 프리셋 슬롯 / 인벤토리 목록 양쪽에서 사용합니다.
 ///
 /// Inspector 연결:
-///   bgImage    — 배경 (시대 색상 틴트)
-///   frameImage — 테두리 (★1=흰, ★2=골드, ★3=퍼플)
-///   iconImage  — 기물 스프라이트
-///   eraBadge   — 시대 뱃지 배경 Image
-///   eraText    — 시대 약자 텍스트 (구석기→구, 현대→현 등)
-///   roleBadge  — 역할 뱃지 배경
-///   roleText   — 역할 텍스트 (CC / 버스트 / 지속 / 버프)
-///   nameText   — 기물 이름
-///   starText   — "★★☆"
-///   countText  — "×3"
-///   button     — 클릭
+///   backgroundImage — 배경 (시대 색상 틴트)
+///   frameImage      — 등급 프레임 Image (WareVisualConfig 스프라이트 + 등급 색상)
+///   iconImage       — 기물 아이콘 (WareVisualConfig ID별 할당)
+///   roleImage       — 역할 아이콘 Image (WareVisualConfig 스프라이트)
+///   eraText         — 시대 약자 텍스트 (구석기→구, 현대→현 등)
+///   gradeText       — 등급 텍스트 (일반 / 레어 / 에픽 / 신화 / S등급)
+///   nameText        — 기물 이름
+///   starText        — 강화 레벨 (Lv.N / Lv.MAX)
+///   countText       — 보유 수량 (×3)
+///   button          — 클릭
 /// </summary>
 [RequireComponent(typeof(Button))]
 public class WareSlotView : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler
@@ -31,11 +30,11 @@ public class WareSlotView : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
 
     [Header("슬롯 UI (EquipmentSlotView 스타일)")]
     public Image           backgroundImage; // 전체적인 배경 (선택 사항)
-    public Image           frameImage;      // ★ 등급 색상 테두리
+    public Image           frameImage;      // 등급 프레임 (WareVisualConfig 스프라이트)
     public Image           iconImage;       // 기물 아이콘
+    public Image           roleImage;       // 역할 아이콘 (WareVisualConfig 스프라이트)
     public TextMeshProUGUI eraText;         // 시대 표시 (구, 신, 현 …)
     public TextMeshProUGUI gradeText;       // 등급 표시 (Normal, Rare, Epic …)
-    public TextMeshProUGUI roleText;        // 역할 표시 (CC, 버스트, 지속 …)
     public TextMeshProUGUI nameText;        // 기물 이름
     public TextMeshProUGUI starText;        // ★ 표시 (★★★)
     public TextMeshProUGUI countText;       // 보유 수량 (x10)
@@ -131,21 +130,26 @@ public class WareSlotView : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
             backgroundImage.color   = EraColor(era) * new Color(1, 1, 1, 0.2f) + new Color(0.1f, 0.1f, 0.2f, 0.8f);
         }
 
-        // 2. 프레임 등급 색상
+        // 2. 프레임 등급 (WareVisualConfig 스프라이트, 색상 없음)
         if (frameImage)
         {
-            frameImage.enabled = true;
-            frameImage.color   = GradeColor(data.f_등급);
+            var cfg         = WareVisualConfig.Shared;
+            var wareGrade   = WareVisualConfig.ParseGrade(data.f_등급);
+            var frameSprite = PresetSlotIndex >= 0
+                ? cfg?.GetPresetFrame(wareGrade)
+                : cfg?.GetGradeFrame(wareGrade);
+            frameImage.sprite  = frameSprite;
+            frameImage.color   = Color.white;
+            frameImage.enabled = frameSprite != null;
         }
         else Debug.LogWarning($"[WareSlotView] {gameObject.name}: frameImage가 연결되지 않았습니다.");
 
-        // 3. 아이콘
-        var sprite = StructureWareManager.LoadIcon(id);
+        // 3. 아이콘 (WareVisualConfig ID별 할당)
+        var iconSprite = WareVisualConfig.Shared?.GetIcon(id);
         if (iconImage)
         {
-            iconImage.sprite  = sprite;
-            iconImage.enabled = sprite != null;
-            if (sprite == null) Debug.LogWarning($"[WareSlotView] {id}의 아이콘을 로드할 수 없습니다.");
+            iconImage.sprite  = iconSprite;
+            iconImage.enabled = iconSprite != null;
         }
 
         // 4. 시대 텍스트
@@ -165,14 +169,14 @@ public class WareSlotView : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         }
         else if (gradeText) gradeText.enabled = false;
 
-        // 6. 역할 텍스트
-        if (roleText && data != null)
+        // 6. 역할 아이콘
+        if (roleImage)
         {
-            roleText.enabled = true;
-            roleText.text    = data.f_역할;
-            roleText.color   = RoleColor(data.f_역할);
+            var wareRole   = WareVisualConfig.ParseRole(data.f_역할);
+            var roleSprite = WareVisualConfig.Shared?.GetRoleIcon(wareRole);
+            roleImage.sprite  = roleSprite;
+            roleImage.enabled = roleSprite != null;
         }
-        else if (roleText) roleText.enabled = false;
 
         // 7. 기물 이름
         if (nameText)
@@ -206,12 +210,12 @@ public class WareSlotView : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         _id = null;
         // _onClick은 유지 (프리셋 편집 용도)
 
-        if (backgroundImage) backgroundImage.color = new Color(0.1f, 0.1f, 0.15f, 0.5f);
-        if (frameImage)      frameImage.color     = new Color(0.35f, 0.35f, 0.35f, 0.5f);
+        if (backgroundImage) backgroundImage.color   = new Color(0.1f, 0.1f, 0.15f, 0.5f);
+        if (frameImage)    { frameImage.sprite = null; frameImage.color = Color.white; frameImage.enabled = false; }
         if (iconImage)       iconImage.enabled    = false;
+        if (roleImage)       roleImage.enabled    = false;
         if (eraText)         eraText.text = "";
         if (gradeText)       gradeText.enabled = false;
-        if (roleText)        roleText.enabled = false;
         if (nameText)        nameText.text = "(선택 안 함)";
         if (nameText)        nameText.color = new Color(0.6f, 0.6f, 0.6f, 1f);
         if (starText)        starText.text = "";
