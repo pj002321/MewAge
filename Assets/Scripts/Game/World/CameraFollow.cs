@@ -60,21 +60,12 @@ public class CameraFollow : MonoBehaviour
         // 먼저 비활성화하고 projection matrix를 초기화한 뒤 orthographicSize를 설정해야 합니다.
         var ppc = GetComponent("PixelPerfectCamera") as Behaviour;
         if (ppc != null)
-        {
             ppc.enabled = false;
-            cam.ResetProjectionMatrix();
-        }
 
-        // 세로형(Portrait) 게임 기준 (1080x1920 = 9:16 비율)
-        // 화면 가로 넓이를 일정하게 보장하여 캐릭터 비율이 거대해지지 않도록 방지
+        cam.ResetProjectionMatrix();
+
         if (fixedOrthographicSize > 0f)
-        {
-            float targetAspect = 9f / 16f;
-            if (cam.aspect < targetAspect)
-                cam.orthographicSize = fixedOrthographicSize * (targetAspect / cam.aspect); // 모바일 등 길쭉한 화면
-            else
-                cam.orthographicSize = fixedOrthographicSize; // 태블릿, PC 등 넓은 화면
-        }
+            cam.orthographicSize = fixedOrthographicSize;
     }
 
     // ── Public API ────────────────────────────────────────────────
@@ -136,10 +127,12 @@ public class CameraFollow : MonoBehaviour
 
     private void Update()
     {
-        // 모바일 환경에서 씬 전환 직후 Screen 해상도는 동일하지만 Camera.aspect가 Unity 내부에 뒤늦게 세팅되는 현상 방지
-        if (Mathf.Abs(cam.aspect - lastAspect) > 0.001f)
+        // 모바일 환경에서 씬 전환 직후 Screen 해상도는 동일하지만 aspect가 Unity 내부에 뒤늦게 세팅되는 현상 방지
+        // cam.aspect 대신 Screen을 직접 읽어 Viewport Rect 영향 없이 비교
+        float currentScreenAspect = (float)Screen.width / Screen.height;
+        if (Mathf.Abs(currentScreenAspect - lastAspect) > 0.001f)
         {
-            lastAspect = cam.aspect;
+            lastAspect = currentScreenAspect;
             Init();
         }
     }
