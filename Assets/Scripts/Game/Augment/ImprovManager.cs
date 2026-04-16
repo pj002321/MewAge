@@ -200,12 +200,14 @@ public class ImprovManager : MonoBehaviourSingleton<ImprovManager>
 
         // 획득 이력 기록
         string key = data.f_증강ID.ToString();
+        Debug.Log($"[ImprovManager] OnImprovSelected 호출 — key='{key}', isEmpty={string.IsNullOrEmpty(key)}, instance={GetInstanceID()}");
         if (!string.IsNullOrEmpty(key))
         {
             if (_acquired.TryGetValue(key, out var entry))
                 _acquired[key] = (entry.data, entry.count + 1);
             else
                 _acquired[key] = (data, 1);
+            Debug.Log($"[ImprovManager] _acquired 저장 완료 — count={_acquired.Count}");
         }
 
         this.DLog($"[ImprovManager] 증강 적용: {data.f_이름} (type={data.f_증강ID}, 주={main}, 보조={sub})");

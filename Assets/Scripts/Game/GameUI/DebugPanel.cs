@@ -16,9 +16,11 @@ public class DebugPanel : MonoBehaviour
     [Header("UI 연결")]
     [SerializeField] private Button          skipWaveButton;
     [SerializeField] private Button          bossWaveButton;
+    [SerializeField] private Button          invincibleButton;
     [SerializeField] private TextMeshProUGUI waveLabel;
 
-    private bool isVisible = true;
+    private bool isVisible    = true;
+    private bool _invincible  = false;
 
     [Header("웨이브 점프 버튼 (jumpWaves 와 1:1 대응)")]
     [SerializeField] private Button[] jumpButtons;
@@ -30,6 +32,7 @@ public class DebugPanel : MonoBehaviour
 
         skipWaveButton?.onClick.AddListener(OnSkipWave);
         bossWaveButton?.onClick.AddListener(OnBossWave);
+        invincibleButton?.onClick.AddListener(OnToggleInvincible);
 
         for (int i = 0; i < jumpButtons.Length; i++)
         {
@@ -56,6 +59,20 @@ public class DebugPanel : MonoBehaviour
     {
         Debug.Log($"[Debug] BossWave 버튼 클릭 — GameManager={GameManager.Shared}");
         GameManager.Shared?.DebugJumpToBossWave();
+    }
+
+    public void OnToggleInvincible()
+    {
+        _invincible = !_invincible;
+        PlayerController.Instance?.SetDebugInvincible(_invincible);
+
+        if (invincibleButton != null)
+        {
+            var label = invincibleButton.GetComponentInChildren<TextMeshProUGUI>();
+            if (label) label.text = _invincible ? "무적 ON" : "무적 OFF";
+        }
+
+        Debug.Log($"[Debug] 무적 {(_invincible ? "ON" : "OFF")}");
     }
 
     public void OnJumpToWave(int wave)

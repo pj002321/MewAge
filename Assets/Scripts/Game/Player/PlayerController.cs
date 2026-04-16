@@ -213,7 +213,27 @@ public class PlayerController : MonoBehaviour
 
     public void TakeDamage(float damage)
     {
-        if (isInvincible) return;
+        if (isInvincible)
+        {
+            // 무적 상태에서도 피해 효과는 적용 (피만 안 달뿐이지)
+            // defense = 피해 감소율(%). defense=10 → 10% 감소, defense=70 → 70% 감소
+            float invincibleReduction = Mathf.Clamp01(defense / 100f);
+            float invincibleReduced   = damage * (1f - invincibleReduction);
+            // HP는 감소하지 않음
+            SyncHPUI();
+            SoundManager.Shared?.Play(SoundKey.Player_Hit);
+            hitFlash?.Flash();
+            hitShake?.Shake();
+            CameraFollow.Shared?.Shake();
+            TriggerHaptic();
+
+            // 피격 후 짧은 무적 (여러 적에 동시에 맞는 것 방지)
+            if (hitInvincibleDuration > 0f)
+                StartCoroutine(HitInvincibleRoutine(hitInvincibleDuration));
+
+            return;
+        }
+
         if (dodge > 0f && Random.value < dodge)
         {
             FXManager.Shared?.SpawnPlayerText("회피", new Color(1f, 0.95f, 0.4f));
@@ -486,6 +506,9 @@ public class PlayerController : MonoBehaviour
             }
         }
     }
+
+    /// <summary>디버그 전용 — 무적 영구 토글. true면 피격 무시, false면 해제.</summary>
+    public void SetDebugInvincible(bool on) => isInvincible = on;
 
     /// <summary>GameManager.Revive()에서 호출 — HP를 가득 채우고 3초 무적 부여</summary>
     public void Revive()

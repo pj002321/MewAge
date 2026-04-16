@@ -75,6 +75,10 @@ public class WaveEnvironmentSwitcher : MonoBehaviourSingleton<WaveEnvironmentSwi
             var parent = bossEnvParent != null ? bossEnvParent : transform;
             _activeBossInstance = Instantiate(_currentStage.bossBackground, parent);
 
+            // Instantiate 직후 즉시 스케일 적용 — LateUpdate 전 1프레임 깜빡임 방지
+            foreach (var fit in _activeBossInstance.GetComponentsInChildren<FitSpriteToScreen>(true))
+                fit.Fit();
+
             var envComp = _activeBossInstance.GetComponentInChildren<EnvironmentBackground>(true);
             CurrentBossEnterPoint = envComp?.bossEnterPoint;
             CurrentBossSpawnPoint = envComp?.bossSpawnPoint;
@@ -154,10 +158,14 @@ public class WaveEnvironmentSwitcher : MonoBehaviourSingleton<WaveEnvironmentSwi
         var parent = normalEnvParent != null ? normalEnvParent : transform;
         _activeBgInstance = Instantiate(matched.Value.background, parent);
 
+        // Instantiate 직후 즉시 스케일 적용 — LateUpdate 전 1프레임 깜빡임 방지
+        foreach (var fit in _activeBgInstance.GetComponentsInChildren<FitSpriteToScreen>(true))
+            fit.Fit();
+
         var envComp = _activeBgInstance.GetComponentInChildren<EnvironmentBackground>(true);
         CurrentBossExitPoint = envComp?.bossExitPoint;
 
-        // FitSpriteToScreen.Start()가 실행된 뒤(1프레임 후)에 Register — 스케일 반영 보장
+        // MovementBounds·SpawnZone 등록은 스케일 반영 후 1프레임 뒤에 수행
         StartCoroutine(RegisterAfterFrame(_activeBgInstance));
     }
 

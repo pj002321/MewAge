@@ -17,6 +17,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     [SerializeField] private GameObject         gameOverPanel;       // 부활 패널
     [SerializeField] private GameOverResultPanel gameOverResultPanel; // 게임오버 결과 패널
     [SerializeField] private GameClearPanel  gameClearPanel;
+    [SerializeField] private GamePausePanel  gamePausePanel;
 
     [Header("Wave 타이머")]
     // Normal wave durations: Wave 1~9=20s, 11~19=30s, 21~29=35s. Boss wave: 90s.
@@ -69,6 +70,9 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 
     private IEnumerator InitAndStartRoutine()
     {
+        // yield return null 이전에 숨겨야 첫 프레임 Update()의 UpdateTimerUI()가 "00:00"을 그리지 않음
+        if (timerText) timerText.gameObject.SetActive(false);
+
         // 1. 유니티 엔진과 모바일 기기(Safe Area, 해상도 등)가 씬 로딩 직후 초기화될 시간을 1프레임 대기합니다.
         yield return null;
 
@@ -542,9 +546,10 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
             yield return null;
         }
 
-        if (timerText) timerText.gameObject.SetActive(true);
+        if (timerText) { timerText.text = ""; timerText.gameObject.SetActive(true); }
+        _isCountingDown = true; // 낙하 중 타이머 UI 업데이트 방지
 
-        // 3) 가속하며 낙하 시작
+        // 4) 가속하며 낙하 시작
         float fallSpeed = 0f;
         while (true)
         {
@@ -565,7 +570,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         // 착지 스쿼시 연출
         yield return StartCoroutine(LandingSquishRoutine(player.transform));
 
-        // 카운트다운
+        // 3,2,1 카운트다운
         yield return StartCoroutine(CountdownRoutine());
 
         player.InputLocked = false;
@@ -640,7 +645,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         notifyLabel.gameObject.SetActive(false);
     }
 
-    /// <summary>게임 시작 전 카운트다운 (3 → 0).</summary>
+    /// <summary>게임 시작 전 카운트다운 (3 → 1 → "00:00").</summary>
     private IEnumerator CountdownRoutine()
     {
         if (timerText == null) yield break;
@@ -651,11 +656,14 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         c.a = 1f;
         timerText.color = c;
 
-        for (int i = 3; i >= 0; i--)
+        for (int i = 3; i >= 1; i--)
         {
-            timerText.text = i == 0 ? "SURVIVE!" : $"0{i}";
+            timerText.text = $"{i}";
             yield return new WaitForSecondsRealtime(1f);
         }
+
+        // 1 이후 바로 00:00 포맷 표시
+        timerText.text = "00:00";
 
         if (notifyLabel != null) notifyLabel.gameObject.SetActive(false);
         _isCountingDown = false;
@@ -776,6 +784,18 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     /// <summary>인게임 획득 골드/경험치를 누적합니다. ItemDropManager, EXP 지급 측에서 호출하세요.</summary>
     public void AddSessionGold(int amount) => sessionGoldGained += amount;
     public void AddSessionExp (int amount) => sessionExpGained  += amount;
+
+    // ── 일시정지 ─────────────────────────────────────────────────
+    public void TogglePause()
+    {
+        if (isGameOver) return;
+        if (gamePausePanel == null) return;
+
+        if (gamePausePanel.gameObject.activeSelf)
+            gamePausePanel.Hide();
+        else
+            gamePausePanel.Show();
+    }
 
     // ── 디버그 전용 ──────────────────────────────────────────────
     /// <summary>현재 웨이브를 즉시 종료합니다. 패널이 열려 있어도 강제 작동합니다.</summary>

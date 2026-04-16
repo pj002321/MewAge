@@ -12,6 +12,7 @@ public class HitFlash : MonoBehaviour
     private SpriteRenderer[] srs;
     private Material[]       originalMats;
     private Coroutine        flashCoroutine;
+    private bool             _isFlashing;
 
     // 씬 전체 공유 흰색 실루엣 재질
     private static Material _flashMat;
@@ -38,9 +39,10 @@ public class HitFlash : MonoBehaviour
 
     private void CacheOriginalMats()
     {
+        if (srs == null || srs.Length == 0) return;
         originalMats = new Material[srs.Length];
         for (int i = 0; i < srs.Length; i++)
-            originalMats[i] = srs[i].material;
+            if (srs[i] != null) originalMats[i] = srs[i].material;
     }
 
     public void Flash()
@@ -55,20 +57,39 @@ public class HitFlash : MonoBehaviour
 
     private IEnumerator FlashRoutine(Material flashMat)
     {
-        // 원본 재질이 바뀌었을 수 있으니 매번 갱신
-        CacheOriginalMats();
+        // 이미 플래시 중이라면 원본 재질을 다시 캐싱하지 않습니다.
+        // (하얗게 변한 재질을 원본으로 오인해 저장하는 현상 방지)
+        if (!_isFlashing)
+            CacheOriginalMats();
 
-        foreach (var sr in srs) sr.material = flashMat;
+        _isFlashing = true;
+        foreach (var sr in srs) 
+            if (sr != null) sr.material = flashMat;
+
         yield return new WaitForSeconds(flashDuration);
+
         RestoreMats();
+        _isFlashing = false;
+        flashCoroutine = null;
     }
 
     private void RestoreMats()
     {
-        if (originalMats == null) return;
+        if (originalMats == null || srs == null) return;
         for (int i = 0; i < srs.Length && i < originalMats.Length; i++)
             if (srs[i] != null && originalMats[i] != null)
                 srs[i].material = originalMats[i];
+    }
+
+    private void OnDisable()
+    {
+        // 도중에 비활성화되더라도 재질이 하얗게 남지 않도록 복구
+        if (_isFlashing)
+        {
+            RestoreMats();
+            _isFlashing = false;
+        }
+        StopAllCoroutines();
     }
 
     private void OnDestroy()
@@ -77,3 +98,4 @@ public class HitFlash : MonoBehaviour
         RestoreMats();
     }
 }
+
