@@ -97,6 +97,13 @@ public abstract class StructureSkillBase : MonoBehaviour
         transform.localScale = normalScale;
     }
 
+    /// <summary>
+    /// 기물이 수명을 다해 파괴되기 직전에 StructureController가 호출합니다.
+    /// 사라지는 연출(역재생, bDestroy 등)이 필요한 스킬에서 오버라이드하세요.
+    /// 이 코루틴이 끝난 후 gameObject가 파괴됩니다.
+    /// </summary>
+    public virtual System.Collections.IEnumerator OnPreDestroy() { yield break; }
+
     protected virtual void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.cyan;

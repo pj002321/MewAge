@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// 둔화 기물 스킬.
+/// 둔화 기물 스킬 (진흙 기물).
 /// 설치 위치 radius 범위 내 적의 이동속도를 subValue% 감소시킵니다.
 /// tickInterval마다 범위 내 적을 재검사하여 둔화를 갱신합니다.
 /// 둔화 중 적의 SpriteRenderer가 보라색으로 변합니다.
+/// 설치 시 mudVfxPrefab을 기물 위치에 스폰하고,
+/// 수명이 다하면 VFX Animator bool "bDestroy"를 true로 설정한 뒤 파괴합니다.
 ///
 /// mainValue : (미사용, 향후 DoT 피해 등으로 확장 가능)
 /// subValue  : 이동속도 감소율 (%) — 예: 40 → 40% 감소
@@ -15,19 +17,31 @@ using UnityEngine;
 ///
 /// # Unity Setup:
 ///   1. 기물 프리팹에 StructureController + 이 스크립트를 부착.
-///   2. slowDuration : 둔화 지속시간 (범위 밖으로 나간 후 유지 시간)
+///   2. slowDuration  : 둔화 지속시간 (범위 밖으로 나간 후 유지 시간)
+///   3. mudVfxPrefab  : 스폰할 VFX 프리팹 (Animator + bool "bDestroy" 파라미터 필요)
+///   4. destroyAnimDuration : bDestroy 설정 후 VFX 파괴까지 대기 시간
 /// </summary>
 public class SlowSkill : StructureSkillBase
 {
     [Header("둔화 설정")]
-    [SerializeField] private float slowDuration = 1.5f;   // 범위 이탈 후 유지 시간
+    [SerializeField] private float slowDuration = 1.5f;
     [SerializeField] private Color slowColor    = new Color(0.6f, 0.3f, 0.9f, 1f);
 
-    // 현재 둔화 적용된 적 → 코루틴 핸들 관리
+    [Header("진흙 VFX 설정")]
+    [SerializeField] private GameObject mudVfxPrefab;
+    [SerializeField] private float      destroyAnimDuration = 0.5f;
+
     private readonly Dictionary<EnemyController, Coroutine> _activeSlows = new();
+    private readonly Dictionary<EnemyBehaviourBase, float>  _savedSpeeds = new();
+
+    private GameObject _vfxInstance;
 
     public override void Activate()
     {
+        // VFX 스폰
+        if (mudVfxPrefab != null)
+            _vfxInstance = Instantiate(mudVfxPrefab, transform.position, Quaternion.identity);
+
         StartCoroutine(TickRoutine());
     }
 
@@ -48,7 +62,6 @@ public class SlowSkill : StructureSkillBase
         {
             if (!col.TryGetComponent<EnemyController>(out var enemy)) continue;
 
-            // 이미 둔화 중이면 코루틴 재시작(갱신)
             if (_activeSlows.TryGetValue(enemy, out var existing) && existing != null)
                 StopCoroutine(existing);
 
@@ -64,13 +77,11 @@ public class SlowSkill : StructureSkillBase
         var sr        = enemy.GetComponent<SpriteRenderer>();
         Color originalColor = sr != null ? sr.color : Color.white;
 
-        // 둔화 적용
         if (behaviour != null) ApplySlow(behaviour, subValue);
         if (sr) sr.color = slowColor;
 
         yield return new WaitForSeconds(slowDuration);
 
-        // 복구
         if (behaviour != null) RemoveSlow(behaviour, subValue);
         if (sr && enemy != null) sr.color = originalColor;
 
@@ -78,13 +89,8 @@ public class SlowSkill : StructureSkillBase
             _activeSlows.Remove(enemy);
     }
 
-    // EnemyBehaviourBase에 moveSpeed 필드가 있다면 직접 조정,
-    // 없으면 enabled 토글 대신 moveSpeedMultiplier 방식을 사용.
-    // 현재 구조에서는 컴포넌트 스케일 방식으로 처리합니다.
     void ApplySlow(EnemyBehaviourBase beh, float pct)
     {
-        // EnemyBehaviourBase에 moveSpeedMultiplier가 있으면 사용,
-        // 없으면 리플렉션으로 _moveSpeed 직접 조정합니다.
         var field = beh.GetType().GetField("moveSpeed",
             System.Reflection.BindingFlags.Instance |
             System.Reflection.BindingFlags.Public |
@@ -94,7 +100,6 @@ public class SlowSkill : StructureSkillBase
         {
             float original = (float)field.GetValue(beh);
             field.SetValue(beh, original * (1f - pct / 100f));
-            // 복구를 위해 원본값을 따로 보관
             _savedSpeeds[beh] = original;
         }
     }
@@ -113,7 +118,19 @@ public class SlowSkill : StructureSkillBase
         }
     }
 
-    private readonly Dictionary<EnemyBehaviourBase, float> _savedSpeeds = new();
+    /// <summary>수명 만료 시 VFX Animator bDestroy=true 설정 후 파괴합니다.</summary>
+    public override IEnumerator OnPreDestroy()
+    {
+        if (_vfxInstance == null) yield break;
+
+        var anim = _vfxInstance.GetComponent<Animator>();
+        if (anim != null)
+            anim.SetBool("bDestroy", true);
+
+        yield return new WaitForSeconds(destroyAnimDuration);
+
+        if (_vfxInstance != null) Destroy(_vfxInstance);
+    }
 
     protected override void OnDrawGizmosSelected()
     {

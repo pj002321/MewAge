@@ -300,6 +300,13 @@ public class WeaponPoint : MonoBehaviour
 
         if (preferBoss)
         {
+            if (weaponType == WeaponType.Lightning)
+            {
+                _noAttackDiagTimer = 0f;
+                ZapAtBoss(boss);
+                cooldownTimer = attackCooldown;
+                return;
+            }
             if (weaponType == WeaponType.Ranged)
             {
                 _noAttackDiagTimer = 0f;
@@ -322,6 +329,14 @@ public class WeaponPoint : MonoBehaviour
             Vector2 toBoss = ((Vector2)boss.transform.position - origin).normalized;
             pullbackLocalPos = -(Vector3)toBoss * pullbackDist;
             state = State.Pullback;
+            return;
+        }
+
+        if (weaponType == WeaponType.Lightning && nearest != null)
+        {
+            _noAttackDiagTimer = 0f;
+            ZapAt(nearest);
+            cooldownTimer = attackCooldown;
             return;
         }
 
@@ -390,6 +405,32 @@ public class WeaponPoint : MonoBehaviour
         Vector2 dir = (target.transform.position - transform.position).normalized;
         var go = Instantiate(projectilePrefab, transform.position, Quaternion.identity);
         go.GetComponent<Projectile>()?.Init(finalDmg, dir, projectileSpeed, isPrimaryCritical: isCrit, lifeSteal: lifeSteal, dotDamage: dotDamage, areaHitRadius: areaHitRadius, areaHitDamageRatio: areaHitDamageRatio, criticalRate: criticalRate, criticalMultiplier: criticalMultiplier, baseDamage: attackDamage);
+        TriggerScalePulse();
+    }
+
+    private void ZapAtBoss(BossController boss)
+    {
+        if (projectilePrefab == null) return;
+        var go = Instantiate(projectilePrefab, transform.position, Quaternion.identity);
+        var zap = go.GetComponent<LightningProjectile>();
+        if (zap != null) zap.Init(boss);
+
+        var vis = go.GetComponent<LightningVisual>();
+        if (vis != null) vis.Setup(this.transform, boss.transform);
+
+        TriggerScalePulse();
+    }
+
+    private void ZapAt(EnemyController target)
+    {
+        if (projectilePrefab == null) return;
+        var go = Instantiate(projectilePrefab, transform.position, Quaternion.identity);
+        var zap = go.GetComponent<LightningProjectile>();
+        if (zap != null) zap.Init(target);
+
+        var vis = go.GetComponent<LightningVisual>();
+        if (vis != null) vis.Setup(this.transform, target.transform);
+
         TriggerScalePulse();
     }
 

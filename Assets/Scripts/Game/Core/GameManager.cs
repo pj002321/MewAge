@@ -412,6 +412,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     {
         wave++;
         waitingForUpgrade = false;
+        ItemDropManager.Shared?.ResetWaveDrops();
 
         // 웨이브 시작 시 MaxHP의 10% 회복 (만땅이어도 텍스트 표시)
         var player = PlayerController.Instance;

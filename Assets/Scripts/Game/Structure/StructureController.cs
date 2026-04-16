@@ -50,6 +50,10 @@ public class StructureController : MonoBehaviour
             this.DLog($"[StructureController] {gameObject.name} 설치됨. {duration}초 뒤 파괴 예정.");
             yield return new WaitForSeconds(duration);
 
+            // 스킬 사라짐 연출 (역재생, bDestroy 등) 완료 대기
+            if (skill != null)
+                yield return StartCoroutine(skill.OnPreDestroy());
+
             this.DLog($"[StructureController] {gameObject.name} 수명 다하여 파괴됨.");
             Destroy(gameObject);
         }

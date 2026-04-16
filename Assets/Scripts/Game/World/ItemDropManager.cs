@@ -28,6 +28,11 @@ public class ItemDropManager : MonoBehaviourSingleton<ItemDropManager>
     [Header("기물 구슬 (챕터 필터링)")]
     [SerializeField] private int currentChapter = 1;
 
+    // 회복 구슬 프리팹 캐시 (Resources/AUG/aug_spw_hp_skl)
+    private const string HealOrbPath = "AUG/aug_spw_hp_skl";
+    private GameObject _healOrbPrefab;
+    private bool _healOrbSpawnedThisWave;
+
     protected override bool DontDestroy => false;
 
     /// <summary>보스 처치 시 다량의 골드·exp 오브를 사방으로 뿜어냅니다.</summary>
@@ -48,7 +53,55 @@ public class ItemDropManager : MonoBehaviourSingleton<ItemDropManager>
 
         if (Random.value <= structureDropChance)
             SpawnStructureOrb(pos);
+
+        TrySpawnHealOrb(pos);
     }
+
+    /// <summary>AUG_SPW_HP_SKL 증강 확률에 따라 체력 회복 구슬을 스폰합니다.</summary>
+    private void TrySpawnHealOrb(Vector3 deathPos)
+    {
+        if (_healOrbSpawnedThisWave) return;
+
+        var player = PlayerController.Instance;
+        if (player == null)
+        {
+            this.DLog("[ItemDrop] TrySpawnHealOrb: PlayerController.Instance null");
+            return;
+        }
+
+        float chance = player.HealOrbSpawnChance;
+        if (chance <= 0f)
+        {
+            this.DLog($"[ItemDrop] TrySpawnHealOrb: chance={chance} (0이하 → 스킵)");
+            return;
+        }
+
+        float roll = Random.value;
+        this.DLog($"[ItemDrop] TrySpawnHealOrb: chance={chance:F2}, roll={roll:F2} → {(roll <= chance ? "스폰" : "미스")}");
+        if (roll > chance) return;
+
+        SpawnHealOrb(deathPos);
+        _healOrbSpawnedThisWave = true;
+    }
+
+    /// <summary>확률 없이 지정 위치(적 사망 위치 등)에 회복 구슬을 즉시 스폰합니다. (디버그/외부 호출용)</summary>
+    public void SpawnHealOrb(Vector3 pos)
+    {
+        if (_healOrbPrefab == null)
+            _healOrbPrefab = Resources.Load<GameObject>(HealOrbPath);
+
+        if (_healOrbPrefab == null)
+        {
+            Debug.LogWarning($"[ItemDrop] 회복 구슬 프리팹 없음: Resources/{HealOrbPath}");
+            return;
+        }
+
+        Vector3 offset = new(Random.Range(-0.3f, 0.3f), Random.Range(-0.3f, 0.3f), 0f);
+        Instantiate(_healOrbPrefab, pos + offset, Quaternion.identity);
+    }
+
+    /// <summary>웨이브 시작 시 회복 구슬 제한을 초기화합니다. GameManager.StartNextWave()에서 호출하세요.</summary>
+    public void ResetWaveDrops() => _healOrbSpawnedThisWave = false;
 
     private void SpawnItem(GameObject prefab, Vector3 pos, DropItem.ItemType type, int value)
     {

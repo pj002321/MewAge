@@ -48,6 +48,7 @@ public class EnemyController : MonoBehaviour
     public Rigidbody2D Rb             => rb;
     public Animator   EnemyAnimator   => animator;
     public float      HPRatio         => maxHP > 0f ? currentHP / maxHP : 0f;
+    public float      MaxHP           => maxHP;
 
     // ── 런타임 상태 ─────────────────────────────────────────────
     private float          currentHP;

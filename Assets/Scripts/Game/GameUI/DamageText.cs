@@ -28,7 +28,8 @@ public class DamageText : MonoBehaviour
     public void Init(float damage, bool isCritical = false, bool isBleed = false)
     {
         if (label == null) label = GetComponentInChildren<TMP_Text>();
-        label.text  = isBleed ? $"-{Mathf.RoundToInt(damage)}" : Mathf.RoundToInt(damage).ToString();
+        int displayDmg = damage > 0f && damage < 1f ? 1 : Mathf.RoundToInt(damage);
+        label.text  = isBleed ? $"-{displayDmg}" : displayDmg.ToString();
         baseColor   = (isCritical || isBleed) ? Color.red : label.color;
         label.color = baseColor;
         timer       = lifetime;

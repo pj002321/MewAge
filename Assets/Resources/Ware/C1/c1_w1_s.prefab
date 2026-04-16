@@ -84,7 +84,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 5
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 679131475736524715, guid: 920dbb46911d23144bbeb9d7b90d184b, type: 3}
+  m_Sprite: {fileID: -3467008124643504340, guid: 81a10b0b4c12a914e9e1717ef5822e6f, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -145,7 +145,7 @@ BoxCollider2D:
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 1.025, y: 1.095}
+    oldSize: {x: 1.28, y: 1.28}
     newSize: {x: 1.46, y: 0.93}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
@@ -170,7 +170,13 @@ MonoBehaviour:
   radius: 1.5
   tickInterval: 1
   isInstallation: 1
-  fireTilePrefab: {fileID: 38222733961658620, guid: 0ebbd7c7ca572c7418fb960c48b39412, type: 3}
+  dropHeight: 5
+  dropDuration: 0.32
+  squashScaleX: 1.35
+  squashScaleY: 0.6
+  squashDuration: 0.08
+  sidePrefab: {fileID: 38222733961658620, guid: db2c145228ae6e74dbfa581540b12d2d, type: 3}
+  topBottomPrefab: {fileID: 38222733961658620, guid: 0ebbd7c7ca572c7418fb960c48b39412, type: 3}
   spreadLength: 6
   cellSize: 1.33
   spreadDelay: 0.05

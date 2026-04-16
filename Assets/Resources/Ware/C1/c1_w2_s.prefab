@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 7126575762079559211}
   - component: {fileID: -855020708500994693}
   - component: {fileID: -8361462678321122859}
+  - component: {fileID: 6375666929079920191}
   m_Layer: 0
   m_Name: c1_w2_s
   m_TagString: Untagged
@@ -84,7 +85,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 5
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -3739866794106041559, guid: 4739c402190263440884679742a46525, type: 3}
+  m_Sprite: {fileID: 8790961881679121965, guid: 7d6304088cc170b4d89c9a8358299bd6, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -145,7 +146,7 @@ BoxCollider2D:
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 1.528, y: 0.904}
+    oldSize: {x: 2.56, y: 1.28}
     newSize: {x: 1.46, y: 0.93}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
@@ -170,6 +171,33 @@ MonoBehaviour:
   radius: 1.5
   tickInterval: 1
   isInstallation: 1
-  fenceSpacing: 1
+  dropHeight: 5
+  dropDuration: 0.32
+  squashScaleX: 1.35
+  squashScaleY: 0.6
+  squashDuration: 0.08
+  fenceSpacing: 1.5
   colliderWidth: 1.71
   colliderHeight: 1
+--- !u!95 &6375666929079920191
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7968452166247501650}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 07acd92ef5a6fbd4cad94ed3684a3d92, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0

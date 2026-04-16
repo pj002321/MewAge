@@ -108,92 +108,96 @@ public class ImprovManager : MonoBehaviourSingleton<ImprovManager>
         var sm     = PlayerStatManager.Shared;
         var player = PlayerController.Instance;
 
-        if (sm == null || player == null)
+        if (player == null)
         {
-            this.DLog("[ImprovManager] PlayerStatManager 또는 PlayerController가 null입니다.");
+            this.DLog("[ImprovManager] PlayerController가 null입니다.");
             return;
         }
 
         float main = data.f_주수치;
         float sub  = data.f_보조수치;
 
+        // sm(PlayerStatManager)이 필요한 case를 위한 지역 헬퍼
+        bool RequireSm()
+        {
+            if (sm != null) return true;
+            this.DLog("[ImprovManager] PlayerStatManager.Shared가 null — 스탯 증강 미적용");
+            return false;
+        }
+
         switch (data.f_증강ID)
         {
             // ── 능력치 계열: % 모디파이어 누적 ──────────────────────
             case ImprovType.AUG_ATK:
-                sm.AddPctMod(StatType.ATK, main);
+                if (RequireSm()) sm.AddPctMod(StatType.ATK, main);
                 break;
 
             case ImprovType.AUG_DEF:
-                sm.AddPctMod(StatType.DEF, main);
+                if (RequireSm()) sm.AddPctMod(StatType.DEF, main);
                 break;
 
             case ImprovType.AUG_MAX_HP:
-                sm.AddPctMod(StatType.MaxHP, main);
+                if (RequireSm()) sm.AddPctMod(StatType.MaxHP, main);
                 break;
 
             case ImprovType.AUG_SPD_MOV:
-                sm.AddPctMod(StatType.MoveSpeed, main);
+                if (RequireSm()) sm.AddPctMod(StatType.MoveSpeed, main);
                 break;
 
             case ImprovType.AUG_SPD_ATK:
-                sm.AddPctMod(StatType.AtkSpeed, main);
+                if (RequireSm()) sm.AddPctMod(StatType.AtkSpeed, main);
                 break;
 
             case ImprovType.AUG_EVA:
-                sm.AddPctMod(StatType.Evasion, main);
+                if (RequireSm()) sm.AddPctMod(StatType.Evasion, main);
                 break;
 
             case ImprovType.AUG_CRI_RATE:
-                sm.AddPctMod(StatType.CritChance, main);
+                if (RequireSm()) sm.AddPctMod(StatType.CritChance, main);
                 break;
 
             case ImprovType.AUG_CRI_DMG:
-                sm.AddPctMod(StatType.CritDmg, main);
+                if (RequireSm()) sm.AddPctMod(StatType.CritDmg, main);
                 break;
 
             case ImprovType.AUG_DOT_DMG:
-                sm.AddPctMod(StatType.BleedPower, main);
+                if (RequireSm()) sm.AddPctMod(StatType.BleedPower, main);
                 break;
 
-            // 기물 쿨타임 단축: 주수치% 감소 → 음수 모디파이어
             case ImprovType.AUG_SKL:
-                sm.AddPctMod(StatType.StructureCooldown, -main);
+                if (RequireSm()) sm.AddPctMod(StatType.StructureCooldown, -main);
                 break;
 
-            // 흡수 반경 증가
             case ImprovType.AUG_REWARD_RNG:
-                sm.AddPctMod(StatType.MagnetRadius, main);
+                if (RequireSm()) sm.AddPctMod(StatType.MagnetRadius, main);
                 break;
 
-            // 몸집 크기 변화 + 최대 체력 % 증감
             case ImprovType.AUG_SIZE_HP_UP:
-                player.IncreaseSizeHP(main, 0f);   // 크기 배율
-                sm.AddPctMod(StatType.MaxHP, sub);  // 체력 %
+                player.IncreaseSizeHP(main, 0f);
+                if (RequireSm()) sm.AddPctMod(StatType.MaxHP, sub);
                 break;
 
             case ImprovType.AUG_SIZE_HP_DOWN:
-                player.DecreaseSizeHP(main, 0f);    // 크기 배율
-                sm.AddPctMod(StatType.MaxHP, -sub); // 체력 % 감소
+                player.DecreaseSizeHP(main, 0f);
+                if (RequireSm()) sm.AddPctMod(StatType.MaxHP, -sub);
                 break;
 
-            // ── 즉시 회복: 현재 MaxHP의 main% 즉시 회복 ─────────────
+            // ── sm 불필요 ─────────────────────────────────────────
+
             case ImprovType.AUG_HEAL:
                 float healAmount = player.MaxHPValue * (main / 100f);
                 player.HealHP(healAmount);
                 break;
 
-            // ── 처치 회복: main% 만큼 발동확률 스탯 누적 + 회복량(sub) 비율 추가 ─
             case ImprovType.AUG_HEAL_DEAD:
-                sm.AddPctMod(StatType.HealOnKill, main);
+                if (RequireSm()) sm.AddPctMod(StatType.HealOnKill, main);
                 player.IncreaseHealOnKillFactor(sub / 100f);
                 break;
 
-            // ── 회복 구슬: main% 확률 스폰 + MaxHP의 sub% 회복 ──────
             case ImprovType.AUG_SPW_HP_SKL:
                 player.IncreaseHealOrbChance(
-                    chance:     main / 100f,   // 스폰 확률 (fraction)
-                    healFactor: sub  / 100f    // MaxHP 대비 회복 비율
+                    chance:     main / 100f,
+                    healFactor: sub  / 100f
                 );
                 break;
         }
