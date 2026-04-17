@@ -14,6 +14,9 @@ using UnityEngine;
 /// </summary>
 public class DamageZoneSkill : StructureSkillBase
 {
+    [Header("사운드")]
+    [SerializeField] private AudioClip activateSound;
+
     [Header("덩쿨 애니메이션")]
     [SerializeField] private Animator _animator;
     [SerializeField] private string   _idleStateName = "idle";
@@ -37,11 +40,13 @@ public class DamageZoneSkill : StructureSkillBase
             hit = true;
         }
 
-        // 처음 몬스터에 닿을 때만 애니메이션 트리거
-        if (hit && !_triggered && _animator != null)
+        // 처음 몬스터에 닿을 때만 애니메이션 트리거 + 사운드
+        if (hit && !_triggered)
         {
             _triggered = true;
-            _animator.SetBool("bTriggerOn", true);
+            SoundManager.Shared?.PlayClip(activateSound);
+            if (_animator != null)
+                _animator.SetBool("bTriggerOn", true);
         }
     }
 

@@ -25,9 +25,11 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
     private readonly List<GameObject> activeDebris = new();
 
     // ── 오브젝트 풀 ──────────────────────────────────────────────
-    private readonly Dictionary<GameObject, Queue<GameObject>> _debrisPool    = new();
+    private readonly Dictionary<GameObject, Queue<GameObject>> _debrisPool     = new();
     private readonly Queue<DamageText>                         _damageTextPool = new();
-    private readonly Dictionary<GameObject, Vector3>           _prefabScales  = new();
+    private readonly Queue<GameObject>                         _hitEffectPool  = new();
+    private readonly Queue<FloatingText>                       _floatingTextPool = new();
+    private readonly Dictionary<GameObject, Vector3>           _prefabScales   = new();
 
     private GameObject GetDebris(GameObject prefab, Vector3 pos)
     {
@@ -88,19 +90,56 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
         dt?.Init(damage, isCritical, isBleed);
     }
 
+    public void ReturnFloatingText(FloatingText ft)
+    {
+        if (ft == null) return;
+        ft.gameObject.SetActive(false);
+        _floatingTextPool.Enqueue(ft);
+    }
+
     /// <summary>플레이어 머리 위에 상승 텍스트를 표시합니다. (획득/회복/회피 피드백)</summary>
     public void SpawnPlayerText(string text, Color color)
     {
         if (floatingTextPrefab == null || PlayerController.Instance?.FloatingTextAnchor == null) return;
-        var go = Instantiate(floatingTextPrefab, PlayerController.Instance.FloatingTextAnchor, false);
-        go.transform.localPosition = Vector3.zero;
-        go.GetComponent<FloatingText>()?.Init(text, color);
+        FloatingText ft;
+        if (_floatingTextPool.Count > 0)
+        {
+            ft = _floatingTextPool.Dequeue();
+            ft.transform.SetParent(PlayerController.Instance.FloatingTextAnchor, false);
+            ft.transform.localPosition = Vector3.zero;
+            ft.gameObject.SetActive(true);
+        }
+        else
+        {
+            var go = Instantiate(floatingTextPrefab, PlayerController.Instance.FloatingTextAnchor, false);
+            go.transform.localPosition = Vector3.zero;
+            ft = go.GetComponent<FloatingText>();
+        }
+        ft?.Init(text, color);
+    }
+
+    public void ReturnHitEffect(GameObject go)
+    {
+        if (go == null) return;
+        go.SetActive(false);
+        _hitEffectPool.Enqueue(go);
     }
 
     public void SpawnHitEffect(Vector3 worldPos)
     {
         if (hitEffectPrefab == null) return;
-        Instantiate(hitEffectPrefab, worldPos, Quaternion.identity);
+        GameObject go;
+        if (_hitEffectPool.Count > 0)
+        {
+            go = _hitEffectPool.Dequeue();
+            go.transform.position = worldPos;
+            go.SetActive(true);
+        }
+        else
+        {
+            go = Instantiate(hitEffectPrefab, worldPos, Quaternion.identity);
+        }
+        go.GetComponent<HitEffect>()?.Play(go, this);
     }
 
     // ── 사망 파편 ────────────────────────────────────────────────
@@ -146,6 +185,10 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
         foreach (var go in activeDebris)
             if (go != null) Destroy(go);
         activeDebris.Clear();
+
+        // 활성 히트 이펙트 풀 반환
+        foreach (var he in Object.FindObjectsByType<HitEffect>(FindObjectsSortMode.None))
+            ReturnHitEffect(he.gameObject);
 
         // 씬에 남아있는 투사체 일괄 제거
         foreach (var p in Object.FindObjectsByType<Projectile>(FindObjectsSortMode.None))

@@ -63,6 +63,6 @@ public class FloatingText : MonoBehaviour
             : Mathf.Lerp(1f, 0f, (progress - fadeStartRatio) / fadeLen);
         label.color = new Color(baseColor.r, baseColor.g, baseColor.b, alpha);
 
-        if (timer <= 0f) Destroy(gameObject);
+        if (timer <= 0f) FXManager.Shared?.ReturnFloatingText(this);
     }
 }

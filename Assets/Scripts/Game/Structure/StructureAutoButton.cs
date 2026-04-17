@@ -69,9 +69,14 @@ public class StructureAutoButton : MonoBehaviour
 
         if (autoOnAnimator == null) return;
         if (isOn)
-            autoOnAnimator.Play(autoOnClip, 0, 0f);  // 처음부터 재생
+        {
+            autoOnAnimator.enabled = true;
+            autoOnAnimator.Play(autoOnClip, 0, 0f);
+        }
         else
-            autoOnAnimator.StopPlayback();            // 정지
+        {
+            autoOnAnimator.enabled = false;
+        }
     }
 
     private void RefreshVisual(bool isOn)

@@ -430,6 +430,54 @@ public class EnemyController : MonoBehaviour
         bleedCoroutine = StartCoroutine(BleedRoutine(damage));
     }
 
+    private Coroutine _fireTintCoroutine;
+
+    /// <summary>
+    /// 화염 출혈 적용 — 스프라이트를 빨간색으로 물들이고
+    /// duration 동안 tickInterval마다 damage 피해를 입힌 뒤 원래 색으로 복구합니다.
+    /// 이미 적용 중이면 타이머를 갱신합니다.
+    /// </summary>
+    public void ApplyFireBleed(float damage, float duration, float tickInterval)
+    {
+        if (damage <= 0f) return;
+        if (_fireTintCoroutine != null) StopCoroutine(_fireTintCoroutine);
+        _fireTintCoroutine = StartCoroutine(FireBleedRoutine(damage, duration, tickInterval));
+    }
+
+    private IEnumerator FireBleedRoutine(float damage, float duration, float tickInterval)
+    {
+        SetTint(new Color(1f, 0.2f, 0.2f, 1f)); // 빨간색
+
+        float elapsed  = 0f;
+        var   wait     = new WaitForSeconds(tickInterval);
+        while (elapsed < duration)
+        {
+            yield return wait;
+            elapsed += tickInterval;
+            if (currentHP <= 0f) break;
+
+            currentHP -= damage;
+            SoundManager.Shared?.Play(SoundKey.Enemy_Hit);
+
+            Vector3 textPos = srs != null && srs.Length > 0
+                ? new Vector3(transform.position.x, srs[0].bounds.max.y, transform.position.z)
+                : transform.position;
+            FXManager.Shared?.SpawnDamageText(textPos, damage, false, true);
+
+            if (currentHP <= 0f)
+            {
+                _deathDir = Vector2.up;
+                OnDeath?.Invoke();
+                CharacterSkillManager.Shared?.AddPoint(1);
+                StartCoroutine(DieRoutine());
+                break;
+            }
+        }
+
+        SetTint(Color.white);
+        _fireTintCoroutine = null;
+    }
+
     private IEnumerator BleedRoutine(float damage)
     {
         float elapsed = 0f;

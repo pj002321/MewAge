@@ -104,10 +104,7 @@ public class WeaponInfoPanel : MonoBehaviourSingleton<WeaponInfoPanel>
         }
 
         if (gradeImage)
-        {
-            gradeImage.sprite = Resources.Load<Sprite>("Weapons/grade/normal");
-            gradeImage.color  = WeaponGradeColors.Get(data.grade);
-        }
+            gradeImage.color = WeaponGradeColors.Get(data.grade);
 
         if (iconImage)
         {
@@ -126,10 +123,7 @@ public class WeaponInfoPanel : MonoBehaviourSingleton<WeaponInfoPanel>
         SetStarObject(starObjects, data.star);
         if (nameText)  nameText.text  = data.weaponName;
         if (gradeText)
-        {
-            gradeText.text  = GradeName(data.grade);
-            gradeText.color = WeaponGradeColors.Get(data.grade);
-        }
+            gradeText.text = GradeName(data.grade);
 
         if (weaponTypeText)
         {
@@ -349,27 +343,33 @@ public class WeaponInfoPanel : MonoBehaviourSingleton<WeaponInfoPanel>
     /// <summary>statId → 한글 스탯 레이블.</summary>
     private static string StatIdToLabel(string statId) => statId switch
     {
-        "ATK_ADD"   => "공격력",
-        "CD_RED"    => "쿨타임",
-        "RNG_ADD"   => "사거리",
-        "DMG_RNG"   => "타격범위",
-        "CRIT_ADD"  => "치명타",
-        "BLEED_ADD" => "출혈",
-        "LIFESTEAL" => "흡혈",
-        _           => statId,
+        "ATK_ADD"    => "공격력",
+        "CD_RED"     => "쿨타임",
+        "RNG_ADD"    => "사거리",
+        "DMG_RNG"    => "타격범위",
+        "CRIT_ADD"   => "치명타",
+        "CRT_RATE"   => "치명타확률",
+        "DOT_AD"     => "출혈",
+        "HP_STL_ADD" => "흡혈",
+        "NUK_ADD"    => "넉백",
+        "HEAL_ADD"   => "자가치유",
+        _            => statId,
     };
 
     /// <summary>statId → 단위.</summary>
     private static string StatIdToUnit(string statId) => statId switch
     {
-        "ATK_ADD"   => "%",
-        "CD_RED"    => "%",
-        "RNG_ADD"   => "%",
-        "DMG_RNG"   => "",
-        "CRIT_ADD"  => "%",
-        "BLEED_ADD" => "%",
-        "LIFESTEAL" => "%",
-        _           => "%",
+        "ATK_ADD"    => "%",
+        "CD_RED"     => "%",
+        "RNG_ADD"    => "%",
+        "DMG_RNG"    => "",
+        "CRIT_ADD"   => "%",
+        "CRT_RATE"   => "%",
+        "DOT_AD"     => "",
+        "HP_STL_ADD" => "%",
+        "NUK_ADD"    => "",
+        "HEAL_ADD"   => "%",
+        _            => "%",
     };
 
     public static void SetStarObject(List<GameObject> objs, int star)

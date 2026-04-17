@@ -26,6 +26,9 @@ public class IceSkill : StructureSkillBase
     [SerializeField] private Color  freezeColor   = new Color(0.4f, 0.7f, 1f, 1f);
     [SerializeField] private bool   repeat        = false;  // true면 tickInterval마다 반복
 
+    [Header("사운드")]
+    [SerializeField] private AudioClip activateSound;
+
     [Header("VFX 설정")]
     [SerializeField] private GameObject freezeVfxPrefab;
     [Tooltip("적 pivot 기준 VFX 스폰 오프셋 (유닛)")]
@@ -39,6 +42,7 @@ public class IceSkill : StructureSkillBase
 
     IEnumerator IceRoutine()
     {
+        SoundManager.Shared?.PlayClip(activateSound);
         var enemies = EnemyController.All;
         for (int i = enemies.Count - 1; i >= 0; i--)
         {

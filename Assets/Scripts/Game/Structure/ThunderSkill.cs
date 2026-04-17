@@ -21,6 +21,9 @@ public class ThunderSkill : StructureSkillBase
     [SerializeField] private float dimDuration = 1.8f;    // 어두운 시간(초)
     [SerializeField] private float fadeDuration = 0.25f;  // 페이드 in/out 시간
 
+    [Header("사운드")]
+    [SerializeField] private AudioClip activateSound;
+
     [Header("번개 딜레이")]
     [SerializeField] private float strikeDelay = 0.1f;    // 적마다 번개 간격
 
@@ -39,7 +42,7 @@ public class ThunderSkill : StructureSkillBase
         _registered = true;
 
         // 1) 페이드 아웃 (어둡게) + 사운드
-        SoundManager.Shared?.Play(SoundKey.Structure_Thunder);
+        SoundManager.Shared?.PlayClip(activateSound);
         yield return StartCoroutine(FadeLight(1f, dimAmount, fadeDuration));
 
         // 2) 모든 적·보스에게 번개 동시 스폰 + 다단 피해
@@ -118,7 +121,7 @@ public class ThunderSkill : StructureSkillBase
             FXManager.Shared?.SpawnHitEffect(enemy.transform.position);
             
             // 효과음 (너무 겹치면 시끄러울 수 있으니 필요시 제한 가능)
-            if (i % 2 == 0) SoundManager.Shared?.Play(SoundKey.Structure_Thunder);
+            if (i % 2 == 0) SoundManager.Shared?.PlayClip(activateSound);
 
             yield return new WaitForSeconds(hitInterval);
         }
@@ -143,7 +146,7 @@ public class ThunderSkill : StructureSkillBase
             boss.TakeDamage(damagePerHit);
             FXManager.Shared?.SpawnHitEffect(boss.transform.position);
             
-            if (i % 2 == 0) SoundManager.Shared?.Play(SoundKey.Structure_Thunder);
+            if (i % 2 == 0) SoundManager.Shared?.PlayClip(activateSound);
 
             yield return new WaitForSeconds(hitInterval);
         }

@@ -35,11 +35,19 @@ public class FireSpreadSkill : StructureSkillBase
     [Tooltip("상·하(위아래) 방향 및 대각선(|Y|>|X|) 에 사용할 프리팹")]
     [SerializeField] private GameObject topBottomPrefab;
 
+    [Header("사운드")]
+    [SerializeField] private AudioClip activateSound;
+
     [Header("확산 설정")]
     [SerializeField] private int   spreadLength = 4;
     [SerializeField] private float cellSize     = 1f;
     [SerializeField] private float spreadDelay  = 0.05f;
     [SerializeField] private float fireDuration = 0f;
+
+    [Header("화염 출혈")]
+    [SerializeField] private float bleedDamage   = 5f;   // 틱당 출혈 피해
+    [SerializeField] private float bleedDuration = 3f;   // 출혈 지속 시간(초)
+    [SerializeField] private float bleedInterval = 0.5f; // 출혈 틱 간격(초)
 
     private readonly List<GameObject> fireTiles = new();
 
@@ -65,6 +73,7 @@ public class FireSpreadSkill : StructureSkillBase
             this.DError("[FireSpreadSkill] sidePrefab 또는 topBottomPrefab 중 하나 이상 연결하세요.");
             return;
         }
+        SoundManager.Shared?.PlayClip(activateSound);
         StartCoroutine(SpreadRoutine());
     }
 
@@ -95,8 +104,6 @@ public class FireSpreadSkill : StructureSkillBase
 
         this.DLog($"[FireSpreadSkill] Lv.{level} — {fireTiles.Count}개 화염 타일 배치 완료 (8방향={addDiagonals})");
 
-        StartCoroutine(DotTickRoutine());
-
         if (fireDuration > 0f)
         {
             yield return new WaitForSeconds(fireDuration);
@@ -109,39 +116,6 @@ public class FireSpreadSkill : StructureSkillBase
     {
         int bonus = level / 2;
         return Mathf.Max(1, spreadLength + bonus);
-    }
-
-    // ── DoT 판정 코루틴 ──────────────────────────────────────────────
-
-    private IEnumerator DotTickRoutine()
-    {
-        var wait = new WaitForSeconds(tickInterval);
-        while (true)
-        {
-            yield return wait;
-            DealDotDamage();
-        }
-    }
-
-    private void DealDotDamage()
-    {
-        foreach (var tile in fireTiles)
-        {
-            if (tile == null) continue;
-            var hits = Physics2D.OverlapBoxAll(tile.transform.position,
-                                               Vector2.one * cellSize * 0.9f, 0f);
-            bool bossHit = false;
-            foreach (var col in hits)
-            {
-                if (col.GetComponentInParent<EnemyController>() is EnemyController enemy)
-                    enemy.TakeDamage(mainValue);
-                else if (!bossHit && col.GetComponentInParent<BossController>() is BossController boss)
-                {
-                    boss.TakeDamage(mainValue);
-                    bossHit = true;
-                }
-            }
-        }
     }
 
     // ── 타일 스폰/정리 ───────────────────────────────────────────────
@@ -166,6 +140,16 @@ public class FireSpreadSkill : StructureSkillBase
             var sr = go.GetComponent<SpriteRenderer>();
             if (sr != null) sr.flipX = true;
         }
+
+        // 트리거 콜라이더가 없으면 동적 추가
+        var col = go.GetComponent<BoxCollider2D>();
+        if (col == null) col = go.AddComponent<BoxCollider2D>();
+        col.isTrigger = true;
+        col.size      = Vector2.one * cellSize * 0.9f;
+
+        // 피해 컴포넌트 부착
+        var tile = go.AddComponent<FireTile>();
+        tile.Init(mainValue, bleedDamage, bleedDuration, bleedInterval, tickInterval);
 
         fireTiles.Add(go);
     }

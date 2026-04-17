@@ -11,11 +11,17 @@ public class HitEffect : MonoBehaviour
     [SerializeField] private Color hitColor  = new(1f, 0.9f, 0.2f, 1f); // 노란 섬광
 
     private SpriteRenderer sr;
-    private float timer;
+    private float    timer;
+    private FXManager _pool;
 
     private void Awake()
     {
         sr = GetComponent<SpriteRenderer>();
+    }
+
+    public void Play(GameObject go, FXManager pool)
+    {
+        _pool = pool;
         if (sr != null) sr.color = hitColor;
         timer = duration;
         transform.localScale = Vector3.zero;
@@ -23,10 +29,11 @@ public class HitEffect : MonoBehaviour
 
     private void Update()
     {
+        if (timer <= 0f) return;
+
         timer -= Time.deltaTime;
         float t = 1f - (timer / duration); // 0 → 1
 
-        // 빠르게 커졌다가 페이드아웃
         float scale = Mathf.Sin(t * Mathf.PI) * maxScale;
         transform.localScale = Vector3.one * scale;
 
@@ -37,6 +44,6 @@ public class HitEffect : MonoBehaviour
         }
 
         if (timer <= 0f)
-            Destroy(gameObject);
+            _pool?.ReturnHitEffect(gameObject);
     }
 }

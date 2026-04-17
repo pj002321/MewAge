@@ -81,6 +81,12 @@ public class SoundManager : MonoBehaviourSingleton<SoundManager>
         }
     }
 
+    public void PlayClip(AudioClip clip, float volume = 1f)
+    {
+        if (clip == null) return;
+        sfxSource.PlayOneShot(clip, volume);
+    }
+
     public void Play(SoundKey key)
     {
         if (!soundDict.TryGetValue(key, out var entry)) return;

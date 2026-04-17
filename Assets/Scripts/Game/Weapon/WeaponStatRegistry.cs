@@ -77,7 +77,21 @@ public static class WeaponStatRegistry
         if (_templates.TryGetValue(statId, out var tmpl))
             return tmpl.Replace("{0}", formatted);
 
-        return $"{statId} +{formatted}";
+        string label = statId switch
+        {
+            "ATK_ADD"    => "공격력",
+            "CD_RED"     => "쿨타임",
+            "RNG_ADD"    => "사거리",
+            "DMG_RNG"    => "타격범위",
+            "CRIT_ADD"   => "치명타",
+            "CRT_RATE"   => "치명타확률",
+            "DOT_AD"     => "출혈",
+            "HP_STL_ADD" => "흡혈",
+            "NUK_ADD"    => "넉백",
+            "HEAL_ADD"   => "자가치유",
+            _            => statId,
+        };
+        return $"{label} +{formatted}";
     }
 
     /// <summary>WeaponStarBonus를 채워 반환합니다.</summary>
