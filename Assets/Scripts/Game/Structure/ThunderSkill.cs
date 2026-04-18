@@ -68,15 +68,14 @@ public class ThunderSkill : StructureSkillBase
             StartCoroutine(MultiStrikeBoss(currentBoss, bossTotalDamage, hitCount, subValue));
         }
 
-        // 조명이 어두운 상태 잠깐 유지
-        float remaining = dimDuration - fadeDuration;
-        if (remaining > 0f)
-            yield return new WaitForSeconds(remaining);
+        // 연타 완료까지 대기 (hitCount × hitInterval)
+        yield return new WaitForSeconds(hitCount * 0.05f + 0.1f);
 
-        // 3) 페이드 인 (복구)
+        // 3) 페이드 인 (복구) 후 즉시 파괴
         yield return StartCoroutine(FadeLight(dimAmount, 1f, fadeDuration));
 
         if (_registered) { GlobalLightDimmer.Release(); _registered = false; }
+        Destroy(gameObject);
     }
 
     // ── 번개 비주얼 스폰 ────────────────────────────────────────────

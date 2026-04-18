@@ -158,11 +158,17 @@ MonoBehaviour:
   radius: 10
   tickInterval: 1
   isInstallation: 1
+  dropHeight: 5
+  dropDuration: 0.32
+  squashScaleX: 1.35
+  squashScaleY: 0.6
+  squashDuration: 0.08
   projectilePrefab: {fileID: 38222733961658620, guid: 5207944a9f2781f47ac927965f9cee0a, type: 3}
-  projectileCount: 3
+  projectileCount: 4
   rotationPerTick: 45
   projectileRadius: 0.15
-  shotInterval: 1
+  shotInterval: 0.8
+  speedOverride: 20
 --- !u!114 &-8971520137901994708
 MonoBehaviour:
   m_ObjectHideFlags: 0

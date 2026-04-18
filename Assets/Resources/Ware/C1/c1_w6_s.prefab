@@ -10,8 +10,8 @@ GameObject:
   m_Component:
   - component: {fileID: 9093893709891787400}
   - component: {fileID: 620458224344999017}
-  - component: {fileID: 7126575762079559211}
   - component: {fileID: -4542874895909438268}
+  - component: {fileID: 8737827579597264236}
   m_Layer: 0
   m_Name: c1_w6_s
   m_TagString: Untagged
@@ -93,19 +93,6 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
---- !u!114 &7126575762079559211
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7968452166247501650}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 950b3648ca2da9a41b6361b5ed16fd5a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::StructureController
-  duration: 10
 --- !u!114 &-4542874895909438268
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -133,3 +120,16 @@ MonoBehaviour:
   activateSound: {fileID: 8300000, guid: 1d74880bed4586644a16a79a2d9dc8af, type: 3}
   freezeVfxPrefab: {fileID: 7968452166247501650, guid: 72ff6bce4833c97448526e304497dfa2, type: 3}
   vfxOffset: {x: 0, y: -0.5}
+--- !u!114 &8737827579597264236
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7968452166247501650}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 950b3648ca2da9a41b6361b5ed16fd5a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::StructureController
+  duration: 3

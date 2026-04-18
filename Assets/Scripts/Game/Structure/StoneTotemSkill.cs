@@ -25,6 +25,8 @@ public class StoneTotemSkill : StructureSkillBase
     [SerializeField] private float      rotationPerTick  = 45f;    // 틱마다 회전 (바람개비)
     [SerializeField] private float      projectileRadius = 0.15f;  // 적 충돌 감지 반경
     [SerializeField] private float      shotInterval     = 0.1f;   // 투사체 간 딜레이 (순차 발사)
+    [Tooltip("0이면 DB subValue 사용")]
+    [SerializeField] private float      speedOverride    = 15f;   // Inspector 속도 직접 지정
 
     private float _currentAngle = 0f;   // 현재 발사 기준 각도
     private readonly System.Collections.Generic.List<GameObject> _activeProjectiles = new();
@@ -109,7 +111,7 @@ public class StoneTotemSkill : StructureSkillBase
         _activeProjectiles.Add(go);
         float travel = 0f;
         
-        float actualSpeed = subValue > 0.01f ? subValue : 5f; // 안전 장치
+        float actualSpeed = speedOverride > 0.01f ? speedOverride : (subValue > 0.01f ? subValue : 15f);
 
         // 창 끝(스프라이트 위쪽)이 이동 방향을 향하도록 정렬
         go.transform.up = (Vector3)direction;

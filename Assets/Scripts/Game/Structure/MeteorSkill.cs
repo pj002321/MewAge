@@ -58,9 +58,8 @@ public class MeteorSkill : StructureSkillBase
         var wait = new WaitForSeconds(meteorInterval);
         for (int i = 0; i < meteorsCount; i++)
         {
-            // 착지 목표: MovementBounds 내 랜덤 위치 (없으면 기물 주변 fallback)
-            Vector2 landPos = GetRandomPointInBounds();
-            // 출발 위치: 착지 지점 우상단
+            // 착지 목표: 살아있는 적 랜덤 1마리, 없으면 화면 랜덤
+            Vector2 landPos = GetRandomEnemyPosition() ?? GetRandomPointInBounds();
             Vector2 startPos = landPos + new Vector2(fallHeight * 0.7f, fallHeight);
 
             StartCoroutine(FallRoutine(startPos, landPos));
@@ -97,6 +96,17 @@ public class MeteorSkill : StructureSkillBase
         _activeMeteorites.Clear();
     }
 
+    // 살아있는 적 중 랜덤 1마리 위치 반환. 없으면 null.
+    Vector2? GetRandomEnemyPosition()
+    {
+        var all = EnemyController.All;
+        if (all == null || all.Count == 0) return null;
+        var enemy = all[Random.Range(0, all.Count)];
+        return enemy != null && enemy.gameObject.activeInHierarchy
+            ? (Vector2?)( (Vector2)enemy.transform.position )
+            : null;
+    }
+
     // 카메라 시야 안쪽에서 랜덤 착지 지점을 반환합니다.
     Vector2 GetRandomPointInBounds()
     {
@@ -125,7 +135,8 @@ public class MeteorSkill : StructureSkillBase
         {
             elapsed += Time.deltaTime;
             float t = Mathf.Clamp01(elapsed / fallDuration);
-            go.transform.position = Vector2.Lerp(from, to, t);
+            float tEased = t * t * t; // 가속도 (cubic ease-in)
+            go.transform.position = Vector2.Lerp(from, to, tEased);
             yield return null;
         }
 

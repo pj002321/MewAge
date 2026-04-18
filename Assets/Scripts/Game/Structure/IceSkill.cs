@@ -51,11 +51,15 @@ public class IceSkill : StructureSkillBase
 
             enemy.Freeze(subValue, mainValue, freezeColor);
 
-            // 적 자식으로 VFX 스폰 (위치 추적) → 부모 회전은 WorldRotationLock으로 무시
             if (freezeVfxPrefab != null)
                 StartCoroutine(FreezeVfxRoutine(enemy.transform, subValue));
         }
-        yield break;
+
+        if (!repeat)
+        {
+            yield return new WaitForSeconds(subValue); // 빙결 지속시간 후 파괴
+            Destroy(gameObject);
+        }
     }
 
     IEnumerator RepeatRoutine()
