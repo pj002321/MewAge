@@ -52,11 +52,16 @@ public class StageSelectPanel : MonoBehaviour
     [Header("스냅 설정")]
     [Range(0.05f, 0.5f)]
     public float swipeThreshold = 0.2f;
+    [Range(0.1f, 1.5f)]
+    public float snapDuration   = 0.65f;
+    [Range(1f, 5f)]
+    public float snapEasePower  = 4f;    // 클수록 끝에서 더 부드럽게 감속
 
     // ── 런타임 ───────────────────────────────────────────────────────
     StageCardView[] cardViews;
     int             currentIndex;
     bool            isSnapping;
+    Coroutine       _snapCoroutine;
     bool            _scrollMode;
     float           _dragStartY;
     float           cachedCardH = -1f;
@@ -375,8 +380,12 @@ public class StageSelectPanel : MonoBehaviour
     public void GoTo(int index, bool animate = true)
     {
         currentIndex = Mathf.Clamp(index, 0, Mathf.Max(0, stages.Length - 1));
-        if (animate) StartCoroutine(SnapCoroutine(currentIndex));
-        else         SnapImmediate(currentIndex);
+        if (animate)
+        {
+            if (_snapCoroutine != null) { StopCoroutine(_snapCoroutine); isSnapping = false; }
+            _snapCoroutine = StartCoroutine(SnapCoroutine(currentIndex));
+        }
+        else SnapImmediate(currentIndex);
     }
 
     float CardH()
@@ -435,10 +444,11 @@ public class StageSelectPanel : MonoBehaviour
             var cg = cardViews[i].GetComponent<CanvasGroup>();
             if (cg != null)
             {
-                if (i < virtualCenter - 0.5f)
+                // 이전 카드는 애니메이션 중에도 항상 숨김
+                if (i < currentIndex)
                 {
                     cg.alpha = 0f;
-                    cg.blocksRaycasts = false; // 투명 카드는 이벤트 차단 해제
+                    cg.blocksRaycasts = false;
                 }
                 else if (dist < 0.5f)
                 {
@@ -465,19 +475,25 @@ public class StageSelectPanel : MonoBehaviour
 
     IEnumerator SnapCoroutine(int index)
     {
-        if (isSnapping || scrollRect == null || content == null) yield break;
+        if (scrollRect == null || content == null) yield break;
         isSnapping = true;
+        StopFloat();
 
         float targetY = SnapY(index);
-        float startY  = content.anchoredPosition.y;
-        float elapsed = 0f;
-        const float duration = 0.35f;
+        float vpH     = scrollRect.viewport.rect.height;
 
-        while (elapsed < duration)
+        // 항상 위에서 아래로 내려오는 시작점: 타겟보다 뷰포트 절반 위에서 시작
+        float startY = targetY + vpH * 0.55f;
+        content.anchoredPosition = new Vector2(content.anchoredPosition.x, startY);
+
+        float elapsed = 0f;
+
+        while (elapsed < snapDuration)
         {
             elapsed += Time.unscaledDeltaTime;
-            float t    = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / duration));
-            float newY = Mathf.Lerp(startY, targetY, t);
+            float t      = Mathf.Clamp01(elapsed / snapDuration);
+            float tEased = 1f - Mathf.Pow(1f - t, snapEasePower);
+            float newY   = Mathf.Lerp(startY, targetY, tEased);
             content.anchoredPosition = new Vector2(content.anchoredPosition.x, newY);
             ApplyCardScales(SnapYToVirtualCenter(newY));
             yield return null;
@@ -485,6 +501,7 @@ public class StageSelectPanel : MonoBehaviour
         content.anchoredPosition = new Vector2(content.anchoredPosition.x, targetY);
         ApplyCardScales(index);
         isSnapping = false;
+        _snapCoroutine = null;
         StartFloat();
     }
 
