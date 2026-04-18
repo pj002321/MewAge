@@ -226,16 +226,22 @@ public class BossController : MonoBehaviour
         {
             elapsed += Time.fixedDeltaTime;
 
-            // 스킬이 발사 중이면 이동 생략
             if (!IsFiringSkill && PlayerTransform != null)
             {
                 float dist = Vector2.Distance(transform.position, PlayerTransform.position);
                 if (dist > chaseStopDistance)
-                    MoveTowardPlayer(MoveSpeed);
+                    MoveTowardPlayer(MoveSpeed); // 내부에서 bMove=true
+                else
+                    EnemyAnimator?.SetBool("bMove", false);
+            }
+            else
+            {
+                EnemyAnimator?.SetBool("bMove", false);
             }
 
             yield return new WaitForFixedUpdate();
         }
+        EnemyAnimator?.SetBool("bMove", false);
     }
 
     private void Update()
@@ -269,6 +275,7 @@ public class BossController : MonoBehaviour
 
     public void MoveInDirection(Vector2 dir, float speed)
     {
+        EnemyAnimator?.SetBool("bMove", true);
         Vector2 delta = dir.normalized * speed * Time.fixedDeltaTime;
         if (Rb != null)
             Rb.MovePosition(Rb.position + delta);
@@ -455,7 +462,7 @@ public class BossController : MonoBehaviour
     private void OnTriggerStay2D(Collider2D other)
     {
         if (damageTimer > 0f) return;
-        
+
         var p = other.GetComponentInParent<PlayerController>();
         if (p == null) return;
 
@@ -463,8 +470,8 @@ public class BossController : MonoBehaviour
         // 자식 오브젝트에 달려 있는 투명한 자석(Magnet)이나 공격 반경 트리거라면 무시!
         if (other.gameObject != p.gameObject) return;
 
+        damageTimer = damageCooldown; // TakeDamage 전에 설정 — OnCollisionStay2D 동프레임 중복 방지
         p.TakeDamage(contactDamage);
-        damageTimer = damageCooldown;
     }
 
     private void OnCollisionStay2D(Collision2D collision)
@@ -472,7 +479,7 @@ public class BossController : MonoBehaviour
         if (damageTimer > 0f) return;
         var p = collision.collider.GetComponentInParent<PlayerController>();
         if (p == null) return;
+        damageTimer = damageCooldown; // TakeDamage 전에 설정 — OnTriggerStay2D 동프레임 중복 방지
         p.TakeDamage(contactDamage);
-        damageTimer = damageCooldown;
     }
 }

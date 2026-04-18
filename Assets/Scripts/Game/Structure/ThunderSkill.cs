@@ -46,7 +46,7 @@ public class ThunderSkill : StructureSkillBase
         yield return StartCoroutine(FadeLight(1f, dimAmount, fadeDuration));
 
         // 2) 모든 적·보스에게 번개 동시 스폰 + 다단 피해
-        int hitCount = Random.Range(10, 16); // 20회는 너무 많을 수 있어 10~15회로 조정
+        int hitCount = Random.Range(3, 6); // 3~5회
 
         var enemies = EnemyController.All;
         for (int i = enemies.Count - 1; i >= 0; i--)

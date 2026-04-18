@@ -447,10 +447,9 @@ public class HomeUIBuilder
 
         // ── 4. StageSelectPanel 연결 ──────────────────────────────────
         var stagePanel          = panelJeontu.AddComponent<StageSelectPanel>();
-        stagePanel.scrollRect   = sr;
-        stagePanel.content      = content;
-        stagePanel.dotContainer = dotRow;
-        stagePanel.startButton  = startBtn;
+        stagePanel.scrollRect  = sr;
+        stagePanel.content     = content;
+        stagePanel.startButton = startBtn;
 
         UnityEventTools.AddPersistentListener(startBtn.onClick, stagePanel.OnStartClicked);
 
@@ -966,8 +965,8 @@ public class HomeUIBuilder
 
         var charPortrait = CreateRect("CharacterPortrait", portraitArea);
         SetAnchors(charPortrait, new Vector2(0f, 0.15f), Vector2.one, Vector2.zero, Vector2.zero);
-        var portraitImg = charPortrait.gameObject.AddComponent<Image>();
-        portraitImg.color = new Color(1f, 1f, 1f, 0f); // 스프라이트 연결용
+        var portraitImg = charPortrait.gameObject.AddComponent<RawImage>();
+        // RawImage는 texture로 연결할 예정
 
         var charNameGO = CreateRect("CharacterName", portraitArea);
         SetAnchors(charNameGO, Vector2.zero, new Vector2(1f, 0.18f), Vector2.zero, Vector2.zero);
@@ -1164,7 +1163,26 @@ public class HomeUIBuilder
         var content      = viewport?.Find("CharacterContent");
         mp.characterContent = content;
 
-        // ── 3. 기존 슬롯에 CharacterSlotView + Highlight + ActionBtn ─
+        // ── 3. 캐릭터 뷰 (포트레이트 RawImage + 이름 텍스트) ───────────
+        var charView = panel.transform.Find("CharacterView");
+        if (charView != null)
+        {
+            var portrait = charView.Find("PortraitArea/CharacterPortrait");
+            if (portrait != null)
+            {
+                // 기존 Image 제거하고 RawImage 추가
+                var img = portrait.GetComponent<Image>();
+                if (img != null) Object.DestroyImmediate(img);
+                var rawImg = portrait.gameObject.AddComponent<RawImage>();
+                mp.characterPortrait = rawImg;
+            }
+
+            var nameGO = charView.Find("PortraitArea/CharacterName/Text");
+            if (nameGO != null)
+                mp.characterNameText = nameGO.GetComponent<TextMeshProUGUI>();
+        }
+
+        // ── 4. 기존 슬롯에 CharacterSlotView + Highlight + ActionBtn ─
         if (content != null)
         {
             for (int i = 0; i < content.childCount; i++)

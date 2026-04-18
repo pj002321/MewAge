@@ -1,13 +1,14 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using TMPro;
 
 /// <summary>
-/// 홈 씬 전투 패널 — 스테이지 선택 캐러셀.
-/// stages 배열에 데이터를 채우면 카드·도트를 자동 생성합니다.
+/// 홈 씬 전투 패널 — 스테이지 선택 수직 캐러셀.
+/// 기본: 현재 스테이지(크게) + 다음 스테이지(위에 작게) 표시.
+/// 카드 클릭 → 스크롤 모드 ON (scrollModeHideTargets 숨김).
+/// 스크롤 모드에서 카드 클릭 → 선택 후 스크롤 모드 OFF.
 /// </summary>
 public class StageSelectPanel : MonoBehaviour
 {
@@ -15,325 +16,411 @@ public class StageSelectPanel : MonoBehaviour
     [System.Serializable]
     public class StageEntry
     {
-        public string chapterID;  // DB_챕터.f_챕터ID
-        public string stageName;  // DB_챕터.f_이름
-        public Sprite icon;       // Resources/Chapter/Icon/{chapterID}.png
-        public int    bestWave;   // 최고 생존 웨이브 (PlayerPrefs에서 로드)
-        public bool   isLocked;   // 잠금 상태
+        public string chapterID;
+        public string stageName;
+        public Sprite icon;
+        public int    bestWave;
+        public bool   isLocked;
     }
 
-    // ── UI 참조 (Builder가 자동 연결) ────────────────────────────────
-    [Header("카드 프리팹 (연결하면 이걸 사용, 비우면 자동 생성)")]
+    // ── UI 참조 ──────────────────────────────────────────────────────
+    [Header("카드 폴백 프리팹 (Resources/Chapter/Card/{chapterID} 없을 때 사용, 비우면 자동 생성)")]
     public StageCardView cardPrefab;
 
-    [Header("스크롤")]
+    [Header("스크롤 (수직)")]
     public ScrollRect    scrollRect;
     public RectTransform content;
-
-    [Header("도트 컨테이너 (DotRow)")]
-    public RectTransform dotContainer;
 
     [Header("버튼")]
     public Button startButton;
 
-    // ── 런타임 생성 ──────────────────────────────────────────────────
-    [Header("도트 색상")]
-    public Color dotActive   = Color.white;
-    public Color dotInactive = new Color(1f, 1f, 1f, 0.3f);
+    [Header("스크롤 모드 시 숨길 오브젝트들 (panel_전투 내 기타 요소)")]
+    public GameObject[] scrollModeHideTargets;
 
-    StageCardView[] cardViews;
-    Image[]         dots;
-    int             currentIndex;
-    bool            isSnapping;
-    float           _dragStartX;
+    [Header("카드 크기")]
+    public float cardWidth  = 800f;
+    public float cardHeight = 260f;
 
-    [Header("스냅 설정")]
-    [Tooltip("이 픽셀 이상 드래그하면 카드 전환 (카드 너비 대비 비율)")]
-    [Range(0.05f, 0.5f)]
-    public float swipeThreshold = 0.2f;
+    [Header("카드 간격")]
+    public float cardSpacing = 4f;
 
     [Header("카드 스케일 (원근 효과)")]
     public float centerScale = 1.0f;
     [Range(0.5f, 1f)]
     public float sideScale   = 0.82f;
 
-    // ── 카드 스타일 (Inspector에서 조정 가능) ─────────────────────
-    [Header("카드 크기 (기준 해상도 기준)")]
-    public float cardWidth  = 1080f;
-    public float cardHeight = 800f;
+    [Header("스냅 설정")]
+    [Range(0.05f, 0.5f)]
+    public float swipeThreshold = 0.2f;
 
-    float cachedCardW = -1f;
+    // ── 런타임 ───────────────────────────────────────────────────────
+    StageCardView[] cardViews;
+    int             currentIndex;
+    bool            isSnapping;
+    bool            _scrollMode;
+    float           _dragStartY;
+    float           cachedCardH = -1f;
+    StageEntry[]    stages;
+    Coroutine       _floatCoroutine;
 
-    StageEntry[] stages; // DB에서 로드
-
+    // ── DB 로드 ──────────────────────────────────────────────────────
     void LoadStagesFromDB()
     {
         var list = new System.Collections.Generic.List<StageEntry>();
         Mewage.DB.DB_챕터.ForEachEntity(row =>
         {
             string chapterID = row.f_챕터ID;
-            string chapterPart = chapterID.Split('_')[0];
-            string stagePart = chapterID.Split('_')[1];
-            if (!int.TryParse(chapterPart.Substring(1), out int chapterNum) ||
-                !int.TryParse(stagePart.Substring(1), out int stageNum))
+            string[] parts = chapterID.Split('_');
+            if (parts.Length < 2) return;
+            if (!int.TryParse(parts[0].Substring(1), out int chapterNum) ||
+                !int.TryParse(parts[1].Substring(1), out int stageNum))
             {
                 Debug.LogWarning($"[StageSelectPanel] Invalid chapterID: {chapterID}");
                 return;
             }
-            string iconPath = $"Chapter/Icon/{chapterID}";
-            Sprite icon = Resources.Load<Sprite>(iconPath);
 
-            // 최고 웨이브 로드 (PlayerPrefs에서)
-            string prefKey = $"BestWave_{chapterID}";
-            int bestWave = PlayerPrefs.GetInt(prefKey, 0);
+            Sprite icon = Resources.Load<Sprite>($"Chapter/Icon/{chapterID}");
+            int bestWave = PlayerPrefs.GetInt($"BestWave_{chapterID}", 0);
 
-            // 잠금 상태
             bool isLocked = true;
             if (chapterID == "C1_S1")
-            {
-                isLocked = false; // 1-1은 항상 열림
-            }
-            else if (chapterPart == "C1")
-            {
-                // 1챕터 내 이전 스테이지 클리어 확인
-                string prevID = $"C1_S{stageNum - 1}";
-                int prevBest = PlayerPrefs.GetInt($"BestWave_{prevID}", 0);
-                isLocked = prevBest <= 0;
-            }
+                isLocked = false;
+            else if (parts[0] == "C1")
+                isLocked = PlayerPrefs.GetInt($"BestWave_C1_S{stageNum - 1}", 0) <= 0;
             else
-            {
-                // 다른 챕터: 1챕터 클리어 확인 (C1_S3 클리어)
-                int prevBest = PlayerPrefs.GetInt("BestWave_C1_S3", 0);
-                isLocked = prevBest <= 0;
-            }
+                isLocked = PlayerPrefs.GetInt("BestWave_C1_S3", 0) <= 0;
 
             list.Add(new StageEntry
             {
                 chapterID = chapterID,
                 stageName = $"{stageNum}.{row.f_이름}",
-                icon = icon,
-                bestWave = bestWave,
-                isLocked = isLocked
+                icon      = icon,
+                bestWave  = bestWave,
+                isLocked  = isLocked
             });
         });
+
         if (list.Count == 0)
         {
-            // DB에 데이터가 없으면 테스트용 하드코딩
-            list.Add(new StageEntry { chapterID = "C1", stageName = "1챕터 야생 거리", icon = null, bestWave = 0, isLocked = false });
-            list.Add(new StageEntry { chapterID = "C2", stageName = "2챕터 어둠의 숲", icon = null, bestWave = 0, isLocked = true });
-            list.Add(new StageEntry { chapterID = "C3", stageName = "3챕터 폐허 도시", icon = null, bestWave = 0, isLocked = true });
-            Debug.Log("[StageSelectPanel] No stages in DB, using hardcoded test data");
+            list.Add(new StageEntry { chapterID = "C1_S1", stageName = "1.야생 거리", isLocked = false });
+            list.Add(new StageEntry { chapterID = "C1_S2", stageName = "2.어둠의 숲",  isLocked = true });
+            list.Add(new StageEntry { chapterID = "C1_S3", stageName = "3.폐허 도시",  isLocked = true });
+            Debug.Log("[StageSelectPanel] DB 없음, 하드코딩 사용");
         }
         stages = list.ToArray();
-        Debug.Log($"[StageSelectPanel] Loaded {stages.Length} stages from DB");
     }
 
+    // ── 초기화 ───────────────────────────────────────────────────────
     void Start()
     {
         LoadStagesFromDB();
+        EnsureVerticalLayout();
         BuildCards();
-        BuildDots();
 
         startButton?.onClick.AddListener(OnStartClicked);
+        SetupScrollEvents();
+        SetScrollMode(true); // 항상 스크롤 모드 (UI 숨김 없이 레이캐스트만 조정)
 
-        if (scrollRect != null)
-        {
-            scrollRect.inertia      = false;
-            scrollRect.movementType = ScrollRect.MovementType.Unrestricted;
-
-            // ScrollRect GameObject에 직접 EventTrigger 등록
-            var trigger = scrollRect.gameObject.AddComponent<EventTrigger>();
-
-            var beginEntry = new EventTrigger.Entry { eventID = EventTriggerType.BeginDrag };
-            beginEntry.callback.AddListener(e => _dragStartX = ((PointerEventData)e).position.x);
-            trigger.triggers.Add(beginEntry);
-
-            var endEntry = new EventTrigger.Entry { eventID = EventTriggerType.EndDrag };
-            endEntry.callback.AddListener(e =>
-            {
-                float delta     = ((PointerEventData)e).position.x - _dragStartX;
-                float threshold = CardW() * swipeThreshold;
-                int   target    = currentIndex;
-                if      (delta < -threshold) target = currentIndex + 1;
-                else if (delta >  threshold) target = currentIndex - 1;
-                GoTo(Mathf.Clamp(target, 0, stages.Length - 1));
-            });
-            trigger.triggers.Add(endEntry);
-        }
-
-        // 한 프레임 후 레이아웃 확정 → 카드 너비 캐시 후 초기 위치 설정
         StartCoroutine(InitAfterLayout());
+    }
+
+    void EnsureVerticalLayout()
+    {
+        if (content == null) return;
+
+        // 수직 스크롤용 anchor/pivot으로 재설정 (빌더가 수평 스크롤용으로 생성하기 때문)
+        content.anchorMin        = new Vector2(0f, 1f);
+        content.anchorMax        = new Vector2(1f, 1f);
+        content.pivot            = new Vector2(0.5f, 1f);
+        content.anchoredPosition = Vector2.zero;
+        content.sizeDelta        = Vector2.zero;
+
+        var hlg = content.GetComponent<HorizontalLayoutGroup>();
+        if (hlg != null) DestroyImmediate(hlg);
+
+        var vlg = content.GetComponent<VerticalLayoutGroup>();
+        if (vlg == null) vlg = content.gameObject.AddComponent<VerticalLayoutGroup>();
+        vlg.childAlignment        = TextAnchor.UpperCenter;
+        vlg.spacing               = cardSpacing;
+        vlg.childControlWidth     = true;
+        vlg.childControlHeight    = false; // 높이는 sizeDelta로 직접 제어
+        vlg.childForceExpandWidth = true;
+        vlg.childForceExpandHeight = false;
+
+        var csf = content.GetComponent<ContentSizeFitter>();
+        if (csf == null) csf = content.gameObject.AddComponent<ContentSizeFitter>();
+        csf.verticalFit   = ContentSizeFitter.FitMode.PreferredSize;
+        csf.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+    }
+
+    void SetupScrollEvents()
+    {
+        if (scrollRect == null) return;
+        scrollRect.vertical      = false; // 드래그는 EventTrigger가 처리 → elastic 방지
+        scrollRect.horizontal    = false;
+        scrollRect.inertia       = false;
+        scrollRect.movementType  = ScrollRect.MovementType.Unrestricted;
+
+        var trigger = scrollRect.gameObject.GetComponent<EventTrigger>()
+                   ?? scrollRect.gameObject.AddComponent<EventTrigger>();
+
+        var beginEntry = new EventTrigger.Entry { eventID = EventTriggerType.BeginDrag };
+        beginEntry.callback.AddListener(e =>
+        {
+            if (_scrollMode)
+            {
+                _dragStartY = ((PointerEventData)e).position.y;
+                StopFloat();
+            }
+        });
+        trigger.triggers.Add(beginEntry);
+
+        var endEntry = new EventTrigger.Entry { eventID = EventTriggerType.EndDrag };
+        endEntry.callback.AddListener(e =>
+        {
+            if (!_scrollMode) return;
+            float delta     = ((PointerEventData)e).position.y - _dragStartY;
+            float threshold = SlotH() * swipeThreshold;
+            int   target    = currentIndex;
+            if      (delta < -threshold) target = currentIndex + 1;
+            else if (delta >  threshold) target = currentIndex - 1;
+            GoTo(Mathf.Clamp(target, 0, stages.Length - 1));
+        });
+        trigger.triggers.Add(endEntry);
     }
 
     IEnumerator InitAfterLayout()
     {
-        yield return null;   // 1프레임 대기 (레이아웃 계산 완료)
+        yield return null;
+        yield return null; // ContentSizeFitter 계산 완료 보장
         Canvas.ForceUpdateCanvases();
 
-        // viewport 실제 너비로 카드 너비 맞춤
         if (scrollRect != null && cardViews != null)
         {
             float vpW = scrollRect.viewport.rect.width;
-            if (vpW > 1f)
+            float vpH = scrollRect.viewport.rect.height;
+            // 카드 1장 높이 = 뷰포트의 40% (이전·다음 카드가 위아래로 살짝 보이도록)
+            float targetH = vpH * 0.28f;
+            if (vpW > 1f && targetH > 1f)
             {
                 foreach (var cv in cardViews)
                 {
                     if (cv == null) continue;
+                    // sizeDelta로 크기 직접 지정 (VLG childControlHeight=false이므로 필수)
                     var rt = cv.GetComponent<RectTransform>();
-                    if (rt != null) rt.sizeDelta = new Vector2(vpW, rt.sizeDelta.y);
+                    if (rt != null) rt.sizeDelta = new Vector2(vpW, targetH);
                     var le = cv.GetComponent<LayoutElement>();
-                    if (le != null) { le.preferredWidth = vpW; le.minWidth = vpW; }
+                    if (le == null) le = cv.gameObject.AddComponent<LayoutElement>();
+                    le.preferredWidth  = vpW;  le.minWidth  = vpW;
+                    le.preferredHeight = targetH; le.minHeight = targetH;
                 }
+                cachedCardH = targetH; // 이후 SnapY 공식에서 사용
                 Canvas.ForceUpdateCanvases();
             }
         }
 
-        cachedCardW = -1f;   // 캐시 리셋 후 카드 실제 너비 재측정
-        SnapImmediate(0);
+        SnapImmediate(currentIndex);
     }
 
-    // ── 카드 동적 생성 ───────────────────────────────────────────────
-
+    // ── 카드 생성 ────────────────────────────────────────────────────
+    // 역순 빌드: stage[n-1] → stage[0]
+    // 결과: content 상단 = 높은 인덱스(다음 스테이지), 하단 = 낮은 인덱스(현재)
     void BuildCards()
     {
-        if (content == null)
-        {
-            Debug.LogError("[StageSelectPanel] content is null - cannot build cards");
-            return;
-        }
-        Debug.Log($"[StageSelectPanel] Building {stages.Length} cards");
+        if (content == null) return;
 
-        // 기존 자식 제거
         for (int i = content.childCount - 1; i >= 0; i--)
             Destroy(content.GetChild(i).gameObject);
 
         cardViews = new StageCardView[stages.Length];
 
-        for (int i = 0; i < stages.Length; i++)
+        for (int i = stages.Length - 1; i >= 0; i--)
         {
             StageCardView cv;
 
-    if (cardPrefab != null)
-    {
-        // ── 프리팹 사용 ──────────────────────────────────────
-        cv = Instantiate(cardPrefab, content);
-        if (cv == null)
-        {
-            Debug.LogError($"[StageSelectPanel] Failed to instantiate cardPrefab for stage {i}");
-            continue;
-        }
-        var le        = cv.GetComponent<LayoutElement>();
-        if (le == null) le = cv.gameObject.AddComponent<LayoutElement>();
-        le.preferredWidth = cardWidth;
-        le.minWidth       = cardWidth;
-        cv.Bind(stages[i]);
-        cardViews[i] = cv;
-        continue;   // 아래 자동 생성 코드 건너뜀
-    }
+            // 1순위: Resources/Chapter/Card/{chapterID} 프리팹
+            // 2순위: Inspector의 cardPrefab 폴백
+            // 3순위: 코드 자동 생성
+            string prefabPath = $"Chapter/Card/{stages[i].chapterID}";
+            StageCardView loadedPrefab = Resources.Load<StageCardView>(prefabPath);
+            StageCardView sourcePrefab = loadedPrefab ?? cardPrefab;
 
-            // ── 자동 생성 ────────────────────────────────────────────
-            var card   = new GameObject($"Card_{i}");
-            card.transform.SetParent(content, false);
+            if (sourcePrefab != null)
+            {
+                cv = Instantiate(sourcePrefab, content);
+                if (cv == null) continue;
+                var le = cv.GetComponent<LayoutElement>()
+                      ?? cv.gameObject.AddComponent<LayoutElement>();
+                le.preferredHeight = cardHeight;
+                le.minHeight       = cardHeight;
+                le.preferredWidth  = cardWidth;
+                le.minWidth        = cardWidth;
+                cv.Bind(stages[i]);
+            }
+            else
+            {
+                cv = BuildAutoCard(i);
+            }
 
-            var cardRT = card.AddComponent<RectTransform>();
-            cardRT.sizeDelta = new Vector2(cardWidth, cardHeight);
+            // 초기 상태: 현재 스테이지만 중앙 카드로 설정
+            cv.SetCenterCard(i == currentIndex);
 
-            var le2            = card.AddComponent<LayoutElement>();
-            le2.preferredWidth = cardWidth;
-            le2.minWidth       = cardWidth;
+            // CanvasGroup 미리 추가 (ApplyCardScales에서 alpha 제어용)
+            if (cv.GetComponent<CanvasGroup>() == null)
+                cv.gameObject.AddComponent<CanvasGroup>();
 
-            // 아이콘 (카드 정중앙)
-            var iconRT      = MakeRT("StageIcon", cardRT);
-            iconRT.anchorMin = new Vector2(0.15f, 0.2f);
-            iconRT.anchorMax = new Vector2(0.85f, 0.88f);
-            iconRT.offsetMin = Vector2.zero;
-            iconRT.offsetMax = Vector2.zero;
-            var iconImg         = iconRT.gameObject.AddComponent<Image>();
-            iconImg.preserveAspect = true;
-            iconImg.color          = Color.white;
-            iconImg.enabled        = false;   // 스프라이트 연결 시 활성화
+            // 클릭 핸들러
+            int stageIdx = i;
+            var btn = cv.GetComponent<Button>()
+                   ?? cv.gameObject.AddComponent<Button>();
+            btn.transition = Selectable.Transition.None;
+            btn.onClick.RemoveAllListeners();
+            btn.onClick.AddListener(() => OnCardClicked(stageIdx));
 
-            // 스테이지 이름 (아이콘 바로 위, 2줄)
-            var nameRT  = MakeTMP("StageName", cardRT, stages[i].stageName, 38f);
-            nameRT.anchorMin = new Vector2(0f, 0.80f);
-            nameRT.anchorMax = new Vector2(1f, 1.00f);
-            nameRT.offsetMin = new Vector2(24f, 0f);
-            nameRT.offsetMax = new Vector2(-24f, 0f);
-            var nameTmp      = nameRT.GetComponent<TextMeshProUGUI>();
-            nameTmp.fontStyle   = FontStyles.Bold;
-            nameTmp.color       = Color.white;
-            nameTmp.alignment   = TextAlignmentOptions.Left;
-            nameTmp.lineSpacing = 8f;
-
-            // 최고 생존 웨이브 (아이콘 아래)
-            string waveStr = stages[i].bestWave > 0 ? $"최고 웨이브: {stages[i].bestWave}" : "최고 웨이브: -";
-            var waveRT  = MakeTMP("BestWave", cardRT, waveStr, 32f);
-            waveRT.anchorMin = new Vector2(0f, 0.06f);
-            waveRT.anchorMax = new Vector2(1f, 0.20f);
-            waveRT.offsetMin = new Vector2(16f, 0f);
-            waveRT.offsetMax = new Vector2(-16f, 0f);
-            waveRT.GetComponent<TextMeshProUGUI>().color = new Color(0.8f, 0.8f, 0.8f, 1f);
-
-            cv               = card.AddComponent<StageCardView>();
-            cv.iconImage     = iconImg;
-            cv.stageNameText = nameTmp;
-            cv.bestWaveText  = waveRT.GetComponent<TextMeshProUGUI>();
-            cv.Bind(stages[i]);
+            // Button 레이캐스트를 위한 배경 Image 보장
+            if (cv.GetComponent<Image>() == null)
+            {
+                var bg = cv.gameObject.AddComponent<Image>();
+                bg.color = new Color(0f, 0f, 0f, 0f); // 투명
+            }
 
             cardViews[i] = cv;
         }
     }
 
-    void BuildDots()
+    StageCardView BuildAutoCard(int i)
     {
-        if (dotContainer == null) return;
+        var card   = new GameObject($"Card_{i}");
+        card.transform.SetParent(content, false);
 
-        for (int i = dotContainer.childCount - 1; i >= 0; i--)
-            Destroy(dotContainer.GetChild(i).gameObject);
+        var cardRT       = card.AddComponent<RectTransform>();
+        cardRT.sizeDelta = new Vector2(cardWidth, cardHeight);
 
-        dots = new Image[stages.Length];
-        for (int i = 0; i < stages.Length; i++)
+        var le2            = card.AddComponent<LayoutElement>();
+        le2.preferredHeight = cardHeight;
+        le2.minHeight       = cardHeight;
+        le2.preferredWidth  = cardWidth;
+        le2.minWidth        = cardWidth;
+
+        // 배경
+        var bg = card.AddComponent<Image>();
+        bg.color = new Color(0.1f, 0.1f, 0.15f, 0.9f);
+
+        // 아이콘
+        var iconRT       = MakeRT("StageIcon", cardRT);
+        iconRT.anchorMin = new Vector2(0.1f, 0.15f);
+        iconRT.anchorMax = new Vector2(0.5f, 0.85f);
+        iconRT.offsetMin = iconRT.offsetMax = Vector2.zero;
+        var iconImg            = iconRT.gameObject.AddComponent<Image>();
+        iconImg.preserveAspect = true;
+        iconImg.enabled        = false;
+
+        // 스테이지 이름
+        var nameRT       = MakeTMP("StageName", cardRT, stages[i].stageName, 36f);
+        nameRT.anchorMin = new Vector2(0.5f, 0.55f);
+        nameRT.anchorMax = new Vector2(1.0f, 1.0f);
+        nameRT.offsetMin = new Vector2(8f, 0f);
+        nameRT.offsetMax = new Vector2(-8f, 0f);
+        var nameTmp          = nameRT.GetComponent<TextMeshProUGUI>();
+        nameTmp.fontStyle    = FontStyles.Bold;
+        nameTmp.color        = Color.white;
+        nameTmp.alignment    = TextAlignmentOptions.Left;
+
+        // 최고 웨이브
+        string waveStr  = stages[i].bestWave > 0 ? $"최고 웨이브: {stages[i].bestWave}" : "최고 웨이브: -";
+        var waveRT       = MakeTMP("BestWave", cardRT, waveStr, 28f);
+        waveRT.anchorMin = new Vector2(0.5f, 0.05f);
+        waveRT.anchorMax = new Vector2(1.0f, 0.50f);
+        waveRT.offsetMin = new Vector2(8f, 0f);
+        waveRT.offsetMax = new Vector2(-8f, 0f);
+        waveRT.GetComponent<TextMeshProUGUI>().color = new Color(0.8f, 0.8f, 0.8f);
+
+        var cv           = card.AddComponent<StageCardView>();
+        cv.iconImage     = iconImg;
+        cv.stageNameText = nameTmp;
+        cv.bestWaveText  = waveRT.GetComponent<TextMeshProUGUI>();
+        cv.Bind(stages[i]);
+        return cv;
+    }
+
+    // ── 카드 클릭 / 스크롤 모드 ─────────────────────────────────────
+    void OnCardClicked(int index)
+    {
+        GoTo(index);
+    }
+
+    void SetScrollMode(bool on)
+    {
+        _scrollMode = on;
+        // 배경/이미지 raycastTarget만 해제 — Button 등 Selectable은 그대로 유지
+        foreach (var go in scrollModeHideTargets)
         {
-            var go  = new GameObject($"Dot_{i}");
-            go.transform.SetParent(dotContainer, false);
-            var le  = go.AddComponent<LayoutElement>();
-            le.preferredWidth  = 16f;
-            le.preferredHeight = 16f;
-            dots[i] = go.AddComponent<Image>();
-            dots[i].color = i == 0 ? dotActive : dotInactive;
+            if (go == null) continue;
+            foreach (var g in go.GetComponentsInChildren<UnityEngine.UI.Graphic>(true))
+            {
+                if (g.GetComponent<UnityEngine.UI.Selectable>() != null) continue;
+                g.raycastTarget = !on;
+            }
         }
     }
 
-    // ── 네비게이션 ───────────────────────────────────────────────────
+    void RefreshCardVisibility()
+    {
+        if (cardViews == null) return;
+        foreach (var cv in cardViews)
+            if (cv != null) cv.gameObject.SetActive(true);
+    }
 
+    // ── 네비게이션 ───────────────────────────────────────────────────
     public void GoTo(int index, bool animate = true)
     {
         currentIndex = Mathf.Clamp(index, 0, Mathf.Max(0, stages.Length - 1));
-        RefreshDots();
-
         if (animate) StartCoroutine(SnapCoroutine(currentIndex));
         else         SnapImmediate(currentIndex);
     }
 
-    float CardW()
+    float CardH()
     {
-        if (cachedCardW > 0f) return cachedCardW;
-
-        // 카드 0번의 실제 rect 너비를 읽음 (레이아웃 계산 완료 후)
-        if (cardViews != null && cardViews.Length > 0)
+        if (cachedCardH > 0f) return cachedCardH;
+        if (cardViews != null && cardViews.Length > 0 && cardViews[0] != null)
         {
             var rt = cardViews[0].GetComponent<RectTransform>();
-            if (rt != null && rt.rect.width > 1f)
+            if (rt != null && rt.rect.height > 1f)
             {
-                cachedCardW = rt.rect.width;
-                return cachedCardW;
+                cachedCardH = rt.rect.height;
+                return cachedCardH;
             }
         }
-        return cardWidth;
+        return cardHeight;
     }
 
+    float SlotH() => CardH() + cardSpacing;
 
-    /// <summary>가상 중심 위치(실수)를 기반으로 모든 카드 스케일을 업데이트합니다.</summary>
+    // stage[index]를 뷰포트 중앙에 놓는 content.anchoredPosition.y
+    // top-anchored content, 역순 빌드: stage[i]는 content 상단에서 (n-1-i)번째 슬롯
+    // cardCenterY_in_content = -(n-1-i)*slotH - h/2  (음수, 위에서 아래)
+    // anchoredPosition.y = -vpH/2 - cardCenterY = -vpH/2 + (n-1-i)*slotH + h/2
+    float SnapY(int index)
+    {
+        if (stages == null || scrollRect == null) return 0f;
+        float h     = CardH();
+        float slotH = h + cardSpacing;
+        int   n     = stages.Length;
+        float vpH   = scrollRect.viewport.rect.height;
+        return -vpH * 0.5f + (n - 1 - index) * slotH + h * 0.5f;
+    }
+
+    float SnapYToVirtualCenter(float anchoredY)
+    {
+        float h     = CardH();
+        float slotH = h + cardSpacing;
+        int   n     = stages.Length;
+        float vpH   = scrollRect != null ? scrollRect.viewport.rect.height : h;
+        // inverse: (n-1-index)*slotH = anchoredY + vpH/2 - h/2
+        float slotRank = (anchoredY + vpH * 0.5f - h * 0.5f) / Mathf.Max(1f, slotH);
+        return n - 1 - slotRank;
+    }
+
     void ApplyCardScales(float virtualCenter)
     {
         if (cardViews == null) return;
@@ -343,15 +430,37 @@ public class StageSelectPanel : MonoBehaviour
             float dist = Mathf.Abs(i - virtualCenter);
             float s    = Mathf.Lerp(centerScale, sideScale, Mathf.Clamp01(dist));
             cardViews[i].transform.localScale = Vector3.one * s;
+            cardViews[i].SetCenterCard(dist < 0.5f);
+
+            var cg = cardViews[i].GetComponent<CanvasGroup>();
+            if (cg != null)
+            {
+                if (i < virtualCenter - 0.5f)
+                {
+                    cg.alpha = 0f;
+                    cg.blocksRaycasts = false; // 투명 카드는 이벤트 차단 해제
+                }
+                else if (dist < 0.5f)
+                {
+                    cg.alpha = 1f;
+                    cg.blocksRaycasts = true;
+                }
+                else
+                {
+                    cg.alpha = Mathf.Lerp(0.45f, 0f, Mathf.Clamp01(dist - 0.5f));
+                    cg.blocksRaycasts = true;
+                }
+            }
         }
     }
 
     void SnapImmediate(int index)
     {
         if (scrollRect == null || content == null) return;
-        float w = CardW();
-        content.anchoredPosition = new Vector2(-index * w, content.anchoredPosition.y);
+        content.anchoredPosition = new Vector2(content.anchoredPosition.x, SnapY(index));
         ApplyCardScales(index);
+        RefreshCardVisibility();
+        StartFloat();
     }
 
     IEnumerator SnapCoroutine(int index)
@@ -359,46 +468,62 @@ public class StageSelectPanel : MonoBehaviour
         if (isSnapping || scrollRect == null || content == null) yield break;
         isSnapping = true;
 
-        float w          = CardW();
-        float targetX    = -index * w;
-        float startX     = content.anchoredPosition.x;
-        float elapsed    = 0f;
-        const float duration = 0.18f;
+        float targetY = SnapY(index);
+        float startY  = content.anchoredPosition.y;
+        float elapsed = 0f;
+        const float duration = 0.35f;
 
         while (elapsed < duration)
         {
             elapsed += Time.unscaledDeltaTime;
             float t    = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / duration));
-            float newX = Mathf.Lerp(startX, targetX, t);
-            content.anchoredPosition = new Vector2(newX, content.anchoredPosition.y);
-            ApplyCardScales(-newX / Mathf.Max(1f, w));
+            float newY = Mathf.Lerp(startY, targetY, t);
+            content.anchoredPosition = new Vector2(content.anchoredPosition.x, newY);
+            ApplyCardScales(SnapYToVirtualCenter(newY));
             yield return null;
         }
-        content.anchoredPosition = new Vector2(targetX, content.anchoredPosition.y);
+        content.anchoredPosition = new Vector2(content.anchoredPosition.x, targetY);
         ApplyCardScales(index);
         isSnapping = false;
+        StartFloat();
     }
 
-    void RefreshDots()
+    // ── 플로팅 ───────────────────────────────────────────────────────
+    void StartFloat()
     {
-        if (dots == null) return;
-        for (int i = 0; i < dots.Length; i++)
-            if (dots[i] != null)
-                dots[i].color = i == currentIndex ? dotActive : dotInactive;
+        StopFloat();
+        if (cardViews == null || currentIndex < 0 || currentIndex >= cardViews.Length) return;
+        var card = cardViews[currentIndex];
+        if (card != null) _floatCoroutine = StartCoroutine(FloatCoroutine(card));
     }
 
+    void StopFloat()
+    {
+        if (_floatCoroutine != null) { StopCoroutine(_floatCoroutine); _floatCoroutine = null; }
+    }
+
+    IEnumerator FloatCoroutine(StageCardView card)
+    {
+        float t = 0f;
+        while (card != null)
+        {
+            t += Time.unscaledDeltaTime * 1.8f;
+            card.transform.localScale = Vector3.one * centerScale * (1f + Mathf.Sin(t) * 0.018f);
+            yield return null;
+        }
+    }
+
+    // ── 시작 ────────────────────────────────────────────────────────
     public void OnStartClicked()
     {
         if (currentIndex < 0 || currentIndex >= stages.Length) return;
-        if (stages[currentIndex].isLocked) return; // 잠금 시 시작 불가
-        string selectedChapterID = stages[currentIndex].chapterID;
-        PlayerPrefs.SetString("SelectedChapterID", selectedChapterID);
+        if (stages[currentIndex].isLocked) return;
+        PlayerPrefs.SetString("SelectedChapterID", stages[currentIndex].chapterID);
         PlayerPrefs.Save();
         SceneLoadManager.LoadScene("stage@scene");
     }
 
-    // ── 헬퍼 ─────────────────────────────────────────────────────────
-
+    // ── 헬퍼 ────────────────────────────────────────────────────────
     static RectTransform MakeRT(string name, RectTransform parent)
     {
         var go = new GameObject(name);

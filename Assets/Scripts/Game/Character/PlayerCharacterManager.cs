@@ -35,8 +35,7 @@ public class PlayerCharacterManager : MonoBehaviourSingleton<PlayerCharacterMana
     private const string PrefKeyChar = "equipped_char";
     private const string PrefKeyTier = "char_tier_{0}"; // 캐릭터별 증강 단계 (1~3)
 
-    private Sprite _cachedSprite;
-    private string _cachedSpriteCharId;
+    private GameObject _currentPlayerModel;
 
     protected override bool DontDestroy => true; // 홈→게임 씬 이동 시 유지
 
@@ -105,21 +104,8 @@ public class PlayerCharacterManager : MonoBehaviourSingleton<PlayerCharacterMana
             return;
         }
 
-        // 0. 캐릭터 스프라이트 교체 — 동일 캐릭터면 캐시 재사용, 변경 시에만 Resources.Load
-        if (!string.IsNullOrEmpty(row.f_캐릭ID))
-        {
-            if (_cachedSprite == null || _cachedSpriteCharId != row.f_캐릭ID)
-            {
-                string spritePath = $"Character/{row.f_캐릭ID.ToLower()}";
-                _cachedSprite     = Resources.Load<Sprite>(spritePath);
-                _cachedSpriteCharId = row.f_캐릭ID;
-            }
-            if (_cachedSprite != null)
-            {
-                var sr = player.GetComponentInChildren<SpriteRenderer>();
-                if (sr != null) sr.sprite = _cachedSprite;
-            }
-        }
+        // 0. 인게임 모델 교체 (Resources/Character/{charId}_model.prefab)
+        SwapPlayerModel(row.f_캐릭ID, player);
 
         // 1. 기초 스탯 적용 — PlayerStatManager를 통해 설정하면 StatPanelUI에도 반영됨
         if (sm != null)
@@ -148,6 +134,49 @@ public class PlayerCharacterManager : MonoBehaviourSingleton<PlayerCharacterMana
         CharacterSkillManager.Shared?.Initialize(skillId);
 
         Debug.Log($"[CharMgr] 스탯 적용: {row.f_이름} (Tier {tier}, 스킬: {skillId})");
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // 모델 교체
+    // ─────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// 인게임 Player의 VisualSlot 자식에 캐릭터 모델 프리팹을 교체합니다.
+    /// 프리팹 경로: Resources/Character/{charId}_model
+    /// 프리팹 구성: SpriteRenderer + Animator (AnimatorController 캐릭터별)
+    /// </summary>
+    void SwapPlayerModel(string charId, PlayerController player)
+    {
+        // VisualSlot 확보 (없으면 생성)
+        var visualSlot = player.transform.Find("VisualSlot");
+        if (visualSlot == null)
+        {
+            var go = new GameObject("VisualSlot");
+            go.transform.SetParent(player.transform, false);
+            visualSlot = go.transform;
+        }
+
+        // 기존 모델 제거
+        if (_currentPlayerModel != null) Destroy(_currentPlayerModel);
+        foreach (Transform child in visualSlot) Destroy(child.gameObject);
+
+        // 모델 프리팹 로드 및 배치
+        var prefab = Resources.Load<GameObject>($"Character/{charId.ToLower()}_model");
+        if (prefab == null)
+        {
+            Debug.LogWarning($"[CharMgr] 모델 프리팹 없음: Character/{charId.ToLower()}_model");
+            return;
+        }
+
+        _currentPlayerModel = Instantiate(prefab, visualSlot);
+        _currentPlayerModel.transform.localPosition = Vector3.zero;
+        _currentPlayerModel.transform.localScale    = Vector3.one;
+
+        // PlayerController 참조 갱신
+        player.RefreshVisualReferences();
+        var anim = _currentPlayerModel.GetComponent<Animator>()
+                ?? _currentPlayerModel.GetComponentInChildren<Animator>();
+        if (anim != null) player.SetAnimator(anim);
     }
 
     // ─────────────────────────────────────────────────────────────

@@ -66,6 +66,10 @@ public class BossGroundSpikeSkill : BossSkillBase
     [SerializeField] private int   fanRepeat      = 3;
     [SerializeField] private float fanRepeatDelay = 0.6f;
 
+    [Header("페이즈 ON/OFF")]
+    [SerializeField] private bool useSpikePhase = true;
+    [SerializeField] private bool useFanPhase   = true;
+
     [Header("애니메이션")]
     [SerializeField] private string attackTrigger = "tAttack";
 
@@ -91,16 +95,21 @@ public class BossGroundSpikeSkill : BossSkillBase
 
             if (IsInvalid()) yield break;
 
-            yield return SpikeLinePhase();
-            if (IsInvalid()) yield break;
+            if (useSpikePhase)
+            {
+                yield return SpikeLinePhase();
+                if (IsInvalid()) yield break;
+                yield return ChasePhase(chaseAfterSpike);
+                if (IsInvalid()) yield break;
+            }
 
-            yield return ChasePhase(chaseAfterSpike);
-            if (IsInvalid()) yield break;
-
-            yield return FanBurstPhase();
-            if (IsInvalid()) yield break;
-
-            yield return ChasePhase(chaseAfterFan);
+            if (useFanPhase)
+            {
+                yield return FanBurstPhase();
+                if (IsInvalid()) yield break;
+                yield return ChasePhase(chaseAfterFan);
+                if (IsInvalid()) yield break;
+            }
         }
     }
 

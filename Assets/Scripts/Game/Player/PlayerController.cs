@@ -101,6 +101,7 @@ public class PlayerController : MonoBehaviour
 
     // 스킬 하이라이트 효과
     private Coroutine _skillHighlightCoroutine;
+    private Coroutine _hitInvincibleCoroutine;
     private bool           isInvincible;
 
     private void Awake()
@@ -117,6 +118,18 @@ public class PlayerController : MonoBehaviour
     {
         StopAllCoroutines();
         if (Instance == this) Instance = null;
+    }
+
+    /// <summary>모델 교체 후 PlayerCharacterManager에서 호출 — 새 Animator 연결.</summary>
+    public void SetAnimator(Animator anim)
+    {
+        playerAnimator = anim;
+    }
+
+    /// <summary>모델 교체 후 PlayerCharacterManager에서 호출 — SpriteRenderer 참조 갱신.</summary>
+    public void RefreshVisualReferences()
+    {
+        spriteRenderer = GetComponentInChildren<SpriteRenderer>();
     }
 
     private void Start()
@@ -229,7 +242,7 @@ public class PlayerController : MonoBehaviour
 
             // 피격 후 짧은 무적 (여러 적에 동시에 맞는 것 방지)
             if (hitInvincibleDuration > 0f)
-                StartCoroutine(HitInvincibleRoutine(hitInvincibleDuration));
+                RestartHitInvincible();
 
             return;
         }
@@ -254,7 +267,7 @@ public class PlayerController : MonoBehaviour
 
         // 피격 후 짧은 무적 (여러 적에 동시에 맞는 것 방지)
         if (hitInvincibleDuration > 0f)
-            StartCoroutine(HitInvincibleRoutine(hitInvincibleDuration));
+            RestartHitInvincible();
 
         if (currentHP <= 0f)
             GameManager.Shared?.TriggerGameOver();
@@ -460,6 +473,12 @@ public class PlayerController : MonoBehaviour
 
     /// <summary>회복 구슬 스폰 확률. (FXManager 또는 HealOrb 스포너에서 참조)</summary>
     public float HealOrbSpawnChance => healOrbChance;
+
+    private void RestartHitInvincible()
+    {
+        if (_hitInvincibleCoroutine != null) StopCoroutine(_hitInvincibleCoroutine);
+        _hitInvincibleCoroutine = StartCoroutine(HitInvincibleRoutine(hitInvincibleDuration));
+    }
 
     private IEnumerator HitInvincibleRoutine(float duration)
     {

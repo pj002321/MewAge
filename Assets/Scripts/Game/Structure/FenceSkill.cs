@@ -25,6 +25,9 @@ public class FenceSkill : StructureSkillBase
 
 
 
+    private static readonly int TriggerHash = Animator.StringToHash("OnTrigger");
+
+    private Animator _animator;
     private bool isFenceChild;
 
     // 현재 이 펜스에 걸려있는 적 목록
@@ -36,6 +39,7 @@ public class FenceSkill : StructureSkillBase
 
     public override void Activate()
     {
+        _animator = GetComponent<Animator>();
         EnsureCollider();
         if (!isFenceChild) SpawnFenceLine();
     }
@@ -61,6 +65,7 @@ public class FenceSkill : StructureSkillBase
         if (enemy == null) return;
         _trapped.Add(enemy);
         enemy.Paralyze(ParalyzeDuration);
+        _animator?.SetTrigger(TriggerHash);
     }
 
     private void OnTriggerExit2D(Collider2D other)

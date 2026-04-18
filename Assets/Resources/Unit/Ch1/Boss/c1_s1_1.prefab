@@ -187,7 +187,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 47b83d84731d5f94ca4c43b16224c669, type: 2}
+  - {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -305,6 +305,11 @@ MonoBehaviour:
   idleDuration: 1.5
   skills:
   - {fileID: 1072981410219997983}
+  entryDrop: 1
+  dropSpeed: 22
+  squashDuration: 0.08
+  stretchDuration: 0.1
+  settleDuration: 0.12
 --- !u!114 &1072981410219997983
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -321,10 +326,12 @@ MonoBehaviour:
   cooldown: 5
   enrageCooldownMult: 1
   maxRange: 0
+  executeInPattern: 1
   projectilePrefab: {fileID: 7916182024222986910, guid: 9a4a33602c726e2489bec5dbb7160348, type: 3}
   projectileSpeed: 3
   projectileDamage: 40
   firePoint: {fileID: 4475026578306635568}
+  enableLinearFire: 1
   linearDuration: 4
   linearInterval: 0.65
   chaseAfterLinear: 5
