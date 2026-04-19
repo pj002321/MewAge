@@ -457,7 +457,7 @@ public class StageSelectPanel : MonoBehaviour
                 }
                 else
                 {
-                    cg.alpha = Mathf.Lerp(0.45f, 0f, Mathf.Clamp01(dist - 0.5f));
+                    cg.alpha = Mathf.Lerp(0.65f, 0f, Mathf.Clamp01(dist - 0.5f));
                     cg.blocksRaycasts = true;
                 }
             }
