@@ -66,20 +66,31 @@ public class HomeWarePanel : MonoBehaviour
     public WareDetailPopup      detailPopup;
     public WareSynthResultPopup synthResultPopup;
 
+    [Header("프리셋 선택 모드")]
+    [Tooltip("장착 선택 모드 진입 시 어둡게 처리할 Image 목록. PresetSlots·선택된 인벤 슬롯은 제외하고 등록하세요.")]
+    public Image[]      dimImages;
+    [Tooltip("각 프리셋 슬롯 위에 올릴 하이라이트 오버레이 (0~3). 슬롯의 자식 Image 오브젝트로 연결하세요.")]
+    public GameObject[] presetHighlightOverlays = new GameObject[4];
+
     [Header("정렬 탭 버튼")]
     public Button tabAll;
     public Button tabByGrade;
     public Button tabByEra;
     public Button tabByRole;
 
-    [Header("탭 색상")]
-    public Color tabActiveColor   = new Color(1f,    0.80f, 0.20f, 1f);
-    public Color tabInactiveColor = new Color(0.25f, 0.25f, 0.25f, 1f);
+    [Header("탭 스프라이트")]
+    public Sprite tabActiveSprite;
+    public Sprite tabInactiveSprite;
 
     // ── 내부 상태 ─────────────────────────────────────────────────────
 
     WareSortMode _sortMode  = WareSortMode.None;
     bool         _synthMode = false;
+
+    string       _pendingPresetId;
+    bool         _inPresetSelectMode;
+    Color[]      _dimOriginalColors;
+    WareSlotView _selectedInvSlot;   // 팝업을 열었던 인벤토리 슬롯
 
     /// <summary>합성 재료로 선택된 카드 ID 목록 (중복 허용, 최대 10)</summary>
     readonly List<string> _synthMaterials = new();
@@ -120,6 +131,7 @@ public class HomeWarePanel : MonoBehaviour
     {
         var mgr = StructureWareManager.Shared;
         if (mgr != null) mgr.OnChanged -= RefreshAll;
+        if (_inPresetSelectMode) EndPresetSelect();
     }
 
     // ── 모드 전환 ─────────────────────────────────────────────────────
@@ -158,33 +170,136 @@ public class HomeWarePanel : MonoBehaviour
         {
             if (presetSlots[i] == null) continue;
             presetSlots[i].PresetSlotIndex = i;
+            int slotIdx = i;
             string id = mgr?.GetPreset(i);
             if (!string.IsNullOrEmpty(id))
-                presetSlots[i].Bind(id, OnPresetSlotClicked);
+                presetSlots[i].Bind(id, _ => OnPresetSlotClickedByIndex(slotIdx));
             else
                 presetSlots[i].BindEmpty(i);
         }
     }
 
-    void OnPresetSlotClicked(string id) => detailPopup?.Show(id);
+    void OnPresetSlotClickedByIndex(int slotIndex)
+    {
+        if (_inPresetSelectMode)
+        {
+            var mgr = StructureWareManager.Shared;
+            if (mgr != null)
+            {
+                // 이미 다른 프리셋 슬롯에 같은 기물이 있으면 두 슬롯을 스왑
+                int existingSlot = -1;
+                for (int i = 0; i < presetSlots.Length; i++)
+                {
+                    if (mgr.GetPreset(i) == _pendingPresetId) { existingSlot = i; break; }
+                }
+
+                if (existingSlot >= 0 && existingSlot != slotIndex)
+                {
+                    // 스왑: 클릭한 슬롯의 기물을 기존 슬롯으로, 선택 기물을 클릭한 슬롯으로
+                    string displaced = mgr.GetPreset(slotIndex);
+                    if (!string.IsNullOrEmpty(displaced)) mgr.SetPreset(existingSlot, displaced);
+                    else                                  mgr.ClearPreset(existingSlot);
+                    mgr.SetPreset(slotIndex, _pendingPresetId);
+                }
+                else
+                {
+                    mgr.SetPreset(slotIndex, _pendingPresetId);
+                }
+            }
+            EndPresetSelect();
+            return;
+        }
+        string id = StructureWareManager.Shared?.GetPreset(slotIndex);
+        if (!string.IsNullOrEmpty(id)) detailPopup?.Show(id);
+    }
+
+    // ── 프리셋 선택 모드 ─────────────────────────────────────────────
+
+    public void BeginPresetSelect(string id)
+    {
+        _pendingPresetId    = id;
+        _inPresetSelectMode = true;
+
+        // 합성 탭 중이면 프리셋 영역 강제 표시
+        if (_synthMode && presetArea) presetArea.SetActive(true);
+
+        // Inspector 등록 Image들 어둡게 (원본 색 저장 후 RGB 30%로 tint)
+        if (dimImages != null)
+        {
+            _dimOriginalColors = new Color[dimImages.Length];
+            for (int i = 0; i < dimImages.Length; i++)
+            {
+                if (dimImages[i] == null) continue;
+                _dimOriginalColors[i] = dimImages[i].color;
+                var c = _dimOriginalColors[i];
+                dimImages[i].color = new Color(c.r * 0.3f, c.g * 0.3f, c.b * 0.3f, c.a);
+            }
+        }
+
+        // 인벤토리 슬롯: 선택된 슬롯 제외하고 CanvasGroup alpha 낮춤
+        if (inventoryContent != null)
+        {
+            foreach (Transform child in inventoryContent)
+            {
+                var s = child.GetComponent<WareSlotView>();
+                if (s == null) continue;
+                var cg = child.GetComponent<CanvasGroup>();
+                cg.alpha = (s == _selectedInvSlot) ? 1f : 0.25f;
+            }
+        }
+
+        foreach (var go in presetHighlightOverlays)
+            if (go != null) go.SetActive(true);
+    }
+
+    void EndPresetSelect()
+    {
+        _inPresetSelectMode = false;
+        _pendingPresetId    = null;
+        _selectedInvSlot    = null;
+
+        // Inspector 등록 Image 색상 복구
+        if (dimImages != null && _dimOriginalColors != null)
+        {
+            for (int i = 0; i < dimImages.Length && i < _dimOriginalColors.Length; i++)
+                if (dimImages[i] != null) dimImages[i].color = _dimOriginalColors[i];
+        }
+
+        // 인벤토리 슬롯 alpha 복구
+        if (inventoryContent != null)
+        {
+            foreach (Transform child in inventoryContent)
+            {
+                var cg = child.GetComponent<CanvasGroup>();
+                if (cg != null) cg.alpha = 1f;
+            }
+        }
+
+        foreach (var go in presetHighlightOverlays)
+            if (go != null) go.SetActive(false);
+
+        RefreshPreset();
+    }
 
     // ── 인벤토리 ─────────────────────────────────────────────────────
 
     void SetSort(WareSortMode mode)
     {
         _sortMode = mode;
-        SetTabColor(tabAll,     mode == WareSortMode.None);
-        SetTabColor(tabByGrade, mode == WareSortMode.ByGrade);
-        SetTabColor(tabByEra,   mode == WareSortMode.ByEra);
-        SetTabColor(tabByRole,  mode == WareSortMode.ByRole);
+        SetTabSprite(tabAll,     mode == WareSortMode.None);
+        SetTabSprite(tabByGrade, mode == WareSortMode.ByGrade);
+        SetTabSprite(tabByEra,   mode == WareSortMode.ByEra);
+        SetTabSprite(tabByRole,  mode == WareSortMode.ByRole);
         RefreshInventory();
     }
 
-    void SetTabColor(Button btn, bool active)
+    void SetTabSprite(Button btn, bool active)
     {
         if (btn == null) return;
         var img = btn.GetComponent<Image>();
-        if (img) img.color = active ? tabActiveColor : tabInactiveColor;
+        if (img == null) return;
+        var target = active ? tabActiveSprite : tabInactiveSprite;
+        if (target != null) img.sprite = target;
     }
 
     void RefreshInventory()
@@ -207,11 +322,13 @@ public class HomeWarePanel : MonoBehaviour
 
             var slot = Instantiate(slotPrefab, inventoryContent);
             slot.PresetSlotIndex = -1;
-            slot.Bind(id, OnInventorySlotClicked, countOverride: remaining > 0 ? remaining : count);
+            var capturedSlot = slot;
+            slot.Bind(id, _ => OnInventorySlotClicked(capturedSlot, id),
+                      countOverride: remaining > 0 ? remaining : count);
         }
     }
 
-    void OnInventorySlotClicked(string id)
+    void OnInventorySlotClicked(WareSlotView slot, string id)
     {
         if (_synthMode)
         {
@@ -219,6 +336,7 @@ public class HomeWarePanel : MonoBehaviour
         }
         else
         {
+            _selectedInvSlot = slot;
             detailPopup?.Show(id);
         }
     }

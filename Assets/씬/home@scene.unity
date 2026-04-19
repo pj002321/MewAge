@@ -7247,6 +7247,47 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 403571234}
   m_CullTransparentMesh: 1
+--- !u!21 &405175946
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: UI/RoundedCorners/RoundedCorners
+  m_Shader: {fileID: 4800000, guid: 0bd2ec5d73751e34a814274a454bec41, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _MainTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _ColorMask: 15
+    - _Stencil: 0
+    - _StencilComp: 8
+    - _StencilOp: 0
+    - _StencilReadMask: 255
+    - _StencilWriteMask: 255
+    - _UseUIAlphaClip: 0
+    m_Colors:
+    - _OuterUV: {r: 0, g: 0, b: 1, a: 1}
+    - _WidthHeightRadius: {r: 104, g: 104, b: 3.6, a: 0}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1
 --- !u!224 &417577464 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 3989486296675370100, guid: 7baef96f52718dc4b9a61e4e7db93df9, type: 3}
@@ -13611,7 +13652,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: 1591264441}
+  m_Material: {fileID: 405175946}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
@@ -19128,8 +19169,8 @@ MonoBehaviour:
   tabAll: {fileID: 375366923}
   tabByGrade: {fileID: 1853031017}
   tabByCiv: {fileID: 778537327}
-  tabActiveColor: {r: 1, g: 1, b: 1, a: 1}
-  tabInactiveColor: {r: 1, g: 1, b: 1, a: 1}
+  tabActiveSprite: {fileID: -130728575328960661, guid: fe6b3df02cb1e9f4e8435b572e86cdaa, type: 3}
+  tabInactiveSprite: {fileID: -809662426711464370, guid: d3c485192e4de934eb49d10847b6f88e, type: 3}
   inventoryContent: {fileID: 2091822306}
   slotPrefab: {fileID: 7900150332275793219, guid: 98f7d65159a3475449a71d984e6cdb66, type: 3}
   detailPopup: {fileID: 1131216554}
@@ -22687,47 +22728,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1585572118}
   m_CullTransparentMesh: 1
---- !u!21 &1591264441
-Material:
-  serializedVersion: 8
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: UI/RoundedCorners/RoundedCorners
-  m_Shader: {fileID: 4800000, guid: 0bd2ec5d73751e34a814274a454bec41, type: 3}
-  m_Parent: {fileID: 0}
-  m_ModifiedSerializedProperties: 0
-  m_ValidKeywords: []
-  m_InvalidKeywords: []
-  m_LightmapFlags: 4
-  m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
-  m_CustomRenderQueue: -1
-  stringTagMap: {}
-  disabledShaderPasses: []
-  m_LockedProperties: 
-  m_SavedProperties:
-    serializedVersion: 3
-    m_TexEnvs:
-    - _MainTex:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    m_Ints: []
-    m_Floats:
-    - _ColorMask: 15
-    - _Stencil: 0
-    - _StencilComp: 8
-    - _StencilOp: 0
-    - _StencilReadMask: 255
-    - _StencilWriteMask: 255
-    - _UseUIAlphaClip: 0
-    m_Colors:
-    - _OuterUV: {r: 0, g: 0, b: 1, a: 1}
-    - _WidthHeightRadius: {r: 104, g: 104, b: 3.6, a: 0}
-  m_BuildTextureStacks: []
-  m_AllowLocking: 1
 --- !u!1 &1594428479
 GameObject:
   m_ObjectHideFlags: 0
@@ -25379,8 +25379,8 @@ MonoBehaviour:
   tabByGrade: {fileID: 382132114}
   tabByEra: {fileID: 721701776}
   tabByRole: {fileID: 1648050506}
-  tabActiveColor: {r: 1, g: 0.8, b: 0.2, a: 1}
-  tabInactiveColor: {r: 1, g: 1, b: 1, a: 1}
+  tabActiveSprite: {fileID: -130728575328960661, guid: fe6b3df02cb1e9f4e8435b572e86cdaa, type: 3}
+  tabInactiveSprite: {fileID: -809662426711464370, guid: d3c485192e4de934eb49d10847b6f88e, type: 3}
 --- !u!1 &1755710566
 GameObject:
   m_ObjectHideFlags: 0

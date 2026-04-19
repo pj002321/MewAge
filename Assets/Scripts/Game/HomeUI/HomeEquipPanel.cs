@@ -26,9 +26,9 @@ public class HomeEquipPanel : MonoBehaviour
     public Button tabByGrade;
     public Button tabByCiv;
 
-    [Header("탭 색상")]
-    public Color tabActiveColor   = new Color(1f,    0.80f, 0.20f, 1f);
-    public Color tabInactiveColor = new Color(0.25f, 0.25f, 0.25f, 1f);
+    [Header("탭 스프라이트")]
+    public Sprite tabActiveSprite;
+    public Sprite tabInactiveSprite;
 
     [Header("인벤토리")]
     public Transform            inventoryContent;
@@ -81,17 +81,19 @@ public class HomeEquipPanel : MonoBehaviour
     void SetSort(EquipSortMode mode)
     {
         _sortMode = mode;
-        SetTabColor(tabAll,     mode == EquipSortMode.None);
-        SetTabColor(tabByGrade, mode == EquipSortMode.ByGrade);
-        SetTabColor(tabByCiv,   mode == EquipSortMode.ByCivilization);
+        SetTabSprite(tabAll,     mode == EquipSortMode.None);
+        SetTabSprite(tabByGrade, mode == EquipSortMode.ByGrade);
+        SetTabSprite(tabByCiv,   mode == EquipSortMode.ByCivilization);
         RefreshInventory();
     }
 
-    void SetTabColor(Button btn, bool active)
+    void SetTabSprite(Button btn, bool active)
     {
         if (btn == null) return;
         var img = btn.GetComponent<Image>();
-        if (img) img.color = active ? tabActiveColor : tabInactiveColor;
+        if (img == null) return;
+        var target = active ? tabActiveSprite : tabInactiveSprite;
+        if (target != null) img.sprite = target;
     }
 
     void RefreshAll()

@@ -1,11 +1,12 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using Mewage.DB;
 
 /// <summary>
-/// 기물 상세 팝업. 정보 확인·강화·분해·프리셋 등록 담당.
-/// 합성은 HomeWarePanel 합성 탭에서 처리합니다.
+/// 기물 상세 팝업. 정보 확인·강화 담당.
+/// 장착은 장착 버튼 → 팝업 닫힘 → HomeWarePanel 프리셋 선택 모드로 처리합니다.
 ///
 /// Inspector 연결:
 ///   iconImage, frameImage — 아이콘 영역
@@ -15,10 +16,10 @@ using Mewage.DB;
 ///   statText     — 현재 주수치
 ///   nextStatText — 다음 레벨 강화 후 수치
 ///   upgradeButton, upgradeLabel — 강화 버튼
-///   dismantleButton — 분해 (+50골드)
+///   equipButton  — 장착 버튼 (누르면 팝업 닫히고 프리셋 슬롯 선택 모드 진입)
 ///   synergyText  — 현재 프리셋 시너지 설명
-///   presetButtons[4], presetLabels[4] — 슬롯 1~4 등록/해제
 ///   closeButton  — 닫기
+///   warePanel    — HomeWarePanel 참조 (반드시 연결)
 /// </summary>
 public class WareDetailPopup : MonoBehaviour
 {
@@ -41,33 +42,27 @@ public class WareDetailPopup : MonoBehaviour
     [SerializeField] Button   upgradeButton;
     [SerializeField] TMP_Text upgradeLabel;
 
-    [Header("분해")]
-    [SerializeField] Button   dismantleButton;
+    [Header("장착")]
+    [SerializeField] Button   equipButton;
 
     [Header("시너지")]
     [SerializeField] TMP_Text synergyText;
 
-    [Header("프리셋 슬롯 (0~3)")]
-    [SerializeField] Button[]   presetButtons = new Button[4];
-    [SerializeField] TMP_Text[] presetLabels  = new TMP_Text[4];
-
     [Header("닫기")]
     [SerializeField] Button closeButton;
 
+    [Header("연결")]
+    [SerializeField] HomeWarePanel warePanel;
+
     string  _currentId;
     DB_기물 _currentData;
+    Coroutine _closeRoutine;
 
     void Awake()
     {
         closeButton?.onClick.AddListener(() => gameObject.SetActive(false));
         upgradeButton?.onClick.AddListener(OnUpgrade);
-        dismantleButton?.onClick.AddListener(OnDismantle);
-
-        for (int i = 0; i < presetButtons.Length && i < 4; i++)
-        {
-            int slot = i;
-            presetButtons[i]?.onClick.AddListener(() => OnPreset(slot));
-        }
+        equipButton?.onClick.AddListener(OnEquip);
     }
 
     // ── 공개 진입점 ──────────────────────────────────────────────────
@@ -78,6 +73,7 @@ public class WareDetailPopup : MonoBehaviour
         if (data == null) return;
         _currentId   = id;
         _currentData = data;
+        transform.localScale = Vector3.one;
         gameObject.SetActive(true);
         Refresh();
     }
@@ -92,10 +88,19 @@ public class WareDetailPopup : MonoBehaviour
         bool canUpg  = mgr?.CanUpgrade(_currentId) ?? false;
         bool isMaxLv = level >= StructureWareManager.MaxLevel;
 
-        // 아이콘
-        var sprite = StructureWareManager.LoadIcon(_currentId);
-        if (iconImage)  { iconImage.sprite = sprite; iconImage.enabled = sprite != null; }
-        if (frameImage) frameImage.color   = WareSlotView.LevelColor(level);
+        // 아이콘 (WareVisualConfig)
+        var iconSprite = WareVisualConfig.Shared?.GetIcon(_currentId);
+        if (iconImage) { iconImage.sprite = iconSprite; iconImage.enabled = iconSprite != null; }
+
+        // 프레임 (WareVisualConfig 등급 스프라이트)
+        if (frameImage && _currentData != null)
+        {
+            var wareGrade   = WareVisualConfig.ParseGrade(_currentData.f_등급);
+            var frameSprite = WareVisualConfig.Shared?.GetGradeFrame(wareGrade);
+            frameImage.sprite  = frameSprite;
+            frameImage.color   = Color.white;
+            frameImage.enabled = frameSprite != null;
+        }
 
         // 정보
         string era = StructureWareManager.EraOf(_currentId);
@@ -142,15 +147,6 @@ public class WareDetailPopup : MonoBehaviour
             if (tagSyns != null) foreach (var s in tagSyns) sb.AppendLine(s);
             synergyText.text = sb.Length > 0 ? sb.ToString().TrimEnd() : "시너지 없음";
         }
-
-        // 프리셋 버튼
-        for (int i = 0; i < presetButtons.Length && i < 4; i++)
-        {
-            if (presetButtons[i] == null) continue;
-            bool inSlot = mgr?.GetPreset(i) == _currentId;
-            if (presetLabels != null && i < presetLabels.Length && presetLabels[i] != null)
-                presetLabels[i].text = inSlot ? $"슬롯{i + 1} 해제" : $"슬롯{i + 1}";
-        }
     }
 
     // ── 버튼 핸들러 ──────────────────────────────────────────────────
@@ -161,21 +157,35 @@ public class WareDetailPopup : MonoBehaviour
             Refresh();
     }
 
-    void OnDismantle()
+    void OnEquip()
     {
-        StructureWareManager.Shared?.Dismantle(_currentId);
-        bool stillOwned = (StructureWareManager.Shared?.GetCount(_currentId) ?? 0) > 0
-                       || (StructureWareManager.Shared?.GetLevel(_currentId) ?? 1) > 1;
-        if (stillOwned) Refresh();
-        else            gameObject.SetActive(false);
+        if (_closeRoutine != null) StopCoroutine(_closeRoutine);
+        _closeRoutine = StartCoroutine(EquipAndClose());
     }
 
-    void OnPreset(int slot)
+    IEnumerator EquipAndClose()
     {
-        var mgr = StructureWareManager.Shared;
-        if (mgr == null) return;
-        if (mgr.GetPreset(slot) == _currentId) mgr.ClearPreset(slot);
-        else                                    mgr.SetPreset(slot, _currentId);
-        Refresh();
+        Vector3 original = transform.localScale;
+
+        // 뿅! — 살짝 커졌다가 0으로
+        float t = 0f;
+        while (t < 0.08f)
+        {
+            t += Time.unscaledDeltaTime;
+            transform.localScale = original * Mathf.Lerp(1f, 1.12f, t / 0.08f);
+            yield return null;
+        }
+        t = 0f;
+        while (t < 0.14f)
+        {
+            t += Time.unscaledDeltaTime;
+            transform.localScale = original * Mathf.Lerp(1.12f, 0f, t / 0.14f);
+            yield return null;
+        }
+
+        gameObject.SetActive(false);
+        transform.localScale = original;
+
+        warePanel?.BeginPresetSelect(_currentId);
     }
 }
