@@ -8,7 +8,13 @@ using UnityEngine.UI;
 [RequireComponent(typeof(AspectRatioFitter))]
 public class ScreenAspectFitter : MonoBehaviour
 {
+    [Tooltip("허용 최소 비율 (width/height). Z플립 등 초세로 화면 대응용. 0이면 제한 없음.")]
+    [SerializeField] private float minRatio = 0f;
+    [Tooltip("허용 최대 비율. 태블릿 등 가로 화면 대응용. 0이면 제한 없음.")]
+    [SerializeField] private float maxRatio = 0f;
+
     AspectRatioFitter _fitter;
+    int _lastWidth, _lastHeight;
 
     void Awake()
     {
@@ -16,11 +22,19 @@ public class ScreenAspectFitter : MonoBehaviour
         Apply();
     }
 
+    void Update()
+    {
+        if (Screen.width != _lastWidth || Screen.height != _lastHeight)
+            Apply();
+    }
+
     void Apply()
     {
         float ratio = (float)Screen.width / Screen.height;
-        // 9:16(0.5625)보다 세로로 긴 화면(iPhone 등) → 0.5 고정
-        // 9:16 이하(넓은 화면) → 실제 비율 사용
-        _fitter.aspectRatio = ratio < 0.5625f ? 0.5f : ratio;
+
+        if (minRatio > 0f) ratio = Mathf.Max(ratio, minRatio);
+        if (maxRatio > 0f) ratio = Mathf.Min(ratio, maxRatio);
+
+        _fitter.aspectRatio = ratio;
     }
 }

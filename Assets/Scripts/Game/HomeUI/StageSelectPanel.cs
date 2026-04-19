@@ -480,14 +480,10 @@ public class StageSelectPanel : MonoBehaviour
         StopFloat();
 
         float targetY = SnapY(index);
-        float vpH     = scrollRect.viewport.rect.height;
-
-        // 항상 위에서 아래로 내려오는 시작점: 타겟보다 뷰포트 절반 위에서 시작
-        float startY = targetY + vpH * 0.55f;
-        content.anchoredPosition = new Vector2(content.anchoredPosition.x, startY);
-
+        float startY  = content.anchoredPosition.y;
         float elapsed = 0f;
 
+        // 현재 위치에서 타겟까지 ease-out으로 스크롤 (카드가 자연스럽게 넘어가는 느낌)
         while (elapsed < snapDuration)
         {
             elapsed += Time.unscaledDeltaTime;
@@ -502,7 +498,12 @@ public class StageSelectPanel : MonoBehaviour
         ApplyCardScales(index);
         isSnapping = false;
         _snapCoroutine = null;
-        StartFloat();
+
+        // 중앙 도착 시 펀치 스케일로 포인팅 느낌
+        if (cardViews != null && currentIndex < cardViews.Length && cardViews[currentIndex] != null)
+            StartCoroutine(PunchScale(cardViews[currentIndex]));
+        else
+            StartFloat();
     }
 
     // ── 플로팅 ───────────────────────────────────────────────────────
@@ -517,6 +518,34 @@ public class StageSelectPanel : MonoBehaviour
     void StopFloat()
     {
         if (_floatCoroutine != null) { StopCoroutine(_floatCoroutine); _floatCoroutine = null; }
+    }
+
+    IEnumerator PunchScale(StageCardView card)
+    {
+        float punchUp   = 0.12f; // 얼마나 튀어오를지
+        float upTime    = 0.08f;
+        float downTime  = 0.14f;
+        float baseScale = centerScale;
+
+        // 순간 확대
+        for (float t = 0f; t < upTime; t += Time.unscaledDeltaTime)
+        {
+            if (card == null) yield break;
+            float s = Mathf.Lerp(baseScale, baseScale * (1f + punchUp), t / upTime);
+            card.transform.localScale = Vector3.one * s;
+            yield return null;
+        }
+        // 원래 크기로 복귀
+        for (float t = 0f; t < downTime; t += Time.unscaledDeltaTime)
+        {
+            if (card == null) yield break;
+            float s = Mathf.Lerp(baseScale * (1f + punchUp), baseScale, t / downTime);
+            card.transform.localScale = Vector3.one * s;
+            yield return null;
+        }
+        if (card != null) card.transform.localScale = Vector3.one * baseScale;
+
+        StartFloat();
     }
 
     IEnumerator FloatCoroutine(StageCardView card)
