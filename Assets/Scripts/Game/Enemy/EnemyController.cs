@@ -561,11 +561,11 @@ public class EnemyController : MonoBehaviour
         if (srs != null && flashMat != null)
             foreach(var sr in srs) sr.material = flashMat;
 
-        float duration  = 0.4f;
+        float duration  = 0.22f;
         float elapsed   = 0f;
         Vector3 initScale = transform.localScale;
-        float spinSpeed = 600f; // deg/s
-        float flySpeed  = 4f;
+        float spinSpeed = 1200f; // deg/s
+        float flySpeed  = 14f;
 
         while (elapsed < duration)
         {

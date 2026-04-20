@@ -46,13 +46,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MovementBounds
   viewMode: 0
   localPoints:
-  - {x: 2.9590747, y: 1.9617879}
-  - {x: 1.536337, y: 2.1459677}
-  - {x: -1.9704008, y: 2.3487353}
-  - {x: -3.1596274, y: 1.5824943}
-  - {x: -3.051473, y: -0.2964037}
-  - {x: -2.7619116, y: -1.9817078}
-  - {x: -0.026903987, y: -2.3278787}
+  - {x: 3.039584, y: 1.9962919}
+  - {x: 1.6202188, y: 2.397613}
+  - {x: -1.6743577, y: 2.0526922}
+  - {x: -2.9266253, y: 1.8768919}
+  - {x: -2.990594, y: -0.32075536}
+  - {x: -2.5885565, y: -2.236325}
+  - {x: -0.026903987, y: -2.419889}
   - {x: 3.0862775, y: -2.168799}
   useCustomCameraBounds: 0
   cameraBoundsRect:
@@ -61,7 +61,7 @@ MonoBehaviour:
     y: -9
     width: 10
     height: 18
-  cameraPadding: {x: 0.31, y: 0.37, z: 0.3, w: 0.3}
+  cameraPadding: {x: 0.49, y: 0.37, z: 0.3, w: 0.3}
 --- !u!1 &6900160063066121858
 GameObject:
   m_ObjectHideFlags: 0
@@ -75,7 +75,7 @@ GameObject:
   - component: {fileID: 7118535169278306876}
   - component: {fileID: 974992375534760076}
   m_Layer: 0
-  m_Name: C1_S1_1
+  m_Name: 0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -148,7 +148,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: -1
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 21300000, guid: 69c26520f18090d4cbd38f1715164cf0, type: 3}
+  m_Sprite: {fileID: 21300000, guid: d58ff749b8dc2f24a9a1ad3854f23525, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -185,6 +185,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnvironmentBackground
   bossExitPoint: {fileID: 0}
   bossEnterPoint: {fileID: 3586832563339069261}
+  bossSpawnPoint: {fileID: 0}
   bossEntryGate: {fileID: 8511726348540898833}
 --- !u!1 &8153718871718567459
 GameObject:
@@ -295,7 +296,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.22209367, y: 0.22209367, z: 1}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7141213778163068944}
@@ -313,12 +314,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpawnZone
   localPoints:
-  - {x: 10.1443205, y: -7.403091}
-  - {x: 10.2069645, y: -0.03133685}
-  - {x: 9.180281, y: 6.146241}
-  - {x: -9.25305, y: 5.1370006}
-  - {x: -9.770585, y: -6.5156193}
-  edgeOffset: 0.5
+  - {x: -1.97213, y: -1.443258}
+  - {x: 2.2425437, y: -1.3805456}
+  - {x: 2.2787678, y: 1.6447299}
+  - {x: -1.9181858, y: 1.6579733}
+  edgeOffset: -1.51
 --- !u!1001 &4932857284771507004
 PrefabInstance:
   m_ObjectHideFlags: 0
