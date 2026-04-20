@@ -46,22 +46,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MovementBounds
   viewMode: 0
   localPoints:
-  - {x: 3.039584, y: 1.9962919}
-  - {x: 1.6202188, y: 2.397613}
-  - {x: -1.6743577, y: 2.0526922}
-  - {x: -2.9266253, y: 1.8768919}
-  - {x: -2.990594, y: -0.32075536}
-  - {x: -2.5885565, y: -2.236325}
-  - {x: -0.026903987, y: -2.419889}
-  - {x: 3.0862775, y: -2.168799}
-  useCustomCameraBounds: 0
+  - {x: 2.4797776, y: 1.6891572}
+  - {x: 1.571244, y: 2.2170818}
+  - {x: -1.4830847, y: 2.1230495}
+  - {x: -2.2860892, y: 1.444948}
+  - {x: -2.0743394, y: -2.2190874}
+  - {x: -0.17908609, y: -2.2365055}
+  - {x: 2.3600235, y: -2.0225935}
+  useCustomCameraBounds: 1
   cameraBoundsRect:
     serializedVersion: 2
-    x: -5
-    y: -9
-    width: 10
-    height: 18
-  cameraPadding: {x: 0.49, y: 0.37, z: 0.3, w: 0.3}
+    x: -2.844481
+    y: -2.71887
+    width: 5.6784
+    height: 5.400647
+  cameraPadding: {x: 1.54, y: 1.7, z: 2.19, w: 3.41}
 --- !u!1 &6900160063066121858
 GameObject:
   m_ObjectHideFlags: 0
@@ -75,7 +74,7 @@ GameObject:
   - component: {fileID: 7118535169278306876}
   - component: {fileID: 974992375534760076}
   m_Layer: 0
-  m_Name: 0
+  m_Name: 1-2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -148,7 +147,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: -1
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 21300000, guid: d58ff749b8dc2f24a9a1ad3854f23525, type: 3}
+  m_Sprite: {fileID: 21300000, guid: b7b9f9e22677a0a498789e5406049793, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -296,7 +295,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.22209367, y: 0.22209367, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7141213778163068944}
@@ -314,11 +313,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpawnZone
   localPoints:
-  - {x: -1.97213, y: -1.443258}
-  - {x: 2.2425437, y: -1.3805456}
-  - {x: 2.2787678, y: 1.6447299}
-  - {x: -1.9181858, y: 1.6579733}
-  edgeOffset: -1.51
+  - {x: 6.903346, y: -7.5734935}
+  - {x: 6.775502, y: -0.18429445}
+  - {x: 6.8594236, y: 6.6927}
+  - {x: -6.9394403, y: 6.925514}
+  - {x: -6.4583755, y: -8.289412}
+  edgeOffset: 0.5
 --- !u!1001 &4932857284771507004
 PrefabInstance:
   m_ObjectHideFlags: 0

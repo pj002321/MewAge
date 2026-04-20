@@ -107,7 +107,7 @@ GameObject:
   - component: {fileID: 7956984884046668424}
   - component: {fileID: 818218120322630538}
   - component: {fileID: 2036998758936243981}
-  - component: {fileID: 6588250223469201823}
+  - component: {fileID: -2974002644493037850}
   m_Layer: 7
   m_Name: c1_m10
   m_TagString: Untagged
@@ -347,7 +347,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HitFlash
   flashDuration: 0.12
   BaseColor: {r: 1, g: 1, b: 1, a: 1}
---- !u!114 &6588250223469201823
+--- !u!114 &-2974002644493037850
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -356,10 +356,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 6872330745170493892}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0ef9839f1a3088e4cad5cf9d4fc2f5ca, type: 3}
+  m_Script: {fileID: 11500000, guid: 26ab6620137f93f4290148fd79412968, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MeleeBehaviour
-  attackRange: 1.2
-  meleeHitRange: 1.3
-  attackInterval: 1
+  m_EditorClassIdentifier: Assembly-CSharp::RangedBehaviour
+  projectilePrefab: {fileID: 109194795691363216, guid: ce238d64c4c9c384ea458dd616a5c30a, type: 3}
+  preferredRange: 4
+  shootInterval: 2
+  rangedDamage: 0
+  firePoint: {fileID: 0}
   attackVfxPrefab: {fileID: 0}

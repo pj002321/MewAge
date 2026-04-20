@@ -64,6 +64,96 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 
     protected override bool DontDestroy => false;
 
+    void OnEnable()  => EliteMarker.OnEliteDied += OnEliteKilled;
+    void OnDisable() => EliteMarker.OnEliteDied -= OnEliteKilled;
+
+    private void OnEliteKilled()
+    {
+        _eliteKilledThisWave = true;
+    }
+
+    private bool IsEliteWave(int w) => w > 0 && w % 10 == 5;
+
+    private void SpawnElite(int w)
+    {
+        // DB_웨이브에서 f_웨이브ID 조회 (예: "C1_S1_W5")
+        string waveKey = currentChapterID + "_W" + w;
+        string waveId  = waveKey;
+        Mewage.DB.DB_웨이브.ForEachEntity(row =>
+        {
+            if (row.f_웨이브ID == waveKey) waveId = row.f_웨이브ID;
+        });
+
+        int idx   = currentChapterID.IndexOf('_');
+        string ch = $"Ch{(idx > 1 ? currentChapterID.Substring(1, idx - 1) : "1")}";
+        string path = $"Unit/{ch}/Elite/{waveId.ToLower()}";
+        var prefab = Resources.Load<GameObject>(path);
+        if (prefab == null) { this.DLog($"[GameManager] Elite prefab not found: {path}"); return; }
+
+        EnemySpawner.Shared?.SpawnEliteAt(prefab);
+        this.DLog($"[GameManager] Elite spawned: {path}");
+    }
+
+    /// <summary>
+    /// DB_증강에서 저주+축복이 있는 항목을 가중치 랜덤으로 1개 뽑습니다.
+    /// 저주 적용 후 위험한 항목은 풀에서 제외합니다.
+    /// </summary>
+    private static Mewage.DB.DB_증강 DrawRandomCurse()
+    {
+        // 저주+축복 데이터가 있는 행만 필터
+        var pool = Mewage.DB.DB_증강.FindEntities(e => e.f_저주수치 > 0f && e.f_축복수치 > 0f);
+        if (pool == null || pool.Count == 0) return null;
+
+        // 저주 적용 후 위험한 항목 제거
+        pool.RemoveAll(e => !IsCurseSafe(e));
+        if (pool.Count == 0) return null;
+
+        float total = 0f;
+        foreach (var e in pool) total += e.f_가중치;
+        if (total <= 0f) return pool[Random.Range(0, pool.Count)];
+
+        float roll = Random.Range(0f, total);
+        float acc  = 0f;
+        foreach (var e in pool)
+        {
+            acc += e.f_가중치;
+            if (roll < acc) return e;
+        }
+        return pool[pool.Count - 1];
+    }
+
+    /// <summary>
+    /// 저주 적용 후 수치가 안전 임계값을 유지하는지 검사합니다.
+    /// false면 DrawRandomCurse 풀에서 제외됩니다.
+    /// </summary>
+    private static bool IsCurseSafe(Mewage.DB.DB_증강 entry)
+    {
+        // 저주 수치가 0이면 항상 안전
+        if (entry.f_저주수치 <= 0f) return true;
+
+        var sm = PlayerStatManager.Shared;
+        if (sm == null) return true;
+
+        // AUG_SKL 저주 = 쿨타임 증가. 쿨타임은 항상 올릴 수 있음
+        if (entry.f_저주 == "AUG_SKL") return true;
+
+        StatType stat    = CurseRewardCard.AugIdToStat(entry.f_저주);
+        float    current = sm.GetFinal(stat);
+
+        // 이미 수치가 0 이하면 더 줄여도 의미 없음 → 제외
+        if (current <= 0f) return false;
+
+        float afterCurse = current * (1f - entry.f_저주수치 / 100f);
+
+        return stat switch
+        {
+            StatType.MaxHP =>
+                afterCurse >= Mathf.Max(30f, (PlayerController.Instance?.CurrentHP ?? 0f) + 10f),
+            StatType.MoveSpeed => afterCurse >= 2f,
+            _                  => afterCurse > 0f,
+        };
+    }
+
     private void Start()
     {
         StartCoroutine(InitAndStartRoutine());
@@ -108,6 +198,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         sm?.BeginBatch();
         PlayerCharacterManager.Shared?.ApplyCharacterStats();
         WareSynergySystem.ApplySynergies();
+        ApplyStageAtkBonus(sm);
         sm?.EndBatch();
 
         // 시작 시 Normal 무기 1개 지급 준비
@@ -126,6 +217,24 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         // 5. 오버레이 연출 중 낙하 입장 연출을 시작합니다.
         //    ThrowOut이 끝나기 전에 이미 연출이 진행되므로 자연스럽게 이어집니다.
         StartCoroutine(PlayerLandingIntroRoutine());
+    }
+
+    private void ApplyStageAtkBonus(PlayerStatManager sm)
+    {
+        if (sm == null || stageAtkBonusPct <= 0f) return;
+        int stage = ParseStageNumber(currentChapterID);
+        if (stage <= 1) return;
+        sm.AddPctMod(StatType.ATK, stageAtkBonusPct * (stage - 1));
+    }
+
+    private static int ParseStageNumber(string chapterID)
+    {
+        // "C1_S2" → 2
+        int sIdx = string.IsNullOrEmpty(chapterID) ? -1 : chapterID.IndexOf('S');
+        if (sIdx >= 0 && sIdx + 1 < chapterID.Length &&
+            int.TryParse(chapterID.Substring(sIdx + 1), out int s))
+            return s;
+        return 1;
     }
 
     private void Update()
@@ -183,6 +292,27 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
             else
                 GoHome();
             yield break;
+        }
+
+        // 트레이드 패널 — 엘리트 처치 시 버프+디버프 카드 1장 (증강 전)
+        if (_eliteKilledThisWave && cursePanel != null)
+        {
+            var curseData = DrawRandomCurse();
+            if (curseData != null)
+            {
+                bool curseDone = false;
+                Time.timeScale = 0f;
+                cursePanel.Prepare(curseData, () => curseDone = true);
+
+                var blur = cursePanel.GetComponentInChildren<BlurBackground>(true);
+                if (blur != null)
+                    yield return StartCoroutine(blur.Capture(cursePanel.gameObject));
+                else
+                    cursePanel.gameObject.SetActive(true);
+
+                cursePanel.ShowPanel();
+                yield return new WaitUntil(() => curseDone);
+            }
         }
 
         if (ImprovManager.Shared != null)
@@ -284,7 +414,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
                 if (_sprWaveNormal == null)
                     _sprWaveNormal = Resources.Load<Sprite>("UI/wave_normal");
                 if (_sprWaveNormal != null) waveIconImg.sprite = _sprWaveNormal;
-                waveIconImg.color = normalWaveColor;
+                waveIconImg.color = IsEliteWave(wave) ? Color.red : normalWaveColor;
             }
         }
     }
@@ -417,7 +547,8 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     public void StartNextWave()
     {
         wave++;
-        waitingForUpgrade = false;
+        waitingForUpgrade    = false;
+        _eliteKilledThisWave = false;
         ItemDropManager.Shared?.ResetWaveDrops();
 
         // 웨이브 시작 시 MaxHP의 10% 회복 (만땅이어도 텍스트 표시)
@@ -474,6 +605,12 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
                 waveTimer   = bossWaveTimeLimit;
                 _pauseTimer = false;
                 EnemySpawner.Shared?.ResumeSpawning(wave);
+
+                // 5,10,15 웨이브 시작 시 돌연변이 출현 알림
+                if (wave % 5 == 0 && wave > 1)
+                {
+                    StartCoroutine(ShowNotifyRoutine("돌연변이 출현!"));
+                }
             });
             return;
         }
@@ -483,6 +620,15 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 
         EnemySpawner.Shared?.ResumeSpawning(wave);
         WaveEnvironmentSwitcher.Shared?.SetWave(wave);
+
+        // 5,10,15 웨이브 시작 시 돌연변이 출현 알림
+        if (wave % 5 == 0 && wave > 1)
+        {
+            StartCoroutine(ShowNotifyRoutine("돌연변이 출현!"));
+        }
+
+        if (IsEliteWave(wave))
+            SpawnElite(wave);
 
         // 타이머 텍스트 확대→복귀 연출 후 카운트다운 시작
         StartCoroutine(TimerStartAnimation());
@@ -761,6 +907,14 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         bossWaveActive = true;
         WaveEnvironmentSwitcher.Shared?.SetBoss();
     }
+
+    [Header("스테이지 밸런스")]
+    [SerializeField] private float stageAtkBonusPct = 20f; // 스테이지 2부터 스테이지당 ATK % 보너스
+
+    [Header("엘리트 몬스터")]
+    [SerializeField] private CurseRewardPanel cursePanel;
+
+    private bool _eliteKilledThisWave;
 
     [Header("보스 처치 후 Orb 수집 대기")]
     [SerializeField] private float orbCollectWait = 5f;   // 업그레이드 패널 전 대기 시간(초)

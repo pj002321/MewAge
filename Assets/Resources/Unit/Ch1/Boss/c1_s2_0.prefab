@@ -208,7 +208,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 5
+  m_SortingOrder: 100
   m_MaskInteraction: 0
   m_Sprite: {fileID: -8768195563984226478, guid: 58b6aecd85a09324dbada7425b99df05, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -353,6 +353,8 @@ MonoBehaviour:
   fanAngle: 120
   fanRepeat: 3
   fanRepeatDelay: 0.6
+  useSpikePhase: 1
+  useFanPhase: 1
   attackTrigger: tAttack
 --- !u!70 &6646660141188298122
 CapsuleCollider2D:

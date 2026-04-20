@@ -13,6 +13,9 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
     [Header("Prefab")]
     [SerializeField] private GameObject spawnMarkerPrefab;
 
+    [Header("엘리트 스폰 마커 프리팹 (null이면 일반 마커 사용)")]
+    [SerializeField] private GameObject eliteSpawnMarkerPrefab;
+
     [Header("보스 스폰 위치 (null이면 랜덤 엣지)")]
     [SerializeField] private Transform bossSpawnPoint;
 
@@ -351,6 +354,34 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
     }
 
     // ── 스폰 위치 ────────────────────────────────────────────────────
+    /// <summary>
+    /// 엘리트 몬스터를 SpawnMarker 경고 연출과 함께 스폰합니다.
+    /// GameManager.SpawnElite()에서 호출됩니다.
+    /// </summary>
+    public void SpawnEliteAt(GameObject prefab)
+    {
+        if (prefab == null) return;
+        Vector2 pos        = GetRandomEdgePosition();
+        int     globalWave = CalcGlobalWave(currentStage, currentWave);
+
+        var markerPrefab = eliteSpawnMarkerPrefab != null ? eliteSpawnMarkerPrefab : spawnMarkerPrefab;
+        if (markerPrefab != null)
+        {
+            var markerObj = Instantiate(markerPrefab, pos, Quaternion.identity);
+            if (markerObj.TryGetComponent<SpawnMarker>(out var marker))
+                marker.Init(prefab, globalWave, globalWave, null, wavesPerStage);
+        }
+        else
+        {
+            var enemy = EnemyPool.Shared != null
+                ? EnemyPool.Shared.Get(prefab, pos)
+                : Instantiate(prefab, pos, Quaternion.identity).GetComponent<EnemyController>();
+
+            if (enemy != null)
+                enemy.InitForWave(globalWave, globalWave, wavesPerStage);
+        }
+    }
+
     private Vector2 GetRandomEdgePosition()
     {
         if (SpawnZone.Shared != null)

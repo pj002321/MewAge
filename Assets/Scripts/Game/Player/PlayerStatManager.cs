@@ -128,10 +128,12 @@ public class PlayerStatManager : MonoBehaviourSingleton<PlayerStatManager>
 
     private bool IsAdditiveStat(StatType stat) => stat switch
     {
-        StatType.CritChance => true,
-        StatType.Evasion    => true,
-        StatType.HealOnKill => true,
-        _                   => false
+        StatType.CritChance        => true,
+        StatType.Evasion           => true,
+        StatType.HealOnKill        => true,
+        StatType.StructureCooldown => true, // % 감소 누적형 — base(0) + pct
+        StatType.Knockback         => true, // 누적형 — base(0) + flat + pct
+        _                          => false
     };
 
     /// <summary>장비 장착 플랫 보너스를 덮어씁니다. EquipmentInventory에서 호출.</summary>
@@ -219,7 +221,7 @@ public class PlayerStatManager : MonoBehaviourSingleton<PlayerStatManager>
         StatType.AtkSpeed          => $"{value:0.#}%",
         StatType.HPRegen           => $"{value:0.##}/s",
         StatType.HealOnKill        => $"{value:0.#}%",
-        StatType.StructureCooldown => $"{value:0.#}s",
+        StatType.StructureCooldown => $"{value:0.#}%",
         StatType.MagnetRadius      => $"{value:0.##}u",               // units
         _                          => $"{value:0.##}",
     };

@@ -70,7 +70,7 @@ public class StageSelectPanel : MonoBehaviour
     float           _dragStartY;
     float           cachedCardH = -1f;
     StageEntry[]    stages;
-    StageCardView   _floatingCard;
+
     CanvasGroup     _contentCG;   // 초기 플래시 방지용
 
     // ── DB 로드 ──────────────────────────────────────────────────────
@@ -180,7 +180,6 @@ public class StageSelectPanel : MonoBehaviour
             if (_scrollMode)
             {
                 _dragStartY = ((PointerEventData)e).position.y;
-                StopFloat();
             }
         });
         trigger.triggers.Add(beginEntry);
@@ -479,14 +478,12 @@ public class StageSelectPanel : MonoBehaviour
         content.anchoredPosition = new Vector2(content.anchoredPosition.x, SnapY(index));
         ApplyCardScales(index);
         RefreshCardVisibility();
-        StartFloat();
     }
 
     IEnumerator SnapCoroutine(int index)
     {
         if (scrollRect == null || content == null) yield break;
         isSnapping = true;
-        StopFloat();
 
         float targetY = SnapY(index);
         float startY  = content.anchoredPosition.y;
@@ -508,27 +505,10 @@ public class StageSelectPanel : MonoBehaviour
         isSnapping = false;
         _snapCoroutine = null;
 
-        // 중앙 도착 시 펀치 후 플로팅
-        if (cardViews != null && currentIndex < cardViews.Length && cardViews[currentIndex] != null)
-            cardViews[currentIndex].PlayPunch(StartFloat);
-        else
-            StartFloat();
+        // 중앙 도착 시 펀치
+        cardViews?[currentIndex]?.PlayPunch();
     }
 
-    // ── 플로팅 ───────────────────────────────────────────────────────
-    void StartFloat()
-    {
-        StopFloat();
-        if (cardViews == null || currentIndex < 0 || currentIndex >= cardViews.Length) return;
-        _floatingCard = cardViews[currentIndex];
-        _floatingCard?.PlayFloat();
-    }
-
-    void StopFloat()
-    {
-        _floatingCard?.StopFloat();
-        _floatingCard = null;
-    }
 
     // ── 시작 ────────────────────────────────────────────────────────
     public void OnStartClicked()

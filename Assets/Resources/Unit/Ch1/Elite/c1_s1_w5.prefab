@@ -108,8 +108,9 @@ GameObject:
   - component: {fileID: 7867964363866000739}
   - component: {fileID: 1767944380024156897}
   - component: {fileID: -7638926655350617789}
+  - component: {fileID: 4733306807263160476}
   m_Layer: 7
-  m_Name: c1_m2 1
+  m_Name: c1_s1_w5
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -125,8 +126,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 5, y: 5, z: 5}
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 3832535250285959828}
   m_Father: {fileID: 0}
@@ -178,7 +179,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 2
+  m_SortingOrder: 100
   m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: befafc3398e906247877b0e542d82b52, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -288,10 +289,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyController
   moveSpeed: 2
-  maxHP: 30
+  maxHP: 2000
   contactDamage: 10
-  goldDrop: 5
-  expDrop: 10
+  goldDrop: 25
+  expDrop: 30
   scoreValue: 0
   damageCooldown: 1
   contactMaxDist: 0.8
@@ -347,6 +348,7 @@ MonoBehaviour:
   attackRange: 1.2
   meleeHitRange: 1.3
   attackInterval: 1
+  useAnimationEvent: 1
   attackVfxPrefab: {fileID: 0}
 --- !u!114 &-7638926655350617789
 MonoBehaviour:
@@ -362,3 +364,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HitFlash
   flashDuration: 0.12
   BaseColor: {r: 1, g: 1, b: 1, a: 1}
+--- !u!114 &4733306807263160476
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6535268019027681566}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9c58f3ba0addd845b2803f0d001d294, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EliteMarker

@@ -109,8 +109,8 @@ MonoBehaviour:
   criticalRate: 0.1
   criticalMultiplier: 2
   knockbackPower: 0
-  dotDamage: 0
-  lifeSteal: 0
+  dotDamage: 5
+  lifeSteal: 5
   pullbackDist: 0.5
   anticipationTime: 0.08
   strikeSpeed: 80
@@ -124,6 +124,10 @@ MonoBehaviour:
   shootScalePulse: 1
   scalePulseMax: 1.3
   scalePulseDuration: 0.12
+  useTrail: 1
+  trailTime: 0.1
+  trailStartWidth: 0.28
+  trailColor: {r: 1, g: 1, b: 1, a: 0.55}
   boomerangMaxBounces: 3
   boomerangBounceRange: 5
   orbitRadius: 5

@@ -23,6 +23,7 @@ public class UpgradePanel : MonoBehaviour
 
     [Header("정보 텍스트")]
     [SerializeField] private TextMeshProUGUI playerGoldText;
+    [SerializeField] private TextMeshProUGUI playerAtkText;
 
     [Header("노티피케이션")]
     [SerializeField] private GameObject      notificationRoot;
@@ -74,10 +75,12 @@ public class UpgradePanel : MonoBehaviour
     private Coroutine          notifCoroutine;
     private Coroutine          autoStartCoroutine;
     private Coroutine          buyExpHoldCoroutine;
+    private Coroutine          atkTextCoroutine;
     private int                selectedInvenIndex  = -1;
     private int                selectedEquipIndex  = -1;
     private bool               isFirstWave         = false;
-    private WeaponSynergyTag[] synergySlotTags = new WeaponSynergyTag[4];
+    private WeaponSynergyTag[] synergySlotTags     = new WeaponSynergyTag[4];
+    private float              _lastDisplayedAtk   = -1f;
 
     // ────────────────────────────────────────────────────────────────
     // 초기화
@@ -156,6 +159,8 @@ public class UpgradePanel : MonoBehaviour
         RefreshExpUI();
 
         portraitAnimator?.Play("enter_portrait");
+        _lastDisplayedAtk = -1f;
+        RefreshAtkUI(animate: false);
     }
 
     private void OnDisable()
@@ -259,6 +264,89 @@ public class UpgradePanel : MonoBehaviour
             playerGoldText.text = $"{PlayerStats.Shared.Gold}";
     }
 
+    public void RefreshAtkUI(bool animate = true)
+    {
+        if (playerAtkText == null) return;
+        float atk = CalcTotalAtk();
+
+        if (!animate || _lastDisplayedAtk < 0f)
+        {
+            // 패널 열릴 때: 값만 기록, 텍스트는 숨김
+            _lastDisplayedAtk = atk;
+            playerAtkText.gameObject.SetActive(false);
+            return;
+        }
+
+        if (Mathf.Approximately(atk, _lastDisplayedAtk)) return;
+
+        if (atkTextCoroutine != null) StopCoroutine(atkTextCoroutine);
+        atkTextCoroutine = StartCoroutine(AtkRollRoutine(_lastDisplayedAtk, atk));
+        _lastDisplayedAtk = atk;
+    }
+
+    private float CalcTotalAtk()
+    {
+        var pc = PlayerController.Instance;
+        float playerAtk  = pc?.Attack ?? PlayerStatManager.Shared?.GetFinal(StatType.ATK) ?? 0f;
+        float synergyPct = pc?.SynergyAtkPct ?? 0f;
+
+        var equipped = PlayerInventory.Shared?.Equipped;
+        if (equipped == null || equipped.Count == 0) return playerAtk;
+
+        float total = 0f;
+        foreach (var w in equipped)
+        {
+            if (w == null) continue;
+            float dmg = w.attackDamage + playerAtk;
+            if (pc != null)
+            {
+                bool isMelee = w.weaponType == WeaponType.Melee || w.weaponType == WeaponType.Spin;
+                dmg += isMelee ? pc.MeleeAttackBonus : pc.RangedAttackBonus;
+            }
+            dmg *= 1f + synergyPct / 100f;
+            total += dmg;
+        }
+        return total;
+    }
+
+    private IEnumerator AtkRollRoutine(float from, float to)
+    {
+        bool increase = to > from;
+        Color col = increase ? Color.green : Color.red;
+
+        playerAtkText.color = col;
+        playerAtkText.gameObject.SetActive(true);
+
+        var cg = playerAtkText.GetComponent<CanvasGroup>()
+              ?? playerAtkText.gameObject.AddComponent<CanvasGroup>();
+        cg.alpha = 1f;
+
+        const float rollDuration = 0.5f;
+        float elapsed = 0f;
+        while (elapsed < rollDuration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float roll = Random.Range(Mathf.Min(from, to), Mathf.Max(from, to));
+            playerAtkText.text = $"공격력 {roll:0}";
+            yield return null;
+        }
+
+        playerAtkText.text = $"공격력 {to:0}";
+        yield return new WaitForSecondsRealtime(2f);
+
+        const float fadeDuration = 0.3f;
+        float fadeElapsed = 0f;
+        while (fadeElapsed < fadeDuration)
+        {
+            fadeElapsed += Time.unscaledDeltaTime;
+            cg.alpha = Mathf.Lerp(1f, 0f, fadeElapsed / fadeDuration);
+            yield return null;
+        }
+        cg.alpha = 1f;
+        playerAtkText.gameObject.SetActive(false);
+        atkTextCoroutine = null;
+    }
+
     public void RefreshExpUI()
     {
         var ps = PlayerStats.Shared;
@@ -302,6 +390,7 @@ public class UpgradePanel : MonoBehaviour
 
         RefreshSynergyColors();
         RefreshGold();
+        RefreshAtkUI();
     }
 
     private void RefreshSynergyColors()

@@ -17,18 +17,10 @@ public class StageCardView : MonoBehaviour
     public TextMeshProUGUI stageNameText;
     public TextMeshProUGUI bestWaveText;
 
-    [Header("플로팅 대상 (지정한 GameObject 묶음에만 효과 적용)")]
+    [Header("펀치 대상")]
     public GameObject floatTarget;
 
-    [Header("플로팅 설정")]
-    public float floatAmplitude  = 8f;    // Y 이동 픽셀
-    public float floatScaleRange = 0.03f; // 스케일 진폭 (0.03 = ±3%)
-    public float floatSpeed      = 1.8f;  // 사인파 속도
-
-    bool      _isLocked;
-    Coroutine _floatCoroutine;
-    Vector3   _floatOriginPos;
-    Vector3   _floatOriginScale;
+    bool _isLocked;
 
     // ── 데이터 바인딩 ────────────────────────────────────────────────
     public void Bind(StageSelectPanel.StageEntry entry)
@@ -65,74 +57,35 @@ public class StageCardView : MonoBehaviour
         if (highlightImage != null) highlightImage.gameObject.SetActive(isCenter);
     }
 
-    // ── 플로팅 ───────────────────────────────────────────────────────
-    public void PlayFloat()
-    {
-        StopFloat();
-        if (floatTarget == null) return;
-        _floatOriginPos   = floatTarget.transform.localPosition;
-        _floatOriginScale = floatTarget.transform.localScale;
-        _floatCoroutine   = StartCoroutine(FloatCoroutine());
-    }
-
-    public void StopFloat()
-    {
-        if (_floatCoroutine == null) return;
-        StopCoroutine(_floatCoroutine);
-        _floatCoroutine = null;
-        if (floatTarget != null)
-        {
-            floatTarget.transform.localPosition = _floatOriginPos;
-            floatTarget.transform.localScale    = _floatOriginScale;
-        }
-    }
-
-    // 스냅 완료 시 펀치 후 플로팅 재개
+    // 스냅 완료 시 펀치 연출
     public void PlayPunch(System.Action onComplete = null)
     {
-        StopFloat();
         if (floatTarget == null) { onComplete?.Invoke(); return; }
-        _floatOriginPos   = floatTarget.transform.localPosition;
-        _floatOriginScale = floatTarget.transform.localScale;
+        StopAllCoroutines();
         StartCoroutine(PunchCoroutine(onComplete));
-    }
-
-    IEnumerator FloatCoroutine()
-    {
-        float t = 0f;
-        while (floatTarget != null)
-        {
-            t += Time.unscaledDeltaTime * floatSpeed;
-            float sin = Mathf.Sin(t);
-            // Y 위로 갈수록 살짝 커지고, 아래로 갈수록 살짝 작아짐
-            floatTarget.transform.localPosition = _floatOriginPos + new Vector3(0f, sin * floatAmplitude, 0f);
-            floatTarget.transform.localScale    = _floatOriginScale * (1f + sin * floatScaleRange);
-            yield return null;
-        }
     }
 
     IEnumerator PunchCoroutine(System.Action onComplete)
     {
-        float punchUp  = 0.12f;
-        float upTime   = 0.08f;
-        float downTime = 0.14f;
-        float baseS    = _floatOriginScale.x;
+        Vector3 originScale = floatTarget.transform.localScale;
+        float   baseS       = originScale.x;
+        const float punchUp  = 0.12f;
+        const float upTime   = 0.08f;
+        const float downTime = 0.14f;
 
         for (float t = 0f; t < upTime; t += Time.unscaledDeltaTime)
         {
             if (floatTarget == null) yield break;
-            float s = Mathf.Lerp(baseS, baseS * (1f + punchUp), t / upTime);
-            floatTarget.transform.localScale = Vector3.one * s;
+            floatTarget.transform.localScale = Vector3.one * Mathf.Lerp(baseS, baseS * (1f + punchUp), t / upTime);
             yield return null;
         }
         for (float t = 0f; t < downTime; t += Time.unscaledDeltaTime)
         {
             if (floatTarget == null) yield break;
-            float s = Mathf.Lerp(baseS * (1f + punchUp), baseS, t / downTime);
-            floatTarget.transform.localScale = Vector3.one * s;
+            floatTarget.transform.localScale = Vector3.one * Mathf.Lerp(baseS * (1f + punchUp), baseS, t / downTime);
             yield return null;
         }
-        if (floatTarget != null) floatTarget.transform.localScale = _floatOriginScale;
+        if (floatTarget != null) floatTarget.transform.localScale = originScale;
 
         onComplete?.Invoke();
     }
@@ -144,5 +97,5 @@ public class StageCardView : MonoBehaviour
             playerPortrait.GetComponent<Animator>()?.Play("enter_portrait");
     }
 
-    void OnDestroy() => StopFloat();
+    void OnDestroy() => StopAllCoroutines();
 }

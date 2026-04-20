@@ -7,9 +7,10 @@ using UnityEngine;
 public class MeleeBehaviour : EnemyBehaviourBase
 {
     [Header("근거리 설정")]
-    [SerializeField] private float attackRange    = 1.2f;   // 멈추고 공격을 시작하는 거리
-    [SerializeField] private float meleeHitRange  = 1.3f;   // Animation Event 타격 판정 거리 (attackRange 이상이어야 함)
+    [SerializeField] private float attackRange    = 1.2f;
+    [SerializeField] private float meleeHitRange  = 1.3f;
     [SerializeField] private float attackInterval = 1.0f;
+    [SerializeField] private bool  useAnimationEvent = true; // false면 타이머에서 직접 피해
 
     [Header("VFX")]
     [SerializeField] private GameObject attackVfxPrefab;
@@ -38,6 +39,8 @@ public class MeleeBehaviour : EnemyBehaviourBase
             Owner.EnemyAnimator?.SetTrigger("tAttack");
             if (attackVfxPrefab != null)
                 Instantiate(attackVfxPrefab, transform.position, Quaternion.identity);
+            if (!useAnimationEvent)
+                PlayerController.Instance?.TakeDamage(Owner.ContactDamage);
         }
     }
 

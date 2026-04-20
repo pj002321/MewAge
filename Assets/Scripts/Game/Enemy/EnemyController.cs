@@ -678,12 +678,12 @@ public class EnemyController : MonoBehaviour
             while (t < duration)
             {
                 t += Time.deltaTime;
-                transform.localScale = Vector3.one * Mathf.Lerp(fromScale, toScale, t / duration);
+                transform.localScale = SpawnScale * Mathf.Lerp(fromScale, toScale, t / duration);
                 yield return null;
             }
         }
 
-        transform.localScale = Vector3.one;
+        transform.localScale = SpawnScale;
         if (rb != null) rb.constraints = RigidbodyConstraints2D.FreezeRotation;
         enabled = true;
     }
