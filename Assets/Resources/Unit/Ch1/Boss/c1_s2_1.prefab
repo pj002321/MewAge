@@ -43,10 +43,10 @@ GameObject:
   - component: {fileID: 3195705286543801482}
   - component: {fileID: 5811717259447075230}
   - component: {fileID: 2814720968601693705}
+  - component: {fileID: 5298877374286941929}
   - component: {fileID: 8725922358913660577}
   - component: {fileID: 6397333588183594770}
   - component: {fileID: 6012793344544136166}
-  - component: {fileID: 5298877374286941929}
   - component: {fileID: 1092818159607941493}
   m_Layer: 7
   m_Name: c1_s2_1
@@ -180,6 +180,43 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
+--- !u!70 &5298877374286941929
+CapsuleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4510239993999273466}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0, y: 0}
+  m_Size: {x: 1.09, y: 2.03}
+  m_Direction: 0
 --- !u!114 &8725922358913660577
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -267,43 +304,6 @@ MonoBehaviour:
   squashDuration: 0.08
   stretchDuration: 0.1
   settleDuration: 0.12
---- !u!70 &5298877374286941929
-CapsuleCollider2D:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4510239993999273466}
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Density: 1
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_ForceSendLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ForceReceiveLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ContactCaptureLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_CallbackLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_IsTrigger: 1
-  m_UsedByEffector: 0
-  m_CompositeOperation: 0
-  m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
-  m_Size: {x: 1.09, y: 2.03}
-  m_Direction: 0
 --- !u!114 &1092818159607941493
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -322,15 +322,15 @@ MonoBehaviour:
   maxRange: 0
   executeInPattern: 1
   projectilePrefab: {fileID: 109194795691363216, guid: ce238d64c4c9c384ea458dd616a5c30a, type: 3}
-  projectileSpeed: 7
+  projectileSpeed: 3
   projectileDamage: 0
   firePoint: {fileID: 3028450626600842442}
   enableLinearFire: 1
   linearDuration: 4
   linearInterval: 0.4
-  chaseAfterLinear: 2
+  chaseAfterLinear: 5
   fanCount: 5
-  fanAngle: 120
+  fanAngle: 160
   fanRepeat: 3
   fanRepeatDelay: 0.6
   chaseAfterFan: 2

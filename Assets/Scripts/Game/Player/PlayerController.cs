@@ -243,6 +243,7 @@ public class PlayerController : MonoBehaviour
 
     public void TakeDamage(float damage)
     {
+        if (_debugInvincible) return;
         if (isInvincible)
         {
             // 무적 상태에서도 피해 효과는 적용 (피만 안 달뿐이지)
@@ -543,8 +544,10 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    /// <summary>디버그 전용 — 무적 영구 토글. true면 피격 무시, false면 해제.</summary>
-    public void SetDebugInvincible(bool on) => isInvincible = on;
+    private bool _debugInvincible;
+
+    /// <summary>디버그 전용 — 무적 영구 토글. isInvincible과 완전히 독립적으로 동작합니다.</summary>
+    public void SetDebugInvincible(bool on) => _debugInvincible = on;
 
     /// <summary>GameManager.Revive()에서 호출 — HP를 가득 채우고 3초 무적 부여</summary>
     public void Revive()

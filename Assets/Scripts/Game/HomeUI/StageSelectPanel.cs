@@ -71,6 +71,7 @@ public class StageSelectPanel : MonoBehaviour
     float           cachedCardH = -1f;
     StageEntry[]    stages;
     StageCardView   _floatingCard;
+    CanvasGroup     _contentCG;   // 초기 플래시 방지용
 
     // ── DB 로드 ──────────────────────────────────────────────────────
     void LoadStagesFromDB()
@@ -120,9 +121,15 @@ public class StageSelectPanel : MonoBehaviour
         EnsureVerticalLayout();
         BuildCards();
 
+        // 레이아웃 완료 전 마지막 카드가 잠깐 보이는 플래시 방지
+        _contentCG = content != null
+            ? (content.GetComponent<CanvasGroup>() ?? content.gameObject.AddComponent<CanvasGroup>())
+            : null;
+        if (_contentCG != null) _contentCG.alpha = 0f;
+
         startButton?.onClick.AddListener(OnStartClicked);
         SetupScrollEvents();
-        SetScrollMode(true); // 항상 스크롤 모드 (UI 숨김 없이 레이캐스트만 조정)
+        SetScrollMode(true);
 
         StartCoroutine(InitAfterLayout());
     }
@@ -194,35 +201,39 @@ public class StageSelectPanel : MonoBehaviour
 
     IEnumerator InitAfterLayout()
     {
-        yield return null;
-        yield return null; // ContentSizeFitter 계산 완료 보장
-        Canvas.ForceUpdateCanvases();
-
-        if (scrollRect != null && cardViews != null)
+        // 뷰포트 크기가 유효해질 때까지 대기 (최대 60프레임)
+        float vpW = 0f, vpH = 0f;
+        for (int i = 0; i < 60; i++)
         {
-            float vpW = scrollRect.viewport.rect.width;
-            float vpH = scrollRect.viewport.rect.height;
-            // 카드 1장 높이 = 뷰포트의 40% (이전·다음 카드가 위아래로 살짝 보이도록)
+            yield return null;
+            if (scrollRect == null || scrollRect.viewport == null) continue;
+            Canvas.ForceUpdateCanvases();
+            vpW = scrollRect.viewport.rect.width;
+            vpH = scrollRect.viewport.rect.height;
+            if (vpW > 1f && vpH > 1f) break;
+        }
+
+        if (cardViews != null && vpW > 1f && vpH > 1f)
+        {
             float targetH = vpH * 0.28f;
-            if (vpW > 1f && targetH > 1f)
+            foreach (var cv in cardViews)
             {
-                foreach (var cv in cardViews)
-                {
-                    if (cv == null) continue;
-                    // sizeDelta로 크기 직접 지정 (VLG childControlHeight=false이므로 필수)
-                    var rt = cv.GetComponent<RectTransform>();
-                    if (rt != null) rt.sizeDelta = new Vector2(vpW, targetH);
-                    var le = cv.GetComponent<LayoutElement>();
-                    if (le == null) le = cv.gameObject.AddComponent<LayoutElement>();
-                    le.preferredWidth  = vpW;  le.minWidth  = vpW;
-                    le.preferredHeight = targetH; le.minHeight = targetH;
-                }
-                cachedCardH = targetH; // 이후 SnapY 공식에서 사용
-                Canvas.ForceUpdateCanvases();
+                if (cv == null) continue;
+                var rt = cv.GetComponent<RectTransform>();
+                if (rt != null) rt.sizeDelta = new Vector2(vpW, targetH);
+                var le = cv.GetComponent<LayoutElement>();
+                if (le == null) le = cv.gameObject.AddComponent<LayoutElement>();
+                le.preferredWidth  = vpW;  le.minWidth  = vpW;
+                le.preferredHeight = targetH; le.minHeight = targetH;
             }
+            cachedCardH = targetH;
+            Canvas.ForceUpdateCanvases();
         }
 
         SnapImmediate(currentIndex);
+
+        // 올바른 위치에 snap된 뒤 content 표시
+        if (_contentCG != null) _contentCG.alpha = 1f;
     }
 
     // ── 카드 생성 ────────────────────────────────────────────────────

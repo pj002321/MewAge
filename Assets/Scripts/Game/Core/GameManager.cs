@@ -139,9 +139,9 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         {
             if (bossWaveActive)
             {
-                // Boss wave timeout → Game Over
+                // Boss wave timeout → Game Over (부활 패널 없이 바로 결과 화면)
                 this.DLog("[GameManager] Boss wave time limit reached! Game Over.");
-                TriggerGameOver();
+                TriggerGameOver(skipRevival: true);
             }
             else
             {
@@ -339,7 +339,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         if (expSlider)        expSlider.value        = (float)exp / expMax;
     }
 
-    public void TriggerGameOver()
+    public void TriggerGameOver(bool skipRevival = false)
     {
         if (isGameOver) return;
         isGameOver = true;
@@ -354,8 +354,14 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
             PlayerPrefs.Save();
         }
 
-        if (gameOverPanel) gameOverPanel.SetActive(true);
-        // GameOverPanel.cs will count down 5 s, shrink itself, then call ShowGameClearAfterGameOver()
+        // 보스 타임아웃 등 skipRevival 요청 시 부활 패널 없이 바로 결과 화면
+        if (skipRevival || gameOverPanel == null)
+        {
+            ShowGameOverResult();
+            return;
+        }
+
+        gameOverPanel.SetActive(true);
     }
 
     /// <summary>
@@ -440,7 +446,8 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         // 보스 전/후: 업그레이드 패널 닫힘 → 게이트 활성화 → 플레이어 이동 → 실제 웨이브 시작
         if (needsExitGate)
         {
-            waitingForUpgrade = true;  // 타이머 카운트다운 억제
+            waitingForUpgrade = true;
+            _pauseTimer       = true;  // 게이트 이동 + 보스 인트로 중 타이머 완전 정지
 
             if (notifyLabel != null)
                 StartCoroutine(ShowNotifyRoutine("길을 따라 이동하세요"));
@@ -463,6 +470,9 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
             WaveEnvironmentSwitcher.Shared?.SetWave(wave); // 일반 맵 유지 (출구 연출용)
             BossIntroSequence.Shared.Play(() =>
             {
+                // 인트로 완료 시점에 타이머를 리셋하고 카운트다운 시작
+                waveTimer   = bossWaveTimeLimit;
+                _pauseTimer = false;
                 EnemySpawner.Shared?.ResumeSpawning(wave);
             });
             return;
