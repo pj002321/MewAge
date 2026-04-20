@@ -96,6 +96,7 @@ public class PlayerController : MonoBehaviour
     private Vector2        moveDirection;
     private Rigidbody2D    rb;
     private SpriteRenderer spriteRenderer;
+    private Transform      _visualSlot;   // VisualSlot 하위 전체를 한 번에 반전
     private HitFlash       hitFlash;
     private HitShake       hitShake;
 
@@ -109,6 +110,7 @@ public class PlayerController : MonoBehaviour
         Instance      = this;
         rb            = GetComponent<Rigidbody2D>();
         spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+        _visualSlot   = transform.Find("VisualSlot");
         hitFlash      = GetComponent<HitFlash>();
         hitShake      = GetComponent<HitShake>();
         currentHP     = maxHP;
@@ -130,6 +132,7 @@ public class PlayerController : MonoBehaviour
     public void RefreshVisualReferences()
     {
         spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+        _visualSlot    = transform.Find("VisualSlot");
     }
 
     private void Start()
@@ -211,16 +214,30 @@ public class PlayerController : MonoBehaviour
 
     private void FlipSprite()
     {
-        if (spriteRenderer == null) return;
         if (moveDirection.x > 0.05f)
         {
-            spriteRenderer.flipX = false;
+            SetFacingRight(true);
             if (dustTrailEffect != null) dustTrailEffect.transform.localScale = Vector3.one;
         }
         else if (moveDirection.x < -0.05f)
         {
-            spriteRenderer.flipX = true;
+            SetFacingRight(false);
             if (dustTrailEffect != null) dustTrailEffect.transform.localScale = new Vector3(-1f, 1f, 1f);
+        }
+    }
+
+    // VisualSlot 전체 반전 → 자식 SpriteRenderer 전부 적용. 없으면 단일 SR flipX 폴백
+    private void SetFacingRight(bool right)
+    {
+        if (_visualSlot != null)
+        {
+            Vector3 s = _visualSlot.localScale;
+            s.x = right ? Mathf.Abs(s.x) : -Mathf.Abs(s.x);
+            _visualSlot.localScale = s;
+        }
+        else if (spriteRenderer != null)
+        {
+            spriteRenderer.flipX = !right;
         }
     }
 
@@ -576,7 +593,7 @@ public class PlayerController : MonoBehaviour
     {
         // 플레이어 스프라이트를 복사한 하이라이트 오브젝트 생성
         var highlightGO = new GameObject("SkillHighlight");
-        highlightGO.transform.SetParent(transform, false);
+        highlightGO.transform.SetParent(_visualSlot != null ? _visualSlot : transform, false);
         highlightGO.transform.localPosition = Vector3.zero;
         highlightGO.transform.localScale = Vector3.one;
 

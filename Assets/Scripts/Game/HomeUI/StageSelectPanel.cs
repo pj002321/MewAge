@@ -49,6 +49,10 @@ public class StageSelectPanel : MonoBehaviour
     [Range(0.5f, 1f)]
     public float sideScale   = 0.82f;
 
+    [Header("인접 카드 투명도")]
+    [Range(0f, 1f)]
+    public float nextCardAlpha = 0.85f;
+
     [Header("스냅 설정")]
     [Range(0.05f, 0.5f)]
     public float swipeThreshold = 0.2f;
@@ -66,7 +70,7 @@ public class StageSelectPanel : MonoBehaviour
     float           _dragStartY;
     float           cachedCardH = -1f;
     StageEntry[]    stages;
-    Coroutine       _floatCoroutine;
+    StageCardView   _floatingCard;
 
     // ── DB 로드 ──────────────────────────────────────────────────────
     void LoadStagesFromDB()
@@ -87,13 +91,7 @@ public class StageSelectPanel : MonoBehaviour
             Sprite icon = Resources.Load<Sprite>($"Chapter/Icon/{chapterID}");
             int bestWave = PlayerPrefs.GetInt($"BestWave_{chapterID}", 0);
 
-            bool isLocked = true;
-            if (chapterID == "C1_S1")
-                isLocked = false;
-            else if (parts[0] == "C1")
-                isLocked = PlayerPrefs.GetInt($"BestWave_C1_S{stageNum - 1}", 0) <= 0;
-            else
-                isLocked = PlayerPrefs.GetInt("BestWave_C1_S3", 0) <= 0;
+            bool isLocked = false; // 모든 스테이지 기본 개방
 
             list.Add(new StageEntry
             {
@@ -108,8 +106,8 @@ public class StageSelectPanel : MonoBehaviour
         if (list.Count == 0)
         {
             list.Add(new StageEntry { chapterID = "C1_S1", stageName = "1.야생 거리", isLocked = false });
-            list.Add(new StageEntry { chapterID = "C1_S2", stageName = "2.어둠의 숲",  isLocked = true });
-            list.Add(new StageEntry { chapterID = "C1_S3", stageName = "3.폐허 도시",  isLocked = true });
+            list.Add(new StageEntry { chapterID = "C1_S2", stageName = "2.어둠의 숲",  isLocked = false });
+            list.Add(new StageEntry { chapterID = "C1_S3", stageName = "3.폐허 도시",  isLocked = false });
             Debug.Log("[StageSelectPanel] DB 없음, 하드코딩 사용");
         }
         stages = list.ToArray();
@@ -457,7 +455,7 @@ public class StageSelectPanel : MonoBehaviour
                 }
                 else
                 {
-                    cg.alpha = Mathf.Lerp(0.65f, 0f, Mathf.Clamp01(dist - 0.5f));
+                    cg.alpha = Mathf.Lerp(nextCardAlpha, 0f, Mathf.Clamp01(dist - 0.5f));
                     cg.blocksRaycasts = true;
                 }
             }
@@ -499,9 +497,9 @@ public class StageSelectPanel : MonoBehaviour
         isSnapping = false;
         _snapCoroutine = null;
 
-        // 중앙 도착 시 펀치 스케일로 포인팅 느낌
+        // 중앙 도착 시 펀치 후 플로팅
         if (cardViews != null && currentIndex < cardViews.Length && cardViews[currentIndex] != null)
-            StartCoroutine(PunchScale(cardViews[currentIndex]));
+            cardViews[currentIndex].PlayPunch(StartFloat);
         else
             StartFloat();
     }
@@ -511,52 +509,14 @@ public class StageSelectPanel : MonoBehaviour
     {
         StopFloat();
         if (cardViews == null || currentIndex < 0 || currentIndex >= cardViews.Length) return;
-        var card = cardViews[currentIndex];
-        if (card != null) _floatCoroutine = StartCoroutine(FloatCoroutine(card));
+        _floatingCard = cardViews[currentIndex];
+        _floatingCard?.PlayFloat();
     }
 
     void StopFloat()
     {
-        if (_floatCoroutine != null) { StopCoroutine(_floatCoroutine); _floatCoroutine = null; }
-    }
-
-    IEnumerator PunchScale(StageCardView card)
-    {
-        float punchUp   = 0.12f; // 얼마나 튀어오를지
-        float upTime    = 0.08f;
-        float downTime  = 0.14f;
-        float baseScale = centerScale;
-
-        // 순간 확대
-        for (float t = 0f; t < upTime; t += Time.unscaledDeltaTime)
-        {
-            if (card == null) yield break;
-            float s = Mathf.Lerp(baseScale, baseScale * (1f + punchUp), t / upTime);
-            card.transform.localScale = Vector3.one * s;
-            yield return null;
-        }
-        // 원래 크기로 복귀
-        for (float t = 0f; t < downTime; t += Time.unscaledDeltaTime)
-        {
-            if (card == null) yield break;
-            float s = Mathf.Lerp(baseScale * (1f + punchUp), baseScale, t / downTime);
-            card.transform.localScale = Vector3.one * s;
-            yield return null;
-        }
-        if (card != null) card.transform.localScale = Vector3.one * baseScale;
-
-        StartFloat();
-    }
-
-    IEnumerator FloatCoroutine(StageCardView card)
-    {
-        float t = 0f;
-        while (card != null)
-        {
-            t += Time.unscaledDeltaTime * 1.8f;
-            card.transform.localScale = Vector3.one * centerScale * (1f + Mathf.Sin(t) * 0.018f);
-            yield return null;
-        }
+        _floatingCard?.StopFloat();
+        _floatingCard = null;
     }
 
     // ── 시작 ────────────────────────────────────────────────────────

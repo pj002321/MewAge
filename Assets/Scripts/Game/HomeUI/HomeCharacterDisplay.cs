@@ -42,6 +42,7 @@ public class HomeCharacterDisplay : MonoBehaviourSingleton<HomeCharacterDisplay>
 
     void Start()
     {
+        PlayerCharacterManager.Shared?.EnsureDefaultCharacter();
         var charId = PlayerCharacterManager.Shared?.EquippedCharID;
         if (!string.IsNullOrEmpty(charId))
             ChangeCharacter(charId);

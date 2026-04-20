@@ -66,6 +66,12 @@ public class WeaponPoint : MonoBehaviour
     [SerializeField] private float scalePulseMax      = 1.3f;   // 최대 배율
     [SerializeField] private float scalePulseDuration = 0.12f;  // 총 지속 시간 (초)
 
+    [Header("잔상 효과 (Striking/Overshooting 구간)")]
+    [SerializeField] private bool  useTrail        = true;
+    [SerializeField] private float trailTime       = 0.10f;  // 잔상 유지 시간(초)
+    [SerializeField] private float trailStartWidth = 0.28f;  // 시작 폭
+    [SerializeField] private Color trailColor      = new Color(1f, 1f, 1f, 0.55f);
+
     [Header("부메랑 설정")]
     [SerializeField] private int   boomerangMaxBounces  = 3;
     [SerializeField] private float boomerangBounceRange = 5f;
@@ -101,8 +107,9 @@ public class WeaponPoint : MonoBehaviour
     private const float DiagLogInterval = 5f; // 이 초마다 로그 1회
     private float _idleNoTargetTimer; // 구버전 호환용 (내부에서만 사용)
 
-    private Coroutine _scalePulseCoroutine;
-    private Vector3   _originalScale;
+    private Coroutine    _scalePulseCoroutine;
+    private Vector3      _originalScale;
+    private TrailRenderer _trail;
 
     // Physics NonAlloc 버퍼 (매 프레임 배열 재할당 방지)
     private static readonly Collider2D[] _hitBuffer = new Collider2D[32];
@@ -114,6 +121,8 @@ public class WeaponPoint : MonoBehaviour
     // 보스 타겟
     private BossController _targetBoss;
     private float _bossSpinHitTimer;
+
+    private Vector2 _attackLookDir; // 공격 시퀀스 전체에서 유지할 시선 방향
 
     // 부메랑 필드 (직접 이동 모드)
     private int _boomerangBouncesLeft;
@@ -128,6 +137,43 @@ public class WeaponPoint : MonoBehaviour
         originLocalPos = transform.localPosition;
         _originalScale = transform.localScale;
         cooldownTimer  = attackCooldown;
+        InitTrail();
+    }
+
+    private void InitTrail()
+    {
+        if (!useTrail || weaponType == WeaponType.Spin) return;
+
+        _trail = GetComponent<TrailRenderer>();
+        if (_trail == null) _trail = gameObject.AddComponent<TrailRenderer>();
+
+        _trail.time       = trailTime;
+        _trail.startWidth = trailStartWidth;
+        _trail.endWidth   = 0f;
+        _trail.minVertexDistance = 0.02f;
+
+        var gradient = new Gradient();
+        gradient.SetKeys(
+            new GradientColorKey[] {
+                new GradientColorKey(trailColor, 0f),
+                new GradientColorKey(trailColor, 1f)
+            },
+            new GradientAlphaKey[] {
+                new GradientAlphaKey(trailColor.a, 0f),
+                new GradientAlphaKey(0f,            1f)
+            }
+        );
+        _trail.colorGradient = gradient;
+
+        var sr = GetComponentInChildren<SpriteRenderer>();
+        if (sr != null)
+        {
+            _trail.sortingLayerID = sr.sortingLayerID;
+            _trail.sortingOrder   = sr.sortingOrder - 1;
+        }
+
+        _trail.material = new Material(Shader.Find("Sprites/Default"));
+        _trail.emitting = false;
     }
 
     private void Update()
@@ -515,6 +561,7 @@ public class WeaponPoint : MonoBehaviour
     {
         SoundManager.Shared?.Play(SoundKey.Weapon_Shoot);
         state = State.Striking;
+        if (_trail != null) { _trail.Clear(); _trail.emitting = true; }
     }
 
     // ─────────────────────────────────────────
@@ -737,18 +784,23 @@ public class WeaponPoint : MonoBehaviour
     // ─────────────────────────────────────────
     private void UpdateReturning()
     {
-        // 플레이어 중앙(0,0,0)으로 복귀
+        // 플레이어 중앙(0,0,0)으로 복귀 (쿨다운은 BeginReturn에서 이미 시작됨)
         transform.localPosition = Vector3.MoveTowards(transform.localPosition, Vector3.zero, returnSpeed * Time.deltaTime);
 
         if (transform.localPosition.sqrMagnitude <= 0.001f)
         {
             transform.localPosition = Vector3.zero;
-            cooldownTimer = attackCooldown;
             state = State.Idle;
         }
     }
 
-    private void BeginReturn() { state = State.Returning; _stateTimer = 0f; }
+    private void BeginReturn()
+    {
+        state = State.Returning;
+        _stateTimer = 0f;
+        cooldownTimer = attackCooldown; // 귀환과 쿨다운 병렬 진행 → 귀환 속도와 DPS 분리
+        if (_trail != null) _trail.emitting = false;
+    }
 
     // ─────────────────────────────────────────
     // 회전: 적 > 이동방향 > 위쪽 우선순위
@@ -764,15 +816,25 @@ public class WeaponPoint : MonoBehaviour
 
     private Vector2 GetLookDirection()
     {
-        // Striking 또는 Pullback 중: 타겟 방향 고정
-        if (state == State.Striking || state == State.Pullback)
+        // 공격 시퀀스 전체(Pullback→Anticipation→Striking→Overshooting→Returning): 타겟 방향 고정
+        if (state != State.Idle)
         {
-            if (weaponType == WeaponType.Boomerang && _boomerangTarget != null)
-                return (GetTargetPos(_boomerangTarget) - transform.position).normalized;
-            if (_targetBoss != null)
-                return ((Vector2)_targetBoss.transform.position - (Vector2)transform.position).normalized;
-            if (targetEnemy != null)
-                return (targetEnemy.transform.position - transform.position).normalized;
+            // 타겟이 살아있는 동안 방향 갱신
+            if (state == State.Pullback || state == State.Striking)
+            {
+                Vector2 dir = Vector2.zero;
+                if (weaponType == WeaponType.Boomerang && _boomerangTarget != null)
+                    dir = (GetTargetPos(_boomerangTarget) - transform.position).normalized;
+                else if (_targetBoss != null)
+                    dir = ((Vector2)_targetBoss.transform.position - (Vector2)transform.position).normalized;
+                else if (targetEnemy != null)
+                    dir = (targetEnemy.transform.position - transform.position).normalized;
+                if (dir.sqrMagnitude > 0.001f)
+                    _attackLookDir = dir;
+            }
+            // 타겟이 사라진 이후(Overshooting/Returning)에도 마지막 방향 유지
+            if (_attackLookDir.sqrMagnitude > 0.001f)
+                return _attackLookDir;
         }
 
         // 적이 있으면 가장 가까운 적 방향

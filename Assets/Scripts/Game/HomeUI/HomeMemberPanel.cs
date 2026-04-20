@@ -42,6 +42,8 @@ public class HomeMemberPanel : MonoBehaviour
         tabCharacter?.onClick.AddListener(() => ShowTab(0));
         tabRune     ?.onClick.AddListener(() => ShowTab(1));
         ShowTab(0);
+
+        PlayerCharacterManager.Shared?.EnsureDefaultCharacter();
         LoadCharacters();
 
         // RawImage에 HomeCharacterDisplay의 RenderTexture 연결

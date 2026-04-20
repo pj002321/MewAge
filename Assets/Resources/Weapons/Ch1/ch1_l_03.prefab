@@ -81,7 +81,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 2
+  m_SortingOrder: 3
   m_MaskInteraction: 0
   m_Sprite: {fileID: 1066025848242959972, guid: 78d61fd33e0f98e479b493b4683771cf, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -108,6 +108,7 @@ MonoBehaviour:
   weaponType: 1
   criticalRate: 0.1
   criticalMultiplier: 2
+  knockbackPower: 0
   dotDamage: 0
   lifeSteal: 0
   pullbackDist: 0.5
@@ -119,7 +120,7 @@ MonoBehaviour:
   overshootDistance: 0.5
   overshootSpeed: 60
   projectilePrefab: {fileID: 8712863012215635396, guid: ef4a09a318a609d448abbbf09dde81fb, type: 3}
-  projectileSpeed: 20
+  projectileSpeed: 50
   shootScalePulse: 1
   scalePulseMax: 1.3
   scalePulseDuration: 0.12

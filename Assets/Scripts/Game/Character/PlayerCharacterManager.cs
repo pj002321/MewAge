@@ -55,6 +55,30 @@ public class PlayerCharacterManager : MonoBehaviourSingleton<PlayerCharacterMana
     /// <summary>현재 장착된 캐릭터 ID (f_캐릭ID)</summary>
     public string EquippedCharID => PlayerPrefs.GetString(PrefKeyChar, "");
 
+    /// <summary>장착된 캐릭터가 없으면 첫 번째 보유 캐릭터를 자동 장착합니다.</summary>
+    public void EnsureDefaultCharacter()
+    {
+        if (!string.IsNullOrEmpty(EquippedCharID)) return;
+
+        DB_캐릭터 first = null;
+        DB_캐릭터.ForEachEntity(row =>
+        {
+            if (first == null && row.f_보유여부)
+                first = row;
+        });
+
+        if (first != null)
+        {
+            PlayerPrefs.SetString(PrefKeyChar, first.f_캐릭ID);
+            PlayerPrefs.Save();
+            Debug.Log($"[CharMgr] 기본 캐릭터 자동 장착: {first.f_이름}");
+        }
+        else
+        {
+            Debug.LogWarning("[CharMgr] 보유 캐릭터가 없어 기본 장착 불가");
+        }
+    }
+
     /// <summary>캐릭터별 현재 증강 단계 (1~3). 미보유이거나 미설정이면 0.</summary>
     public int GetAugmentTier(string charID)
         => PlayerPrefs.GetInt(string.Format(PrefKeyTier, charID), 1);
@@ -75,10 +99,12 @@ public class PlayerCharacterManager : MonoBehaviourSingleton<PlayerCharacterMana
     {
         string skillId = "";  // 캐릭터 미장착/오류 시에도 Initialize는 반드시 호출
 
+        EnsureDefaultCharacter(); // 장착 캐릭터 없으면 첫 보유 캐릭터 자동 장착
+
         string charID = EquippedCharID;
         if (string.IsNullOrEmpty(charID))
         {
-            Debug.LogWarning("[CharMgr] 장착된 캐릭터 없음 (PlayerPrefs 비어있음)");
+            Debug.LogWarning("[CharMgr] 장착된 캐릭터 없음 (보유 캐릭터 없음)");
             CharacterSkillManager.Shared?.Initialize(skillId);
             return;
         }
