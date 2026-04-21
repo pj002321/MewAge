@@ -655,10 +655,12 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     /// </summary>
     private IEnumerator PlayerLandingIntroRoutine()
     {
+        StructureInventory.BlockAll = true; // 낙하~카운트다운 구간 기물 설치 차단
+
         if (timerText) timerText.gameObject.SetActive(false);
 
         var player = PlayerController.Instance;
-        if (player == null) { StartNextWave(); yield break; }
+        if (player == null) { StructureInventory.BlockAll = false; StartNextWave(); yield break; }
 
         player.InputLocked = true;
 
@@ -722,6 +724,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         // 3,2,1 카운트다운
         yield return StartCoroutine(CountdownRoutine());
 
+        StructureInventory.BlockAll = false; // 카운트다운 끝 → 기물 설치 허용
         player.InputLocked = false;
         StartNextWave();
     }
@@ -729,6 +732,8 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     /// <summary>보스 맵으로 즉시 전환 후 플레이어를 bossEnterPoint에서 낙하시킵니다.</summary>
     private IEnumerator BossLandingRoutine()
     {
+        StructureInventory.BlockAll = true;
+
         var player = PlayerController.Instance;
         if (player != null) player.InputLocked = true;
 
@@ -789,6 +794,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
             yield return StartCoroutine(LandingSquishRoutine(player.transform));
 
         // 입력 해제 + 보스 웨이브 시작
+        StructureInventory.BlockAll = false; // 기물 설치 허용
         if (player != null) player.InputLocked = false;
         waveTimer   = bossWaveTimeLimit;
         _pauseTimer = false;
@@ -873,8 +879,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         var cdText = countdownText != null ? countdownText : timerText;
         if (cdText == null) yield break;
 
-        _isCountingDown              = true;
-        StructureInventory.BlockAll  = true;  // 카운트다운 중 기물 설치 차단
+        _isCountingDown = true;
         cdText.gameObject.SetActive(true);
 
         for (int i = 3; i >= 1; i--)
