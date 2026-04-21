@@ -81,6 +81,7 @@ public class UpgradePanel : MonoBehaviour
     private bool               isFirstWave         = false;
     private WeaponSynergyTag[] synergySlotTags     = new WeaponSynergyTag[4];
     private float              _lastDisplayedAtk   = -1f;
+    private float              _atkBeforeMerge     = -1f; // 합성 직전 ATK 스냅샷
 
     // ────────────────────────────────────────────────────────────────
     // 초기화
@@ -160,6 +161,7 @@ public class UpgradePanel : MonoBehaviour
 
         portraitAnimator?.Play("enter_portrait");
         _lastDisplayedAtk = -1f;
+        _atkBeforeMerge   = -1f;
         RefreshAtkUI(animate: false);
     }
 
@@ -273,14 +275,19 @@ public class UpgradePanel : MonoBehaviour
         {
             // 패널 열릴 때: 값만 기록, 텍스트는 숨김
             _lastDisplayedAtk = atk;
+            _atkBeforeMerge   = -1f;
             playerAtkText.gameObject.SetActive(false);
             return;
         }
 
-        if (Mathf.Approximately(atk, _lastDisplayedAtk)) return;
+        // 합성 직전에 캡처된 스냅샷이 있으면 그것을 비교 기준으로 사용
+        float from = (_atkBeforeMerge >= 0f) ? _atkBeforeMerge : _lastDisplayedAtk;
+        _atkBeforeMerge = -1f;
+
+        if (Mathf.Approximately(atk, from) && Mathf.Approximately(atk, _lastDisplayedAtk)) return;
 
         if (atkTextCoroutine != null) StopCoroutine(atkTextCoroutine);
-        atkTextCoroutine = StartCoroutine(AtkRollRoutine(_lastDisplayedAtk, atk));
+        atkTextCoroutine = StartCoroutine(AtkRollRoutine(from, atk));
         _lastDisplayedAtk = atk;
     }
 
@@ -464,6 +471,7 @@ public class UpgradePanel : MonoBehaviour
             WeaponInfoPanel.Shared?.Show(item,
                 onEquip: () =>
                 {
+                    _atkBeforeMerge = CalcTotalAtk(); // 장착 전 ATK 스냅샷
                     PlayerInventory.Shared?.EquipFromInventory(slotIndex);
                     SoundManager.Shared?.Play(SoundKey.UI_Equip);
                     selectedInvenIndex = -1;
@@ -504,6 +512,7 @@ public class UpgradePanel : MonoBehaviour
             WeaponInfoPanel.Shared?.Show(inv.Equipped[slotIndex],
                 onUnequip: () =>
                 {
+                    _atkBeforeMerge = CalcTotalAtk(); // 해제 전 ATK 스냅샷
                     var i = PlayerInventory.Shared;
                     if (i != null && !i.UnequipToInventory(slotIndex))
                     {
@@ -744,6 +753,7 @@ public class UpgradePanel : MonoBehaviour
     private void OnBeforeMerge(PlayerInventory.MergeAnimInfo info)
     {
         if (!gameObject.activeInHierarchy) return;
+        _atkBeforeMerge = CalcTotalAtk(); // 합성 전 ATK 스냅샷 저장
         if (coinImageSource == null || rootCanvas == null) return;
         StartCoroutine(MergeAnimRoutine(info));
     }

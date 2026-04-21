@@ -44,6 +44,9 @@ public class StructureInventory : MonoBehaviourSingleton<StructureInventory>
     /// <summary>패널이 열려있는 동안 auto-mode 배치를 막습니다.</summary>
     public static bool BlockAuto { get; set; }
 
+    /// <summary>카운트다운 등 특정 구간에서 수동/자동 배치를 전부 막습니다.</summary>
+    public static bool BlockAll  { get; set; }
+
     public void ToggleAuto()
     {
         IsAutoMode     = !IsAutoMode;
@@ -87,7 +90,8 @@ public class StructureInventory : MonoBehaviourSingleton<StructureInventory>
         }
 
         _autoTimer += Time.deltaTime;
-        if (_autoTimer >= slotAutoInterval)
+        float currentInterval = (ActiveAutoSlot >= 0 && _cooldownRemaining[ActiveAutoSlot] <= 0f) ? 1f : slotAutoInterval;
+        if (_autoTimer >= currentInterval)
         {
             _autoTimer = 0f;
             int used = ActiveAutoSlot;
@@ -199,6 +203,7 @@ public class StructureInventory : MonoBehaviourSingleton<StructureInventory>
     /// <param name="launchOriginWorld">발사 시작 월드 좌표. null이면 플레이어 위치 사용.</param>
     public void UseAt(int slot, Vector3? launchOriginWorld = null)
     {
+        if (BlockAll) return;
         if (slot < 0 || slot >= SlotCount) return;
         if (slotData[slot] == null || slotCount[slot] <= 0) return;
         if (_cooldownRemaining[slot] > 0f) return;  // 쿨타임 중

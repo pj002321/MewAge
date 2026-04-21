@@ -564,54 +564,25 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         if (player != null && player.WaveHealAmount > 0f)
             player.HealHP(player.WaveHealAmount);
 
-        bool isBossWave    = EnemySpawner.Shared?.GetNextBossWave(wave - 1) == wave;
-        bool needsExitGate = isBossWave;
+        bool isBossWave = EnemySpawner.Shared?.GetNextBossWave(wave - 1) == wave;
 
-        // Boss wave gets its own time limit; normal waves use stepped duration
         waveTimer = isBossWave ? bossWaveTimeLimit : WaveDuration(wave);
 
-        this.DLog($"[GameManager] StartNextWave wave={wave} | isBossWave={isBossWave} | needsGate={needsExitGate} | timer={waveTimer}s");
+        this.DLog($"[GameManager] StartNextWave wave={wave} | isBossWave={isBossWave} | timer={waveTimer}s");
 
         UpdateWaveUI(isBossWave);
-
-        // 보스 전/후: 업그레이드 패널 닫힘 → 게이트 활성화 → 플레이어 이동 → 실제 웨이브 시작
-        if (needsExitGate)
-        {
-            waitingForUpgrade = true;
-            _pauseTimer       = true;  // 게이트 이동 + 보스 인트로 중 타이머 완전 정지
-
-            if (notifyLabel != null)
-                StartCoroutine(ShowNotifyRoutine("길을 따라 이동하세요"));
-
-            WaveEnvironmentSwitcher.Shared?.ActivateExitGate(() =>
-            {
-                waitingForUpgrade = false;
-                DoStartWave(isBossWave);
-            });
-            return;
-        }
 
         DoStartWave(isBossWave);
     }
 
     private void DoStartWave(bool isBossWave)
     {
-        if (isBossWave && BossIntroSequence.Shared != null)
+        // 보스 웨이브: 인트로 시퀀스 유무 관계없이 바로 보스 맵 낙하 연출
+        if (isBossWave)
         {
-            WaveEnvironmentSwitcher.Shared?.SetWave(wave); // 일반 맵 유지 (출구 연출용)
-            BossIntroSequence.Shared.Play(() =>
-            {
-                // 인트로 완료 시점에 타이머를 리셋하고 카운트다운 시작
-                waveTimer   = bossWaveTimeLimit;
-                _pauseTimer = false;
-                EnemySpawner.Shared?.ResumeSpawning(wave);
-
-                // 5,10,15 웨이브 시작 시 돌연변이 출현 알림
-                if (wave % 5 == 0 && wave > 1)
-                {
-                    StartCoroutine(ShowNotifyRoutine("돌연변이 출현!"));
-                }
-            });
+            bossWaveActive = true;
+            _pauseTimer    = true;
+            StartCoroutine(BossLandingRoutine());
             return;
         }
 
@@ -755,6 +726,78 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         StartNextWave();
     }
 
+    /// <summary>보스 맵으로 즉시 전환 후 플레이어를 bossEnterPoint에서 낙하시킵니다.</summary>
+    private IEnumerator BossLandingRoutine()
+    {
+        var player = PlayerController.Instance;
+        if (player != null) player.InputLocked = true;
+
+        // 보스 환경 전환 — 이 시점에 CurrentBossEnterPoint 세팅됨
+        WaveEnvironmentSwitcher.Shared?.SetBoss();
+
+        // 1프레임 대기 (환경 오브젝트 활성화 완료)
+        yield return null;
+
+        // 입장 위치 결정: bossEnterPoint 우선, 없으면 맵 중앙
+        var enterPoint = WaveEnvironmentSwitcher.Shared?.CurrentBossEnterPoint;
+        Vector2 landPos;
+        if (enterPoint != null)
+        {
+            landPos = enterPoint.position;
+        }
+        else
+        {
+            landPos = Vector2.zero;
+            if (MovementBounds.Shared != null)
+            {
+                MovementBounds.Shared.GetPlayerBoundsMinMax(out Vector2 bMin, out Vector2 bMax);
+                landPos = (bMin + bMax) * 0.5f;
+            }
+        }
+
+        // 플레이어를 낙하 시작 위치로 이동
+        var rb       = player?.GetComponent<Rigidbody2D>();
+        Vector2 startPos = landPos + Vector2.up * dropHeight;
+        if (player != null)
+        {
+            if (rb != null) { rb.position = startPos; rb.linearVelocity = Vector2.zero; }
+            else              player.transform.position = startPos;
+        }
+
+        if (timerText) timerText.gameObject.SetActive(false);
+
+        // 낙하
+        float fallSpeed = 0f;
+        while (player != null)
+        {
+            yield return new WaitForFixedUpdate();
+            fallSpeed += dropGravity * Time.fixedDeltaTime;
+            Vector2 cur  = rb != null ? rb.position : (Vector2)player.transform.position;
+            Vector2 next = cur + Vector2.down * fallSpeed * Time.fixedDeltaTime;
+            if (next.y <= landPos.y)
+            {
+                if (rb != null) { rb.MovePosition(landPos); rb.linearVelocity = Vector2.zero; }
+                else              player.transform.position = landPos;
+                break;
+            }
+            if (rb != null) rb.MovePosition(next);
+            else             player.transform.position = next;
+        }
+
+        // 착지 스쿼시 연출
+        if (player != null)
+            yield return StartCoroutine(LandingSquishRoutine(player.transform));
+
+        // 입력 해제 + 보스 웨이브 시작
+        if (player != null) player.InputLocked = false;
+        waveTimer   = bossWaveTimeLimit;
+        _pauseTimer = false;
+        EnemySpawner.Shared?.ResumeSpawning(wave);
+        if (wave % 5 == 0 && wave > 1)
+            StartCoroutine(ShowNotifyRoutine("돌연변이 출현!"));
+        StartCoroutine(TimerStartAnimation());
+    }
+
     /// <summary>착지 시 Y 찌그러짐 → 복귀 바운스 연출.</summary>
     private IEnumerator LandingSquishRoutine(Transform t)
     {
@@ -830,7 +873,8 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         var cdText = countdownText != null ? countdownText : timerText;
         if (cdText == null) yield break;
 
-        _isCountingDown = true;
+        _isCountingDown              = true;
+        StructureInventory.BlockAll  = true;  // 카운트다운 중 기물 설치 차단
         cdText.gameObject.SetActive(true);
 
         for (int i = 3; i >= 1; i--)
@@ -845,7 +889,8 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         if (timerText) { timerText.gameObject.SetActive(true); timerText.text = "00:00"; }
 
         if (notifyLabel != null) notifyLabel.gameObject.SetActive(false);
-        _isCountingDown = false;
+        _isCountingDown             = false;
+        StructureInventory.BlockAll = false; // 카운트다운 종료 → 설치 허용
     }
 
     public bool IsGameOver  => isGameOver;
