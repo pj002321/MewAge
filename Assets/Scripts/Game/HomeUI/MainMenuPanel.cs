@@ -107,7 +107,7 @@ public class MainMenuPanel : MonoBehaviour
             list.Add(new StageEntry
             {
                 chapterID = chapterID,
-                stageName = $"{stageNum}.{row.f_이름}",
+                stageName = $"{list.Count + 1}.{row.f_이름}",
                 icon      = icon,
                 bestWave  = bestWave,
                 isLocked  = isLocked
