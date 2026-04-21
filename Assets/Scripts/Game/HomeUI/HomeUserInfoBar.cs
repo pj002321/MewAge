@@ -9,6 +9,18 @@ using UnityEngine.UI;
 /// </summary>
 public class HomeUserInfoBar : MonoBehaviour
 {
+
+    [Header("UI")]
+    public Button avatarProfileButton;      // 유저프로필 패널 활성화
+    public Button lubyChargeButton;         // Panel_상점의 보석 충전 위치로 이동
+    public Button goldChargeButton;         // Panel_상점의 골드 충전 위치로 이동
+    public PopUpUserProfile popup_userProfile;
+
+    [Header("상점 연동")]
+    public HomeUIManager  homeUIManager;   // 탭 전환용 (상점 탭 인덱스 0)
+    public int            shopTabIndex = 0;
+    public HomeShopPanel  shopPanel;
+
     [Header("프로필")]
     public Image            avatarImage;
     public TextMeshProUGUI  levelText;
@@ -30,6 +42,10 @@ public class HomeUserInfoBar : MonoBehaviour
         if (levelText != null) levelText.text = "1";
         if (nameText  != null) nameText.text  = "용사";
 
+        avatarProfileButton.onClick.AddListener(() => ShowPopUp());
+        lubyChargeButton?.onClick.AddListener(() => GoToShop(gem: true));
+        goldChargeButton?.onClick.AddListener(() => GoToShop(gem: false));
+
         if (expSlider != null)
         {
             expSlider.minValue = 0f;
@@ -40,5 +56,21 @@ public class HomeUserInfoBar : MonoBehaviour
 
         for (int i = 0; i < currencyTexts.Length; i++)
             if (currencyTexts[i] != null) currencyTexts[i].text = "0";
+    }
+
+    public void OnDestroy()
+    {
+        avatarProfileButton.onClick.RemoveListener(() => ShowPopUp());
+        lubyChargeButton?.onClick.RemoveAllListeners();
+        goldChargeButton?.onClick.RemoveAllListeners();
+    }
+
+    private void ShowPopUp() => popup_userProfile.Show();
+
+    private void GoToShop(bool gem)
+    {
+        homeUIManager?.ShowTab(shopTabIndex);
+        if (gem) shopPanel?.ScrollToGem();
+        else      shopPanel?.ScrollToGold();
     }
 }

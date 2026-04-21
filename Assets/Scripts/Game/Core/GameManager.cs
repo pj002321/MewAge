@@ -284,6 +284,9 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 
         if (waveClearPanel) waveClearPanel.SetActive(false);
 
+        // 대기 중 사망(부활 패널)했다가 아직 isGameOver 상태면 패널 표시 중단
+        if (isGameOver) yield break;
+
         // 최종 웨이브 클리어 → 게임 클리어 패널
         if (wave >= GetMaxWave())
         {
@@ -529,7 +532,9 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         if (gameOverPanel)       gameOverPanel.SetActive(false);
         if (gameOverResultPanel) gameOverResultPanel.gameObject.SetActive(false);
         PlayerController.Instance?.Revive();
-        EnemySpawner.Shared?.ResumeSpawning(wave);
+        // 웨이브 클리어 시퀀스(업그레이드 패널 등)가 이미 진행 중이면 스폰 재개 금지
+        if (!waitingForUpgrade)
+            EnemySpawner.Shared?.ResumeSpawning(wave);
         Debug.Log("[GameManager] Revive() 완료");
     }
 
@@ -799,8 +804,8 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         waveTimer   = bossWaveTimeLimit;
         _pauseTimer = false;
         EnemySpawner.Shared?.ResumeSpawning(wave);
-        if (wave % 5 == 0 && wave > 1)
-            StartCoroutine(ShowNotifyRoutine("돌연변이 출현!"));
+        if (BossIntroSequence.Shared != null)
+            yield return StartCoroutine(BossIntroSequence.Shared.PlayBossNoti());
         StartCoroutine(TimerStartAnimation());
     }
 

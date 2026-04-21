@@ -365,8 +365,6 @@ ScriptableObject (`Assets/Data/`). 챕터별 일반 적 스폰 항목(가중치/
 
 - 싱글톤: `.Shared`. PlayerController/WeaponManager: `.Instance`.
 - DB 클래스: `using Mewage.DB;`.
-- 다중 스탯 변경: `BeginBatch()` / `EndBatch()`.
-- `MainMenuHud.cs`는 `Assets/` 루트. Exit: `Application.Quit()` (빌드), `EditorApplication.isPlaying = false` (에디터).
 - 씬 네이밍: `name@scene.unity`.
 - 씬 전환 (로딩 오버레이): `SceneLoadManager.LoadScene("stage@scene")`.
 - `Time.timeScale = 0f` 패널 일시정지 → 닫을 때 `1f` 복구.

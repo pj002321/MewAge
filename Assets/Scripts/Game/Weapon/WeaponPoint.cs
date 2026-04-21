@@ -19,27 +19,24 @@ public class WeaponPoint : MonoBehaviour
     private float areaHitRadius;
     // ────────────────────────────────────────────────────────────────
 
-    [Header("무기 고유 스탯 (프리팹별 Inspector 설정)")]
-    [Tooltip("크리티컬 발동 확률 (0~1, 예: 0.1 = 10%)")]
-    [SerializeField] private float criticalRate       = 0f;
-    [Tooltip("크리티컬 데미지 배율 (예: 2 = 2배)")]
-    [SerializeField] private float criticalMultiplier = 2f;
-    [Tooltip("넉백 지수 (0 = 없음)")]
-    [SerializeField] private float knockbackPower     = 0f;
-    [Tooltip("출혈 데미지 (0 = 없음)")]
-    [SerializeField] private float dotDamage   = 0f;
-    [Tooltip("흡혈 (공격 시 HP 회복 %, 0 = 없음)")]
-    [SerializeField] private float lifeSteal   = 0f;
+    // ── DB_무기에서 Init()으로 주입 (Inspector 설정 불필요) ──────────
+    private float criticalRate       = 0f;
+    private float criticalMultiplier = 2f;
+    private float knockbackPower     = 0f;
+    private float dotDamage          = 0f;
+    private float lifeSteal          = 0f;
 
     // ── 읽기 전용 프로퍼티 (WeaponInfoPanel용) ───────────────────
-    public float AttackDamage   => attackDamage;
-    public float AttackCooldown => attackCooldown;
-    public float AttackRange    => attackRange;
-    public float CriticalRate   => criticalRate;
-    public float CriticalDamage => criticalMultiplier;
-    public float BleedDamage    => dotDamage;
-    public float LifeSteal      => lifeSteal;
-    public float KnockbackPower => knockbackPower;
+    public float AttackDamage    => attackDamage;
+    public float AttackCooldown  => attackCooldown;
+    public float AttackRange     => attackRange;
+    public float CriticalRate    => criticalRate;
+    public float CriticalDamage  => criticalMultiplier;
+    public float BleedDamage     => dotDamage;
+    public float LifeSteal       => lifeSteal;
+    public float KnockbackPower  => knockbackPower;
+    public float ProjectileSpeed => projectileSpeed;
+    public float AreaDamageRatio => areaHitDamageRatio;
 
     [Header("근거리 이동 속도")]
     [SerializeField] private float pullbackDist     = 0.5f;  // 뒤로 빼는 거리 (로컬)
@@ -142,13 +139,14 @@ public class WeaponPoint : MonoBehaviour
 
     private void InitTrail()
     {
-        if (!useTrail || weaponType == WeaponType.Spin) return;
+        if (!useTrail) return;
 
         _trail = GetComponent<TrailRenderer>();
         if (_trail == null) _trail = gameObject.AddComponent<TrailRenderer>();
 
-        _trail.time       = trailTime;
-        _trail.startWidth = trailStartWidth;
+        bool isSpin = weaponType == WeaponType.Spin;
+        _trail.time       = isSpin ? 0.22f : trailTime;
+        _trail.startWidth = isSpin ? 0.18f : trailStartWidth;
         _trail.endWidth   = 0f;
         _trail.minVertexDistance = 0.02f;
 
@@ -173,7 +171,7 @@ public class WeaponPoint : MonoBehaviour
         }
 
         _trail.material = new Material(Shader.Find("Sprites/Default"));
-        _trail.emitting = false;
+        _trail.emitting = isSpin; // Spin은 공전 시작부터 항상 켜짐
     }
 
     private void Update()
@@ -439,7 +437,7 @@ public class WeaponPoint : MonoBehaviour
         go.GetComponent<Projectile>()?.Init(finalDmg, dir, projectileSpeed, isPrimaryCritical: isCrit,
             lifeSteal: lifeSteal, dotDamage: dotDamage, areaHitRadius: areaHitRadius,
             areaHitDamageRatio: areaHitDamageRatio, criticalRate: criticalRate,
-            criticalMultiplier: criticalMultiplier, baseDamage: attackDamage);
+            criticalMultiplier: criticalMultiplier, baseDamage: attackDamage, knockbackPower: knockbackPower);
         TriggerScalePulse();
     }
 
@@ -450,7 +448,7 @@ public class WeaponPoint : MonoBehaviour
         var (finalDmg, isCrit) = RollCrit(attackDamage);
         Vector2 dir = (target.transform.position - transform.position).normalized;
         var go = Instantiate(projectilePrefab, transform.position, Quaternion.identity);
-        go.GetComponent<Projectile>()?.Init(finalDmg, dir, projectileSpeed, isPrimaryCritical: isCrit, lifeSteal: lifeSteal, dotDamage: dotDamage, areaHitRadius: areaHitRadius, areaHitDamageRatio: areaHitDamageRatio, criticalRate: criticalRate, criticalMultiplier: criticalMultiplier, baseDamage: attackDamage);
+        go.GetComponent<Projectile>()?.Init(finalDmg, dir, projectileSpeed, isPrimaryCritical: isCrit, lifeSteal: lifeSteal, dotDamage: dotDamage, areaHitRadius: areaHitRadius, areaHitDamageRatio: areaHitDamageRatio, criticalRate: criticalRate, criticalMultiplier: criticalMultiplier, baseDamage: attackDamage, knockbackPower: knockbackPower);
         TriggerScalePulse();
     }
 
@@ -703,7 +701,7 @@ public class WeaponPoint : MonoBehaviour
                     var (bossDmg, bossCrit) = RollCrit(attackDamage);
                     Vector2 bossKnock = ((Vector2)boss.transform.position - (Vector2)transform.position);
                     if (bossKnock.sqrMagnitude < 0.001f) bossKnock = hitDir;
-                    boss.TakeDamage(bossDmg, bossCrit, bossKnock.normalized, 8f);
+                    boss.TakeDamage(bossDmg, bossCrit, bossKnock.normalized, knockbackPower);
                     ApplyLifeSteal(bossDmg);
                     bossHit = true;
                     anyHit = true;
@@ -717,7 +715,7 @@ public class WeaponPoint : MonoBehaviour
             var (finalDmg, isCrit) = RollCrit(baseDmg);
             Vector2 knockDir = ((Vector2)enemy.transform.position - (Vector2)transform.position);
             if (knockDir.sqrMagnitude < 0.001f) knockDir = hitDir;
-            enemy.TakeDamage(finalDmg, isCrit, knockDir.normalized, 8f);
+                enemy.TakeDamage(finalDmg, isCrit, knockDir.normalized, knockbackPower);
             ApplyLifeSteal(finalDmg);
             if (dotDamage > 0f) enemy.ApplyBleed(dotDamage);
             anyHit = true;
@@ -748,7 +746,7 @@ public class WeaponPoint : MonoBehaviour
                 var (finalDmg, isCrit) = RollCrit(baseDmg);
                 Vector2 knockDir = ((Vector2)enemy.transform.position - (Vector2)transform.position);
                 if (knockDir.sqrMagnitude < 0.001f) knockDir = hitDir;
-                enemy.TakeDamage(finalDmg, isCrit, knockDir.normalized, 8f);
+            enemy.TakeDamage(finalDmg, isCrit, knockDir.normalized, knockbackPower);
                 ApplyLifeSteal(finalDmg);
                 if (dotDamage > 0f) enemy.ApplyBleed(dotDamage);
                 anyHit = true;
@@ -764,7 +762,7 @@ public class WeaponPoint : MonoBehaviour
                 var (finalDmg, isCrit) = RollCrit(baseDmg);
                 Vector2 knockDir = ((Vector2)boss.transform.position - (Vector2)transform.position);
                 if (knockDir.sqrMagnitude < 0.001f) knockDir = hitDir;
-                boss.TakeDamage(finalDmg, isCrit, knockDir.normalized, 8f);
+                boss.TakeDamage(finalDmg, isCrit, knockDir.normalized, knockbackPower);
                 ApplyLifeSteal(finalDmg);
                 if (dotDamage > 0f) boss.ApplyBleed(dotDamage);
                 anyHit = true;
@@ -799,7 +797,7 @@ public class WeaponPoint : MonoBehaviour
         state = State.Returning;
         _stateTimer = 0f;
         cooldownTimer = attackCooldown; // 귀환과 쿨다운 병렬 진행 → 귀환 속도와 DPS 분리
-        if (_trail != null) _trail.emitting = false;
+        if (_trail != null && weaponType != WeaponType.Spin) _trail.emitting = false;
     }
 
     // ─────────────────────────────────────────
@@ -964,52 +962,49 @@ public class WeaponPoint : MonoBehaviour
     /// <summary>WeaponManager가 장착 시 호출 — DB 스탯 및 플레이어 보너스 적용.</summary>
     public void Init(WeaponData data)
     {
-        weaponType    = data.weaponType;
-        criticalRate  = 0.05f + data.criticalRate;  // 기본 5% + 성 보너스 포함 크리티컬 확률
-        lifeSteal     = data.lifeSteal;
+        weaponType = data.weaponType;
 
-        // DB 기반 스탯 적용 (성 보너스 포함된 최종값)
+        // DB_무기에서 로드된 스탯 주입
+        criticalRate       = data.criticalRate;
+        criticalMultiplier = data.criticalDamage > 0f ? data.criticalDamage : 2f;
+        lifeSteal          = data.lifeSteal;
+        knockbackPower     = data.knockbackPower;
+        dotDamage          = data.bleedDamage;
+
         attackCooldown = data.attackCooldown;
-        _baseCooldown  = data.attackCooldown;       // RecalcCooldown 기준값
+        _baseCooldown  = data.attackCooldown;
         attackRange    = data.attackRange;
         areaHitRadius  = data.areaHitRadius;
 
-        // ── 진단: attackRange 0 이면 공격 불가 ──────────────────────────
         if (attackRange <= 0f)
-            Debug.LogWarning($"[WeaponPoint] ⚠️ attackRange=0 — 무기 '{gameObject.name}' (DB f_탐지범위 확인 필요). 적을 절대 탐색 못합니다.");
+            Debug.LogWarning($"[WeaponPoint] ⚠️ attackRange=0 — 무기 '{gameObject.name}' (DB f_탐지범위 확인 필요).");
 
-        // Spin 타입은 시계방향으로 회전
         if (weaponType == WeaponType.Spin)
-            orbitSpeed = -Mathf.Abs(orbitSpeed);
+        {
+            orbitSpeed    = -Mathf.Abs(orbitSpeed);
+            spinKnockback = data.knockbackPower;
+        }
 
-        // 부메랑 설정 적용
         if (weaponType == WeaponType.Boomerang)
         {
-            boomerangMaxBounces = data.maxBounces;
+            boomerangMaxBounces  = data.maxBounces;
             boomerangBounceRange = data.bounceRange;
         }
 
         var player = PlayerController.Instance;
         if (player != null)
         {
-            // 공통 보너스 + 무기 타입별 보너스 적용 (플랫 수치)
-            // data.attackDamage에는 성 보너스가 포함된 최종 기본값이 들어있음
-            attackDamage = data.attackDamage + player.Attack;
-            attackDamage += weaponType == WeaponType.Melee    ? player.MeleeAttackBonus  : 0f;
-            attackDamage += weaponType == WeaponType.Ranged   ? player.RangedAttackBonus : 0f;
+            attackDamage  = data.attackDamage + player.Attack;
+            attackDamage += weaponType == WeaponType.Melee     ? player.MeleeAttackBonus  : 0f;
+            attackDamage += weaponType == WeaponType.Ranged    ? player.RangedAttackBonus : 0f;
             attackDamage += weaponType == WeaponType.Boomerang ? player.RangedAttackBonus : 0f;
             attackDamage += weaponType == WeaponType.Spin      ? player.MeleeAttackBonus  : 0f;
 
-            // 시너지 효과는 퍼센트(%)로 증가 (예: 25%면 1.25 곱셈)
             if (player.SynergyAtkPct > 0f)
-            {
                 attackDamage *= (1f + player.SynergyAtkPct / 100f);
-            }
         }
 
-        // 성 등급에 맞는 외곽선 적용
         GetComponentInChildren<SpriteOutline>()?.SetStar(data.star);
-        // projectilePrefab은 무기 프리팹 Inspector에서 직접 설정합니다.
     }
 
     /// <summary>크리티컬 판정. isCritical=true이면 데미지에 multiplier를 곱한 값 반환.</summary>

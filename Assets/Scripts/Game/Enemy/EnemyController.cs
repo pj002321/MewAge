@@ -398,27 +398,18 @@ public class EnemyController : MonoBehaviour
 
     private IEnumerator KnockbackRoutine(Vector2 dir, float force)
     {
-        moveSpeed = 0f;
-
         float elapsed  = 0f;
-        float duration = 0.3f;
+        float duration = 0.5f;
 
         while (elapsed < duration)
         {
-            float t    = elapsed / duration;
-            Vector2 next = rb.position + dir * force * (1f - t) * Time.fixedDeltaTime;
-
-            // MovementBounds 밖으로는 밀려나지 않도록 클램프
-            var bounds = MovementBounds.Shared;
-            if (bounds != null && !bounds.IsInside(next))
-                next = bounds.ClosestPointOnBoundary(next);
-
-            rb?.MovePosition(next);
+            float t = elapsed / duration;
+            // _pendingMove에 누적 → FixedUpdate에서 한 번만 MovePosition 호출
+            _pendingMove += dir * force * (1f - t) * Time.fixedDeltaTime;
             elapsed += Time.fixedDeltaTime;
             yield return new WaitForFixedUpdate();
         }
 
-        moveSpeed = baseSpeed;
         knockbackCoroutine = null;
     }
 

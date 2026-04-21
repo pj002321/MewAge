@@ -261,6 +261,7 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
         var gos  = new GameObject[count];
         var vels = new Vector2[count];
         var srs  = new SpriteRenderer[count];
+        var initialScales = new Vector3[count];
 
         bool  hasDir  = deathDir.sqrMagnitude > 0.001f;
         float baseRad = hasDir ? Mathf.Atan2(deathDir.y, deathDir.x) * Mathf.Rad2Deg : 0f;
@@ -270,8 +271,11 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
             gos[i] = GetDebris(prefab, pos);
             activeDebris.Add(gos[i]);
             srs[i] = gos[i].GetComponent<SpriteRenderer>();
+            initialScales[i] = gos[i].transform.localScale;
 
             float angleDeg, speed;
+            // 원본 스케일 저장
+            _prefabScales.TryGetValue(prefab, out var initialScale);
             if (hasDir)
             {
                 // 앞 절반: deathDir 방향 ±20° 좁은 cone — 빠르게 쌔게
@@ -313,12 +317,19 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
                 gos[i].transform.position += (Vector3)(vels[i] * Time.deltaTime);
                 vels[i] *= 1f - 6f * Time.deltaTime; // 감속
 
-                // 후반부터 페이드아웃
-                if (srs[i] != null && t > 0.4f)
+                // 후반부터 페이드아웃 및 사이즈 축소
+                if (t > 0.4f)
                 {
-                    float alpha = Mathf.Lerp(1f, 0f, (t - 0.4f) / 0.6f);
-                    var c = srs[i].color;
-                    srs[i].color = new Color(c.r, c.g, c.b, alpha);
+                    float fadeT = (t - 0.4f) / 0.6f;
+                    if (srs[i] != null)
+                    {
+                        float alpha = Mathf.Lerp(1f, 0f, fadeT);
+                        var c = srs[i].color;
+                        srs[i].color = new Color(c.r, c.g, c.b, alpha);
+                    }
+                    // 사이즈 축소 (0.5배까지)
+                    float scale = Mathf.Lerp(1f, 0.5f, fadeT);
+                    gos[i].transform.localScale = initialScales[i] * scale;
                 }
             }
             elapsed += Time.deltaTime;

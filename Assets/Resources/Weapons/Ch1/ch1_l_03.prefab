@@ -81,7 +81,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 3
+  m_SortingOrder: 101
   m_MaskInteraction: 0
   m_Sprite: {fileID: 1066025848242959972, guid: 78d61fd33e0f98e479b493b4683771cf, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -106,18 +106,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponPoint
   weaponType: 1
-  criticalRate: 0.1
-  criticalMultiplier: 2
-  knockbackPower: 0
-  dotDamage: 0
-  lifeSteal: 0
   pullbackDist: 0.5
   anticipationTime: 0.08
   strikeSpeed: 70
-  returnSpeed: 40
+  returnSpeed: 50
   hitDistance: 0.25
   areaHitDamageRatio: 0.5
-  overshootDistance: 0.5
+  overshootDistance: 3
   overshootSpeed: 60
   projectilePrefab: {fileID: 8712863012215635396, guid: ef4a09a318a609d448abbbf09dde81fb, type: 3}
   projectileSpeed: 40

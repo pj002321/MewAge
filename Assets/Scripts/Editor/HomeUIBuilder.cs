@@ -446,7 +446,7 @@ public class HomeUIBuilder
         startLblRT.offsetMax = Vector2.zero;
 
         // ── 4. StageSelectPanel 연결 ──────────────────────────────────
-        var stagePanel          = panelJeontu.AddComponent<StageSelectPanel>();
+        var stagePanel          = panelJeontu.AddComponent<MainMenuPanel>();
         stagePanel.scrollRect  = sr;
         stagePanel.content     = content;
         stagePanel.startButton = startBtn;

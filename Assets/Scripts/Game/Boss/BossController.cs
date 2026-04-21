@@ -91,6 +91,7 @@ public class BossController : MonoBehaviour
     private float            damageTimer;
     private SpriteRenderer[] srs;
     private Coroutine        flashCoroutine;
+    private Coroutine        knockbackCoroutine;
     private bool             isDead;
     private bool             _dropping;
     private bool             _skillExecuting;
@@ -292,6 +293,29 @@ public class BossController : MonoBehaviour
     }
 
     // ── 피격 / 사망 ─────────────────────────────────────────────────
+
+    /// <summary>지정 방향으로 순간적으로 밀어냅니다.</summary>
+    public void Knockback(Vector2 dir, float force)
+    {
+        if (knockbackCoroutine != null) StopCoroutine(knockbackCoroutine);
+        knockbackCoroutine = StartCoroutine(KnockbackRoutine(dir.normalized, force));
+    }
+
+    private IEnumerator KnockbackRoutine(Vector2 dir, float force)
+    {
+        float elapsed  = 0f;
+        float duration = 0.5f;
+
+        while (elapsed < duration)
+        {
+            float t    = elapsed / duration;
+            Vector2 next = Rb.position + dir * force * (1f - t) * Time.fixedDeltaTime;
+
+            Rb?.MovePosition(next);
+            elapsed += Time.fixedDeltaTime;
+            yield return new WaitForFixedUpdate();
+        }
+    }
 
     public void TakeDamage(float damage, bool isCritical = false, Vector2 knockbackDir = default, float knockbackForce = 0f)
     {

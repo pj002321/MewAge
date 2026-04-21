@@ -277,6 +277,8 @@ public class PlayerController : MonoBehaviour
         currentHP -= reduced;
         currentHP  = Mathf.Max(0f, currentHP);
         SyncHPUI();
+        // 피격 데미지 표시
+        FXManager.Shared?.SpawnPlayerText(Mathf.RoundToInt(reduced).ToString(), Color.red);
         SoundManager.Shared?.Play(SoundKey.Player_Hit);
         hitFlash?.Flash();
         hitShake?.Shake();

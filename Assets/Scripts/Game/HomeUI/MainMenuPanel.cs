@@ -10,7 +10,7 @@ using TMPro;
 /// 카드 클릭 → 스크롤 모드 ON (scrollModeHideTargets 숨김).
 /// 스크롤 모드에서 카드 클릭 → 선택 후 스크롤 모드 OFF.
 /// </summary>
-public class StageSelectPanel : MonoBehaviour
+public class MainMenuPanel : MonoBehaviour
 {
     // ── 데이터 ──────────────────────────────────────────────────────
     [System.Serializable]
@@ -24,8 +24,21 @@ public class StageSelectPanel : MonoBehaviour
     }
 
     // ── UI 참조 ──────────────────────────────────────────────────────
-    [Header("카드 폴백 프리팹 (Resources/Chapter/Card/{chapterID} 없을 때 사용, 비우면 자동 생성)")]
-    public StageCardView cardPrefab;
+    [Header("UI")]
+    public Button storageButton;
+    public Button specialGiftButton;
+    public Button dailymissionButton;
+    public Button autohuntButton;
+    public Button attendanceButton;
+    public Button rankingButton;
+    public Button menuButton;
+
+    public PopUpAttendance attendancePopup;
+    public PopUpDailyMission dailyMissionPopup;
+    public PopUpStorage storagePopup;
+    public PopUpSpecialGift specialgiftPopup;
+    public PopUpMenu menuPopup;
+    public PopUpRanking rankingPopup;
 
     [Header("스크롤 (수직)")]
     public ScrollRect    scrollRect;
@@ -33,9 +46,6 @@ public class StageSelectPanel : MonoBehaviour
 
     [Header("버튼")]
     public Button startButton;
-
-    [Header("스크롤 모드 시 숨길 오브젝트들 (panel_전투 내 기타 요소)")]
-    public GameObject[] scrollModeHideTargets;
 
     [Header("카드 크기")]
     public float cardWidth  = 800f;
@@ -115,12 +125,18 @@ public class StageSelectPanel : MonoBehaviour
     }
 
     // ── 초기화 ───────────────────────────────────────────────────────
+
     void Start()
     {
         LoadStagesFromDB();
         EnsureVerticalLayout();
         BuildCards();
-
+        storageButton.onClick.AddListener(() => storagePopup.Show());
+        dailymissionButton.onClick.AddListener(() => dailyMissionPopup.Show());
+        attendanceButton.onClick.AddListener(() => attendancePopup.Show());
+        specialGiftButton.onClick.AddListener(() => specialgiftPopup.Show());
+        menuButton.onClick.AddListener(() => menuPopup.Show());
+        rankingButton.onClick.AddListener(() => rankingPopup.Show());
         // 레이아웃 완료 전 마지막 카드가 잠깐 보이는 플래시 방지
         _contentCG = content != null
             ? (content.GetComponent<CanvasGroup>() ?? content.gameObject.AddComponent<CanvasGroup>())
@@ -251,16 +267,14 @@ public class StageSelectPanel : MonoBehaviour
         {
             StageCardView cv;
 
-            // 1순위: Resources/Chapter/Card/{chapterID} 프리팹
-            // 2순위: Inspector의 cardPrefab 폴백
-            // 3순위: 코드 자동 생성
+            // Resources/Chapter/Card/{chapterID} 프리팹
+
             string prefabPath = $"Chapter/Card/{stages[i].chapterID}";
             StageCardView loadedPrefab = Resources.Load<StageCardView>(prefabPath);
-            StageCardView sourcePrefab = loadedPrefab ?? cardPrefab;
-
-            if (sourcePrefab != null)
+           
+            if (loadedPrefab != null)
             {
-                cv = Instantiate(sourcePrefab, content);
+                cv = Instantiate(loadedPrefab, content);
                 if (cv == null) continue;
                 var le = cv.GetComponent<LayoutElement>()
                       ?? cv.gameObject.AddComponent<LayoutElement>();
@@ -365,16 +379,6 @@ public class StageSelectPanel : MonoBehaviour
     void SetScrollMode(bool on)
     {
         _scrollMode = on;
-        // 배경/이미지 raycastTarget만 해제 — Button 등 Selectable은 그대로 유지
-        foreach (var go in scrollModeHideTargets)
-        {
-            if (go == null) continue;
-            foreach (var g in go.GetComponentsInChildren<UnityEngine.UI.Graphic>(true))
-            {
-                if (g.GetComponent<UnityEngine.UI.Selectable>() != null) continue;
-                g.raycastTarget = !on;
-            }
-        }
     }
 
     void RefreshCardVisibility()

@@ -20,11 +20,12 @@ public class Projectile : MonoBehaviour
     private float   criticalRate;
     private float   criticalMultiplier;
     private float   baseDamage;
+    private float   knockbackPower;
 
     // Physics NonAlloc 버퍼
     private static readonly Collider2D[] _hitBuffer = new Collider2D[32];
 
-    public void Init(float primaryDmg, Vector2 direction, float speed = 6f, float lifetime = 5f, bool isPrimaryCritical = false, float lifeSteal = 0f, float dotDamage = 0f, float areaHitRadius = 0f, float areaHitDamageRatio = 0f, float criticalRate = 0f, float criticalMultiplier = 2f, float baseDamage = 0f)
+    public void Init(float primaryDmg, Vector2 direction, float speed = 6f, float lifetime = 5f, bool isPrimaryCritical = false, float lifeSteal = 0f, float dotDamage = 0f, float areaHitRadius = 0f, float areaHitDamageRatio = 0f, float criticalRate = 0f, float criticalMultiplier = 2f, float baseDamage = 0f, float knockbackPower = 16f)
     {
         this.primaryDmg         = primaryDmg;
         this.direction          = direction.normalized;
@@ -37,6 +38,7 @@ public class Projectile : MonoBehaviour
         this.criticalRate       = criticalRate;
         this.criticalMultiplier = criticalMultiplier;
         this.baseDamage         = baseDamage;
+        this.knockbackPower     = knockbackPower;
         Destroy(gameObject, lifetime);
 
         float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg - 90f;
@@ -94,7 +96,7 @@ public class Projectile : MonoBehaviour
                 }
                 Vector2 knockDir = ((Vector2)areaEnemy.transform.position - (Vector2)transform.position);
                 if (knockDir.sqrMagnitude < 0.001f) knockDir = direction;
-                areaEnemy.TakeDamage(dmg, isCrit, knockDir.normalized, 6f);
+                areaEnemy.TakeDamage(dmg, isCrit, knockDir.normalized, knockbackPower);
                 if (lifeSteal > 0f) PlayerController.Instance?.HealHP(dmg * lifeSteal);
                 if (dotDamage > 0f) areaEnemy.ApplyBleed(dotDamage);
             }

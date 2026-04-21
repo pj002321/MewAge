@@ -179,7 +179,7 @@ public class HomeUIManager : MonoBehaviour
     public void StartGame()
     {
         // StageSelectPanel의 현재 선택 스테이지를 저장 후 씬 전환
-        var stagePanel = FindFirstObjectByType<StageSelectPanel>();
+        var stagePanel = FindFirstObjectByType<MainMenuPanel>();
         if (stagePanel != null)
         {
             stagePanel.OnStartClicked();

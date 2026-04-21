@@ -35,6 +35,9 @@ public class PlayerCharacterManager : MonoBehaviourSingleton<PlayerCharacterMana
     private const string PrefKeyChar = "equipped_char";
     private const string PrefKeyTier = "char_tier_{0}"; // 캐릭터별 증강 단계 (1~3)
 
+    [Header("모델 데칼")]
+    [SerializeField] private GameObject decalPrefab;
+
     private GameObject _currentPlayerModel;
 
     protected override bool DontDestroy => true; // 홈→게임 씬 이동 시 유지
@@ -197,6 +200,25 @@ public class PlayerCharacterManager : MonoBehaviourSingleton<PlayerCharacterMana
         _currentPlayerModel = Instantiate(prefab, visualSlot);
         _currentPlayerModel.transform.localPosition = Vector3.zero;
         _currentPlayerModel.transform.localScale    = Vector3.one;
+
+        if (decalPrefab != null)
+        {
+            var decal = Instantiate(decalPrefab, _currentPlayerModel.transform);
+            decal.transform.localScale = Vector3.one;
+
+            var col = player.GetComponent<Collider2D>()
+                   ?? player.GetComponentInChildren<Collider2D>();
+            if (col != null)
+            {
+                float worldMinY = col.bounds.min.y;
+                float localY    = _currentPlayerModel.transform.InverseTransformPoint(0f, worldMinY, 0f).y;
+                decal.transform.localPosition = new Vector3(0f, localY, 0f);
+            }
+            else
+            {
+                decal.transform.localPosition = Vector3.zero;
+            }
+        }
 
         // PlayerController 참조 갱신
         player.RefreshVisualReferences();

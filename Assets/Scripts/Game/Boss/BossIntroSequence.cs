@@ -35,6 +35,20 @@ public class BossIntroSequence : MonoBehaviourSingleton<BossIntroSequence>
         StartCoroutine(Sequence(onComplete));
     }
 
+    public IEnumerator PlayBossNoti()
+    {
+        if (bossNotiObject == null) yield break;
+        bossNotiObject.SetActive(true);
+        yield return null; // Animator 초기화 대기 (1프레임)
+        var anim = bossNotiObject.GetComponent<Animator>();
+        if (anim != null)
+        {
+            float clipLength = anim.GetCurrentAnimatorStateInfo(0).length;
+            yield return new WaitForSeconds(clipLength);
+        }
+        bossNotiObject.SetActive(false);
+    }
+
     private IEnumerator Sequence(System.Action onComplete)
     {
         var switcher  = WaveEnvironmentSwitcher.Shared;

@@ -23,7 +23,7 @@ public class StageCardView : MonoBehaviour
     bool _isLocked;
 
     // ── 데이터 바인딩 ────────────────────────────────────────────────
-    public void Bind(StageSelectPanel.StageEntry entry)
+    public void Bind(MainMenuPanel.StageEntry entry)
     {
         _isLocked = entry.isLocked;
 

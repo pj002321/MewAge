@@ -28,6 +28,10 @@ public class DebugPanel : MonoBehaviour
 
     private void Awake()
     {
+#if !UNITY_EDITOR && !DEVELOPMENT_BUILD
+        gameObject.SetActive(false);
+        return;
+#endif
         toggleVisibilityButton?.onClick.AddListener(OnToggleVisibility);
 
         skipWaveButton?.onClick.AddListener(OnSkipWave);

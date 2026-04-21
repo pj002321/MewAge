@@ -746,6 +746,26 @@ namespace Mewage.DB
 			get => _f_속성내용[Index];
 			set => _f_속성내용[Index] = value;
 		}
+		public System.Int32 f_넉백
+		{
+			get => _f_넉백[Index];
+			set => _f_넉백.SetValue(this, value);
+		}
+		public System.Int32 f_치명타
+		{
+			get => _f_치명타[Index];
+			set => _f_치명타.SetValue(this, value);
+		}
+		public System.Int32 f_출혈
+		{
+			get => _f_출혈[Index];
+			set => _f_출혈.SetValue(this, value);
+		}
+		public System.Int32 f_흡혈
+		{
+			get => _f_흡혈[Index];
+			set => _f_흡혈.SetValue(this, value);
+		}
 		private static BansheeGz.BGDatabase.BGFieldEntityName _ufle12jhs77_f_name;
 		public static BansheeGz.BGDatabase.BGFieldEntityName _f_name => _ufle12jhs77_f_name ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldEntityName>(MetaDefault, new BGId(4873413822836436793UL, 9130358899360770223UL), () => _ufle12jhs77_f_name = null);
 		private static BansheeGz.BGDatabase.BGFieldString _ufle12jhs77_f_무기ID;
@@ -790,6 +810,14 @@ namespace Mewage.DB
 		public static BansheeGz.BGDatabase.BGFieldString _f_속성ID => _ufle12jhs77_f_속성ID ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(MetaDefault, new BGId(4806443005845309366UL, 8152737873880033965UL), () => _ufle12jhs77_f_속성ID = null);
 		private static BansheeGz.BGDatabase.BGFieldString _ufle12jhs77_f_속성내용;
 		public static BansheeGz.BGDatabase.BGFieldString _f_속성내용 => _ufle12jhs77_f_속성내용 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(MetaDefault, new BGId(5229771709375110868UL, 1871059779558664878UL), () => _ufle12jhs77_f_속성내용 = null);
+		private static BansheeGz.BGDatabase.BGFieldInt _ufle12jhs77_f_넉백;
+		public static BansheeGz.BGDatabase.BGFieldInt _f_넉백 => _ufle12jhs77_f_넉백 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(MetaDefault, new BGId(4796237163892227879UL, 10667931804643034526UL), () => _ufle12jhs77_f_넉백 = null);
+		private static BansheeGz.BGDatabase.BGFieldInt _ufle12jhs77_f_치명타;
+		public static BansheeGz.BGDatabase.BGFieldInt _f_치명타 => _ufle12jhs77_f_치명타 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(MetaDefault, new BGId(4928906861758726815UL, 7773975797752096432UL), () => _ufle12jhs77_f_치명타 = null);
+		private static BansheeGz.BGDatabase.BGFieldInt _ufle12jhs77_f_출혈;
+		public static BansheeGz.BGDatabase.BGFieldInt _f_출혈 => _ufle12jhs77_f_출혈 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(MetaDefault, new BGId(5117349830299152111UL, 18275321271005576110UL), () => _ufle12jhs77_f_출혈 = null);
+		private static BansheeGz.BGDatabase.BGFieldInt _ufle12jhs77_f_흡혈;
+		public static BansheeGz.BGDatabase.BGFieldInt _f_흡혈 => _ufle12jhs77_f_흡혈 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(MetaDefault, new BGId(5322275005243636888UL, 6661079844634022538UL), () => _ufle12jhs77_f_흡혈 = null);
 		private DB_무기() : base(MetaDefault) {}
 		private DB_무기(BGId id) : base(MetaDefault, id) {}
 		private DB_무기(BGMetaEntity meta) : base(meta) {}
@@ -828,6 +856,10 @@ namespace Mewage.DB
 			_ufle12jhs77_f_S3 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(_metaDefault, new BGId(5243992276726904990UL, 6110944814045174166UL));
 			_ufle12jhs77_f_속성ID = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(_metaDefault, new BGId(4806443005845309366UL, 8152737873880033965UL));
 			_ufle12jhs77_f_속성내용 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(_metaDefault, new BGId(5229771709375110868UL, 1871059779558664878UL));
+			_ufle12jhs77_f_넉백 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(_metaDefault, new BGId(4796237163892227879UL, 10667931804643034526UL));
+			_ufle12jhs77_f_치명타 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(_metaDefault, new BGId(4928906861758726815UL, 7773975797752096432UL));
+			_ufle12jhs77_f_출혈 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(_metaDefault, new BGId(5117349830299152111UL, 18275321271005576110UL));
+			_ufle12jhs77_f_흡혈 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(_metaDefault, new BGId(5322275005243636888UL, 6661079844634022538UL));
 		}
 		public static void ReleaseCodeGenRuntime()
 		{
@@ -854,6 +886,10 @@ namespace Mewage.DB
 			_ufle12jhs77_f_S3 = null;
 			_ufle12jhs77_f_속성ID = null;
 			_ufle12jhs77_f_속성내용 = null;
+			_ufle12jhs77_f_넉백 = null;
+			_ufle12jhs77_f_치명타 = null;
+			_ufle12jhs77_f_출혈 = null;
+			_ufle12jhs77_f_흡혈 = null;
 		}
 
 		[Preserve]
@@ -888,6 +924,10 @@ namespace Mewage.DB
 			public const string S3 = "S3";
 			public const string 속성ID = "속성ID";
 			public const string 속성내용 = "속성내용";
+			public const string 넉백 = "넉백";
+			public const string 치명타 = "치명타";
+			public const string 출혈 = "출혈";
+			public const string 흡혈 = "흡혈";
 		}
 	}
 

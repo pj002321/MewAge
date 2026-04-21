@@ -1,4 +1,6 @@
+using System.Collections;
 using UnityEngine;
+using UnityEngine.UI;
 
 /// <summary>
 /// 홈 상점 패널.
@@ -8,6 +10,11 @@ public class HomeShopPanel : MonoBehaviour
 {
     [Header("가챠 결과 팝업")]
     public GachaResultPopup gachaPopup;
+
+    [Header("섹션 스크롤")]
+    [SerializeField] private ScrollRect   scrollRect;
+    [SerializeField] private RectTransform gemSection;
+    [SerializeField] private RectTransform goldSection;
 
     bool         _resultShown;
     EquipBoxType _pendingBox;
@@ -83,6 +90,32 @@ public class HomeShopPanel : MonoBehaviour
             Debug.Log($"[Shop] 인벤토리 보관함 수량: {EquipmentInventory.Shared?.Bag.Count}");
             gachaPopup.ShowMultiResult(results);
         }
+    }
+
+    // ── 섹션 이동 ───────────────────────────────────────────────────
+
+    public void ScrollToGem()  => StartCoroutine(ScrollToSection(gemSection));
+    public void ScrollToGold() => StartCoroutine(ScrollToSection(goldSection));
+
+    private IEnumerator ScrollToSection(RectTransform section)
+    {
+        if (scrollRect == null || section == null) yield break;
+
+        // 패널이 방금 활성화됐을 수 있어 한 프레임 대기
+        yield return null;
+
+        Canvas.ForceUpdateCanvases();
+
+        var content  = scrollRect.content;
+        var viewport = scrollRect.viewport != null ? scrollRect.viewport : scrollRect.GetComponent<RectTransform>();
+
+        // 섹션의 content 기준 로컬 Y 위치
+        Vector2 sectionLocal = (Vector2)content.InverseTransformPoint(section.position);
+        float   contentH     = content.rect.height;
+        float   viewportH    = viewport.rect.height;
+
+        float targetY = Mathf.Clamp01((-sectionLocal.y) / (contentH - viewportH));
+        scrollRect.verticalNormalizedPosition = 1f - targetY;
     }
 
     // ── IAP / 재화 구매 ─────────────────────────────────────────────

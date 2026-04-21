@@ -144,6 +144,15 @@ public class WeaponData : ScriptableObject
         data.baseMaxBounces     = row.f_튕김횟수;
         data.baseBounceRange    = data.weaponType == WeaponType.Boomerang ? 5f : 0f;
 
+        // DB에서 직접 로드 (무기 프리팹 Inspector 의존 제거)
+        // 아래 필드는 BansheeGz DB_무기에 컬럼을 추가한 후 사용하세요:
+        // f_넉백(float), f_치명타(float, 0~1), f_출혈(float), f_흡혈(float)
+        data.baseCriticalRate   = row.f_치명타 / 100f; // DB: 0~100 → 내부: 0~1
+        data.baseCriticalDamage = 2f;            // 치명타 배율 고정 2배
+        data.baseBleedDamage    = row.f_출혈;
+        data.baseLifeSteal      = row.f_흡혈;
+        data.baseKnockbackPower = row.f_넉백;
+
         // 무기ID 기반으로 Resources에서 프리팹 로드 (예: Resources/Weapons/Ch1/ch1_n_00)
         string weaponId = row.f_무기ID;
         if (!string.IsNullOrEmpty(weaponId))
@@ -158,17 +167,6 @@ public class WeaponData : ScriptableObject
         {
             data.icon = data.prefab.GetComponent<SpriteRenderer>()?.sprite
                      ?? data.prefab.GetComponentInChildren<SpriteRenderer>()?.sprite;
-
-            // criticalRate / bleedDamage / lifeSteal / criticalDamage / knockbackPower는 각 무기 프리팹 Inspector에서 설정
-            var wp = data.prefab.GetComponentInChildren<WeaponPoint>();
-            if (wp != null)
-            {
-                data.baseCriticalRate   = wp.CriticalRate;
-                data.baseCriticalDamage = wp.CriticalDamage;
-                data.baseBleedDamage    = wp.BleedDamage;
-                data.baseLifeSteal      = wp.LifeSteal;
-                data.baseKnockbackPower = wp.KnockbackPower;
-            }
         }
 
         data.ResetToBase();
@@ -221,8 +219,10 @@ public class WeaponData : ScriptableObject
         attackRange    = baseAttackRange;
         areaHitRadius  = baseAreaHitRadius;
         criticalRate   = baseCriticalRate;
+        criticalDamage = baseCriticalDamage;
         bleedDamage    = baseBleedDamage;
         lifeSteal      = baseLifeSteal;
+        knockbackPower = baseKnockbackPower;
         maxBounces     = baseMaxBounces;
         bounceRange    = baseBounceRange;
     }
