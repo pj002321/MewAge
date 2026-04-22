@@ -1077,6 +1077,9 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         EnemySpawner.Shared?.StopSpawning();
         EnemySpawner.Shared?.ClearAllEnemies();
 
+        if (BossController.Current != null)
+            Object.Destroy(BossController.Current.gameObject);
+
         if (bossWaveActive)
         {
             bossWaveActive = false;
@@ -1117,11 +1120,19 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         EnemySpawner.Shared?.StopSpawning();
         EnemySpawner.Shared?.ClearAllEnemies();
 
+        if (BossController.Current != null)
+            Object.Destroy(BossController.Current.gameObject);
+
+        if (bossWaveActive)
+        {
+            WaveEnvironmentSwitcher.Shared?.SetNormal();
+            BossHUDPanel.Shared?.Hide();
+        }
+
         bossWaveActive    = false;
         wave              = targetWave - 1;
         waitingForUpgrade = false;
 
-        // 보스 입장 게이트(Exit Point) 연출을 띄우려면, 활성화된 배경 맵이 해당 층(예: 9웨이브)의 맵이어야 합니다.
         WaveEnvironmentSwitcher.Shared?.SetWave(wave);
 
         StartNextWave();

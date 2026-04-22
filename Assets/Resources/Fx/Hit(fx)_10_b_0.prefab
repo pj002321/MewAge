@@ -28,9 +28,9 @@ Transform:
   m_GameObject: {fileID: 8315657212143604512}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -22.261532, y: -3.4584486, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 2, y: 2, z: 2}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -81,10 +81,10 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 10
+  m_SortingOrder: 120
   m_MaskInteraction: 0
   m_Sprite: {fileID: -1938711983768115421, guid: 514125d890e1afb42822be59944fca51, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 0.5728886, b: 0.3820755, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -127,6 +127,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f34c0b15eafb8ba42b08a6309f22b2b0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HitEffect
-  duration: 0.35
-  maxScale: 1.5
-  hitColor: {r: 1, g: 0.4198113, b: 0.47573334, a: 1}
+  duration: 0.5
+  maxScale: 2
+  hitColor: {r: 1, g: 0.76203376, b: 0.2028302, a: 1}

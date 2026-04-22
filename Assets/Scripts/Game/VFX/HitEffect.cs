@@ -22,7 +22,7 @@ public class HitEffect : MonoBehaviour
     public void Play(GameObject go, FXManager pool)
     {
         _pool = pool;
-        if (sr != null) sr.color = hitColor;
+        //if (sr != null) sr.color = hitColor;
         timer = duration;
         transform.localScale = Vector3.zero;
     }
