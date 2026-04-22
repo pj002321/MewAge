@@ -84,16 +84,19 @@ public class EnemyController : MonoBehaviour
     // 원본 재질 캐시 (풀 반환 시 복구용)
     private Material[] _originalMats;
 
+    private EliteMarker _eliteMarker;
+
     // ── 초기화 ──────────────────────────────────────────────────
     private void Awake()
     {
-        currentHP = maxHP;
-        baseSpeed = moveSpeed;
-        rb        = GetComponent<Rigidbody2D>();
-        srs       = GetComponentsInChildren<SpriteRenderer>(true);
-        hitFlash  = GetComponentInChildren<HitFlash>(true);
-        animator  = GetComponentInChildren<Animator>();
-        behaviour = GetComponent<EnemyBehaviourBase>();
+        currentHP    = maxHP;
+        baseSpeed    = moveSpeed;
+        rb           = GetComponent<Rigidbody2D>();
+        srs          = GetComponentsInChildren<SpriteRenderer>(true);
+        hitFlash     = GetComponentInChildren<HitFlash>(true);
+        animator     = GetComponentInChildren<Animator>();
+        behaviour    = GetComponent<EnemyBehaviourBase>();
+        _eliteMarker = GetComponent<EliteMarker>();
 
         // 디버그: SpriteRenderer 확인
         if (srs == null || srs.Length == 0)
@@ -520,7 +523,10 @@ public class EnemyController : MonoBehaviour
             _deathDir = knockbackDir.sqrMagnitude > 0.001f ? knockbackDir.normalized : Vector2.up;
             OnDeath?.Invoke();
             CharacterSkillManager.Shared?.AddPoint(1);
-            ItemDropManager.Shared?.SpawnDrops(transform.position, goldDrop, expDrop);
+            if (_eliteMarker != null)
+                ItemDropManager.Shared?.SpawnEliteDrops(transform.position, goldDrop, expDrop);
+            else
+                ItemDropManager.Shared?.SpawnDrops(transform.position, goldDrop, expDrop);
             StartCoroutine(DieRoutine());
         }
     }

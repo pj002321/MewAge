@@ -25,6 +25,12 @@ public class ItemDropManager : MonoBehaviourSingleton<ItemDropManager>
     [SerializeField] private float bossOrbBurstSpeedMax = 11f;
     [SerializeField] private float bossOrbFriction      = 6f;
 
+    [Header("엘리트 Orb 버스트 설정")]
+    [SerializeField] private int   eliteOrbCount        = 4;   // 금·경험치 각각 스폰 수
+    [SerializeField] private float eliteOrbSpeedMin     = 5f;
+    [SerializeField] private float eliteOrbSpeedMax     = 9f;
+    [SerializeField] private float eliteOrbFriction     = 5f;
+
     [Header("기물 구슬 (챕터 필터링)")]
     [SerializeField] private int currentChapter = 1;
 
@@ -40,6 +46,34 @@ public class ItemDropManager : MonoBehaviourSingleton<ItemDropManager>
     {
         for (int i = 0; i < goldCount; i++) SpawnBurstItem(goldPrefab, pos, DropItem.ItemType.Gold, goldValue);
         for (int i = 0; i < expCount;  i++) SpawnBurstItem(expPrefab,  pos, DropItem.ItemType.Exp,  expValue);
+    }
+
+    /// <summary>엘리트 처치 시 gold·exp 오브를 위쪽 부채꼴로 팡 터뜨립니다.</summary>
+    public void SpawnEliteDrops(Vector3 pos, int goldValue, int expValue)
+    {
+        int count = Mathf.Max(1, eliteOrbCount);
+        int goldPer = Mathf.Max(1, goldValue / count);
+        int expPer  = Mathf.Max(1, expValue  / count);
+
+        for (int i = 0; i < count; i++) SpawnEliteBurstItem(goldPrefab, pos, DropItem.ItemType.Gold, goldPer);
+        for (int i = 0; i < count; i++) SpawnEliteBurstItem(expPrefab,  pos, DropItem.ItemType.Exp,  expPer);
+
+        if (Random.value <= structureDropChance) SpawnStructureOrb(pos);
+        TrySpawnHealOrb(pos);
+    }
+
+    // 위쪽 반원(30°~150°) 부채꼴로 초기 속도를 줘 포물선 궤적을 만듭니다.
+    private void SpawnEliteBurstItem(GameObject prefab, Vector3 pos, DropItem.ItemType type, int value)
+    {
+        if (prefab == null) return;
+        Vector3 offset = new(Random.Range(-0.2f, 0.2f), Random.Range(-0.2f, 0.2f), 0f);
+        var go = Instantiate(prefab, pos + offset, Quaternion.identity);
+        float angleDeg = Random.Range(30f, 150f);
+        float rad      = angleDeg * Mathf.Deg2Rad;
+        float speed    = Random.Range(eliteOrbSpeedMin, eliteOrbSpeedMax);
+        Vector2 vel    = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad)) * speed;
+        float spd      = type == DropItem.ItemType.Gold ? goldMoveSpeed : expMoveSpeed;
+        go.GetComponent<DropItem>()?.InitBurst(type, value, vel, eliteOrbFriction, spd);
     }
 
     /// <summary>적 사망 위치에서 아이템을 드롭합니다.</summary>

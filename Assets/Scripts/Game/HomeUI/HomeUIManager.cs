@@ -17,6 +17,9 @@ public class HomeUIManager : MonoBehaviour
     [Header("Specific Image for Battle Tab")]
     public Image specificImage; // 특정 이미지를 Panel_전투에서만 비활성화
 
+    [Header("디버그 토글")]
+    [SerializeField] private Button debugToggleButton;
+
     [Header("Tab Colors")]
     public Color activeColor = new Color(1f, 0.8f, 0.2f, 1f);
     public Color inactiveColor = new Color(0.5f, 0.5f, 0.5f, 1f);
@@ -38,6 +41,9 @@ public class HomeUIManager : MonoBehaviour
     private RectTransform[] _tabIconRts;
     private Vector2[]       _tabIconOriginPos;
     private Coroutine[]     _iconCoroutines;
+    private RectTransform[] _tabIndicatorRts;
+    private Vector3[]       _tabIndicatorOriginScales;
+    private Coroutine[]     _indicatorCoroutines;
 
     void Start()
     {
@@ -49,11 +55,14 @@ public class HomeUIManager : MonoBehaviour
         int count = tabButtons.Length;
         tabOriginalWidths = new float[count];
         tabOriginalColors = new Color[count];
-        _widthCoroutines  = new Coroutine[count];
-        _layoutElements   = new LayoutElement[count];
-        _tabIconRts       = new RectTransform[count];
-        _tabIconOriginPos = new Vector2[count];
-        _iconCoroutines   = new Coroutine[count];
+        _widthCoroutines          = new Coroutine[count];
+        _layoutElements           = new LayoutElement[count];
+        _tabIconRts               = new RectTransform[count];
+        _tabIconOriginPos         = new Vector2[count];
+        _iconCoroutines           = new Coroutine[count];
+        _tabIndicatorRts          = new RectTransform[count];
+        _tabIndicatorOriginScales = new Vector3[count];
+        _indicatorCoroutines      = new Coroutine[count];
 
         for (int i = 0; i < count; i++)
         {
@@ -75,12 +84,15 @@ public class HomeUIManager : MonoBehaviour
             tabOriginalWidths[i] = (le.preferredWidth > 0f) ? le.preferredWidth : baseW;
             le.preferredWidth = tabOriginalWidths[i];
 
-            // 아이콘 RectTransform 캡처 — 버튼 자신이 아닌 첫 번째 자식 Image
+            // 아이콘(첫 번째 자식 Image) + 인디케이터(두 번째 자식 Image) 캡처
             foreach (var childImg in tabButtons[i].GetComponentsInChildren<Image>(true))
             {
-                if (childImg.gameObject == tabButtons[i].gameObject) continue; // 버튼 배경 스킵
-                _tabIconRts[i]       = childImg.GetComponent<RectTransform>();
-                _tabIconOriginPos[i] = _tabIconRts[i].anchoredPosition;
+                if (childImg.gameObject == tabButtons[i].gameObject) continue;
+                var crt = childImg.GetComponent<RectTransform>();
+                _tabIconRts[i]               = crt;
+                _tabIconOriginPos[i]         = crt.anchoredPosition;
+                _tabIndicatorRts[i]          = crt;
+                _tabIndicatorOriginScales[i] = crt.localScale;
                 break;
             }
         }
@@ -92,8 +104,32 @@ public class HomeUIManager : MonoBehaviour
                 tabButtons[i].onClick.AddListener(() => ShowTab(index));
         }
 
+        // 디버그 토글 버튼 (MEWAGE_DEBUG 빌드 + 에디터에서만 노출)
+#if !UNITY_EDITOR && !MEWAGE_DEBUG
+        if (debugToggleButton != null) debugToggleButton.gameObject.SetActive(false);
+#else
+        RefreshDebugButtonLabel();
+        debugToggleButton?.onClick.AddListener(OnDebugToggle);
+#endif
+
         // 전투 탭 기본
         ShowTab(2);
+    }
+
+    private void OnDebugToggle()
+    {
+        bool current = PlayerPrefs.GetInt("DebugMode", 1) == 1;
+        PlayerPrefs.SetInt("DebugMode", current ? 0 : 1);
+        PlayerPrefs.Save();
+        RefreshDebugButtonLabel();
+    }
+
+    private void RefreshDebugButtonLabel()
+    {
+        if (debugToggleButton == null) return;
+        bool on = PlayerPrefs.GetInt("DebugMode", 1) == 1;
+        var label = debugToggleButton.GetComponentInChildren<TMPro.TextMeshProUGUI>();
+        if (label != null) label.text = on ? "디버그 ON" : "디버그 OFF";
     }
 
     public void ShowTab(int index)
@@ -140,6 +176,14 @@ public class HomeUIManager : MonoBehaviour
                 if (_iconCoroutines[i] != null) StopCoroutine(_iconCoroutines[i]);
                 _iconCoroutines[i] = StartCoroutine(LerpIconY(_tabIconRts[i], _tabIconOriginPos[i].x, targetY, iconAnimTime));
             }
+
+            // 인디케이터 스케일
+            if (_tabIndicatorRts[i] != null)
+            {
+                Vector3 targetScale = (i == index) ? Vector3.one : _tabIndicatorOriginScales[i];
+                if (_indicatorCoroutines[i] != null) StopCoroutine(_indicatorCoroutines[i]);
+                _indicatorCoroutines[i] = StartCoroutine(LerpScale(_tabIndicatorRts[i], targetScale, iconAnimTime));
+            }
         }
 
         // 특정 이미지를 Panel_전투에서만 비활성화
@@ -160,6 +204,19 @@ public class HomeUIManager : MonoBehaviour
             yield return null;
         }
         le.preferredWidth = to;
+    }
+
+    private IEnumerator LerpScale(RectTransform rt, Vector3 to, float duration)
+    {
+        Vector3 from    = rt.localScale;
+        float elapsed   = 0f;
+        while (elapsed < duration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            rt.localScale = Vector3.Lerp(from, to, elapsed / duration);
+            yield return null;
+        }
+        rt.localScale = to;
     }
 
     private IEnumerator LerpIconY(RectTransform rt, float targetX, float targetY, float duration)
