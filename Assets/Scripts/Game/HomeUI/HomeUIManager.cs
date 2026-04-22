@@ -104,13 +104,13 @@ public class HomeUIManager : MonoBehaviour
                 tabButtons[i].onClick.AddListener(() => ShowTab(index));
         }
 
-        // 디버그 토글 버튼 (MEWAGE_DEBUG 빌드 + 에디터에서만 노출)
-#if !UNITY_EDITOR && !MEWAGE_DEBUG
-        if (debugToggleButton != null) debugToggleButton.gameObject.SetActive(false);
-#else
-        RefreshDebugButtonLabel();
-        debugToggleButton?.onClick.AddListener(OnDebugToggle);
-#endif
+        // 디버그 토글 버튼 (항상 노출하도록 변경)
+        if (debugToggleButton != null)
+        {
+            debugToggleButton.gameObject.SetActive(true);
+            RefreshDebugButtonLabel();
+            debugToggleButton.onClick.AddListener(OnDebugToggle);
+        }
 
         // 전투 탭 기본
         ShowTab(2);

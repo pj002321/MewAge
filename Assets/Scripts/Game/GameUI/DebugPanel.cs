@@ -28,10 +28,7 @@ public class DebugPanel : MonoBehaviour
 
     private void Awake()
     {
-#if !UNITY_EDITOR && !MEWAGE_DEBUG
-        gameObject.SetActive(false);
-        return;
-#endif
+        // 에디터/디버그 빌드 한정 활성화 로직 제거. (항상 PlayerPrefs 기준으로만 판단)
         if (PlayerPrefs.GetInt("DebugMode", 1) == 0)
         {
             gameObject.SetActive(false);
