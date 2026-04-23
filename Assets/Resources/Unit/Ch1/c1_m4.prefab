@@ -107,7 +107,7 @@ GameObject:
   - component: {fileID: 8704387436020610850}
   - component: {fileID: -58419445731862681}
   - component: {fileID: 6332168805933254515}
-  - component: {fileID: -4808067146239347187}
+  - component: {fileID: -1328648504228144652}
   m_Layer: 7
   m_Name: c1_m4
   m_TagString: Untagged
@@ -344,7 +344,7 @@ CapsuleCollider2D:
   m_Offset: {x: 0, y: -0.09}
   m_Size: {x: 1.7866666, y: 0.92}
   m_Direction: 1
---- !u!114 &-4808067146239347187
+--- !u!114 &-1328648504228144652
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -356,9 +356,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3640172dedd67864e9d6803100a29029, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SlimeBobAnimation
-  minScaleY: 0.78
-  maxScaleY: 1.12
-  squashStretchX: 0
+  minScaleY: 0.9
+  maxScaleY: 1.05
+  squashStretchX: 0.5
   frequency: 1.25
   randomPhase: 1
   spriteTarget: {fileID: 0}

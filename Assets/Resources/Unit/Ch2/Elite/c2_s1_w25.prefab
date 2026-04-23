@@ -14,9 +14,8 @@ GameObject:
   - component: {fileID: 8817257906202644891}
   - component: {fileID: 1075984086305696753}
   - component: {fileID: 907566172734922977}
-  - component: {fileID: 5696626193639595007}
-  - component: {fileID: 1745739997703430310}
-  - component: {fileID: 8172702909974989573}
+  - component: {fileID: 4950081078187605302}
+  - component: {fileID: -3310641572088407229}
   m_Layer: 7
   m_Name: c2_s1_w25
   m_TagString: Untagged
@@ -66,7 +65,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: a97c105638bdf8b4a8650670310a4cd3, type: 2}
+  - {fileID: 2100000, guid: 47b83d84731d5f94ca4c43b16224c669, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -200,8 +199,8 @@ MonoBehaviour:
   moveSpeed: 2
   maxHP: 30
   contactDamage: 10
-  goldDrop: 5
-  expDrop: 10
+  goldDrop: 30
+  expDrop: 30
   scoreValue: 0
   damageCooldown: 1
   contactMaxDist: 0.8
@@ -210,7 +209,7 @@ MonoBehaviour:
   bleedInterval: 1
   separationRadius: 0.7
   separationStrength: 2
---- !u!114 &5696626193639595007
+--- !u!114 &4950081078187605302
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -219,30 +218,17 @@ MonoBehaviour:
   m_GameObject: {fileID: 574793032822915054}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bce05cdbf4c6c0d4b8e3a23bbeb3fb43, type: 3}
+  m_Script: {fileID: 11500000, guid: ebf384ff75278374cb62dda6f31d5629, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::EnemyFXConfig
-  onAttack:
-    vfxPrefab: {fileID: 0}
-    spawnOffset: {x: 0, y: 0}
-    sfxClip: {fileID: 0}
-    volume: 1
-  onHit:
-    vfxPrefab: {fileID: 3063604705314726052, guid: 4af60bfb9e1b34c44888e1e4643fdb65, type: 3}
-    spawnOffset: {x: 0, y: 0}
-    sfxClip: {fileID: 8300000, guid: 0e5edb6bccf05984dad128fb1a9fc914, type: 3}
-    volume: 1
-  onDeath:
-    vfxPrefab: {fileID: 0}
-    spawnOffset: {x: 0, y: 0}
-    sfxClip: {fileID: 0}
-    volume: 1
-  onSpawn:
-    vfxPrefab: {fileID: 0}
-    spawnOffset: {x: 0, y: 0}
-    sfxClip: {fileID: 0}
-    volume: 1
---- !u!114 &1745739997703430310
+  m_EditorClassIdentifier: Assembly-CSharp::ChargeBehaviour
+  chargeInterval: 3
+  chargeDuration: 0.6
+  chargeSpeedMultiplier: 3.5
+  chargeColor: {r: 1, g: 0, b: 0, a: 1}
+  chargeScale: 0.85
+  preChargeDuration: 0.25
+  ghostInterval: 0.06
+--- !u!114 &-3310641572088407229
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -251,27 +237,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 574793032822915054}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 90b2b11fd0b1a454e95ed4fd7298f46d, type: 3}
+  m_Script: {fileID: 11500000, guid: d9c58f3ba0addd845b2803f0d001d294, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HordeBehaviour
-  splitCount: 6
-  clusterRadius: 0.6
-  spawnEdge: 1
-  destroyMargin: 2
---- !u!114 &8172702909974989573
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 574793032822915054}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8dbca1b53536a2b47a8964120af00539, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HitFlash
-  flashDuration: 0.12
-  BaseColor: {r: 1, g: 1, b: 1, a: 1}
+  m_EditorClassIdentifier: Assembly-CSharp::EliteMarker
 --- !u!1 &3354211901654412982
 GameObject:
   m_ObjectHideFlags: 0

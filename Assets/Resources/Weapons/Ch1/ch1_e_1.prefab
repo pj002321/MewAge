@@ -116,6 +116,9 @@ MonoBehaviour:
   overshootSpeed: 60
   projectilePrefab: {fileID: 0}
   projectileSpeed: 0
+  useParabolicShot: 0
+  parabolicArcHeight: 1.5
+  parabolicSpawnLocalPos: {x: 0, y: 0, z: 0}
   shootScalePulse: 1
   scalePulseMax: 1.3
   scalePulseDuration: 0.12
@@ -134,6 +137,8 @@ MonoBehaviour:
   slashArcDegrees: 180
   slashSweepSpeed: 480
   slashHitRadius: 0.35
+  slashVfxPrefab: {fileID: 0}
+  slashVfxDuration: 1
 --- !u!114 &4746999439796901104
 MonoBehaviour:
   m_ObjectHideFlags: 0

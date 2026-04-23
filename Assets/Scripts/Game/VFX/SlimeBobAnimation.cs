@@ -28,6 +28,7 @@ public class SlimeBobAnimation : MonoBehaviour
     private float   _halfHeight;
     private float   _phase;
     private bool    _fixBottom; // spriteTarget이 진짜 자식일 때만 위치 보정
+    private SpriteRenderer _renderer; // 성능 최적화용 캐시
 
     private void Awake()
     {
@@ -71,14 +72,17 @@ public class SlimeBobAnimation : MonoBehaviour
         _origLocalScale = spriteTarget.localScale;
         _phase          = Random.Range(0f, randomPhase);
 
-        var renderer = spriteTarget.GetComponent<SpriteRenderer>();
-        _halfHeight = (renderer != null && renderer.sprite != null)
-            ? renderer.sprite.bounds.extents.y
+        _renderer = spriteTarget.GetComponent<SpriteRenderer>();
+        _halfHeight = (_renderer != null && _renderer.sprite != null)
+            ? _renderer.sprite.bounds.extents.y
             : 0.5f;
     }
 
     private void Update()
     {
+        // 성능 최적화: 화면에 보이지 않으면 업데이트 스킵
+        if (_renderer != null && !_renderer.isVisible) return;
+
         float t      = (Mathf.Sin((Time.time * frequency + _phase) * Mathf.PI * 2f) + 1f) * 0.5f;
         float scaleY = Mathf.Lerp(minScaleY, maxScaleY, t);
         float scaleX = 1f + (1f - scaleY) * squashStretchX;

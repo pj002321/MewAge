@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 8954435514631718549}
   - component: {fileID: 3826616121158853639}
   - component: {fileID: -6754250014962494040}
+  - component: {fileID: -6074370583918650380}
   m_Layer: 7
   m_Name: c2_m9
   m_TagString: Untagged
@@ -224,6 +225,24 @@ MonoBehaviour:
   attackInterval: 2
   damageMultiplier: 1.5
   attackVfxPrefab: {fileID: 0}
+--- !u!114 &-6074370583918650380
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 917885316504536691}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3640172dedd67864e9d6803100a29029, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SlimeBobAnimation
+  minScaleY: 0.9
+  maxScaleY: 1.1
+  squashStretchX: 0.5
+  frequency: 1.25
+  randomPhase: 1
+  spriteTarget: {fileID: 0}
 --- !u!1 &8116714791214715617
 GameObject:
   m_ObjectHideFlags: 0

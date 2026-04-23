@@ -15,9 +15,8 @@ GameObject:
   - component: {fileID: 6453839904366324668}
   - component: {fileID: 5650901321275164484}
   - component: {fileID: -5874366549243020845}
-  - component: {fileID: 945605578375847875}
   - component: {fileID: -2434905160088638796}
-  - component: {fileID: -1998638751274722966}
+  - component: {fileID: 6781448397647558850}
   m_Layer: 7
   m_Name: c1_m1
   m_TagString: Untagged
@@ -110,7 +109,7 @@ Animator:
   m_GameObject: {fileID: 2860284734646843584}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: a6920aee78a3e5a4f9893b5fb6d09614, type: 2}
+  m_Controller: {fileID: 22100000, guid: 0b2e405d0adf7d14998462f1cf22394c, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -228,38 +227,6 @@ MonoBehaviour:
   attackInterval: 1
   useAnimationEvent: 0
   attackVfxPrefab: {fileID: 0}
---- !u!114 &945605578375847875
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2860284734646843584}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bce05cdbf4c6c0d4b8e3a23bbeb3fb43, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::EnemyFXConfig
-  onAttack:
-    vfxPrefab: {fileID: 1915369493659787082, guid: 951fa77ecd3fe044db5f4c5db5c400f2, type: 3}
-    spawnOffset: {x: 0, y: 0}
-    sfxClip: {fileID: 8300000, guid: 323e15cfe809e114ab92c9f4b25e8bc2, type: 3}
-    volume: 1
-  onHit:
-    vfxPrefab: {fileID: 3063604705314726052, guid: 4af60bfb9e1b34c44888e1e4643fdb65, type: 3}
-    spawnOffset: {x: 0, y: 0}
-    sfxClip: {fileID: 8300000, guid: 7cbd6cd765888ff418d01d98bd1ce9c2, type: 3}
-    volume: 1
-  onDeath:
-    vfxPrefab: {fileID: 0}
-    spawnOffset: {x: 0, y: 0}
-    sfxClip: {fileID: 0}
-    volume: 1
-  onSpawn:
-    vfxPrefab: {fileID: 0}
-    spawnOffset: {x: 0, y: 0}
-    sfxClip: {fileID: 0}
-    volume: 1
 --- !u!114 &-2434905160088638796
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -274,7 +241,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HitFlash
   flashDuration: 0.12
   BaseColor: {r: 1, g: 1, b: 1, a: 1}
---- !u!114 &-1998638751274722966
+--- !u!114 &6781448397647558850
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -286,10 +253,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3640172dedd67864e9d6803100a29029, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SlimeBobAnimation
-  minScaleY: 0.78
-  maxScaleY: 1.12
+  minScaleY: 0.9
+  maxScaleY: 1.05
   squashStretchX: 0.5
-  frequency: 1.5
+  frequency: 1.25
   randomPhase: 1
   spriteTarget: {fileID: 0}
 --- !u!1 &5355396286084888952

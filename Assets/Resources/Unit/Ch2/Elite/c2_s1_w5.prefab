@@ -12,6 +12,8 @@ GameObject:
   - component: {fileID: 4158209311869695610}
   - component: {fileID: 6689306021448422482}
   - component: {fileID: 5709863596310658779}
+  - component: {fileID: 4871718760915829775}
+  - component: {fileID: 3385751780015699409}
   m_Layer: 7
   m_Name: c2_s1_w5
   m_TagString: Untagged
@@ -60,7 +62,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: a97c105638bdf8b4a8650670310a4cd3, type: 2}
+  - {fileID: 2100000, guid: 47b83d84731d5f94ca4c43b16224c669, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -140,3 +142,34 @@ MonoBehaviour:
   bleedInterval: 1
   separationRadius: 1.2
   separationStrength: 8
+--- !u!114 &4871718760915829775
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5780791762247049258}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ebf384ff75278374cb62dda6f31d5629, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ChargeBehaviour
+  chargeInterval: 3
+  chargeDuration: 0.6
+  chargeSpeedMultiplier: 3.5
+  chargeColor: {r: 1, g: 0, b: 0, a: 1}
+  chargeScale: 0.85
+  preChargeDuration: 0.25
+  ghostInterval: 0.06
+--- !u!114 &3385751780015699409
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5780791762247049258}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9c58f3ba0addd845b2803f0d001d294, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EliteMarker

@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 2432528865374558513}
   - component: {fileID: -1570432277689139297}
   - component: {fileID: 4612523977552399776}
+  - component: {fileID: -7682337208956565981}
   m_Layer: 7
   m_Name: c2_m5
   m_TagString: Untagged
@@ -227,6 +228,24 @@ MonoBehaviour:
   chargeScale: 0.85
   preChargeDuration: 0.25
   ghostInterval: 0.06
+--- !u!114 &-7682337208956565981
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2217421304044356619}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3640172dedd67864e9d6803100a29029, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SlimeBobAnimation
+  minScaleY: 0.9
+  maxScaleY: 1.1
+  squashStretchX: 0.5
+  frequency: 1.25
+  randomPhase: 1
+  spriteTarget: {fileID: 0}
 --- !u!1 &7957499469005562028
 GameObject:
   m_ObjectHideFlags: 0

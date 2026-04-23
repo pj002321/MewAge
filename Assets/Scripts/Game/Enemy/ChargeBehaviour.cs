@@ -44,6 +44,8 @@ public class ChargeBehaviour : EnemyBehaviourBase
             ghostTimer     = 0f;
             originalScale = Owner.transform.localScale;  // 원본 스케일 저장
 
+            Owner.EnemyAnimator.SetTrigger("tCharge");
+
             // 돌진 준비: 스프라이트 빨간색, 스케일 축소
             var sr = Owner.GetComponent<SpriteRenderer>();
             if (sr != null)

@@ -66,6 +66,7 @@ public class EnemyController : MonoBehaviour
     private Coroutine bleedCoroutine;
     private float     baseSpeed; // 넉백/스턴 전 원본 속도
     private Vector2   _deathDir;  // 사망 시 날아갈 방향
+    private bool      isMoving;
 
     // 사망 흰색 실루엣 재질 (SpriteSilhouette 쉐이더) — 씬 전체 공유
     private static Material _deathFlashMat;
@@ -91,6 +92,7 @@ public class EnemyController : MonoBehaviour
     {
         currentHP    = maxHP;
         baseSpeed    = moveSpeed;
+        isMoving     = false;
         rb           = GetComponent<Rigidbody2D>();
         srs          = GetComponentsInChildren<SpriteRenderer>(true);
         hitFlash     = GetComponentInChildren<HitFlash>(true);
@@ -145,6 +147,7 @@ public class EnemyController : MonoBehaviour
         if (GameManager.Shared != null && GameManager.Shared.IsGameOver) return;
         if (isStunned) return;
         if (behaviour != null && behaviour.enabled) behaviour.OnAttackUpdate();
+        animator.SetBool("bMove", isMoving);
         CheckPlayerContact();
     }
 
@@ -184,6 +187,7 @@ public class EnemyController : MonoBehaviour
 
         if (_pendingMove != Vector2.zero && rb != null)
             rb.MovePosition(rb.position + _pendingMove);
+        isMoving = _pendingMove != Vector2.zero;
         _pendingMove = Vector2.zero;
     }
 

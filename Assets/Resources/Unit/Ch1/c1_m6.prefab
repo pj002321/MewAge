@@ -17,7 +17,7 @@ GameObject:
   - component: {fileID: 4733982585748470084}
   - component: {fileID: 371966393226962196}
   - component: {fileID: 8635708321786010924}
-  - component: {fileID: 3868923941896332262}
+  - component: {fileID: 8679045591154048956}
   m_Layer: 7
   m_Name: c1_m6
   m_TagString: Untagged
@@ -110,7 +110,7 @@ Animator:
   m_GameObject: {fileID: 1651568199920207753}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 00b7b8cf8e045364ea9dbb69bbb60733, type: 2}
+  m_Controller: {fileID: 22100000, guid: e32e6f842f3e8f64097305874c4ee8e1, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -274,7 +274,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HitFlash
   flashDuration: 0.12
   BaseColor: {r: 1, g: 1, b: 1, a: 1}
---- !u!114 &3868923941896332262
+--- !u!114 &8679045591154048956
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -286,9 +286,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3640172dedd67864e9d6803100a29029, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SlimeBobAnimation
-  minScaleY: 0.78
-  maxScaleY: 1.12
-  squashStretchX: 0
+  minScaleY: 0.9
+  maxScaleY: 1.05
+  squashStretchX: 0.5
   frequency: 1.25
   randomPhase: 1
   spriteTarget: {fileID: 0}

@@ -17,7 +17,7 @@ GameObject:
   - component: {fileID: 1745739997703430310}
   - component: {fileID: 8172702909974989573}
   - component: {fileID: 4271521301852791539}
-  - component: {fileID: -2649981528203438986}
+  - component: {fileID: -8499466750821137407}
   m_Layer: 7
   m_Name: c1_m5
   m_TagString: Untagged
@@ -110,7 +110,7 @@ Animator:
   m_GameObject: {fileID: 574793032822915054}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: e722ee32dac87f1408cec652f0771c43, type: 2}
+  m_Controller: {fileID: 22100000, guid: 1ff7151633c56f64390cafd27dd1c378, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -273,7 +273,7 @@ CapsuleCollider2D:
   m_Offset: {x: 0, y: 0}
   m_Size: {x: 1.34, y: 0.86}
   m_Direction: 0
---- !u!114 &-2649981528203438986
+--- !u!114 &-8499466750821137407
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -285,9 +285,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3640172dedd67864e9d6803100a29029, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SlimeBobAnimation
-  minScaleY: 0.78
-  maxScaleY: 1.12
-  squashStretchX: 0
+  minScaleY: 0.9
+  maxScaleY: 1.05
+  squashStretchX: 0.5
   frequency: 1.25
   randomPhase: 1
   spriteTarget: {fileID: 0}

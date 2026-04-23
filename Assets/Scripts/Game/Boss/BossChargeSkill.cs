@@ -19,6 +19,8 @@ public class BossChargeSkill : BossSkillBase
         if (Owner.PlayerTransform == null) yield break;
         if (GameManager.Shared != null && GameManager.Shared.IsGameOver) yield break;
 
+        Owner.EnemyAnimator?.SetTrigger("tCharge");
+
         float   speed   = chargeSpeed * (Boss != null && Boss.IsEnraged ? Boss.EnrageSpeedMult : 1f);
         // 시작 시점의 플레이어 방향을 고정으로 사용 (방향이 도중에 바뀌지 않도록)
         Vector2 dir     = ((Vector2)Owner.PlayerTransform.position - (Vector2)Owner.transform.position).normalized;
