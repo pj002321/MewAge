@@ -22,6 +22,14 @@ public class Projectile : MonoBehaviour
     private float   baseDamage;
     private float   knockbackPower;
 
+    // 포물선 전용
+    private bool    _isParabolic;
+    private Vector3 _paraStart;
+    private Vector3 _paraControl;
+    private Vector3 _paraEnd;
+    private float   _paraDuration;
+    private float   _paraElapsed;
+
     // Physics NonAlloc 버퍼
     private static readonly Collider2D[] _hitBuffer = new Collider2D[32];
 
@@ -45,6 +53,44 @@ public class Projectile : MonoBehaviour
         transform.rotation = Quaternion.Euler(0f, 0f, angle);
     }
 
+    /// <summary>
+    /// 포물선 투사체 초기화.
+    /// 2차 베지어(Start → Control → End)로 이동하며, 매 프레임 접선 방향으로 자전.
+    /// </summary>
+    public void InitParabolic(float primaryDmg, Vector3 targetPos, float speed, float arcHeight,
+        bool isPrimaryCritical = false, float lifeSteal = 0f, float dotDamage = 0f,
+        float areaHitRadius = 0f, float areaHitDamageRatio = 0f,
+        float criticalRate = 0f, float criticalMultiplier = 2f,
+        float baseDamage = 0f, float knockbackPower = 16f)
+    {
+        this.primaryDmg         = primaryDmg;
+        this.isPrimaryCritical  = isPrimaryCritical;
+        this.lifeSteal          = lifeSteal;
+        this.dotDamage          = dotDamage;
+        this.areaHitRadius      = areaHitRadius;
+        this.areaHitDamageRatio = areaHitDamageRatio;
+        this.criticalRate       = criticalRate;
+        this.criticalMultiplier = criticalMultiplier;
+        this.baseDamage         = baseDamage;
+        this.knockbackPower     = knockbackPower;
+
+        _isParabolic  = true;
+        _paraStart    = transform.position;
+        _paraEnd      = targetPos;
+
+        // 컨트롤 포인트: 시작~끝 중간에서 World Y 방향으로 arcHeight 만큼 올림
+        _paraControl  = (_paraStart + _paraEnd) * 0.5f + Vector3.up * arcHeight;
+
+        float dist    = Vector3.Distance(_paraStart, _paraEnd);
+        _paraDuration = Mathf.Max(dist / Mathf.Max(speed, 0.1f), 0.05f);
+        _paraElapsed  = 0f;
+
+        // 타격 시 넉백 방향 = 발사 방향 (수평)
+        direction = ((Vector2)(targetPos - transform.position)).normalized;
+
+        Destroy(gameObject, _paraDuration + 0.2f);
+    }
+
     private (float finalDamage, bool isCritical) RollCrit(float baseDamage)
     {
         bool crit = criticalRate > 0f && Random.value < criticalRate;
@@ -53,6 +99,31 @@ public class Projectile : MonoBehaviour
 
     private void Update()
     {
+        if (_isParabolic)
+        {
+            _paraElapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(_paraElapsed / _paraDuration);
+
+            // 2차 베지어 위치
+            float u   = 1f - t;
+            Vector3 pos = u * u * _paraStart
+                        + 2f * u * t * _paraControl
+                        + t * t * _paraEnd;
+            transform.position = pos;
+
+            // 베지어 접선으로 회전 (해석적 미분: dP/dt = 2(1-t)(P1-P0) + 2t(P2-P1))
+            Vector3 tangent = 2f * u * (_paraControl - _paraStart)
+                            + 2f * t * (_paraEnd    - _paraControl);
+            if (tangent.sqrMagnitude > 0.0001f)
+            {
+                float angle = Mathf.Atan2(tangent.y, tangent.x) * Mathf.Rad2Deg - 90f;
+                transform.rotation = Quaternion.Euler(0f, 0f, angle);
+            }
+
+            if (t >= 1f) Destroy(gameObject);
+            return;
+        }
+
         transform.Translate(direction * speed * Time.deltaTime, Space.World);
     }
 

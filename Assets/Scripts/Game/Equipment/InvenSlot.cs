@@ -50,7 +50,7 @@ public class InvenSlot : MonoBehaviour,
         if (frameImg)
         {
             var gradeSprite = WeaponVisualConfig.Shared?.GetGradeSprite(
-                has ? data.grade : WeaponGrade.Normal);
+                has ? data.grade : WeaponGrade.Common);
             if (gradeSprite != null)
             {
                 frameImg.sprite = gradeSprite;

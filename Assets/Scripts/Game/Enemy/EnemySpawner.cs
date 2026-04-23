@@ -25,6 +25,9 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
     [Header("글로벌 상한 (0 = DB f_최대스폰 우선)")]
     [SerializeField] private int maxEnemiesOnMap = 30;
 
+    [Header("플레이어로부터 최소 스폰 거리")]
+    [SerializeField] private float minDistanceFromPlayer = 3f;
+
     private float currentInterval  = 3f;
     private int   currentSpawnCount = 3;
     private int   currentMaxOnMap;          // DB f_최대스폰 (0 = 무제한)
@@ -384,16 +387,33 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
 
     private Vector2 GetRandomEdgePosition()
     {
+        Vector2 playerPos = PlayerController.Instance != null ? (Vector2)PlayerController.Instance.transform.position : Vector2.zero;
+
+        for (int attempt = 0; attempt < 10; attempt++) // 최대 10번 시도
+        {
+            Vector2 pos;
+            if (SpawnZone.Shared != null)
+                pos = SpawnZone.Shared.GetRandomEdgePosition();
+            else
+            {
+                int side = Random.Range(0, 4);
+                pos = side switch
+                {
+                    0 => new Vector2(Random.Range(-5f,  5f),  9.5f),
+                    1 => new Vector2(Random.Range(-5f,  5f), -9.5f),
+                    2 => new Vector2(-5.5f, Random.Range(-9f, 9f)),
+                    _ => new Vector2( 5.5f, Random.Range(-9f, 9f)),
+                };
+            }
+
+            if (Vector2.Distance(pos, playerPos) >= minDistanceFromPlayer)
+                return pos;
+        }
+
+        // 10번 시도해도 안 되면 그냥 반환 (fallback)
         if (SpawnZone.Shared != null)
             return SpawnZone.Shared.GetRandomEdgePosition();
-
-        int side = Random.Range(0, 4);
-        return side switch
-        {
-            0 => new Vector2(Random.Range(-5f,  5f),  9.5f),
-            1 => new Vector2(Random.Range(-5f,  5f), -9.5f),
-            2 => new Vector2(-5.5f, Random.Range(-9f, 9f)),
-            _ => new Vector2( 5.5f, Random.Range(-9f, 9f)),
-        };
+        else
+            return new Vector2(Random.Range(-5f, 5f), 9.5f);
     }
 }

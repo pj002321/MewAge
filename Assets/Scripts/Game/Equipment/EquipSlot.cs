@@ -132,7 +132,7 @@ public class EquipSlot : MonoBehaviour,
 
         if (frameImg)
         {
-            var gradeSprite = WeaponVisualConfig.Shared?.GetGradeSprite(has ? data.grade : WeaponGrade.Normal);
+            var gradeSprite = WeaponVisualConfig.Shared?.GetGradeSprite(has ? data.grade : WeaponGrade.Common);
             if (gradeSprite != null)
             {
                 frameImg.sprite = gradeSprite;

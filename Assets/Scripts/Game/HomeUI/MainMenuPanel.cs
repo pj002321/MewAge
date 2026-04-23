@@ -519,6 +519,7 @@ public class MainMenuPanel : MonoBehaviour
     {
         if (currentIndex < 0 || currentIndex >= stages.Length) return;
         if (stages[currentIndex].isLocked) return;
+        if (SceneLoadManager.IsTransitioning) return;
         PlayerPrefs.SetString("SelectedChapterID", stages[currentIndex].chapterID);
         PlayerPrefs.Save();
         SceneLoadManager.LoadScene("stage@scene");

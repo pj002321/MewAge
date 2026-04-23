@@ -16,7 +16,7 @@ public class WeaponPresetEditor : EditorWindow
     private Vector2 _scroll;
     private bool    _dirty;
 
-    private readonly List<List<DB_무기>> _chapters = new();
+    private readonly List<(int chapter, List<DB_무기> weapons)> _chapters = new();
 
     // weaponId → 편집 가능한 프리팹 엔트리
     private readonly Dictionary<string, PrefabEntry> _prefabs = new();
@@ -61,6 +61,7 @@ public class WeaponPresetEditor : EditorWindow
         new Color(1f,   0.9f,  0.55f, 0.22f), // Boomerang
         new Color(0.7f, 1f,    0.8f,  0.22f), // Spin
         new Color(1f,   1f,    0.45f, 0.22f), // Lightning
+        new Color(1f,   0.6f,  0.8f,  0.22f), // Slash
     };
 
     [MenuItem("MuAge/Weapon Preset Editor")]
@@ -83,13 +84,13 @@ public class WeaponPresetEditor : EditorWindow
             byChapter[ch].Add(row);
         });
         foreach (var kv in byChapter)
-            _chapters.Add(kv.Value);
+            _chapters.Add((kv.Key, kv.Value));
 
         if (_tab >= _chapters.Count) _tab = 0;
 
         // 전체 챕터 프리팹 미리 로드
-        foreach (var chapter in _chapters)
-            foreach (var row in chapter)
+        foreach (var ch in _chapters)
+            foreach (var row in ch.weapons)
                 TryLoadPrefab(row);
 
         Repaint();
@@ -155,7 +156,7 @@ public class WeaponPresetEditor : EditorWindow
 
         _scroll = EditorGUILayout.BeginScrollView(_scroll, alwaysShowHorizontal: true, alwaysShowVertical: false);
         DrawColumnHeader();
-        foreach (var row in _chapters[_tab])
+        foreach (var row in _chapters[_tab].weapons)
             DrawRow(row);
         EditorGUILayout.EndScrollView();
 
@@ -170,7 +171,7 @@ public class WeaponPresetEditor : EditorWindow
         for (int i = 0; i < _chapters.Count; i++)
         {
             bool sel = _tab == i;
-            if (GUILayout.Toggle(sel, $"Ch.{i + 1}", EditorStyles.toolbarButton, GUILayout.Width(46)) && !sel)
+            if (GUILayout.Toggle(sel, $"Ch.{_chapters[i].chapter}", EditorStyles.toolbarButton, GUILayout.Width(46)) && !sel)
             {
                 _tab    = i;
                 _scroll = Vector2.zero;
@@ -179,7 +180,7 @@ public class WeaponPresetEditor : EditorWindow
 
         GUILayout.FlexibleSpace();
 
-        int count = _chapters.Count > 0 ? _chapters[_tab].Count : 0;
+        int count = _chapters.Count > 0 ? _chapters[_tab].weapons.Count : 0;
         GUILayout.Label($"{count}종", EditorStyles.miniLabel);
         GUILayout.Space(8);
 
@@ -303,6 +304,7 @@ public class WeaponPresetEditor : EditorWindow
         "Boomerang" or "부메랑" => 3,
         "Spin"      or "돌리기" => 4,
         "Lightning" or "번개"   => 5,
+        "Slash"     or "슬래시" or "베기" => 6,
         _                       => -1,
     };
 
@@ -314,6 +316,7 @@ public class WeaponPresetEditor : EditorWindow
         "Boomerang" or "부메랑" => "부메랑",
         "Spin"      or "돌리기" => "스핀",
         "Lightning" or "번개"   => "번개",
+        "Slash"     or "슬래시" or "베기" => "슬래시",
         _                       => t ?? "?",
     };
 

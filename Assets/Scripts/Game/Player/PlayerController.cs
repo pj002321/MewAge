@@ -435,10 +435,10 @@ public class PlayerController : MonoBehaviour
     {
         float newScale = Mathf.Max(transform.localScale.x / scaleMultiplier, minScale);
         transform.localScale = Vector3.one * newScale;
-        // 한 번 적용 시 maxHP가 현재의 20% 미만으로 떨어지지 않도록 하한선 적용
+        // 한 번 적용 시 maxHP가 현재의 50% 미만으로 떨어지지 않도록 하한선 적용
         // (예: maxHP=50, penalty=50 → 기존 로직이면 maxHP=1 → currentHP=1 버그 발생)
-        float newMaxHP = Mathf.Max(maxHP * 0.2f, maxHP - hpPenalty);
-        maxHP     = Mathf.Max(1f, newMaxHP);
+        float newMaxHP = Mathf.Max(maxHP * 0.5f, maxHP - hpPenalty);
+        maxHP     = Mathf.Max(10f, newMaxHP);
         currentHP = Mathf.Min(currentHP, maxHP);
         SyncHPUI();
     }

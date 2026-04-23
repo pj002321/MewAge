@@ -400,11 +400,11 @@ public class WeaponInfoPanel : MonoBehaviourSingleton<WeaponInfoPanel>
     /// <summary>WeaponGrade → 한글 이름</summary>
     private static string GradeName(WeaponGrade grade) => grade switch
     {
-        WeaponGrade.Normal  => "일반",
-        WeaponGrade.Rare    => "레어",
-        WeaponGrade.Elite   => "엘리트",
-        WeaponGrade.Epic    => "에픽",
-        WeaponGrade.Legend  => "신화",
-        _                   => grade.ToString(),
+        WeaponGrade.Common    => "일반",
+        WeaponGrade.Rare      => "고급",
+        WeaponGrade.Epic      => "희귀",
+        WeaponGrade.Legendary => "전설",
+        WeaponGrade.Mythic    => "신화",
+        _                     => grade.ToString(),
     };
 }

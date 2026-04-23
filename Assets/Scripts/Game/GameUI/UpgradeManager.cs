@@ -21,7 +21,7 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
     private struct DrawProfile
     {
         public int   minLevel;
-        public float normal, rare, elite, epic, legend;
+        public float common, rare, epic, legendary, mythic;
     }
 
     private DrawProfile[] drawProfiles = System.Array.Empty<DrawProfile>();
@@ -168,12 +168,12 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
             if (!string.IsNullOrEmpty(row.f_가챠타입)) return;
             list.Add(new DrawProfile
             {
-                minLevel = row.f_레벨,
-                normal   = row.f_노멀,
-                rare     = row.f_레어,
-                elite    = row.f_엘리트,
-                epic     = row.f_에픽,
-                legend   = row.f_신화,
+                minLevel  = row.f_레벨,
+                common    = row.f_일반,
+                rare      = row.f_고급,
+                epic      = row.f_에픽,
+                legendary = row.f_전설,
+                mythic    = row.f_신화,
             });
         });
         list.Sort((a, b) => a.minLevel.CompareTo(b.minLevel));
@@ -196,7 +196,7 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
     {
         var normals = new List<WeaponData>();
         foreach (var w in allWeapons)
-            if (w != null && w.grade == WeaponGrade.Normal && w.chapter <= currentChapter
+            if (w != null && w.grade == WeaponGrade.Common && w.chapter == currentChapter
                 && w.weaponType == WeaponType.Melee)
                 normals.Add(w);
 
@@ -234,7 +234,7 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
         upgradePanel.Refresh(currentDraw, rerollPrice, buyExpPrice,
                              PlayerInventory.Shared?.Inventory.Count ?? 0,
                              PlayerInventory.MaxInventory, wave,
-                             p.normal, p.rare, p.elite, p.epic, p.legend, adCardData,
+                             p.common, p.rare, p.epic, p.legendary, p.mythic, adCardData,
                              isCardSold, isAdCardSold);
         upgradePanel.gameObject.SetActive(true);
     }
@@ -412,7 +412,7 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
         upgradePanel.Refresh(currentDraw, rerollPrice, buyExpPrice,
                              PlayerInventory.Shared?.Inventory.Count ?? 0,
                              PlayerInventory.MaxInventory, wave,
-                             p.normal, p.rare, p.elite, p.epic, p.legend, adCardData,
+                             p.common, p.rare, p.epic, p.legendary, p.mythic, adCardData,
                              isCardSold, isAdCardSold);
     }
 
@@ -424,7 +424,7 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
     {
         var pool = new List<WeaponData>();
         foreach (var w in allWeapons)
-            if (w != null && w.chapter <= currentChapter)
+            if (w != null && w.chapter == currentChapter)
             { pool.Add(w); pool.Add(w); }
 
         WeaponGrade grade  = RollGrade(profile);
@@ -515,7 +515,7 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
     {
         var pool = new List<WeaponData>();
         foreach (var w in allWeapons)
-            if (w != null && w.chapter <= currentChapter)
+            if (w != null && w.chapter == currentChapter)
             { pool.Add(w); pool.Add(w); }   // 같은 무기 최대 2장
 
         int         playerLevel = PlayerStats.Shared?.Level ?? 1;
@@ -543,18 +543,17 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
     private static WeaponGrade RollGrade(DrawProfile p)
     {
         // 총합 기준으로 정규화해서 롤 — DB 합계가 100이 아니어도 안전
-        float total = p.normal + p.rare + p.elite + p.epic + p.legend;
-        if (total <= 0f) return WeaponGrade.Normal;
+        float total = p.common + p.rare + p.epic + p.legendary + p.mythic;
+        if (total <= 0f) return WeaponGrade.Common;
 
         float roll = Random.Range(0f, total);
         float acc  = 0f;
-        acc += p.normal; if (roll < acc) return WeaponGrade.Normal;
-        acc += p.rare;   if (roll < acc) return WeaponGrade.Rare;
-        acc += p.elite;  if (roll < acc) return WeaponGrade.Elite;
-        acc += p.epic;   if (roll < acc) return WeaponGrade.Epic;
-        if (p.legend > 0f)               return WeaponGrade.Legend;
-        // legend=0이면 Epic으로 폴백
-        return WeaponGrade.Epic;
+        acc += p.common;    if (roll < acc) return WeaponGrade.Common;
+        acc += p.rare;      if (roll < acc) return WeaponGrade.Rare;
+        acc += p.epic;      if (roll < acc) return WeaponGrade.Epic;
+        acc += p.legendary; if (roll < acc) return WeaponGrade.Legendary;
+        if (p.mythic > 0f)                  return WeaponGrade.Mythic;
+        return WeaponGrade.Legendary;
     }
 
     private WeaponData PickByGrade(List<WeaponData> pool, WeaponGrade grade)
@@ -562,7 +561,16 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
         var candidates = pool.FindAll(w => w.grade == grade);
         if (candidates.Count > 0)
             return candidates[Random.Range(0, candidates.Count)];
-        // 해당 희귀도 무기 없으면 아무 무기나 반환
-        return pool.Count > 0 ? pool[Random.Range(0, pool.Count)] : null;
+
+        // 해당 등급 무기 없으면 한 단계씩 낮춰서 탐색
+        int gradeInt = (int)grade - 1;
+        while (gradeInt >= 0)
+        {
+            candidates = pool.FindAll(w => w.grade == (WeaponGrade)gradeInt);
+            if (candidates.Count > 0)
+                return candidates[Random.Range(0, candidates.Count)];
+            gradeInt--;
+        }
+        return null;
     }
 }

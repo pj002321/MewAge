@@ -11,8 +11,8 @@ GameObject:
   - component: {fileID: 2729239689777574900}
   - component: {fileID: 1730632055688686968}
   - component: {fileID: 5824938326527874614}
-  - component: {fileID: 2362836234529854177}
-  m_Layer: 0
+  - component: {fileID: 4436910961165905048}
+  m_Layer: 7
   m_Name: c2_s2_1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -115,7 +115,7 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
---- !u!114 &2362836234529854177
+--- !u!114 &4436910961165905048
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -124,19 +124,26 @@ MonoBehaviour:
   m_GameObject: {fileID: 2217421304044356619}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 05b90058a78bdf242ada91d00c9db68b, type: 3}
+  m_Script: {fileID: 11500000, guid: bfce9f499de271b4c8ab1d03e8957395, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::EnemyController
-  moveSpeed: 2
-  maxHP: 30
-  contactDamage: 10
-  goldDrop: 5
-  expDrop: 10
-  scoreValue: 10
-  damageCooldown: 1
-  contactMaxDist: 0.8
-  knockbackImmune: 0
-  bleedDuration: 5
-  bleedInterval: 1
-  separationRadius: 1.2
-  separationStrength: 8
+  m_EditorClassIdentifier: Assembly-CSharp::BossController
+  damageCooldown: 0.5
+  enrageThreshold: 0.5
+  enrageSpeedMult: 1.5
+  enrageDamageMult: 1.5
+  flashColor: {r: 1, g: 0.2, b: 0.2, a: 1}
+  flashDuration: 0.12
+  onDeathFX:
+    vfxPrefab: {fileID: 0}
+    spawnOffset: {x: 0, y: 0}
+    sfxClip: {fileID: 0}
+    volume: 1
+  chaseStopDistance: 1.8
+  chaseDuration: 2.5
+  idleDuration: 0.6
+  skills: []
+  entryDrop: 1
+  dropSpeed: 22
+  squashDuration: 0.08
+  stretchDuration: 0.1
+  settleDuration: 0.12

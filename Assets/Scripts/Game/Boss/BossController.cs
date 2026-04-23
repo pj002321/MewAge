@@ -23,12 +23,6 @@ public class BossController : MonoBehaviour
     [SerializeField] private float enrageSpeedMult  = 1.5f;
     [SerializeField] private float enrageDamageMult = 1.5f;
 
-    // ── 아웃라인 ──────────────────────────────────────────────────
-    [Header("아웃라인")]
-    [SerializeField] private string outlineColorProperty = "_OutlineColorBase";
-    [SerializeField] private Color  normalOutlineColor   = Color.white;
-    [SerializeField] private Color  enrageOutlineColor   = Color.red;
-
     // ── HitFlash ──────────────────────────────────────────────────
     [Header("피격 플래시")]
     [SerializeField] private Color flashColor    = new(1f, 0.2f, 0.2f, 1f);
@@ -36,7 +30,6 @@ public class BossController : MonoBehaviour
 
     // ── FX ────────────────────────────────────────────────────────
     [Header("이펙트")]
-    [SerializeField] private EnemyEffectEntry onHitFX   = new();
     [SerializeField] private EnemyEffectEntry onDeathFX = new();
 
     // ── 드롭 (DB에서 로드) ────────────────────────────────────────
@@ -129,7 +122,6 @@ public class BossController : MonoBehaviour
     private void Start()
     {
         PlayerTransform = PlayerController.Instance?.transform;
-        SetOutlineColor(normalOutlineColor);
         GameManager.Shared?.StartBossWave();
         BossHUDPanel.Shared?.Show(this);
 
@@ -337,7 +329,6 @@ public class BossController : MonoBehaviour
         FXManager.Shared?.SpawnDamageText(textPos, damage, isCritical);
         FXManager.Shared?.SpawnHitEffect(transform.position);
 
-        PlayFX(onHitFX);
         HitFlash();
 
         if (currentHP <= 0f)
@@ -422,7 +413,6 @@ public class BossController : MonoBehaviour
     private void TriggerEnrage()
     {
         IsEnraged = true;
-        SetOutlineColor(enrageOutlineColor);
         OnEnraged?.Invoke();
     }
 
@@ -455,16 +445,6 @@ public class BossController : MonoBehaviour
         currentHP     = data.hp;
         contactDamage = data.contactDamage;
         moveSpeed     = data.moveSpeed;
-    }
-
-    // ── 아웃라인 ─────────────────────────────────────────────────
-
-    private void SetOutlineColor(Color color)
-    {
-        if (srs == null) return;
-        foreach (var sr in srs)
-            if (sr != null && sr.material != null)
-                sr.material.SetColor(outlineColorProperty, color);
     }
 
     private void OnDestroy()

@@ -2,7 +2,7 @@ using Mewage.DB;
 using UnityEngine;
 
 /// <summary>희귀도 — 상점 뽑기 확률 결정. DB_무기.f_등급에서 읽습니다.</summary>
-public enum WeaponGrade { Normal, Rare, Elite, Epic, Legend }
+public enum WeaponGrade { Common, Rare, Epic, Legendary, Mythic }
 
 /// <summary>
 /// 무기 한 종류의 런타임 데이터.
@@ -176,15 +176,21 @@ public class WeaponData : ScriptableObject
     private static WeaponGrade ParseGrade(string s)
     {
         if (System.Enum.TryParse<WeaponGrade>(s, true, out var g)) return g;
-        return s switch
+        var result = s switch
         {
-            "노멀"   => WeaponGrade.Normal,
-            "레어"   => WeaponGrade.Rare,
-            "엘리트" => WeaponGrade.Elite,
-            "에픽"   => WeaponGrade.Epic,
-            "신화"   => WeaponGrade.Legend,
-            _        => WeaponGrade.Normal,
+            "일반" or "노멀" or "Normal"  => WeaponGrade.Common,
+            "고급" or "레어" or "Rare"    => WeaponGrade.Rare,
+            "희귀" or "에픽" or "엘리트" or "Elite" or "Epic" => WeaponGrade.Epic,
+            "전설" or "Legend"            => WeaponGrade.Legendary,
+            "신화" or "Mythic"            => WeaponGrade.Mythic,
+            _                             => (WeaponGrade)(-1),
         };
+        if ((int)result < 0)
+        {
+            Debug.LogWarning($"[WeaponData] ParseGrade: 알 수 없는 등급 값 '{s}' → Common으로 대체. BansheeGz DB의 f_등급 필드를 확인하세요.");
+            return WeaponGrade.Common;
+        }
+        return result;
     }
 
     private static WeaponType ParseWeaponType(string s)
@@ -197,6 +203,8 @@ public class WeaponData : ScriptableObject
             "마법"   => WeaponType.Magic,
             "부메랑" => WeaponType.Boomerang,
             "돌리기" => WeaponType.Spin,
+            "슬래시" => WeaponType.Slash,
+            "베기"   => WeaponType.Slash,
             _        => WeaponType.Melee,
         };
     }
