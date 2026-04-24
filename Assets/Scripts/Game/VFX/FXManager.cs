@@ -14,6 +14,7 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
     [SerializeField] private GameObject debrisPrefab;
     [SerializeField] private GameObject goldOrbDebrisPrefab;
     [SerializeField] private GameObject expOrbDebrisPrefab;
+    [SerializeField] private GameObject landingVfxPrefab;
 
     [Header("Orb 파편 연출 on/off")]
     [SerializeField] private bool showGoldOrbDebris = true;
@@ -23,6 +24,9 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
 
     // 파편 오브젝트 추적 (웨이브 종료 시 일괄 제거용)
     private readonly List<GameObject> activeDebris = new();
+
+    // 활성 히트 이펙트 추적 (FindObjectsByType 제거용)
+    private readonly List<GameObject> _activeHitEffects = new();
 
     // ── 오브젝트 풀 ──────────────────────────────────────────────
     private readonly Dictionary<GameObject, Queue<GameObject>> _debrisPool     = new();
@@ -122,6 +126,7 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
     {
         if (go == null) return;
         go.SetActive(false);
+        _activeHitEffects.Remove(go);
         _hitEffectPool.Enqueue(go);
     }
 
@@ -139,7 +144,14 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
         {
             go = Instantiate(hitEffectPrefab, worldPos, Quaternion.identity);
         }
+        _activeHitEffects.Add(go);
         go.GetComponent<HitEffect>()?.Play(go, this);
+    }
+
+    public void SpawnLandingVFX(Vector3 worldPos)
+    {
+        if (landingVfxPrefab == null) return;
+        Instantiate(landingVfxPrefab, worldPos, Quaternion.identity);
     }
 
     // ── 사망 파편 ────────────────────────────────────────────────
@@ -186,17 +198,25 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
             if (go != null) Destroy(go);
         activeDebris.Clear();
 
-        // 활성 히트 이펙트 풀 반환
-        foreach (var he in Object.FindObjectsByType<HitEffect>(FindObjectsSortMode.None))
-            ReturnHitEffect(he.gameObject);
+        // 활성 히트 이펙트 풀 반환 (static 추적 리스트 사용)
+        for (int i = _activeHitEffects.Count - 1; i >= 0; i--)
+        {
+            var go = _activeHitEffects[i];
+            if (go == null) continue;
+            go.SetActive(false);
+            _hitEffectPool.Enqueue(go);
+        }
+        _activeHitEffects.Clear();
 
-        // 씬에 남아있는 투사체 일괄 제거
-        foreach (var p in Object.FindObjectsByType<Projectile>(FindObjectsSortMode.None))
-            Destroy(p.gameObject);
-        foreach (var p in Object.FindObjectsByType<EnemyProjectile>(FindObjectsSortMode.None))
-            Destroy(p.gameObject);
-        foreach (var p in Object.FindObjectsByType<BoomerangProjectile>(FindObjectsSortMode.None))
-            Destroy(p.gameObject);
+        // 씬에 남아있는 투사체 일괄 제거 (static All 리스트 사용)
+        for (int i = Projectile.All.Count - 1; i >= 0; i--)
+            if (Projectile.All[i] != null) Destroy(Projectile.All[i].gameObject);
+
+        for (int i = EnemyProjectile.All.Count - 1; i >= 0; i--)
+            if (EnemyProjectile.All[i] != null) Destroy(EnemyProjectile.All[i].gameObject);
+
+        for (int i = BoomerangProjectile.All.Count - 1; i >= 0; i--)
+            if (BoomerangProjectile.All[i] != null) Destroy(BoomerangProjectile.All[i].gameObject);
 
         this.DLog("[FXManager] ClearAllFX — 파편·투사체 정리 완료");
     }

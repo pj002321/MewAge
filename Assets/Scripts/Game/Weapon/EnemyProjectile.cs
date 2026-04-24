@@ -9,6 +9,11 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody2D))]
 public class EnemyProjectile : MonoBehaviour
 {
+    public static readonly System.Collections.Generic.List<EnemyProjectile> All = new();
+
+    private void OnEnable()  => All.Add(this);
+    private void OnDisable() => All.Remove(this);
+
     private float       damage;
     private float       speed;
     private Vector2     direction;

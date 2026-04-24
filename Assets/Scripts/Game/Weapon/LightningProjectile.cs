@@ -13,27 +13,29 @@ public class LightningProjectile : MonoBehaviour
 
     [Header("Settings")]
     [SerializeField] private float duration = 0.5f;
-    [SerializeField] private float hpPercentage = 0.1f; // 10%
     [SerializeField] private int minHits = 10;
     [SerializeField] private int maxHits = 20;
 
     private EnemyController _targetEnemy;
     private BossController _targetBoss;
     private float _totalDamage;
+    private bool _isCrit;
     private int _hitCount;
     private float _damagePerHit;
 
-    public void Init(EnemyController target, float customPercentage = 0.1f)
+    public void Init(EnemyController target, float totalDamage, bool isCrit = false)
     {
         _targetEnemy = target;
-        hpPercentage = customPercentage;
+        _totalDamage = totalDamage;
+        _isCrit = isCrit;
         ChangeState(LightningState.Setup);
     }
 
-    public void Init(BossController target, float customPercentage = 0.1f)
+    public void Init(BossController target, float totalDamage, bool isCrit = false)
     {
         _targetBoss = target;
-        hpPercentage = customPercentage;
+        _totalDamage = totalDamage;
+        _isCrit = isCrit;
         ChangeState(LightningState.Setup);
     }
 
@@ -66,11 +68,6 @@ public class LightningProjectile : MonoBehaviour
 
     private void HandleSetup()
     {
-        float targetMaxHP = 0f;
-        if (_targetEnemy != null) targetMaxHP = _targetEnemy.MaxHP;
-        else if (_targetBoss != null) targetMaxHP = _targetBoss.MaxHPValue;
-
-        _totalDamage = targetMaxHP * hpPercentage;
         _hitCount = Random.Range(minHits, maxHits + 1);
         _damagePerHit = _totalDamage / _hitCount;
 
@@ -102,12 +99,12 @@ public class LightningProjectile : MonoBehaviour
         if (_targetEnemy != null)
         {
             // Simple damage without critical/knockback for the rapid zap
-            _targetEnemy.TakeDamage(_damagePerHit);
+            _targetEnemy.TakeDamage(_damagePerHit, _isCrit);
             FXManager.Shared?.SpawnHitEffect(_targetEnemy.transform.position);
         }
         else if (_targetBoss != null)
         {
-            _targetBoss.TakeDamage(_damagePerHit);
+            _targetBoss.TakeDamage(_damagePerHit, _isCrit);
             FXManager.Shared?.SpawnHitEffect(_targetBoss.transform.position);
         }
     }

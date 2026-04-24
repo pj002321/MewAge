@@ -33,6 +33,11 @@ public class Projectile : MonoBehaviour
     // Physics NonAlloc 버퍼
     private static readonly Collider2D[] _hitBuffer = new Collider2D[32];
 
+    public static readonly System.Collections.Generic.List<Projectile> All = new();
+
+    private void OnEnable()  => All.Add(this);
+    private void OnDisable() => All.Remove(this);
+
     public void Init(float primaryDmg, Vector2 direction, float speed = 6f, float lifetime = 5f, bool isPrimaryCritical = false, float lifeSteal = 0f, float dotDamage = 0f, float areaHitRadius = 0f, float areaHitDamageRatio = 0f, float criticalRate = 0f, float criticalMultiplier = 2f, float baseDamage = 0f, float knockbackPower = 16f)
     {
         this.primaryDmg         = primaryDmg;

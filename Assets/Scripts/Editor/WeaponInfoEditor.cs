@@ -6,6 +6,7 @@ using UnityEngine;
 public class WeaponInfoEditor : Editor
 {
     SerializedProperty p_weaponType;
+    SerializedProperty p_magicElement;
     SerializedProperty p_projectilePrefab;
     SerializedProperty p_projectileSpeed;
     SerializedProperty p_useParabolicShot;
@@ -18,6 +19,11 @@ public class WeaponInfoEditor : Editor
     SerializedProperty p_orbitSpeed;
     SerializedProperty p_spinHitRadius;
     SerializedProperty p_spinHitCooldown;
+
+    // 번개 뮤즐 전용
+    SerializedProperty p_muzzlePoint;
+    SerializedProperty p_muzzleVfxPrefab;
+    SerializedProperty p_zapBoltVfxPrefab;
 
     // 슬래시 전용
     SerializedProperty p_slashRadius;
@@ -34,6 +40,7 @@ public class WeaponInfoEditor : Editor
     private void OnEnable()
     {
         p_weaponType          = serializedObject.FindProperty("weaponType");
+        p_magicElement        = serializedObject.FindProperty("magicElement");
         p_projectilePrefab    = serializedObject.FindProperty("projectilePrefab");
         p_projectileSpeed     = serializedObject.FindProperty("projectileSpeed");
         p_useParabolicShot       = serializedObject.FindProperty("useParabolicShot");
@@ -50,6 +57,9 @@ public class WeaponInfoEditor : Editor
         p_slashHitRadius      = serializedObject.FindProperty("slashHitRadius");
         p_slashVfxPrefab      = serializedObject.FindProperty("slashVfxPrefab");
         p_slashVfxDuration    = serializedObject.FindProperty("slashVfxDuration");
+        p_muzzlePoint         = serializedObject.FindProperty("muzzlePoint");
+        p_muzzleVfxPrefab     = serializedObject.FindProperty("muzzleVfxPrefab");
+        p_zapBoltVfxPrefab    = serializedObject.FindProperty("zapBoltVfxPrefab");
     }
 
     private void OnDisable() => StopPreview();
@@ -66,13 +76,28 @@ public class WeaponInfoEditor : Editor
 
         EditorGUILayout.PropertyField(p_weaponType, new GUIContent("무기 타입"));
 
+        WeaponType type = (WeaponType)p_weaponType.enumValueIndex;
+        if (type == WeaponType.Magic)
+        {
+            EditorGUILayout.PropertyField(p_magicElement, new GUIContent("마법 속성"));
+
+            var element = (MagicElement)p_magicElement.enumValueIndex;
+            if (element == MagicElement.Lightning)
+            {
+                EditorGUILayout.Space(4);
+                EditorGUILayout.LabelField("번개 Muzzle", EditorStyles.boldLabel);
+                EditorGUILayout.PropertyField(p_muzzlePoint,      new GUIContent("뮤즐 Transform"));
+                EditorGUILayout.PropertyField(p_muzzleVfxPrefab,  new GUIContent("뮤즐 VFX 프리팹"));
+                EditorGUILayout.PropertyField(p_zapBoltVfxPrefab, new GUIContent("번개 볼트 VFX 프리팹"));
+                EditorGUILayout.HelpBox("뮤즐 Transform: 무기 프리팹 자식 오브젝트로 배치 후 연결\n뮤즐 VFX: 발사 시 1초 후 자동 파괴됩니다.\n번개 볼트 VFX: 뮤즐→타겟 방향으로 스폰됩니다.", MessageType.None);
+            }
+        }
+
         EditorGUILayout.HelpBox(
             "공격력 · 탐지범위 · 공격속도 · 주변범위 · 튕김횟수\n넉백 · 치명타 · 출혈 · 흡혈  →  DB_무기에서 자동 로드",
             MessageType.Info);
 
         EditorGUILayout.Space(6);
-
-        WeaponType type = (WeaponType)p_weaponType.enumValueIndex;
 
         // ── 투사체 공통 ──────────────────────────────────────────────
         if (type != WeaponType.Melee && type != WeaponType.Spin && type != WeaponType.Slash)
@@ -81,7 +106,7 @@ public class WeaponInfoEditor : Editor
             EditorGUILayout.PropertyField(p_projectileSpeed,  new GUIContent("투사체 속도"));
         }
 
-        if (type != WeaponType.Lightning && type != WeaponType.Slash)
+        if (type != WeaponType.Slash)
             EditorGUILayout.PropertyField(p_areaHitDamageRatio, new GUIContent("주변 데미지 배율 (0~1)"));
 
         // ── RANGED 포물선 옵션 ────────────────────────────────────────

@@ -11,10 +11,11 @@ public enum WeaponGrade { Common, Rare, Epic, Legendary, Mythic }
 public class WeaponData : ScriptableObject
 {
     [Header("기본 정보")]
-    public string     weaponName;
-    public Sprite     icon;
-    public WeaponType weaponType;
-    public GameObject prefab;
+    public string       weaponName;
+    public Sprite       icon;
+    public WeaponType   weaponType;
+    public MagicElement magicElement; // Magic 타입일 때만 유효
+    public GameObject   prefab;
 
     [Header("희귀도 (상점 뽑기 확률)")]
     public WeaponGrade grade;
@@ -85,6 +86,7 @@ public class WeaponData : ScriptableObject
         next.weaponName       = weaponName;
         next.icon             = icon;
         next.weaponType       = weaponType;
+        next.magicElement     = magicElement;
         next.prefab           = prefab;
         next.grade            = grade;
         next.price            = price;
@@ -137,6 +139,8 @@ public class WeaponData : ScriptableObject
 
         // DB에서 직접 기본 스탯 로드
         // f_공격속도는 float (초 단위 쿨타임) — 0.8 → 0.8초에 한 번 공격
+        data.magicElement = ParseMagicElement(row.f_타입);
+
         data.baseAttackDamage   = row.f_기본공격력;
         data.baseAttackCooldown = row.f_공격속도 > 0 ? row.f_공격속도 : 1f;
         data.baseAttackRange    = row.f_탐지범위;
@@ -178,11 +182,11 @@ public class WeaponData : ScriptableObject
         if (System.Enum.TryParse<WeaponGrade>(s, true, out var g)) return g;
         var result = s switch
         {
-            "일반" or "노멀" or "Normal"  => WeaponGrade.Common,
-            "고급" or "레어" or "Rare"    => WeaponGrade.Rare,
-            "희귀" or "에픽" or "엘리트" or "Elite" or "Epic" => WeaponGrade.Epic,
-            "전설" or "Legend"            => WeaponGrade.Legendary,
-            "신화" or "Mythic"            => WeaponGrade.Mythic,
+            "일반" => WeaponGrade.Common,
+            "레어" => WeaponGrade.Rare,
+            "희귀" => WeaponGrade.Epic,
+            "전설" => WeaponGrade.Legendary,
+            "신화" => WeaponGrade.Mythic,
             _                             => (WeaponGrade)(-1),
         };
         if ((int)result < 0)
@@ -198,16 +202,23 @@ public class WeaponData : ScriptableObject
         if (System.Enum.TryParse<WeaponType>(s, true, out var t)) return t;
         return s switch
         {
-            "근거리" => WeaponType.Melee,
-            "원거리" => WeaponType.Ranged,
-            "마법"   => WeaponType.Magic,
-            "부메랑" => WeaponType.Boomerang,
-            "돌리기" => WeaponType.Spin,
-            "슬래시" => WeaponType.Slash,
-            "베기"   => WeaponType.Slash,
-            _        => WeaponType.Melee,
+            "근거리"                          => WeaponType.Melee,
+            "원거리"                          => WeaponType.Ranged,
+            "마법" or "번개" or "불" or "얼음" => WeaponType.Magic,
+            "부메랑"                          => WeaponType.Boomerang,
+            "돌리기"                          => WeaponType.Spin,
+            "슬래시" or "베기"                => WeaponType.Slash,
+            _                                 => WeaponType.Melee,
         };
     }
+
+    private static MagicElement ParseMagicElement(string s) => s switch
+    {
+        "번개" or "Lightning" => MagicElement.Lightning,
+        "불"   or "Fire"      => MagicElement.Fire,
+        "얼음" or "Ice"       => MagicElement.Ice,
+        _                     => MagicElement.None,
+    };
 
     private static WeaponSynergyTag ParseSynergyTag(string s)
     {

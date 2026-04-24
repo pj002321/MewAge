@@ -27,6 +27,8 @@ public class WeaponPresetEditor : EditorWindow
         public SerializedObject   so;
         public SerializedProperty speedProp;
         public SerializedProperty ratioProp;
+        public SerializedProperty magicElementProp;
+        public SerializedProperty zapBoltVfxPrefabProp;
         public SerializedProperty pullbackProp;
         public SerializedProperty strikeProp;
         public SerializedProperty returnProp;
@@ -41,7 +43,7 @@ public class WeaponPresetEditor : EditorWindow
         "",      "무기ID", "이름",   "타입",  "등급",
         "공격력", "탐지",  "쿨타임", "범위",
         "튕김",   "넉백",  "크리%",  "출혈",  "흡혈",
-        "★투사체속도", "★배율",
+        "★투사체속도", "★배율", "★마법속성", "★번개VFX",
         "★백스윙", "★돌진", "★복귀", "★오버슛거리", "★오버슛속도",
     };
     private static readonly float[] ColW =
@@ -49,7 +51,7 @@ public class WeaponPresetEditor : EditorWindow
         36,  90,  72,  50,  50,
         50,  44,  52,  52,
         38,  44,  48,  42,  42,
-        72,  52,
+        72,  52,  70,  70,
         52,  48,  48,  68,  68,
     };
 
@@ -60,7 +62,6 @@ public class WeaponPresetEditor : EditorWindow
         new Color(0.8f, 0.7f,  1f,    0.22f), // Magic
         new Color(1f,   0.9f,  0.55f, 0.22f), // Boomerang
         new Color(0.7f, 1f,    0.8f,  0.22f), // Spin
-        new Color(1f,   1f,    0.45f, 0.22f), // Lightning
         new Color(1f,   0.6f,  0.8f,  0.22f), // Slash
     };
 
@@ -114,16 +115,18 @@ public class WeaponPresetEditor : EditorWindow
 
         _prefabs[id] = new PrefabEntry
         {
-            go                = go,
-            so                = so,
-            speedProp         = so.FindProperty("projectileSpeed"),
-            ratioProp         = so.FindProperty("areaHitDamageRatio"),
-            pullbackProp      = so.FindProperty("pullbackDist"),
-            strikeProp        = so.FindProperty("strikeSpeed"),
-            returnProp        = so.FindProperty("returnSpeed"),
-            overshootDistProp = so.FindProperty("overshootDistance"),
-            overshootSpeedProp= so.FindProperty("overshootSpeed"),
-            icon              = sprite,
+            go                   = go,
+            so                   = so,
+            speedProp            = so.FindProperty("projectileSpeed"),
+            ratioProp            = so.FindProperty("areaHitDamageRatio"),
+            magicElementProp     = so.FindProperty("magicElement"),
+            zapBoltVfxPrefabProp = so.FindProperty("zapBoltVfxPrefab"),
+            pullbackProp         = so.FindProperty("pullbackDist"),
+            strikeProp           = so.FindProperty("strikeSpeed"),
+            returnProp           = so.FindProperty("returnSpeed"),
+            overshootDistProp    = so.FindProperty("overshootDistance"),
+            overshootSpeedProp   = so.FindProperty("overshootSpeed"),
+            icon                 = sprite,
         };
     }
 
@@ -262,15 +265,27 @@ public class WeaponPresetEditor : EditorWindow
             entry.so.Update();
             EditFloat(entry, entry.speedProp,         14, star);
             EditFloat(entry, entry.ratioProp,         15, star);
-            EditFloat(entry, entry.pullbackProp,      16, star);
-            EditFloat(entry, entry.strikeProp,        17, star);
-            EditFloat(entry, entry.returnProp,        18, star);
-            EditFloat(entry, entry.overshootDistProp, 19, star);
-            EditFloat(entry, entry.overshootSpeedProp,20, star);
+            // ★마법속성 — Magic 타입만 드롭다운, 나머지는 "-"
+            bool isMagic = TypeIndex(row.f_타입) == 2;
+            if (isMagic && entry.magicElementProp != null)
+                EditMagicElement(entry, 16, star);
+            else
+                L("-", 16, gray);
+            // ★번개VFX — 마법속성이 Lightning일 때만 편집 가능
+            bool isLightning = isMagic && entry.magicElementProp != null && (MagicElement)entry.magicElementProp.enumValueIndex == MagicElement.Lightning;
+            if (isLightning && entry.zapBoltVfxPrefabProp != null)
+                EditObject(entry, entry.zapBoltVfxPrefabProp, 17, star);
+            else
+                L("-", 17, gray);
+            EditFloat(entry, entry.pullbackProp,      18, star);
+            EditFloat(entry, entry.strikeProp,        19, star);
+            EditFloat(entry, entry.returnProp,        20, star);
+            EditFloat(entry, entry.overshootDistProp, 21, star);
+            EditFloat(entry, entry.overshootSpeedProp,22, star);
         }
         else
         {
-            for (int ci = 14; ci <= 20; ci++) L("-", ci, gray);
+            for (int ci = 14; ci <= 22; ci++) L("-", ci, gray);
         }
 
         EditorGUILayout.EndHorizontal();
@@ -296,38 +311,63 @@ public class WeaponPresetEditor : EditorWindow
         }
     }
 
+    private void EditMagicElement(PrefabEntry entry, int col, GUIStyle s)
+    {
+        var prop = entry.magicElementProp;
+        EditorGUI.BeginChangeCheck();
+        var cur = (MagicElement)prop.enumValueIndex;
+        var next = (MagicElement)EditorGUILayout.EnumPopup(cur, s, GUILayout.Width(ColW[col]));
+        if (EditorGUI.EndChangeCheck())
+        {
+            prop.enumValueIndex = (int)next;
+            entry.so.ApplyModifiedPropertiesWithoutUndo();
+            _dirty = true;
+        }
+    }
+
+    private void EditObject(PrefabEntry entry, SerializedProperty prop, int col, GUIStyle s)
+    {
+        if (prop == null) { L("-", col, s); return; }
+        EditorGUI.BeginChangeCheck();
+        var obj = EditorGUILayout.ObjectField(prop.objectReferenceValue, typeof(GameObject), false, GUILayout.Width(ColW[col]));
+        if (EditorGUI.EndChangeCheck())
+        {
+            prop.objectReferenceValue = obj;
+            entry.so.ApplyModifiedPropertiesWithoutUndo();
+            _dirty = true;
+        }
+    }
+
     private static int TypeIndex(string t) => t switch
     {
-        "Melee"     or "근거리" => 0,
-        "Ranged"    or "원거리" => 1,
-        "Magic"     or "마법"   => 2,
-        "Boomerang" or "부메랑" => 3,
-        "Spin"      or "돌리기" => 4,
-        "Lightning" or "번개"   => 5,
-        "Slash"     or "슬래시" or "베기" => 6,
-        _                       => -1,
+        "Melee"     or "근거리"            => 0,
+        "Ranged"    or "원거리"            => 1,
+        "Magic"     or "마법"              => 2,
+        "Boomerang" or "부메랑"            => 3,
+        "Spin"      or "돌리기"            => 4,
+        "Slash"     or "슬래시" or "베기"  => 5,
+        _                                  => -1,
     };
 
     private static string TypeStr(string t) => t switch
     {
-        "Melee"     or "근거리" => "근접",
-        "Ranged"    or "원거리" => "원거리",
-        "Magic"     or "마법"   => "마법",
-        "Boomerang" or "부메랑" => "부메랑",
-        "Spin"      or "돌리기" => "스핀",
-        "Lightning" or "번개"   => "번개",
-        "Slash"     or "슬래시" or "베기" => "슬래시",
-        _                       => t ?? "?",
+        "Melee"     or "근거리"            => "근접",
+        "Ranged"    or "원거리"            => "원거리",
+        "Magic"     or "마법"              => "마법",
+        "Boomerang" or "부메랑"            => "부메랑",
+        "Spin"      or "돌리기"            => "스핀",
+        "Slash"     or "슬래시" or "베기"  => "슬래시",
+        _                                  => t ?? "?",
     };
 
     private static string GradeStr(string g) => g switch
     {
-        "Normal"  or "노멀"   => "노멀",
-        "Rare"    or "레어"   => "레어",
-        "Elite"   or "엘리트" => "엘리트",
-        "Epic"    or "에픽"   => "에픽",
-        "Legend"  or "신화"   => "신화",
-        _                     => g ?? "?",
+        "Common"    or "일반" => "일반",
+        "Rare"      or "레어" => "레어",
+        "Epic"      or "희귀" => "희귀",
+        "Legendary" or "전설" => "전설",
+        "Mythic"    or "신화" => "신화",
+        _                    => g ?? "?",
     };
 }
 #endif

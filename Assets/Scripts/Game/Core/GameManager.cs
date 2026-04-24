@@ -725,6 +725,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 
         // 착지 스쿼시 연출
         yield return StartCoroutine(LandingSquishRoutine(player.transform));
+        FXManager.Shared?.SpawnLandingVFX(player.transform.position);
 
         // 3,2,1 카운트다운
         yield return StartCoroutine(CountdownRoutine());
@@ -796,7 +797,10 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 
         // 착지 스쿼시 연출
         if (player != null)
+        {
             yield return StartCoroutine(LandingSquishRoutine(player.transform));
+            FXManager.Shared?.SpawnLandingVFX(player.transform.position);
+        }
 
         // 입력 해제 + 보스 웨이브 시작
         StructureInventory.BlockAll = false; // 기물 설치 허용

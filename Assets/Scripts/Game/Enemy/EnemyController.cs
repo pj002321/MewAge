@@ -56,9 +56,11 @@ public class EnemyController : MonoBehaviour
     private Transform      playerTransform;
     private Rigidbody2D    rb;
     private SpriteRenderer[] srs;
+    private Collider2D[]   _cachedColliders;
     private HitFlash       hitFlash;
     private Animator       animator;
     private EnemyBehaviourBase behaviour;
+    private bool           _lastFlipX;  // FlipToward 중복 갱신 방지
 
     private bool      isStunned;
     private Vector2   _pendingMove;
@@ -93,12 +95,13 @@ public class EnemyController : MonoBehaviour
         currentHP    = maxHP;
         baseSpeed    = moveSpeed;
         isMoving     = false;
-        rb           = GetComponent<Rigidbody2D>();
-        srs          = GetComponentsInChildren<SpriteRenderer>(true);
-        hitFlash     = GetComponentInChildren<HitFlash>(true);
-        animator     = GetComponentInChildren<Animator>();
-        behaviour    = GetComponent<EnemyBehaviourBase>();
-        _eliteMarker = GetComponent<EliteMarker>();
+        rb                = GetComponent<Rigidbody2D>();
+        srs               = GetComponentsInChildren<SpriteRenderer>(true);
+        _cachedColliders  = GetComponentsInChildren<Collider2D>(true);
+        hitFlash          = GetComponentInChildren<HitFlash>(true);
+        animator          = GetComponentInChildren<Animator>();
+        behaviour         = GetComponent<EnemyBehaviourBase>();
+        _eliteMarker      = GetComponent<EliteMarker>();
 
         // 디버그: SpriteRenderer 확인
         if (srs == null || srs.Length == 0)
@@ -249,7 +252,8 @@ public class EnemyController : MonoBehaviour
                 if (_originalMats[i] != null) srs[i].material = _originalMats[i];
 
         foreach (var sr in srs)  sr.enabled = true;
-        foreach (var col in GetComponentsInChildren<Collider2D>(true)) col.enabled = true;
+        if (_cachedColliders != null)
+            foreach (var col in _cachedColliders) col.enabled = true;
 
         playerTransform = PlayerController.Instance?.transform;
         All.Add(this);
@@ -268,7 +272,8 @@ public class EnemyController : MonoBehaviour
                 if (_originalMats[i] != null) srs[i].material = _originalMats[i];
 
         foreach (var sr in srs)  sr.enabled = false;
-        foreach (var col in GetComponentsInChildren<Collider2D>(true)) col.enabled = false;
+        if (_cachedColliders != null)
+            foreach (var col in _cachedColliders) col.enabled = false;
 
         AllRemoveSwapBack(this);
     }
@@ -299,8 +304,14 @@ public class EnemyController : MonoBehaviour
     public void FlipToward(Vector2 dir)
     {
         if (srs == null || srs.Length == 0) return;
-        if (dir.x > 0.01f)       { foreach(var sr in srs) sr.flipX = false; }
-        else if (dir.x < -0.01f) { foreach(var sr in srs) sr.flipX = true; }
+        bool newFlipX;
+        if      (dir.x > 0.01f)  newFlipX = false;
+        else if (dir.x < -0.01f) newFlipX = true;
+        else return;
+
+        if (newFlipX == _lastFlipX) return;
+        _lastFlipX = newFlipX;
+        foreach (var sr in srs) sr.flipX = newFlipX;
     }
 
     // ── 충돌 접촉 피해 ──────────────────────────────────────────

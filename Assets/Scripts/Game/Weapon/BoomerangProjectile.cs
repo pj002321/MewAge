@@ -26,6 +26,11 @@ public class BoomerangProjectile : MonoBehaviour
     private float   criticalMultiplier;
     private float   baseDamage;
 
+    public static readonly System.Collections.Generic.List<BoomerangProjectile> All = new();
+
+    private void OnEnable()  => All.Add(this);
+    private void OnDisable() => All.Remove(this);
+
     private enum State { Flying, Returning }
     private State state = State.Flying;
 

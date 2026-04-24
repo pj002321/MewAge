@@ -91,7 +91,36 @@ public class WeaponPoint : MonoBehaviour
     [SerializeField] private GameObject slashVfxPrefab;             // 중간 지점에서 Instantiate, 프리팹이 스스로 파괴
     [SerializeField] private float      slashVfxDuration = 1f;     // VFX 지속 시간 (초)
 
-    private enum State { Idle, Pullback, Anticipation, Striking, Overshooting, Returning, Slashing }
+    [Header("차징 설정 (WeaponType.Charge)")]
+    [SerializeField] private float chargeDuration = 1f;
+
+    [Header("마법 속성 (WeaponType.Magic 전용)")]
+    [SerializeField] private MagicElement magicElement = MagicElement.None;
+
+    [Header("번개 Muzzle (Magic + Lightning)")]
+    [SerializeField] private Transform   muzzlePoint;
+    [SerializeField] private GameObject  zapBoltVfxPrefab;
+
+    [Header("번개 연타")]
+    [SerializeField] private int   lightningBurstCount    = 3;    // 연타 횟수
+    [SerializeField] private float lightningBurstInterval = 0.07f; // 연타 간격(초)
+    [SerializeField] private float zapLineHitRadius       = 0.25f; // 라인 피해 판정 반경
+
+    private Transform MuzzleTransform => muzzlePoint != null ? muzzlePoint : transform;
+    private GameObject _activeBolt;
+
+    private static readonly RaycastHit2D[]        _zapLineBuffer  = new RaycastHit2D[16];
+    private static readonly HashSet<EnemyController> _zapHitEnemies = new();
+
+    [Header("애니메이션")]
+    [SerializeField] private Animator       weaponAnimator;
+    [SerializeField] private AnimationClip  attackClip;       // tAttack 시 재생할 클립 (Melee/Ranged/Magic)
+    [SerializeField] private string         attackClipSlotName = "Attack"; // AnimatorOverrideController 슬롯 이름
+
+    private AnimatorOverrideController _animOverride;
+    private float _chargeTimer;
+
+    private enum State { Idle, Pullback, Anticipation, Striking, Overshooting, Returning, Slashing, Charging }
     private State state = State.Idle;
 
     private Vector3 originLocalPos;
@@ -125,6 +154,7 @@ public class WeaponPoint : MonoBehaviour
     // Spin 전용
     private float currentAngle;
     private readonly Dictionary<EnemyController, float> spinHitTimers = new Dictionary<EnemyController, float>();
+    private readonly List<EnemyController> _spinExpiredKeys = new List<EnemyController>();
 
     // 보스 타겟
     private BossController _targetBoss;
@@ -155,6 +185,15 @@ public class WeaponPoint : MonoBehaviour
         _originalScale = transform.localScale;
         cooldownTimer  = attackCooldown;
         InitTrail();
+        InitAnimator();
+    }
+
+    private void InitAnimator()
+    {
+        if (weaponAnimator == null || attackClip == null) return;
+        _animOverride = new AnimatorOverrideController(weaponAnimator.runtimeAnimatorController);
+        _animOverride[attackClipSlotName] = attackClip;
+        weaponAnimator.runtimeAnimatorController = _animOverride;
     }
 
     private void OnDrawGizmos()
@@ -295,6 +334,7 @@ public class WeaponPoint : MonoBehaviour
             case State.Overshooting: UpdateOvershooting(); break;
             case State.Returning:    UpdateReturning();    break;
             case State.Slashing:     UpdateSlash();        break;
+            case State.Charging:     UpdateCharging();     break;
         }
     }
 
@@ -311,14 +351,15 @@ public class WeaponPoint : MonoBehaviour
         // 무기 스프라이트를 공전 방향으로 자전
         transform.rotation = Quaternion.Euler(0f, 0f, currentAngle - 90f);
 
-        // 피타격 쿨타임 감소 (Keys 복사 후 수정)
+        // 피타격 쿨타임 감소 (재사용 리스트로 Dictionary 키 복사 제거)
         if (_bossSpinHitTimer > 0f) _bossSpinHitTimer -= Time.deltaTime;
-        var keys = new List<EnemyController>(spinHitTimers.Keys);
-        foreach (var k in keys)
+        foreach (var kvp in spinHitTimers)
         {
-            spinHitTimers[k] -= Time.deltaTime;
-            if (spinHitTimers[k] <= 0f) spinHitTimers.Remove(k);
+            spinHitTimers[kvp.Key] = kvp.Value - Time.deltaTime;
+            if (spinHitTimers[kvp.Key] <= 0f) _spinExpiredKeys.Add(kvp.Key);
         }
+        for (int i = 0; i < _spinExpiredKeys.Count; i++) spinHitTimers.Remove(_spinExpiredKeys[i]);
+        _spinExpiredKeys.Clear();
 
         // 타격 판정
         int hitCount = Physics2D.OverlapCircleNonAlloc(transform.position, spinHitRadius, _hitBuffer);
@@ -395,9 +436,11 @@ public class WeaponPoint : MonoBehaviour
             ((Vector2)boss.transform.position - origin).sqrMagnitude <
             ((Vector2)nearest.transform.position - origin).sqrMagnitude);
 
+        bool isLightning = weaponType == WeaponType.Magic && magicElement == MagicElement.Lightning;
+
         if (preferBoss)
         {
-            if (weaponType == WeaponType.Lightning)
+            if (isLightning)
             {
                 _noAttackDiagTimer = 0f;
                 ZapAtBoss(boss);
@@ -423,7 +466,17 @@ public class WeaponPoint : MonoBehaviour
                 return;
             }
             if (weaponType == WeaponType.Slash) { BeginSlash(boss); return; }
-            // Melee
+            if (weaponType == WeaponType.Charge)
+            {
+                _noAttackDiagTimer = 0f;
+                _targetBoss = boss;
+                _chargeTimer = chargeDuration;
+                cooldownTimer = attackCooldown;
+                weaponAnimator?.SetTrigger("tCharge");
+                state = State.Charging;
+                return;
+            }
+            // Melee / Magic
             _noAttackDiagTimer = 0f;
             _targetBoss = boss;
             Vector2 toBoss = ((Vector2)boss.transform.position - origin).normalized;
@@ -432,7 +485,7 @@ public class WeaponPoint : MonoBehaviour
             return;
         }
 
-        if (weaponType == WeaponType.Lightning && nearest != null)
+        if (isLightning && nearest != null)
         {
             _noAttackDiagTimer = 0f;
             ZapAt(nearest);
@@ -474,6 +527,17 @@ public class WeaponPoint : MonoBehaviour
         }
 
         if (weaponType == WeaponType.Slash && nearest != null) { BeginSlash(nearest); return; }
+
+        if (weaponType == WeaponType.Charge && nearest != null)
+        {
+            _noAttackDiagTimer = 0f;
+            targetEnemy = nearest;
+            _chargeTimer = chargeDuration;
+            cooldownTimer = attackCooldown;
+            weaponAnimator?.SetTrigger("tCharge");
+            state = State.Charging;
+            return;
+        }
 
         if (nearest != null)
         {
@@ -520,6 +584,7 @@ public class WeaponPoint : MonoBehaviour
                 areaHitDamageRatio: areaHitDamageRatio, criticalRate: criticalRate,
                 criticalMultiplier: criticalMultiplier, baseDamage: attackDamage, knockbackPower: knockbackPower);
         }
+        TriggerAttackAnimation();
         TriggerScalePulse();
     }
 
@@ -550,33 +615,85 @@ public class WeaponPoint : MonoBehaviour
                 areaHitDamageRatio: areaHitDamageRatio, criticalRate: criticalRate,
                 criticalMultiplier: criticalMultiplier, baseDamage: attackDamage, knockbackPower: knockbackPower);
         }
+        TriggerAttackAnimation();
         TriggerScalePulse();
     }
 
-    private void ZapAtBoss(BossController boss)
+    private void ZapAtBoss(BossController boss)   => StartCoroutine(BurstZapRoutine(MuzzleTransform, null, boss));
+    private void ZapAt(EnemyController target)    => StartCoroutine(BurstZapRoutine(MuzzleTransform, target, null));
+
+    private System.Collections.IEnumerator BurstZapRoutine(Transform muzzle, EnemyController enemy, BossController boss)
     {
-        if (projectilePrefab == null) return;
-        var go = Instantiate(projectilePrefab, transform.position, Quaternion.identity);
-        var zap = go.GetComponent<LightningProjectile>();
-        if (zap != null) zap.Init(boss);
+        if (muzzlePoint != null) muzzlePoint.gameObject.SetActive(true);
 
-        var vis = go.GetComponent<LightningVisual>();
-        if (vis != null) vis.Setup(this.transform, boss.transform);
+        for (int i = 0; i < lightningBurstCount; i++)
+        {
+            Transform targetTf = enemy != null ? enemy.transform : boss?.transform;
+            if (targetTf == null) break;
+            bool alive = enemy != null ? enemy.gameObject.activeInHierarchy : boss.gameObject.activeInHierarchy;
+            if (!alive) break;
 
-        TriggerScalePulse();
+            SpawnZapBolt(muzzle, targetTf);
+            ZapLineDamage(muzzle.position, targetTf.position, enemy, boss);
+            SoundManager.Shared?.Play(SoundKey.Structure_Thunder);
+            if (i == 0) TriggerScalePulse();
+
+            if (i < lightningBurstCount - 1)
+                yield return new WaitForSeconds(lightningBurstInterval);
+        }
+
+        if (muzzlePoint != null) muzzlePoint.gameObject.SetActive(false);
     }
 
-    private void ZapAt(EnemyController target)
+    private void ZapLineDamage(Vector3 from, Vector3 to, EnemyController primary, BossController primaryBoss)
     {
-        if (projectilePrefab == null) return;
-        var go = Instantiate(projectilePrefab, transform.position, Quaternion.identity);
-        var zap = go.GetComponent<LightningProjectile>();
-        if (zap != null) zap.Init(target);
+        Vector2 dir = ((Vector2)(to - from)).normalized;
+        float dist  = Vector2.Distance(from, to);
+        int hitCount = Physics2D.CircleCastNonAlloc(from, zapLineHitRadius, dir, _zapLineBuffer, dist);
 
+        _zapHitEnemies.Clear();
+        bool bossHit = false;
+
+        for (int i = 0; i < hitCount; i++)
+        {
+            var col = _zapLineBuffer[i].collider;
+            if (col == null) continue;
+
+            if (!bossHit)
+            {
+                var b = col.GetComponentInParent<BossController>();
+                if (b != null)
+                {
+                    bossHit = true;
+                    var (dmg, crit) = RollCrit(b == primaryBoss ? attackDamage : attackDamage * areaHitDamageRatio);
+                    b.TakeDamage(dmg, crit, dir, knockbackPower);
+                    ApplyLifeSteal(dmg);
+                    continue;
+                }
+            }
+
+            var e = col.GetComponentInParent<EnemyController>();
+            if (e == null || _zapHitEnemies.Contains(e)) continue;
+            _zapHitEnemies.Add(e);
+
+            var (dmg2, crit2) = RollCrit(e == primary ? attackDamage : attackDamage * areaHitDamageRatio);
+            e.TakeDamage(dmg2, crit2, dir, knockbackPower);
+            ApplyLifeSteal(dmg2);
+            if (dotDamage > 0f) e.ApplyBleed(dotDamage);
+        }
+    }
+
+    private void SpawnZapBolt(Transform from, Transform to)
+    {
+        if (zapBoltVfxPrefab == null) return;
+        if (_activeBolt != null) Destroy(_activeBolt);
+        var go  = Instantiate(zapBoltVfxPrefab, from.position, Quaternion.identity);
         var vis = go.GetComponent<LightningVisual>();
-        if (vis != null) vis.Setup(this.transform, target.transform);
-
-        TriggerScalePulse();
+        if (vis != null)
+            vis.Setup(from, to);
+        else
+            Destroy(go, 1f);
+        _activeBolt = go;
     }
 
 
@@ -690,6 +807,30 @@ public class WeaponPoint : MonoBehaviour
             BeginReturn();
     }
 
+    private void UpdateCharging()
+    {
+        bool bossGone  = _targetBoss == null || !_targetBoss.gameObject.activeInHierarchy;
+        bool enemyGone = targetEnemy == null  || !targetEnemy.gameObject.activeInHierarchy;
+        if (bossGone && enemyGone)
+        {
+            targetEnemy = null;
+            _targetBoss = null;
+            BeginReturn(false);
+            return;
+        }
+
+        _chargeTimer -= Time.deltaTime;
+        if (_chargeTimer <= 0f)
+        {
+            Vector3 targetPos = _targetBoss != null
+                ? _targetBoss.transform.position
+                : targetEnemy.transform.position;
+            Vector2 toTarget = (targetPos - transform.parent.position).normalized;
+            pullbackLocalPos = -(Vector3)toTarget * pullbackDist;
+            state = State.Pullback;
+        }
+    }
+
 
 
     private void TriggerScalePulse()
@@ -770,8 +911,16 @@ public class WeaponPoint : MonoBehaviour
     private void BeginStrike()
     {
         SoundManager.Shared?.Play(SoundKey.Weapon_Shoot);
+        if (weaponType == WeaponType.Melee || weaponType == WeaponType.Magic)
+            TriggerAttackAnimation();
         state = State.Striking;
         if (_trail != null && weaponType != WeaponType.Slash) { _trail.Clear(); _trail.emitting = true; }
+    }
+
+    private void TriggerAttackAnimation()
+    {
+        if (weaponAnimator == null) return;
+        weaponAnimator.SetTrigger("tAttack");
     }
 
     // ─────────────────────────────────────────
@@ -876,6 +1025,7 @@ public class WeaponPoint : MonoBehaviour
             state = State.Overshooting;
         }
     }
+
 
     // ─────────────────────────────────────────
     // Overshooting: 타격 후 조금 더 나아갔다가 복귀
@@ -1191,6 +1341,9 @@ public class WeaponPoint : MonoBehaviour
     public void Init(WeaponData data)
     {
         weaponType = data.weaponType;
+        // DB에 명시된 속성이 있을 때만 덮어씀 — 없으면 프리팹 Inspector 값 유지
+        if (data.magicElement != MagicElement.None)
+            magicElement = data.magicElement;
 
         // DB_무기에서 로드된 스탯 주입
         criticalRate       = data.criticalRate;
@@ -1227,6 +1380,7 @@ public class WeaponPoint : MonoBehaviour
             attackDamage += weaponType == WeaponType.Ranged    ? player.RangedAttackBonus : 0f;
             attackDamage += weaponType == WeaponType.Boomerang ? player.RangedAttackBonus : 0f;
             attackDamage += weaponType == WeaponType.Spin      ? player.MeleeAttackBonus  : 0f;
+            attackDamage += weaponType == WeaponType.Charge    ? player.MeleeAttackBonus  : 0f;
 
             if (player.SynergyAtkPct > 0f)
                 attackDamage *= (1f + player.SynergyAtkPct / 100f);

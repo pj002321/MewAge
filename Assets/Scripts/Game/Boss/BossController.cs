@@ -88,6 +88,9 @@ public class BossController : MonoBehaviour
     private bool             isDead;
     private bool             _dropping;
     private bool             _skillExecuting;
+    private bool             _lastFlipX;  // FlipToward 중복 갱신 방지
+
+    private readonly List<BossSkillBase> _readySkills = new();
 
     public bool IsDropping    => _dropping;
     /// <summary>투사체 발사 페이즈 중임을 표시 — ChaseRoutine이 이동을 중단합니다.</summary>
@@ -162,6 +165,7 @@ public class BossController : MonoBehaviour
         yield return StartCoroutine(ScaleYTo(originalScale, 0.55f, squashDuration));
         yield return StartCoroutine(ScaleYTo(originalScale, 1.3f,  stretchDuration));
         yield return StartCoroutine(ScaleYTo(originalScale, 1f,    settleDuration));
+        FXManager.Shared?.SpawnLandingVFX(transform.position);
 
         _dropping = false;
         StartCoroutine(PatternRoutine());
@@ -280,8 +284,14 @@ public class BossController : MonoBehaviour
     public void FlipToward(Vector2 dir)
     {
         if (srs == null) return;
-        if (dir.x > 0.01f)       foreach (var sr in srs) sr.flipX = false;
-        else if (dir.x < -0.01f) foreach (var sr in srs) sr.flipX = true;
+        bool newFlipX;
+        if      (dir.x > 0.01f)  newFlipX = false;
+        else if (dir.x < -0.01f) newFlipX = true;
+        else return;
+
+        if (newFlipX == _lastFlipX) return;
+        _lastFlipX = newFlipX;
+        foreach (var sr in srs) sr.flipX = newFlipX;
     }
 
     // ── 피격 / 사망 ─────────────────────────────────────────────────
@@ -426,12 +436,12 @@ public class BossController : MonoBehaviour
             ? Vector2.Distance(transform.position, PlayerTransform.position)
             : 0f;
 
-        var ready = new List<BossSkillBase>();
+        _readySkills.Clear();
         foreach (var s in skills)
-            if (s.executeInPattern && s.CanUse(dist)) ready.Add(s);
+            if (s.executeInPattern && s.CanUse(dist)) _readySkills.Add(s);
 
-        if (ready.Count == 0) return null;
-        return ready[Random.Range(0, ready.Count)];
+        if (_readySkills.Count == 0) return null;
+        return _readySkills[Random.Range(0, _readySkills.Count)];
     }
 
     // ── DB 데이터 적용 ────────────────────────────────────────────

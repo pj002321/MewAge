@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using Mewage.DB;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -26,6 +28,12 @@ public class DebugPanel : MonoBehaviour
     [SerializeField] private Button[] jumpButtons;
     [SerializeField] private int[]    jumpWaves = { 9, 10, 19, 20, 29, 30, 40 };
 
+    [Header("무기 디버그 장착")]
+    [SerializeField] private TMP_Dropdown weaponDropdown;
+    [SerializeField] private Button       equipWeaponButton;
+
+    private readonly List<DB_무기> _debugWeaponList = new();
+
     private void Awake()
     {
         // 에디터/디버그 빌드 한정 활성화 로직 제거. (항상 PlayerPrefs 기준으로만 판단)
@@ -45,6 +53,14 @@ public class DebugPanel : MonoBehaviour
             int wave = i < jumpWaves.Length ? jumpWaves[i] : (i + 1) * 10;
             jumpButtons[i]?.onClick.AddListener(() => OnJumpToWave(wave));
         }
+
+        equipWeaponButton?.onClick.AddListener(OnEquipSelectedWeapon);
+        weaponDropdown?.onValueChanged.AddListener(_ => OnEquipSelectedWeapon());
+    }
+
+    private void Start()
+    {
+        PopulateWeaponDropdown();
     }
 
     private void Update()
@@ -106,6 +122,69 @@ public class DebugPanel : MonoBehaviour
                 }
             }
         }
+    }
+
+    private void PopulateWeaponDropdown()
+    {
+        if (weaponDropdown == null) return;
+        _debugWeaponList.Clear();
+        weaponDropdown.ClearOptions();
+
+        // SelectedChapterID 형식: "C2_S1" → 첫 번째 '_' 앞 부분에서 숫자 추출
+        string chapterId = PlayerPrefs.GetString("SelectedChapterID", "C1_S1");
+        int chapter = 1;
+        string[] parts = chapterId.Split('_');
+        if (parts.Length > 0 && parts[0].Length >= 2)
+            int.TryParse(parts[0].Substring(1), out chapter);
+
+        DB_무기.ForEachEntity(row =>
+        {
+            if (row.f_챕터 == chapter) _debugWeaponList.Add(row);
+        });
+
+        _debugWeaponList.Sort((a, b) => GradeOrder(a.f_등급).CompareTo(GradeOrder(b.f_등급)));
+
+        var options = new List<TMP_Dropdown.OptionData>();
+        foreach (var row in _debugWeaponList)
+            options.Add(new TMP_Dropdown.OptionData($"[{GradeLabel(row.f_등급)}] {row.f_이름}"));
+
+        weaponDropdown.AddOptions(options);
+    }
+
+    private static int GradeOrder(string g) => g switch
+    {
+        "Common"    or "일반" => 0,
+        "Rare"      or "레어" => 1,
+        "Epic"      or "희귀" => 2,
+        "Legendary" or "전설" => 3,
+        "Mythic"    or "신화" => 4,
+        _                    => 0,
+    };
+
+    private static string GradeLabel(string g) => g switch
+    {
+        "Common"    or "일반" => "일반",
+        "Rare"      or "레어" => "레어",
+        "Epic"      or "희귀" => "희귀",
+        "Legendary" or "전설" => "전설",
+        "Mythic"    or "신화" => "신화",
+        _                    => g ?? "?",
+    };
+
+    public void OnEquipSelectedWeapon()
+    {
+        if (weaponDropdown == null || _debugWeaponList.Count == 0) return;
+        int idx = weaponDropdown.value;
+        if (idx < 0 || idx >= _debugWeaponList.Count) return;
+
+        var inv = PlayerInventory.Shared;
+        if (inv == null) { Debug.LogWarning("[Debug] PlayerInventory 없음"); return; }
+
+        var data = WeaponData.FromDB(_debugWeaponList[idx]);
+        inv.ForceAddToInventory(data);
+        inv.EquipFromInventory(inv.Inventory.Count - 1);
+
+        Debug.Log($"[Debug] 무기 장착: {data.weaponName} ({data.weaponType})");
     }
 
     private void RefreshLabel()

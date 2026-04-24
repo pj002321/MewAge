@@ -16,6 +16,7 @@ public class HealerBehaviour : EnemyBehaviourBase
     [SerializeField] private float safeDistance = 5f;
 
     private float healTimer;
+    private static readonly Collider2D[] _healBuffer = new Collider2D[32];
 
     public override void Init(EnemyController controller)
     {
@@ -49,10 +50,10 @@ public class HealerBehaviour : EnemyBehaviourBase
 
     private void HealNearbyAllies()
     {
-        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, healRange);
-        foreach (var col in hits)
+        int count = Physics2D.OverlapCircleNonAlloc(transform.position, healRange, _healBuffer);
+        for (int i = 0; i < count; i++)
         {
-            if (!col.TryGetComponent<EnemyController>(out var ally)) continue;
+            if (!_healBuffer[i].TryGetComponent<EnemyController>(out var ally)) continue;
             if (ally == Owner) continue;
 
             // TODO: EnemyController에 HealHP(float) 추가 후 활성화

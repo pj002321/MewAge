@@ -17,17 +17,19 @@ public class ChargeBehaviour : EnemyBehaviourBase
     [SerializeField] private float   preChargeDuration = 0.25f;
     [SerializeField] private float   ghostInterval    = 0.06f;
 
-    private float   chargeTimer;
-    private bool    isCharging;
-    private float   chargeRemaining;
-    private Vector2 chargeDir;
-    private float   ghostTimer;
-    private Vector3 originalScale;  // 원본 스케일 저장
+    private float          chargeTimer;
+    private bool           isCharging;
+    private float          chargeRemaining;
+    private Vector2        chargeDir;
+    private float          ghostTimer;
+    private Vector3        originalScale;
+    private SpriteRenderer _cachedSr;  // GetComponent 캐시
 
     public override void Init(EnemyController controller)
     {
         base.Init(controller);
         chargeTimer = chargeInterval;
+        _cachedSr   = Owner.GetComponent<SpriteRenderer>();
     }
 
     public override void OnAttackUpdate()
@@ -47,7 +49,7 @@ public class ChargeBehaviour : EnemyBehaviourBase
             Owner.EnemyAnimator.SetTrigger("tCharge");
 
             // 돌진 준비: 스프라이트 빨간색, 스케일 축소
-            var sr = Owner.GetComponent<SpriteRenderer>();
+            var sr = _cachedSr;
             if (sr != null)
             {
                 sr.color = chargeColor;
@@ -63,7 +65,7 @@ public class ChargeBehaviour : EnemyBehaviourBase
             // 준비 시간后就 원상 복구 (1회만)
             if (chargeRemaining <= chargeDuration - preChargeDuration)
             {
-                var sr = Owner.GetComponent<SpriteRenderer>();
+                var sr = _cachedSr;
                 if (sr != null)
                 {
                     sr.color = Color.white;
@@ -88,14 +90,14 @@ public class ChargeBehaviour : EnemyBehaviourBase
             {
                 ClampToBounds();
                 isCharging = false;
-                var sr = Owner.GetComponent<SpriteRenderer>();
+                var sr = _cachedSr;
                 if (sr != null) { sr.color = Color.white; Owner.transform.localScale = originalScale; }
             }
 
             if (chargeRemaining <= 0f)
             {
                 isCharging = false;
-                var sr = Owner.GetComponent<SpriteRenderer>();
+                var sr = _cachedSr;
                 if (sr != null) { sr.color = Color.white; Owner.transform.localScale = originalScale; }
             }
         }
@@ -133,7 +135,7 @@ public class ChargeBehaviour : EnemyBehaviourBase
     // ── 고스트 트레일 ───────────────────────────────────────────
     private void SpawnGhostTrail()
     {
-        var sr = Owner.GetComponent<SpriteRenderer>();
+        var sr = _cachedSr;
         if (sr == null) return;
 
         var sprite = sr.sprite;

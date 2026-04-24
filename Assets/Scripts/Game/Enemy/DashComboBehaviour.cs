@@ -26,8 +26,16 @@ public class DashComboBehaviour : EnemyBehaviourBase
     [SerializeField] private GameObject attackVfxPrefab;
 
     private bool isRunning;
-    // 애니메이션 이벤트용 — 마지막 공격 데미지
     private float _pendingDamage;
+    private WaitForSeconds _waitIdle;
+    private WaitForSeconds _waitHitInterval;
+
+    public override void Init(EnemyController controller)
+    {
+        base.Init(controller);
+        _waitIdle        = new WaitForSeconds(idleDuration);
+        _waitHitInterval = new WaitForSeconds(hitInterval);
+    }
 
     public override void OnMoveFixedUpdate() { }   // 코루틴에서 직접 이동
 
@@ -44,7 +52,7 @@ public class DashComboBehaviour : EnemyBehaviourBase
         while (true)
         {
             // 1) 대기
-            yield return new WaitForSeconds(idleDuration);
+            yield return _waitIdle;
 
             if (Owner.PlayerTransform == null) continue;
 
@@ -74,7 +82,7 @@ public class DashComboBehaviour : EnemyBehaviourBase
                 if (attackVfxPrefab != null)
                     Instantiate(attackVfxPrefab, Owner.transform.position, Quaternion.identity);
 
-                yield return new WaitForSeconds(hitInterval);
+                yield return _waitHitInterval;
             }
         }
     }

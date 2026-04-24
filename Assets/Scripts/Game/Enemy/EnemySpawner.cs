@@ -48,6 +48,9 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
     private readonly System.Collections.Generic.Dictionary<string, UnitData> _unitCache = new();
     private readonly System.Collections.Generic.Dictionary<string, BossData> _bossCache = new();
 
+    // PickUnitData 재사용 버퍼 — 매 스폰마다 List 할당 방지
+    private readonly (string unitId, float ratio)[] _unitSlots = new (string, float)[4];
+
     // ── 초기화 ──────────────────────────────────────────────────────
     protected override void Awake()
     {
@@ -131,29 +134,27 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
         var row = GetActiveRow(currentChapter, currentStage, currentWave);
         if (row == null) return null;
 
-        var slots = new List<(string unitId, float ratio)>
-        {
-            (row.f_유닛1, row.f_비율1),
-            (row.f_유닛2, row.f_비율2),
-            (row.f_유닛3, row.f_비율3),
-            (row.f_유닛4, row.f_비율4),
-        };
+        _unitSlots[0] = (row.f_유닛1, row.f_비율1);
+        _unitSlots[1] = (row.f_유닛2, row.f_비율2);
+        _unitSlots[2] = (row.f_유닛3, row.f_비율3);
+        _unitSlots[3] = (row.f_유닛4, row.f_비율4);
 
         float total = 0f;
-        foreach (var (unitId, ratio) in slots)
-            if (!string.IsNullOrEmpty(unitId) && ratio > 0f) total += ratio;
+        for (int i = 0; i < 4; i++)
+            if (!string.IsNullOrEmpty(_unitSlots[i].unitId) && _unitSlots[i].ratio > 0f)
+                total += _unitSlots[i].ratio;
 
         if (total <= 0f) return null;
 
         float roll = Random.value * total;
         float acc  = 0f;
-        foreach (var (unitId, ratio) in slots)
+        for (int i = 0; i < 4; i++)
         {
-            if (string.IsNullOrEmpty(unitId) || ratio <= 0f) continue;
-            acc += ratio;
+            if (string.IsNullOrEmpty(_unitSlots[i].unitId) || _unitSlots[i].ratio <= 0f) continue;
+            acc += _unitSlots[i].ratio;
             if (roll <= acc)
             {
-                _unitCache.TryGetValue(unitId, out var d);
+                _unitCache.TryGetValue(_unitSlots[i].unitId, out var d);
                 return d;
             }
         }
@@ -163,7 +164,7 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
     // ── 보스 스폰 ───────────────────────────────────────────────────
     private void SpawnBoss()
     {
-        if (Object.FindAnyObjectByType<BossController>() != null)
+        if (BossController.Current != null)
         {
             Debug.Log("[EnemySpawner] 보스가 이미 존재합니다. 중복 스폰 방지.");
             return;
@@ -315,31 +316,24 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
 
     public void ClearAllEnemies()
     {
+        // SpawnMarker 먼저 정리 — FadeAndSpawn 코루틴이 적 정리 후에 추가 스폰하지 못하도록
+        for (int i = SpawnMarker.All.Count - 1; i >= 0; i--)
+        {
+            var marker = SpawnMarker.All[i];
+            if (marker == null) continue;
+            marker.StopAllCoroutines();
+            Destroy(marker.gameObject);
+        }
+
         // EnemyPool은 SetActive를 사용하지 않으므로 FindObjectsByType으로 접근하면
         // 풀 대기 중인 적(-9999 위치)까지 Destroy되어 풀 큐가 깨짐 — All만 사용할 것
         for (int i = EnemyController.All.Count - 1; i >= 0; i--)
         {
             var enemy = EnemyController.All[i];
             if (enemy == null) continue;
-            enemy.StopAllCoroutines();   // DieRoutine 즉시 중단
-            enemy.gameObject.SetActive(false); // 시각적으로 즉시 숨김
+            enemy.StopAllCoroutines();
+            enemy.gameObject.SetActive(false);
             Destroy(enemy.gameObject);
-        }
-        // All.Clear()는 호출하지 않음 — OnDestroy에서 AllRemoveSwapBack이 자연스럽게 처리
-
-        foreach (var marker in Object.FindObjectsByType<SpawnMarker>(FindObjectsSortMode.None))
-            Destroy(marker.gameObject);
-
-        // 안전망: SpawnMarker가 이미 Instantiate했지만 Start()가 안 돌아 All에 미등록된 적 처리
-        // SetActive(false)인 풀 대기 적은 건드리지 않음
-        foreach (var enemy in Object.FindObjectsByType<EnemyController>(FindObjectsSortMode.None))
-        {
-            if (enemy.gameObject.activeSelf)
-            {
-                enemy.StopAllCoroutines();
-                enemy.gameObject.SetActive(false);
-                Destroy(enemy.gameObject);
-            }
         }
     }
 

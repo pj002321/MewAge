@@ -15,11 +15,18 @@ public class SpawnMarker : MonoBehaviour
     private static int _activeCount;
     public  static int ActiveCount => _activeCount;
 
-    private void OnDestroy() => _activeCount--;
+    public static readonly System.Collections.Generic.List<SpawnMarker> All = new();
+
+    private void OnDestroy()
+    {
+        _activeCount--;
+        All.Remove(this);
+    }
 
     public void Init(GameObject prefab, int globalWave = 0, int designGlobalWave = 0, UnitData unitData = null, int wavesPerStage = 30)
     {
         _activeCount++;
+        All.Add(this);
         spawnPrefab       = prefab;
         _globalWave       = globalWave;
         _designGlobalWave = designGlobalWave;

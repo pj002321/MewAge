@@ -27,11 +27,15 @@ public class SlamBehaviour : EnemyBehaviourBase
     private float cooldownTimer;
     private bool  isSlamming;
     private Animator anim;
+    private WaitForSeconds _waitHangTime;
+    private WaitForSeconds _waitAfterLand;
 
     public override void Init(EnemyController controller)
     {
         base.Init(controller);
-        anim = controller.GetComponentInChildren<Animator>();
+        anim           = controller.GetComponentInChildren<Animator>();
+        _waitHangTime  = new WaitForSeconds(slamHangTime);
+        _waitAfterLand = new WaitForSeconds(0.3f);
     }
 
     public override void ApplyWaveScaling(float multiplier)
@@ -92,7 +96,7 @@ public class SlamBehaviour : EnemyBehaviourBase
         if (slamMarkerPrefab != null)
             marker = Instantiate(slamMarkerPrefab, slamTarget, Quaternion.identity);
 
-        yield return new WaitForSeconds(slamHangTime);
+        yield return _waitHangTime;
 
         // 3) 내려꽂기
         while (Vector3.Distance(Owner.transform.position, slamTarget) > 0.05f)
@@ -115,7 +119,7 @@ public class SlamBehaviour : EnemyBehaviourBase
             Vector2.Distance(Owner.transform.position, player.transform.position) <= slamRadius)
             player.TakeDamage(slamDamage);
 
-        yield return new WaitForSeconds(0.3f);
+        yield return _waitAfterLand;
         isSlamming = false;
     }
 
