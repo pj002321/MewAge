@@ -1,68 +1,95 @@
 using UnityEngine;
 
 /// <summary>
-/// 돌진형 — 플레이어를 향해 접근하다가 주기적으로 고속 돌진합니다.
+/// 돌진형 — 2초 이동 → 2초 정지(Idle) → 돌진 → 반복
 /// 접촉 피해는 EnemyController의 OnTrigger에서 처리됩니다.
 /// </summary>
 public class ChargeBehaviour : EnemyBehaviourBase
 {
     [Header("돌진 설정")]
-    [SerializeField] private float chargeInterval        = 3f;
     [SerializeField] private float chargeDuration        = 0.6f;
     [SerializeField] private float chargeSpeedMultiplier = 3.5f;
 
-    [Header("돌진 준비 시각")]
-    [SerializeField] private Color   chargeColor      = Color.red;
-    [SerializeField] private float   chargeScale      = 0.85f;
-    [SerializeField] private float   preChargeDuration = 0.25f;
-    [SerializeField] private float   ghostInterval    = 0.06f;
+    [Header("이동/정지 사이클")]
+    [SerializeField] private float moveDuration = 2f;
+    [SerializeField] private float idleDuration = 2f;
 
-    private float          chargeTimer;
-    private bool           isCharging;
-    private float          chargeRemaining;
-    private Vector2        chargeDir;
-    private float          ghostTimer;
-    private Vector3        originalScale;
-    private SpriteRenderer _cachedSr;  // GetComponent 캐시
+    [Header("돌진 준비 시각")]
+    [SerializeField] private Color chargeColor       = Color.red;
+    [SerializeField] private float chargeScale       = 0.85f;
+    [SerializeField] private float preChargeDuration = 0.25f;
+    [SerializeField] private float ghostInterval     = 0.06f;
+
+    private enum Phase { Moving, Idle, Charging }
+    private Phase   _phase;
+    private float   _phaseTimer;
+
+    private float           chargeRemaining;
+    private Vector2         chargeDir;
+    private float           ghostTimer;
+    private Vector3         originalScale;
+    private SpriteRenderer  _cachedSr;
 
     public override void Init(EnemyController controller)
     {
         base.Init(controller);
-        chargeTimer = chargeInterval;
+        _phase      = Phase.Moving;
+        _phaseTimer = moveDuration;
         _cachedSr   = Owner.GetComponent<SpriteRenderer>();
     }
 
     public override void OnAttackUpdate()
     {
-        if (isCharging || Owner.PlayerTransform == null) return;
+        if (Owner.PlayerTransform == null || _phase == Phase.Charging) return;
 
-        chargeTimer -= Time.deltaTime;
-        if (chargeTimer <= 0f)
+        _phaseTimer -= Time.deltaTime;
+
+        if (_phase == Phase.Moving && _phaseTimer <= 0f)
         {
-            chargeTimer     = chargeInterval;
-            chargeDir       = ((Vector2)Owner.PlayerTransform.position - Owner.Rb.position).normalized;
-            chargeRemaining = chargeDuration;
-            isCharging      = true;
-            ghostTimer     = 0f;
-            originalScale = Owner.transform.localScale;  // 원본 스케일 저장
-
-            Owner.EnemyAnimator.SetTrigger("tCharge");
-
-            // 돌진 준비: 스프라이트 빨간색, 스케일 축소
-            var sr = _cachedSr;
-            if (sr != null)
-            {
-                sr.color = chargeColor;
-                Owner.transform.localScale = originalScale * chargeScale;
-            }
+            _phase      = Phase.Idle;
+            _phaseTimer = idleDuration;
         }
+        else if (_phase == Phase.Idle && _phaseTimer <= 0f)
+        {
+            BeginCharge();
+        }
+    }
+
+    private void BeginCharge()
+    {
+        _phase          = Phase.Charging;
+        chargeDir       = ((Vector2)Owner.PlayerTransform.position - Owner.Rb.position).normalized;
+        chargeRemaining = chargeDuration;
+        ghostTimer      = 0f;
+        originalScale   = Owner.transform.localScale;
+
+        Owner.EnemyAnimator.SetTrigger("tCharge");
+
+        var sr = _cachedSr;
+        if (sr != null)
+        {
+            sr.color = chargeColor;
+            Owner.transform.localScale = originalScale * chargeScale;
+        }
+    }
+
+    private void EndCharge()
+    {
+        var sr = _cachedSr;
+        if (sr != null)
+        {
+            sr.color = Color.white;
+            Owner.transform.localScale = originalScale;
+        }
+        _phase      = Phase.Moving;
+        _phaseTimer = moveDuration;
     }
 
     public override void OnMoveFixedUpdate()
     {
-        if (isCharging)
+        if (_phase == Phase.Charging)
         {
-            // 준비 시간后就 원상 복구 (1회만)
+            // 준비 시간 후 원상 복구 (1회만)
             if (chargeRemaining <= chargeDuration - preChargeDuration)
             {
                 var sr = _cachedSr;
@@ -89,22 +116,18 @@ public class ChargeBehaviour : EnemyBehaviourBase
             if (IsOutOfBounds(Owner.transform.position))
             {
                 ClampToBounds();
-                isCharging = false;
-                var sr = _cachedSr;
-                if (sr != null) { sr.color = Color.white; Owner.transform.localScale = originalScale; }
+                EndCharge();
             }
-
-            if (chargeRemaining <= 0f)
+            else if (chargeRemaining <= 0f)
             {
-                isCharging = false;
-                var sr = _cachedSr;
-                if (sr != null) { sr.color = Color.white; Owner.transform.localScale = originalScale; }
+                EndCharge();
             }
         }
-        else
+        else if (_phase == Phase.Moving)
         {
             Owner.MoveTowardPlayer(Owner.MoveSpeed);
         }
+        // Phase.Idle: 이동하지 않음
     }
 
     private bool IsOutOfBounds(Vector2 pos)
@@ -142,14 +165,14 @@ public class ChargeBehaviour : EnemyBehaviourBase
         if (sprite == null) return;
 
         var go = new GameObject("ChargeGhost", typeof(SpriteRenderer));
-        go.transform.position = Owner.transform.position;
+        go.transform.position   = Owner.transform.position;
         go.transform.localScale = Owner.transform.localScale;
 
         var ghostSr = go.GetComponent<SpriteRenderer>();
-        ghostSr.sprite = sprite;
-        ghostSr.color = new Color(1f, 1f, 1f, 0.35f);
+        ghostSr.sprite         = sprite;
+        ghostSr.color          = new Color(1f, 1f, 1f, 0.35f);
         ghostSr.sortingLayerID = sr.sortingLayerID;
-        ghostSr.sortingOrder = sr.sortingOrder - 1;
+        ghostSr.sortingOrder   = sr.sortingOrder - 1;
 
         Destroy(go, 0.12f);
     }

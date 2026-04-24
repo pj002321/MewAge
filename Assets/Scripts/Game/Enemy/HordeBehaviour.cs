@@ -65,6 +65,9 @@ public class HordeBehaviour : EnemyBehaviourBase
                 ec.enabled = true;
                 if (Owner.ActiveUnitData != null)
                     ec.ApplyUnitData(Owner.ActiveUnitData);
+                // SpawnScale = targetScale 로 저장 + BounceIn이 매 프레임 scale을 쓰므로
+                // Animator에 scale 키프레임이 있어도 덮어쓰기를 방지함
+                ec.PlaySpawnBounce();
             }
 
             if (clone.TryGetComponent<HordeBehaviour>(out var hb))

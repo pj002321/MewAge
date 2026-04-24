@@ -15,7 +15,6 @@ GameObject:
   - component: {fileID: 2531985962442067216}
   - component: {fileID: 943707339566565793}
   - component: {fileID: -88253163262595315}
-  - component: {fileID: 937456904316553902}
   m_Layer: 7
   m_Name: c2_m12
   m_TagString: Untagged
@@ -34,7 +33,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 4574888226846933012}
   m_Father: {fileID: 0}
@@ -88,12 +87,12 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 5
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -160414358269569970, guid: 073bc32d40f8c63499fc0acb13195b3a, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 073bc32d40f8c63499fc0acb13195b3a, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 2.03, y: 2.04}
+  m_Size: {x: 1.92, y: 2.2}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
@@ -206,8 +205,8 @@ CapsuleCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: -0.07, y: 0}
-  m_Size: {x: 1.06, y: 0.64}
+  m_Offset: {x: 0, y: -0.68}
+  m_Size: {x: 1.37, y: 0.73}
   m_Direction: 1
 --- !u!114 &-88253163262595315
 MonoBehaviour:
@@ -225,24 +224,6 @@ MonoBehaviour:
   clusterRadius: 0.6
   spawnEdge: 1
   destroyMargin: 2
---- !u!114 &937456904316553902
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5780791762247049258}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3640172dedd67864e9d6803100a29029, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SlimeBobAnimation
-  minScaleY: 0.9
-  maxScaleY: 1.1
-  squashStretchX: 0.5
-  frequency: 1.25
-  randomPhase: 1
-  spriteTarget: {fileID: 0}
 --- !u!1 &9095108348472895431
 GameObject:
   m_ObjectHideFlags: 0
@@ -269,7 +250,7 @@ Transform:
   m_GameObject: {fileID: 9095108348472895431}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.132, y: -0.342, z: 0}
+  m_LocalPosition: {x: -0.057, y: -1.063, z: 0}
   m_LocalScale: {x: 1.3563277, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

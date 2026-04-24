@@ -155,6 +155,7 @@ public class WeaponPoint : MonoBehaviour
     private float currentAngle;
     private readonly Dictionary<EnemyController, float> spinHitTimers = new Dictionary<EnemyController, float>();
     private readonly List<EnemyController> _spinExpiredKeys = new List<EnemyController>();
+    private bool _hasSpinCollider; // Collider2D가 있으면 OnTriggerStay2D 사용, 없으면 OverlapCircle 폴백
 
     // 보스 타겟
     private BossController _targetBoss;
@@ -186,6 +187,8 @@ public class WeaponPoint : MonoBehaviour
         cooldownTimer  = attackCooldown;
         InitTrail();
         InitAnimator();
+        if (weaponType == WeaponType.Spin)
+            _hasSpinCollider = GetComponent<Collider2D>() != null;
     }
 
     private void InitAnimator()
@@ -361,36 +364,48 @@ public class WeaponPoint : MonoBehaviour
         for (int i = 0; i < _spinExpiredKeys.Count; i++) spinHitTimers.Remove(_spinExpiredKeys[i]);
         _spinExpiredKeys.Clear();
 
-        // 타격 판정
+        // Collider2D가 없는 경우에만 OverlapCircle 폴백 사용
+        // Collider2D가 있으면 OnTriggerStay2D에서 처리
+        if (!_hasSpinCollider)
+            SpinOverlapHit();
+    }
+
+    private void SpinOverlapHit()
+    {
         int hitCount = Physics2D.OverlapCircleNonAlloc(transform.position, spinHitRadius, _hitBuffer);
         for (int i = 0; i < hitCount; i++)
+            SpinProcessHit(_hitBuffer[i]);
+    }
+
+    private void OnTriggerStay2D(Collider2D other)
+    {
+        if (weaponType != WeaponType.Spin) return;
+        SpinProcessHit(other);
+    }
+
+    private void SpinProcessHit(Collider2D col)
+    {
+        var boss = col.GetComponentInParent<BossController>();
+        if (boss != null && _bossSpinHitTimer <= 0f)
         {
-            var hit = _hitBuffer[i];
-
-            // 보스 타격
-            var boss = hit.GetComponentInParent<BossController>();
-            if (boss != null && _bossSpinHitTimer <= 0f)
-            {
-                var (bossDmg, bossCrit) = RollCrit(attackDamage);
-                Vector2 bossKnock = (boss.transform.position - transform.position).normalized;
-                boss.TakeDamage(bossDmg, bossCrit, bossKnock, spinKnockback);
-                ApplyLifeSteal(bossDmg);
-                _bossSpinHitTimer = spinHitCooldown;
-                continue;
-            }
-
-            var enemy = hit.GetComponentInParent<EnemyController>();
-            if (enemy == null || spinHitTimers.ContainsKey(enemy)) continue;
-
-            var (finalDmg, isCrit) = RollCrit(attackDamage);
-            Vector2 knockDir = (enemy.transform.position - transform.position).normalized;
-            enemy.TakeDamage(finalDmg, isCrit, knockDir, spinKnockback);
-            ApplyLifeSteal(finalDmg);
-            if (dotDamage > 0f) enemy.ApplyBleed(dotDamage);
-            SoundManager.Shared?.Play(SoundKey.Weapon_Attack);
-
-            spinHitTimers[enemy] = spinHitCooldown;
+            var (bossDmg, bossCrit) = RollCrit(attackDamage);
+            Vector2 bossKnock = (boss.transform.position - transform.position).normalized;
+            boss.TakeDamage(bossDmg, bossCrit, bossKnock, spinKnockback);
+            ApplyLifeSteal(bossDmg);
+            _bossSpinHitTimer = spinHitCooldown;
+            return;
         }
+
+        var enemy = col.GetComponentInParent<EnemyController>();
+        if (enemy == null || spinHitTimers.ContainsKey(enemy)) return;
+
+        var (finalDmg, isCrit) = RollCrit(attackDamage);
+        Vector2 knockDir = (enemy.transform.position - transform.position).normalized;
+        enemy.TakeDamage(finalDmg, isCrit, knockDir, spinKnockback);
+        ApplyLifeSteal(finalDmg);
+        if (dotDamage > 0f) enemy.ApplyBleed(dotDamage);
+        SoundManager.Shared?.Play(SoundKey.Weapon_Attack);
+        spinHitTimers[enemy] = spinHitCooldown;
     }
 
     // ─────────────────────────────────────────

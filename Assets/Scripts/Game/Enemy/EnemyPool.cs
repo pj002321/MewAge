@@ -29,7 +29,7 @@ public class EnemyPool : MonoBehaviourSingleton<EnemyPool>
         {
             enemy = queue.Dequeue();
             enemy.transform.SetPositionAndRotation(pos, Quaternion.identity);
-            enemy.transform.localScale = Vector3.one;
+            enemy.transform.localScale = prefab.transform.localScale; // 프리팹 원본 스케일 복구
             enemy.WakeFromPool();            // 렌더러·콜라이더 켜기, All 등록
         }
         else

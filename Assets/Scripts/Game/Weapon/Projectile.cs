@@ -6,7 +6,11 @@ using UnityEngine;
 /// </summary>
 public class Projectile : MonoBehaviour
 {
-    [SerializeField] private LayerMask targetLayer; // 인스펙터에서 설정 (Enemy 또는 Player)
+    public enum SpriteForward { Up, Right, Down, Left }
+
+    [SerializeField] private LayerMask    targetLayer;  // 인스펙터에서 설정 (Enemy 또는 Player)
+    [Tooltip("이 프리팹 에셋의 기본 Forward 방향 (Z=0일 때 스프라이트가 향하는 쪽)")]
+    [SerializeField] private SpriteForward spriteForward = SpriteForward.Up;
 
     private BossController _ownerBoss;   // 보스가 발사한 투사체면 설정 → 보스 자해 방지
     private float   primaryDmg;
@@ -29,6 +33,16 @@ public class Projectile : MonoBehaviour
     private Vector3 _paraEnd;
     private float   _paraDuration;
     private float   _paraElapsed;
+
+    // 에셋 forward 각도 (Up=90, Right=0, Down=-90, Left=180)
+    private float ForwardAngle => spriteForward switch
+    {
+        SpriteForward.Up    =>  90f,
+        SpriteForward.Right =>   0f,
+        SpriteForward.Down  => -90f,
+        SpriteForward.Left  => 180f,
+        _                   =>  90f,
+    };
 
     // Physics NonAlloc 버퍼
     private static readonly Collider2D[] _hitBuffer = new Collider2D[32];
@@ -54,7 +68,7 @@ public class Projectile : MonoBehaviour
         this.knockbackPower     = knockbackPower;
         Destroy(gameObject, lifetime);
 
-        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg - 90f;
+        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg - ForwardAngle;
         transform.rotation = Quaternion.Euler(0f, 0f, angle);
     }
 
@@ -121,7 +135,7 @@ public class Projectile : MonoBehaviour
                             + 2f * t * (_paraEnd    - _paraControl);
             if (tangent.sqrMagnitude > 0.0001f)
             {
-                float angle = Mathf.Atan2(tangent.y, tangent.x) * Mathf.Rad2Deg - 90f;
+                float angle = Mathf.Atan2(tangent.y, tangent.x) * Mathf.Rad2Deg - ForwardAngle;
                 transform.rotation = Quaternion.Euler(0f, 0f, angle);
             }
 
