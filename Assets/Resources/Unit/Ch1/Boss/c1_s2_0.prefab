@@ -285,16 +285,8 @@ MonoBehaviour:
   enrageThreshold: 0.5
   enrageSpeedMult: 1.5
   enrageDamageMult: 1.5
-  outlineColorProperty: _SolidOutline
-  normalOutlineColor: {r: 1, g: 1, b: 1, a: 1}
-  enrageOutlineColor: {r: 1, g: 0, b: 0, a: 1}
   flashColor: {r: 1, g: 0.2, b: 0.2, a: 1}
   flashDuration: 0.12
-  onHitFX:
-    vfxPrefab: {fileID: 0}
-    spawnOffset: {x: 0, y: 0}
-    sfxClip: {fileID: 0}
-    volume: 1
   onDeathFX:
     vfxPrefab: {fileID: 0}
     spawnOffset: {x: 0, y: 0}
@@ -323,7 +315,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossGroundSpikeSkill
   skillId: 
-  cooldown: 3
+  cooldown: 2
   enrageCooldownMult: 0.7
   maxRange: 0
   executeInPattern: 1
@@ -334,27 +326,17 @@ MonoBehaviour:
   spikeDamage: 50
   spikeImpactVfx: {fileID: 6220896372230165779, guid: 6c4493b7955c99b42b25f630d3c23194, type: 3}
   vfxLifetime: 1
-  projectilePrefab: {fileID: 7916182024222986910, guid: 626d85e8f1b7842468211300a67af973, type: 3}
-  projectileSpeed: 7
-  projectileDamage: 50
-  firePoint: {fileID: 4475026578306635568}
   spikeMarkerPrefab: {fileID: 7905823675861574758, guid: e965097e70b2e9d47807ebf0614a30a6, type: 3}
   spikeWarningTime: 0.9
   postMarkerDelay: 0.1
-  spikeCount: 3
+  spikeCount: 6
   spikeDistance: 1.2
   spikeStrikeDelay: 0.25
   spawnHeightOffset: 8
   pivotToTipOffset: 0.5
   chaseAfterSpike: 2
-  chaseAfterFan: 2
   chaseStopDist: 1.8
-  fanCount: 5
-  fanAngle: 120
-  fanRepeat: 3
-  fanRepeatDelay: 0.6
   useSpikePhase: 1
-  useFanPhase: 1
   attackTrigger: tAttack
 --- !u!70 &6646660141188298122
 CapsuleCollider2D:

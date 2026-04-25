@@ -241,7 +241,7 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    public void TakeDamage(float damage)
+    public void TakeDamage(float damage, bool isFromBoss = false, bool isFromElite = false)
     {
         if (_debugInvincible) return;
         if (isInvincible)
@@ -274,6 +274,9 @@ public class PlayerController : MonoBehaviour
         // defense = 피해 감소율(%). defense=10 → 10% 감소, defense=70 → 70% 감소
         float reduction = Mathf.Clamp01(defense / 100f);
         float reduced   = damage * (1f - reduction);
+        var relic = RelicManager.Shared;
+        if (isFromBoss  && relic != null) reduced *= (1f - relic.BossDmgReduceTotal);
+        if (isFromElite && relic != null) reduced *= (1f - relic.EliteDmgReduceTotal);
         currentHP -= reduced;
         currentHP  = Mathf.Max(0f, currentHP);
         SyncHPUI();

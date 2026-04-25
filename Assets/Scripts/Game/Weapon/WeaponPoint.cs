@@ -1399,6 +1399,23 @@ public class WeaponPoint : MonoBehaviour
 
             if (player.SynergyAtkPct > 0f)
                 attackDamage *= (1f + player.SynergyAtkPct / 100f);
+
+            var relic = RelicManager.Shared;
+            if (relic != null)
+            {
+                float relicPct = weaponType switch
+                {
+                    WeaponType.Melee     => relic.MeleeAtkBonusPct,
+                    WeaponType.Charge    => relic.MeleeAtkBonusPct,
+                    WeaponType.Slash     => relic.MeleeAtkBonusPct,
+                    WeaponType.Ranged    => relic.RangedAtkBonusPct,
+                    WeaponType.Magic     => relic.MagicAtkBonusPct,
+                    WeaponType.Boomerang => relic.BoomerangAtkBonusPct,
+                    WeaponType.Spin      => relic.SpinAtkBonusPct,
+                    _                   => 0f,
+                };
+                if (relicPct > 0f) attackDamage *= (1f + relicPct / 100f);
+            }
         }
 
         GetComponentInChildren<SpriteOutline>()?.SetStar(data.star);

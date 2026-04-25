@@ -2,13 +2,11 @@ using System.Collections;
 using UnityEngine;
 
 /// <summary>
-/// 보스 스킬: 낙하 스파이크 ↔ 부채꼴 발사 교대 사이클.
+/// 보스 스킬: 낙하 스파이크 사이클.
 ///
 /// 사이클:
 ///   1) [스파이크] 플레이어 중심 좌우로 N개 마커 표시 → 마커 제거 → 위에서 수직 낙하
 ///   2) [추격]     N초 추격
-///   3) [부채꼴]   부채꼴 투사체 M회 발사
-///   4) [추격]     N초 추격
 /// </summary>
 public class BossGroundSpikeSkill : BossSkillBase
 {
@@ -24,15 +22,6 @@ public class BossGroundSpikeSkill : BossSkillBase
     [Tooltip("스파이크 착지 시 생성할 이펙트 프리팹 (없으면 생략)")]
     [SerializeField] private GameObject spikeImpactVfx;
     [SerializeField] private float      vfxLifetime = 1f;
-
-    [Header("부채꼴 투사체")]
-    [SerializeField] private GameObject projectilePrefab;
-    [SerializeField] private float      projectileSpeed  = 7f;
-    [SerializeField] private float      projectileDamage = 0f;
-
-    [Header("발사 지점 (부채꼴)")]
-    [Tooltip("null이면 보스 중심")]
-    [SerializeField] private Transform firePoint;
 
     [Header("경고 마커")]
     [Tooltip("ImpactMarker 컴포넌트가 붙은 마커 프리팹")]
@@ -57,18 +46,10 @@ public class BossGroundSpikeSkill : BossSkillBase
 
     [Header("추격")]
     [SerializeField] private float chaseAfterSpike = 2f;
-    [SerializeField] private float chaseAfterFan   = 2f;
     [SerializeField] private float chaseStopDist   = 1.8f;
-
-    [Header("부채꼴 버스트")]
-    [SerializeField] private int   fanCount       = 5;
-    [SerializeField] private float fanAngle       = 120f;
-    [SerializeField] private int   fanRepeat      = 3;
-    [SerializeField] private float fanRepeatDelay = 0.6f;
 
     [Header("페이즈 ON/OFF")]
     [SerializeField] private bool useSpikePhase = true;
-    [SerializeField] private bool useFanPhase   = true;
 
     [Header("애니메이션")]
     [SerializeField] private string attackTrigger = "tAttack";
@@ -100,14 +81,6 @@ public class BossGroundSpikeSkill : BossSkillBase
                 yield return SpikeLinePhase();
                 if (IsInvalid()) yield break;
                 yield return ChasePhase(chaseAfterSpike);
-                if (IsInvalid()) yield break;
-            }
-
-            if (useFanPhase)
-            {
-                yield return FanBurstPhase();
-                if (IsInvalid()) yield break;
-                yield return ChasePhase(chaseAfterFan);
                 if (IsInvalid()) yield break;
             }
         }
@@ -200,26 +173,6 @@ public class BossGroundSpikeSkill : BossSkillBase
         }
     }
 
-    private IEnumerator FanBurstPhase()
-    {
-        Boss.IsFiringSkill = true;
-        try
-        {
-            for (int i = 0; i < fanRepeat; i++)
-            {
-                if (IsInvalid()) yield break;
-                FireFan();
-                if (i < fanRepeat - 1)
-                    yield return new WaitForSeconds(fanRepeatDelay);
-            }
-            yield return new WaitForSeconds(0.3f);
-        }
-        finally
-        {
-            if (Boss != null) Boss.IsFiringSkill = false;
-        }
-    }
-
     private IEnumerator ChasePhase(float duration)
     {
         float elapsed   = 0f;
@@ -240,36 +193,6 @@ public class BossGroundSpikeSkill : BossSkillBase
 
             elapsed += Time.fixedDeltaTime;
             yield return new WaitForFixedUpdate();
-        }
-    }
-
-    // ── 부채꼴 발사 ───────────────────────────────────────────────
-
-    private void FireFan()
-    {
-        if (projectilePrefab == null || Owner.PlayerTransform == null) return;
-
-        Owner.EnemyAnimator?.SetTrigger(attackTrigger);
-
-        Vector2 spawnPos  = firePoint != null ? (Vector2)firePoint.position
-                          : Owner.Rb != null  ? Owner.Rb.position
-                          : (Vector2)Owner.transform.position;
-        Vector2 toPlayer  = ((Vector2)Owner.PlayerTransform.position - spawnPos).normalized;
-        float   baseAngle = Mathf.Atan2(toPlayer.y, toPlayer.x) * Mathf.Rad2Deg;
-
-        int   count    = Mathf.Max(1, fanCount);
-        float halfSpan = fanAngle * 0.5f;
-        float step     = count > 1 ? fanAngle / (count - 1) : 0f;
-
-        float dmgMult = Boss != null && Boss.IsEnraged ? Boss.EnrageDamageMult : 1f;
-        float dmg     = (projectileDamage > 0f ? projectileDamage : Owner.ContactDamage) * dmgMult;
-
-        for (int i = 0; i < count; i++)
-        {
-            float   angle = baseAngle - halfSpan + step * i;
-            Vector2 dir   = new Vector2(Mathf.Cos(angle * Mathf.Deg2Rad), Mathf.Sin(angle * Mathf.Deg2Rad));
-            var go = Instantiate(projectilePrefab, spawnPos, Quaternion.identity);
-            if (go.TryGetComponent<Projectile>(out var p)) { p.Init(dmg, dir, projectileSpeed); p.SetOwnerBoss(Boss); }
         }
     }
 
@@ -317,11 +240,13 @@ public class BossGroundSpikeSkill : BossSkillBase
 
         if (spike == null) yield break;
 
-        // 착지 — VFX (프리팹 자식에 "VfxPoint" Transform이 있으면 그 위치 사용)
+        // 착지 — VFX (콜라이더 하단 끝 기준)
         if (spikeImpactVfx != null)
         {
-            var vfxPoint = spike.transform.Find("VfxPoint");
-            Vector3 vfxPos = vfxPoint != null ? vfxPoint.position : spike.transform.position;
+            Vector3 vfxPos = spike.transform.position;
+            var col = spike.GetComponent<Collider2D>();
+            if (col != null)
+                vfxPos.y = col.bounds.min.y;
             var vfxGo = Instantiate(spikeImpactVfx, vfxPos, Quaternion.identity);
             Destroy(vfxGo, vfxLifetime);
         }

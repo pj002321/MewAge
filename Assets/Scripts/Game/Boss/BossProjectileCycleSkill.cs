@@ -195,14 +195,25 @@ public class BossProjectileCycleSkill : BossSkillBase
 
     private IEnumerator WarnThenFire(Vector2 spawnPos, Vector2[] dirs)
     {
-        var lines = new GameObject[dirs.Length];
+        var lines = new LineRenderer[dirs.Length];
         for (int i = 0; i < dirs.Length; i++)
             lines[i] = SpawnWarningLine(spawnPos, dirs[i]);
 
-        yield return new WaitForSeconds(warningDuration);
+        float elapsed = 0f;
+        while (elapsed < warningDuration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / warningDuration);
+            for (int i = 0; i < dirs.Length; i++)
+            {
+                if (lines[i] == null) continue;
+                lines[i].SetPosition(1, spawnPos + dirs[i] * (warningLineLength * t));
+            }
+            yield return null;
+        }
 
-        foreach (var go in lines)
-            if (go != null) Destroy(go);
+        foreach (var lr in lines)
+            if (lr != null) Destroy(lr.gameObject);
 
         if (IsInvalid()) yield break;
 
@@ -211,23 +222,23 @@ public class BossProjectileCycleSkill : BossSkillBase
             SpawnProjectile(spawnPos, dir);
     }
 
-    private GameObject SpawnWarningLine(Vector2 start, Vector2 dir)
+    private LineRenderer SpawnWarningLine(Vector2 start, Vector2 dir)
     {
         var go = new GameObject("WarnLine");
         var lr = go.AddComponent<LineRenderer>();
         lr.useWorldSpace = true;
         lr.positionCount = 2;
         lr.SetPosition(0, start);
-        lr.SetPosition(1, start + dir * warningLineLength);
+        lr.SetPosition(1, start);   // 길이 0에서 시작, WarnThenFire에서 애니메이션
         lr.startWidth   = warningLineWidth;
-        lr.endWidth     = 0f;
+        lr.endWidth     = warningLineWidth;
         lr.material     = warningMaterial != null
             ? warningMaterial
             : new Material(Shader.Find("Sprites/Default"));
         lr.startColor   = warningColor;
-        lr.endColor     = new Color(warningColor.r, warningColor.g, warningColor.b, 0f);
+        lr.endColor     = warningColor;
         lr.sortingOrder = 10;
-        return go;
+        return lr;
     }
 
     // ── 발사 헬퍼 ────────────────────────────────────────────────

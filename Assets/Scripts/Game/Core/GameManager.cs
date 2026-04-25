@@ -197,6 +197,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         sm?.ResetMods();
         sm?.BeginBatch();
         PlayerCharacterManager.Shared?.ApplyCharacterStats();
+        RelicManager.Shared?.ApplyRelicStats();
         ApplyStageAtkBonus(sm);
         sm?.EndBatch();
 

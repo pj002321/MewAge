@@ -323,6 +323,9 @@ public class BossController : MonoBehaviour
     {
         if (isDead) return;
 
+        float bossAtkBonus = RelicManager.Shared?.BossAtkBonusPct ?? 0f;
+        if (bossAtkBonus > 0f) damage *= (1f + bossAtkBonus / 100f);
+
         currentHP -= damage;
 
         // 플레이어 스킬 게이지 증가
@@ -485,7 +488,7 @@ public class BossController : MonoBehaviour
         if (other.gameObject != p.gameObject) return;
 
         damageTimer = damageCooldown; // TakeDamage 전에 설정 — OnCollisionStay2D 동프레임 중복 방지
-        p.TakeDamage(contactDamage);
+        p.TakeDamage(contactDamage, isFromBoss: true);
     }
 
     private void OnCollisionStay2D(Collision2D collision)

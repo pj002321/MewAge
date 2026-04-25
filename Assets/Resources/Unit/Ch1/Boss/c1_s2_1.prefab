@@ -25,7 +25,7 @@ Transform:
   m_GameObject: {fileID: 4110917248892786449}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.581, y: 0, z: 0}
+  m_LocalPosition: {x: 0.06, y: -0.98, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -141,7 +141,7 @@ Animator:
   m_GameObject: {fileID: 4510239993999273466}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 65c7e700aafb41148b021143cd7bc037, type: 2}
+  m_Controller: {fileID: 22100000, guid: 18f8a39044ba8fd458ebe732a9beaf35, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -314,11 +314,10 @@ MonoBehaviour:
   maxRange: 0
   executeInPattern: 1
   projectilePrefab: {fileID: 109194795691363216, guid: ce238d64c4c9c384ea458dd616a5c30a, type: 3}
-  projectileSpeed: 3
-  projectileDamage: 20
+  projectileSpeed: 8
   firePoint: {fileID: 3028450626600842442}
   enableLinearFire: 1
-  linearDuration: 4
+  linearCount: 8
   linearInterval: 0.4
   chaseAfterLinear: 5
   fanCount: 5
@@ -326,7 +325,12 @@ MonoBehaviour:
   fanRepeat: 3
   fanRepeatDelay: 0.6
   chaseAfterFan: 2
-  chaseStopDistance: 1.8
+  chaseStopDistance: 5
+  warningDuration: 1
+  warningLineLength: 10
+  warningLineWidth: 1
+  warningColor: {r: 1, g: 1, b: 1, a: 1}
+  warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
   attackTrigger: tAttack
 --- !u!1 &5233518724168949262
 GameObject:

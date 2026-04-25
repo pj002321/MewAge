@@ -13,18 +13,43 @@ public class BossChargeSkill : BossSkillBase
     [SerializeField] private float chargeSpeed    = 18f;
     [SerializeField] private float chargeDuration = 0.4f;
 
+    [Header("경고 라인")]
+    [SerializeField] private float    warningDuration   = 0.5f;
+    [SerializeField] private float    warningLineLength = 12f;
+    [SerializeField] private float    warningLineWidth  = 0.08f;
+    [SerializeField] private Color    warningColor      = Color.red;
+    [Tooltip("Sprites/Default 또는 URP Unlit 머티리얼 할당. null이면 자동 생성")]
+    [SerializeField] private Material warningMaterial;
+
     protected override IEnumerator OnExecute()
     {
         // 플레이어 없음 또는 게임오버 → 즉시 중단
         if (Owner.PlayerTransform == null) yield break;
         if (GameManager.Shared != null && GameManager.Shared.IsGameOver) yield break;
 
+        Vector2 origin = Owner.Rb != null ? Owner.Rb.position : (Vector2)Owner.transform.position;
+        Vector2 dir    = ((Vector2)Owner.PlayerTransform.position - origin).normalized;
+
+        // 경고 라인 애니메이션
+        var lr = SpawnWarningLine(origin, dir);
+        float elapsed = 0f;
+        while (elapsed < warningDuration)
+        {
+            if (Owner == null || Owner.PlayerTransform == null) { if (lr != null) Destroy(lr.gameObject); yield break; }
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / warningDuration);
+            if (lr != null) lr.SetPosition(1, origin + dir * (warningLineLength * t));
+            yield return null;
+        }
+        if (lr != null) Destroy(lr.gameObject);
+
+        if (Owner == null || Owner.PlayerTransform == null) yield break;
+        if (GameManager.Shared != null && GameManager.Shared.IsGameOver) yield break;
+
         Owner.EnemyAnimator?.SetTrigger("tCharge");
 
         float   speed   = chargeSpeed * (Boss != null && Boss.IsEnraged ? Boss.EnrageSpeedMult : 1f);
-        // 시작 시점의 플레이어 방향을 고정으로 사용 (방향이 도중에 바뀌지 않도록)
-        Vector2 dir     = ((Vector2)Owner.PlayerTransform.position - (Vector2)Owner.transform.position).normalized;
-        float   elapsed = 0f;
+        elapsed = 0f;
 
         while (elapsed < chargeDuration)
         {
@@ -47,5 +72,24 @@ public class BossChargeSkill : BossSkillBase
             elapsed += Time.fixedDeltaTime;
             yield return new WaitForFixedUpdate();
         }
+    }
+
+    private LineRenderer SpawnWarningLine(Vector2 start, Vector2 dir)
+    {
+        var go = new GameObject("WarnLine");
+        var lr = go.AddComponent<LineRenderer>();
+        lr.useWorldSpace = true;
+        lr.positionCount = 2;
+        lr.SetPosition(0, start);
+        lr.SetPosition(1, start);
+        lr.startWidth   = warningLineWidth;
+        lr.endWidth     = warningLineWidth;
+        lr.material     = warningMaterial != null
+            ? warningMaterial
+            : new Material(Shader.Find("Sprites/Default"));
+        lr.startColor   = warningColor;
+        lr.endColor     = warningColor;
+        lr.sortingOrder = 10;
+        return lr;
     }
 }

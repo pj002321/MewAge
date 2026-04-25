@@ -1,5 +1,36 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &669834849754594387
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2908955346115048226}
+  m_Layer: 7
+  m_Name: GameObject
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2908955346115048226
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 669834849754594387}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7709635535999324975}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &4510239993999273466
 GameObject:
   m_ObjectHideFlags: 0
@@ -18,6 +49,7 @@ GameObject:
   - component: {fileID: 5821915655939214708}
   - component: {fileID: 4920938319397271602}
   - component: {fileID: 4596225152492531232}
+  - component: {fileID: 3594604641412481875}
   m_Layer: 7
   m_Name: c1_s3_2
   m_TagString: Untagged
@@ -39,6 +71,7 @@ Transform:
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 4088361612343034944}
+  - {fileID: 2908955346115048226}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &3195705286543801482
@@ -211,16 +244,8 @@ MonoBehaviour:
   enrageThreshold: 0.5
   enrageSpeedMult: 1.5
   enrageDamageMult: 1.5
-  outlineColorProperty: _SolidOutline
-  normalOutlineColor: {r: 1, g: 1, b: 1, a: 1}
-  enrageOutlineColor: {r: 1, g: 0, b: 0, a: 1}
   flashColor: {r: 1, g: 0.2, b: 0.2, a: 1}
   flashDuration: 0.12
-  onHitFX:
-    vfxPrefab: {fileID: 0}
-    spawnOffset: {x: 0, y: 0}
-    sfxClip: {fileID: 0}
-    volume: 1
   onDeathFX:
     vfxPrefab: {fileID: 0}
     spawnOffset: {x: 0, y: 0}
@@ -232,6 +257,7 @@ MonoBehaviour:
   skills:
   - {fileID: 4920938319397271602}
   - {fileID: 4596225152492531232}
+  - {fileID: 3594604641412481875}
   entryDrop: 1
   dropSpeed: 22
   squashDuration: 0.08
@@ -323,10 +349,6 @@ MonoBehaviour:
   spikeDamage: 0
   spikeImpactVfx: {fileID: 6220896372230165779, guid: 6c4493b7955c99b42b25f630d3c23194, type: 3}
   vfxLifetime: 1
-  projectilePrefab: {fileID: 109194795691363216, guid: ce238d64c4c9c384ea458dd616a5c30a, type: 3}
-  projectileSpeed: 7
-  projectileDamage: 0
-  firePoint: {fileID: 0}
   spikeMarkerPrefab: {fileID: 7905823675861574758, guid: e965097e70b2e9d47807ebf0614a30a6, type: 3}
   spikeWarningTime: 0.9
   postMarkerDelay: 0.1
@@ -336,14 +358,44 @@ MonoBehaviour:
   spawnHeightOffset: 3
   pivotToTipOffset: 0.5
   chaseAfterSpike: 2
-  chaseAfterFan: 2
   chaseStopDist: 1.8
-  fanCount: 10
-  fanAngle: 120
-  fanRepeat: 2
-  fanRepeatDelay: 0.6
   useSpikePhase: 1
-  useFanPhase: 0
+  attackTrigger: tAttack
+--- !u!114 &3594604641412481875
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4510239993999273466}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 71ecc31d375a1534384e5b1844037cf7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BossProjectileCycleSkill
+  skillId: 
+  cooldown: 5
+  enrageCooldownMult: 0.7
+  maxRange: 0
+  executeInPattern: 1
+  projectilePrefab: {fileID: 109194795691363216, guid: ce238d64c4c9c384ea458dd616a5c30a, type: 3}
+  projectileSpeed: 7
+  firePoint: {fileID: 2908955346115048226}
+  enableLinearFire: 1
+  linearCount: 3
+  linearInterval: 1
+  chaseAfterLinear: 2
+  fanCount: 5
+  fanAngle: 120
+  fanRepeat: 3
+  fanRepeatDelay: 0.6
+  chaseAfterFan: 2
+  chaseStopDistance: 1.8
+  warningDuration: 0.6
+  warningLineLength: 10
+  warningLineWidth: 1
+  warningColor: {r: 1, g: 1, b: 1, a: 1}
+  warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
   attackTrigger: tAttack
 --- !u!1 &5233518724168949262
 GameObject:

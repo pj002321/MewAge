@@ -166,7 +166,7 @@ public class EnemyController : MonoBehaviour
         if (Vector2.Distance(transform.position, playerTransform.position) > contactMaxDist) return;
         var player = PlayerController.Instance;
         if (player == null) return;
-        player.TakeDamage(contactDamage);
+        player.TakeDamage(contactDamage, isFromElite: _eliteMarker != null);
         damageTimer = damageCooldown;
     }
 

@@ -116,7 +116,7 @@ Transform:
   m_GameObject: {fileID: 4423835837989258071}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.501, y: 0, z: 0}
+  m_LocalPosition: {x: -0.003, y: -0.654, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -320,11 +320,10 @@ MonoBehaviour:
   maxRange: 0
   executeInPattern: 1
   projectilePrefab: {fileID: 7916182024222986910, guid: 9a4a33602c726e2489bec5dbb7160348, type: 3}
-  projectileSpeed: 3
-  projectileDamage: 40
+  projectileSpeed: 4
   firePoint: {fileID: 4475026578306635568}
   enableLinearFire: 1
-  linearDuration: 4
+  linearCount: 8
   linearInterval: 0.65
   chaseAfterLinear: 5
   fanCount: 5
@@ -333,6 +332,11 @@ MonoBehaviour:
   fanRepeatDelay: 0.6
   chaseAfterFan: 4
   chaseStopDistance: 2.5
+  warningDuration: 1
+  warningLineLength: 10
+  warningLineWidth: 1
+  warningColor: {r: 1, g: 1, b: 1, a: 1}
+  warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
   attackTrigger: tAttack
 --- !u!70 &2925710928678679702
 CapsuleCollider2D:
