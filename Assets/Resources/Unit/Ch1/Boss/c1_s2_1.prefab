@@ -279,16 +279,8 @@ MonoBehaviour:
   enrageThreshold: 0.5
   enrageSpeedMult: 1.5
   enrageDamageMult: 1.5
-  outlineColorProperty: _SolidOutline
-  normalOutlineColor: {r: 1, g: 1, b: 1, a: 1}
-  enrageOutlineColor: {r: 1, g: 0, b: 0, a: 1}
   flashColor: {r: 1, g: 0.2, b: 0.2, a: 1}
   flashDuration: 0.12
-  onHitFX:
-    vfxPrefab: {fileID: 0}
-    spawnOffset: {x: 0, y: 0}
-    sfxClip: {fileID: 0}
-    volume: 1
   onDeathFX:
     vfxPrefab: {fileID: 0}
     spawnOffset: {x: 0, y: 0}
@@ -323,7 +315,7 @@ MonoBehaviour:
   executeInPattern: 1
   projectilePrefab: {fileID: 109194795691363216, guid: ce238d64c4c9c384ea458dd616a5c30a, type: 3}
   projectileSpeed: 3
-  projectileDamage: 0
+  projectileDamage: 20
   firePoint: {fileID: 3028450626600842442}
   enableLinearFire: 1
   linearDuration: 4
