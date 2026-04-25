@@ -90,19 +90,19 @@ public static class WareSynergySystem
         {
             if (kv.Value >= 4)
             {
-                PlayerStatManager.Shared?.AddPctMod(StatType.StructureCooldown, -30f);
+                // StructureCooldown 제거됨
                 PlayerStatManager.Shared?.AddPctMod(StatType.ATK, 20f);
                 return;
             }
             if (kv.Value >= 2 && !appliedSingleEra)
             {
-                PlayerStatManager.Shared?.AddPctMod(StatType.StructureCooldown, -15f);
+                // StructureCooldown 제거됨
                 appliedSingleEra = true;
             }
         }
 
         if (variety >= 4)      PlayerStatManager.Shared?.AddPctMod(StatType.ATK, 50f);
-        else if (variety >= 3) PlayerStatManager.Shared?.AddPctMod(StatType.StructureCooldown, -20f);
+        // StructureCooldown 제거됨
         // variety >= 2: 체력 회복 → 게임 씬 내 PlayerController.Heal 필요, 현재는 HPRegen 보정
         else if (variety >= 2) PlayerStatManager.Shared?.AddPctMod(StatType.HPRegen, 3f);
     }

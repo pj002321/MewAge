@@ -37,14 +37,8 @@ public class ImprovPanel : MonoBehaviour
 
     private void OnEnable()
     {
-        StructureInventory.BlockAuto = true;
         foreach (var anim in GetComponentsInChildren<Animator>(true))
             anim.updateMode = AnimatorUpdateMode.UnscaledTime;
-    }
-
-    private void OnDisable()
-    {
-        StructureInventory.BlockAuto = false;
     }
 
     public void Setup(DB_증강[] improvs)
@@ -123,7 +117,6 @@ public class ImprovPanel : MonoBehaviour
             case ImprovType.AUG_CRI_RATE:     return (StatType.CritChance,        main);
             case ImprovType.AUG_CRI_DMG:      return (StatType.CritDmg,           main);
             case ImprovType.AUG_DOT_DMG:      return (StatType.BleedPower,        main);
-            case ImprovType.AUG_SKL:          return (StatType.StructureCooldown, -main);
             case ImprovType.AUG_REWARD_RNG:   return (StatType.MagnetRadius,      main);
             case ImprovType.AUG_SIZE_HP_UP:   return (StatType.MaxHP,             sub);
             case ImprovType.AUG_SIZE_HP_DOWN: return (StatType.MaxHP,             -sub);

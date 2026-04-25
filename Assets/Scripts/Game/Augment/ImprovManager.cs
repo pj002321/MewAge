@@ -164,10 +164,6 @@ public class ImprovManager : MonoBehaviourSingleton<ImprovManager>
                 if (RequireSm()) sm.AddPctMod(StatType.BleedPower, main);
                 break;
 
-            case ImprovType.AUG_SKL:
-                if (RequireSm()) sm.AddPctMod(StatType.StructureCooldown, -main);
-                break;
-
             case ImprovType.AUG_REWARD_RNG:
                 if (RequireSm()) sm.AddPctMod(StatType.MagnetRadius, main);
                 break;

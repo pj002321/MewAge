@@ -22,9 +22,8 @@ public class PlayerStatManager : MonoBehaviourSingleton<PlayerStatManager>
     [SerializeField] private float baseAtkSpeed          = 0f;   // 초 단위 쿨타임 감산량 (0 = 감산 없음)
     [SerializeField] private float baseEvasion           = 0f;
     [SerializeField] private float baseCritChance        = 0f;
-    [SerializeField] private float baseCritDmg           = 100f;
-    [SerializeField] private float baseStructureCooldown = 30f;
-    [SerializeField] private float baseKnockback         = 0f;
+    [SerializeField] private float baseCritDmg   = 100f;
+    [SerializeField] private float baseKnockback = 0f;
     [SerializeField] private float baseHealOnKill        = 0f;
 
     private static readonly int StatCount =
@@ -69,9 +68,8 @@ public class PlayerStatManager : MonoBehaviourSingleton<PlayerStatManager>
         baseAtkSpeed          = 0f;
         baseEvasion           = 0f;
         baseCritChance        = 0f;
-        baseCritDmg           = 100f;
-        baseStructureCooldown = 0f;
-        baseKnockback         = 0f;
+        baseCritDmg   = 100f;
+        baseKnockback = 0f;
         baseHealOnKill        = 0f;
     }
 
@@ -90,9 +88,8 @@ public class PlayerStatManager : MonoBehaviourSingleton<PlayerStatManager>
             case StatType.AtkSpeed:          baseAtkSpeed          = value; break;
             case StatType.Evasion:           baseEvasion           = value; break;
             case StatType.CritChance:        baseCritChance        = value; break;
-            case StatType.CritDmg:           baseCritDmg           = value; break;
-            case StatType.StructureCooldown: baseStructureCooldown = value; break;
-            case StatType.Knockback:         baseKnockback         = value; break;
+            case StatType.CritDmg:   baseCritDmg   = value; break;
+            case StatType.Knockback: baseKnockback = value; break;
             case StatType.HealOnKill:        baseHealOnKill        = value; break;
         }
         if (_batching) return;
@@ -128,11 +125,10 @@ public class PlayerStatManager : MonoBehaviourSingleton<PlayerStatManager>
 
     private bool IsAdditiveStat(StatType stat) => stat switch
     {
-        StatType.CritChance        => true,
-        StatType.Evasion           => true,
-        StatType.HealOnKill        => true,
-        StatType.StructureCooldown => true, // % 감소 누적형 — base(0) + pct
-        StatType.Knockback         => true, // 누적형 — base(0) + flat + pct
+        StatType.CritChance => true,
+        StatType.Evasion    => true,
+        StatType.HealOnKill => true,
+        StatType.Knockback  => true, // 누적형 — base(0) + flat + pct
         _                          => false
     };
 
@@ -184,9 +180,8 @@ public class PlayerStatManager : MonoBehaviourSingleton<PlayerStatManager>
         StatType.AtkSpeed          => baseAtkSpeed,
         StatType.Evasion           => baseEvasion,
         StatType.CritChance        => baseCritChance,
-        StatType.CritDmg           => baseCritDmg,
-        StatType.StructureCooldown => baseStructureCooldown,
-        StatType.Knockback         => baseKnockback,
+        StatType.CritDmg   => baseCritDmg,
+        StatType.Knockback => baseKnockback,
         StatType.HealOnKill        => baseHealOnKill,
         _                          => 0f,
     };
@@ -205,9 +200,8 @@ public class PlayerStatManager : MonoBehaviourSingleton<PlayerStatManager>
         StatType.AtkSpeed          => "공격속도",
         StatType.Evasion           => "회피",
         StatType.CritChance        => "크리티컬 확률",
-        StatType.CritDmg           => "크리티컬 데미지",
-        StatType.StructureCooldown => "기물 쿨타임",
-        StatType.Knockback         => "넉백",
+        StatType.CritDmg   => "크리티컬 데미지",
+        StatType.Knockback => "넉백",
         StatType.HealOnKill        => "처치 회복",
         _                          => stat.ToString(),
     };
@@ -218,11 +212,10 @@ public class PlayerStatManager : MonoBehaviourSingleton<PlayerStatManager>
         StatType.Evasion           => $"{value:0.#}%",                 // 0~100 기준
         StatType.CritChance        => $"{value:0.#}%",
         StatType.CritDmg           => $"{value:0.#}%",
-        StatType.AtkSpeed          => $"{value:0.#}%",
-        StatType.HPRegen           => $"{value:0.##}/s",
-        StatType.HealOnKill        => $"{value:0.#}%",
-        StatType.StructureCooldown => $"{value:0.#}%",
-        StatType.MagnetRadius      => $"{value:0.##}u",               // units
+        StatType.AtkSpeed     => $"{value:0.#}%",
+        StatType.HPRegen      => $"{value:0.##}/s",
+        StatType.HealOnKill   => $"{value:0.#}%",
+        StatType.MagnetRadius => $"{value:0.##}u",               // units
         _                          => $"{value:0.##}",
     };
 

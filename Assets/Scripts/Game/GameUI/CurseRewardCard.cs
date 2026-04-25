@@ -108,7 +108,6 @@ public class CurseRewardCard : MonoBehaviour
         "AUG_EVA"          => StatType.Evasion,
         "AUG_CRI_RATE"     => StatType.CritChance,
         "AUG_CRI_DMG"      => StatType.CritDmg,
-        "AUG_SKL"          => StatType.StructureCooldown,
         "AUG_REWARD_RNG"   => StatType.MagnetRadius,
         "AUG_DOT_DMG"      => StatType.BleedPower,
         _                  => StatType.ATK,

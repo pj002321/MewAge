@@ -1,6 +1,4 @@
-using System.Collections.Generic;
 using UnityEngine;
-using Mewage.DB;
 
 /// <summary>
 /// 아이템 드롭 Prefab을 관리하고 스폰합니다.
@@ -16,9 +14,8 @@ public class ItemDropManager : MonoBehaviourSingleton<ItemDropManager>
     [SerializeField] private float expMoveSpeed  = 8f;
 
     [Header("드롭 확률 (0~1)")]
-    [SerializeField] private float goldDropChance      = 0.5f;
-    [SerializeField] private float expDropChance       = 1.0f;
-    [SerializeField] private float structureDropChance = 0.04f;
+    [SerializeField] private float goldDropChance = 0.5f;
+    [SerializeField] private float expDropChance  = 1.0f;
 
     [Header("보스 Orb 버스트 설정")]
     [SerializeField] private float bossOrbBurstSpeedMin = 4f;
@@ -30,9 +27,6 @@ public class ItemDropManager : MonoBehaviourSingleton<ItemDropManager>
     [SerializeField] private float eliteOrbSpeedMin     = 5f;
     [SerializeField] private float eliteOrbSpeedMax     = 9f;
     [SerializeField] private float eliteOrbFriction     = 5f;
-
-    [Header("기물 구슬 (챕터 필터링)")]
-    [SerializeField] private int currentChapter = 1;
 
     // 회복 구슬 프리팹 캐시 (Resources/AUG/aug_spw_hp_skl)
     private const string HealOrbPath = "AUG/aug_spw_hp_skl";
@@ -58,7 +52,6 @@ public class ItemDropManager : MonoBehaviourSingleton<ItemDropManager>
         for (int i = 0; i < count; i++) SpawnEliteBurstItem(goldPrefab, pos, DropItem.ItemType.Gold, goldPer);
         for (int i = 0; i < count; i++) SpawnEliteBurstItem(expPrefab,  pos, DropItem.ItemType.Exp,  expPer);
 
-        if (Random.value <= structureDropChance) SpawnStructureOrb(pos);
         TrySpawnHealOrb(pos);
     }
 
@@ -84,9 +77,6 @@ public class ItemDropManager : MonoBehaviourSingleton<ItemDropManager>
 
         if (goldPrefab != null && Random.value <= goldDropChance)
             SpawnItem(goldPrefab, pos, DropItem.ItemType.Gold, goldValue);
-
-        if (Random.value <= structureDropChance)
-            SpawnStructureOrb(pos);
 
         TrySpawnHealOrb(pos);
     }
@@ -158,49 +148,6 @@ public class ItemDropManager : MonoBehaviourSingleton<ItemDropManager>
         float   spd      = type == DropItem.ItemType.Gold ? goldMoveSpeed : expMoveSpeed;
         go.GetComponent<DropItem>()?.InitBurst(type, value, velocity, bossOrbFriction, spd);
     }
-
-    private void SpawnStructureOrb(Vector3 pos)
-    {
-        string prefix = $"C{currentChapter}_";
-        var allPool = DB_기물.FindEntities(e => e.f_기물ID != null && e.f_기물ID.StartsWith(prefix));
-        if (allPool == null || allPool.Count == 0) return;
-
-        // 프리셋에 등록된 기물만 필터링
-        var wareMgr = StructureWareManager.Shared;
-        var pool = new System.Collections.Generic.List<DB_기물>();
-        foreach (var item in allPool)
-        {
-            for (int i = 0; i < 4; i++)
-            {
-                if (wareMgr?.GetPreset(i) == item.f_기물ID)
-                {
-                    pool.Add(item);
-                    break;
-                }
-            }
-        }
-        if (pool.Count == 0) return;
-
-        var picked  = pool[Random.Range(0, pool.Count)];
-        string id   = picked.f_기물ID;                               // e.g. C1_W0
-        string chapter = $"C{currentChapter}";
-        string path = $"Ware/{chapter}/{id.ToLower()}";             // Ware/C1/c1_w0
-
-        var prefab = Resources.Load<GameObject>(path);
-        if (prefab == null)
-        {
-            Debug.LogWarning($"[ItemDrop] 오브 프리팹 없음: Resources/{path}");
-            return;
-        }
-
-        Vector3 offset = new(Random.Range(-0.3f, 0.3f), Random.Range(-0.3f, 0.3f), 0f);
-        var go  = Instantiate(prefab, pos + offset, Quaternion.identity);
-        var orb = go.GetComponent<StructureOrb>();
-        if (orb != null) orb.Init(picked);
-        else Debug.LogWarning($"[ItemDrop] {path} 프리팹에 StructureOrb 컴포넌트가 없습니다.");
-    }
-
-    public void OnChapterUp(int chapter) => currentChapter = chapter;
 
     /// <summary>웨이브 종료 시 맵에 남은 골드·경험치 orb를 전부 위로 튕겨 올립니다.</summary>
     public void ThrowUpAll()

@@ -113,7 +113,6 @@ public class EquipmentData
         "STAT_EVA_RATE" => StatType.Evasion,
         "STAT_SPD_MOV"  => StatType.MoveSpeed,
         "STAT_SPD_ATK"  => StatType.AtkSpeed,
-        "STAT_SKL_CD"   => StatType.StructureCooldown,
         "STAT_DOT_DMG"  => StatType.BleedPower,
         _               => (StatType?)null,
     };
@@ -130,7 +129,6 @@ public class EquipmentData
             "STAT_CRI_DMG"    => "치명타 피해",
             "STAT_ATK_RNG"    => "공격 사거리",
             "STAT_CUR_REWARD" => "골드 보너스",
-            "STAT_SKL_CD"     => "스킬 쿨다운",
             "STAT_STUN"       => "적 둔화",
             "STAT_EVA_RATE"   => "회피율",
             "STAT_SPD_MOV"    => "이동속도",

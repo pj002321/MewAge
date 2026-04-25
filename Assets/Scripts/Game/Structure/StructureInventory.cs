@@ -216,8 +216,7 @@ public class StructureInventory : MonoBehaviourSingleton<StructureInventory>
         if (slotCount[slot] <= 0) slotData[slot] = null;
 
         // 쿨타임 시작
-        float reduction             = PlayerStatManager.Shared?.GetFinal(StatType.StructureCooldown) ?? 0f;
-        float duration              = Mathf.Max(0.5f, baseCooldown * Mathf.Clamp01(1f - reduction / 100f));
+        float duration              = baseCooldown;
         _cooldownDuration[slot]     = duration;
         _cooldownRemaining[slot]    = duration;
 

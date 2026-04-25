@@ -141,8 +141,6 @@ public class UpgradePanel : MonoBehaviour
     // ────────────────────────────────────────────────────────────────
     private void OnEnable()
     {
-        StructureInventory.BlockAuto = true;
-
         foreach (var anim in GetComponentsInChildren<Animator>(true))
             anim.updateMode = AnimatorUpdateMode.UnscaledTime;
 
@@ -167,8 +165,6 @@ public class UpgradePanel : MonoBehaviour
 
     private void OnDisable()
     {
-        StructureInventory.BlockAuto = false;
-
         if (autoStartCoroutine != null) StopCoroutine(autoStartCoroutine);
         if (notifCoroutine != null) { StopCoroutine(notifCoroutine); notifCoroutine = null; }
         if (buyExpHoldCoroutine != null) { StopCoroutine(buyExpHoldCoroutine); buyExpHoldCoroutine = null; }

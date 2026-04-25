@@ -191,13 +191,12 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         WaveEnvironmentSwitcher.Shared?.SetStage(currentChapterID);
         EnemySpawner.Shared?.SetChapterStage(currentChapterID);
 
-        // 이전 판 증강 수치 초기화 후 캐릭터 기초 스탯 + 기물 시너지 일괄 반영
+        // 이전 판 증강 수치 초기화 후 캐릭터 기초 스탯 일괄 반영
         // BeginBatch ~ EndBatch 사이 SetBase/AddPctMod는 마지막 EndBatch에서 1회만 적용됨
         var sm = PlayerStatManager.Shared;
         sm?.ResetMods();
         sm?.BeginBatch();
         PlayerCharacterManager.Shared?.ApplyCharacterStats();
-        WareSynergySystem.ApplySynergies();
         ApplyStageAtkBonus(sm);
         sm?.EndBatch();
 
@@ -328,7 +327,6 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 
     /// <summary>
     /// 적: 기존 사망 연출(흰색 실루엣·파편·날아가기) 재생.
-    /// 기물: 스케일다운 후 파괴.
     /// duration은 DieRoutine(0.4f)보다 여유 있게 설정할 것.
     /// </summary>
     private IEnumerator ClearAllWithScaleDown(float duration)
@@ -340,31 +338,9 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
             if (e != null) e.ForceDie();
         }
 
-        // 기물 — 스케일다운
-        var targets    = new System.Collections.Generic.List<Transform>();
-        var origScales = new System.Collections.Generic.List<Vector3>();
-        foreach (var sc in StructureController.All)
-        {
-            if (sc != null)
-            {
-                targets.Add(sc.transform);
-                origScales.Add(sc.transform.localScale);
-            }
-        }
+        yield return new WaitForSeconds(duration);
 
-        float elapsed = 0f;
-        while (elapsed < duration)
-        {
-            elapsed += Time.deltaTime;
-            float t = Mathf.Clamp01(elapsed / duration);
-            for (int i = 0; i < targets.Count; i++)
-                if (targets[i] != null)
-                    targets[i].localScale = Vector3.Lerp(origScales[i], Vector3.zero, t);
-            yield return null;
-        }
-
-        // 기물 파괴 + 아직 남은 적 강제 정리
-        StructureController.DestroyAll();
+        // 아직 남은 적 강제 정리
         EnemySpawner.Shared?.ClearAllEnemies();
     }
 
@@ -660,12 +636,10 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     /// </summary>
     private IEnumerator PlayerLandingIntroRoutine()
     {
-        StructureInventory.BlockAll = true; // 낙하~카운트다운 구간 기물 설치 차단
-
         if (timerText) timerText.gameObject.SetActive(false);
 
         var player = PlayerController.Instance;
-        if (player == null) { StructureInventory.BlockAll = false; StartNextWave(); yield break; }
+        if (player == null) { StartNextWave(); yield break; }
 
         player.InputLocked = true;
 
@@ -730,7 +704,6 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         // 3,2,1 카운트다운
         yield return StartCoroutine(CountdownRoutine());
 
-        StructureInventory.BlockAll = false; // 카운트다운 끝 → 기물 설치 허용
         player.InputLocked = false;
         StartNextWave();
     }
@@ -738,8 +711,6 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     /// <summary>보스 맵으로 즉시 전환 후 플레이어를 bossEnterPoint에서 낙하시킵니다.</summary>
     private IEnumerator BossLandingRoutine()
     {
-        StructureInventory.BlockAll = true;
-
         var player = PlayerController.Instance;
         if (player != null) player.InputLocked = true;
 
@@ -803,7 +774,6 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         }
 
         // 입력 해제 + 보스 웨이브 시작
-        StructureInventory.BlockAll = false; // 기물 설치 허용
         if (player != null) player.InputLocked = false;
         waveTimer   = bossWaveTimeLimit;
         _pauseTimer = false;
@@ -903,8 +873,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         if (timerText) { timerText.gameObject.SetActive(true); timerText.text = "00:00"; }
 
         if (notifyLabel != null) notifyLabel.gameObject.SetActive(false);
-        _isCountingDown             = false;
-        StructureInventory.BlockAll = false; // 카운트다운 종료 → 설치 허용
+        _isCountingDown = false;
     }
 
     public bool IsGameOver  => isGameOver;
