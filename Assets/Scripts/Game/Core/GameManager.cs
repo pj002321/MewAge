@@ -212,7 +212,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         SceneLoadManager.NotifyStageReady();
 
         // BGM 재생
-        SoundManager.Shared?.PlayGameBGM();
+        SoundManager.Shared?.PlayChapterGameBGM(currentChapterID);
 
         // 5. 오버레이 연출 중 낙하 입장 연출을 시작합니다.
         //    ThrowOut이 끝나기 전에 이미 연출이 진행되므로 자연스럽게 이어집니다.

@@ -21,6 +21,13 @@ public class BossChargeSkill : BossSkillBase
     [Tooltip("Sprites/Default 또는 URP Unlit 머티리얼 할당. null이면 자동 생성")]
     [SerializeField] private Material warningMaterial;
 
+    private LineRenderer _warnLine;
+
+    private void OnDisable()
+    {
+        if (_warnLine != null) { Destroy(_warnLine.gameObject); _warnLine = null; }
+    }
+
     protected override IEnumerator OnExecute()
     {
         // 플레이어 없음 또는 게임오버 → 즉시 중단
@@ -32,16 +39,18 @@ public class BossChargeSkill : BossSkillBase
 
         // 경고 라인 애니메이션
         var lr = SpawnWarningLine(origin, dir);
+        _warnLine = lr;
         float elapsed = 0f;
         while (elapsed < warningDuration)
         {
-            if (Owner == null || Owner.PlayerTransform == null) { if (lr != null) Destroy(lr.gameObject); yield break; }
+            if (Owner == null || Owner.PlayerTransform == null) { if (lr != null) Destroy(lr.gameObject); _warnLine = null; yield break; }
             elapsed += Time.deltaTime;
             float t = Mathf.Clamp01(elapsed / warningDuration);
             if (lr != null) lr.SetPosition(1, origin + dir * (warningLineLength * t));
             yield return null;
         }
         if (lr != null) Destroy(lr.gameObject);
+        _warnLine = null;
 
         if (Owner == null || Owner.PlayerTransform == null) yield break;
         if (GameManager.Shared != null && GameManager.Shared.IsGameOver) yield break;

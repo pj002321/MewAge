@@ -57,6 +57,24 @@ public class MeleeBehaviour : EnemyBehaviourBase
             Owner.FlipToward(toPlayer);
     }
 
+#if UNITY_EDITOR
+    private void OnDrawGizmosSelected()
+    {
+        var col = GetComponentInParent<Collider2D>();
+        Vector3 pos = col != null ? col.bounds.center : transform.position;
+
+        UnityEditor.Handles.color = new Color(1f, 0.4f, 0f, 0.15f);
+        UnityEditor.Handles.DrawSolidDisc(pos, Vector3.forward, attackRange);
+        UnityEditor.Handles.color = new Color(1f, 0.4f, 0f, 0.8f);
+        UnityEditor.Handles.DrawWireDisc(pos, Vector3.forward, attackRange);
+
+        UnityEditor.Handles.color = new Color(1f, 0f, 0f, 0.15f);
+        UnityEditor.Handles.DrawSolidDisc(pos, Vector3.forward, meleeHitRange);
+        UnityEditor.Handles.color = new Color(1f, 0f, 0f, 0.8f);
+        UnityEditor.Handles.DrawWireDisc(pos, Vector3.forward, meleeHitRange);
+    }
+#endif
+
     /// <summary>
     /// 공격 애니메이션의 타격 프레임에 Animation Event로 호출됩니다.
     /// 이 시점에 플레이어가 근접해 있으면 피해를 입힙니다.

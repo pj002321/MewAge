@@ -22,10 +22,22 @@ public class SoundManager : MonoBehaviourSingleton<SoundManager>
     [Header("사운드 딕셔너리")]
     [SerializeField] private List<SoundEntry> soundList = new();
 
-    [Header("BGM")]
+    [System.Serializable]
+    public class ChapterBGMEntry
+    {
+        [Tooltip("챕터 접두어 (예: C1, C2)")]
+        public string chapterId;
+        public AudioClip homeBGM;
+        public AudioClip gameBGM;
+    }
+
+    [Header("BGM — 기본 (챕터 미지정 폴백)")]
     [SerializeField] private AudioClip homeBGM;
     [SerializeField] private AudioClip gameBGM;
     [SerializeField] private float bgmFadeDuration = 1f;
+
+    [Header("BGM — 챕터별")]
+    [SerializeField] private List<ChapterBGMEntry> chapterBGMList = new();
 
     private readonly Dictionary<SoundKey, SoundEntry> soundDict = new();
     private readonly Dictionary<SoundKey, float> lastPlayTime = new();
@@ -35,6 +47,7 @@ public class SoundManager : MonoBehaviourSingleton<SoundManager>
     private Coroutine bgmFadeCoroutine;
 
     private string currentScene;
+    private string currentChapterId;
     private bool isLoadingIndicatorActive;
 
     protected override void Awake()
@@ -103,8 +116,40 @@ public class SoundManager : MonoBehaviourSingleton<SoundManager>
     // ─────────────────────────────────────────────────
     // BGM
     // ─────────────────────────────────────────────────
-    public void PlayHomeBGM() => PlayBGMWithFade(homeBGM, "home");
-    public void PlayGameBGM() => PlayBGMWithFade(gameBGM, "game");
+    public void PlayHomeBGM() => PlayChapterHomeBGM(null);
+    public void PlayGameBGM() => PlayChapterGameBGM(null);
+
+    /// <summary>chapterID 예: "C1_S1" → "C1" 접두어로 챕터별 홈 BGM 재생.</summary>
+    public void PlayChapterHomeBGM(string chapterID)
+    {
+        currentChapterId = ChapterPrefix(chapterID);
+        var clip = FindBGM(currentChapterId, isHome: true) ?? homeBGM;
+        PlayBGMWithFade(clip, "home");
+    }
+
+    /// <summary>chapterID 예: "C1_S1" → "C1" 접두어로 챕터별 인게임 BGM 재생.</summary>
+    public void PlayChapterGameBGM(string chapterID)
+    {
+        currentChapterId = ChapterPrefix(chapterID);
+        var clip = FindBGM(currentChapterId, isHome: false) ?? gameBGM;
+        PlayBGMWithFade(clip, "game");
+    }
+
+    private static string ChapterPrefix(string chapterID)
+    {
+        if (string.IsNullOrEmpty(chapterID)) return null;
+        int under = chapterID.IndexOf('_');
+        return under > 0 ? chapterID.Substring(0, under) : chapterID;
+    }
+
+    private AudioClip FindBGM(string prefix, bool isHome)
+    {
+        if (string.IsNullOrEmpty(prefix)) return null;
+        foreach (var e in chapterBGMList)
+            if (e.chapterId == prefix)
+                return isHome ? e.homeBGM : e.gameBGM;
+        return null;
+    }
 
     private void PlayBGMWithFade(AudioClip clip, string sceneName)
     {
@@ -162,8 +207,8 @@ public class SoundManager : MonoBehaviourSingleton<SoundManager>
     private void ResumeBGM()
     {
         if (currentScene == "home")
-            PlayBGMWithFade(homeBGM, "home");
+            PlayChapterHomeBGM(currentChapterId);
         else if (currentScene == "game")
-            PlayBGMWithFade(gameBGM, "game");
+            PlayChapterGameBGM(currentChapterId);
     }
 }

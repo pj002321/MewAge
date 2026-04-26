@@ -27,11 +27,12 @@ public class RangedBehaviour : EnemyBehaviourBase
     [Header("VFX")]
     [SerializeField] private GameObject attackVfxPrefab;
 
-    private float _projSpeed;
-    private float _projBonusDamage;
-    private bool  _projCanReflect;
-    private float shootTimer;
-    private bool  _isWarning;
+    private float        _projSpeed;
+    private float        _projBonusDamage;
+    private bool         _projCanReflect;
+    private float        shootTimer;
+    private bool         _isWarning;
+    private LineRenderer _activeWarnLine;
 
     public override void ApplyWaveScaling(float multiplier)
     {
@@ -90,10 +91,11 @@ public class RangedBehaviour : EnemyBehaviourBase
             : Vector2.right;
 
         var lr      = SpawnWarningLine(spawnPos, dir);
+        _activeWarnLine = lr;
         float elapsed = 0f;
         while (elapsed < warningDuration)
         {
-            if (Owner == null) { if (lr != null) Destroy(lr.gameObject); _isWarning = false; yield break; }
+            if (Owner == null) { if (lr != null) Destroy(lr.gameObject); _activeWarnLine = null; _isWarning = false; yield break; }
             // 발사 지점이 이동할 수 있으므로 매 프레임 갱신
             spawnPos = firePoint != null ? (Vector2)firePoint.position : Owner.Rb.position;
             if (lr != null) lr.SetPosition(0, spawnPos);
@@ -103,6 +105,7 @@ public class RangedBehaviour : EnemyBehaviourBase
             yield return null;
         }
         if (lr != null) Destroy(lr.gameObject);
+        _activeWarnLine = null;
 
         if (Owner != null && Owner.PlayerTransform != null)
             ShootProjectile();
@@ -128,6 +131,16 @@ public class RangedBehaviour : EnemyBehaviourBase
             float spd = _projSpeed > 0f ? _projSpeed : 6f;
             p.Init(dmg, dir, spd);
         }
+    }
+
+    private void OnDisable()
+    {
+        if (_activeWarnLine != null)
+        {
+            Destroy(_activeWarnLine.gameObject);
+            _activeWarnLine = null;
+        }
+        _isWarning = false;
     }
 
     private LineRenderer SpawnWarningLine(Vector2 start, Vector2 dir)

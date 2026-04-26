@@ -246,6 +246,8 @@ public class MainMenuPanel : MonoBehaviour
         }
 
         SnapImmediate(currentIndex);
+        if (stages != null && stages.Length > 0)
+            SoundManager.Shared?.PlayChapterHomeBGM(stages[currentIndex].chapterID);
 
         // 올바른 위치에 snap된 뒤 content 표시
         if (_contentCG != null) _contentCG.alpha = 1f;
@@ -392,6 +394,7 @@ public class MainMenuPanel : MonoBehaviour
     public void GoTo(int index, bool animate = true)
     {
         currentIndex = Mathf.Clamp(index, 0, Mathf.Max(0, stages.Length - 1));
+        SoundManager.Shared?.PlayChapterHomeBGM(stages[currentIndex].chapterID);
         if (animate)
         {
             if (_snapCoroutine != null) { StopCoroutine(_snapCoroutine); isSnapping = false; }

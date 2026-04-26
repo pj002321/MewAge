@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 /// <summary>
@@ -56,12 +57,15 @@ public class UpgradePanel : MonoBehaviour
     [Header("시너지 슬롯 컨테이너 (챕터별 4개, 배너 프리팹 인스턴스 부모)")]
     [SerializeField] private RectTransform[] synergySlotRoots = new RectTransform[4];
 
-    [Header("등급 확률 텍스트 (Normal/Rare/Elite/Epic/Legend)")]
+    [Header("등급 확률 텍스트 (일반/고급/희귀/전설/신화)")]
     [SerializeField] private TextMeshProUGUI normalProbText;
     [SerializeField] private TextMeshProUGUI rareProbText;
-    [SerializeField] private TextMeshProUGUI eliteProbText;
+    [FormerlySerializedAs("eliteProbText")]
     [SerializeField] private TextMeshProUGUI epicProbText;
-    [SerializeField] private TextMeshProUGUI legendProbText;
+    [FormerlySerializedAs("epicProbText")]
+    [SerializeField] private TextMeshProUGUI legendaryProbText;
+    [FormerlySerializedAs("legendProbText")]
+    [SerializeField] private TextMeshProUGUI mythicProbText;
 
     [Header("코인 날아가기 이펙트")]
     [SerializeField] private Image         coinImageSource;  // 복사할 코인 Image 컴포넌트
@@ -180,8 +184,8 @@ public class UpgradePanel : MonoBehaviour
     // ────────────────────────────────────────────────────────────────
     public void Refresh(WeaponData[] drawnCards, int rerollPrice, int buyExpPrice,
                         int ownedCount, int maxOwned, int wave,
-                        float pNormal = 0f, float pRare = 0f, float pElite = 0f,
-                        float pEpic  = 0f, float pLegend = 0f, WeaponData adCardData = null,
+                        float pNormal = 0f, float pRare = 0f, float pEpic = 0f,
+                        float pLegendary = 0f, float pMythic = 0f, WeaponData adCardData = null,
                         bool[] isSold = null, bool isAdSold = false)
     {
         isFirstWave = (wave == 0);
@@ -211,11 +215,11 @@ public class UpgradePanel : MonoBehaviour
         if (rerollButton) rerollButton.interactable = !isFirstWave;
 
         // 등급 확률 텍스트
-        if (normalProbText) normalProbText.text = $"{pNormal:0.#}%";
-        if (rareProbText)   rareProbText.text   = $"{pRare:0.#}%";
-        if (eliteProbText)  { eliteProbText.text = $"{pElite:0.#}%"; eliteProbText.color = new Color(0.1f, 0.75f, 1f); }
-        if (epicProbText)   epicProbText.text   = $"{pEpic:0.#}%";
-        if (legendProbText) legendProbText.text = $"{pLegend:0.#}%";
+        if (normalProbText)    normalProbText.text    = $"{pNormal:0.#}%";
+        if (rareProbText)      rareProbText.text      = $"{pRare:0.#}%";
+        if (epicProbText)    { epicProbText.text      = $"{pEpic:0.#}%";      epicProbText.color    = WeaponGradeColors.Get(WeaponGrade.Epic); }
+        if (legendaryProbText) { legendaryProbText.text = $"{pLegendary:0.#}%"; legendaryProbText.color = WeaponGradeColors.Get(WeaponGrade.Legendary); }
+        if (mythicProbText)  { mythicProbText.text   = $"{pMythic:0.#}%";    mythicProbText.color  = WeaponGradeColors.Get(WeaponGrade.Mythic); }
 
         RefreshGold();
         RefreshSynergySlots(wave);

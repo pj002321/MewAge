@@ -958,10 +958,10 @@ namespace Mewage.DB
 			get => _f_고급[Index];
 			set => _f_고급.SetValue(this, value);
 		}
-		public System.Int32 f_에픽
+		public System.Int32 f_희귀
 		{
-			get => _f_에픽[Index];
-			set => _f_에픽.SetValue(this, value);
+			get => _f_희귀[Index];
+			set => _f_희귀.SetValue(this, value);
 		}
 		public System.Int32 f_전설
 		{
@@ -1013,11 +1013,6 @@ namespace Mewage.DB
 			get => _f_G확률행수[Index];
 			set => _f_G확률행수.SetValue(this, value);
 		}
-		public System.Int32 f_희귀
-		{
-			get => _f_희귀[Index];
-			set => _f_희귀.SetValue(this, value);
-		}
 		private static BansheeGz.BGDatabase.BGFieldEntityName _ufle12jhs77_f_name;
 		public static BansheeGz.BGDatabase.BGFieldEntityName _f_name => _ufle12jhs77_f_name ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldEntityName>(MetaDefault, new BGId(5625658253894579995UL, 11916171661083328130UL), () => _ufle12jhs77_f_name = null);
 		private static BansheeGz.BGDatabase.BGFieldInt _ufle12jhs77_f_레벨;
@@ -1026,8 +1021,8 @@ namespace Mewage.DB
 		public static BansheeGz.BGDatabase.BGFieldInt _f_일반 => _ufle12jhs77_f_일반 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(MetaDefault, new BGId(4853448701703407359UL, 8620194466950415548UL), () => _ufle12jhs77_f_일반 = null);
 		private static BansheeGz.BGDatabase.BGFieldInt _ufle12jhs77_f_고급;
 		public static BansheeGz.BGDatabase.BGFieldInt _f_고급 => _ufle12jhs77_f_고급 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(MetaDefault, new BGId(5701276980408763607UL, 14026773862389441207UL), () => _ufle12jhs77_f_고급 = null);
-		private static BansheeGz.BGDatabase.BGFieldInt _ufle12jhs77_f_에픽;
-		public static BansheeGz.BGDatabase.BGFieldInt _f_에픽 => _ufle12jhs77_f_에픽 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(MetaDefault, new BGId(5335082598826157739UL, 1418155301340982955UL), () => _ufle12jhs77_f_에픽 = null);
+		private static BansheeGz.BGDatabase.BGFieldInt _ufle12jhs77_f_희귀;
+		public static BansheeGz.BGDatabase.BGFieldInt _f_희귀 => _ufle12jhs77_f_희귀 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(MetaDefault, new BGId(5248769706607206603UL, 17803114571621228948UL), () => _ufle12jhs77_f_희귀 = null);
 		private static BansheeGz.BGDatabase.BGFieldInt _ufle12jhs77_f_전설;
 		public static BansheeGz.BGDatabase.BGFieldInt _f_전설 => _ufle12jhs77_f_전설 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(MetaDefault, new BGId(4638881899825672950UL, 24441057483953024UL), () => _ufle12jhs77_f_전설 = null);
 		private static BansheeGz.BGDatabase.BGFieldInt _ufle12jhs77_f_신화;
@@ -1048,8 +1043,6 @@ namespace Mewage.DB
 		public static BansheeGz.BGDatabase.BGFieldListInt _f_필중횟수 => _ufle12jhs77_f_필중횟수 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldListInt>(MetaDefault, new BGId(5576940160155670476UL, 13538873303951078067UL), () => _ufle12jhs77_f_필중횟수 = null);
 		private static BansheeGz.BGDatabase.BGFieldInt _ufle12jhs77_f_G확률행수;
 		public static BansheeGz.BGDatabase.BGFieldInt _f_G확률행수 => _ufle12jhs77_f_G확률행수 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(MetaDefault, new BGId(4682472181735014820UL, 16643053331841911173UL), () => _ufle12jhs77_f_G확률행수 = null);
-		private static BansheeGz.BGDatabase.BGFieldInt _ufle12jhs77_f_희귀;
-		public static BansheeGz.BGDatabase.BGFieldInt _f_희귀 => _ufle12jhs77_f_희귀 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(MetaDefault, new BGId(5248769706607206603UL, 17803114571621228948UL), () => _ufle12jhs77_f_희귀 = null);
 		private DB_확률() : base(MetaDefault) {}
 		private DB_확률(BGId id) : base(MetaDefault, id) {}
 		private DB_확률(BGMetaEntity meta) : base(meta) {}
@@ -1070,7 +1063,7 @@ namespace Mewage.DB
 			_ufle12jhs77_f_레벨 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(_metaDefault, new BGId(4739559781667025629UL, 7243315150124483486UL));
 			_ufle12jhs77_f_일반 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(_metaDefault, new BGId(4853448701703407359UL, 8620194466950415548UL));
 			_ufle12jhs77_f_고급 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(_metaDefault, new BGId(5701276980408763607UL, 14026773862389441207UL));
-			_ufle12jhs77_f_에픽 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(_metaDefault, new BGId(5335082598826157739UL, 1418155301340982955UL));
+			_ufle12jhs77_f_희귀 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(_metaDefault, new BGId(5248769706607206603UL, 17803114571621228948UL));
 			_ufle12jhs77_f_전설 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(_metaDefault, new BGId(4638881899825672950UL, 24441057483953024UL));
 			_ufle12jhs77_f_신화 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(_metaDefault, new BGId(5407329611896701116UL, 9347693638854938035UL));
 			_ufle12jhs77_f_R확률행수 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(_metaDefault, new BGId(5164038927912365791UL, 7602602498304646282UL));
@@ -1081,7 +1074,6 @@ namespace Mewage.DB
 			_ufle12jhs77_f_G전설 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(_metaDefault, new BGId(5088435167571180073UL, 14610832360457822343UL));
 			_ufle12jhs77_f_필중횟수 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldListInt>(_metaDefault, new BGId(5576940160155670476UL, 13538873303951078067UL));
 			_ufle12jhs77_f_G확률행수 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(_metaDefault, new BGId(4682472181735014820UL, 16643053331841911173UL));
-			_ufle12jhs77_f_희귀 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(_metaDefault, new BGId(5248769706607206603UL, 17803114571621228948UL));
 		}
 		public static void ReleaseCodeGenRuntime()
 		{
@@ -1090,7 +1082,7 @@ namespace Mewage.DB
 			_ufle12jhs77_f_레벨 = null;
 			_ufle12jhs77_f_일반 = null;
 			_ufle12jhs77_f_고급 = null;
-			_ufle12jhs77_f_에픽 = null;
+			_ufle12jhs77_f_희귀 = null;
 			_ufle12jhs77_f_전설 = null;
 			_ufle12jhs77_f_신화 = null;
 			_ufle12jhs77_f_R확률행수 = null;
@@ -1101,7 +1093,6 @@ namespace Mewage.DB
 			_ufle12jhs77_f_G전설 = null;
 			_ufle12jhs77_f_필중횟수 = null;
 			_ufle12jhs77_f_G확률행수 = null;
-			_ufle12jhs77_f_희귀 = null;
 		}
 
 		[Preserve]
@@ -1118,7 +1109,7 @@ namespace Mewage.DB
 			public const string 레벨 = "레벨";
 			public const string 일반 = "일반";
 			public const string 고급 = "고급";
-			public const string 에픽 = "에픽";
+			public const string 희귀 = "희귀";
 			public const string 전설 = "전설";
 			public const string 신화 = "신화";
 			public const string R확률행수 = "R확률행수";
@@ -1129,7 +1120,6 @@ namespace Mewage.DB
 			public const string G전설 = "G전설";
 			public const string 필중횟수 = "필중횟수";
 			public const string G확률행수 = "G확률행수";
-			public const string 희귀 = "희귀";
 		}
 	}
 

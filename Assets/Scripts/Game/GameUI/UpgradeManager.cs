@@ -171,7 +171,7 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
                 minLevel  = row.f_레벨,
                 common    = row.f_일반,
                 rare      = row.f_고급,
-                epic      = row.f_에픽,
+                epic      = row.f_희귀,
                 legendary = row.f_전설,
                 mythic    = row.f_신화,
             });

@@ -54,6 +54,14 @@ public class BossProjectileCycleSkill : BossSkillBase
     [SerializeField] private string attackTrigger = "tAttack";
 
     private bool isChasing;
+    private readonly System.Collections.Generic.List<LineRenderer> _activeWarnLines = new System.Collections.Generic.List<LineRenderer>();
+
+    private void OnDisable()
+    {
+        foreach (var lr in _activeWarnLines)
+            if (lr != null) Destroy(lr.gameObject);
+        _activeWarnLines.Clear();
+    }
 
     // ── 초기화 ────────────────────────────────────────────────────
 
@@ -197,7 +205,10 @@ public class BossProjectileCycleSkill : BossSkillBase
     {
         var lines = new LineRenderer[dirs.Length];
         for (int i = 0; i < dirs.Length; i++)
+        {
             lines[i] = SpawnWarningLine(spawnPos, dirs[i]);
+            _activeWarnLines.Add(lines[i]);
+        }
 
         float elapsed = 0f;
         while (elapsed < warningDuration)
@@ -213,7 +224,10 @@ public class BossProjectileCycleSkill : BossSkillBase
         }
 
         foreach (var lr in lines)
+        {
             if (lr != null) Destroy(lr.gameObject);
+            _activeWarnLines.Remove(lr);
+        }
 
         if (IsInvalid()) yield break;
 
