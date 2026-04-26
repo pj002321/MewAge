@@ -26,7 +26,7 @@ Transform:
   m_GameObject: {fileID: 1853499898610612309}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: -0.62, z: 0}
+  m_LocalPosition: {x: 0, y: 0.07, z: 0}
   m_LocalScale: {x: 1.1, y: 1.1, z: 1.1}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -102,10 +102,9 @@ GameObject:
   - component: {fileID: 4708227032593916452}
   - component: {fileID: 9171375779276546692}
   - component: {fileID: 1315726127995701119}
+  - component: {fileID: 3772880163930704889}
   - component: {fileID: 4195903941498747360}
-  - component: {fileID: 88283260616077910}
   - component: {fileID: 8704387436020610850}
-  - component: {fileID: -58419445731862681}
   - component: {fileID: 6332168805933254515}
   - component: {fileID: -1328648504228144652}
   m_Layer: 7
@@ -217,6 +216,28 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
+--- !u!95 &3772880163930704889
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5595907520033269590}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 22100000, guid: 103db8b19d5bc1a47990b5d98b0784c3, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!114 &4195903941498747360
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -242,38 +263,6 @@ MonoBehaviour:
   bleedInterval: 1
   separationRadius: 5
   separationStrength: 1
---- !u!114 &88283260616077910
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5595907520033269590}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bce05cdbf4c6c0d4b8e3a23bbeb3fb43, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::EnemyFXConfig
-  onAttack:
-    vfxPrefab: {fileID: 0}
-    spawnOffset: {x: 0, y: 0}
-    sfxClip: {fileID: 0}
-    volume: 1
-  onHit:
-    vfxPrefab: {fileID: 0}
-    spawnOffset: {x: 0, y: 0}
-    sfxClip: {fileID: 0}
-    volume: 1
-  onDeath:
-    vfxPrefab: {fileID: 0}
-    spawnOffset: {x: 0, y: 0}
-    sfxClip: {fileID: 0}
-    volume: 1
-  onSpawn:
-    vfxPrefab: {fileID: 0}
-    spawnOffset: {x: 0, y: 0}
-    sfxClip: {fileID: 0}
-    volume: 1
 --- !u!114 &8704387436020610850
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -286,27 +275,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ebf384ff75278374cb62dda6f31d5629, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ChargeBehaviour
-  chargeInterval: 3
   chargeDuration: 1
   chargeSpeedMultiplier: 3
+  moveDuration: 2
+  idleDuration: 2
   chargeColor: {r: 1, g: 0, b: 0, a: 1}
   chargeScale: 0.85
   preChargeDuration: 0.5
   ghostInterval: 0.06
---- !u!114 &-58419445731862681
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5595907520033269590}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8dbca1b53536a2b47a8964120af00539, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HitFlash
-  flashDuration: 0.12
-  BaseColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!70 &6332168805933254515
 CapsuleCollider2D:
   m_ObjectHideFlags: 0

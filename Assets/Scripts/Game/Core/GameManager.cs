@@ -464,6 +464,10 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
             PlayerPrefs.Save();
         }
 
+        // 일시정지 중 사망 시 퍼즈 패널 강제 닫기
+        if (gamePausePanel != null && gamePausePanel.gameObject.activeSelf)
+            gamePausePanel.Hide();
+
         // 보스 타임아웃 등 skipRevival 요청 시 부활 패널 없이 바로 결과 화면
         if (skipRevival || gameOverPanel == null)
         {
@@ -591,6 +595,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     {
         if (timerText == null) yield break;
 
+        timerText.gameObject.SetActive(true);
         _pauseTimer = true;
         var rt = timerText.rectTransform;
         Vector3 baseScale = rt.localScale;

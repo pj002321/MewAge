@@ -91,6 +91,37 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!1 &5989814376111710945
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8991457889587638470}
+  m_Layer: 7
+  m_Name: GameObject
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8991457889587638470
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5989814376111710945}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 9161313412171669554}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &6872330745170493892
 GameObject:
   m_ObjectHideFlags: 0
@@ -130,6 +161,7 @@ Transform:
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 1082681437759257435}
+  - {fileID: 8991457889587638470}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &6673154977024379246
@@ -363,8 +395,13 @@ MonoBehaviour:
   projectilePrefab: {fileID: 109194795691363216, guid: ce238d64c4c9c384ea458dd616a5c30a, type: 3}
   preferredRange: 4
   shootInterval: 2
-  rangedDamage: 0
-  firePoint: {fileID: 0}
+  rangedDamage: 20
+  firePoint: {fileID: 8991457889587638470}
+  warningDuration: 1
+  warningLineLength: 8
+  warningLineWidth: 0.8
+  warningColor: {r: 1, g: 0, b: 0, a: 1}
+  warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
   attackVfxPrefab: {fileID: 0}
 --- !u!114 &7559408558089857974
 MonoBehaviour:

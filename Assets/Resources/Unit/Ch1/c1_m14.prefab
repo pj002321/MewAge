@@ -91,6 +91,37 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!1 &4415210760228317228
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8078664861803589011}
+  m_Layer: 0
+  m_Name: GameObject
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8078664861803589011
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4415210760228317228}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.11, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2799849513256322318}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &7313528007987417252
 GameObject:
   m_ObjectHideFlags: 0
@@ -106,7 +137,7 @@ GameObject:
   - component: {fileID: 5337808210302580648}
   - component: {fileID: 7126431795147920118}
   - component: {fileID: -5871980427623642109}
-  - component: {fileID: -5070660432427263646}
+  - component: {fileID: 297263582989846363}
   - component: {fileID: 3890210798184681978}
   - component: {fileID: -829680764859906721}
   m_Layer: 0
@@ -130,6 +161,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 4092441220517724094}
+  - {fileID: 8078664861803589011}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &6749509527068973254
@@ -311,7 +343,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HitFlash
   flashDuration: 0.12
   BaseColor: {r: 1, g: 1, b: 1, a: 1}
---- !u!114 &-5070660432427263646
+--- !u!114 &297263582989846363
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -320,16 +352,20 @@ MonoBehaviour:
   m_GameObject: {fileID: 7313528007987417252}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ebf384ff75278374cb62dda6f31d5629, type: 3}
+  m_Script: {fileID: 11500000, guid: 26ab6620137f93f4290148fd79412968, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ChargeBehaviour
-  chargeInterval: 3
-  chargeDuration: 0.6
-  chargeSpeedMultiplier: 3.5
-  chargeColor: {r: 1, g: 0, b: 0, a: 1}
-  chargeScale: 0.85
-  preChargeDuration: 0.25
-  ghostInterval: 0.06
+  m_EditorClassIdentifier: Assembly-CSharp::RangedBehaviour
+  projectilePrefab: {fileID: 7916182024222986910, guid: 626d85e8f1b7842468211300a67af973, type: 3}
+  preferredRange: 4
+  shootInterval: 2
+  rangedDamage: 10
+  firePoint: {fileID: 8078664861803589011}
+  warningDuration: 1
+  warningLineLength: 8
+  warningLineWidth: 0.8
+  warningColor: {r: 1, g: 0, b: 0, a: 1}
+  warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
+  attackVfxPrefab: {fileID: 0}
 --- !u!70 &3890210798184681978
 CapsuleCollider2D:
   m_ObjectHideFlags: 0

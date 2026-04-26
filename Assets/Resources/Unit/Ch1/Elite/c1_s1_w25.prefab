@@ -34,7 +34,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 2, y: 2, z: 2}
+  m_LocalScale: {x: 1.5, y: 1.5, z: 1.5}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 5253102227377969980}
@@ -274,6 +274,11 @@ MonoBehaviour:
   shootInterval: 2
   rangedDamage: 50
   firePoint: {fileID: 5727613956503103848}
+  warningDuration: 0.4
+  warningLineLength: 8
+  warningLineWidth: 0.05
+  warningColor: {r: 1, g: 0, b: 0, a: 1}
+  warningMaterial: {fileID: 0}
   attackVfxPrefab: {fileID: 0}
 --- !u!1 &3635078499002654668
 GameObject:

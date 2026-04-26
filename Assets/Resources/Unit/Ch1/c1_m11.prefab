@@ -132,13 +132,10 @@ GameObject:
   m_Component:
   - component: {fileID: 2799849513256322318}
   - component: {fileID: 6749509527068973254}
-  - component: {fileID: 8622318352103326421}
   - component: {fileID: 3477989986898819601}
   - component: {fileID: 4893850151441561591}
   - component: {fileID: 5337808210302580648}
-  - component: {fileID: 7126431795147920118}
   - component: {fileID: 2583878160409121165}
-  - component: {fileID: -5871980427623642109}
   - component: {fileID: -2056243319490886844}
   m_Layer: 0
   m_Name: c1_m11
@@ -223,28 +220,6 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
---- !u!95 &8622318352103326421
-Animator:
-  serializedVersion: 7
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7313528007987417252}
-  m_Enabled: 1
-  m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 0}
-  m_CullingMode: 0
-  m_UpdateMode: 0
-  m_ApplyRootMotion: 0
-  m_LinearVelocityBlending: 0
-  m_StabilizeFeet: 0
-  m_AnimatePhysics: 0
-  m_WarningMessage: 
-  m_HasTransformHierarchy: 1
-  m_AllowConstantClipSamplingOptimization: 1
-  m_KeepAnimatorStateOnDisable: 0
-  m_WriteDefaultValuesOnDisable: 0
 --- !u!50 &3477989986898819601
 Rigidbody2D:
   serializedVersion: 5
@@ -334,38 +309,6 @@ MonoBehaviour:
   bleedInterval: 1
   separationRadius: 3
   separationStrength: 2
---- !u!114 &7126431795147920118
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7313528007987417252}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bce05cdbf4c6c0d4b8e3a23bbeb3fb43, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::EnemyFXConfig
-  onAttack:
-    vfxPrefab: {fileID: 0}
-    spawnOffset: {x: 0, y: 0}
-    sfxClip: {fileID: 0}
-    volume: 1
-  onHit:
-    vfxPrefab: {fileID: 0}
-    spawnOffset: {x: 0, y: 0}
-    sfxClip: {fileID: 0}
-    volume: 1
-  onDeath:
-    vfxPrefab: {fileID: 0}
-    spawnOffset: {x: 0, y: 0}
-    sfxClip: {fileID: 0}
-    volume: 1
-  onSpawn:
-    vfxPrefab: {fileID: 0}
-    spawnOffset: {x: 0, y: 0}
-    sfxClip: {fileID: 0}
-    volume: 1
 --- !u!114 &2583878160409121165
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -383,21 +326,12 @@ MonoBehaviour:
   shootInterval: 2
   rangedDamage: 100
   firePoint: {fileID: 5428772856677564459}
+  warningDuration: 1
+  warningLineLength: 8
+  warningLineWidth: 0.8
+  warningColor: {r: 1, g: 0, b: 0, a: 1}
+  warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
   attackVfxPrefab: {fileID: 0}
---- !u!114 &-5871980427623642109
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7313528007987417252}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8dbca1b53536a2b47a8964120af00539, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HitFlash
-  flashDuration: 0.12
-  BaseColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!114 &-2056243319490886844
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 /// <summary>
@@ -15,6 +16,14 @@ public class RangedBehaviour : EnemyBehaviourBase
     [Tooltip("null이면 적 중심에서 발사")]
     [SerializeField] private Transform firePoint;
 
+    [Header("경고 라인")]
+    [SerializeField] private float    warningDuration   = 0.4f;
+    [SerializeField] private float    warningLineLength = 8f;
+    [SerializeField] private float    warningLineWidth  = 0.05f;
+    [SerializeField] private Color    warningColor      = Color.red;
+    [Tooltip("Sprites/Default 또는 URP Unlit 머티리얼 할당. null이면 자동 생성")]
+    [SerializeField] private Material warningMaterial;
+
     [Header("VFX")]
     [SerializeField] private GameObject attackVfxPrefab;
 
@@ -22,6 +31,7 @@ public class RangedBehaviour : EnemyBehaviourBase
     private float _projBonusDamage;
     private bool  _projCanReflect;
     private float shootTimer;
+    private bool  _isWarning;
 
     public override void ApplyWaveScaling(float multiplier)
     {
@@ -31,12 +41,13 @@ public class RangedBehaviour : EnemyBehaviourBase
     public override void OnAttackUpdate()
     {
         if (Owner.PlayerTransform == null) return;
+        if (_isWarning) return;
 
         shootTimer -= Time.deltaTime;
         if (shootTimer <= 0f)
         {
             shootTimer = shootInterval;
-            ShootProjectile();
+            StartCoroutine(WarnAndShoot());
         }
     }
 
@@ -69,6 +80,36 @@ public class RangedBehaviour : EnemyBehaviourBase
         _projCanReflect  = data.canReflect;
     }
 
+    private IEnumerator WarnAndShoot()
+    {
+        _isWarning = true;
+
+        Vector2 spawnPos = firePoint != null ? (Vector2)firePoint.position : Owner.Rb.position;
+        Vector2 dir      = Owner.PlayerTransform != null
+            ? ((Vector2)Owner.PlayerTransform.position - spawnPos).normalized
+            : Vector2.right;
+
+        var lr      = SpawnWarningLine(spawnPos, dir);
+        float elapsed = 0f;
+        while (elapsed < warningDuration)
+        {
+            if (Owner == null) { if (lr != null) Destroy(lr.gameObject); _isWarning = false; yield break; }
+            // 발사 지점이 이동할 수 있으므로 매 프레임 갱신
+            spawnPos = firePoint != null ? (Vector2)firePoint.position : Owner.Rb.position;
+            if (lr != null) lr.SetPosition(0, spawnPos);
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / warningDuration);
+            if (lr != null) lr.SetPosition(1, spawnPos + dir * (warningLineLength * t));
+            yield return null;
+        }
+        if (lr != null) Destroy(lr.gameObject);
+
+        if (Owner != null && Owner.PlayerTransform != null)
+            ShootProjectile();
+
+        _isWarning = false;
+    }
+
     private void ShootProjectile()
     {
         if (projectilePrefab == null) return;
@@ -87,5 +128,24 @@ public class RangedBehaviour : EnemyBehaviourBase
             float spd = _projSpeed > 0f ? _projSpeed : 6f;
             p.Init(dmg, dir, spd);
         }
+    }
+
+    private LineRenderer SpawnWarningLine(Vector2 start, Vector2 dir)
+    {
+        var go = new GameObject("WarnLine");
+        var lr = go.AddComponent<LineRenderer>();
+        lr.useWorldSpace = true;
+        lr.positionCount = 2;
+        lr.SetPosition(0, start);
+        lr.SetPosition(1, start);
+        lr.startWidth   = warningLineWidth;
+        lr.endWidth     = warningLineWidth;
+        lr.material     = warningMaterial != null
+            ? warningMaterial
+            : new Material(Shader.Find("Sprites/Default"));
+        lr.startColor   = warningColor;
+        lr.endColor     = warningColor;
+        lr.sortingOrder = 10;
+        return lr;
     }
 }
