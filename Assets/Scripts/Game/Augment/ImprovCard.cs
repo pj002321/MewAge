@@ -74,17 +74,7 @@ public class ImprovCard : MonoBehaviour
         }
 
         if (nameText) nameText.text = data.f_이름;
-        if (descText)
-        {
-            string desc = data.f_설명;
-            if (!string.IsNullOrEmpty(desc))
-            {
-                desc = desc.Replace("{0}", data.f_주수치.ToString());
-                desc = desc.Replace("{1}", data.f_보조수치.ToString());
-                desc = ColorizeNumbers(desc);
-            }
-            descText.text = desc ?? string.Empty;
-        }
+        if (descText)  descText.text = BuildDescription(data);
 
         if (button) button.interactable = true;
         SetDimmed(false);
@@ -154,6 +144,32 @@ public class ImprovCard : MonoBehaviour
 
         transform.localEulerAngles = Vector3.zero;
         transform.localScale       = endScale;
+    }
+
+    // ── 설명 텍스트 생성 ──────────────────────────────────────────────
+
+    private static string BuildDescription(DB_증강 data)
+    {
+        var sb = new System.Text.StringBuilder();
+
+        // f_설명 기본 텍스트 (있을 때만)
+        string baseDesc = data.f_설명;
+        if (!string.IsNullOrEmpty(baseDesc))
+        {
+            baseDesc = baseDesc.Replace("{0}", data.f_주수치.ToString());
+            baseDesc = baseDesc.Replace("{1}", data.f_보조수치.ToString());
+            sb.AppendLine(ColorizeNumbers(baseDesc));
+        }
+
+        // 축복 (긍정 효과) — AugmentHelper 공용 메서드 사용
+        string blessLine = AugmentHelper.BuildEffectLine(data.f_축복, data.f_축복수치, positive: true);
+        if (blessLine != null) sb.AppendLine(blessLine);
+
+        // 저주 (부정 효과) — 타입이 ATK여도 항상 손해로 표시
+        string curseLine = AugmentHelper.BuildEffectLine(data.f_저주, data.f_저주수치, positive: false);
+        if (curseLine != null) sb.Append(curseLine);
+
+        return sb.ToString().TrimEnd();
     }
 
     /// <summary>설명 텍스트의 숫자를 맥락에 따라 녹색/빨강으로 채색합니다.</summary>

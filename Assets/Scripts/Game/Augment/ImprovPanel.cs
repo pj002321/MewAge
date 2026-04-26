@@ -106,22 +106,17 @@ public class ImprovPanel : MonoBehaviour
         if (data == null) return null;
         float main = data.f_주수치;
         float sub  = data.f_보조수치;
+
+        // 특수 케이스 (체형 → sub 사용, 처치 회복 → HealOnKill)
         switch (data.f_증강ID)
         {
-            case ImprovType.AUG_ATK:          return (StatType.ATK,               main);
-            case ImprovType.AUG_DEF:          return (StatType.DEF,               main);
-            case ImprovType.AUG_MAX_HP:       return (StatType.MaxHP,             main);
-            case ImprovType.AUG_SPD_MOV:      return (StatType.MoveSpeed,         main);
-            case ImprovType.AUG_SPD_ATK:      return (StatType.AtkSpeed,          main);
-            case ImprovType.AUG_EVA:          return (StatType.Evasion,           main);
-            case ImprovType.AUG_CRI_RATE:     return (StatType.CritChance,        main);
-            case ImprovType.AUG_CRI_DMG:      return (StatType.CritDmg,           main);
-            case ImprovType.AUG_DOT_DMG:      return (StatType.BleedPower,        main);
-            case ImprovType.AUG_REWARD_RNG:   return (StatType.MagnetRadius,      main);
-            case ImprovType.AUG_SIZE_HP_UP:   return (StatType.MaxHP,             sub);
-            case ImprovType.AUG_SIZE_HP_DOWN: return (StatType.MaxHP,             -sub);
-            case ImprovType.AUG_HEAL_DEAD:    return (StatType.HealOnKill,        main);
-            default:                          return null;
+            case ImprovType.AUG_SIZE_HP_UP:   return (StatType.MaxHP,      sub);
+            case ImprovType.AUG_SIZE_HP_DOWN: return (StatType.MaxHP,      -sub);
+            case ImprovType.AUG_HEAL_DEAD:    return (StatType.HealOnKill, main);
         }
+
+        // 일반 스탯 계열 — AugmentHelper 공용 매핑 사용
+        var stat = AugmentHelper.ToStatType(data.f_증강ID.ToString());
+        return stat.HasValue ? (stat.Value, main) : ((StatType, float)?)null;
     }
 }

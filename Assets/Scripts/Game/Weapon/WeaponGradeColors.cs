@@ -11,6 +11,17 @@ public static class WeaponGradeColors
     private static Color yellow => new Color(1f, 0.9f, 0.1f);  // 4성 — 노랑  (Legendary)
     private static Color red => new Color(1f, 0.2f, 0.2f);  // 5성 — 빨강  (Mythic)
 
+    /// <summary>등급 한국어 표시명.</summary>
+    public static string ToKorean(WeaponGrade grade) => grade switch
+    {
+        WeaponGrade.Common    => "일반",
+        WeaponGrade.Rare      => "고급",
+        WeaponGrade.Epic      => "희귀",
+        WeaponGrade.Legendary => "전설",
+        WeaponGrade.Mythic    => "신화",
+        _                     => grade.ToString(),
+    };
+
     /// <summary>상점 카드 — 희귀도 등급 기준</summary>
     public static Color Get(WeaponGrade grade) => grade switch
     {

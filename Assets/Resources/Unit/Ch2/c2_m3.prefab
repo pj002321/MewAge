@@ -106,6 +106,7 @@ GameObject:
   - component: {fileID: 4169460820276639604}
   - component: {fileID: 3956946777425214820}
   - component: {fileID: -4372753262634940898}
+  - component: {fileID: 1256630319309987289}
   m_Layer: 7
   m_Name: c2_m3
   m_TagString: Untagged
@@ -274,10 +275,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8565366821a26e448bf253c3a60c531f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MagicBehaviour
+  skillType: 0
   castInterval: 4
-  castRange: 5
-  spellDamage: 20
-  spellPrefab: {fileID: 0}
+  castRange: 7
+  warningDuration: 0.8
+  markerPrefab: {fileID: 7905823675861574758, guid: 2c45f609030a63849b36336032979582, type: 3}
+  spikeDamage: 20
+  spikeHitRadius: 1
+  spikeEffectPrefab: {fileID: 228922861371978889, guid: 762b510f416fe3942b4b795eb989e022, type: 3}
+  effectLifetime: 1
+  summonPrefab: {fileID: 0}
+  summonCount: 3
+  summonSpread: 1.5
   preferredRange: 5
 --- !u!114 &-4372753262634940898
 MonoBehaviour:
@@ -297,3 +306,40 @@ MonoBehaviour:
   frequency: 1.25
   randomPhase: 1
   spriteTarget: {fileID: 0}
+--- !u!70 &1256630319309987289
+CapsuleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5298016620640385389}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0, y: 0.855}
+  m_Size: {x: 1, y: 1.71}
+  m_Direction: 0
