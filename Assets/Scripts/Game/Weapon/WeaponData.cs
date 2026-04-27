@@ -130,7 +130,18 @@ public class WeaponData : ScriptableObject
         data.star             = 1;
         data.weaponType       = ParseWeaponType(row.f_타입);
         data.price            = row.f_가격;
-        data.chapter          = row.f_챕터;
+        // weaponId 접두어(ch3_ → 3)에서 챕터 파싱 — f_챕터 오입력 방어
+        {
+            int parsed = row.f_챕터;
+            string wid = row.f_무기ID;
+            if (!string.IsNullOrEmpty(wid))
+            {
+                var p0 = wid.ToLower().Split('_')[0];
+                if (p0.StartsWith("ch") && int.TryParse(p0.Substring(2), out int n))
+                    parsed = n;
+            }
+            data.chapter = parsed;
+        }
         data.tag1             = ParseSynergyTag(row.f_태그1);
         data.storyDescription = row.f_스토리설명;
         data.bonus2Star = WeaponStatRegistry.Build(row.f_속성2성ID, row.f_S1);

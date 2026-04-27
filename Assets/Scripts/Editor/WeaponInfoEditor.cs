@@ -86,9 +86,10 @@ public class WeaponInfoEditor : Editor
             {
                 EditorGUILayout.Space(4);
                 EditorGUILayout.LabelField("번개 Muzzle", EditorStyles.boldLabel);
-                EditorGUILayout.PropertyField(p_muzzlePoint,      new GUIContent("뮤즐 Transform"));
-                EditorGUILayout.PropertyField(p_muzzleVfxPrefab,  new GUIContent("뮤즐 VFX 프리팹"));
-                EditorGUILayout.PropertyField(p_zapBoltVfxPrefab, new GUIContent("번개 볼트 VFX 프리팹"));
+                if (p_muzzlePoint      != null) EditorGUILayout.PropertyField(p_muzzlePoint,      new GUIContent("뮤즐 Transform"));
+                if (p_muzzleVfxPrefab  != null) EditorGUILayout.PropertyField(p_muzzleVfxPrefab,  new GUIContent("뮤즐 VFX 프리팹"));
+                if (p_zapBoltVfxPrefab != null) EditorGUILayout.PropertyField(p_zapBoltVfxPrefab, new GUIContent("번개 볼트 VFX 프리팹"));
+                else EditorGUILayout.HelpBox("WeaponPoint에 muzzlePoint / muzzleVfxPrefab / zapBoltVfxPrefab 필드가 없습니다.", MessageType.Warning);
                 EditorGUILayout.HelpBox("뮤즐 Transform: 무기 프리팹 자식 오브젝트로 배치 후 연결\n뮤즐 VFX: 발사 시 1초 후 자동 파괴됩니다.\n번개 볼트 VFX: 뮤즐→타겟 방향으로 스폰됩니다.", MessageType.None);
             }
         }

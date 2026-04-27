@@ -68,7 +68,8 @@ public class WeaponPresetEditor : EditorWindow
     [MenuItem("MuAge/Weapon Preset Editor")]
     public static void Open() => GetWindow<WeaponPresetEditor>("무기 프리셋");
 
-    private void OnEnable() => Reload();
+    private void OnEnable()  => Reload();
+    private void OnFocus()   => Reload();
 
     // ── 데이터 로드 ──────────────────────────────────────────────────
     private void Reload()
