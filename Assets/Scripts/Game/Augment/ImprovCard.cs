@@ -161,13 +161,9 @@ public class ImprovCard : MonoBehaviour
             sb.AppendLine(ColorizeNumbers(baseDesc));
         }
 
-        // 축복 (긍정 효과) — AugmentHelper 공용 메서드 사용
+        // 축복 (긍정 효과)만 표시 — 저주 효과는 저주 패널에서만 표시
         string blessLine = AugmentHelper.BuildEffectLine(data.f_축복, data.f_축복수치, positive: true);
-        if (blessLine != null) sb.AppendLine(blessLine);
-
-        // 저주 (부정 효과) — 타입이 ATK여도 항상 손해로 표시
-        string curseLine = AugmentHelper.BuildEffectLine(data.f_저주, data.f_저주수치, positive: false);
-        if (curseLine != null) sb.Append(curseLine);
+        if (blessLine != null) sb.Append(blessLine);
 
         return sb.ToString().TrimEnd();
     }

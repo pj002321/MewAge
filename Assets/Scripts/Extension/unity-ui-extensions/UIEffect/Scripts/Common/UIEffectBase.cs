@@ -115,6 +115,7 @@ namespace Coffee.UIExtensions
 		/// </summary>
 		public virtual void ModifyMaterial()
 		{
+			if (targetGraphic == null) return;
 			targetGraphic.material = isActiveAndEnabled ? m_EffectMaterial : null;
 		}
 
