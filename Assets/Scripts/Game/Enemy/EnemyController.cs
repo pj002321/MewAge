@@ -88,6 +88,7 @@ public class EnemyController : MonoBehaviour
     private Material[] _originalMats;
 
     private EliteMarker _eliteMarker;
+    private TankShield  _shield;
 
     // ── 초기화 ──────────────────────────────────────────────────
     private void Awake()
@@ -102,6 +103,7 @@ public class EnemyController : MonoBehaviour
         animator          = GetComponentInChildren<Animator>();
         behaviour         = GetComponent<EnemyBehaviourBase>();
         _eliteMarker      = GetComponent<EliteMarker>();
+        _shield           = GetComponent<TankShield>();
 
         // 디버그: SpriteRenderer 확인
         if (srs == null || srs.Length == 0)
@@ -256,6 +258,7 @@ public class EnemyController : MonoBehaviour
             foreach (var col in _cachedColliders) col.enabled = true;
 
         playerTransform = PlayerController.Instance?.transform;
+        _shield?.ResetShield();
         All.Add(this);
     }
 
@@ -519,6 +522,10 @@ public class EnemyController : MonoBehaviour
 
     public void TakeDamage(float damage, bool isCritical = false, Vector2 knockbackDir = default, float knockbackForce = 0f)
     {
+        // 방어막이 있으면 먼저 흡수 — 잔여 피해만 HP에 적용
+        if (_shield != null) damage = _shield.TryAbsorbDamage(damage);
+        if (damage <= 0f) return;
+
         currentHP -= damage;
 
         SoundManager.Shared?.Play(SoundKey.Enemy_Hit);
