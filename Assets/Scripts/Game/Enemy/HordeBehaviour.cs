@@ -90,8 +90,7 @@ public class HordeBehaviour : EnemyBehaviourBase
             dirSet  = true;
 
             // 스프라이트 방향 1회 설정
-            var sr = Owner.GetComponent<UnityEngine.SpriteRenderer>();
-            if (sr != null) sr.flipX = moveDir.x < 0f;
+            Owner.FlipToward(moveDir);
         }
 
         Owner.MoveInDirection(moveDir, Owner.MoveSpeed);

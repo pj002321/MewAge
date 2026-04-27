@@ -11,7 +11,12 @@ public class BossRollingProjectile : MonoBehaviour
     private Vector2         _direction;
     private float           _speed;
     private float           _rotateSpeed; // 초당 회전각 (도)
+    private bool            _rotate;
     private BossController  _ownerBoss;
+
+    [Header("연출")]
+    [Tooltip("벽에 튕길 때마다 스프라이트 좌우 반전")]
+    [SerializeField] private bool flipOnBounce = true;
 
     private int             _maxBounces;
     private int             _currentBounces;
@@ -26,12 +31,13 @@ public class BossRollingProjectile : MonoBehaviour
     /// <param name="speed">이동 속도 (units/s)</param>
     /// <param name="lifetime">자동 소멸까지 시간 (초)</param>
     /// <param name="rotateSpeed">굴림 회전 속도 (도/s). 양수=시계방향</param>
-    public void Init(float damage, Vector2 direction, float speed, float lifetime = 6f, float rotateSpeed = 360f, int maxBounces = 0)
+    public void Init(float damage, Vector2 direction, float speed, float lifetime = 6f, float rotateSpeed = 360f, int maxBounces = 0, bool rotate = true)
     {
         _damage         = damage;
         _direction      = direction.normalized;
         _speed          = speed;
         _rotateSpeed    = rotateSpeed;
+        _rotate         = rotate;
         _maxBounces     = maxBounces;
         _currentBounces = 0;
         _spriteRenderer = GetComponentInChildren<SpriteRenderer>();
@@ -59,8 +65,8 @@ public class BossRollingProjectile : MonoBehaviour
         if (_isDestroying) return;
 
         HandleMovement();
-        // 굴림 회전
-        transform.Rotate(0f, 0f, _rotateSpeed * Time.deltaTime);
+        if (_rotate)
+            transform.Rotate(0f, 0f, _rotateSpeed * Time.deltaTime);
     }
 
     private void HandleMovement()
@@ -76,6 +82,13 @@ public class BossRollingProjectile : MonoBehaviour
                 Vector2 hitNormal = GetBoundaryNormal(currentPos);
                 _direction = Vector2.Reflect(_direction, hitNormal).normalized;
                 _currentBounces++;
+
+                if (flipOnBounce)
+                {
+                    var s = transform.localScale;
+                    s.x = -s.x;
+                    transform.localScale = s;
+                }
 
                 this.DLog($"Bounced! ({_currentBounces}/{_maxBounces}) Normal: {hitNormal}");
 

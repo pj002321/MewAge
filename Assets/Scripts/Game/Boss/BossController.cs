@@ -90,6 +90,9 @@ public class BossController : MonoBehaviour
     private bool             _skillExecuting;
     private bool             _lastFlipX;  // FlipToward 중복 갱신 방지
 
+    /// <summary>현재 보스가 왼쪽을 바라보고 있으면 true.</summary>
+    public bool IsFacingLeft => _lastFlipX;
+
     private readonly List<BossSkillBase> _readySkills = new();
 
     public bool IsDropping    => _dropping;
@@ -283,15 +286,21 @@ public class BossController : MonoBehaviour
 
     public void FlipToward(Vector2 dir)
     {
-        if (srs == null) return;
         bool newFlipX;
         if      (dir.x > 0.01f)  newFlipX = false;
         else if (dir.x < -0.01f) newFlipX = true;
         else return;
 
-        if (newFlipX == _lastFlipX) return;
         _lastFlipX = newFlipX;
-        foreach (var sr in srs) sr.flipX = newFlipX;
+    }
+
+    private void LateUpdate()
+    {
+        if (isDead || _dropping) return;
+        var s = transform.localScale;
+        float absX = Mathf.Abs(s.x);
+        s.x = _lastFlipX ? -absX : absX;
+        transform.localScale = s;
     }
 
     // ── 피격 / 사망 ─────────────────────────────────────────────────

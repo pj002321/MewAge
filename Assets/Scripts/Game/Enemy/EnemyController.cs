@@ -303,18 +303,23 @@ public class EnemyController : MonoBehaviour
         FlipToward(dir);
     }
 
-    /// <summary>방향 벡터에 따라 스프라이트를 좌우 반전합니다.</summary>
+    /// <summary>방향 벡터에 따라 좌우 반전 플래그를 갱신합니다. 실제 scale 적용은 LateUpdate.</summary>
     public void FlipToward(Vector2 dir)
     {
-        if (srs == null || srs.Length == 0) return;
         bool newFlipX;
         if      (dir.x > 0.01f)  newFlipX = false;
         else if (dir.x < -0.01f) newFlipX = true;
         else return;
 
-        if (newFlipX == _lastFlipX) return;
         _lastFlipX = newFlipX;
-        foreach (var sr in srs) sr.flipX = newFlipX;
+    }
+
+    private void LateUpdate()
+    {
+        var s = transform.localScale;
+        float absX = Mathf.Abs(s.x);
+        s.x = _lastFlipX ? -absX : absX;
+        transform.localScale = s;
     }
 
     // ── 충돌 접촉 피해 ──────────────────────────────────────────

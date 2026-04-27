@@ -29,6 +29,7 @@ public class BossRollingBoulderSkill : BossSkillBase
     [SerializeField] private float      rotateSpeed     = 270f;
     [SerializeField] private float      boulderDamage   = 0f; // 0이면 ContactDamage 사용
     [SerializeField] private int        maxBounces      = 3;
+    [SerializeField] private bool       rotate          = true;
 
     [Header("발사 지점")]
     [Tooltip("null이면 보스 중심에서 발사")]
@@ -87,7 +88,7 @@ public class BossRollingBoulderSkill : BossSkillBase
             ? (Vector2)firePoint.position
             : Owner.Rb != null ? Owner.Rb.position : (Vector2)Owner.transform.position;
 
-        Vector2 dir    = ((Vector2)Owner.PlayerTransform.position - spawnPos).normalized;
+        Vector2 dir    = Boss.IsFacingLeft ? Vector2.left : Vector2.right;
         float dmgMult  = Boss != null && Boss.IsEnraged ? Boss.EnrageDamageMult : 1f;
         float dmg      = (boulderDamage > 0f ? boulderDamage : Owner.ContactDamage) * dmgMult;
 
@@ -100,7 +101,7 @@ public class BossRollingBoulderSkill : BossSkillBase
             float finalDmg      = boulderData != null ? boulderData.Damage : dmg;
             int   finalBounces  = boulderData != null ? boulderData.MaxBounces : maxBounces;
 
-            boulder.Init(finalDmg, dir, finalSpeed, finalLifetime, finalRotate, finalBounces);
+            boulder.Init(finalDmg, dir, finalSpeed, finalLifetime, finalRotate, finalBounces, rotate);
             boulder.SetOwnerBoss(Boss);
         }
     }

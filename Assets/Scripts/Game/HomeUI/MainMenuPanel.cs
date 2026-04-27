@@ -124,11 +124,22 @@ public class MainMenuPanel : MonoBehaviour
         stages = list.ToArray();
     }
 
+    int FindSavedStageIndex()
+    {
+        if (stages == null || stages.Length == 0) return 0;
+        string saved = PlayerPrefs.GetString("SelectedChapterID", "");
+        if (string.IsNullOrEmpty(saved)) return 0;
+        for (int i = 0; i < stages.Length; i++)
+            if (stages[i].chapterID == saved) return i;
+        return 0;
+    }
+
     // ── 초기화 ───────────────────────────────────────────────────────
 
     void Start()
     {
         LoadStagesFromDB();
+        currentIndex = FindSavedStageIndex();
         EnsureVerticalLayout();
         BuildCards();
         storageButton.onClick.AddListener(() => storagePopup.Show());
