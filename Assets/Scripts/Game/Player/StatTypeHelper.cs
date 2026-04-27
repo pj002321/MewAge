@@ -13,8 +13,9 @@ public static class StatTypeHelper
         StatType.AtkSpeed     => "공격속도",
         StatType.Evasion      => "회피율",
         StatType.CritChance   => "치명타 확률",
-        StatType.CritDmg      => "치명타 피해",
-        StatType.Knockback    => "넉백",
+        StatType.CritDmg           => "치명타 피해",
+        StatType.StructureCooldown => "기물 쿨타임",
+        StatType.Knockback         => "넉백",
         StatType.HealOnKill   => "처치 회복",
         _                     => stat.ToString(),
     };

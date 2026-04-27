@@ -24,7 +24,8 @@ public class WeaponSynergySlot : MonoBehaviour
         // 배너 아이콘 (UpgradePanel 슬롯과 동일한 이미지)
         if (synergyIconImg != null)
         {
-            var banner = cfg?.GetSynergyBanner(entry.Tag);
+            bool active = equippedCount >= 1;
+            var banner = cfg?.GetSynergyBanner(entry.Tag, active) ?? entry.Icon;
             synergyIconImg.sprite  = banner;
             synergyIconImg.enabled = banner != null;
         }
@@ -61,7 +62,7 @@ public class WeaponSynergySlot : MonoBehaviour
         if (synergyRefSlotPrefab == null || refSlotContainer == null) return;
 
         var equipped = SynergyHelper.GetEquippedWeaponsForTag(entry.Tag);
-        var banner   = WeaponVisualConfig.Shared?.GetSynergyBanner(entry.Tag);
+        var banner   = WeaponVisualConfig.Shared?.GetSynergyBanner(entry.Tag, active: equipped.Count >= 1);
 
         // 슬롯 재사용 / 생성
         for (int i = 0; i < equipped.Count; i++)

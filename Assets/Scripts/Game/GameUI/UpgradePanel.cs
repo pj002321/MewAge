@@ -412,7 +412,11 @@ public class UpgradePanel : MonoBehaviour
 
             var img = root.GetComponent<Image>() ?? root.GetComponentInChildren<Image>();
             if (img != null && img.enabled)
+            {
+                var banner = WeaponVisualConfig.Shared?.GetSynergyBanner(synergySlotTags[i], isAchieved);
+                if (banner != null) img.sprite = banner;
                 img.color = isAchieved ? SynergyHelper.GetTierColor(count) : Color.white;
+            }
 
             var animator = root.GetComponent<Animator>() ?? root.GetComponentInChildren<Animator>();
             if (animator != null)

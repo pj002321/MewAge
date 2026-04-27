@@ -15,6 +15,7 @@ public enum StatType
     Evasion           = 8,   // 회피 수치       — 피격 회피 확률 (0~0.75)
     CritChance        = 9,   // 크리티컬 확률   — %
     CritDmg           = 10,  // 크리티컬 데미지 — 기본 1.5x 위 추가 배율 %
-    Knockback         = 11,  // 넉백 지수       — 적에게 가하는 넉백 강도
-    HealOnKill        = 12,  // 처치 회복       — 적 처치 시 회복 발동 확률 (%)
+    StructureCooldown = 11,  // 기물 쿨타임     — 기물 스킬 쿨타임 감소 % (현재 미사용, 직렬화 호환용)
+    Knockback         = 12,  // 넉백 지수       — 적에게 가하는 넉백 강도
+    HealOnKill        = 13,  // 처치 회복       — 적 처치 시 회복 발동 확률 (%)
 }

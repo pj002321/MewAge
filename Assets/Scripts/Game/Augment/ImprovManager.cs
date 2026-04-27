@@ -198,9 +198,6 @@ public class ImprovManager : MonoBehaviourSingleton<ImprovManager>
                 break;
         }
 
-        // f_축복 / f_저주 스탯 모디파이어 적용 (AugmentHelper 공용 메서드)
-        AugmentHelper.ApplyStatMod(sm, data.f_축복, data.f_축복수치, positive: true);
-        AugmentHelper.ApplyStatMod(sm, data.f_저주,  data.f_저주수치,  positive: false);
 
         // 획득 이력 기록
         string key = data.f_증강ID.ToString();

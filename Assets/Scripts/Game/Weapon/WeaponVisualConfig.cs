@@ -39,7 +39,8 @@ public class WeaponVisualConfig : ScriptableObject
     public struct SynergyBannerEntry
     {
         public WeaponSynergyTag tag;
-        public Sprite           banner;
+        public Sprite           inactiveBanner;   // 비활성화 (장착 0개)
+        public Sprite           activeBanner;     // 활성화 (장착 1개 이상)
     }
 
     [Header("등급 프레임 스프라이트 (Normal~Legend)")]
@@ -77,11 +78,17 @@ public class WeaponVisualConfig : ScriptableObject
         return null;
     }
 
-    public Sprite GetSynergyBanner(WeaponSynergyTag tag)
+    /// <summary>active=true면 activeBanner, false면 inactiveBanner를 반환합니다.
+    /// activeBanner가 미할당된 경우 inactiveBanner로 폴백합니다.</summary>
+    public Sprite GetSynergyBanner(WeaponSynergyTag tag, bool active = false)
     {
         if (tag == WeaponSynergyTag.None) return null;
         foreach (var e in synergyBanners)
-            if (e.tag == tag) return e.banner;
+        {
+            if (e.tag != tag) continue;
+            if (active && e.activeBanner != null) return e.activeBanner;
+            return e.inactiveBanner;
+        }
         return null;
     }
 
