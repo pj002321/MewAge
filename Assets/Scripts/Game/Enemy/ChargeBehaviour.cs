@@ -63,13 +63,16 @@ public class ChargeBehaviour : EnemyBehaviourBase
         ghostTimer      = 0f;
         originalScale   = Owner.transform.localScale;
 
-        Owner.EnemyAnimator.SetTrigger("tCharge");
+        Owner.EnemyAnimator?.SetTrigger("tCharge");
 
         var sr = _cachedSr;
         if (sr != null)
         {
             sr.color = chargeColor;
-            Owner.transform.localScale = originalScale * chargeScale;
+            // X는 LateUpdate의 flip이 제어하므로 Y만 조정
+            var s = Owner.transform.localScale;
+            s.y = originalScale.y * chargeScale;
+            Owner.transform.localScale = s;
         }
     }
 
@@ -79,7 +82,9 @@ public class ChargeBehaviour : EnemyBehaviourBase
         if (sr != null)
         {
             sr.color = Color.white;
-            Owner.transform.localScale = originalScale;
+            var s = Owner.transform.localScale;
+            s.y = originalScale.y;
+            Owner.transform.localScale = s;
         }
         _phase      = Phase.Moving;
         _phaseTimer = moveDuration;
@@ -96,7 +101,9 @@ public class ChargeBehaviour : EnemyBehaviourBase
                 if (sr != null)
                 {
                     sr.color = Color.white;
-                    Owner.transform.localScale = originalScale;
+                    var s = Owner.transform.localScale;
+                    s.y = originalScale.y;
+                    Owner.transform.localScale = s;
                 }
                 chargeRemaining = chargeDuration + 1f;  // 중복 복구 방지
             }

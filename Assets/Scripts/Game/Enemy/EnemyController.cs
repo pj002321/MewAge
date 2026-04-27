@@ -152,7 +152,7 @@ public class EnemyController : MonoBehaviour
         if (GameManager.Shared != null && GameManager.Shared.IsGameOver) return;
         if (isStunned) return;
         if (behaviour != null && behaviour.enabled) behaviour.OnAttackUpdate();
-        animator.SetBool("bMove", isMoving);
+        animator?.SetBool("bMove", isMoving);
         CheckPlayerContact();
     }
 
@@ -284,6 +284,10 @@ public class EnemyController : MonoBehaviour
     private void LateUpdate()
     {
         damageTimer -= Time.deltaTime;
+
+        var s = transform.localScale;
+        s.x = _lastFlipX ? -Mathf.Abs(s.x) : Mathf.Abs(s.x);
+        transform.localScale = s;
     }
 
     // ── 이동 헬퍼 (EnemyBehaviourBase에서 호출) ─────────────────
@@ -314,13 +318,6 @@ public class EnemyController : MonoBehaviour
         _lastFlipX = newFlipX;
     }
 
-    private void LateUpdate()
-    {
-        var s = transform.localScale;
-        float absX = Mathf.Abs(s.x);
-        s.x = _lastFlipX ? -absX : absX;
-        transform.localScale = s;
-    }
 
     // ── 충돌 접촉 피해 ──────────────────────────────────────────
     private void OnTriggerStay2D(Collider2D other)
