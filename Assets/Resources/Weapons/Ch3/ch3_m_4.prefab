@@ -1,5 +1,36 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &5018522307257079662
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3366430413513682790}
+  m_Layer: 0
+  m_Name: tMuzzle
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3366430413513682790
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5018522307257079662}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.731, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 9195742053575101327}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &7736371004280348099
 GameObject:
   m_ObjectHideFlags: 0
@@ -31,7 +62,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 3366430413513682790}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &3948020582310150610
@@ -105,17 +137,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 80572d92ca6952f478c256b7ffc65d80, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponPoint
-  weaponType: 1
+  weaponType: 2
   pullbackDist: 0.5
   anticipationTime: 0.1
   strikeSpeed: 90
   returnSpeed: 70
   hitDistance: 0.25
   areaHitDamageRatio: 0.5
-  overshootDistance: 3
+  overshootDistance: 5
   overshootSpeed: 60
-  projectilePrefab: {fileID: 6277426376135361209, guid: 8a7fe956edac1de40b9f99808893590d, type: 3}
-  projectileSpeed: 10
+  pullOnReturn: 0
+  pullRadius: 2
+  pullStrength: 8
+  pullDuration: 0.25
+  projectilePrefab: {fileID: 38222733961658620, guid: f708158f0386f7b4c8a769e2b3a403ee, type: 3}
+  projectileSpeed: 20
   useParabolicShot: 1
   parabolicArcHeight: 5
   parabolicSpawnLocalPos: {x: 0.6, y: 0.63, z: 0}
@@ -139,10 +175,21 @@ MonoBehaviour:
   slashHitRadius: 0.35
   slashVfxPrefab: {fileID: 0}
   slashVfxDuration: 1
+  slashTeleportMaxDist: 3
+  slashFadeTime: 0.12
   chargeDuration: 1
-  magicElement: 0
-  muzzlePoint: {fileID: 0}
-  zapBoltVfxPrefab: {fileID: 0}
+  hammerRiseHeight: 4
+  hammerRiseTime: 0.55
+  hammerSpinSpeed: 900
+  hammerSlamSpeed: 28
+  hammerImpactWorldPos: {x: 0, y: 0}
+  hammerImpactRadius: 1.8
+  hammerImpactVfxPrefab: {fileID: 0}
+  hammerHighlightScale: 2.2
+  hammerHighlightDur: 0.35
+  magicElement: 1
+  muzzlePoint: {fileID: 3366430413513682790}
+  zapBoltVfxPrefab: {fileID: 7880470054483752245, guid: 33a39c92b73c6bf4b9927fe04ca23d8f, type: 3}
   lightningBurstCount: 3
   lightningBurstInterval: 0.07
   zapLineHitRadius: 0.25

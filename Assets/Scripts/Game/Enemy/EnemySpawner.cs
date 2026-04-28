@@ -308,10 +308,13 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
         if (spawning) StartCoroutine(SpawnLoop());
     }
 
+    public bool IsSpawning => spawning;
+
     public void StopSpawning()
     {
         spawning = false;
         StopAllCoroutines();
+        SpawnMarker.CancelAll(); // 대기 중인 마커도 즉시 취소
     }
 
     public void ClearAllEnemies()

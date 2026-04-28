@@ -55,7 +55,6 @@ public class DebugPanel : MonoBehaviour
         }
 
         equipWeaponButton?.onClick.AddListener(OnEquipSelectedWeapon);
-        weaponDropdown?.onValueChanged.AddListener(_ => OnEquipSelectedWeapon());
     }
 
     private void Start()
@@ -130,16 +129,15 @@ public class DebugPanel : MonoBehaviour
         _debugWeaponList.Clear();
         weaponDropdown.ClearOptions();
 
-        // SelectedChapterID 형식: "C2_S1" → 첫 번째 '_' 앞 부분에서 숫자 추출
-        string chapterId = PlayerPrefs.GetString("SelectedChapterID", "C1_S1");
+        string chapterID = PlayerPrefs.GetString("SelectedChapterID", "C1_S1");
         int chapter = 1;
-        string[] parts = chapterId.Split('_');
+        string[] parts = chapterID.Split('_');
         if (parts.Length > 0 && parts[0].Length >= 2)
             int.TryParse(parts[0].Substring(1), out chapter);
-
         DB_무기.ForEachEntity(row =>
         {
-            if (row.f_챕터 == chapter) _debugWeaponList.Add(row);
+            var w = WeaponData.FromDB(row);
+            if (w != null && w.chapter == chapter) _debugWeaponList.Add(row);
         });
 
         _debugWeaponList.Sort((a, b) => GradeOrder(a.f_등급).CompareTo(GradeOrder(b.f_등급)));
@@ -149,6 +147,22 @@ public class DebugPanel : MonoBehaviour
             options.Add(new TMP_Dropdown.OptionData($"[{GradeLabel(row.f_등급)}] {row.f_이름}"));
 
         weaponDropdown.AddOptions(options);
+        weaponDropdown.value = 0;
+        weaponDropdown.RefreshShownValue();
+
+        // 드롭다운 팝업 높이를 항목 수에 맞게 조정 (마지막 항목 잘림 방지)
+        if (weaponDropdown.template != null)
+        {
+            var itemToggle = weaponDropdown.template.GetComponentInChildren<UnityEngine.UI.Toggle>(true);
+            float itemH = itemToggle != null
+                ? ((RectTransform)itemToggle.transform).rect.height
+                : 30f;
+            if (itemH < 1f) itemH = 30f;
+
+            int visible = Mathf.Min(options.Count, 12);
+            weaponDropdown.template.sizeDelta =
+                new Vector2(weaponDropdown.template.sizeDelta.x, visible * itemH + 8f);
+        }
     }
 
     private static int GradeOrder(string g) => g switch

@@ -7,6 +7,7 @@ public enum WeaponType
     Spin,      // 돌리기 (플레이어 주위 공전)
     Slash,     // 슬래시 (관통형 검기)
     Charge,    // 차징 후 강타
+    Hammer,    // 해머 (회전 상승 → 내려치기)
 }
 
 /// <summary>Magic 타입 무기의 속성. WeaponPoint Inspector에서 설정합니다.</summary>

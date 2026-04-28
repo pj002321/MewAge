@@ -144,10 +144,14 @@ MonoBehaviour:
   returnSpeed: 70
   hitDistance: 0.25
   areaHitDamageRatio: 0.5
-  overshootDistance: 3
+  overshootDistance: 5
   overshootSpeed: 60
-  projectilePrefab: {fileID: 0}
-  projectileSpeed: 0
+  pullOnReturn: 0
+  pullRadius: 2
+  pullStrength: 8
+  pullDuration: 0.25
+  projectilePrefab: {fileID: 38222733961658620, guid: f708158f0386f7b4c8a769e2b3a403ee, type: 3}
+  projectileSpeed: 15
   useParabolicShot: 0
   parabolicArcHeight: 1.5
   parabolicSpawnLocalPos: {x: 0, y: 0, z: 0}
@@ -171,8 +175,19 @@ MonoBehaviour:
   slashHitRadius: 0.35
   slashVfxPrefab: {fileID: 0}
   slashVfxDuration: 1
+  slashTeleportMaxDist: 3
+  slashFadeTime: 0.12
   chargeDuration: 1
-  magicElement: 1
+  hammerRiseHeight: 4
+  hammerRiseTime: 0.55
+  hammerSpinSpeed: 900
+  hammerSlamSpeed: 28
+  hammerImpactWorldPos: {x: 0, y: 0}
+  hammerImpactRadius: 1.8
+  hammerImpactVfxPrefab: {fileID: 0}
+  hammerHighlightScale: 2.2
+  hammerHighlightDur: 0.35
+  magicElement: 2
   muzzlePoint: {fileID: 4038413518401450771}
   zapBoltVfxPrefab: {fileID: 7880470054483752245, guid: 33a39c92b73c6bf4b9927fe04ca23d8f, type: 3}
   lightningBurstCount: 3

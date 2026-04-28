@@ -31,8 +31,8 @@ public class TeleportBehaviour : EnemyBehaviourBase
     [SerializeField] private float spawnRadiusMax = 3.5f;
 
     [Header("스폰 마커")]
-    [SerializeField] private GameObject spawnMarkerPrefab;  // TeleportMarker 컴포넌트가 달린 프리팹
-    [SerializeField] private float      markerDuration = 1.2f;  // 마커 표시 후 스폰까지 대기 시간
+    [SerializeField] private GameObject spawnMarkerPrefab;
+    [SerializeField] private float      markerDuration = 1.2f;
 
     [Header("안전 타임아웃 (애니메이션 이벤트 누락 대비)")]
     [SerializeField] private float animEventTimeout = 3f;

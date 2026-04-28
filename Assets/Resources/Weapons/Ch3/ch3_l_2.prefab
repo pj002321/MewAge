@@ -31,7 +31,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 8102706229582257358}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &3948020582310150610
@@ -105,15 +106,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 80572d92ca6952f478c256b7ffc65d80, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponPoint
-  weaponType: 3
+  weaponType: 4
   pullbackDist: 0.5
   anticipationTime: 0.1
   strikeSpeed: 90
   returnSpeed: 70
   hitDistance: 0.25
   areaHitDamageRatio: 0.5
-  overshootDistance: 3
+  overshootDistance: 5
   overshootSpeed: 60
+  pullOnReturn: 0
+  pullRadius: 2
+  pullStrength: 8
+  pullDuration: 0.25
   projectilePrefab: {fileID: 0}
   projectileSpeed: 0
   useParabolicShot: 0
@@ -128,10 +133,10 @@ MonoBehaviour:
   trailColor: {r: 1, g: 1, b: 1, a: 0.55}
   boomerangMaxBounces: 3
   boomerangBounceRange: 5
-  orbitRadius: 1.2
-  orbitSpeed: 200
-  spinHitRadius: 0.35
-  spinHitCooldown: 0.5
+  orbitRadius: 3
+  orbitSpeed: 700
+  spinHitRadius: 2
+  spinHitCooldown: 0.1
   spinKnockback: 7
   slashRadius: 1.2
   slashArcDegrees: 180
@@ -139,7 +144,18 @@ MonoBehaviour:
   slashHitRadius: 0.35
   slashVfxPrefab: {fileID: 0}
   slashVfxDuration: 1
+  slashTeleportMaxDist: 3
+  slashFadeTime: 0.12
   chargeDuration: 1
+  hammerRiseHeight: 4
+  hammerRiseTime: 0.55
+  hammerSpinSpeed: 900
+  hammerSlamSpeed: 28
+  hammerImpactWorldPos: {x: 0, y: 0}
+  hammerImpactRadius: 1.8
+  hammerImpactVfxPrefab: {fileID: 0}
+  hammerHighlightScale: 2.2
+  hammerHighlightDur: 0.35
   magicElement: 0
   muzzlePoint: {fileID: 0}
   zapBoltVfxPrefab: {fileID: 0}
@@ -167,3 +183,65 @@ MonoBehaviour:
   - {r: 0.39999998, g: 1, b: 0.6414886, a: 1}
   - {r: 0.8, g: 0.4, b: 1, a: 1}
   - {r: 1, g: 0.35, b: 0.35, a: 1}
+--- !u!1001 &6286106019850729031
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 9195742053575101327}
+    m_Modifications:
+    - target: {fileID: 15513976786529175, guid: 50a3259f991f6b54f93e4b02acc23ea7, type: 3}
+      propertyPath: m_Name
+      value: Trail
+      objectReference: {fileID: 0}
+    - target: {fileID: 2832241332406053513, guid: 50a3259f991f6b54f93e4b02acc23ea7, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2832241332406053513, guid: 50a3259f991f6b54f93e4b02acc23ea7, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2832241332406053513, guid: 50a3259f991f6b54f93e4b02acc23ea7, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2832241332406053513, guid: 50a3259f991f6b54f93e4b02acc23ea7, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2832241332406053513, guid: 50a3259f991f6b54f93e4b02acc23ea7, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2832241332406053513, guid: 50a3259f991f6b54f93e4b02acc23ea7, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2832241332406053513, guid: 50a3259f991f6b54f93e4b02acc23ea7, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2832241332406053513, guid: 50a3259f991f6b54f93e4b02acc23ea7, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2832241332406053513, guid: 50a3259f991f6b54f93e4b02acc23ea7, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2832241332406053513, guid: 50a3259f991f6b54f93e4b02acc23ea7, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 50a3259f991f6b54f93e4b02acc23ea7, type: 3}
+--- !u!4 &8102706229582257358 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2832241332406053513, guid: 50a3259f991f6b54f93e4b02acc23ea7, type: 3}
+  m_PrefabInstance: {fileID: 6286106019850729031}
+  m_PrefabAsset: {fileID: 0}

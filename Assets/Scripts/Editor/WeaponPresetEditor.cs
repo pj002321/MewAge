@@ -81,7 +81,7 @@ public class WeaponPresetEditor : EditorWindow
         var byChapter = new SortedDictionary<int, List<DB_무기>>();
         DB_무기.ForEachEntity(row =>
         {
-            int ch = row.f_챕터;
+            int ch = ChapterFromId(row.f_무기ID, row.f_챕터);
             if (!byChapter.ContainsKey(ch)) byChapter[ch] = new List<DB_무기>();
             byChapter[ch].Add(row);
         });
@@ -103,7 +103,8 @@ public class WeaponPresetEditor : EditorWindow
         string id = row.f_무기ID;
         if (string.IsNullOrEmpty(id) || _prefabs.ContainsKey(id)) return;
 
-        string path = $"Assets/Resources/Weapons/Ch{row.f_챕터}/{id.ToLower()}.prefab";
+        int    ch   = ChapterFromId(id, row.f_챕터);
+        string path = $"Assets/Resources/Weapons/Ch{ch}/{id.ToLower()}.prefab";
         var go = AssetDatabase.LoadAssetAtPath<GameObject>(path);
         if (go == null) return;
 
@@ -337,6 +338,18 @@ public class WeaponPresetEditor : EditorWindow
             entry.so.ApplyModifiedPropertiesWithoutUndo();
             _dirty = true;
         }
+    }
+
+    /// <summary>weaponId 접두어(ch3_ → 3)에서 챕터 파싱. 실패 시 fallback 반환.</summary>
+    private static int ChapterFromId(string weaponId, int fallback)
+    {
+        if (!string.IsNullOrEmpty(weaponId))
+        {
+            var p0 = weaponId.ToLower().Split('_')[0];
+            if (p0.StartsWith("ch") && int.TryParse(p0.Substring(2), out int n))
+                return n;
+        }
+        return fallback;
     }
 
     private static int TypeIndex(string t) => t switch

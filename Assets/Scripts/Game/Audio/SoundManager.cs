@@ -153,11 +153,12 @@ public class SoundManager : MonoBehaviourSingleton<SoundManager>
 
     private void PlayBGMWithFade(AudioClip clip, string sceneName)
     {
-        if (clip == null) return;
-
+        // 씬 이름은 로딩 중이더라도 반드시 기록 (ResumeBGM이 올바른 씬으로 재개할 수 있도록)
         currentScene = sceneName;
 
-        // 로딩 중에는 재생하지 않음
+        if (clip == null) return;
+
+        // 로딩 중에는 재생하지 않음 — ResumeBGM에서 재개됨
         if (isLoadingIndicatorActive) return;
 
         // 같은 클립이 재생 중이면 스킵

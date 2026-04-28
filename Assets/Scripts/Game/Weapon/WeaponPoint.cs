@@ -54,6 +54,12 @@ public class WeaponPoint : MonoBehaviour
     [SerializeField] private float overshootDistance = 0.5f;
     [SerializeField] private float overshootSpeed    = 60f;
 
+    [Header("복귀 시 당기기 (Melee 전용)")]
+    [SerializeField] private bool  pullOnReturn     = false;
+    [SerializeField] private float pullRadius       = 2.0f;  // 당기기 범위
+    [SerializeField] private float pullStrength     = 8f;    // 당기기 힘 (impulse)
+    [SerializeField] private float pullDuration     = 0.25f; // 당기기 적용 시간(초)
+
     [Header("원거리 설정")]
     [SerializeField] private GameObject projectilePrefab;
     [SerializeField] private float      projectileSpeed = 8f;
@@ -84,15 +90,28 @@ public class WeaponPoint : MonoBehaviour
     [SerializeField] private float spinKnockback   = 7f;
 
     [Header("슬래시 설정 (WeaponType.Slash) — 반원 베기")]
-    [SerializeField] private float      slashRadius     = 1.2f;   // 최소 베기 반경 (폴백)
-    [SerializeField] private float      slashArcDegrees = 180f;   // 호 각도
-    [SerializeField] private float      slashSweepSpeed = 480f;   // deg/s
-    [SerializeField] private float      slashHitRadius  = 0.35f;
-    [SerializeField] private GameObject slashVfxPrefab;             // 중간 지점에서 Instantiate, 프리팹이 스스로 파괴
-    [SerializeField] private float      slashVfxDuration = 1f;     // VFX 지속 시간 (초)
+    [SerializeField] private float      slashRadius          = 1.2f;   // 최소 베기 반경 (폴백)
+    [SerializeField] private float      slashArcDegrees      = 180f;   // 호 각도
+    [SerializeField] private float      slashSweepSpeed      = 480f;   // deg/s
+    [SerializeField] private float      slashHitRadius       = 0.35f;
+    [SerializeField] private GameObject slashVfxPrefab;                // 중간 지점에서 Instantiate, 프리팹이 스스로 파괴
+    [SerializeField] private float      slashVfxDuration     = 1f;     // VFX 지속 시간 (초)
+    [SerializeField] private float      slashTeleportMaxDist = 3.0f;   // 플레이어 기준 최대 이동 거리
+    [SerializeField] private float      slashFadeTime        = 0.12f;  // 페이드 인/아웃 시간(초)
 
     [Header("차징 설정 (WeaponType.Charge)")]
     [SerializeField] private float chargeDuration = 1f;
+
+    [Header("해머 설정 (WeaponType.Hammer)")]
+    [SerializeField] private float      hammerRiseHeight      = 4f;     // 맵 정중앙 위 상승 높이
+    [SerializeField] private float      hammerRiseTime        = 0.55f;  // 상승 시간(초)
+    [SerializeField] private float      hammerSpinSpeed       = 900f;   // 상승/하강 중 자전 속도 (deg/s)
+    [SerializeField] private float      hammerSlamSpeed       = 28f;    // 하강 속도
+    [SerializeField] private Vector2    hammerImpactWorldPos  = Vector2.zero; // 착지 세계 좌표 (맵 정중앙)
+    [SerializeField] private float      hammerImpactRadius    = 1.8f;   // 충격 범위
+    [SerializeField] private GameObject hammerImpactVfxPrefab;           // 착지 VFX
+    [SerializeField] private float      hammerHighlightScale  = 2.2f;   // 충격 순간 최대 스케일 배율
+    [SerializeField] private float      hammerHighlightDur    = 0.35f;  // 하이라이트 지속시간(초)
 
     [Header("마법 속성 (WeaponType.Magic 전용)")]
     [SerializeField] private MagicElement magicElement = MagicElement.None;
@@ -109,6 +128,11 @@ public class WeaponPoint : MonoBehaviour
     private Transform MuzzleTransform => muzzlePoint != null ? muzzlePoint : transform;
     private GameObject _activeBolt;
 
+    // Fire 마법 전용
+    private SpriteRenderer _weaponSr;
+    private Coroutine      _srColorCoroutine;
+    private static readonly Color _fireRedColor = new Color(1f, 0.2f, 0.05f);
+
     private static readonly RaycastHit2D[]        _zapLineBuffer  = new RaycastHit2D[16];
     private static readonly HashSet<EnemyController> _zapHitEnemies = new();
 
@@ -120,7 +144,7 @@ public class WeaponPoint : MonoBehaviour
     private AnimatorOverrideController _animOverride;
     private float _chargeTimer;
 
-    private enum State { Idle, Pullback, Anticipation, Striking, Overshooting, Returning, Slashing, Charging }
+    private enum State { Idle, Pullback, Anticipation, Striking, Overshooting, Returning, Slashing, Charging, SlashSequence, HammerSequence }
     private State state = State.Idle;
 
     private Vector3 originLocalPos;
@@ -178,6 +202,8 @@ public class WeaponPoint : MonoBehaviour
     private bool  _slashVfxSpawned;
     private readonly HashSet<EnemyController> _slashHitEnemies = new();
     private bool _slashHitBoss;
+    private Coroutine _slashSequenceCoroutine;
+    private Coroutine _hammerSequenceCoroutine;
 
     private void Start()
     {
@@ -185,6 +211,7 @@ public class WeaponPoint : MonoBehaviour
         originLocalPos = transform.localPosition;
         _originalScale = transform.localScale;
         cooldownTimer  = attackCooldown;
+        _weaponSr      = GetComponentInChildren<SpriteRenderer>();
         InitTrail();
         InitAnimator();
         if (weaponType == WeaponType.Spin)
@@ -305,12 +332,13 @@ public class WeaponPoint : MonoBehaviour
             _noAttackDiagTimer = 0f;
         }
 
-        // Slash 베기 중엔 UpdateSlash가 위치·회전 전담 → UpdateRotation 스킵
-        if (state != State.Slashing)
+        // 코루틴이 위치·회전 전담하는 상태에서는 UpdateRotation 스킵
+        if (state != State.Slashing && state != State.SlashSequence && state != State.HammerSequence)
             UpdateRotation();
 
-        // 미아 방지: Idle/Returning 외 상태에서 너무 오래 머물면 강제 복귀
-        if (state != State.Idle && state != State.Returning)
+        // 미아 방지: 코루틴 구동 상태는 타임아웃 제외
+        if (state != State.Idle && state != State.Returning
+            && state != State.SlashSequence && state != State.HammerSequence)
         {
             _stateTimer += Time.deltaTime;
             if (_stateTimer >= MaxStateTime)
@@ -336,8 +364,10 @@ public class WeaponPoint : MonoBehaviour
             case State.Striking:     UpdateStriking();     break;
             case State.Overshooting: UpdateOvershooting(); break;
             case State.Returning:    UpdateReturning();    break;
-            case State.Slashing:     UpdateSlash();        break;
-            case State.Charging:     UpdateCharging();     break;
+            case State.Slashing:       UpdateSlash();      break;
+            case State.Charging:       UpdateCharging();   break;
+            case State.SlashSequence:                      break; // 코루틴이 전담
+            case State.HammerSequence:                     break; // 코루틴이 전담
         }
     }
 
@@ -452,9 +482,17 @@ public class WeaponPoint : MonoBehaviour
             ((Vector2)nearest.transform.position - origin).sqrMagnitude);
 
         bool isLightning = weaponType == WeaponType.Magic && magicElement == MagicElement.Lightning;
+        bool isFireMagic = weaponType == WeaponType.Magic && magicElement == MagicElement.Fire;
 
         if (preferBoss)
         {
+            if (isFireMagic)
+            {
+                _noAttackDiagTimer = 0f;
+                FireHomingAtBoss(boss);
+                cooldownTimer = attackCooldown;
+                return;
+            }
             if (isLightning)
             {
                 _noAttackDiagTimer = 0f;
@@ -497,6 +535,14 @@ public class WeaponPoint : MonoBehaviour
             Vector2 toBoss = ((Vector2)boss.transform.position - origin).normalized;
             pullbackLocalPos = -(Vector3)toBoss * pullbackDist;
             state = State.Pullback;
+            return;
+        }
+
+        if (isFireMagic && nearest != null)
+        {
+            _noAttackDiagTimer = 0f;
+            FireHomingAt(nearest);
+            cooldownTimer = attackCooldown;
             return;
         }
 
@@ -551,6 +597,14 @@ public class WeaponPoint : MonoBehaviour
             cooldownTimer = attackCooldown;
             weaponAnimator?.SetTrigger("tCharge");
             state = State.Charging;
+            return;
+        }
+
+        if (weaponType == WeaponType.Hammer && (nearest != null || bossInRange))
+        {
+            _noAttackDiagTimer = 0f;
+            if (_hammerSequenceCoroutine != null) StopCoroutine(_hammerSequenceCoroutine);
+            _hammerSequenceCoroutine = StartCoroutine(HammerSequenceRoutine(nearest, bossInRange ? boss : null));
             return;
         }
 
@@ -637,6 +691,63 @@ public class WeaponPoint : MonoBehaviour
     private void ZapAtBoss(BossController boss)   => StartCoroutine(BurstZapRoutine(MuzzleTransform, null, boss));
     private void ZapAt(EnemyController target)    => StartCoroutine(BurstZapRoutine(MuzzleTransform, target, null));
 
+    private void FireHomingAt(EnemyController target)
+    {
+        if (projectilePrefab == null) return;
+        var (finalDmg, isCrit) = RollCrit(attackDamage);
+        var go   = Instantiate(projectilePrefab, transform.position, Quaternion.identity);
+        var homing = go.GetComponent<FireHomingProjectile>();
+        if (homing == null) homing = go.AddComponent<FireHomingProjectile>();
+        homing.Init(finalDmg, projectileSpeed, target,
+            lifeSteal: lifeSteal, dotDamage: dotDamage,
+            knockbackPower: knockbackPower, critRate: criticalRate, critMult: criticalMultiplier);
+        TriggerFireSpriteColor();
+        TriggerScalePulse();
+    }
+
+    private void FireHomingAtBoss(BossController boss)
+    {
+        if (projectilePrefab == null) return;
+        var (finalDmg, isCrit) = RollCrit(attackDamage);
+        var go   = Instantiate(projectilePrefab, transform.position, Quaternion.identity);
+        var homing = go.GetComponent<FireHomingProjectile>();
+        if (homing == null) homing = go.AddComponent<FireHomingProjectile>();
+        homing.InitBoss(finalDmg, projectileSpeed, boss,
+            lifeSteal: lifeSteal, dotDamage: dotDamage,
+            knockbackPower: knockbackPower, critRate: criticalRate, critMult: criticalMultiplier);
+        TriggerFireSpriteColor();
+        TriggerScalePulse();
+    }
+
+    private void TriggerFireSpriteColor()
+    {
+        if (_weaponSr == null) return;
+        if (_srColorCoroutine != null) StopCoroutine(_srColorCoroutine);
+        _srColorCoroutine = StartCoroutine(FireSpriteColorRoutine());
+    }
+
+    private System.Collections.IEnumerator FireSpriteColorRoutine()
+    {
+        float half = attackCooldown * 0.5f;
+
+        // 흰색 → 빨간색
+        for (float t = 0f; t < half; t += Time.deltaTime)
+        {
+            if (_weaponSr == null) yield break;
+            _weaponSr.color = Color.Lerp(Color.white, _fireRedColor, t / half);
+            yield return null;
+        }
+        // 빨간색 → 흰색
+        for (float t = 0f; t < half; t += Time.deltaTime)
+        {
+            if (_weaponSr == null) yield break;
+            _weaponSr.color = Color.Lerp(_fireRedColor, Color.white, t / half);
+            yield return null;
+        }
+        if (_weaponSr != null) _weaponSr.color = Color.white;
+        _srColorCoroutine = null;
+    }
+
     private System.Collections.IEnumerator BurstZapRoutine(Transform muzzle, EnemyController enemy, BossController boss)
     {
         if (muzzlePoint != null) muzzlePoint.gameObject.SetActive(true);
@@ -716,24 +827,310 @@ public class WeaponPoint : MonoBehaviour
     private void BeginSlash(object target)
     {
         _noAttackDiagTimer = 0f;
-        Vector2 origin = transform.parent != null ? (Vector2)transform.parent.position : (Vector2)transform.position;
+        EnemyController ec = target as EnemyController;
+        BossController  bc = target as BossController;
+        if (ec == null && bc == null) return;
 
-        Vector2 toTarget = Vector2.up;
-        if (target is EnemyController ec && ec != null)
+        if (_slashSequenceCoroutine != null) StopCoroutine(_slashSequenceCoroutine);
+        _slashSequenceCoroutine = StartCoroutine(SlashSequenceRoutine(ec, bc));
+    }
+
+    private System.Collections.IEnumerator SlashSequenceRoutine(EnemyController enemy, BossController boss)
+    {
+        state         = State.SlashSequence;
+        cooldownTimer = attackCooldown;
+
+        Vector2 playerPos = transform.parent != null
+            ? (Vector2)transform.parent.position : (Vector2)transform.position;
+
+        try
         {
-            targetEnemy = ec;
-            toTarget = ((Vector2)ec.transform.position - origin).normalized;
+            // ── 1. 제자리에서 페이드 아웃 ──────────────────────────────────
+            if (_trail != null) _trail.emitting = false;
+            yield return StartCoroutine(FadeWeapon(1f, 0f, slashFadeTime));
+
+            // ── 2. 적 방향으로 텔레포트 (최대 거리 제한) ───────────────────
+            // FadeOut 도중 적이 사라질 수 있으므로 null 재확인
+            Vector2 targetWorldPos;
+            if      (enemy != null) targetWorldPos = enemy.transform.position;
+            else if (boss  != null) targetWorldPos = boss.transform.position;
+            else yield break; // finally에서 복구
+
+            Vector2 toTarget    = targetWorldPos - playerPos;
+            float   clampedDist = Mathf.Min(toTarget.magnitude * 0.85f, slashTeleportMaxDist);
+            Vector2 localOffset = toTarget.sqrMagnitude > 0.001f
+                ? toTarget.normalized * clampedDist
+                : Vector2.up * clampedDist;
+
+            transform.localPosition = new Vector3(localOffset.x, localOffset.y, 0f);
+
+            // 회전을 타겟 방향으로 맞춤
+            float faceAngle = Mathf.Atan2(localOffset.y, localOffset.x) * Mathf.Rad2Deg - 90f;
+            transform.rotation = Quaternion.Euler(0f, 0f, faceAngle);
+
+            // ── 3. 페이드 인 ───────────────────────────────────────────────
+            yield return StartCoroutine(FadeWeapon(0f, 1f, slashFadeTime));
+
+            // ── 4. 슬래시 호 초기화 ────────────────────────────────────────
+            Vector2 weaponFromPlayer = (Vector2)transform.localPosition;
+            _slashActiveRadius = Mathf.Max(weaponFromPlayer.magnitude, slashRadius);
+            _slashCenterAngle  = Mathf.Atan2(weaponFromPlayer.y, weaponFromPlayer.x) * Mathf.Rad2Deg;
+            _slashCurrentAngle = _slashCenterAngle + slashArcDegrees * 0.5f;
+            _slashEndAngle     = _slashCenterAngle - slashArcDegrees * 0.5f;
+            _slashHitEnemies.Clear();
+            _slashHitBoss    = false;
+            _slashVfxSpawned = false;
+
+            float startRad = _slashCurrentAngle * Mathf.Deg2Rad;
+            transform.localPosition = new Vector3(
+                Mathf.Cos(startRad), Mathf.Sin(startRad), 0f) * _slashActiveRadius;
+
+            // ── 5. 호를 그리며 베기 (타격 판정은 VFX Collider가 담당) ────
+            while (_slashCurrentAngle > _slashEndAngle)
+            {
+                _slashCurrentAngle -= slashSweepSpeed * Time.deltaTime;
+                float rad = _slashCurrentAngle * Mathf.Deg2Rad;
+                transform.localPosition = new Vector3(
+                    Mathf.Cos(rad), Mathf.Sin(rad), 0f) * _slashActiveRadius;
+                transform.rotation = Quaternion.Euler(0f, 0f, _slashCurrentAngle - 90f);
+
+                // 호 중간 지점에서 VFX 스폰 — OnTriggerEnter2D가 피해 처리
+                if (!_slashVfxSpawned && _slashCurrentAngle <= _slashCenterAngle)
+                {
+                    _slashVfxSpawned = true;
+                    if (slashVfxPrefab != null)
+                    {
+                        float   midRad      = _slashCenterAngle * Mathf.Deg2Rad;
+                        Vector2 midDir      = new Vector2(Mathf.Cos(midRad), Mathf.Sin(midRad));
+                        Vector3 vfxWorldPos = (Vector3)playerPos + (Vector3)(midDir * _slashActiveRadius);
+                        var vfx = Instantiate(slashVfxPrefab, vfxWorldPos, Quaternion.identity);
+                        vfx.GetComponent<SlashVFX>()?.SetDirection(midDir);
+                        vfx.AddComponent<SlashVfxBehaviour>().Init(
+                            slashVfxDuration, 0.25f, midDir,
+                            attackDamage, criticalRate, criticalMultiplier, knockbackPower, dotDamage, lifeSteal);
+                        Destroy(vfx, slashVfxDuration);
+                    }
+                }
+
+                yield return null;
+            }
+
+            // ── 6. 베기 후 페이드 아웃 ────────────────────────────────────
+            yield return StartCoroutine(FadeWeapon(1f, 0f, slashFadeTime));
+
+            // ── 7. 원위치 복귀 ─────────────────────────────────────────────
+            transform.localPosition = Vector3.zero;
+
+            // ── 8. 페이드 인 ───────────────────────────────────────────────
+            yield return StartCoroutine(FadeWeapon(0f, 1f, slashFadeTime));
         }
-        else if (target is BossController bc && bc != null)
+        finally
         {
-            _targetBoss = bc;
-            toTarget = ((Vector2)bc.transform.position - origin).normalized;
+            // 예외·yield break 어느 경로로 종료되든 무기 상태 복원
+            if (_weaponSr != null) { Color c = _weaponSr.color; c.a = 1f; _weaponSr.color = c; }
+            transform.localPosition = Vector3.zero;
+            transform.rotation      = Quaternion.identity;
+            if (_trail != null) _trail.emitting = true;
+            state = State.Idle;
+            _slashSequenceCoroutine = null;
+        }
+    }
+
+    private System.Collections.IEnumerator FadeWeapon(float from, float to, float duration)
+    {
+        if (_weaponSr == null) yield break;
+        Color c = _weaponSr.color;
+        for (float t = 0f; t < duration; t += Time.deltaTime)
+        {
+            c.a = Mathf.Lerp(from, to, t / duration);
+            _weaponSr.color = c;
+            yield return null;
+        }
+        c.a = to;
+        _weaponSr.color = c;
+    }
+
+    // ─────────────────────────────────────────
+    // Hammer: 맵 정중앙 강하 시퀀스
+    // ─────────────────────────────────────────
+    private System.Collections.IEnumerator HammerSequenceRoutine(EnemyController targetEnemyArg = null, BossController targetBossArg = null)
+    {
+        state = State.HammerSequence;
+        // 쿨타임은 시퀀스 종료 후 설정 (공격 불가 보장)
+
+        // 원래 로컬 위치 저장 (복귀용)
+        Vector3 startLocal    = transform.localPosition;
+        Vector3 startWorldPos = transform.position;
+
+        // 착지 위치: 가장 가까운 적 → 보스 → Inspector 설정값 순서
+        Vector3 impactWorld;
+        if (targetEnemyArg != null)
+            impactWorld = targetEnemyArg.transform.position;
+        else if (targetBossArg != null)
+            impactWorld = targetBossArg.transform.position;
+        else
+            impactWorld = new Vector3(hammerImpactWorldPos.x, hammerImpactWorldPos.y, 0f);
+        impactWorld.z = 0f;
+
+        Vector3 peakWorld = impactWorld + Vector3.up * hammerRiseHeight;
+
+        // 착지 방향 회전: 착지점을 향해 무기 전면이 맞닿도록 정렬
+        Vector2 slamDir2D  = ((Vector2)impactWorld - (Vector2)peakWorld).normalized; // 거의 Vector2.down
+        float   landAngle  = Mathf.Atan2(slamDir2D.y, slamDir2D.x) * Mathf.Rad2Deg - 90f;
+        Quaternion landRot = Quaternion.Euler(0f, 0f, landAngle);
+
+        float spinAngle = 0f;
+
+        // ── 1. 현재 위치 → 정점(맵 중앙 상공)으로 회전하며 상승 ──────
+        for (float t = 0f; t < hammerRiseTime; t += Time.deltaTime)
+        {
+            float f    = t / hammerRiseTime;
+            float ease = f * f;  // ease-in
+            transform.position = Vector3.Lerp(startWorldPos, peakWorld, ease);
+            spinAngle += hammerSpinSpeed * Time.deltaTime;
+            transform.rotation = Quaternion.Euler(0f, 0f, spinAngle);
+            yield return null;
+        }
+        transform.position = peakWorld;
+
+        // ── 2. 정점에서 짧은 정지 ─────────────────────────────────────
+        yield return new WaitForSeconds(0.12f);
+
+        // ── 3. 빠르게 하강 — 착지 방향으로 Slerp 정렬 ────────────────
+        Quaternion slamStartRot = transform.rotation;
+        float      totalDist    = Vector3.Distance(peakWorld, impactWorld);
+        while ((transform.position - impactWorld).sqrMagnitude > 0.04f)
+        {
+            transform.position = Vector3.MoveTowards(
+                transform.position, impactWorld, hammerSlamSpeed * Time.deltaTime);
+
+            // 남은 거리 비율로 착지 방향에 점점 가까워지도록 회전
+            float remaining = Vector3.Distance(transform.position, impactWorld);
+            float aligned   = 1f - Mathf.Clamp01(remaining / totalDist);
+            transform.rotation = Quaternion.Slerp(slamStartRot, landRot, aligned);
+            yield return null;
+        }
+        transform.position = impactWorld;
+        transform.rotation = landRot; // 착지 시 정확히 맞닿은 방향으로 스냅
+
+        // ── 4. 착지 충격 — 범위 데미지 ───────────────────────────────
+        Vector2 impactCenter = (Vector2)impactWorld;
+
+        int hitCount = Physics2D.OverlapCircleNonAlloc(impactCenter, hammerImpactRadius, _hitBuffer);
+        bool bossHit = false;
+        bool anyHit  = false;
+        for (int i = 0; i < hitCount; i++)
+        {
+            var col = _hitBuffer[i];
+            if (!bossHit)
+            {
+                var b = col.GetComponentInParent<BossController>();
+                if (b != null)
+                {
+                    var (bDmg, bCrit) = RollCrit(attackDamage);
+                    Vector2 bKnock = ((Vector2)b.transform.position - impactCenter);
+                    b.TakeDamage(bDmg, bCrit, bKnock.sqrMagnitude > 0.001f ? bKnock.normalized : Vector2.up, knockbackPower);
+                    ApplyLifeSteal(bDmg);
+                    bossHit = true; anyHit = true;
+                    continue;
+                }
+            }
+            var e = col.GetComponentInParent<EnemyController>();
+            if (e == null) continue;
+            var (eDmg, eCrit) = RollCrit(attackDamage);
+            Vector2 eKnock = ((Vector2)e.transform.position - impactCenter);
+            e.TakeDamage(eDmg, eCrit, eKnock.sqrMagnitude > 0.001f ? eKnock.normalized : Vector2.up, knockbackPower);
+            ApplyLifeSteal(eDmg);
+            if (dotDamage > 0f) e.ApplyBleed(dotDamage);
+            anyHit = true;
+        }
+        if (anyHit) SoundManager.Shared?.Play(SoundKey.Weapon_Attack);
+
+        // VFX 스폰
+        if (hammerImpactVfxPrefab != null)
+            Destroy(Instantiate(hammerImpactVfxPrefab, (Vector3)impactCenter, Quaternion.identity), 2f);
+        else
+            Debug.LogWarning($"[Hammer] hammerImpactVfxPrefab 미할당 — {gameObject.name}");
+
+        // ── 5. 착지 즉시 복귀 ─────────────────────────────────────────
+        // (하이라이트 대기 없음)
+
+        // ── 6. 빠르게 하늘로 솟구치기 ────────────────────────────────
+        Vector3 returnPeakWorld = impactWorld + Vector3.up * hammerRiseHeight;
+        float   returnRiseTime  = hammerRiseTime * 0.35f;
+        Vector3 riseStart       = transform.position;
+        for (float t = 0f; t < returnRiseTime; t += Time.deltaTime)
+        {
+            float f = t / returnRiseTime;
+            float ease = f * (2f - f); // ease-out
+            transform.position = Vector3.Lerp(riseStart, returnPeakWorld, ease);
+            yield return null;
+        }
+        transform.position = returnPeakWorld;
+
+        // ── 7. 원래 자리로 빠르게 낙하 ───────────────────────────────
+        Vector3 returnTargetWorld = transform.parent.TransformPoint(startLocal);
+        float   returnSlamSpeed   = hammerSlamSpeed * 1.5f;
+        while ((transform.position - returnTargetWorld).sqrMagnitude > 0.01f)
+        {
+            // 부모가 움직일 수 있으므로 매 프레임 갱신
+            returnTargetWorld = transform.parent.TransformPoint(startLocal);
+            transform.position = Vector3.MoveTowards(
+                transform.position, returnTargetWorld, returnSlamSpeed * Time.deltaTime);
+            yield return null;
+        }
+        transform.localPosition = startLocal;
+        transform.rotation      = Quaternion.identity;
+
+        cooldownTimer = attackCooldown;
+        state = State.Idle;
+        _hammerSequenceCoroutine = null;
+    }
+
+    /// <summary>착지 순간 반투명 고스트가 확산되며 사라지는 파문 연출</summary>
+    private System.Collections.IEnumerator HammerImpactHighlightRoutine()
+    {
+        // 고스트 2개를 살짝 시차를 두고 발사 (파문 느낌)
+        StartCoroutine(HammerGhostWave(0f,    1f,   hammerHighlightScale));
+        StartCoroutine(HammerGhostWave(0.08f, 0.6f, hammerHighlightScale * 0.7f));
+
+        // 고스트가 퍼지는 동안 무기는 착지 위치에 정지
+        yield return new WaitForSecondsRealtime(hammerHighlightDur);
+    }
+
+    /// <summary>현재 위치에서 고스트 스프라이트가 확산·페이드아웃</summary>
+    private System.Collections.IEnumerator HammerGhostWave(float delay, float startAlpha, float scaleMult)
+    {
+        if (delay > 0f) yield return new WaitForSecondsRealtime(delay);
+        if (_weaponSr == null || _weaponSr.sprite == null) yield break;
+
+        var go = new GameObject("HammerGhost");
+        go.transform.position   = transform.position;
+        go.transform.rotation   = transform.rotation;
+        go.transform.localScale = transform.lossyScale;
+
+        var sr = go.AddComponent<SpriteRenderer>();
+        sr.sprite         = _weaponSr.sprite;
+        sr.sortingLayerID = _weaponSr.sortingLayerID;
+        sr.sortingOrder   = _weaponSr.sortingOrder - 1;
+        sr.color          = new Color(1f, 1f, 1f, startAlpha);
+
+        float    duration   = hammerHighlightDur * 0.9f;
+        Vector3  startScale = go.transform.localScale;
+        Vector3  endScale   = startScale * scaleMult;
+
+        for (float t = 0f; t < duration; t += Time.unscaledDeltaTime)
+        {
+            float f    = t / duration;
+            float ease = 1f - (1f - f) * (1f - f); // ease-out
+            go.transform.localScale = Vector3.LerpUnclamped(startScale, endScale, ease);
+            Color c = sr.color;
+            c.a = Mathf.Lerp(startAlpha, 0f, f);
+            sr.color = c;
+            yield return null;
         }
 
-        // 근접처럼 앞으로 찌른 뒤 → 도달 시 호 스윕 전환 (UpdateStriking에서 StartSlashSweep 호출)
-        pullbackLocalPos = -(Vector3)toTarget * pullbackDist;
-        cooldownTimer    = attackCooldown;
-        state            = State.Pullback;
+        Destroy(go);
     }
 
     // UpdateStriking에서 Slash 타입이 타격 거리에 도달했을 때 호출
@@ -767,53 +1164,21 @@ public class WeaponPoint : MonoBehaviour
         // 플레이어를 축으로 공전 회전
         transform.rotation = Quaternion.Euler(0f, 0f, _slashCurrentAngle - 90f);
 
-        // 타격 판정
-        int hitCount = Physics2D.OverlapCircleNonAlloc(transform.position, slashHitRadius, _hitBuffer);
-        for (int i = 0; i < hitCount; i++)
-        {
-            var hit = _hitBuffer[i];
-
-            if (!_slashHitBoss)
-            {
-                var boss = hit.GetComponentInParent<BossController>();
-                if (boss != null)
-                {
-                    var (bossDmg, bossCrit) = RollCrit(attackDamage);
-                    Vector2 bossKnock = ((Vector2)boss.transform.position - (Vector2)transform.position).normalized;
-                    boss.TakeDamage(bossDmg, bossCrit, bossKnock, knockbackPower);
-                    ApplyLifeSteal(bossDmg);
-                    _slashHitBoss = true;
-                    SoundManager.Shared?.Play(SoundKey.Weapon_Attack);
-                    continue;
-                }
-            }
-
-            var enemy = hit.GetComponentInParent<EnemyController>();
-            if (enemy == null || _slashHitEnemies.Contains(enemy)) continue;
-
-            _slashHitEnemies.Add(enemy);
-            var (finalDmg, isCrit) = RollCrit(attackDamage);
-            Vector2 knockDir = ((Vector2)enemy.transform.position - (Vector2)transform.position).normalized;
-            enemy.TakeDamage(finalDmg, isCrit, knockDir, knockbackPower);
-            ApplyLifeSteal(finalDmg);
-            if (dotDamage > 0f) enemy.ApplyBleed(dotDamage);
-            SoundManager.Shared?.Play(SoundKey.Weapon_Attack);
-        }
-
-        // 호의 중간지점(centerAngle) 도달 시 VFX 스폰
-        // RANGED의 Projectile 방향과 동일한 방식: 플레이어→아크 중심 방향으로 회전 계산
+        // 호의 중간지점(centerAngle) 도달 시 VFX 스폰 — 타격 판정은 VFX Collider가 담당
         if (!_slashVfxSpawned && _slashCurrentAngle <= _slashCenterAngle)
         {
             _slashVfxSpawned = true;
             if (slashVfxPrefab != null)
             {
                 Vector2 parentPos = transform.parent != null ? (Vector2)transform.parent.position : (Vector2)transform.position;
-                float midRad = _slashCenterAngle * Mathf.Deg2Rad;
-                Vector2 midDir = new Vector2(Mathf.Cos(midRad), Mathf.Sin(midRad));
+                float   midRad    = _slashCenterAngle * Mathf.Deg2Rad;
+                Vector2 midDir    = new Vector2(Mathf.Cos(midRad), Mathf.Sin(midRad));
                 Vector3 vfxWorldPos = (Vector3)parentPos + (Vector3)(midDir * _slashActiveRadius);
-                Quaternion vfxRot = Quaternion.Euler(0f, 0f, _slashCenterAngle - 90f);
-                GameObject vfx = Instantiate(slashVfxPrefab, vfxWorldPos, vfxRot);
-                vfx.AddComponent<SlashVfxBehaviour>().Init(slashVfxDuration, 0.25f, midDir);
+                GameObject vfx = Instantiate(slashVfxPrefab, vfxWorldPos, Quaternion.identity);
+                vfx.GetComponent<SlashVFX>()?.SetDirection(midDir);
+                vfx.AddComponent<SlashVfxBehaviour>().Init(
+                    slashVfxDuration, 0.25f, midDir,
+                    attackDamage, criticalRate, criticalMultiplier, knockbackPower, dotDamage, lifeSteal);
                 Destroy(vfx, slashVfxDuration);
             }
         }
@@ -1188,6 +1553,42 @@ public class WeaponPoint : MonoBehaviour
         if (resetCooldown)
             cooldownTimer = attackCooldown;
         if (_trail != null && weaponType != WeaponType.Spin) _trail.emitting = false;
+
+        if (resetCooldown && pullOnReturn && weaponType == WeaponType.Melee)
+            StartCoroutine(PullEnemiesRoutine());
+    }
+
+    private System.Collections.IEnumerator PullEnemiesRoutine()
+    {
+        Vector2 playerPos = transform.parent != null
+            ? (Vector2)transform.parent.position
+            : (Vector2)transform.position;
+
+        float elapsed = 0f;
+        while (elapsed < pullDuration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / pullDuration; // 0→1 (초반에 강하게)
+            float forceMult = (1f - t) * pullStrength * Time.deltaTime / pullDuration;
+
+            int count = Physics2D.OverlapCircleNonAlloc(playerPos, pullRadius, _hitBuffer);
+            for (int i = 0; i < count; i++)
+            {
+                var col = _hitBuffer[i];
+                var enemy = col.GetComponentInParent<EnemyController>();
+                if (enemy == null || !enemy.gameObject.activeInHierarchy) continue;
+
+                Vector2 toPlayer = playerPos - (Vector2)enemy.transform.position;
+                if (toPlayer.sqrMagnitude < 0.01f) continue;
+
+                var rb = enemy.GetComponent<Rigidbody2D>();
+                if (rb != null)
+                    rb.AddForce(toPlayer.normalized * pullStrength * (1f - t), ForceMode2D.Force);
+                else
+                    enemy.transform.position += (Vector3)(toPlayer.normalized * forceMult);
+            }
+            yield return null;
+        }
     }
 
     // ─────────────────────────────────────────
@@ -1355,8 +1756,10 @@ public class WeaponPoint : MonoBehaviour
     /// <summary>WeaponManager가 장착 시 호출 — DB 스탯 및 플레이어 보너스 적용.</summary>
     public void Init(WeaponData data)
     {
-        weaponType = data.weaponType;
-        // DB에 명시된 속성이 있을 때만 덮어씀 — 없으면 프리팹 Inspector 값 유지
+        // weaponType / magicElement: 프리팹 Inspector가 기준.
+        // DB f_타입은 상점 필터·표시용 — ParseWeaponType 폴백(Melee)이 프리팹을 덮어쓰지 않도록 하지 않음.
+        if (data.weaponType != WeaponType.Melee)   // Melee는 폴백 기본값이므로 명시적인 타입일 때만 적용
+            weaponType = data.weaponType;
         if (data.magicElement != MagicElement.None)
             magicElement = data.magicElement;
 
@@ -1395,7 +1798,9 @@ public class WeaponPoint : MonoBehaviour
             attackDamage += weaponType == WeaponType.Ranged    ? player.RangedAttackBonus : 0f;
             attackDamage += weaponType == WeaponType.Boomerang ? player.RangedAttackBonus : 0f;
             attackDamage += weaponType == WeaponType.Spin      ? player.MeleeAttackBonus  : 0f;
+            attackDamage += weaponType == WeaponType.Slash      ? player.MeleeAttackBonus  : 0f;
             attackDamage += weaponType == WeaponType.Charge    ? player.MeleeAttackBonus  : 0f;
+            attackDamage += weaponType == WeaponType.Hammer    ? player.MeleeAttackBonus  : 0f;
 
             if (player.SynergyAtkPct > 0f)
                 attackDamage *= (1f + player.SynergyAtkPct / 100f);
@@ -1408,6 +1813,7 @@ public class WeaponPoint : MonoBehaviour
                     WeaponType.Melee     => relic.MeleeAtkBonusPct,
                     WeaponType.Charge    => relic.MeleeAtkBonusPct,
                     WeaponType.Slash     => relic.MeleeAtkBonusPct,
+                    WeaponType.Hammer    => relic.MeleeAtkBonusPct,
                     WeaponType.Ranged    => relic.RangedAtkBonusPct,
                     WeaponType.Magic     => relic.MagicAtkBonusPct,
                     WeaponType.Boomerang => relic.BoomerangAtkBonusPct,
@@ -1457,6 +1863,12 @@ public class WeaponPoint : MonoBehaviour
         Vector3 center = transform.parent != null ? transform.parent.position : transform.position;
         Gizmos.color = new Color(1f, 0.8f, 0f, 0.4f);
         Gizmos.DrawWireSphere(center, attackRange);
+
+        if (pullOnReturn && weaponType == WeaponType.Melee)
+        {
+            Gizmos.color = new Color(0.6f, 0.2f, 1f, 0.3f);
+            Gizmos.DrawWireSphere(center, pullRadius);
+        }
 
         if (weaponType == WeaponType.Spin)
         {

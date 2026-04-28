@@ -112,8 +112,12 @@ MonoBehaviour:
   returnSpeed: 60
   hitDistance: 0.25
   areaHitDamageRatio: 0.25
-  overshootDistance: 3
+  overshootDistance: 5
   overshootSpeed: 60
+  pullOnReturn: 0
+  pullRadius: 2
+  pullStrength: 8
+  pullDuration: 0.25
   projectilePrefab: {fileID: 0}
   projectileSpeed: 0
   useParabolicShot: 0
@@ -139,11 +143,15 @@ MonoBehaviour:
   slashHitRadius: 0.35
   slashVfxPrefab: {fileID: 0}
   slashVfxDuration: 1
+  slashTeleportMaxDist: 3
+  slashFadeTime: 0.12
   chargeDuration: 1
   magicElement: 0
   muzzlePoint: {fileID: 0}
-  muzzleVfxPrefab: {fileID: 0}
   zapBoltVfxPrefab: {fileID: 0}
+  lightningBurstCount: 3
+  lightningBurstInterval: 0.07
+  zapLineHitRadius: 0.25
   weaponAnimator: {fileID: 0}
   attackClip: {fileID: 0}
   attackClipSlotName: Attack

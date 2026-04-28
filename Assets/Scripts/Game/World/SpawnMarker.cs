@@ -23,6 +23,18 @@ public class SpawnMarker : MonoBehaviour
         All.Remove(this);
     }
 
+    /// <summary>씬에 있는 모든 SpawnMarker를 즉시 취소합니다. StopSpawning 시 호출.</summary>
+    public static void CancelAll()
+    {
+        for (int i = All.Count - 1; i >= 0; i--)
+        {
+            if (All[i] != null)
+                Destroy(All[i].gameObject);
+        }
+        All.Clear();
+        _activeCount = 0;
+    }
+
     public void Init(GameObject prefab, int globalWave = 0, int designGlobalWave = 0, UnitData unitData = null, int wavesPerStage = 30)
     {
         _activeCount++;
@@ -53,6 +65,13 @@ public class SpawnMarker : MonoBehaviour
         gameObject.SetActive(false);
 
         if (GameManager.Shared != null && GameManager.Shared.IsGameOver)
+        {
+            Destroy(gameObject);
+            yield break;
+        }
+
+        // 웨이브 클리어로 스폰이 중단된 경우 스폰하지 않음
+        if (EnemySpawner.Shared != null && !EnemySpawner.Shared.IsSpawning)
         {
             Destroy(gameObject);
             yield break;

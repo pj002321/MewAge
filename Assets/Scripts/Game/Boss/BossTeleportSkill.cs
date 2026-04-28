@@ -101,10 +101,6 @@ public class BossTeleportSkill : BossSkillBase
     }
 
     // ── 애니메이션 이벤트 수신 ────────────────────────────────
-    /// <summary>
-    /// 애니메이션 이벤트에서 호출합니다.
-    /// 숨기 클립 끝 → "dig" / 스폰 클립 끝 → "spawn"
-    /// </summary>
     public void OnTeleportAnimEnd(string clipName)
     {
         if (clipName == "dig")   _digAnimEnded   = true;

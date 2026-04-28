@@ -49,9 +49,6 @@ public class HomeUIManager : MonoBehaviour
     {
         SoundManager.Shared?.PlayHomeBGM();
 
-        var structwareMgr = StructureWareManager.Shared;
-        Debug.Log($"[HomeUIManager] StructureWareManager 로드: {(structwareMgr != null ? "성공" : "실패")}");
-
         int count = tabButtons.Length;
         tabOriginalWidths = new float[count];
         tabOriginalColors = new Color[count];

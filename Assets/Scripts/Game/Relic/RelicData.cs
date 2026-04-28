@@ -11,7 +11,6 @@ public class RelicData
     public string         relicName;
     public string         grade;
     public string         description;
-    public Sprite         icon;
 
     public RelicEffectType primaryEffect;
     public float           primaryBase;    // f_속성수치 (Lv.1 기준)
@@ -35,6 +34,7 @@ public class RelicData
 
     private static float ScaleMult(int level)
     {
+        if (level <= 0) return 0f;   // 잠금 상태
         int clamped = Mathf.Clamp(level, 1, RelicInventory.MaxLevel);
         return 1f + (clamped - 1) * 0.15f;
     }
@@ -55,7 +55,6 @@ public class RelicData
 
         data.primaryEffect   = ParseEffect(row.f_속성ID);
         data.secondaryEffect = ParseEffect(row.f_특수속성ID);
-        data.icon = Resources.Load<Sprite>($"Relic/{row.f_ID.ToLower()}");
         return data;
     }
 

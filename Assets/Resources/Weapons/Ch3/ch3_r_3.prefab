@@ -105,16 +105,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 80572d92ca6952f478c256b7ffc65d80, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponPoint
-  weaponType: 0
+  weaponType: 1
   pullbackDist: 0.5
   anticipationTime: 0.1
   strikeSpeed: 80
   returnSpeed: 70
   hitDistance: 0.25
   areaHitDamageRatio: 0.5
-  overshootDistance: 3
+  overshootDistance: 5
   overshootSpeed: 60
-  projectilePrefab: {fileID: 0}
+  pullOnReturn: 0
+  pullRadius: 2
+  pullStrength: 8
+  pullDuration: 0.25
+  projectilePrefab: {fileID: 7736371004280348099, guid: 9133649f8dc20104d8ee235eab1e3fa2, type: 3}
   projectileSpeed: 20
   useParabolicShot: 0
   parabolicArcHeight: 1.5
@@ -139,6 +143,8 @@ MonoBehaviour:
   slashHitRadius: 0.35
   slashVfxPrefab: {fileID: 0}
   slashVfxDuration: 1
+  slashTeleportMaxDist: 3
+  slashFadeTime: 0.12
   chargeDuration: 1
   magicElement: 0
   muzzlePoint: {fileID: 0}

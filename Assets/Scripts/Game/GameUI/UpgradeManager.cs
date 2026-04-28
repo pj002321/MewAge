@@ -194,13 +194,26 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
 
     public void GiveStarterWeapon()
     {
+        // 1순위: Common + Melee
         var normals = new List<WeaponData>();
         foreach (var w in allWeapons)
             if (w != null && w.grade == WeaponGrade.Common && w.chapter == currentChapter
                 && w.weaponType == WeaponType.Melee)
                 normals.Add(w);
 
-        if (normals.Count == 0) { Debug.LogWarning("[UpgradeManager] 지급할 무기 없음"); return; }
+        // 2순위: Common 아무 타입
+        if (normals.Count == 0)
+        {
+            foreach (var w in allWeapons)
+                if (w != null && w.grade == WeaponGrade.Common && w.chapter == currentChapter)
+                    normals.Add(w);
+        }
+
+        if (normals.Count == 0)
+        {
+            Debug.LogWarning($"[UpgradeManager] 지급할 무기 없음 — chapter={currentChapter}, 전체무기={allWeapons.Length}, ch{currentChapter}무기={System.Array.FindAll(allWeapons, w => w != null && w.chapter == currentChapter).Length}");
+            return;
+        }
 
         var inv = PlayerInventory.Shared;
         if (inv == null) return;

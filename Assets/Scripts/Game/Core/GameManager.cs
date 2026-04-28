@@ -882,8 +882,9 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         _isCountingDown = false;
     }
 
-    public bool IsGameOver  => isGameOver;
-    public int  CurrentWave => wave;
+    public bool   IsGameOver       => isGameOver;
+    public int    CurrentWave      => wave;
+    public string CurrentChapterID => currentChapterID;
 
     /// <summary>현재 챕터+스테이지의 DB_웨이브에서 최대 웨이브 번호를 반환합니다.</summary>
     private int GetMaxWave()
