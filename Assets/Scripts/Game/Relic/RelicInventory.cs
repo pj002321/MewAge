@@ -42,9 +42,11 @@ public class RelicInventory : MonoBehaviourSingleton<RelicInventory>
     };
 
     private const string FragKeyPrefix = "RelicFrag_";
+    private const string StarKeyPrefix = "RelicStar_";
 
-    private readonly Dictionary<string, int> _fragments = new();
-    private readonly List<RelicData>         _all       = new();
+    private readonly Dictionary<string, int> _fragments  = new();
+    private readonly Dictionary<string, int> _starLevels = new();
+    private readonly List<RelicData>         _all        = new();
 
     public static event System.Action OnChanged;
 
@@ -68,7 +70,8 @@ public class RelicInventory : MonoBehaviourSingleton<RelicInventory>
             var data = RelicData.FromDB(row);
             if (data == null) return;
             _all.Add(data);
-            _fragments[data.relicId] = PlayerPrefs.GetInt(FragKeyPrefix + data.relicId, 0);
+            _fragments[data.relicId]  = PlayerPrefs.GetInt(FragKeyPrefix + data.relicId, 0);
+            _starLevels[data.relicId] = PlayerPrefs.GetInt(StarKeyPrefix + data.relicId, 1);
         });
     }
 
@@ -132,6 +135,16 @@ public class RelicInventory : MonoBehaviourSingleton<RelicInventory>
 
     public bool CanUpgrade(string id) => GetLevel(id) < MaxLevel;
 
+    // ── 성급 ──────────────────────────────────────────────────────────────
+    public const int MaxStar = 4;
+
+    /// <summary>현재 성급 (1~4). 기본값 1.</summary>
+    public int GetStarLevel(string id) =>
+        _starLevels.TryGetValue(id, out var v) ? v : 1;
+
+    /// <summary>성급 돌파 가능 여부 (4성 미만).</summary>
+    public bool CanBreakThrough(string id) => GetStarLevel(id) < MaxStar;
+
     // ── 조각 추가 ─────────────────────────────────────────────────────────
     public void AddFragments(string id, int count)
     {
@@ -140,5 +153,17 @@ public class RelicInventory : MonoBehaviourSingleton<RelicInventory>
         PlayerPrefs.SetInt(FragKeyPrefix + id, _fragments[id]);
         PlayerPrefs.Save();
         OnChanged?.Invoke();
+    }
+
+    /// <summary>성급 돌파: 성급을 1 올립니다 (최대 4성).</summary>
+    public bool TryBreakThrough(string id)
+    {
+        if (!CanBreakThrough(id)) return false;
+        if (!_starLevels.ContainsKey(id)) return false;
+        _starLevels[id]++;
+        PlayerPrefs.SetInt(StarKeyPrefix + id, _starLevels[id]);
+        PlayerPrefs.Save();
+        OnChanged?.Invoke();
+        return true;
     }
 }

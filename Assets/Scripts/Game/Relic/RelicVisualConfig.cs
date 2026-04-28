@@ -37,6 +37,21 @@ public class RelicVisualConfig : ScriptableObject
     }
 
     [Serializable]
+    public struct TagGradeEntry
+    {
+        public Grade  grade;
+        public Sprite sprite;
+    }
+
+    [Serializable]
+    public struct StarEntry
+    {
+        [Range(1, 4)]
+        public int    star;
+        public Sprite sprite;
+    }
+
+    [Serializable]
     public struct RelicIconEntry
     {
         public string relicId;
@@ -51,6 +66,12 @@ public class RelicVisualConfig : ScriptableObject
 
     [Header("등급 배너 (RelicInfoPopup)")]
     public BannerEntry[] bannerGrades;
+
+    [Header("등급 태그 이미지 (RelicInfoPopup)")]
+    public TagGradeEntry[] tagGrades;
+
+    [Header("성급 이미지 1~4성 (RelicInfoPopup)")]
+    public StarEntry[] starImages;
 
     [Header("유물 아이콘 (ID별)")]
     public RelicIconEntry[] relicIcons;
@@ -74,6 +95,20 @@ public class RelicVisualConfig : ScriptableObject
     {
         foreach (var e in bannerGrades)
             if (e.grade == grade) return e.sprite;
+        return null;
+    }
+
+    public Sprite GetTagGradeSprite(Grade grade)
+    {
+        foreach (var e in tagGrades)
+            if (e.grade == grade) return e.sprite;
+        return null;
+    }
+
+    public Sprite GetStarSprite(int star)
+    {
+        foreach (var e in starImages)
+            if (e.star == star) return e.sprite;
         return null;
     }
 

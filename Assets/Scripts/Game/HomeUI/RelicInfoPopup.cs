@@ -33,15 +33,28 @@ public class RelicInfoPopup : MonoBehaviour
     [SerializeField] private TextMeshProUGUI descriptionText;
     [SerializeField] private TextMeshProUGUI fragmentText;
 
-    [Header("닫기")]
+    [Header("등급 태그 / 성급")]
+    [SerializeField] private Image tagGradeImg;
+    [SerializeField] private Image starImg;
+
+    [Header("버튼")]
     [SerializeField] private Button closeButton;
+    [SerializeField] private Button closeButton2;
+    [SerializeField] private Button breakthroughButton;
+
+    [Header("애니메이션")]
+    [SerializeField] private float animDuration = 0.18f;
 
     private static readonly Color LockedTint = new Color(0.4f, 0.4f, 0.4f, 1f);
+    private Coroutine _anim;
+    private RelicData _currentData;
 
     // ── 라이프사이클 ──────────────────────────────────────────────────────
     private void Awake()
     {
         closeButton?.onClick.AddListener(Hide);
+        closeButton2?.onClick.AddListener(Hide);
+        breakthroughButton?.onClick.AddListener(OnBreakthroughClicked);
         gameObject.SetActive(false);
     }
 
@@ -49,16 +62,21 @@ public class RelicInfoPopup : MonoBehaviour
     public void Show(RelicData data)
     {
         if (data == null) return;
+        _currentData = data;
         gameObject.SetActive(true);
+        if (_anim != null) StopCoroutine(_anim);
+        _anim = StartCoroutine(ScaleTo(Vector3.zero, Vector3.one));
 
-        var  inv    = RelicInventory.Shared;
-        var  cfg    = RelicVisualConfig.Shared;
-        bool locked = inv == null || !inv.IsUnlocked(data.relicId);
-        int  level  = inv?.GetLevel(data.relicId) ?? 0;
-        int  frags  = inv?.GetFragments(data.relicId) ?? 0;
-        int  nextT  = inv?.GetNextThreshold(data.relicId) ?? RelicInventory.FragThresholds[0];
-        var  grade  = locked ? RelicVisualConfig.Grade.Common
-                             : RelicVisualConfig.ParseGrade(data.grade);
+        var  inv        = RelicInventory.Shared;
+        var  cfg        = RelicVisualConfig.Shared;
+        bool locked     = inv == null || !inv.IsUnlocked(data.relicId);
+        int  level      = inv?.GetLevel(data.relicId) ?? 0;
+        int  frags      = inv?.GetFragments(data.relicId) ?? 0;
+        int  nextT      = inv?.GetNextThreshold(data.relicId) ?? RelicInventory.FragThresholds[0];
+        int  gradeIndex = locked ? -1 : (inv?.GetGradeIndex(data.relicId) ?? -1);
+        int  starLevel  = inv?.GetStarLevel(data.relicId) ?? 1;
+        var  grade      = locked ? RelicVisualConfig.Grade.Common
+                                 : RelicVisualConfig.ParseGrade(data.grade);
 
         // 아이콘: config에서 표시 시점에 로드
         if (iconImage)
@@ -81,8 +99,8 @@ public class RelicInfoPopup : MonoBehaviour
             bannerImage.color  = Color.white;
         }
 
-        // 등급 텍스트
-        if (gradeText) gradeText.text = locked ? "잠금" : inv.GetGradeLabel(data.relicId);
+        // 등급 텍스트 (f_등급 기반)
+        if (gradeText) gradeText.text = locked ? "잠금" : GradeLabel(grade);
 
         // 이름
         if (nameText) nameText.text = data.relicName;
@@ -111,11 +129,77 @@ public class RelicInfoPopup : MonoBehaviour
                 ? $"조각  {frags} / {nextT}"
                 : $"조각  {frags}  (최대 등급)";
         }
+
+        // 등급 태그 이미지 (f_등급 기반)
+        if (tagGradeImg)
+        {
+            var tagSprite = locked ? null : cfg?.GetTagGradeSprite(grade);
+            tagGradeImg.sprite  = tagSprite;
+            tagGradeImg.enabled = tagSprite != null;
+        }
+
+        // 성급 이미지 (등급과 무관, 1~4성 독립)
+        if (starImg)
+        {
+            starImg.gameObject.SetActive(!locked);
+            if (!locked)
+            {
+                starImg.sprite = cfg?.GetStarSprite(starLevel);
+                starImg.SetNativeSize();
+            }
+        }
+
+        // 성급 돌파 버튼
+        if (breakthroughButton)
+            breakthroughButton.interactable = !locked && (inv?.CanBreakThrough(data.relicId) ?? false);
     }
 
-    public void Hide() => gameObject.SetActive(false);
+    public void Hide()
+    {
+        if (_anim != null) StopCoroutine(_anim);
+        _anim = StartCoroutine(ScaleTo(transform.localScale, Vector3.zero, deactivateOnDone: true));
+    }
+
+    // ── 성급 돌파 ─────────────────────────────────────────────────────────
+    private void OnBreakthroughClicked()
+    {
+        if (_currentData == null) return;
+        RelicInventory.Shared?.TryBreakThrough(_currentData.relicId);
+        Show(_currentData);
+    }
+
+    // ── 애니메이션 ────────────────────────────────────────────────────────
+    private System.Collections.IEnumerator ScaleTo(Vector3 from, Vector3 to, bool deactivateOnDone = false)
+    {
+        transform.localScale = from;
+        float t = 0f;
+        while (t < 1f)
+        {
+            t += Time.unscaledDeltaTime / animDuration;
+            transform.localScale = Vector3.LerpUnclamped(from, to, EaseOutBack(Mathf.Clamp01(t)));
+            yield return null;
+        }
+        transform.localScale = to;
+        if (deactivateOnDone) gameObject.SetActive(false);
+        _anim = null;
+    }
+
+    private static float EaseOutBack(float t)
+    {
+        const float c = 1.70158f;
+        return 1f + (c + 1f) * Mathf.Pow(t - 1f, 3f) + c * Mathf.Pow(t - 1f, 2f);
+    }
 
     // ── 내부 헬퍼 ─────────────────────────────────────────────────────────
+    private static string GradeLabel(RelicVisualConfig.Grade grade) => grade switch
+    {
+        RelicVisualConfig.Grade.Rare      => "고급",
+        RelicVisualConfig.Grade.Epic      => "희귀",
+        RelicVisualConfig.Grade.Legendary => "전설",
+        RelicVisualConfig.Grade.Mythic    => "신화",
+        _                                 => "일반",
+    };
+
     private static string BuildAttrLine(RelicEffectType effect, float value, bool locked)
     {
         if (effect == RelicEffectType.NONE) return "-";
@@ -125,26 +209,26 @@ public class RelicInfoPopup : MonoBehaviour
 
     private static string EffectLabel(RelicEffectType e) => e switch
     {
-        RelicEffectType.MELEE_ATK     => "근접 공격력",
-        RelicEffectType.RANGED_ATK    => "원거리 공격력",
-        RelicEffectType.MAGIC_ATK     => "마법 공격력",
-        RelicEffectType.BOOMERANG_ATK => "부메랑 공격력",
-        RelicEffectType.SPIN_ATK      => "스핀 공격력",
-        RelicEffectType.ATK           => "전체 공격력",
-        RelicEffectType.DEF           => "방어력",
-        RelicEffectType.MAX_HP        => "최대 체력",
-        RelicEffectType.MOV_SPD       => "이동속도",
-        RelicEffectType.ATK_SPD       => "공격속도",
-        RelicEffectType.EVA           => "회피",
-        RelicEffectType.CRT_RATE      => "치명타 확률",
-        RelicEffectType.CRT_DMG       => "치명타 데미지",
-        RelicEffectType.BLEED         => "출혈 데미지",
-        RelicEffectType.HP_REGEN      => "체력 재생",
-        RelicEffectType.MAGNET        => "흡수 반경",
-        RelicEffectType.KNOCKBACK     => "넉백",
-        RelicEffectType.HEAL_KILL     => "처치 회복",
-        RelicEffectType.BOSS_DMG      => "보스 피해 감소",
-        RelicEffectType.BOSS_ATK      => "보스 피해 증가",
+        RelicEffectType.MELEE_ATK     => "근접무기 공격력 증가",
+        RelicEffectType.RANGED_ATK    => "원거리무기 공격력 증가",
+        RelicEffectType.MAGIC_ATK     => "마법무기 공격력 증가",
+        RelicEffectType.BOOMERANG_ATK => "부메랑무기 공격력 증가",
+        RelicEffectType.SPIN_ATK      => "스핀무기 공격력 증가",
+        RelicEffectType.ATK           => "전체 공격력 증가",
+        RelicEffectType.DEF           => "방어력 증가",
+        RelicEffectType.MAX_HP        => "최대 체력 증가",
+        RelicEffectType.MOV_SPD       => "이동속도 증가",
+        RelicEffectType.ATK_SPD       => "공격속도 증가",
+        RelicEffectType.EVA           => "회피 증가",
+        RelicEffectType.CRT_RATE      => "치명타 확률 증가",
+        RelicEffectType.CRT_DMG       => "치명타 데미지 증가",
+        RelicEffectType.BLEED         => "출혈 데미지 증가",
+        RelicEffectType.HP_REGEN      => "지속 회복량 증가",
+        RelicEffectType.MAGNET        => "흡수 반경 증가",
+        RelicEffectType.KNOCKBACK     => "넉백 증가",
+        RelicEffectType.HEAL_KILL     => "처치 회복 증가",
+        RelicEffectType.BOSS_DMG      => "보스 데미지 감소",
+        RelicEffectType.BOSS_ATK      => "보스 공격피해 증가",
         RelicEffectType.ELITE_DMG     => "엘리트 피해 감소",
         _                             => e.ToString(),
     };
