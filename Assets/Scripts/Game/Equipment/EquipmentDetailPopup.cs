@@ -22,6 +22,7 @@ public class EquipmentDetailPopup : MonoBehaviour
     [Header("아이콘 & 이름")]
     public Image           itemIcon;
     public Image           frameIcon;
+    public Image           bannerImage;
     public Image           categoryIcon;
     public TextMeshProUGUI nameText;
 
@@ -76,8 +77,8 @@ public class EquipmentDetailPopup : MonoBehaviour
 
         if (itemIcon)
         {
-            itemIcon.enabled = e.icon != null;
-            if (e.icon != null) itemIcon.sprite = e.icon;
+            itemIcon.enabled = e.Icon != null;
+            if (e.Icon != null) itemIcon.sprite = e.Icon;
         }
 
         if (frameIcon)
@@ -90,6 +91,13 @@ public class EquipmentDetailPopup : MonoBehaviour
             }
             else
                 frameIcon.color = EquipmentData.GradeColor(e.grade);
+        }
+
+        if (bannerImage)
+        {
+            var bannerSprite = Resources.Load<Sprite>($"Equip/Banner/{e.grade.ToString().ToLower()}");
+            bannerImage.sprite  = bannerSprite;
+            bannerImage.enabled = bannerSprite != null;
         }
 
         if (categoryIcon)

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using Mewage.DB;
 
 public enum EquipSortMode { None, ByGrade, ByCivilization }
 
@@ -23,6 +24,35 @@ public class EquipmentInventory : MonoBehaviourSingleton<EquipmentInventory>
     public System.Action OnChanged;
 
     protected override bool DontDestroy => true;
+
+    private const string StarterGivenKey = "StarterEquipGiven";
+
+    protected override void Awake()
+    {
+        base.Awake();
+        GiveStarterEquipmentIfNeeded();
+    }
+
+    private void GiveStarterEquipmentIfNeeded()
+    {
+        if (PlayerPrefs.GetInt(StarterGivenKey, 0) != 0) return;
+
+        int given = 0;
+        DB_장비.ForEachEntity(row =>
+        {
+            if (given >= 3) return;
+            if (row == null || string.IsNullOrEmpty(row.f_장비ID)) return;
+            if (row.f_등급 != "NORMAL") return;
+
+            var data = EquipmentData.FromDB(row);
+            if (data == null) return;
+            bag.Add(data);
+            given++;
+        });
+
+        PlayerPrefs.SetInt(StarterGivenKey, 1);
+        PlayerPrefs.Save();
+    }
 
     public IReadOnlyList<EquipmentData> Equipped => equipped;
     public IReadOnlyList<EquipmentData> Bag      => bag;

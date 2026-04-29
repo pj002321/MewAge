@@ -73,6 +73,14 @@ public class HomeCharacterDisplay : MonoBehaviourSingleton<HomeCharacterDisplay>
         if (layer >= 0) SetLayerRecursive(_currentModel, layer);
     }
 
+    /// <summary>현재 모델의 Animator에서 "happy" 클립을 재생합니다.</summary>
+    public void PlayHappy()
+    {
+        if (_currentModel == null) return;
+        var anim = _currentModel.GetComponentInChildren<Animator>();
+        if (anim != null) anim.Play("happy", 0, 0f);
+    }
+
     void OnDestroy()
     {
         if (_currentModel != null) Destroy(_currentModel);

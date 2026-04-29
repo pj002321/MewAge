@@ -171,6 +171,7 @@ public class HomeEquipPanel : MonoBehaviour
         {
             _showStatChange = false;
             ShowStatChange();
+            HomeCharacterDisplay.Shared?.PlayHappy();
         }
     }
 

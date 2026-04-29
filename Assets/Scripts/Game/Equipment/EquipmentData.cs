@@ -22,7 +22,9 @@ public class EquipmentData
     public string        statId;      // STAT_ATK, STAT_DEF, STAT_HP, ...
     public float         statValue;
     public string        description;
-    public Sprite        icon;
+
+    private Sprite _icon;
+    public  Sprite  Icon => _icon ??= LoadIcon(civilization, category, equipId);
 
     // ── DB에서 생성 ─────────────────────────────────────────────────
     public static EquipmentData FromDB(DB_장비 row)
@@ -43,7 +45,6 @@ public class EquipmentData
         if (!System.Enum.TryParse(row.f_문명, true, out e.civilization))
             e.civilization = EquipCiv.구석기;
 
-        e.icon = LoadIcon(e.civilization, e.category, e.equipId);
         return e;
     }
 

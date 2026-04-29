@@ -114,7 +114,7 @@ MonoBehaviour:
   returnSpeed: 70
   hitDistance: 0.25
   areaHitDamageRatio: 0.5
-  overshootDistance: 5
+  overshootDistance: 4
   overshootSpeed: 60
   pullOnReturn: 0
   pullRadius: 2
@@ -148,6 +148,15 @@ MonoBehaviour:
   slashTeleportMaxDist: 3
   slashFadeTime: 0.12
   chargeDuration: 1
+  hammerRiseHeight: 4
+  hammerRiseTime: 0.55
+  hammerSpinSpeed: 900
+  hammerSlamSpeed: 28
+  hammerImpactWorldPos: {x: 0, y: 0}
+  hammerImpactRadius: 1.8
+  hammerImpactVfxPrefab: {fileID: 0}
+  hammerHighlightScale: 2.2
+  hammerHighlightDur: 0.35
   magicElement: 0
   muzzlePoint: {fileID: 0}
   zapBoltVfxPrefab: {fileID: 0}
