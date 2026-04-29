@@ -35,6 +35,13 @@ public class HomeEquipVisualConfig : ScriptableObject
         public Sprite     locked;
     }
 
+    [Serializable]
+    public struct GradeTagEntry
+    {
+        public EquipGrade grade;
+        public Sprite     sprite;
+    }
+
     [Header("등급 테두리")]
     public GradeFrameEntry[] frameGrades;
 
@@ -43,6 +50,9 @@ public class HomeEquipVisualConfig : ScriptableObject
 
     [Header("등급 인덱스 아이콘 (해금/잠금)")]
     public GradeIndexEntry[] indexGrades;
+
+    [Header("등급 태그 이미지")]
+    public GradeTagEntry[] tagGrades;
 
     // ── 조회 헬퍼 ────────────────────────────────────────────────────────
     public Sprite GetFrame(EquipGrade grade)
@@ -63,6 +73,13 @@ public class HomeEquipVisualConfig : ScriptableObject
     {
         foreach (var e in indexGrades)
             if (e.grade == grade) return unlocked ? e.unlocked : e.locked;
+        return null;
+    }
+
+    public Sprite GetTag(EquipGrade grade)
+    {
+        foreach (var e in tagGrades)
+            if (e.grade == grade) return e.sprite;
         return null;
     }
 

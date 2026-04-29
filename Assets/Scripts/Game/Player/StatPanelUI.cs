@@ -17,7 +17,6 @@ public class StatPanelUI : MonoBehaviourSingleton<StatPanelUI>
     protected override bool DontDestroy => false;
 
     [SerializeField] private Button closeButton;
-    [SerializeField] private Button activeButton;
 
     [Header("스케일 애니메이션")]
     [SerializeField] private float openDuration  = 0.18f;
@@ -42,8 +41,7 @@ public class StatPanelUI : MonoBehaviourSingleton<StatPanelUI>
         base.Awake();
         _originalScale = transform.localScale;
 
-        closeButton ?.onClick.AddListener(Hide);
-        activeButton?.onClick.AddListener(Show);
+        closeButton?.onClick.AddListener(Hide);
 
         foreach (var anim in GetComponentsInChildren<Animator>(includeInactive: true))
             anim.updateMode = AnimatorUpdateMode.UnscaledTime;

@@ -8,32 +8,37 @@ using UnityEngine;
 public class HitFlash : MonoBehaviour
 {
     [SerializeField] private float flashDuration = 0.1f;
+    [SerializeField] private Color flashColor    = Color.white;
 
     private SpriteRenderer[] srs;
     private Material[]       originalMats;
+    private Material         _instanceFlashMat;
     private Coroutine        flashCoroutine;
     private bool             _isFlashing;
 
-    // 씬 전체 공유 흰색 실루엣 재질
-    private static Material _flashMat;
-    private static Material GetFlashMat()
+    // BaseColor는 하위 호환성 유지
+    [HideInInspector] public Color BaseColor = Color.white;
+
+    private Material GetFlashMat()
     {
-        if (_flashMat != null) return _flashMat;
+        if (_instanceFlashMat != null) return _instanceFlashMat;
         var shader = Shader.Find("Custom/SpriteSilhouette");
         if (shader == null) return null;
-        _flashMat = new Material(shader);
-        _flashMat.SetColor("_Color", Color.white);
-        return _flashMat;
+        _instanceFlashMat = new Material(shader);
+        _instanceFlashMat.SetColor("_Color", flashColor);
+        return _instanceFlashMat;
     }
-
-    // BaseColor는 하위 호환성 유지 (외부에서 참조 중인 코드 대응)
-    [HideInInspector] public Color BaseColor = Color.white;
 
     private void Awake()
     {
+        RefreshRenderers();
+    }
+
+    /// <summary>모델이 동적으로 교체된 후 호출해 SpriteRenderer 캐시를 갱신합니다.</summary>
+    public void RefreshRenderers()
+    {
         srs = GetComponentsInChildren<SpriteRenderer>(true);
         if (srs.Length == 0) srs = GetComponentsInParent<SpriteRenderer>();
-
         CacheOriginalMats();
     }
 

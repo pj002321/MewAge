@@ -20,19 +20,18 @@ public class ImprovPanel : MonoBehaviour
 
     private void Awake()
     {
-        if (statPanelHoldButton != null)
-        {
-            var trigger = statPanelHoldButton.GetComponent<EventTrigger>()
-                       ?? statPanelHoldButton.gameObject.AddComponent<EventTrigger>();
+        if (statPanelHoldButton == null) return;
 
-            var down = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
-            down.callback.AddListener(_ => StatPanelUI.Shared?.Show());
-            trigger.triggers.Add(down);
+        var trigger = statPanelHoldButton.GetComponent<EventTrigger>()
+                   ?? statPanelHoldButton.gameObject.AddComponent<EventTrigger>();
 
-            var up = new EventTrigger.Entry { eventID = EventTriggerType.PointerUp };
-            up.callback.AddListener(_ => StatPanelUI.Shared?.Hide());
-            trigger.triggers.Add(up);
-        }
+        var down = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
+        down.callback.AddListener(_ => StatPanelUI.Shared?.Show());
+        trigger.triggers.Add(down);
+
+        var up = new EventTrigger.Entry { eventID = EventTriggerType.PointerUp };
+        up.callback.AddListener(_ => StatPanelUI.Shared?.Hide());
+        trigger.triggers.Add(up);
     }
 
     private void OnEnable()

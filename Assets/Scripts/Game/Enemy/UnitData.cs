@@ -79,6 +79,7 @@ public class UnitData
                         if (sr.sprite == null)
                         {
                             Debug.LogWarning($"[UnitData] 프리팹 SpriteRenderer의 sprite null: {path}");
+                            break;
                         }
                     }
                 }

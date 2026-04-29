@@ -99,6 +99,36 @@ public class PlayerStats : MonoBehaviourSingleton<PlayerStats>
         SyncUI();
     }
 
+    /// <summary>
+    /// 디버그용 강제 레벨업 메서드입니다.
+    /// 현재 레벨에서 다음 레벨로 가기 위한 정확한 경험치만을 추가합니다.
+    /// </summary>
+    public void DebugLevelUp()
+    {
+        if (level >= maxLevel) return;
+
+        int requiredExp = expToNext - exp;
+        exp += requiredExp;
+        
+        while (exp >= expToNext && level < maxLevel)
+        {
+            exp -= expToNext;
+            level++;
+            expToNext = CalcExpToNext(level);
+            Debug.Log($"[PlayerStats] Debug Level Up! → {level}");
+            PlayerController.Instance?.HealHP(10f);
+            FXManager.Shared?.SpawnPlayerText("+10", Color.green);
+        }
+
+        if (level >= maxLevel)
+        {
+            exp = 0;
+            expToNext = CalcExpToNext(maxLevel - 1);
+        }
+
+        SyncUI();
+    }
+
     private void SyncUI()
     {
         GameManager.Shared?.UpdateGoldUI(gold);

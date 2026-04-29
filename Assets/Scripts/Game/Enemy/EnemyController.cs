@@ -90,6 +90,10 @@ public class EnemyController : MonoBehaviour
     private EliteMarker _eliteMarker;
     private TankShield  _shield;
 
+    // 분리 스로틀 (20회/초 — FixedUpdate 50회/초 대비 O(N²) 부하 60% 감소)
+    private float _sepTimer;
+    private const float SepInterval = 0.05f;
+
     // ── 초기화 ──────────────────────────────────────────────────
     private void Awake()
     {
@@ -165,7 +169,7 @@ public class EnemyController : MonoBehaviour
     {
         if (damageTimer > 0f) return;
         if (playerTransform == null) return;
-        if (Vector2.Distance(transform.position, playerTransform.position) > contactMaxDist) return;
+        if (((Vector2)transform.position - (Vector2)playerTransform.position).sqrMagnitude > contactMaxDist * contactMaxDist) return;
         var player = PlayerController.Instance;
         if (player == null) return;
         player.TakeDamage(contactDamage, isFromElite: _eliteMarker != null);
@@ -204,13 +208,18 @@ public class EnemyController : MonoBehaviour
     {
         if (separationRadius <= 0f || rb == null) return;
 
+        _sepTimer -= Time.fixedDeltaTime;
+        if (_sepTimer > 0f) return;
+        _sepTimer = SepInterval;
+
         float   r2   = separationRadius * separationRadius;
         Vector2 push = Vector2.zero;
 
-        foreach (var other in All)
+        for (int i = 0; i < All.Count; i++)
         {
+            var other = All[i];
             if (other == this || other.rb == null) continue;
-            Vector2 diff  = rb.position - other.rb.position;
+            Vector2 diff   = rb.position - other.rb.position;
             float   sqDist = diff.sqrMagnitude;
             if (sqDist > 0.000001f && sqDist < r2)
             {
@@ -220,7 +229,7 @@ public class EnemyController : MonoBehaviour
         }
 
         if (push != Vector2.zero)
-            _pendingMove += push * separationStrength * Time.fixedDeltaTime;
+            _pendingMove += push * separationStrength * SepInterval;
     }
 
     private void OnDestroy()
@@ -329,7 +338,7 @@ public class EnemyController : MonoBehaviour
         // 플레이어 본체(PlayerController가 달린 오브젝트)가 아닌 자식의 투명 트리거(자석 등) 무시
         if (other.gameObject != p.gameObject) return;
         
-        if (Vector2.Distance(transform.position, p.transform.position) > contactMaxDist) return;
+        if (((Vector2)transform.position - (Vector2)p.transform.position).sqrMagnitude > contactMaxDist * contactMaxDist) return;
         p.TakeDamage(contactDamage);
         damageTimer = damageCooldown;
     }
@@ -341,7 +350,7 @@ public class EnemyController : MonoBehaviour
 
         // 플레이어 본체(PlayerController가 달린 오브젝트)가 아닌 자식의 투명 트리거(자석 등) 무시
         if (other.gameObject != p.gameObject) return;
-        if (Vector2.Distance(transform.position, p.transform.position) > contactMaxDist) return;
+        if (((Vector2)transform.position - (Vector2)p.transform.position).sqrMagnitude > contactMaxDist * contactMaxDist) return;
         p.TakeDamage(contactDamage);
         damageTimer = damageCooldown;
     }

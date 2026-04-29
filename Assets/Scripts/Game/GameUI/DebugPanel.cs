@@ -19,6 +19,7 @@ public class DebugPanel : MonoBehaviour
     [SerializeField] private Button          skipWaveButton;
     [SerializeField] private Button          bossWaveButton;
     [SerializeField] private Button          invincibleButton;
+    [SerializeField] private Button          levelUpButton;
     [SerializeField] private TextMeshProUGUI waveLabel;
 
     private bool isVisible    = true;
@@ -47,6 +48,7 @@ public class DebugPanel : MonoBehaviour
         skipWaveButton?.onClick.AddListener(OnSkipWave);
         bossWaveButton?.onClick.AddListener(OnBossWave);
         invincibleButton?.onClick.AddListener(OnToggleInvincible);
+        levelUpButton?.onClick.AddListener(OnLevelUp);
 
         for (int i = 0; i < jumpButtons.Length; i++)
         {
@@ -96,6 +98,12 @@ public class DebugPanel : MonoBehaviour
         Debug.Log($"[Debug] 무적 {(_invincible ? "ON" : "OFF")}");
     }
 
+    public void OnLevelUp()
+    {
+        Debug.Log($"[Debug] Level Up 버튼 클릭");
+        PlayerStats.Shared?.DebugLevelUp();
+    }
+
     public void OnJumpToWave(int wave)
     {
         Debug.Log($"[Debug] JumpToWave {wave} 버튼 클릭");
@@ -113,6 +121,7 @@ public class DebugPanel : MonoBehaviour
         {
             if (skipWaveButton) skipWaveButton.gameObject.SetActive(isVisible);
             if (bossWaveButton) bossWaveButton.gameObject.SetActive(isVisible);
+            if (levelUpButton) levelUpButton.gameObject.SetActive(isVisible);
             if (jumpButtons != null)
             {
                 foreach (var btn in jumpButtons)

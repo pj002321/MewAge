@@ -122,7 +122,6 @@ public class CharacterSkillManager : MonoBehaviourSingleton<CharacterSkillManage
         _isActive      = true;
         _currentPoints = 0;
         SetButtonInteractable(false);
-        if (skillReadyFX) skillReadyFX.SetActive(false);
         RefreshUI();
 
         SpawnEffect();
@@ -170,6 +169,7 @@ public class CharacterSkillManager : MonoBehaviourSingleton<CharacterSkillManage
         else
             ApplyDefaultBoost(false);
         DespawnEffect();
+        if (skillReadyFX) skillReadyFX.SetActive(false);
         _isActive = false;
     }
 
@@ -179,7 +179,7 @@ public class CharacterSkillManager : MonoBehaviourSingleton<CharacterSkillManage
         if (_spawnedEffect != null) Destroy(_spawnedEffect);
 
         var parent = PlayerController.Instance != null ? PlayerController.Instance.transform : transform;
-        _spawnedEffect = Instantiate(skillEffectPrefab, parent.position, Quaternion.identity, parent);
+        _spawnedEffect = Instantiate(skillEffectPrefab, parent.position, skillEffectPrefab.transform.rotation, parent);
     }
 
     private void DespawnEffect()

@@ -81,6 +81,13 @@ public class HomeCharacterDisplay : MonoBehaviourSingleton<HomeCharacterDisplay>
         if (anim != null) anim.Play("happy", 0, 0f);
     }
 
+    public void PlaySad()
+    {
+        if (_currentModel == null) return;
+        var anim = _currentModel.GetComponentInChildren<Animator>();
+        if (anim != null) anim.Play("sad", 0, 0f);
+    }
+
     void OnDestroy()
     {
         if (_currentModel != null) Destroy(_currentModel);
