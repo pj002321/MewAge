@@ -27,20 +27,16 @@ public class AugmentStatPanel : MonoBehaviour
     /// <param name="grade">캐릭터 등급 (예: "C", "B", "A", "S", "SS")</param>
     public void Refresh(string statId, string value, bool unlocked, string grade)
     {
-        gameObject.SetActive(unlocked);
-        if (!unlocked) return;
+        gameObject.SetActive(true);
 
         var config = MemberVisualConfig.Shared;
-        if (config == null)
-            Debug.LogWarning("[AugmentStatPanel] MemberVisualConfig가 Resources/Character/ 에 없습니다.");
 
         if (panelImg)
         {
             var spr = config?.GetPanelSprite(grade, unlocked);
             if (spr != null)
                 panelImg.sprite = spr;
-            else
-                panelImg.color = unlocked ? Color.white : new Color(0.4f, 0.4f, 0.4f, 1f);
+            panelImg.color = unlocked ? Color.white : new Color(0.4f, 0.4f, 0.4f, 1f);
         }
 
         if (indexImg)
@@ -48,10 +44,14 @@ public class AugmentStatPanel : MonoBehaviour
             var spr = config?.GetIndexSprite(grade, unlocked);
             indexImg.sprite  = spr;
             indexImg.enabled = spr != null;
+            indexImg.color   = unlocked ? Color.white : new Color(0.4f, 0.4f, 0.4f, 1f);
         }
 
         if (statText)
-            statText.text = BuildStatLine(statId, value);
+        {
+            statText.text  = unlocked ? BuildStatLine(statId, value) : "???";
+            statText.color = unlocked ? Color.white : new Color(0.4f, 0.4f, 0.4f, 1f);
+        }
     }
 
     static string BuildStatLine(string statId, string value)

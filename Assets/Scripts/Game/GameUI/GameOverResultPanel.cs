@@ -36,13 +36,13 @@ public class GameOverResultPanel : MonoBehaviour
         });
     }
 
-    public void Show(int wave)
+    public void Show(int wave, int sessionGold)
     {
         gameObject.SetActive(true);
         if (waveText != null) waveText.text = $"WAVE {wave}";
 
-        var reward = RunRewardCalculator.Calculate(wave, isClear: false);
-        AccountManager.Shared?.GiveReward(reward);
+        var reward = RunRewardCalculator.Calculate(sessionGold, wave);
+        RewardManager.Shared?.GiveReward(reward);
 
         if (rewardGoldText != null) rewardGoldText.text = $"+{reward.gold}";
         if (rewardExpText  != null) rewardExpText.text  = $"+{reward.exp}";

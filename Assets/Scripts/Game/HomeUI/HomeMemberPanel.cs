@@ -79,10 +79,16 @@ public class HomeMemberPanel : MonoBehaviour
         foreach (Transform child in characterContent)
             Destroy(child.gameObject);
 
+        string equippedId = PlayerCharacterManager.Shared?.EquippedCharID;
+
         DB_캐릭터.ForEachEntity(row =>
         {
             var slot = Instantiate(slotPrefab, characterContent);
             slot.Bind(row);
+
+            // 장착 중인 영웅 슬롯을 자동 선택해 상단 정보 즉시 표시
+            if (row.f_캐릭ID == equippedId)
+                SelectSlot(slot);
         });
     }
 

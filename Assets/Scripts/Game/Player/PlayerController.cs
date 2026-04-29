@@ -247,25 +247,7 @@ public class PlayerController : MonoBehaviour
     {
         if (_debugInvincible) return;
         if (isInvincible)
-        {
-            // 무적 상태에서도 피해 효과는 적용 (피만 안 달뿐이지)
-            // defense = 피해 감소율(%). defense=10 → 10% 감소, defense=70 → 70% 감소
-            float invincibleReduction = Mathf.Clamp01(defense / 100f);
-            float invincibleReduced   = damage * (1f - invincibleReduction);
-            // HP는 감소하지 않음
-            SyncHPUI();
-            SoundManager.Shared?.Play(SoundKey.Player_Hit);
-            hitFlash?.Flash();
-            hitShake?.Shake();
-            CameraFollow.Shared?.Shake();
-            TriggerHaptic();
-
-            // 피격 후 짧은 무적 (여러 적에 동시에 맞는 것 방지)
-            if (hitInvincibleDuration > 0f)
-                RestartHitInvincible();
-
             return;
-        }
 
         if (dodge > 0f && Random.value < dodge)
         {
@@ -273,8 +255,8 @@ public class PlayerController : MonoBehaviour
             return;
         }
 
-        // defense = 피해 감소율(%). defense=10 → 10% 감소, defense=70 → 70% 감소
-        float reduction = Mathf.Clamp01(defense / 100f);
+        // defense = 피해 감소율(%). 최대 75% 상한 (DEF≥100이어도 완전 무적 방지)
+        float reduction = Mathf.Clamp(defense / 100f, 0f, 0.75f);
         float reduced   = damage * (1f - reduction);
         var relic = RelicManager.Shared;
         if (isFromBoss  && relic != null) reduced *= (1f - relic.BossDmgReduceTotal);

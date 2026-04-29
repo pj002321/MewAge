@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
+
 public class HomeUIManager : MonoBehaviour
 {
     [Header("Panels")]
@@ -10,6 +11,10 @@ public class HomeUIManager : MonoBehaviour
 
     [Header("Tab Buttons")]
     public Button[] tabButtons;
+
+    [Header("Tab Icon Sprites")]
+    public Sprite activeSprite;    // 활성 탭 이미지
+    public Sprite inactiveSprite;  // 비활성 탭 이미지
 
     [Header("User Info")]
     public HomeUserInfoBar userInfoBar;
@@ -77,7 +82,6 @@ public class HomeUIManager : MonoBehaviour
             // 현재 RectTransform 너비를 원본으로 캡처
             var rt = tabButtons[i].GetComponent<RectTransform>();
             float baseW = rt != null ? rt.rect.width : 100f;
-            // LayoutElement에 이미 preferredWidth가 있으면 그걸 사용
             tabOriginalWidths[i] = (le.preferredWidth > 0f) ? le.preferredWidth : baseW;
             le.preferredWidth = tabOriginalWidths[i];
 
@@ -180,6 +184,16 @@ public class HomeUIManager : MonoBehaviour
                 Vector3 targetScale = (i == index) ? Vector3.one : _tabIndicatorOriginScales[i];
                 if (_indicatorCoroutines[i] != null) StopCoroutine(_indicatorCoroutines[i]);
                 _indicatorCoroutines[i] = StartCoroutine(LerpScale(_tabIndicatorRts[i], targetScale, iconAnimTime));
+            }
+
+            // 탭 아이콘 Sprite 교체
+            var img2 = tabButtons[i].GetComponent<Image>();
+            if (img2 != null)
+            {
+                bool isActive = (i == index);
+                if (isActive  && activeSprite   != null) img2.sprite = activeSprite;
+                if (!isActive && inactiveSprite != null) img2.sprite = inactiveSprite;
+                img2.SetNativeSize();
             }
         }
 

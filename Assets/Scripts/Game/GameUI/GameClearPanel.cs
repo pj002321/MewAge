@@ -85,12 +85,12 @@ public class GameClearPanel : MonoBehaviour
         if (goldGainedText != null) goldGainedText.text = $"+{goldGained}";
 
         // ── 아웃게임 보상 계산 & 지급 ────────────────────
-        var reward = RunRewardCalculator.Calculate(finalWave, isClear: true);
-        AccountManager.Shared?.GiveReward(reward);
+        var reward = RunRewardCalculator.Calculate(goldGained, finalWave);
+        RewardManager.Shared?.GiveReward(reward);
 
         if (rewardGoldText != null) rewardGoldText.text = $"+{reward.gold}";
         if (rewardExpText  != null) rewardExpText.text  = $"+{reward.exp}";
-        if (rewardRubyText != null) rewardRubyText.text = $"+{reward.ruby}";
+        if (rewardRubyText != null) rewardRubyText.text = reward.ruby > 0 ? $"+{reward.ruby}" : "-";
 
         // ── 아웃게임 유저 EXP 현황 ─────────────────────
         RefreshOutgameExp();
@@ -138,21 +138,21 @@ public class GameClearPanel : MonoBehaviour
 
     private void RefreshOutgameExp()
     {
-        var acct = AccountManager.Shared;
-        if (acct == null) return;
+        var rw = RewardManager.Shared;
+        if (rw == null) return;
 
-        int level      = acct.Level;
-        int currentExp = acct.Exp;
-        int required   = acct.ExpToNext(level);
+        int level    = rw.Level;
+        int cur      = rw.Exp;
+        int required = rw.ExpToNext(level);
 
         if (outgameLevelText != null) outgameLevelText.text = $"{level}";
-        if (outgameExpText   != null) outgameExpText.text   = $"{currentExp} / {required}";
+        if (outgameExpText   != null) outgameExpText.text   = $"{cur} / {required}";
 
         if (outgameExpSlider != null)
         {
             outgameExpSlider.minValue = 0f;
             outgameExpSlider.maxValue = 1f;
-            outgameExpSlider.value    = required > 0 ? (float)currentExp / required : 0f;
+            outgameExpSlider.value    = required > 0 ? (float)cur / required : 0f;
         }
     }
 

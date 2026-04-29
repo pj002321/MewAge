@@ -15,9 +15,9 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     [SerializeField] private Slider          expSlider;
     [SerializeField] private Slider          hpSlider;
     [SerializeField] private TextMeshProUGUI hpText;
-    [SerializeField] private GameObject         gameOverPanel;       // 부활 패널
-    [SerializeField] private GameOverResultPanel gameOverResultPanel; // 게임오버 결과 패널
-    [SerializeField] private GameClearPanel  gameClearPanel;
+    [SerializeField] private GameObject      gameOverPanel;        // 부활 패널
+    [SerializeField] private RunResultPanel  clearResultPanel;     // 게임 클리어 결과 패널
+    [SerializeField] private RunResultPanel  gameOverResultPanel;  // 게임오버 결과 패널
     [SerializeField] private GamePausePanel  gamePausePanel;
 
     [Header("Wave 타이머")]
@@ -177,9 +177,10 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         }
 
         // 3. 게임 시스템 및 UI 초기화
-        if (gameOverPanel)               gameOverPanel.SetActive(false);
-        if (waveClearPanel)              waveClearPanel.SetActive(false);
-        if (gameClearPanel != null)      gameClearPanel.gameObject.SetActive(false);
+        if (gameOverPanel)                    gameOverPanel.SetActive(false);
+        if (waveClearPanel)                   waveClearPanel.SetActive(false);
+        if (clearResultPanel    != null)  clearResultPanel.gameObject.SetActive(false);
+        if (gameOverResultPanel != null)  gameOverResultPanel.gameObject.SetActive(false);
 
         // Activate VirtualJoystick for in-game control
         if (VirtualJoystick.Instance != null)
@@ -290,8 +291,8 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         // 최종 웨이브 클리어 → 게임 클리어 패널
         if (wave >= GetMaxWave())
         {
-            if (gameClearPanel != null)
-                gameClearPanel.Show(wave, sessionExpGained, sessionGoldGained);
+            if (clearResultPanel != null)
+                clearResultPanel.Show(wave, sessionGoldGained, isClear: true);
             else
                 GoHome();
             yield break;
@@ -484,7 +485,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     public void ShowGameOverResult()
     {
         if (gameOverResultPanel != null)
-            gameOverResultPanel.Show(wave);
+            gameOverResultPanel.Show(wave, sessionGoldGained, isClear: false);
         else
             GoHome();
     }
@@ -510,8 +511,8 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         Debug.Log($"[GameManager] Revive() 호출 — isGameOver={isGameOver}, PlayerController={PlayerController.Instance}");
         if (!isGameOver) { Debug.LogWarning("[GameManager] Revive() 무시: isGameOver=false"); return; }
         isGameOver = false;
-        if (gameOverPanel)       gameOverPanel.SetActive(false);
-        if (gameOverResultPanel) gameOverResultPanel.gameObject.SetActive(false);
+        if (gameOverPanel)                   gameOverPanel.SetActive(false);
+        if (gameOverResultPanel != null)     gameOverResultPanel.Hide();
         PlayerController.Instance?.Revive();
         // 웨이브 클리어 시퀀스(업그레이드 패널 등)가 이미 진행 중이면 스폰 재개 금지
         if (!waitingForUpgrade)
@@ -992,14 +993,14 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         EnemySpawner.Shared?.StopSpawning();
         EnemySpawner.Shared?.ClearAllEnemies();
 
-        if (gameClearPanel != null)
+        if (clearResultPanel != null)
         {
-            gameClearPanel.Show(wave, sessionExpGained, sessionGoldGained);
+            clearResultPanel.Show(wave, sessionGoldGained, isClear: true);
         }
         else
         {
-            this.DLog("[GameManager] GameClearPanel not assigned — showing GameOver as fallback.");
-            if (gameOverPanel) gameOverPanel.SetActive(true);
+            this.DLog("[GameManager] clearResultPanel not assigned — going home as fallback.");
+            GoHome();
         }
     }
 

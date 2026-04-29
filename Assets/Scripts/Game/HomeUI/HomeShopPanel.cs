@@ -38,7 +38,7 @@ public class HomeShopPanel : MonoBehaviour
 
         gachaPopup.OnDrawRequested  = null;
         gachaPopup.OnDrawRequested += OnGachaDrawPressed;
-        gachaPopup.OpenForDraw(gemCost);
+        gachaPopup.OpenForDraw(gemCost, ToGachaBoxType(boxType));
     }
 
     void MovePopupToRootCanvas()
@@ -60,6 +60,7 @@ public class HomeShopPanel : MonoBehaviour
 
     void OnGachaDrawPressed()
     {
+        this.DLog($"[HomeShopPanel] OnGachaDrawPressed — _resultShown={_resultShown}");
         if (_resultShown) return;
         _resultShown = true;
 
@@ -68,29 +69,34 @@ public class HomeShopPanel : MonoBehaviour
 
         if (_pendingCount <= 1)
         {
+            this.DLog($"[HomeShopPanel] Draw 시도 — box={_pendingBox}");
             var equip = EquipmentGacha.Draw(_pendingBox);
-            if (equip != null)
-                Debug.Log($"[Shop] 뽑기: {equip.equipId} | {equip.itemName} | {equip.grade} | {equip.StatDescription()}");
-            else
-                Debug.LogWarning("[Shop] 뽑기 결과: null (DB 확인 필요)");
+            this.DLog($"[HomeShopPanel] Draw 결과 — equip={equip?.itemName ?? "NULL"}");
 
             EquipmentInventory.Shared?.TryAdd(equip);
-            Debug.Log($"[Shop] 인벤토리 보관함 수량: {EquipmentInventory.Shared?.Bag.Count}");
+            this.DLog("[HomeShopPanel] ShowResult 호출 직전");
             gachaPopup.ShowResult(equip);
         }
         else
         {
+            this.DLog($"[HomeShopPanel] DrawMulti 시도 — count={_pendingCount}, box={_pendingBox}");
             var results = EquipmentGacha.DrawMulti(_pendingCount, _pendingBox);
             foreach (var equip in results)
             {
                 if (equip == null) continue;
-                Debug.Log($"[Shop] 뽑기: {equip.equipId} | {equip.itemName} | {equip.grade} | {equip.StatDescription()}");
                 EquipmentInventory.Shared?.TryAdd(equip);
             }
-            Debug.Log($"[Shop] 인벤토리 보관함 수량: {EquipmentInventory.Shared?.Bag.Count}");
+            this.DLog("[HomeShopPanel] ShowMultiResult 호출 직전");
             gachaPopup.ShowMultiResult(results);
         }
     }
+
+    static GachaBoxType ToGachaBoxType(EquipBoxType t) => t switch
+    {
+        EquipBoxType.Rare  => GachaBoxType.EquipRare,
+        EquipBoxType.Epic  => GachaBoxType.EquipEpic,
+        _                  => GachaBoxType.EquipNormal,
+    };
 
     // ── 섹션 이동 ───────────────────────────────────────────────────
 

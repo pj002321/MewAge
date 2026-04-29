@@ -1,22 +1,22 @@
 using UnityEngine;
 
 /// <summary>
-/// 아웃게임 재화(골드·경험치·루비)와 계정 레벨을 관리합니다.
+/// 아웃게임 재화(골드·계정경험치·루비)와 계정 레벨을 관리합니다.
 /// DontDestroy=true로 씬 전환 후에도 유지됩니다.
 ///
-/// 레벨 공식: expToNext(lv) = 100 + (lv-1) × 50
-///   Lv1→2: 100  Lv5→6: 300  Lv10→11: 550  Lv20→21: 1050
+/// 레벨 공식: expToNext(lv) = 200 + (lv-1) × 100
+///   Lv1→2: 200  Lv5→6: 600  Lv10→11: 1100  Lv20→21: 2100
 /// </summary>
-public class AccountManager : MonoBehaviourSingleton<AccountManager>
+public class RewardManager : MonoBehaviourSingleton<RewardManager>
 {
     protected override bool DontDestroy => true;
 
     public const int MaxLevel = 50;
 
-    private const string K_Gold  = "Acct_Gold";
-    private const string K_Exp   = "Acct_Exp";
-    private const string K_Ruby  = "Acct_Ruby";
-    private const string K_Level = "Acct_Level";
+    private const string K_Gold  = "RW_Gold";
+    private const string K_Exp   = "RW_Exp";
+    private const string K_Ruby  = "RW_Ruby";
+    private const string K_Level = "RW_Level";
 
     private int _gold;
     private int _exp;
@@ -87,7 +87,7 @@ public class AccountManager : MonoBehaviourSingleton<AccountManager>
     }
 
     /// <summary>현재 레벨에서 다음 레벨까지 필요한 경험치.</summary>
-    public int ExpToNext(int level) => 100 + (level - 1) * 50;
+    public int ExpToNext(int level) => 200 + (level - 1) * 100;
 
     // ── 저장 ──────────────────────────────────────────────────────────────
     private void Save()
