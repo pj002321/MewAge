@@ -181,7 +181,8 @@ public class HomeUIManager : MonoBehaviour
             // 인디케이터 스케일
             if (_tabIndicatorRts[i] != null)
             {
-                Vector3 targetScale = (i == index) ? Vector3.one : _tabIndicatorOriginScales[i];
+                Vector3 originScale = _tabIndicatorOriginScales[i];
+                Vector3 targetScale = (i == index) ? originScale * 1.25f : originScale;
                 if (_indicatorCoroutines[i] != null) StopCoroutine(_indicatorCoroutines[i]);
                 _indicatorCoroutines[i] = StartCoroutine(LerpScale(_tabIndicatorRts[i], targetScale, iconAnimTime));
             }

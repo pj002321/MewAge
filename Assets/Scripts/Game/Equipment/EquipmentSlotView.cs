@@ -56,6 +56,7 @@ public class EquipmentSlotView : MonoBehaviour
                 var catSprite = HomeEquipVisualConfig.Shared?.GetCategoryIcon(data.category);
                 categoryIcon.sprite  = catSprite;
                 categoryIcon.enabled = catSprite != null;
+                categoryIcon.color   = EquipmentData.GradeColor(data.grade);
             }
             else
             {

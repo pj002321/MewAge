@@ -45,18 +45,28 @@ public class GachaResultPopup : MonoBehaviour
     public float multiDelay  = 0.12f;
 
     public Action OnDrawRequested;
+    public Action OnDrawReset;
 
     // 뽑기 결과 임시 저장 (애니메이션 후 표시)
     EquipmentData       _pendingResult;
     List<EquipmentData> _pendingMultiResult;
+
+    // 한 번 더 뽑기용 저장
+    int          _currentGemCost;
+    GachaBoxType _currentBoxType;
 
     // ── 초기화 ─────────────────────────────────────────────────────────
 
     void Awake()
     {
         closeHitArea?.onClick.AddListener(Close);
-        drawButton?.onClick.AddListener(() => OnDrawRequested?.Invoke());
+        drawButton?.onClick.AddListener(OnDrawButtonClicked);
         gameObject.SetActive(false);
+    }
+
+    void OnDrawButtonClicked()
+    {
+        OpenForDraw(_currentGemCost, _currentBoxType);
     }
 
     // ── 공개 API ───────────────────────────────────────────────────────
@@ -69,6 +79,11 @@ public class GachaResultPopup : MonoBehaviour
 
         _pendingResult      = null;
         _pendingMultiResult = null;
+        _currentGemCost     = gemCost;
+        _currentBoxType     = boxType;
+
+        // HomeShopPanel의 중복 방지 플래그 리셋
+        OnDrawReset?.Invoke();
 
         if (drawCostText) drawCostText.text = $"x{gemCost}";
 
