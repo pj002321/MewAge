@@ -34,6 +34,10 @@ public class EquipmentDetailPopup : MonoBehaviour
     public TextMeshProUGUI statText;
     public TextMeshProUGUI descText;
 
+    [Header("태그 이미지")]
+    public Image           tagImage;
+    public Image           textIndexImg;
+
     [Header("버튼")]
     public Button          actionButton;
     public TextMeshProUGUI actionLabel;
@@ -83,7 +87,7 @@ public class EquipmentDetailPopup : MonoBehaviour
 
         if (frameIcon)
         {
-            var frameSprite = Resources.Load<Sprite>($"Equip/Frame/{e.grade.ToString().ToLower()}");
+            var frameSprite = HomeEquipVisualConfig.Shared?.GetFrame(e.grade);
             if (frameSprite != null)
             {
                 frameIcon.sprite = frameSprite;
@@ -95,7 +99,7 @@ public class EquipmentDetailPopup : MonoBehaviour
 
         if (bannerImage)
         {
-            var bannerSprite = Resources.Load<Sprite>($"Equip/Banner/{e.grade.ToString().ToLower()}");
+            var bannerSprite = HomeEquipVisualConfig.Shared?.GetBanner(e.grade);
             bannerImage.sprite  = bannerSprite;
             bannerImage.enabled = bannerSprite != null;
         }
@@ -108,13 +112,24 @@ public class EquipmentDetailPopup : MonoBehaviour
             if (catSprite != null) categoryIcon.sprite = catSprite;
         }
 
+        if (tagImage)
+        {
+            var tagSprite = HomeEquipVisualConfig.Shared?.GetTag(e.grade);
+            tagImage.sprite  = tagSprite;
+            tagImage.enabled = tagSprite != null;
+        }
+
+        if (textIndexImg)
+        {
+            var indexSprite = HomeEquipVisualConfig.Shared?.GetIndex(e.grade, _isEquipped);
+            textIndexImg.sprite  = indexSprite;
+            textIndexImg.enabled = indexSprite != null;
+        }
+
         if (nameText) nameText.text = e.itemName;
 
         if (gradeText)
-        {
-            gradeText.text  = e.GradeLabel();
-            gradeText.color = EquipmentData.GradeColor(e.grade);
-        }
+            gradeText.text = e.GradeLabel();
 
         if (civText)
             civText.text = $"{e.civilization}  ·  {e.CategoryLabel()}";

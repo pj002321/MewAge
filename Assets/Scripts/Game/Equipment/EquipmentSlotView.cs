@@ -51,13 +51,15 @@ public class EquipmentSlotView : MonoBehaviour
 
         if (categoryIcon)
         {
-            categoryIcon.enabled = has;
             if (has)
             {
-                string key = $"{data.category.ToString().ToLower()}_{data.grade.ToString().ToLower()}";
-                var catSprite = Resources.Load<Sprite>($"Equip/Category/{key}");
+                var catSprite = HomeEquipVisualConfig.Shared?.GetCategoryIcon(data.category);
+                categoryIcon.sprite  = catSprite;
                 categoryIcon.enabled = catSprite != null;
-                if (catSprite != null) categoryIcon.sprite = catSprite;
+            }
+            else
+            {
+                categoryIcon.enabled = false;
             }
         }
 

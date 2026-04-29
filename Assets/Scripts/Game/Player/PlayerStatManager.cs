@@ -120,10 +120,14 @@ public class PlayerStatManager : MonoBehaviourSingleton<PlayerStatManager>
         float flat = _equipFlat[(int)stat];
         float pct  = _pctMods[(int)stat];
 
-        if (IsAdditiveStat(stat))
-            return b + flat + pct;
+        float result = IsAdditiveStat(stat)
+            ? b + flat + pct
+            : (b + flat) * (1f + pct / 100f);
 
-        return (b + flat) * (1f + pct / 100f);
+        if (stat == StatType.MaxHP)
+            result = Mathf.Max(10f, result);
+
+        return result;
     }
 
     private bool IsAdditiveStat(StatType stat) => stat switch

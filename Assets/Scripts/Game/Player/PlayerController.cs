@@ -111,7 +111,7 @@ public class PlayerController : MonoBehaviour
         rb            = GetComponent<Rigidbody2D>();
         spriteRenderer = GetComponentInChildren<SpriteRenderer>();
         _visualSlot   = transform.Find("VisualSlot");
-        hitFlash      = GetComponent<HitFlash>();
+        hitFlash      = GetComponentInChildren<HitFlash>();
         hitShake      = GetComponent<HitShake>();
         currentHP     = maxHP;
     }
@@ -133,6 +133,8 @@ public class PlayerController : MonoBehaviour
     {
         spriteRenderer = GetComponentInChildren<SpriteRenderer>();
         _visualSlot    = transform.Find("VisualSlot");
+        hitFlash       = GetComponentInChildren<HitFlash>();
+        hitFlash?.RefreshRenderers();
     }
 
     private void Start()
@@ -335,7 +337,7 @@ public class PlayerController : MonoBehaviour
         if (!Mathf.Approximately(newMaxHP, maxHP))
         {
             float delta = newMaxHP - maxHP;
-            maxHP     = Mathf.Max(1f, newMaxHP);
+            maxHP     = Mathf.Max(10f, newMaxHP);
             currentHP = delta > 0f
                 ? Mathf.Min(currentHP + delta, maxHP)
                 : Mathf.Min(currentHP, maxHP);
@@ -398,7 +400,7 @@ public class PlayerController : MonoBehaviour
         _synergyMaxHp = maxHpAdd;
         if (!Mathf.Approximately(delta, 0f))
         {
-            maxHP     = Mathf.Max(1f, maxHP + delta);
+            maxHP     = Mathf.Max(10f, maxHP + delta);
             currentHP = Mathf.Min(currentHP, maxHP);
             SyncHPUI();
         }

@@ -171,7 +171,6 @@ public class HomeEquipPanel : MonoBehaviour
         {
             _showStatChange = false;
             ShowStatChange();
-            HomeCharacterDisplay.Shared?.PlayHappy();
         }
     }
 
@@ -223,11 +222,19 @@ public class HomeEquipPanel : MonoBehaviour
         statChangeText.color = isIncrease ? Color.green : Color.red;
 
         if (_statChangeCoroutine != null) StopCoroutine(_statChangeCoroutine);
-        _statChangeCoroutine = StartCoroutine(StatChangeRoutine(text.Trim()));
+        _statChangeCoroutine = StartCoroutine(StatChangeRoutine(text.Trim(), isIncrease));
     }
 
-    System.Collections.IEnumerator StatChangeRoutine(string finalText)
+    System.Collections.IEnumerator StatChangeRoutine(string finalText, bool isIncrease)
     {
+        // 팝업이 닫힌 뒤(한 프레임 후) 애니메이션 재생
+        yield return null;
+
+        if (isIncrease)
+            HomeCharacterDisplay.Shared?.PlayHappy();
+        else
+            HomeCharacterDisplay.Shared?.PlaySad();
+
         statChangeText.gameObject.SetActive(true);
 
         // 빠친코 연출: 0.5초 동안 랜덤 숫자

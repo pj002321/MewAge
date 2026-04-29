@@ -5,10 +5,10 @@ using UnityEngine;
 /// 보스 스킬: 큰 돌 굴리기.
 ///
 /// 흐름:
-///   1) 잠깐 멈춰서 조준 (preDelay)
-///   2) 큰 돌 투사체를 플레이어 방향으로 천천히 굴림
+///   1) 경고 라인 표시 후 조준 딜레이 (preDelay)
+///   2) 큰 돌 투사체를 보스 진행 방향으로 천천히 굴림
 ///      — 발사 중 보스 이동 정지
-///   3) repeatCount 번 반복 후 종료
+///   3) rollCount 번 반복 후 종료
 /// </summary>
 public class BossRollingBoulderSkill : BossSkillBase
 {
@@ -43,8 +43,22 @@ public class BossRollingBoulderSkill : BossSkillBase
     [Tooltip("연속 발사 사이 간격 (초)")]
     [SerializeField] private float rollInterval = 0.8f;
 
+    [Header("경고 라인")]
+    [SerializeField] private float    warningLineLength = 12f;
+    [SerializeField] private float    warningLineWidth  = 0.12f;
+    [SerializeField] private Color    warningColor      = Color.red;
+    [Tooltip("Sprites/Default 또는 URP Unlit 머티리얼 할당. null이면 자동 생성")]
+    [SerializeField] private Material warningMaterial;
+
     [Header("애니메이션")]
     [SerializeField] private string attackTrigger = "tAttack";
+
+    private LineRenderer _warnLine;
+
+    private void OnDisable()
+    {
+        if (_warnLine != null) { Destroy(_warnLine.gameObject); _warnLine = null; }
+    }
 
     protected override IEnumerator OnExecute()
     {
@@ -53,9 +67,28 @@ public class BossRollingBoulderSkill : BossSkillBase
         Boss.IsFiringSkill = true;
         try
         {
-            // 1) 조준 딜레이
+            // 1) 경고 라인 + 조준 딜레이
             if (preDelay > 0f)
-                yield return new WaitForSeconds(preDelay);
+            {
+                Vector2 spawnPos = firePoint != null
+                    ? (Vector2)firePoint.position
+                    : Owner.Rb != null ? Owner.Rb.position : (Vector2)Owner.transform.position;
+                Vector2 dir = Boss.IsFacingLeft ? Vector2.left : Vector2.right;
+
+                var lr = SpawnWarningLine(spawnPos, dir);
+                _warnLine = lr;
+                float elapsed = 0f;
+                while (elapsed < preDelay)
+                {
+                    if (Owner == null) { if (lr != null) Destroy(lr.gameObject); _warnLine = null; yield break; }
+                    elapsed += Time.deltaTime;
+                    float t = Mathf.Clamp01(elapsed / preDelay);
+                    if (lr != null) lr.SetPosition(1, spawnPos + dir * (warningLineLength * t));
+                    yield return null;
+                }
+                if (lr != null) Destroy(lr.gameObject);
+                _warnLine = null;
+            }
 
             if (Owner.PlayerTransform == null) yield break;
 
@@ -78,6 +111,25 @@ public class BossRollingBoulderSkill : BossSkillBase
         {
             if (Boss != null) Boss.IsFiringSkill = false;
         }
+    }
+
+    private LineRenderer SpawnWarningLine(Vector2 start, Vector2 dir)
+    {
+        var go = new GameObject("WarnLine");
+        var lr = go.AddComponent<LineRenderer>();
+        lr.useWorldSpace = true;
+        lr.positionCount = 2;
+        lr.SetPosition(0, start);
+        lr.SetPosition(1, start);
+        lr.startWidth   = warningLineWidth;
+        lr.endWidth     = warningLineWidth;
+        lr.material     = warningMaterial != null
+            ? warningMaterial
+            : new Material(Shader.Find("Sprites/Default"));
+        lr.startColor   = warningColor;
+        lr.endColor     = warningColor;
+        lr.sortingOrder = 10;
+        return lr;
     }
 
     private void SpawnBoulder()

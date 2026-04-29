@@ -36,6 +36,11 @@ public class GameClearPanel : MonoBehaviour
     [SerializeField] private Image           goldGainedIcon;  // Gold 아이콘 이미지
     [SerializeField] private TextMeshProUGUI goldGainedText;  // 획득 Gold 숫자
 
+    [Header("아웃게임 보상")]
+    [SerializeField] private TextMeshProUGUI rewardGoldText;  // "+150"
+    [SerializeField] private TextMeshProUGUI rewardExpText;   // "+75"
+    [SerializeField] private TextMeshProUGUI rewardRubyText;  // "+3"
+
     [Header("아웃게임 유저 경험치 현황")]
     [SerializeField] private Slider          outgameExpSlider; // 누적 유저 EXP 슬라이더
     [SerializeField] private TextMeshProUGUI outgameLevelText; // "Lv. 5"
@@ -75,12 +80,20 @@ public class GameClearPanel : MonoBehaviour
         if (finalWaveText != null)
             finalWaveText.text = $"WAVE {finalWave}";
 
-        // ── 획득 EXP / Gold ───────────────────────────
+        // ── 획득 EXP / Gold (인게임) ─────────────────────
         if (expGainedText  != null) expGainedText.text  = $"+{expGained}";
         if (goldGainedText != null) goldGainedText.text = $"+{goldGained}";
 
+        // ── 아웃게임 보상 계산 & 지급 ────────────────────
+        var reward = RunRewardCalculator.Calculate(finalWave, isClear: true);
+        AccountManager.Shared?.GiveReward(reward);
+
+        if (rewardGoldText != null) rewardGoldText.text = $"+{reward.gold}";
+        if (rewardExpText  != null) rewardExpText.text  = $"+{reward.exp}";
+        if (rewardRubyText != null) rewardRubyText.text = $"+{reward.ruby}";
+
         // ── 아웃게임 유저 EXP 현황 ─────────────────────
-        RefreshOutgameExp(expGained);
+        RefreshOutgameExp();
 
         // ── 팝인 애니메이션: 0 → overshoot → 원본 스케일 ──
         StopAllCoroutines();
@@ -123,35 +136,24 @@ public class GameClearPanel : MonoBehaviour
         transform.localScale = originalScale;
     }
 
-    /// <summary>
-    /// 아웃게임 누적 유저 EXP를 읽고 슬라이더/텍스트를 갱신합니다.
-    /// 실제 저장 시스템과 연동 시 이 메서드를 수정하세요.
-    /// </summary>
-    private void RefreshOutgameExp(int bonusExp)
+    private void RefreshOutgameExp()
     {
-        // ─── 실제 저장 시스템 연동 예시 ───────────────────────────────
-        // int level      = UserSaveManager.Shared.Level;
-        // int currentExp = UserSaveManager.Shared.Exp + bonusExp;
-        // int requiredExp = LevelTable.GetRequiredExp(level);
-        // ──────────────────────────────────────────────────────────────
+        var acct = AccountManager.Shared;
+        if (acct == null) return;
 
-        // 임시 더미 데이터 (저장 시스템 연동 전까지 사용)
-        int level       = 1;
-        int currentExp  = bonusExp;
-        int requiredExp = 100;
+        int level      = acct.Level;
+        int currentExp = acct.Exp;
+        int required   = acct.ExpToNext(level);
 
-        if (outgameLevelText != null)
-            outgameLevelText.text = $"{level}";
+        if (outgameLevelText != null) outgameLevelText.text = $"{level}";
+        if (outgameExpText   != null) outgameExpText.text   = $"{currentExp} / {required}";
 
         if (outgameExpSlider != null)
         {
             outgameExpSlider.minValue = 0f;
             outgameExpSlider.maxValue = 1f;
-            outgameExpSlider.value    = requiredExp > 0 ? (float)currentExp / requiredExp : 0f;
+            outgameExpSlider.value    = required > 0 ? (float)currentExp / required : 0f;
         }
-
-        if (outgameExpText != null)
-            outgameExpText.text = $"{currentExp} / {requiredExp}";
     }
 
     // ── 버튼 콜백 ───────────────────────────────────────────────────

@@ -179,11 +179,16 @@ public class WeaponPoint : MonoBehaviour
     private float currentAngle;
     private readonly Dictionary<EnemyController, float> spinHitTimers = new Dictionary<EnemyController, float>();
     private readonly List<EnemyController> _spinExpiredKeys = new List<EnemyController>();
+    private readonly List<EnemyController> _spinKeys        = new List<EnemyController>();
     private bool _hasSpinCollider; // Collider2D가 있으면 OnTriggerStay2D 사용, 없으면 OverlapCircle 폴백
 
     // 보스 타겟
     private BossController _targetBoss;
     private float _bossSpinHitTimer;
+
+    // 보스 Collider2D 캐시 (매 UpdateIdle 마다 GetComponentInChildren 방지)
+    private BossController _cachedBossForCollider;
+    private Collider2D     _cachedBossCollider;
 
     private Vector2 _attackLookDir; // 공격 시퀀스 전체에서 유지할 시선 방향
 
@@ -386,10 +391,13 @@ public class WeaponPoint : MonoBehaviour
 
         // 피타격 쿨타임 감소 (재사용 리스트로 Dictionary 키 복사 제거)
         if (_bossSpinHitTimer > 0f) _bossSpinHitTimer -= Time.deltaTime;
-        foreach (var kvp in spinHitTimers)
+        _spinKeys.Clear();
+        _spinKeys.AddRange(spinHitTimers.Keys);
+        for (int i = 0; i < _spinKeys.Count; i++)
         {
-            spinHitTimers[kvp.Key] = kvp.Value - Time.deltaTime;
-            if (spinHitTimers[kvp.Key] <= 0f) _spinExpiredKeys.Add(kvp.Key);
+            var key = _spinKeys[i];
+            spinHitTimers[key] -= Time.deltaTime;
+            if (spinHitTimers[key] <= 0f) _spinExpiredKeys.Add(key);
         }
         for (int i = 0; i < _spinExpiredKeys.Count; i++) spinHitTimers.Remove(_spinExpiredKeys[i]);
         _spinExpiredKeys.Clear();
@@ -466,15 +474,14 @@ public class WeaponPoint : MonoBehaviour
         bool bossInRange = false;
         if (boss != null)
         {
-            var bossCol = boss.GetComponentInChildren<Collider2D>();
-            if (bossCol != null)
+            if (_cachedBossForCollider != boss)
             {
-                bossInRange = (bossCol.ClosestPoint(origin) - origin).sqrMagnitude <= attackRange * attackRange;
+                _cachedBossForCollider = boss;
+                _cachedBossCollider    = boss.GetComponentInChildren<Collider2D>();
             }
-            else
-            {
-                bossInRange = ((Vector2)boss.transform.position - origin).sqrMagnitude <= attackRange * attackRange;
-            }
+            bossInRange = _cachedBossCollider != null
+                ? (_cachedBossCollider.ClosestPoint(origin) - origin).sqrMagnitude <= attackRange * attackRange
+                : ((Vector2)boss.transform.position - origin).sqrMagnitude <= attackRange * attackRange;
         }
         
         bool preferBoss = bossInRange && (nearest == null ||

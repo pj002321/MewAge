@@ -344,14 +344,14 @@ public class WeaponInfoPanel : MonoBehaviourSingleton<WeaponInfoPanel>
     private static string StatIdToLabel(string statId) => statId switch
     {
         "ATK_ADD"    => "공격력",
-        "CD_RED"     => "쿨타임",
-        "RNG_ADD"    => "사거리",
+        "CD_RED"     => "공격속도",
+        "RNG_ADD"    => "무기 사거리",
         "DMG_RNG"    => "타격범위",
-        "CRIT_ADD"   => "치명타",
+        "CRIT_ADD"   => "치명타데미지",
         "CRT_RATE"   => "치명타확률",
-        "DOT_AD"     => "출혈",
-        "HP_STL_ADD" => "흡혈",
-        "NUK_ADD"    => "넉백",
+        "DOT_AD"     => "지속피해량",
+        "HP_STL_ADD" => "흡혈수치량",
+        "NUK_ADD"    => "넉백지수",
         "HEAL_ADD"   => "자가치유",
         _            => statId,
     };
@@ -361,13 +361,13 @@ public class WeaponInfoPanel : MonoBehaviourSingleton<WeaponInfoPanel>
     {
         "ATK_ADD"    => "%",
         "CD_RED"     => "%",
-        "RNG_ADD"    => "%",
+        "RNG_ADD"    => "",
         "DMG_RNG"    => "",
         "CRIT_ADD"   => "%",
         "CRT_RATE"   => "%",
-        "DOT_AD"     => "",
+        "DOT_AD"     => "%",
         "HP_STL_ADD" => "%",
-        "NUK_ADD"    => "",
+        "NUK_ADD"    => "%",
         "HEAL_ADD"   => "%",
         _            => "%",
     };

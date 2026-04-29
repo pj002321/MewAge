@@ -9,7 +9,12 @@ using UnityEngine.UI;
 public class GameOverResultPanel : MonoBehaviour
 {
     [Header("웨이브 표시")]
-    [SerializeField] private TextMeshProUGUI waveText;   // "WAVE 15"
+    [SerializeField] private TextMeshProUGUI waveText;
+
+    [Header("아웃게임 보상")]
+    [SerializeField] private TextMeshProUGUI rewardGoldText;
+    [SerializeField] private TextMeshProUGUI rewardExpText;
+    [SerializeField] private TextMeshProUGUI rewardRubyText;
 
     [Header("버튼")]
     [SerializeField] private Button homeButton;
@@ -35,5 +40,12 @@ public class GameOverResultPanel : MonoBehaviour
     {
         gameObject.SetActive(true);
         if (waveText != null) waveText.text = $"WAVE {wave}";
+
+        var reward = RunRewardCalculator.Calculate(wave, isClear: false);
+        AccountManager.Shared?.GiveReward(reward);
+
+        if (rewardGoldText != null) rewardGoldText.text = $"+{reward.gold}";
+        if (rewardExpText  != null) rewardExpText.text  = $"+{reward.exp}";
+        if (rewardRubyText != null) rewardRubyText.text = reward.ruby > 0 ? $"+{reward.ruby}" : "-";
     }
 }

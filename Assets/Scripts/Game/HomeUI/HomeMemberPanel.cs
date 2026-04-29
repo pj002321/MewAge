@@ -15,11 +15,15 @@ public class HomeMemberPanel : MonoBehaviour
     public RawImage         characterPortrait;
     public TextMeshProUGUI  characterNameText;
 
-    [Header("증강 능력치 패널 (우상단)")]
-    public TextMeshProUGUI augmentLv1Text;
-    public TextMeshProUGUI augmentLv2Text;
-    public TextMeshProUGUI augmentLv3Text;
-    public TextMeshProUGUI augmentLv4Text;
+    [Header("스킬 아이콘 (MemberVisualConfig)")]
+    public Image            skillIconImg;
+
+    [Header("증강 능력치 패널 3개 (AugmentStatPanel 컴포넌트 부착)")]
+    public AugmentStatPanel[] augmentPanels; // [0]=Lv1, [1]=Lv2, [2]=Lv3
+
+    [Header("고유능력 텍스트")]
+    public TextMeshProUGUI abilityNameText;  // f_고유능력  (예: "숙련")
+    public TextMeshProUGUI abilityDescText;  // f_능력설명  (예: "많은 적을 처치 시...")
 
     [Header("탭 버튼 (캐릭터 · 룬)")]
     public Button tabCharacter;
@@ -36,6 +40,7 @@ public class HomeMemberPanel : MonoBehaviour
     public CharacterSlotView slotPrefab;
 
     CharacterSlotView _selectedSlot;
+    bool              _started;
 
     void Start()
     {
@@ -46,14 +51,25 @@ public class HomeMemberPanel : MonoBehaviour
         PlayerCharacterManager.Shared?.EnsureDefaultCharacter();
         LoadCharacters();
 
-        // RawImage에 HomeCharacterDisplay의 RenderTexture 연결
         if (characterPortrait != null && HomeCharacterDisplay.Shared != null)
             characterPortrait.texture = HomeCharacterDisplay.Shared.renderTexture;
 
-        // 패널이 열릴 때 현재 장착 캐릭터 포트레이트 반영
+        _started = true;
+        TriggerDropIn();
+    }
+
+    void OnEnable()
+    {
+        if (!_started) return; // Start 전에는 Skip (Start에서 처리)
+        TriggerDropIn();
+    }
+
+    void TriggerDropIn()
+    {
         var charId = PlayerCharacterManager.Shared?.EquippedCharID;
-        if (!string.IsNullOrEmpty(charId))
-            HomeCharacterDisplay.Shared?.ChangeCharacter(charId);
+        if (string.IsNullOrEmpty(charId)) return;
+        HomeCharacterDisplay.Shared?.ChangeCharacter(charId);
+        HomeCharacterDisplay.Shared?.DropIn();
     }
 
     void LoadCharacters()
@@ -106,24 +122,34 @@ public class HomeMemberPanel : MonoBehaviour
     {
         if (characterNameText) characterNameText.text = d.f_이름;
 
-        // 포트레이트: HomeCharacterDisplay가 모델을 교체 → RT 자동 갱신
         HomeCharacterDisplay.Shared?.ChangeCharacter(d.f_캐릭ID);
 
-        if (augmentLv1Text) augmentLv1Text.text = BuildStatLine(d.f_속성1ID, d.f_S1);
-        if (augmentLv2Text) augmentLv2Text.text = BuildStatLine(d.f_속성2ID, d.f_S2);
-        if (augmentLv3Text) augmentLv3Text.text = BuildStatLine(d.f_속성3ID, d.f_S3);
-        if (augmentLv4Text) augmentLv4Text.text = BuildAbilityLine(d.f_능력ID, d.f_능력치설명);
-    }
+        // 스킬 아이콘
+        if (skillIconImg)
+        {
+            var icon = MemberVisualConfig.Shared?.GetSkillIcon(d.f_스킬ID);
+            skillIconImg.sprite  = icon;
+            skillIconImg.enabled = icon != null;
+        }
 
-    static string BuildStatLine(string attrId, string value)
-    {
-        if (string.IsNullOrEmpty(attrId)) return string.Empty;
-        return string.IsNullOrEmpty(value) ? attrId : $"{attrId} +{value}";
-    }
+        // 증강 티어 — 미보유 캐릭터는 0으로 처리(전부 잠금)
+        int tier = d.f_보유여부
+            ? (PlayerCharacterManager.Shared?.GetAugmentTier(d.f_캐릭ID) ?? 1)
+            : 0;
 
-    static string BuildAbilityLine(string abilityId, string desc)
-    {
-        if (!string.IsNullOrEmpty(desc)) return desc;
-        return abilityId ?? string.Empty;
+        // 증강 능력치 패널 3개
+        if (augmentPanels != null)
+        {
+            if (augmentPanels.Length > 0 && augmentPanels[0] != null)
+                augmentPanels[0].Refresh(d.f_속성1ID, d.f_S1, tier >= 1, d.f_등급);
+            if (augmentPanels.Length > 1 && augmentPanels[1] != null)
+                augmentPanels[1].Refresh(d.f_속성2ID, d.f_S2, tier >= 2, d.f_등급);
+            if (augmentPanels.Length > 2 && augmentPanels[2] != null)
+                augmentPanels[2].Refresh(d.f_속성3ID, d.f_S3, tier >= 3, d.f_등급);
+        }
+
+        // 고유능력
+        if (abilityNameText) abilityNameText.text = d.f_고유능력 ?? string.Empty;
+        if (abilityDescText)  abilityDescText.text  = d.f_능력설명  ?? string.Empty;
     }
 }
