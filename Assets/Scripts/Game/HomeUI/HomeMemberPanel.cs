@@ -18,20 +18,12 @@ public class HomeMemberPanel : MonoBehaviour
     [Header("스킬 아이콘 (MemberVisualConfig)")]
     public Image            skillIconImg;
 
-    [Header("증강 능력치 패널 — 속성 텍스트")]
-    public TextMeshProUGUI augmentLv1Text;
-    public TextMeshProUGUI augmentLv2Text;
-    public TextMeshProUGUI augmentLv3Text;
-
-    [Header("증강 능력치 패널 — 인덱스 이미지 (속성 1~3 + 고유능력)")]
-    public Image augmentIndex1Img;
-    public Image augmentIndex2Img;
-    public Image augmentIndex3Img;
-    public Image augmentIndex4Img;
+    [Header("증강 능력치 패널 3개 (AugmentStatPanel 컴포넌트 부착)")]
+    public AugmentStatPanel[] augmentPanels; // [0]=Lv1, [1]=Lv2, [2]=Lv3
 
     [Header("고유능력 텍스트")]
-    public TextMeshProUGUI abilityNameText;   // f_고유능력  (예: "숙련")
-    public TextMeshProUGUI abilityDescText;   // f_능력설명  (예: "많은 적을 처치 시...")
+    public TextMeshProUGUI abilityNameText;  // f_고유능력  (예: "숙련")
+    public TextMeshProUGUI abilityDescText;  // f_능력설명  (예: "많은 적을 처치 시...")
 
     [Header("탭 버튼 (캐릭터 · 룬)")]
     public Button tabCharacter;
@@ -48,6 +40,7 @@ public class HomeMemberPanel : MonoBehaviour
     public CharacterSlotView slotPrefab;
 
     CharacterSlotView _selectedSlot;
+    bool              _started;
 
     void Start()
     {
@@ -61,9 +54,22 @@ public class HomeMemberPanel : MonoBehaviour
         if (characterPortrait != null && HomeCharacterDisplay.Shared != null)
             characterPortrait.texture = HomeCharacterDisplay.Shared.renderTexture;
 
+        _started = true;
+        TriggerDropIn();
+    }
+
+    void OnEnable()
+    {
+        if (!_started) return; // Start 전에는 Skip (Start에서 처리)
+        TriggerDropIn();
+    }
+
+    void TriggerDropIn()
+    {
         var charId = PlayerCharacterManager.Shared?.EquippedCharID;
-        if (!string.IsNullOrEmpty(charId))
-            HomeCharacterDisplay.Shared?.ChangeCharacter(charId);
+        if (string.IsNullOrEmpty(charId)) return;
+        HomeCharacterDisplay.Shared?.ChangeCharacter(charId);
+        HomeCharacterDisplay.Shared?.DropIn();
     }
 
     void LoadCharacters()
@@ -126,63 +132,24 @@ public class HomeMemberPanel : MonoBehaviour
             skillIconImg.enabled = icon != null;
         }
 
-        // 증강 티어 — 미보유 캐릭터는 0으로 처리(잠금)
+        // 증강 티어 — 미보유 캐릭터는 0으로 처리(전부 잠금)
         int tier = d.f_보유여부
             ? (PlayerCharacterManager.Shared?.GetAugmentTier(d.f_캐릭ID) ?? 1)
             : 0;
 
-        // 속성 텍스트
-        if (augmentLv1Text) augmentLv1Text.text = BuildStatLine(d.f_속성1ID, d.f_S1);
-        if (augmentLv2Text) augmentLv2Text.text = BuildStatLine(d.f_속성2ID, d.f_S2);
-        if (augmentLv3Text) augmentLv3Text.text = BuildStatLine(d.f_속성3ID, d.f_S3);
-
-        // 인덱스 이미지 (잠금/해금)
-        SetAugmentIndex(augmentIndex1Img, 1, tier >= 1);
-        SetAugmentIndex(augmentIndex2Img, 2, tier >= 2);
-        SetAugmentIndex(augmentIndex3Img, 3, tier >= 3);
-        SetAugmentIndex(augmentIndex4Img, 4, true); // 고유능력은 항상 해금 표시
+        // 증강 능력치 패널 3개
+        if (augmentPanels != null)
+        {
+            if (augmentPanels.Length > 0 && augmentPanels[0] != null)
+                augmentPanels[0].Refresh(d.f_속성1ID, d.f_S1, tier >= 1, d.f_등급);
+            if (augmentPanels.Length > 1 && augmentPanels[1] != null)
+                augmentPanels[1].Refresh(d.f_속성2ID, d.f_S2, tier >= 2, d.f_등급);
+            if (augmentPanels.Length > 2 && augmentPanels[2] != null)
+                augmentPanels[2].Refresh(d.f_속성3ID, d.f_S3, tier >= 3, d.f_등급);
+        }
 
         // 고유능력
         if (abilityNameText) abilityNameText.text = d.f_고유능력 ?? string.Empty;
         if (abilityDescText)  abilityDescText.text  = d.f_능력설명  ?? string.Empty;
     }
-
-    void SetAugmentIndex(Image img, int level, bool unlocked)
-    {
-        if (img == null) return;
-        var sprite = MemberVisualConfig.Shared?.GetAugmentIndex(level, unlocked);
-        img.sprite  = sprite;
-        img.enabled = sprite != null;
-    }
-
-    // ── StatID → 한국어 라벨 ──────────────────────────────────────────────
-
-    static string BuildStatLine(string statId, string value)
-    {
-        if (string.IsNullOrEmpty(statId)) return string.Empty;
-
-        string label = StatIdToLabel(statId);
-        if (string.IsNullOrEmpty(value)) return label;
-        return $"{label} +{value}%";
-    }
-
-    static string StatIdToLabel(string statId) => statId switch
-    {
-        "STAT_ATK"       => "공격력",
-        "STAT_DEF"       => "방어력",
-        "STAT_HP"        => "최대체력",
-        "STAT_SPD_ATK"   => "공격속도",
-        "STAT_SPD_MOV"   => "이동속도",
-        "STAT_CRI_RATE"  => "치명타 확률",
-        "STAT_CRI_DMG"   => "치명타 데미지",
-        "STAT_EVA_RATE"  => "회피 확률",
-        "STAT_ATK_RNG"   => "공격사거리",
-        "STAT_CUR_REWARD"=> "추가 골드",
-        "STAT_CUR_EXP"   => "추가 경험치",
-        "STAT_SKL_CD"    => "기물 쿨타임",
-        "STAT_STUN"      => "적 둔화",
-        "STAT_DOT_DMG"   => "출혈 데미지",
-        "STAT_DOT"       => "지속피해",
-        _                => statId,
-    };
 }
