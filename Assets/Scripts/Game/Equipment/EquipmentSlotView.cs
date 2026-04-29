@@ -45,8 +45,8 @@ public class EquipmentSlotView : MonoBehaviour
 
         if (iconImage)
         {
-            iconImage.enabled = has && data.icon != null;
-            if (has && data.icon != null) iconImage.sprite = data.icon;
+            iconImage.enabled = has && data.Icon != null;
+            if (has && data.Icon != null) iconImage.sprite = data.Icon;
         }
 
         if (categoryIcon)

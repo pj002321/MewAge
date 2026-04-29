@@ -29,7 +29,10 @@ public class SpawnMarker : MonoBehaviour
         for (int i = All.Count - 1; i >= 0; i--)
         {
             if (All[i] != null)
+            {
+                All[i].StopAllCoroutines(); // Destroy는 지연 처리 — 코루틴 먼저 즉시 중단
                 Destroy(All[i].gameObject);
+            }
         }
         All.Clear();
         _activeCount = 0;

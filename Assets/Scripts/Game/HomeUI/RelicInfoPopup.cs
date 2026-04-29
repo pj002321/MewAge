@@ -66,7 +66,11 @@ public class RelicInfoPopup : MonoBehaviour
         gameObject.SetActive(true);
         if (_anim != null) StopCoroutine(_anim);
         _anim = StartCoroutine(ScaleTo(Vector3.zero, Vector3.one));
+        RefreshUI(data);
+    }
 
+    private void RefreshUI(RelicData data)
+    {
         var  inv        = RelicInventory.Shared;
         var  cfg        = RelicVisualConfig.Shared;
         bool locked     = inv == null || !inv.IsUnlocked(data.relicId);
@@ -165,7 +169,7 @@ public class RelicInfoPopup : MonoBehaviour
     {
         if (_currentData == null) return;
         RelicInventory.Shared?.TryBreakThrough(_currentData.relicId);
-        Show(_currentData);
+        RefreshUI(_currentData);
     }
 
     // ── 애니메이션 ────────────────────────────────────────────────────────
