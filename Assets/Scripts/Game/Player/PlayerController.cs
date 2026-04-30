@@ -95,8 +95,13 @@ public class PlayerController : MonoBehaviour
 
     private Vector2        moveDirection;
     private Rigidbody2D    rb;
+    [Header("비주얼")]
+    [SerializeField] private Transform visualSlot;   // 미할당 시 Awake에서 "VisualSlot" 자동 탐색
+
+    public Transform VisualSlot => _visualSlot;
+
     private SpriteRenderer spriteRenderer;
-    private Transform      _visualSlot;   // VisualSlot 하위 전체를 한 번에 반전
+    private Transform      _visualSlot;
     private HitFlash       hitFlash;
     private HitShake       hitShake;
 
@@ -110,7 +115,7 @@ public class PlayerController : MonoBehaviour
         Instance      = this;
         rb            = GetComponent<Rigidbody2D>();
         spriteRenderer = GetComponentInChildren<SpriteRenderer>();
-        _visualSlot   = transform.Find("VisualSlot");
+        _visualSlot   = visualSlot != null ? visualSlot : transform.Find("VisualSlot");
         hitFlash      = GetComponentInChildren<HitFlash>();
         hitShake      = GetComponent<HitShake>();
         currentHP     = maxHP;
@@ -132,7 +137,7 @@ public class PlayerController : MonoBehaviour
     public void RefreshVisualReferences()
     {
         spriteRenderer = GetComponentInChildren<SpriteRenderer>();
-        _visualSlot    = transform.Find("VisualSlot");
+        _visualSlot    = visualSlot != null ? visualSlot : transform.Find("VisualSlot");
         hitFlash       = GetComponentInChildren<HitFlash>();
         hitFlash?.RefreshRenderers();
     }

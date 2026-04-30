@@ -176,8 +176,9 @@ public class PlayerCharacterManager : MonoBehaviourSingleton<PlayerCharacterMana
     /// </summary>
     void SwapPlayerModel(string charId, PlayerController player)
     {
-        // VisualSlot 확보 (없으면 생성)
-        var visualSlot = player.transform.Find("VisualSlot");
+        // VisualSlot 확보 — Inspector 할당 우선, 없으면 이름 탐색, 그래도 없으면 생성
+        var visualSlot = player.VisualSlot
+                      ?? player.transform.Find("VisualSlot");
         if (visualSlot == null)
         {
             var go = new GameObject("VisualSlot");
@@ -225,6 +226,10 @@ public class PlayerCharacterManager : MonoBehaviourSingleton<PlayerCharacterMana
         var anim = _currentPlayerModel.GetComponent<Animator>()
                 ?? _currentPlayerModel.GetComponentInChildren<Animator>();
         if (anim != null) player.SetAnimator(anim);
+
+        // 모델 교체 후 SlimeBobAnimation 재초기화 (Awake 시점엔 모델이 없었을 수 있음)
+        var slimeBob = visualSlot.GetComponentInChildren<SlimeBobAnimation>();
+        slimeBob?.Reinitialize();
     }
 
     // ─────────────────────────────────────────────────────────────

@@ -26,7 +26,13 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
     [SerializeField] private int maxEnemiesOnMap = 30;
 
     [Header("플레이어로부터 최소 스폰 거리")]
-    [SerializeField] private float minDistanceFromPlayer = 3f;
+    [SerializeField] private float minDistanceFromPlayer = 6f;
+
+    [Header("분산 스폰")]
+    [SerializeField] [Range(4, 12)] private int sectorCount = 8; // 360도를 몇 섹터로 나눌지
+
+    private int[] _shuffledSectors;
+    private int   _sectorCursor;
 
     private float currentInterval  = 3f;
     private int   currentSpawnCount = 3;
@@ -203,8 +209,6 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
 
     private void DoSpawn(GameObject prefab, Vector2 pos, UnitData data = null)
     {
-        Debug.Log($"[EnemySpawner] 스폰 시도: prefab={prefab?.name}, pos={pos}, data={data?.unitId}");
-
         int globalWave       = CalcGlobalWave(currentStage, currentWave);
         int designGlobalWave = data != null ? data.designGlobalWave : globalWave;
 
@@ -384,33 +388,68 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
 
     private Vector2 GetRandomEdgePosition()
     {
-        Vector2 playerPos = PlayerController.Instance != null ? (Vector2)PlayerController.Instance.transform.position : Vector2.zero;
+        Vector2 playerPos = PlayerController.Instance != null
+            ? (Vector2)PlayerController.Instance.transform.position
+            : Vector2.zero;
 
-        for (int attempt = 0; attempt < 10; attempt++) // 최대 10번 시도
+        // 섹터 순환: 한 사이클이 끝나면 재셔플 → 8방향 균등 분산
+        if (_shuffledSectors == null || _shuffledSectors.Length != sectorCount)
+            ReshuffleSectors();
+        if (_sectorCursor >= _shuffledSectors.Length)
+            ReshuffleSectors();
+
+        int   sector     = _shuffledSectors[_sectorCursor++];
+        float sectorDeg  = 360f / sectorCount;
+        float sectorMin  = sector * sectorDeg;
+
+        // 해당 섹터 + 거리 조건 만족 위치 탐색
+        for (int attempt = 0; attempt < 30; attempt++)
         {
-            Vector2 pos;
-            if (SpawnZone.Shared != null)
-                pos = SpawnZone.Shared.GetRandomEdgePosition();
-            else
-            {
-                int side = Random.Range(0, 4);
-                pos = side switch
-                {
-                    0 => new Vector2(Random.Range(-5f,  5f),  9.5f),
-                    1 => new Vector2(Random.Range(-5f,  5f), -9.5f),
-                    2 => new Vector2(-5.5f, Random.Range(-9f, 9f)),
-                    _ => new Vector2( 5.5f, Random.Range(-9f, 9f)),
-                };
-            }
+            Vector2 pos = SampleEdge();
+            if (Vector2.Distance(pos, playerPos) < minDistanceFromPlayer) continue;
 
+            float angle = Mathf.Repeat(
+                Mathf.Atan2(pos.y - playerPos.y, pos.x - playerPos.x) * Mathf.Rad2Deg,
+                360f);
+            if (Mathf.Repeat(angle - sectorMin, 360f) <= sectorDeg)
+                return pos;
+        }
+
+        // fallback: 거리 조건만
+        for (int attempt = 0; attempt < 10; attempt++)
+        {
+            Vector2 pos = SampleEdge();
             if (Vector2.Distance(pos, playerPos) >= minDistanceFromPlayer)
                 return pos;
         }
 
-        // 10번 시도해도 안 되면 그냥 반환 (fallback)
-        if (SpawnZone.Shared != null)
-            return SpawnZone.Shared.GetRandomEdgePosition();
-        else
-            return new Vector2(Random.Range(-5f, 5f), 9.5f);
+        return SampleEdge();
+    }
+
+    private void ReshuffleSectors()
+    {
+        if (_shuffledSectors == null || _shuffledSectors.Length != sectorCount)
+            _shuffledSectors = new int[sectorCount];
+
+        for (int i = 0; i < sectorCount; i++) _shuffledSectors[i] = i;
+        for (int i = sectorCount - 1; i > 0; i--)
+        {
+            int j = Random.Range(0, i + 1);
+            (_shuffledSectors[i], _shuffledSectors[j]) = (_shuffledSectors[j], _shuffledSectors[i]);
+        }
+        _sectorCursor = 0;
+    }
+
+    private Vector2 SampleEdge()
+    {
+        if (SpawnZone.Shared != null) return SpawnZone.Shared.GetRandomEdgePosition();
+        int side = Random.Range(0, 4);
+        return side switch
+        {
+            0 => new Vector2(Random.Range(-5f,  5f),  9.5f),
+            1 => new Vector2(Random.Range(-5f,  5f), -9.5f),
+            2 => new Vector2(-5.5f, Random.Range(-9f, 9f)),
+            _ => new Vector2( 5.5f, Random.Range(-9f, 9f)),
+        };
     }
 }

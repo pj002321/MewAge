@@ -19,7 +19,7 @@ public class SpawnMarker : MonoBehaviour
 
     private void OnDestroy()
     {
-        _activeCount--;
+        _activeCount = Mathf.Max(0, _activeCount - 1);
         All.Remove(this);
     }
 

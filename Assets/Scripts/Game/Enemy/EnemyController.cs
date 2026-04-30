@@ -612,34 +612,74 @@ public class EnemyController : MonoBehaviour
         else                          Destroy(gameObject);
     }
 
+    // ── 웨이브 스케일링 커브 ─────────────────────────────────────
+    // 각 웨이브에서 적용할 절대 배율 키프레임 (wave, hpMult, dmgMult)
+    // 스테이지 내 웨이브(1~wavesPerStage) 기준
+    private static readonly int[]   s_curveWaves  = {  1,    5,    10,   15,   20,    25,    30   };
+    private static readonly float[] s_curveHp     = { 1.0f, 1.8f, 3.2f, 5.5f, 8.5f, 12.5f, 18.5f };
+    private static readonly float[] s_curveDmg    = { 1.0f, 1.25f,1.6f, 2.1f, 2.8f,  3.6f,  5.0f };
+
+    // wave(스테이지 내 1~N)에서의 배율을 키프레임 사이 선형 보간으로 반환
+    private static float EvalScaleCurve(int wave, float[] keys)
+    {
+        if (wave <= s_curveWaves[0]) return keys[0];
+
+        int last = s_curveWaves.Length - 1;
+        if (wave >= s_curveWaves[last])
+        {
+            // 마지막 구간 기울기로 외삽
+            float slope = (keys[last] - keys[last - 1])
+                        / (s_curveWaves[last] - s_curveWaves[last - 1]);
+            return keys[last] + slope * (wave - s_curveWaves[last]);
+        }
+
+        for (int i = 1; i <= last; i++)
+        {
+            if (wave <= s_curveWaves[i])
+            {
+                float t = (float)(wave - s_curveWaves[i - 1])
+                        / (s_curveWaves[i] - s_curveWaves[i - 1]);
+                return Mathf.Lerp(keys[i - 1], keys[i], t);
+            }
+        }
+        return keys[last];
+    }
+
     // ── 웨이브 구간 스탯 적용 ────────────────────────────────────
     /// <summary>
     /// 스폰 시 EnemySpawner에서 호출. ApplyUnitData() 이후에 호출해야 합니다.
-    /// globalWave      = (currentStage-1)*30 + currentWave
-    /// designGlobalWave = (designStage-1)*30 + designWave
+    /// globalWave      = (currentStage-1)*wavesPerStage + currentWave
+    /// designGlobalWave = (designStage-1)*wavesPerStage + designWave
     /// </summary>
     public void InitForWave(int globalWave, int designGlobalWave = 0, int wavesPerStage = 30)
     {
-        // DB 비율 기반 스케일링 (ApplyUnitData 이후에 호출돼야 ActiveUnitData가 있음)
         if (ActiveUnitData == null) return;
 
-        int totalDelta  = Mathf.Max(0, globalWave - designGlobalWave);
+        int totalDelta = Mathf.Max(0, globalWave - designGlobalWave);
         if (totalDelta == 0) return;
 
-        // 스테이지 단위 차이
+        // 스테이지 차이 (스테이지가 다르면 hpGrowthRate 기반 추가 배율 적용)
         int currentStage = (globalWave        - 1) / wavesPerStage + 1;
         int designStage  = (designGlobalWave   - 1) / wavesPerStage + 1;
         int stageDelta   = Mathf.Max(0, currentStage - designStage);
 
-        // 스테이지 점프 후 남은 웨이브 차이 (같은 스테이지 내 진행)
-        int waveOnlyDelta = Mathf.Max(0, totalDelta - stageDelta * wavesPerStage);
+        // 스테이지 내 웨이브 (1 ~ wavesPerStage)
+        int curWave = ((globalWave      - 1) % wavesPerStage) + 1;
+        int desWave = ((designGlobalWave - 1) % wavesPerStage) + 1;
 
-        // 최초기준 체력 + 최초기준 * stageRate * stageDelta
-        //                  + 최초기준 * (stageRate / wavesPerStage) * waveOnlyDelta
-        float hpMult  = 1f + ActiveUnitData.hpGrowthRate  * stageDelta
-                           + ActiveUnitData.hpGrowthRate  / wavesPerStage * waveOnlyDelta;
-        float dmgMult = 1f + ActiveUnitData.dmgGrowthRate * stageDelta
-                           + ActiveUnitData.dmgGrowthRate / wavesPerStage * waveOnlyDelta;
+        // 커브 상대 비율: curve(현재웨이브) / curve(설계웨이브)
+        // → W1 적이 W15에 나오면 5.5/1.0 = 5.5x, W10 적이 W15에 나오면 5.5/3.2 = 1.72x
+        float hpMult  = Mathf.Max(1f, EvalScaleCurve(curWave, s_curveHp)
+                                    / EvalScaleCurve(desWave, s_curveHp));
+        float dmgMult = Mathf.Max(1f, EvalScaleCurve(curWave, s_curveDmg)
+                                    / EvalScaleCurve(desWave, s_curveDmg));
+
+        // 스테이지 간 추가 배율 (기존 hpGrowthRate 활용)
+        if (stageDelta > 0)
+        {
+            hpMult  *= 1f + ActiveUnitData.hpGrowthRate  * stageDelta;
+            dmgMult *= 1f + ActiveUnitData.dmgGrowthRate * stageDelta;
+        }
 
         maxHP         *= hpMult;
         currentHP      = maxHP;

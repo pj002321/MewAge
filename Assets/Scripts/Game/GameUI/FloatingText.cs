@@ -35,7 +35,6 @@ public class FloatingText : MonoBehaviour
         initialized = true;
 
         transform.localScale = Vector3.zero;
-        Debug.Log($"[FloatingText] Initialized: text={text}, position={transform.position}");
     }
 
     private void Update()

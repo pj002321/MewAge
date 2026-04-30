@@ -87,21 +87,12 @@ public class ItemDropManager : MonoBehaviourSingleton<ItemDropManager>
         if (_healOrbSpawnedThisWave) return;
 
         var player = PlayerController.Instance;
-        if (player == null)
-        {
-            this.DLog("[ItemDrop] TrySpawnHealOrb: PlayerController.Instance null");
-            return;
-        }
+        if (player == null) return;
 
         float chance = player.HealOrbSpawnChance;
-        if (chance <= 0f)
-        {
-            this.DLog($"[ItemDrop] TrySpawnHealOrb: chance={chance} (0이하 → 스킵)");
-            return;
-        }
+        if (chance <= 0f) return;
 
         float roll = Random.value;
-        this.DLog($"[ItemDrop] TrySpawnHealOrb: chance={chance:F2}, roll={roll:F2} → {(roll <= chance ? "스폰" : "미스")}");
         if (roll > chance) return;
 
         SpawnHealOrb(deathPos);

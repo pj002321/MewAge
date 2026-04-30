@@ -106,9 +106,9 @@ GameObject:
   - component: {fileID: 1460802425032751945}
   - component: {fileID: 4618429624673289503}
   - component: {fileID: 7867964363866000739}
-  - component: {fileID: 1767944380024156897}
   - component: {fileID: -7638926655350617789}
   - component: {fileID: 4733306807263160476}
+  - component: {fileID: 6164113639181463538}
   m_Layer: 7
   m_Name: c1_s1_w5
   m_TagString: Untagged
@@ -288,9 +288,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 05b90058a78bdf242ada91d00c9db68b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyController
-  moveSpeed: 2
-  maxHP: 2000
-  contactDamage: 10
+  moveSpeed: 3
+  maxHP: 1000
+  contactDamage: 20
   goldDrop: 25
   expDrop: 30
   scoreValue: 0
@@ -333,23 +333,6 @@ MonoBehaviour:
     spawnOffset: {x: 0, y: 0}
     sfxClip: {fileID: 0}
     volume: 1
---- !u!114 &1767944380024156897
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6535268019027681566}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0ef9839f1a3088e4cad5cf9d4fc2f5ca, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MeleeBehaviour
-  attackRange: 1.2
-  meleeHitRange: 1.3
-  attackInterval: 1
-  useAnimationEvent: 1
-  attackVfxPrefab: {fileID: 0}
 --- !u!114 &-7638926655350617789
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -363,6 +346,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HitFlash
   flashDuration: 0.12
+  flashColor: {r: 1, g: 1, b: 1, a: 1}
   BaseColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!114 &4733306807263160476
 MonoBehaviour:
@@ -376,3 +360,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d9c58f3ba0addd845b2803f0d001d294, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EliteMarker
+--- !u!114 &6164113639181463538
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6535268019027681566}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ebf384ff75278374cb62dda6f31d5629, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ChargeBehaviour
+  chargeDuration: 1
+  chargeSpeedMultiplier: 3.5
+  moveDuration: 2
+  idleDuration: 2
+  chargeColor: {r: 1, g: 0, b: 0, a: 1}
+  chargeScale: 0.85
+  preChargeDuration: 0.25
+  ghostInterval: 0.06
