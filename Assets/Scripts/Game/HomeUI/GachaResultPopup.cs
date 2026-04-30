@@ -141,6 +141,7 @@ public class GachaResultPopup : MonoBehaviour
 
             // 현재 클립 종료 → bComplete = true
             chestAnimator.SetBool("bComplete", true);
+            SoundManager.Shared?.Play(SoundKey.Gacha_Open);
             this.DLog("[GachaResultPopup] bComplete = true ✅");
 
             // 전환 대기 (2프레임)
@@ -167,6 +168,7 @@ public class GachaResultPopup : MonoBehaviour
         var slot   = Instantiate(slotPrefab, parent);
         slot.Bind(equip, null);
         slot.StartSpin();
+        SoundManager.Shared?.Play(SoundKey.Gacha_ItemReveal);
 
         var rt = slot.GetComponent<RectTransform>();
         rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
@@ -198,6 +200,7 @@ public class GachaResultPopup : MonoBehaviour
             var slot = Instantiate(slotPrefab, multiResultContent);
             slot.Bind(equip, null);
             slot.StartSpin();
+            SoundManager.Shared?.Play(SoundKey.Gacha_ItemReveal);
             var rt = slot.GetComponent<RectTransform>();
             rt.localScale = Vector3.zero;
             slots.Add(rt);

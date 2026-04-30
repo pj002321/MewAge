@@ -32,6 +32,9 @@ public class MainMenuPanel : MonoBehaviour
     public Button attendanceButton;
     public Button rankingButton;
     public Button menuButton;
+    public Button inventoryButton;
+    public Button achievementButton;
+    public Button breakthroughRewardButton;
 
     public PopUpAttendance attendancePopup;
     public PopUpDailyMission dailyMissionPopup;
@@ -39,6 +42,10 @@ public class MainMenuPanel : MonoBehaviour
     public PopUpSpecialGift specialgiftPopup;
     public PopUpMenu menuPopup;
     public PopUpRanking rankingPopup;
+    public PopUpInventory inventoryPopup;
+    public PopUpAchievement achievementPopup;
+    public PopUpAutoHunt autoHuntPopup;
+    public PopUpBreakthroughReward breakthroughRewardPopup;
 
     [Header("스크롤 (수직)")]
     public ScrollRect    scrollRect;
@@ -71,17 +78,19 @@ public class MainMenuPanel : MonoBehaviour
     [Range(1f, 5f)]
     public float snapEasePower  = 4f;    // 클수록 끝에서 더 부드럽게 감속
 
-    // ── 런타임 ───────────────────────────────────────────────────────
     StageCardView[] cardViews;
     int             currentIndex;
     bool            isSnapping;
     Coroutine       _snapCoroutine;
     bool            _scrollMode;
     float           _dragStartY;
+    float           _contentStartY;
     float           cachedCardH = -1f;
     StageEntry[]    stages;
 
-    CanvasGroup     _contentCG;   // 초기 플래시 방지용
+    CanvasGroup     _contentCG;
+
+    static bool     _attendanceShownThisSession;
 
     // ── DB 로드 ──────────────────────────────────────────────────────
     void LoadStagesFromDB()
@@ -142,12 +151,16 @@ public class MainMenuPanel : MonoBehaviour
         currentIndex = FindSavedStageIndex();
         EnsureVerticalLayout();
         BuildCards();
-        storageButton.onClick.AddListener(() => storagePopup.Show());
-        dailymissionButton.onClick.AddListener(() => dailyMissionPopup.Show());
-        attendanceButton.onClick.AddListener(() => attendancePopup.Show());
-        specialGiftButton.onClick.AddListener(() => specialgiftPopup.Show());
-        menuButton.onClick.AddListener(() => menuPopup.Show());
-        rankingButton.onClick.AddListener(() => rankingPopup.Show());
+        storageButton?.onClick.AddListener(() => storagePopup?.Show());
+        dailymissionButton?.onClick.AddListener(() => dailyMissionPopup?.Show());
+        attendanceButton?.onClick.AddListener(() => attendancePopup?.Show());
+        specialGiftButton?.onClick.AddListener(() => specialgiftPopup?.Show());
+        menuButton?.onClick.AddListener(() => menuPopup?.Show());
+        rankingButton?.onClick.AddListener(() => rankingPopup?.Show());
+        inventoryButton?.onClick.AddListener(() => inventoryPopup.Show());
+        achievementButton?.onClick.AddListener(() => achievementPopup.Show());
+        autohuntButton?.onClick.AddListener(() => autoHuntPopup.Show());
+        breakthroughRewardButton?.onClick.AddListener(() => breakthroughRewardPopup.Show());
         // 레이아웃 완료 전 마지막 카드가 잠깐 보이는 플래시 방지
         _contentCG = content != null
             ? (content.GetComponent<CanvasGroup>() ?? content.gameObject.AddComponent<CanvasGroup>())
@@ -204,12 +217,23 @@ public class MainMenuPanel : MonoBehaviour
         var beginEntry = new EventTrigger.Entry { eventID = EventTriggerType.BeginDrag };
         beginEntry.callback.AddListener(e =>
         {
-            if (_scrollMode)
-            {
-                _dragStartY = ((PointerEventData)e).position.y;
-            }
+            if (!_scrollMode) return;
+            if (_snapCoroutine != null) { StopCoroutine(_snapCoroutine); isSnapping = false; }
+            _dragStartY    = ((PointerEventData)e).position.y;
+            _contentStartY = content.anchoredPosition.y;
         });
         trigger.triggers.Add(beginEntry);
+
+        var dragEntry = new EventTrigger.Entry { eventID = EventTriggerType.Drag };
+        dragEntry.callback.AddListener(e =>
+        {
+            if (!_scrollMode) return;
+            float delta = ((PointerEventData)e).position.y - _dragStartY;
+            float newY  = _contentStartY + delta;
+            content.anchoredPosition = new Vector2(content.anchoredPosition.x, newY);
+            ApplyCardScales(SnapYToVirtualCenter(newY));
+        });
+        trigger.triggers.Add(dragEntry);
 
         var endEntry = new EventTrigger.Entry { eventID = EventTriggerType.EndDrag };
         endEntry.callback.AddListener(e =>
@@ -262,6 +286,12 @@ public class MainMenuPanel : MonoBehaviour
 
         // 올바른 위치에 snap된 뒤 content 표시
         if (_contentCG != null) _contentCG.alpha = 1f;
+
+        if (!_attendanceShownThisSession)
+        {
+            _attendanceShownThisSession = true;
+            attendancePopup?.Show();
+        }
     }
 
     // ── 카드 생성 ────────────────────────────────────────────────────
