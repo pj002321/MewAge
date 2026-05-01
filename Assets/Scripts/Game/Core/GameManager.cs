@@ -265,8 +265,14 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     }
     private IEnumerator WaveClearRoutine()
     {
-        if (waveClearPanel) waveClearPanel.SetActive(true);
         EnemySpawner.Shared?.StopSpawning();
+
+        // 남은 orb 파편 즉시 터뜨리기 (노티 전)
+        ItemDropManager.Shared?.ThrowUpAll();
+
+        yield return new WaitForSeconds(0.15f);  // 파편 연출이 잠깐 보이도록 대기
+
+        if (waveClearPanel) waveClearPanel.SetActive(true);
 
         // 적 사망 연출 + 기물 스케일다운 후 파괴 (DieRoutine 기준 0.45s)
         yield return StartCoroutine(ClearAllWithScaleDown(0.45f));
@@ -275,10 +281,6 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         GlobalLightDimmer.ForceReset();           // 조명 즉시 복구
 
         yield return new WaitForSeconds(waveClearDuration);
-
-        // 남은 orb 위로 튕겨 올리고 잠깐 대기 후 패널 전환
-        ItemDropManager.Shared?.ThrowUpAll();
-        yield return new WaitForSeconds(0.55f);
 
         if (waveClearPanel) waveClearPanel.SetActive(false);
 

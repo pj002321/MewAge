@@ -150,50 +150,21 @@ public class ImprovCard : MonoBehaviour
 
     private static string BuildDescription(DB_증강 data)
     {
-        var sb = new System.Text.StringBuilder();
+        string desc = data.f_설명;
+        if (string.IsNullOrEmpty(desc)) return string.Empty;
 
-        // f_설명 기본 텍스트 (있을 때만)
-        string baseDesc = data.f_설명;
-        if (!string.IsNullOrEmpty(baseDesc))
-        {
-            baseDesc = baseDesc.Replace("{0}", data.f_주수치.ToString());
-            baseDesc = baseDesc.Replace("{1}", data.f_보조수치.ToString());
-            sb.AppendLine(ColorizeNumbers(baseDesc));
-        }
+        // 수치 플레이스홀더 제거 (% 단위 포함)
+        desc = desc.Replace("{0}%", "").Replace("{1}%", "");
+        desc = desc.Replace("{0}", "").Replace("{1}", "");
 
+        // 연속 공백 정리
+        desc = Regex.Replace(desc, @"\s{2,}", " ").Trim();
 
-        return sb.ToString().TrimEnd();
-    }
+        // 증가 → 초록 ↑, 감소 → 빨강 ↓
+        desc = desc.Replace("증가", "<color=#55FF88>↑</color>");
+        desc = desc.Replace("감소", "<color=#FF5555>↓</color>");
 
-    /// <summary>설명 텍스트의 숫자를 맥락에 따라 녹색/빨강으로 채색합니다.</summary>
-    private static string ColorizeNumbers(string text)
-    {
-        return Regex.Replace(text, @"[+\-]?\d+(?:\.\d+)?", match =>
-        {
-            string num = match.Value;
-            bool isNegative = num.StartsWith("-");
-
-            // 숫자가 속한 절(쉼표·마침표·줄바꿈으로 구분)만 검사해 오탐 방지
-            string clause = GetClause(text, match.Index);
-            bool hasReduction = clause.Contains("감소") || clause.Contains("하락") || clause.Contains("커지");
-
-            string color = (isNegative || hasReduction) ? "#FF5555" : "#55FF88";
-            return $"<color={color}>{num}</color>";
-        });
-    }
-
-    /// <summary>pos가 속한 절을 반환합니다 (쉼표·마침표·줄바꿈을 경계로 분리).</summary>
-    private static string GetClause(string text, int pos)
-    {
-        int start = pos;
-        while (start > 0 && text[start - 1] != ',' && text[start - 1] != '.' && text[start - 1] != '\n')
-            start--;
-
-        int end = pos;
-        while (end < text.Length && text[end] != ',' && text[end] != '.' && text[end] != '\n')
-            end++;
-
-        return text.Substring(start, end - start);
+        return desc;
     }
 
     private IEnumerator ScaleRoutine(Transform target, float targetScale, float duration)
