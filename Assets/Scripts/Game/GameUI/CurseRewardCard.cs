@@ -90,9 +90,7 @@ public class CurseRewardCard : MonoBehaviour
     {
         if (value <= 0f || string.IsNullOrEmpty(augId)) return "-";
         string statName = PlayerStatManager.GetStatName(AugIdToStat(augId));
-        bool isSkl = augId == "AUG_SKL";
-        bool isIncrease = curse ? isSkl : !isSkl;
-        string label = isIncrease ? "증가" : "감소";
+        string label = curse ? "감소" : "증가";
         return $"{statName}  {value:0.#}% {label}";
     }
 

@@ -134,9 +134,6 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         var sm = PlayerStatManager.Shared;
         if (sm == null) return true;
 
-        // AUG_SKL 저주 = 쿨타임 증가. 쿨타임은 항상 올릴 수 있음
-        if (entry.f_저주 == "AUG_SKL") return true;
-
         StatType stat    = CurseRewardCard.AugIdToStat(entry.f_저주);
         float    current = sm.GetFinal(stat);
 

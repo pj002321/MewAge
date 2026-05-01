@@ -13,7 +13,6 @@ public enum AugId
     AUG_ATK,
     AUG_HEAL,
     AUG_EVA,
-    AUG_SKL,
     AUG_MAX_HP,
     AUG_REWARD_RNG,
     AUG_DOT_DMG,

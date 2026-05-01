@@ -293,6 +293,7 @@ public class WeaponInfoPanel : MonoBehaviourSingleton<WeaponInfoPanel>
         // 스탯 레이블: 첫 번째 비어있지 않은 보너스의 statId 기준
         string statId    = !b2.IsEmpty ? b2.statId : (!b3.IsEmpty ? b3.statId : b4.statId);
         string statLabel = StatIdToLabel(statId);
+        if (string.IsNullOrEmpty(statLabel)) { labelDesc.text = string.Empty; return; }
         string unit      = StatIdToUnit(statId);
 
         // 수치 문자열 (정수이면 정수로, 소수면 소수점 1자리)
@@ -353,6 +354,8 @@ public class WeaponInfoPanel : MonoBehaviourSingleton<WeaponInfoPanel>
         "HP_STL_ADD" => "흡혈수치량",
         "NUK_ADD"    => "넉백지수",
         "HEAL_ADD"   => "자가치유",
+        "SKL_CD"     => "",
+        "STAT_SKL_CD"=> "",
         _            => statId,
     };
 
