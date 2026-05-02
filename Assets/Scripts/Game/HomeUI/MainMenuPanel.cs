@@ -6,9 +6,8 @@ using TMPro;
 
 /// <summary>
 /// 홈 씬 전투 패널 — 스테이지 선택 수직 캐러셀.
-/// 기본: 현재 스테이지(크게) + 다음 스테이지(위에 작게) 표시.
-/// 카드 클릭 → 스크롤 모드 ON (scrollModeHideTargets 숨김).
-/// 스크롤 모드에서 카드 클릭 → 선택 후 스크롤 모드 OFF.
+/// 드래그 중: 손가락 1:1 추적 + 관성 여운 → 가장 가까운 카드에 스냅.
+/// 스냅 완료 시에만 SetCenterCard(true) 호출 → 캐릭터/몬스터 랜딩 애니메이션 억제.
 /// </summary>
 public class MainMenuPanel : MonoBehaviour
 {
@@ -18,6 +17,7 @@ public class MainMenuPanel : MonoBehaviour
     {
         public string chapterID;
         public string stageName;
+        public string chapterLabel;  // "구석기 - 원시의 마을"
         public Sprite icon;
         public int    bestWave;
         public bool   isLocked;
@@ -54,43 +54,37 @@ public class MainMenuPanel : MonoBehaviour
     [Header("버튼")]
     public Button startButton;
 
-    [Header("카드 크기")]
-    public float cardWidth  = 800f;
-    public float cardHeight = 260f;
-
-    [Header("카드 간격")]
-    public float cardSpacing = 4f;
-
-    [Header("카드 스케일 (원근 효과)")]
-    public float centerScale = 1.0f;
+    [Header("카드")]
+    public float cardWidth     = 800f;
+    public float cardHeight    = 260f;
+    public float cardSpacing   = 4f;
     [Range(0.5f, 1f)]
-    public float sideScale   = 0.82f;
-
-    [Header("인접 카드 투명도")]
+    public float sideScale     = 0.82f;
     [Range(0f, 1f)]
     public float nextCardAlpha = 0.85f;
 
-    [Header("스냅 설정")]
+    [Header("스크롤")]
     [Range(0.05f, 0.5f)]
-    public float swipeThreshold = 0.2f;
-    [Range(0.1f, 1.5f)]
-    public float snapDuration   = 0.65f;
-    [Range(1f, 5f)]
-    public float snapEasePower  = 4f;    // 클수록 끝에서 더 부드럽게 감속
+    public float snapDuration   = 0.18f;
+    public float flickThreshold = 400f;
 
+    // ── 런타임 ───────────────────────────────────────────────────────
     StageCardView[] cardViews;
     int             currentIndex;
     bool            isSnapping;
     Coroutine       _snapCoroutine;
-    bool            _scrollMode;
     float           _dragStartY;
     float           _contentStartY;
     float           cachedCardH = -1f;
     StageEntry[]    stages;
-
     CanvasGroup     _contentCG;
 
-    static bool     _attendanceShownThisSession;
+    // 관성용 속도 추적 (EMA 방식)
+    float _dragVelocity;
+    float _prevPointerY;
+    float _prevPointerTime;
+
+    static bool _attendanceShownThisSession;
 
     // ── DB 로드 ──────────────────────────────────────────────────────
     void LoadStagesFromDB()
@@ -104,31 +98,29 @@ public class MainMenuPanel : MonoBehaviour
             if (!int.TryParse(parts[0].Substring(1), out int chapterNum) ||
                 !int.TryParse(parts[1].Substring(1), out int stageNum))
             {
-                Debug.LogWarning($"[StageSelectPanel] Invalid chapterID: {chapterID}");
+                Debug.LogWarning($"[MainMenuPanel] Invalid chapterID: {chapterID}");
                 return;
             }
 
-            Sprite icon = Resources.Load<Sprite>($"Chapter/Icon/{chapterID}");
-            int bestWave = PlayerPrefs.GetInt($"BestWave_{chapterID}", 0);
-
-            bool isLocked = false; // 모든 스테이지 기본 개방
+            Sprite icon    = Resources.Load<Sprite>($"Chapter/Icon/{chapterID}");
+            int bestWave   = PlayerPrefs.GetInt($"BestWave_{chapterID}", 0);
 
             list.Add(new StageEntry
             {
-                chapterID = chapterID,
-                stageName = $"{list.Count + 1}.{row.f_이름}",
-                icon      = icon,
-                bestWave  = bestWave,
-                isLocked  = isLocked
+                chapterID    = chapterID,
+                stageName    = $"{chapterNum}-{stageNum}.{row.f_이름}",
+                chapterLabel = BuildChapterLabel(chapterNum),
+                icon         = icon,
+                bestWave     = bestWave,
+                isLocked     = false
             });
         });
 
         if (list.Count == 0)
         {
-            list.Add(new StageEntry { chapterID = "C1_S1", stageName = "1.야생 거리", isLocked = false });
-            list.Add(new StageEntry { chapterID = "C1_S2", stageName = "2.어둠의 숲",  isLocked = false });
-            list.Add(new StageEntry { chapterID = "C1_S3", stageName = "3.폐허 도시",  isLocked = false });
-            Debug.Log("[StageSelectPanel] DB 없음, 하드코딩 사용");
+            list.Add(new StageEntry { chapterID = "C1_S1", stageName = "1.야생 거리" });
+            list.Add(new StageEntry { chapterID = "C1_S2", stageName = "2.어둠의 숲"  });
+            list.Add(new StageEntry { chapterID = "C1_S3", stageName = "3.폐허 도시"  });
         }
         stages = list.ToArray();
     }
@@ -144,13 +136,13 @@ public class MainMenuPanel : MonoBehaviour
     }
 
     // ── 초기화 ───────────────────────────────────────────────────────
-
     void Start()
     {
         LoadStagesFromDB();
         currentIndex = FindSavedStageIndex();
         EnsureVerticalLayout();
         BuildCards();
+
         storageButton?.onClick.AddListener(() => storagePopup?.Show());
         dailymissionButton?.onClick.AddListener(() => dailyMissionPopup?.Show());
         attendanceButton?.onClick.AddListener(() => attendancePopup?.Show());
@@ -161,7 +153,7 @@ public class MainMenuPanel : MonoBehaviour
         achievementButton?.onClick.AddListener(() => achievementPopup.Show());
         autohuntButton?.onClick.AddListener(() => autoHuntPopup.Show());
         breakthroughRewardButton?.onClick.AddListener(() => breakthroughRewardPopup.Show());
-        // 레이아웃 완료 전 마지막 카드가 잠깐 보이는 플래시 방지
+
         _contentCG = content != null
             ? (content.GetComponent<CanvasGroup>() ?? content.gameObject.AddComponent<CanvasGroup>())
             : null;
@@ -169,7 +161,6 @@ public class MainMenuPanel : MonoBehaviour
 
         startButton?.onClick.AddListener(OnStartClicked);
         SetupScrollEvents();
-        SetScrollMode(true);
 
         StartCoroutine(InitAfterLayout());
     }
@@ -178,7 +169,6 @@ public class MainMenuPanel : MonoBehaviour
     {
         if (content == null) return;
 
-        // 수직 스크롤용 anchor/pivot으로 재설정 (빌더가 수평 스크롤용으로 생성하기 때문)
         content.anchorMin        = new Vector2(0f, 1f);
         content.anchorMax        = new Vector2(1f, 1f);
         content.pivot            = new Vector2(0.5f, 1f);
@@ -190,11 +180,11 @@ public class MainMenuPanel : MonoBehaviour
 
         var vlg = content.GetComponent<VerticalLayoutGroup>();
         if (vlg == null) vlg = content.gameObject.AddComponent<VerticalLayoutGroup>();
-        vlg.childAlignment        = TextAnchor.UpperCenter;
-        vlg.spacing               = cardSpacing;
-        vlg.childControlWidth     = true;
-        vlg.childControlHeight    = false; // 높이는 sizeDelta로 직접 제어
-        vlg.childForceExpandWidth = true;
+        vlg.childAlignment         = TextAnchor.UpperCenter;
+        vlg.spacing                = cardSpacing;
+        vlg.childControlWidth      = true;
+        vlg.childControlHeight     = false;
+        vlg.childForceExpandWidth  = true;
         vlg.childForceExpandHeight = false;
 
         var csf = content.GetComponent<ContentSizeFitter>();
@@ -206,52 +196,78 @@ public class MainMenuPanel : MonoBehaviour
     void SetupScrollEvents()
     {
         if (scrollRect == null) return;
-        scrollRect.vertical      = false; // 드래그는 EventTrigger가 처리 → elastic 방지
-        scrollRect.horizontal    = false;
-        scrollRect.inertia       = false;
-        scrollRect.movementType  = ScrollRect.MovementType.Unrestricted;
+        scrollRect.vertical     = false;
+        scrollRect.horizontal   = false;
+        scrollRect.inertia      = false;
+        scrollRect.movementType = ScrollRect.MovementType.Unrestricted;
 
         var trigger = scrollRect.gameObject.GetComponent<EventTrigger>()
                    ?? scrollRect.gameObject.AddComponent<EventTrigger>();
 
+        // ── BeginDrag ──────────────────────────────────────────────
         var beginEntry = new EventTrigger.Entry { eventID = EventTriggerType.BeginDrag };
         beginEntry.callback.AddListener(e =>
         {
-            if (!_scrollMode) return;
             if (_snapCoroutine != null) { StopCoroutine(_snapCoroutine); isSnapping = false; }
-            _dragStartY    = ((PointerEventData)e).position.y;
-            _contentStartY = content.anchoredPosition.y;
+            var ptr         = (PointerEventData)e;
+            _dragStartY     = ptr.position.y;
+            _contentStartY  = content.anchoredPosition.y;
+            _dragVelocity   = 0f;
+            _prevPointerY   = ptr.position.y;
+            _prevPointerTime = Time.unscaledTime;
         });
         trigger.triggers.Add(beginEntry);
 
+        // ── Drag ───────────────────────────────────────────────────
         var dragEntry = new EventTrigger.Entry { eventID = EventTriggerType.Drag };
         dragEntry.callback.AddListener(e =>
         {
-            if (!_scrollMode) return;
-            float delta = ((PointerEventData)e).position.y - _dragStartY;
-            float newY  = _contentStartY + delta;
+            var ptr  = (PointerEventData)e;
+            float y  = ptr.position.y;
+            float dt = Time.unscaledTime - _prevPointerTime;
+
+            if (dt > 0.001f)
+            {
+                float frameVel = (y - _prevPointerY) / dt;
+                _dragVelocity  = Mathf.Lerp(_dragVelocity, frameVel, 0.35f);
+            }
+            _prevPointerY    = y;
+            _prevPointerTime = Time.unscaledTime;
+
+            float rawY  = _contentStartY + (y - _dragStartY);
+            // 양 끝 클램프 + rubber-band (슬롯 30% 여유)
+            float rubber = SlotH() * 0.3f;
+            float minY   = SnapY(stages.Length - 1) - rubber;
+            float maxY   = SnapY(0)                 + rubber;
+            float newY   = Mathf.Clamp(rawY, minY, maxY);
             content.anchoredPosition = new Vector2(content.anchoredPosition.x, newY);
-            ApplyCardScales(SnapYToVirtualCenter(newY));
+
+            ApplyCardScales(SnapYToVirtualCenter(newY), suppressAnimation: true);
         });
         trigger.triggers.Add(dragEntry);
 
+        // ── EndDrag ────────────────────────────────────────────────
         var endEntry = new EventTrigger.Entry { eventID = EventTriggerType.EndDrag };
         endEntry.callback.AddListener(e =>
         {
-            if (!_scrollMode) return;
-            float delta     = ((PointerEventData)e).position.y - _dragStartY;
-            float threshold = SlotH() * swipeThreshold;
-            int   target    = currentIndex;
-            if      (delta < -threshold) target = currentIndex + 1;
-            else if (delta >  threshold) target = currentIndex - 1;
-            GoTo(Mathf.Clamp(target, 0, stages.Length - 1));
+            // 현재 콘텐츠 위치 기준 가장 가까운 카드 계산
+            int nearest = Mathf.Clamp(
+                Mathf.RoundToInt(SnapYToVirtualCenter(content.anchoredPosition.y)),
+                0, stages.Length - 1);
+
+            // 플릭이 충분히 빠르면 nearest 에서 한 칸 더 이동
+            int target;
+            if      (_dragVelocity < -flickThreshold) target = Mathf.Min(nearest + 1, stages.Length - 1);
+            else if (_dragVelocity >  flickThreshold) target = Mathf.Max(nearest - 1, 0);
+            else                                      target = nearest;
+
+            GoTo(target);
         });
         trigger.triggers.Add(endEntry);
     }
 
     IEnumerator InitAfterLayout()
     {
-        // 뷰포트 크기가 유효해질 때까지 대기 (최대 60프레임)
         float vpW = 0f, vpH = 0f;
         for (int i = 0; i < 60; i++)
         {
@@ -281,10 +297,10 @@ public class MainMenuPanel : MonoBehaviour
         }
 
         SnapImmediate(currentIndex);
+
         if (stages != null && stages.Length > 0)
             SoundManager.Shared?.PlayChapterHomeBGM(stages[currentIndex].chapterID);
 
-        // 올바른 위치에 snap된 뒤 content 표시
         if (_contentCG != null) _contentCG.alpha = 1f;
 
         if (!_attendanceShownThisSession)
@@ -295,8 +311,6 @@ public class MainMenuPanel : MonoBehaviour
     }
 
     // ── 카드 생성 ────────────────────────────────────────────────────
-    // 역순 빌드: stage[n-1] → stage[0]
-    // 결과: content 상단 = 높은 인덱스(다음 스테이지), 하단 = 낮은 인덱스(현재)
     void BuildCards()
     {
         if (content == null) return;
@@ -309,22 +323,16 @@ public class MainMenuPanel : MonoBehaviour
         for (int i = stages.Length - 1; i >= 0; i--)
         {
             StageCardView cv;
-
-            // Resources/Chapter/Card/{chapterID} 프리팹
-
-            string prefabPath = $"Chapter/Card/{stages[i].chapterID}";
+            string prefabPath         = $"Chapter/Card/{stages[i].chapterID}";
             StageCardView loadedPrefab = Resources.Load<StageCardView>(prefabPath);
-           
+
             if (loadedPrefab != null)
             {
                 cv = Instantiate(loadedPrefab, content);
                 if (cv == null) continue;
-                var le = cv.GetComponent<LayoutElement>()
-                      ?? cv.gameObject.AddComponent<LayoutElement>();
-                le.preferredHeight = cardHeight;
-                le.minHeight       = cardHeight;
-                le.preferredWidth  = cardWidth;
-                le.minWidth        = cardWidth;
+                var le            = cv.GetComponent<LayoutElement>() ?? cv.gameObject.AddComponent<LayoutElement>();
+                le.preferredHeight = cardHeight; le.minHeight = cardHeight;
+                le.preferredWidth  = cardWidth;  le.minWidth  = cardWidth;
                 cv.Bind(stages[i]);
             }
             else
@@ -332,26 +340,21 @@ public class MainMenuPanel : MonoBehaviour
                 cv = BuildAutoCard(i);
             }
 
-            // 초기 상태: 현재 스테이지만 중앙 카드로 설정
             cv.SetCenterCard(i == currentIndex);
 
-            // CanvasGroup 미리 추가 (ApplyCardScales에서 alpha 제어용)
             if (cv.GetComponent<CanvasGroup>() == null)
                 cv.gameObject.AddComponent<CanvasGroup>();
 
-            // 클릭 핸들러
             int stageIdx = i;
-            var btn = cv.GetComponent<Button>()
-                   ?? cv.gameObject.AddComponent<Button>();
+            var btn = cv.GetComponent<Button>() ?? cv.gameObject.AddComponent<Button>();
             btn.transition = Selectable.Transition.None;
             btn.onClick.RemoveAllListeners();
             btn.onClick.AddListener(() => OnCardClicked(stageIdx));
 
-            // Button 레이캐스트를 위한 배경 Image 보장
             if (cv.GetComponent<Image>() == null)
             {
                 var bg = cv.gameObject.AddComponent<Image>();
-                bg.color = new Color(0f, 0f, 0f, 0f); // 투명
+                bg.color = new Color(0f, 0f, 0f, 0f);
             }
 
             cardViews[i] = cv;
@@ -360,44 +363,37 @@ public class MainMenuPanel : MonoBehaviour
 
     StageCardView BuildAutoCard(int i)
     {
-        var card   = new GameObject($"Card_{i}");
+        var card         = new GameObject($"Card_{i}");
         card.transform.SetParent(content, false);
-
         var cardRT       = card.AddComponent<RectTransform>();
         cardRT.sizeDelta = new Vector2(cardWidth, cardHeight);
 
-        var le2            = card.AddComponent<LayoutElement>();
-        le2.preferredHeight = cardHeight;
-        le2.minHeight       = cardHeight;
-        le2.preferredWidth  = cardWidth;
-        le2.minWidth        = cardWidth;
+        var le2             = card.AddComponent<LayoutElement>();
+        le2.preferredHeight = cardHeight; le2.minHeight = cardHeight;
+        le2.preferredWidth  = cardWidth;  le2.minWidth  = cardWidth;
 
-        // 배경
-        var bg = card.AddComponent<Image>();
+        var bg   = card.AddComponent<Image>();
         bg.color = new Color(0.1f, 0.1f, 0.15f, 0.9f);
 
-        // 아이콘
-        var iconRT       = MakeRT("StageIcon", cardRT);
-        iconRT.anchorMin = new Vector2(0.1f, 0.15f);
-        iconRT.anchorMax = new Vector2(0.5f, 0.85f);
-        iconRT.offsetMin = iconRT.offsetMax = Vector2.zero;
+        var iconRT             = MakeRT("StageIcon", cardRT);
+        iconRT.anchorMin       = new Vector2(0.1f, 0.15f);
+        iconRT.anchorMax       = new Vector2(0.5f, 0.85f);
+        iconRT.offsetMin       = iconRT.offsetMax = Vector2.zero;
         var iconImg            = iconRT.gameObject.AddComponent<Image>();
         iconImg.preserveAspect = true;
         iconImg.enabled        = false;
 
-        // 스테이지 이름
         var nameRT       = MakeTMP("StageName", cardRT, stages[i].stageName, 36f);
         nameRT.anchorMin = new Vector2(0.5f, 0.55f);
         nameRT.anchorMax = new Vector2(1.0f, 1.0f);
         nameRT.offsetMin = new Vector2(8f, 0f);
         nameRT.offsetMax = new Vector2(-8f, 0f);
-        var nameTmp          = nameRT.GetComponent<TextMeshProUGUI>();
-        nameTmp.fontStyle    = FontStyles.Bold;
-        nameTmp.color        = Color.white;
-        nameTmp.alignment    = TextAlignmentOptions.Left;
+        var nameTmp      = nameRT.GetComponent<TextMeshProUGUI>();
+        nameTmp.fontStyle = FontStyles.Bold;
+        nameTmp.color     = Color.white;
+        nameTmp.alignment = TextAlignmentOptions.Left;
 
-        // 최고 웨이브
-        string waveStr  = stages[i].bestWave > 0 ? $"최고 웨이브: {stages[i].bestWave}" : "최고 웨이브: -";
+        string waveStr   = stages[i].bestWave > 0 ? $"최고 웨이브: {stages[i].bestWave}" : "최고 웨이브: -";
         var waveRT       = MakeTMP("BestWave", cardRT, waveStr, 28f);
         waveRT.anchorMin = new Vector2(0.5f, 0.05f);
         waveRT.anchorMax = new Vector2(1.0f, 0.50f);
@@ -413,37 +409,95 @@ public class MainMenuPanel : MonoBehaviour
         return cv;
     }
 
-    // ── 카드 클릭 / 스크롤 모드 ─────────────────────────────────────
-    void OnCardClicked(int index)
-    {
-        GoTo(index);
-    }
-
-    void SetScrollMode(bool on)
-    {
-        _scrollMode = on;
-    }
-
-    void RefreshCardVisibility()
-    {
-        if (cardViews == null) return;
-        foreach (var cv in cardViews)
-            if (cv != null) cv.gameObject.SetActive(true);
-    }
+    // ── 카드 클릭 ────────────────────────────────────────────────────
+    void OnCardClicked(int index) => GoTo(index);
 
     // ── 네비게이션 ───────────────────────────────────────────────────
     public void GoTo(int index, bool animate = true)
     {
         currentIndex = Mathf.Clamp(index, 0, Mathf.Max(0, stages.Length - 1));
         SoundManager.Shared?.PlayChapterHomeBGM(stages[currentIndex].chapterID);
+
+        if (_snapCoroutine != null) { StopCoroutine(_snapCoroutine); isSnapping = false; }
+
         if (animate)
-        {
-            if (_snapCoroutine != null) { StopCoroutine(_snapCoroutine); isSnapping = false; }
             _snapCoroutine = StartCoroutine(SnapCoroutine(currentIndex));
-        }
-        else SnapImmediate(currentIndex);
+        else
+            SnapImmediate(currentIndex);
     }
 
+    // ── 스케일/알파 ──────────────────────────────────────────────────
+    /// <param name="suppressAnimation">true 이면 SetCenterCard 호출 생략 (드래그 중)</param>
+    void ApplyCardScales(float virtualCenter, bool suppressAnimation = false)
+    {
+        if (cardViews == null) return;
+        for (int i = 0; i < cardViews.Length; i++)
+        {
+            if (cardViews[i] == null) continue;
+            float dist = Mathf.Abs(i - virtualCenter);
+            float s    = Mathf.Lerp(1f, sideScale, Mathf.Clamp01(dist));
+            cardViews[i].transform.localScale = Vector3.one * s;
+
+            if (!suppressAnimation)
+                cardViews[i].SetCenterCard(dist < 0.5f);
+
+            var cg = cardViews[i].GetComponent<CanvasGroup>();
+            if (cg == null) continue;
+
+            if (!suppressAnimation && i < currentIndex)
+            {
+                // 스냅 완료 상태에서만 이전 카드 숨김
+                cg.alpha = 0f; cg.blocksRaycasts = false;
+            }
+            else if (dist < 0.5f)
+            {
+                cg.alpha = 1f; cg.blocksRaycasts = true;
+            }
+            else
+            {
+                cg.alpha = Mathf.Lerp(nextCardAlpha, 0f, Mathf.Clamp01(dist - 0.5f));
+                cg.blocksRaycasts = true;
+            }
+        }
+    }
+
+    void SnapImmediate(int index)
+    {
+        if (scrollRect == null || content == null) return;
+        content.anchoredPosition = new Vector2(content.anchoredPosition.x, SnapY(index));
+        ApplyCardScales(index, suppressAnimation: false);
+        foreach (var cv in cardViews)
+            if (cv != null) cv.gameObject.SetActive(true);
+    }
+
+    // ── 스냅 코루틴 (ease-out) ───────────────────────────────────────
+    IEnumerator SnapCoroutine(int index)
+    {
+        isSnapping = true;
+        float targetY = SnapY(index);
+        float startY  = content.anchoredPosition.y;
+        float elapsed = 0f;
+
+        while (elapsed < snapDuration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float t      = Mathf.Clamp01(elapsed / snapDuration);
+            float tEased = 1f - Mathf.Pow(1f - t, 2f);
+            float newY   = Mathf.Lerp(startY, targetY, tEased);
+            content.anchoredPosition = new Vector2(content.anchoredPosition.x, newY);
+            ApplyCardScales(SnapYToVirtualCenter(newY), suppressAnimation: true);
+            yield return null;
+        }
+
+        content.anchoredPosition = new Vector2(content.anchoredPosition.x, targetY);
+        ApplyCardScales(index, suppressAnimation: false);
+
+        isSnapping     = false;
+        _snapCoroutine = null;
+        cardViews?[currentIndex]?.PlayPunch();
+    }
+
+    // ── 수학 헬퍼 ───────────────────────────────────────────────────
     float CardH()
     {
         if (cachedCardH > 0f) return cachedCardH;
@@ -461,10 +515,6 @@ public class MainMenuPanel : MonoBehaviour
 
     float SlotH() => CardH() + cardSpacing;
 
-    // stage[index]를 뷰포트 중앙에 놓는 content.anchoredPosition.y
-    // top-anchored content, 역순 빌드: stage[i]는 content 상단에서 (n-1-i)번째 슬롯
-    // cardCenterY_in_content = -(n-1-i)*slotH - h/2  (음수, 위에서 아래)
-    // anchoredPosition.y = -vpH/2 - cardCenterY = -vpH/2 + (n-1-i)*slotH + h/2
     float SnapY(int index)
     {
         if (stages == null || scrollRect == null) return 0f;
@@ -481,82 +531,9 @@ public class MainMenuPanel : MonoBehaviour
         float slotH = h + cardSpacing;
         int   n     = stages.Length;
         float vpH   = scrollRect != null ? scrollRect.viewport.rect.height : h;
-        // inverse: (n-1-index)*slotH = anchoredY + vpH/2 - h/2
         float slotRank = (anchoredY + vpH * 0.5f - h * 0.5f) / Mathf.Max(1f, slotH);
         return n - 1 - slotRank;
     }
-
-    void ApplyCardScales(float virtualCenter)
-    {
-        if (cardViews == null) return;
-        for (int i = 0; i < cardViews.Length; i++)
-        {
-            if (cardViews[i] == null) continue;
-            float dist = Mathf.Abs(i - virtualCenter);
-            float s    = Mathf.Lerp(centerScale, sideScale, Mathf.Clamp01(dist));
-            cardViews[i].transform.localScale = Vector3.one * s;
-            cardViews[i].SetCenterCard(dist < 0.5f);
-
-            var cg = cardViews[i].GetComponent<CanvasGroup>();
-            if (cg != null)
-            {
-                // 이전 카드는 애니메이션 중에도 항상 숨김
-                if (i < currentIndex)
-                {
-                    cg.alpha = 0f;
-                    cg.blocksRaycasts = false;
-                }
-                else if (dist < 0.5f)
-                {
-                    cg.alpha = 1f;
-                    cg.blocksRaycasts = true;
-                }
-                else
-                {
-                    cg.alpha = Mathf.Lerp(nextCardAlpha, 0f, Mathf.Clamp01(dist - 0.5f));
-                    cg.blocksRaycasts = true;
-                }
-            }
-        }
-    }
-
-    void SnapImmediate(int index)
-    {
-        if (scrollRect == null || content == null) return;
-        content.anchoredPosition = new Vector2(content.anchoredPosition.x, SnapY(index));
-        ApplyCardScales(index);
-        RefreshCardVisibility();
-    }
-
-    IEnumerator SnapCoroutine(int index)
-    {
-        if (scrollRect == null || content == null) yield break;
-        isSnapping = true;
-
-        float targetY = SnapY(index);
-        float startY  = content.anchoredPosition.y;
-        float elapsed = 0f;
-
-        // 현재 위치에서 타겟까지 ease-out으로 스크롤 (카드가 자연스럽게 넘어가는 느낌)
-        while (elapsed < snapDuration)
-        {
-            elapsed += Time.unscaledDeltaTime;
-            float t      = Mathf.Clamp01(elapsed / snapDuration);
-            float tEased = 1f - Mathf.Pow(1f - t, snapEasePower);
-            float newY   = Mathf.Lerp(startY, targetY, tEased);
-            content.anchoredPosition = new Vector2(content.anchoredPosition.x, newY);
-            ApplyCardScales(SnapYToVirtualCenter(newY));
-            yield return null;
-        }
-        content.anchoredPosition = new Vector2(content.anchoredPosition.x, targetY);
-        ApplyCardScales(index);
-        isSnapping = false;
-        _snapCoroutine = null;
-
-        // 중앙 도착 시 펀치
-        cardViews?[currentIndex]?.PlayPunch();
-    }
-
 
     // ── 시작 ────────────────────────────────────────────────────────
     public void OnStartClicked()
@@ -568,6 +545,21 @@ public class MainMenuPanel : MonoBehaviour
         PlayerPrefs.Save();
         SceneLoadManager.LoadScene("stage@scene");
     }
+
+    // ── 챕터 레이블 ─────────────────────────────────────────────────
+    static string BuildChapterLabel(int chapterNum) => chapterNum switch
+    {
+        1 => "원시의 마을",
+        2 => "정착의 마을",
+        3 => "청동의 마을",
+        4 => "전쟁의 마을",
+        5 => "성벽의 마을",
+        6 => "산업의 마을",
+        7 => "도시의 마을",
+        8 => "궤도의 마을",
+        9 => "우주의 마을",
+        _ => $"{chapterNum}챕터"
+    };
 
     // ── 헬퍼 ────────────────────────────────────────────────────────
     static RectTransform MakeRT(string name, RectTransform parent)

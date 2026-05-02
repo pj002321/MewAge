@@ -21,6 +21,10 @@ public class UpgradePanel : MonoBehaviour
     [SerializeField] private Button          buyExpButton;
     [SerializeField] private Button          nextWaveButton;
     [SerializeField] private Button          infoButton;
+    [SerializeField] private Button          eraWeaponInfoButton;
+
+    [Header("시대별 무기 정보 팝업")]
+    [SerializeField] private EraWeaponInfoPopup eraWeaponInfoPopup;
 
     [Header("정보 텍스트")]
     [SerializeField] private TextMeshProUGUI playerGoldText;
@@ -95,6 +99,8 @@ public class UpgradePanel : MonoBehaviour
         rerollButton? .onClick.AddListener(OnRerollClicked);
         nextWaveButton?.onClick.AddListener(OnNextWaveClicked);
         infoButton?   .onClick.AddListener(OnInfoClicked);
+        eraWeaponInfoButton?.onClick.AddListener(() =>
+            eraWeaponInfoPopup?.Open(UpgradeManager.Shared?.CurrentChapter ?? 1));
 
         // EXP 구매 버튼: 롱프레스 지원 (EventTrigger로 PointerDown/Up 처리)
         if (buyExpButton != null)

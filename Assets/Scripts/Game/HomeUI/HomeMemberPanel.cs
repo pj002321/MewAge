@@ -25,13 +25,6 @@ public class HomeMemberPanel : MonoBehaviour
     public TextMeshProUGUI abilityNameText;  // f_고유능력  (예: "숙련")
     public TextMeshProUGUI abilityDescText;  // f_능력설명  (예: "많은 적을 처치 시...")
 
-    [Header("탭 버튼 (캐릭터 · 룬)")]
-    public Button tabCharacter;
-    public Button tabRune;
-
-    [Header("탭 활성 배경 컬러 (텍스트 색상은 변경하지 않음)")]
-    public Color tabActiveColor   = new Color(1f,  0.80f, 0.20f, 1f);
-    public Color tabInactiveColor = new Color(0.15f, 0.20f, 0.35f, 1f);
 
     [Header("스크롤 Content")]
     public Transform characterContent;
@@ -44,10 +37,6 @@ public class HomeMemberPanel : MonoBehaviour
 
     void Start()
     {
-        tabCharacter?.onClick.AddListener(() => ShowTab(0));
-        tabRune     ?.onClick.AddListener(() => ShowTab(1));
-        ShowTab(0);
-
         PlayerCharacterManager.Shared?.EnsureDefaultCharacter();
         LoadCharacters();
 
@@ -91,20 +80,6 @@ public class HomeMemberPanel : MonoBehaviour
                 SelectSlot(slot);
         });
     }
-
-    public void ShowTab(int index)
-    {
-        SetTabBg(tabCharacter, index == 0);
-        SetTabBg(tabRune,      index == 1);
-    }
-
-    void SetTabBg(Button btn, bool active)
-    {
-        if (btn == null) return;
-        var img = btn.GetComponent<Image>();
-        if (img) img.color = active ? tabActiveColor : tabInactiveColor;
-    }
-
     /// <summary>CharacterSlotView 에서 호출 — 선택 슬롯 교체.</summary>
     public void SelectSlot(CharacterSlotView slot)
     {

@@ -55,6 +55,9 @@ public class GachaResultPopup : MonoBehaviour
     int          _currentGemCost;
     GachaBoxType _currentBoxType;
 
+    // 연출 진행 중 플래그 — true 이면 버튼/닫기 차단
+    bool _isRevealing;
+
     // ── 초기화 ─────────────────────────────────────────────────────────
 
     void Awake()
@@ -66,6 +69,7 @@ public class GachaResultPopup : MonoBehaviour
 
     void OnDrawButtonClicked()
     {
+        if (_isRevealing) return;
         OpenForDraw(_currentGemCost, _currentBoxType);
     }
 
@@ -89,6 +93,7 @@ public class GachaResultPopup : MonoBehaviour
 
         gameObject.SetActive(true);
         ApplyGachaVisual(boxType);
+        SetInteractable(false);   // 즉시 차단 — 코루틴 시작 전 연타 방지
 
         // 외부에서 ShowResult / ShowMultiResult 로 결과를 주입받은 뒤
         // 코루틴이 애니메이션 종료 후 표시합니다.
@@ -111,6 +116,7 @@ public class GachaResultPopup : MonoBehaviour
 
     public void Close()
     {
+        if (_isRevealing) return;
         StopAllCoroutines();
         OnDrawRequested = null;
         gameObject.SetActive(false);
@@ -149,13 +155,24 @@ public class GachaResultPopup : MonoBehaviour
             yield return null;
         }
 
-        // 아이템 팝인 표시
+        // 아이템 팝인 표시 (진행 중 버튼·닫기 차단)
+        SetInteractable(false);
+
         if (_pendingResult != null)
             yield return StartCoroutine(RevealSingle(_pendingResult));
         else if (_pendingMultiResult != null)
             yield return StartCoroutine(RevealMulti(_pendingMultiResult));
         else
             this.DLog("[GachaResultPopup] 표시할 결과 없음 (null)");
+
+        SetInteractable(true);
+    }
+
+    void SetInteractable(bool value)
+    {
+        _isRevealing = !value;
+        if (drawButton)    drawButton.interactable    = value;
+        if (closeHitArea)  closeHitArea.interactable  = value;
     }
 
     // ── 아이템 표시 ───────────────────────────────────────────────────

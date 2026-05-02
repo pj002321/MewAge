@@ -744,9 +744,7 @@ public class HomeUIBuilder
         // ── 5. HomeEquipPanel 연결 ─────────────────────────────────────
         var equipPanel              = panelJangbi.AddComponent<HomeEquipPanel>();
         equipPanel.equipSlots       = equipSlots;
-        equipPanel.tabAll           = tabAllBtn;
-        equipPanel.tabByGrade       = tabGradeBtn;
-        equipPanel.tabByCiv         = tabCivBtn;
+
         equipPanel.inventoryContent = inventoryContent;
         equipPanel.detailPopup      = detailPopup;
         // slotPrefab 은 프리팹 참조이므로 Inspector에서 직접 연결 필요
@@ -1111,8 +1109,6 @@ public class HomeUIBuilder
         var memberPanel                 = panelDaewon.AddComponent<HomeMemberPanel>();
         memberPanel.characterPortrait = portraitImg;
         memberPanel.characterNameText = charNameTmp;
-        memberPanel.tabCharacter      = tabCharBtn;
-        memberPanel.tabRune           = tabRuneBtn;
         memberPanel.characterContent  = charContent;
 
         panelDaewon.SetActive(false);
@@ -1152,9 +1148,6 @@ public class HomeUIBuilder
             // Tab_장비 제거
             var tabEquip = tabBar.Find("Tab_장비");
             if (tabEquip != null) Object.DestroyImmediate(tabEquip.gameObject);
-
-            mp.tabCharacter = tabBar.Find("Tab_캐릭터")?.GetComponent<Button>();
-            mp.tabRune      = tabBar.Find("Tab_룬")?.GetComponent<Button>();
         }
 
         // ── 2. 캐릭터 Content 스크롤 찾기 ───────────────────────────

@@ -3,7 +3,7 @@ using System.Linq;
 using UnityEngine;
 using Mewage.DB;
 
-public enum EquipSortMode { None, ByGrade, ByCivilization }
+public enum EquipSortMode { None, ByGrade, ByCivilization, ByCategory }
 
 /// <summary>
 /// 장비 아이템 인벤토리 싱글톤.
@@ -123,6 +123,9 @@ public class EquipmentInventory : MonoBehaviourSingleton<EquipmentInventory>
                 break;
             case EquipSortMode.ByCivilization:
                 sorted.Sort((a, b) => a.civilization.CompareTo(b.civilization));
+                break;
+            case EquipSortMode.ByCategory:
+                sorted.Sort((a, b) => a.category.CompareTo(b.category));
                 break;
         }
         return sorted;
