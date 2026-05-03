@@ -26,6 +26,11 @@ public class Projectile : MonoBehaviour
     private float   baseDamage;
     private float   knockbackPower;
 
+
+    // 가속 전용
+    private float _curSpeed;
+    private float _accel;
+
     // 포물선 전용
     private bool    _isParabolic;
     private Vector3 _paraStart;
@@ -52,7 +57,7 @@ public class Projectile : MonoBehaviour
     private void OnEnable()  => All.Add(this);
     private void OnDisable() => All.Remove(this);
 
-    public void Init(float primaryDmg, Vector2 direction, float speed = 6f, float lifetime = 5f, bool isPrimaryCritical = false, float lifeSteal = 0f, float dotDamage = 0f, float areaHitRadius = 0f, float areaHitDamageRatio = 0f, float criticalRate = 0f, float criticalMultiplier = 2f, float baseDamage = 0f, float knockbackPower = 16f)
+    public void Init(float primaryDmg, Vector2 direction, float speed = 6f, float lifetime = 5f, bool isPrimaryCritical = false, float lifeSteal = 0f, float dotDamage = 0f, float areaHitRadius = 0f, float areaHitDamageRatio = 0f, float criticalRate = 0f, float criticalMultiplier = 2f, float baseDamage = 0f, float knockbackPower = 16f, float acceleration = 0f, float initialSpeedRatio = 0.25f)
     {
         this.primaryDmg         = primaryDmg;
         this.direction          = direction.normalized;
@@ -66,6 +71,8 @@ public class Projectile : MonoBehaviour
         this.criticalMultiplier = criticalMultiplier;
         this.baseDamage         = baseDamage;
         this.knockbackPower     = knockbackPower;
+        _accel    = acceleration;
+        _curSpeed = acceleration > 0f ? speed * initialSpeedRatio : speed;
         Destroy(gameObject, lifetime);
 
         float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg - ForwardAngle;
@@ -143,7 +150,9 @@ public class Projectile : MonoBehaviour
             return;
         }
 
-        transform.Translate(direction * speed * Time.deltaTime, Space.World);
+        if (_accel > 0f)
+            _curSpeed = Mathf.MoveTowards(_curSpeed, speed, _accel * Time.deltaTime);
+        transform.Translate(direction * _curSpeed * Time.deltaTime, Space.World);
     }
 
     /// <summary>보스가 발사한 투사체임을 표시합니다. 보스 자해를 방지합니다.</summary>

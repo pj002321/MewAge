@@ -669,7 +669,8 @@ public class WeaponPoint : MonoBehaviour
             proj.Init(finalDmg, aimDir, projectileSpeed, isPrimaryCritical: isCrit,
                 lifeSteal: lifeSteal, dotDamage: dotDamage, areaHitRadius: areaHitRadius,
                 areaHitDamageRatio: areaHitDamageRatio, criticalRate: criticalRate,
-                criticalMultiplier: criticalMultiplier, baseDamage: attackDamage, knockbackPower: knockbackPower);
+                criticalMultiplier: criticalMultiplier, baseDamage: attackDamage, knockbackPower: knockbackPower,
+                acceleration: projectileSpeed * 3f);
         }
         TriggerAttackAnimation();
         TriggerRecoil(aimDir);
@@ -705,7 +706,8 @@ public class WeaponPoint : MonoBehaviour
             proj.Init(finalDmg, aimDir, projectileSpeed, isPrimaryCritical: isCrit,
                 lifeSteal: lifeSteal, dotDamage: dotDamage, areaHitRadius: areaHitRadius,
                 areaHitDamageRatio: areaHitDamageRatio, criticalRate: criticalRate,
-                criticalMultiplier: criticalMultiplier, baseDamage: attackDamage, knockbackPower: knockbackPower);
+                criticalMultiplier: criticalMultiplier, baseDamage: attackDamage, knockbackPower: knockbackPower,
+                acceleration: projectileSpeed * 3f);
         }
         TriggerAttackAnimation();
         TriggerRecoil(aimDir);
@@ -1864,9 +1866,6 @@ public class WeaponPoint : MonoBehaviour
             attackDamage += weaponType == WeaponType.Slash      ? player.MeleeAttackBonus  : 0f;
             attackDamage += weaponType == WeaponType.Charge    ? player.MeleeAttackBonus  : 0f;
             attackDamage += weaponType == WeaponType.Hammer    ? player.MeleeAttackBonus  : 0f;
-
-            if (player.SynergyAtkPct > 0f)
-                attackDamage *= (1f + player.SynergyAtkPct / 100f);
 
             var relic = RelicManager.Shared;
             if (relic != null)

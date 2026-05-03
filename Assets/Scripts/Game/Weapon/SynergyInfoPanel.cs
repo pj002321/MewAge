@@ -1,72 +1,96 @@
+using System.Collections;
+using System.Collections.Generic;
+using Mewage.DB;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// 챕터 시너지 4개를 한 번에 보여주는 패널.
-/// Inspector 연결:
-///   panelRoot   — 패널 루트 GameObject
-///   slots[0~3]  — WeaponSynergySlot 컴포넌트 4개
-///   closeButton — 닫기 버튼 (선택)
+/// 시너지 정보 팝업 — DB_시너지에서 f_출현시작챕터 ≤ 현재 챕터인 시너지를 모두 스크롤로 표시합니다.
+///
+/// Open(chapter) 호출 시 해당 챕터까지 등장하는 시너지를 등급 순으로 나열합니다.
+/// DB_시너지 필요 필드: f_시너지ID, f_이름, f_조건설명, f_등급, f_효과, f_출현시작챕터
 /// </summary>
 public class SynergyInfoPanel : MonoBehaviourSingleton<SynergyInfoPanel>
 {
-    [Header("패널 루트")]
-    [SerializeField] private GameObject panelRoot;
+    [Header("타이틀")]
+    public TextMeshProUGUI titleText;
 
-    [Header("시너지 슬롯 (4개)")]
-    [SerializeField] private WeaponSynergySlot[] slots = new WeaponSynergySlot[4];
+    [Header("스크롤 콘텐츠")]
+    public ScrollRect    scrollRect;
+    public RectTransform content;
+    public SynergySlot   slotPrefab;
 
-    [Header("닫기")]
-    [SerializeField] private Button closeButton;
+    [Header("닫기 버튼")]
+    public Button closeButton;
 
     protected override bool DontDestroy => false;
 
-    private int _currentChapter = -1;
-
+    // ── 초기화 ────────────────────────────────────────────────────────
     protected override void Awake()
     {
         base.Awake();
         closeButton?.onClick.AddListener(Hide);
-        if (panelRoot) panelRoot.SetActive(false);
+        gameObject.SetActive(false);
     }
 
-    /// <summary>해당 챕터의 시너지 4개를 모두 표시합니다.</summary>
+    // ── 공개 API ──────────────────────────────────────────────────────
+
+    /// <summary>챕터 번호로 해당 챕터까지 등장하는 시너지 팝업을 엽니다.</summary>
     public void Show(int chapter)
     {
-        _currentChapter = chapter;
+        ClearSlots();
 
-        var synergies = SynergyHelper.GetChapterSynergies(chapter);
+        if (titleText != null)
+            titleText.text = "시너지 목록";
 
-        for (int i = 0; i < slots.Length; i++)
+        var rows = LoadSynergies(chapter);
+
+        foreach (var row in rows)
         {
-            var slot = slots[i];
-            if (slot == null) continue;
-
-            if (i < synergies.Count)
-            {
-                var entry = synergies[i];
-                int count = SynergyHelper.CountEquippedTag(entry.Tag);
-                slot.gameObject.SetActive(true);
-                slot.Bind(entry, count);
-            }
-            else
-            {
-                slot.gameObject.SetActive(false);
-            }
+            var slot = Instantiate(slotPrefab, content);
+            slot.Bind(row);
         }
 
-        if (panelRoot) panelRoot.SetActive(true);
+        gameObject.SetActive(true);
+        StartCoroutine(ScrollToTop());
     }
 
-    /// <summary>열려 있을 때 장착 수 변경을 반영합니다.</summary>
-    public void Refresh()
-    {
-        if (panelRoot != null && panelRoot.activeSelf && _currentChapter >= 0)
-            Show(_currentChapter);
-    }
+    /// <summary>패널이 열린 상태일 때 갱신이 필요한 경우 호출 (현재는 정적 표시이므로 no-op)</summary>
+    public void Refresh() { }
 
     public void Hide()
     {
-        if (panelRoot) panelRoot.SetActive(false);
+        gameObject.SetActive(false);
+    }
+
+    // ── 내부 ──────────────────────────────────────────────────────────
+
+    List<DB_시너지> LoadSynergies(int chapter)
+    {
+        var result = new List<DB_시너지>();
+        DB_시너지.ForEachEntity(row =>
+        {
+            if (row == null || string.IsNullOrEmpty(row.f_시너지ID)) return;
+            if (row.f_출현시작챕터 <= chapter)
+                result.Add(row);
+        });
+        // 등급 오름차순 정렬 (S > A > B 순으로 위에 표시)
+        result.Sort((a, b) => string.Compare(b.f_등급, a.f_등급, System.StringComparison.Ordinal));
+        return result;
+    }
+
+    void ClearSlots()
+    {
+        if (content == null) return;
+        for (int i = content.childCount - 1; i >= 0; i--)
+            Destroy(content.GetChild(i).gameObject);
+    }
+
+    IEnumerator ScrollToTop()
+    {
+        yield return null; // 레이아웃 갱신 대기
+        Canvas.ForceUpdateCanvases();
+        if (scrollRect != null) scrollRect.verticalNormalizedPosition = 1f;
     }
 }

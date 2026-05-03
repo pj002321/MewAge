@@ -12,7 +12,6 @@ public class UpgradeCard : MonoBehaviour
 {
     [SerializeField] private Image            frameImg;
     [SerializeField] private Image            weaponIcon;
-    [SerializeField] private Image            synergyIconImg;
     [SerializeField] private Image            weaponTypeImg;
     [SerializeField] private TextMeshProUGUI  weaponNameText;
     [SerializeField] private TextMeshProUGUI  priceText;
@@ -57,7 +56,7 @@ public class UpgradeCard : MonoBehaviour
             weaponIcon.enabled = weaponData.icon != null;
             weaponIcon.color   = Color.white;
         }
-        ApplyWeaponOverlays(weaponData, SynergyHelper.ColorBronze);
+        ApplyWeaponOverlays(weaponData);
         if (weaponNameText) weaponNameText.text = weaponData.weaponName;
         if (priceText)      priceText.text      = $"{weaponData.price}";
         SetStarObject(starObjects, weaponData.star);
@@ -128,17 +127,9 @@ public class UpgradeCard : MonoBehaviour
             if (objs[i] != null) objs[i].SetActive(i == star - 1 && star > 0);
     }
 
-    private void ApplyWeaponOverlays(WeaponData data, Color synergyColor)
+    private void ApplyWeaponOverlays(WeaponData data)
     {
         var cfg = WeaponVisualConfig.Shared;
-
-        if (synergyIconImg)
-        {
-            var sprite = cfg?.GetSynergySprite(data.tag1);
-            synergyIconImg.sprite  = sprite;
-            synergyIconImg.enabled = sprite != null;
-            if (sprite != null) synergyIconImg.color = synergyColor;
-        }
 
         if (weaponTypeImg)
         {

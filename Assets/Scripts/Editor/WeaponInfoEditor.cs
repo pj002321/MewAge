@@ -60,9 +60,9 @@ public class WeaponInfoEditor : Editor
     {
         p_weaponType             = serializedObject.FindProperty("weaponType");
         p_magicElement           = serializedObject.FindProperty("magicElement");
-        p_projectilePrefab       = serializedObject.FindProperty("projectilePrefab");
-        p_projectileSpeed        = serializedObject.FindProperty("projectileSpeed");
-        p_useParabolicShot       = serializedObject.FindProperty("useParabolicShot");
+        p_projectilePrefab              = serializedObject.FindProperty("projectilePrefab");
+        p_projectileSpeed               = serializedObject.FindProperty("projectileSpeed");
+        p_useParabolicShot              = serializedObject.FindProperty("useParabolicShot");
         p_parabolicArcHeight     = serializedObject.FindProperty("parabolicArcHeight");
         p_parabolicSpawnLocalPos = serializedObject.FindProperty("parabolicSpawnLocalPos");
         p_areaHitDamageRatio     = serializedObject.FindProperty("areaHitDamageRatio");

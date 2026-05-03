@@ -313,8 +313,8 @@ public class DropItem : MonoBehaviour
     public void Collect()
     {
         var stats = PlayerStats.Shared;
-        if (itemType == ItemType.Gold) stats?.AddGold(value + (stats?.GoldBonus ?? 0));
-        else                           stats?.AddExp (value + (stats?.ExpBonus  ?? 0));
+        if (itemType == ItemType.Gold) stats?.AddGold(value);
+        else                           stats?.AddExp (value);
 
         var player = PlayerController.Instance;
         Vector3 spawnPos = player != null

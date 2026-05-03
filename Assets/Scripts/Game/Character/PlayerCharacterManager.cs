@@ -286,10 +286,8 @@ public class PlayerCharacterManager : MonoBehaviourSingleton<PlayerCharacterMana
                 player.IncreaseDodge(pct / 100f);         // fraction
                 break;
             case "STAT_CUR_REWARD":
-                stats?.SetSynergyBonus(stats.GoldBonus + (int)pct, stats.ExpBonus);
-                break;
             case "STAT_CUR_EXP":
-                stats?.SetSynergyBonus(stats.GoldBonus, stats.ExpBonus + (int)pct);
+                // 시너지 골드/경험치 보너스 시스템 제거됨 — TODO: 새 시너지 효과 적용
                 break;
             // 아래 항목들은 WeaponPoint/WeaponData 직접 연동이 필요합니다 (TODO)
             case "STAT_CRI_RATE":   // 치명타 확률 → WeaponPoint

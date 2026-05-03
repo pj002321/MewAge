@@ -71,14 +71,14 @@ public class CurseRewardCard : MonoBehaviour
             iconImg.enabled = sprite != null;
         }
 
-        if (blessingText) 
+        if (blessingText)
         {
-            blessingText.text = ColorizeNumbers(FormatEffect(data.f_축복, data.f_축복수치, curse: false), false);
+            blessingText.text  = FormatEffect(data.f_축복, data.f_축복수치, curse: false);
             blessingText.color = Color.white;
         }
-        if (curseText)    
+        if (curseText)
         {
-            curseText.text    = ColorizeNumbers(FormatEffect(data.f_저주,  data.f_저주수치, curse: true), true);
+            curseText.text  = FormatEffect(data.f_저주, data.f_저주수치, curse: true);
             curseText.color = Color.white;
         }
 
@@ -90,8 +90,9 @@ public class CurseRewardCard : MonoBehaviour
     {
         if (value <= 0f || string.IsNullOrEmpty(augId)) return "-";
         string statName = PlayerStatManager.GetStatName(AugIdToStat(augId));
-        string label = curse ? "감소" : "증가";
-        return $"{statName}  {value:0.#}% {label}";
+        string arrowColor = curse ? "#FF5555" : "#55FF88";
+        string arrow      = curse ? "↓" : "↑";
+        return $"{statName}  <color={arrowColor}>{value:0.#}% {arrow}</color>";
     }
 
     public static StatType AugIdToStat(string id) => id switch

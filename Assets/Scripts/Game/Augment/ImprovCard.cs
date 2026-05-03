@@ -153,8 +153,9 @@ public class ImprovCard : MonoBehaviour
         string desc = data.f_설명;
         if (string.IsNullOrEmpty(desc)) return string.Empty;
 
-        // 수치 플레이스홀더 제거 (% 단위 포함)
+        // 수치 플레이스홀더 제거 (배수·% 단위 포함, 순서 중요)
         desc = desc.Replace("{0}%", "").Replace("{1}%", "");
+        desc = desc.Replace("{0}배", "").Replace("{1}배", "");
         desc = desc.Replace("{0}", "").Replace("{1}", "");
 
         // 연속 공백 정리
@@ -163,6 +164,11 @@ public class ImprovCard : MonoBehaviour
         // 증가 → 초록 ↑, 감소 → 빨강 ↓
         desc = desc.Replace("증가", "<color=#55FF88>↑</color>");
         desc = desc.Replace("감소", "<color=#FF5555>↓</color>");
+        // 몸집 커짐 → 빨강 ↑ (부정적 효과), 작아짐 → 초록 ↓ (유리한 경우도 있으므로 중립 색)
+        desc = desc.Replace("커지고", "<color=#FF5555>↑</color>");
+        desc = desc.Replace("커짐",   "<color=#FF5555>↑</color>");
+        desc = desc.Replace("작아지고", "<color=#55FF88>↑</color>");
+        desc = desc.Replace("작아짐",   "<color=#55FF88>↑</color>");
 
         return desc;
     }

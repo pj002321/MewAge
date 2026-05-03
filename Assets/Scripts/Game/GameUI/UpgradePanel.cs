@@ -58,9 +58,6 @@ public class UpgradePanel : MonoBehaviour
     [Header("인벤토리 슬롯 (10개)")]
     [SerializeField] private InvenSlot[] invenSlots;
 
-    [Header("시너지 슬롯 컨테이너 (챕터별 4개, 배너 프리팹 인스턴스 부모)")]
-    [SerializeField] private RectTransform[] synergySlotRoots = new RectTransform[4];
-
     [Header("등급 확률 텍스트 (일반/고급/희귀/전설/신화)")]
     [SerializeField] private TextMeshProUGUI normalProbText;
     [SerializeField] private TextMeshProUGUI rareProbText;
@@ -87,7 +84,6 @@ public class UpgradePanel : MonoBehaviour
     private int                selectedInvenIndex  = -1;
     private int                selectedEquipIndex  = -1;
     private bool               isFirstWave         = false;
-    private WeaponSynergyTag[] synergySlotTags     = new WeaponSynergyTag[4];
     private float              _lastDisplayedAtk   = -1f;
     private float              _atkBeforeMerge     = -1f; // 합성 직전 ATK 스냅샷
 
@@ -113,17 +109,6 @@ public class UpgradePanel : MonoBehaviour
             var up = new EventTrigger.Entry { eventID = EventTriggerType.PointerUp };
             up.callback.AddListener(_ => OnBuyExpPointerUp());
             trigger.triggers.Add(up);
-        }
-
-        synergySlotTags = new WeaponSynergyTag[synergySlotRoots.Length];
-        for (int i = 0; i < synergySlotRoots.Length; i++)
-        {
-            int idx = i;
-            var root = synergySlotRoots[idx];
-            if (root == null) continue;
-            var btn = root.GetComponent<Button>() ?? root.GetComponentInParent<Button>();
-            if (btn != null)
-                btn.onClick.AddListener(() => OnSynergySlotClicked(idx));
         }
 
         for (int i = 0; i < invenSlots.Length; i++)
@@ -228,42 +213,8 @@ public class UpgradePanel : MonoBehaviour
         if (mythicProbText)  { mythicProbText.text   = $"{pMythic:0.#}%";    mythicProbText.color  = WeaponGradeColors.Get(WeaponGrade.Mythic); }
 
         RefreshGold();
-        RefreshSynergySlots(wave);
         RefreshInventoryUI();
         RefreshExpUI();
-    }
-
-    private void RefreshSynergySlots(int wave)
-    {
-        int chapter   = UpgradeManager.Shared?.CurrentChapter ?? 1;
-        var synergies = SynergyHelper.GetChapterSynergies(chapter);
-        var cfg       = WeaponVisualConfig.Shared;
-
-        for (int i = 0; i < synergySlotRoots.Length; i++)
-        {
-            var root = synergySlotRoots[i];
-            if (root == null) continue;
-
-            var img = root.GetComponent<Image>() ?? root.GetComponentInChildren<Image>();
-
-            if (i < synergies.Count)
-            {
-                var entry  = synergies[i];
-                synergySlotTags[i] = entry.Tag;
-
-                var sprite = cfg?.GetSynergyBanner(entry.Tag);
-                if (img != null)
-                {
-                    img.sprite  = sprite;
-                    img.enabled = sprite != null;
-                }
-            }
-            else
-            {
-                synergySlotTags[i] = WeaponSynergyTag.None;
-                if (img != null) img.enabled = false;
-            }
-        }
     }
 
     public void RefreshGold()
@@ -300,8 +251,7 @@ public class UpgradePanel : MonoBehaviour
     private float CalcTotalAtk()
     {
         var pc = PlayerController.Instance;
-        float playerAtk  = pc?.Attack ?? PlayerStatManager.Shared?.GetFinal(StatType.ATK) ?? 0f;
-        float synergyPct = pc?.SynergyAtkPct ?? 0f;
+        float playerAtk = pc?.Attack ?? PlayerStatManager.Shared?.GetFinal(StatType.ATK) ?? 0f;
 
         var equipped = PlayerInventory.Shared?.Equipped;
         if (equipped == null || equipped.Count == 0) return playerAtk;
@@ -316,7 +266,6 @@ public class UpgradePanel : MonoBehaviour
                 bool isMelee = w.weaponType == WeaponType.Melee || w.weaponType == WeaponType.Spin;
                 dmg += isMelee ? pc.MeleeAttackBonus : pc.RangedAttackBonus;
             }
-            dmg *= 1f + synergyPct / 100f;
             total += dmg;
         }
         return total;
@@ -375,9 +324,7 @@ public class UpgradePanel : MonoBehaviour
         if (expGainText)
         {
             int buyExpAmount = UpgradeManager.Shared?.BuyExpAmount ?? 30;
-            float synergyPct = ps.SynergyExpPct;
-            int actualGain = (int)(buyExpAmount * (1f + synergyPct / 100f));
-            expGainText.text = $"경험치 +{actualGain}";
+            expGainText.text = $"경험치 +{buyExpAmount}";
         }
     }
 
@@ -401,59 +348,13 @@ public class UpgradePanel : MonoBehaviour
         bool hasEquipped = inv.Equipped.Count > 0;
         if (nextWaveButton) nextWaveButton.interactable = hasEquipped;
 
-        RefreshSynergyColors();
         RefreshGold();
         RefreshAtkUI();
-    }
-
-    private void RefreshSynergyColors()
-    {
-        for (int i = 0; i < synergySlotRoots.Length; i++)
-        {
-            var root = synergySlotRoots[i];
-            if (root == null) continue;
-
-            int  count      = SynergyHelper.CountEquippedTag(synergySlotTags[i]);
-            bool isAchieved = count >= 1;
-
-            var img = root.GetComponent<Image>() ?? root.GetComponentInChildren<Image>();
-            if (img != null && img.enabled)
-            {
-                var banner = WeaponVisualConfig.Shared?.GetSynergyBanner(synergySlotTags[i], isAchieved);
-                if (banner != null) img.sprite = banner;
-                img.color = isAchieved ? SynergyHelper.GetTierColor(count) : Color.white;
-            }
-
-            var animator = root.GetComponent<Animator>() ?? root.GetComponentInChildren<Animator>();
-            if (animator != null)
-            {
-                if (isAchieved)
-                {
-                    animator.enabled = true;
-                    var ctrl = animator.runtimeAnimatorController;
-                    animator.runtimeAnimatorController = null;
-                    animator.runtimeAnimatorController = ctrl;
-                }
-                else
-                {
-                    animator.enabled = false;
-                }
-            }
-        }
-
-        SynergyInfoPanel.Shared?.Refresh();
     }
 
     private void OnInfoClicked()
     {
         int chapter = UpgradeManager.Shared?.CurrentChapter ?? 1;
-        SynergyInfoPanel.Shared?.Show(chapter);
-    }
-
-    private void OnSynergySlotClicked(int index)
-    {
-        int chapter = UpgradeManager.Shared?.CurrentChapter ?? 1;
-        Debug.Log($"[Synergy] slot {index} clicked, chapter={chapter}, panel={SynergyInfoPanel.Shared}");
         SynergyInfoPanel.Shared?.Show(chapter);
     }
 
@@ -844,7 +745,6 @@ public class UpgradePanel : MonoBehaviour
         var iconDefs = new (Sprite sprite, Vector2 size)[]
         {
             (data?.icon,                                                     slotSize),
-            (data != null ? cfg?.GetSynergySprite(data.tag1)    : null,     slotSize * 0.45f),
             (data != null ? cfg?.GetTypeSprite(data.weaponType) : null,     slotSize * 0.45f),
         };
 

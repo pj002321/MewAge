@@ -16,7 +16,6 @@ public class EquipSlot : MonoBehaviour,
     [SerializeField] private Image synergyhilightImg;
     [SerializeField] private Image frameImg;
     [SerializeField] private Image iconImg;
-    [SerializeField] private Image synergyIconImg;
     [SerializeField] private Image weaponTypeImg;
     [SerializeField] private List<GameObject> starObjects; // 0=1성, 1=2성, 2=3성, 3=4성
 
@@ -121,9 +120,7 @@ public class EquipSlot : MonoBehaviour,
         if (iconImg)  iconImg.enabled = has;
         if (has && iconImg && data.icon) iconImg.sprite = data.icon;
 
-        int chapter = UpgradeManager.Shared?.CurrentChapter ?? 1;
         SetStarObject(starObjects, has ? data.star : 0);
-        WeaponInfoPanel.SetSynergyIcon(synergyIconImg, has ? data.tag1 : WeaponSynergyTag.None, chapter);
         if (has)
             WeaponInfoPanel.SetTypeIcon(weaponTypeImg, data.weaponType, data.grade);
         else if (weaponTypeImg)

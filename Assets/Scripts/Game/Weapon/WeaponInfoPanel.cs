@@ -26,7 +26,6 @@ public class WeaponInfoPanel : MonoBehaviourSingleton<WeaponInfoPanel>
     [SerializeField] private Image           weaponTypeImg;
     [SerializeField] private TextMeshProUGUI gradeText;   // 예: "레어"
     [SerializeField] private TextMeshProUGUI weaponTypeText;
-    [SerializeField] private TextMeshProUGUI synergyTagText;
     [SerializeField] private TextMeshProUGUI nameText;
 
     [Header("스탯 — 메인값")]
@@ -44,9 +43,6 @@ public class WeaponInfoPanel : MonoBehaviourSingleton<WeaponInfoPanel>
 
     [Header("스토리 설명")]
     [SerializeField] private TextMeshProUGUI storyText;
-
-    [Header("시너지 태그 아이콘")]
-    [SerializeField] private Image synergyIcon;
 
     [Header("닫기 버튼")]
     [SerializeField] private Button closeButton;
@@ -138,11 +134,6 @@ public class WeaponInfoPanel : MonoBehaviourSingleton<WeaponInfoPanel>
             };
         }
 
-        if (synergyTagText)
-        {
-            synergyTagText.text = SynergyHelper.GetDisplayName(data.tag1);
-        }
-
         // ── 스탯 메인값 ───────────────────────────────────────────
         // 공격력: 정수
         if (attackText) attackText.text = $"{Mathf.RoundToInt(data.attackDamage)}";
@@ -197,10 +188,6 @@ public class WeaponInfoPanel : MonoBehaviourSingleton<WeaponInfoPanel>
 
         // ── 스토리 설명 ───────────────────────────────────────────
         if (storyText) storyText.text = data.storyDescription ?? string.Empty;
-
-        // ── 시너지 태그 아이콘 ────────────────────────────────────
-        int chapter = UpgradeManager.Shared?.CurrentChapter ?? 1;
-        SetSynergyIcon(synergyIcon, data.tag1, chapter);
 
         if (panelRoot) panelRoot.SetActive(true);
     }
@@ -380,15 +367,6 @@ public class WeaponInfoPanel : MonoBehaviourSingleton<WeaponInfoPanel>
         if (objs == null) return;
         for (int i = 0; i < objs.Count; i++)
             if (objs[i] != null) objs[i].SetActive(i == star - 1 && star > 0);
-    }
-
-    public static void SetSynergyIcon(Image img, WeaponSynergyTag tag, int chapter)
-    {
-        if (img == null) return;
-        var sprite = WeaponVisualConfig.Shared?.GetSynergySprite(tag);
-        img.sprite  = sprite;
-        img.enabled = sprite != null && tag != WeaponSynergyTag.None;
-        if (img.enabled) img.color = SynergyHelper.ColorBronze;
     }
 
     public static void SetTypeIcon(Image img, WeaponType type, WeaponGrade grade)

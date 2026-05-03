@@ -106,12 +106,12 @@ public class ImprovPanel : MonoBehaviour
         float main = data.f_주수치;
         float sub  = data.f_보조수치;
 
-        // 특수 케이스 (체형 → sub 사용, 처치 회복 → HealOnKill)
+        // 특수 케이스
         switch (data.f_증강ID)
         {
-            case ImprovType.AUG_SIZE_HP_UP:   return (StatType.MaxHP,      sub);
+            case ImprovType.AUG_SIZE_HP_UP:   return (StatType.MaxHP,       sub);
             case ImprovType.AUG_SIZE_HP_DOWN: return (StatType.MaxHP,      -sub);
-            case ImprovType.AUG_HEAL_DEAD:    return (StatType.HealOnKill, main);
+            case ImprovType.AUG_HEAL_DEAD:    return (StatType.HealOnKill,  main);
         }
 
         // 일반 스탯 계열 — AugmentHelper 공용 매핑 사용

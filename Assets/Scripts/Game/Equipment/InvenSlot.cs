@@ -14,7 +14,6 @@ public class InvenSlot : MonoBehaviour,
 {
     [SerializeField] private Image            frameImg;
     [SerializeField] private Image            iconImg;
-    [SerializeField] private Image            synergyIconImg;
     [SerializeField] private Image            weaponTypeImg;
     [SerializeField] private List<GameObject> starObjects; // 0=1성, 1=2성, 2=3성, 3=4성
 
@@ -59,7 +58,7 @@ public class InvenSlot : MonoBehaviour,
             }
         }
         if (has && iconImg && data.icon) iconImg.sprite = data.icon;
-        ApplyWeaponOverlays(has ? data : null, SynergyHelper.ColorBronze);
+        ApplyWeaponOverlays(has ? data : null);
         SetStarObject(starObjects, has ? data.star : 0);
 
         float s = (has && selected) ? selectedScale : normalScale;
@@ -73,17 +72,9 @@ public class InvenSlot : MonoBehaviour,
             if (objs[i] != null) objs[i].SetActive(i == star - 1 && star > 0);
     }
 
-    private void ApplyWeaponOverlays(WeaponData data, Color synergyColor)
+    private void ApplyWeaponOverlays(WeaponData data)
     {
         var cfg = WeaponVisualConfig.Shared;
-
-        if (synergyIconImg)
-        {
-            var sprite = data != null ? cfg?.GetSynergySprite(data.tag1) : null;
-            synergyIconImg.sprite  = sprite;
-            synergyIconImg.enabled = sprite != null;
-            if (sprite != null) synergyIconImg.color = synergyColor;
-        }
 
         if (weaponTypeImg)
         {
