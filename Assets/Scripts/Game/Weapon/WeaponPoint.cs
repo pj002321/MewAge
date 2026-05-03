@@ -1886,7 +1886,13 @@ public class WeaponPoint : MonoBehaviour
             }
         }
 
-        GetComponentInChildren<SpriteOutline>()?.SetStar(data.star);
+        var outline = GetComponentInChildren<SpriteOutline>();
+        outline?.SetStar(data.star);
+        outline?.SetGrade(data.grade);
+
+        var weaponSr = GetComponentInChildren<SpriteRenderer>();
+        var aura = GetComponent<WeaponAura>() ?? gameObject.AddComponent<WeaponAura>();
+        aura.Apply(weaponSr, data.grade);
     }
 
     /// <summary>크리티컬 판정. isCritical=true이면 데미지에 multiplier를 곱한 값 반환.</summary>
