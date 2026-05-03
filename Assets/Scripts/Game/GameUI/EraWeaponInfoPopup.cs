@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -14,6 +15,7 @@ public class EraWeaponInfoPopup : MonoBehaviour
     public TextMeshProUGUI titleText;
 
     [Header("스크롤 콘텐츠")]
+    public ScrollRect      scrollRect;
     public RectTransform   content;
     public EraWeaponSlot   slotPrefab;
 
@@ -48,6 +50,14 @@ public class EraWeaponInfoPopup : MonoBehaviour
         }
 
         gameObject.SetActive(true);
+        StartCoroutine(ScrollToTop());
+    }
+
+    IEnumerator ScrollToTop()
+    {
+        yield return null; // 레이아웃 갱신 대기
+        Canvas.ForceUpdateCanvases();
+        if (scrollRect != null) scrollRect.verticalNormalizedPosition = 1f;
     }
 
     public void Close()
