@@ -17,11 +17,27 @@ public class UIButtonPressAnimation : MonoBehaviour,
     Vector3    _originScale;
     Coroutine  _co;
     bool       _isDown;
+    UnityEngine.UI.Button _button;
 
-    void Awake() => _originScale = transform.localScale;
-
-    public void OnPointerDown(PointerEventData _)
+    void Awake()
     {
+        _originScale = transform.localScale;
+        _button = GetComponent<UnityEngine.UI.Button>();
+    }
+
+    public void OnPointerDown(PointerEventData eventData)
+    {
+        // Button 컴포넌트가 없으면 Press 연출 없음
+        if (_button == null) return;
+
+        // 실제 클릭된 오브젝트가 우리 Button이 아닌 다른 Button 하위이면 버블업 이벤트 → 무시
+        var hitGO = eventData.pointerCurrentRaycast.gameObject;
+        if (hitGO != null)
+        {
+            var hitBtn = hitGO.GetComponentInParent<UnityEngine.UI.Button>();
+            if (hitBtn != _button) return;
+        }
+
         _isDown = true;
         Run(ScaleTo(_originScale * pressScale, pressDuration, ease: false));
     }

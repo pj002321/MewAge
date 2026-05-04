@@ -96,9 +96,6 @@ public class CurseRewardPanel : MonoBehaviour
 
     static void ApplyEffect(PlayerStatManager sm, string augId, float value, bool curse)
     {
-        if (value <= 0f || string.IsNullOrEmpty(augId)) return;
-        var   stat = CurseRewardCard.AugIdToStat(augId);
-        float sign = curse ? -1f : +1f;
-        sm.AddPctMod(stat, sign * value);
+        AugmentHelper.ApplyStatMod(sm, augId, value, positive: !curse);
     }
 }

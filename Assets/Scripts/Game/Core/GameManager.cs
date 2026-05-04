@@ -134,7 +134,9 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         var sm = PlayerStatManager.Shared;
         if (sm == null) return true;
 
-        StatType stat    = CurseRewardCard.AugIdToStat(entry.f_저주);
+        StatType? statNullable = AugmentHelper.ToStatType(entry.f_저주);
+        if (statNullable == null) return true;
+        StatType stat    = statNullable.Value;
         float    current = sm.GetFinal(stat);
 
         // 이미 수치가 0 이하면 더 줄여도 의미 없음 → 제외
@@ -461,8 +463,10 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         if (wave > currentBest)
         {
             PlayerPrefs.SetInt(prefKey, wave);
-            PlayerPrefs.Save();
         }
+        // 전투 1회 완료 기록 (홈 메뉴 잠금 해제용)
+        PlayerPrefs.SetInt("BattleCompleted", 1);
+        PlayerPrefs.Save();
 
         // 일시정지 중 사망 시 퍼즈 패널 강제 닫기
         if (gamePausePanel != null && gamePausePanel.gameObject.activeSelf)
@@ -707,8 +711,9 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         yield return StartCoroutine(LandingSquishRoutine(player.transform));
         FXManager.Shared?.SpawnLandingVFX(player.transform.position);
 
-        // 3,2,1 카운트다운
-        yield return StartCoroutine(CountdownRoutine());
+        _isCountingDown = false;
+        if (timerText) timerText.gameObject.SetActive(true);
+        if (countdownText) countdownText.gameObject.SetActive(false);
 
         player.InputLocked = false;
         StartNextWave();
@@ -991,6 +996,9 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     {
         EnemySpawner.Shared?.StopSpawning();
         EnemySpawner.Shared?.ClearAllEnemies();
+
+        PlayerPrefs.SetInt("BattleCompleted", 1);
+        PlayerPrefs.Save();
 
         if (clearResultPanel != null)
         {

@@ -557,7 +557,7 @@ public class EnemyController : MonoBehaviour
             OnDeath?.Invoke();
             CharacterSkillManager.Shared?.AddPoint(1);
             if (_eliteMarker != null)
-                ItemDropManager.Shared?.SpawnEliteDrops(transform.position, goldDrop, expDrop);
+                ItemDropManager.Shared?.SpawnBossDrops(transform.position, goldDrop, 1, expDrop, 1);
             else
                 ItemDropManager.Shared?.SpawnDrops(transform.position, goldDrop, expDrop);
             StartCoroutine(DieRoutine());

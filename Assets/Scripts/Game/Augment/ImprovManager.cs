@@ -163,7 +163,7 @@ public class ImprovManager : MonoBehaviourSingleton<ImprovManager>
 
             case ImprovType.AUG_SIZE_HP_DOWN:
                 player.DecreaseSizeHP(main, 0f);
-                if (RequireSm()) sm.SetBase(StatType.MaxHP, sm.GetBase(StatType.MaxHP) - sub);
+                if (RequireSm()) sm.AddPctMod(StatType.MaxHP, -sub);
                 break;
 
             // ── % 모디파이어 계열 — 설명에 % 있음 ───────────────────

@@ -18,6 +18,12 @@ public class BossHUDPanel : MonoBehaviourSingleton<BossHUDPanel>
     [SerializeField] private TextMeshProUGUI bossNameText;
     [SerializeField] private TextMeshProUGUI hpText;
 
+    [Header("그로기 UI")]
+    [Tooltip("그로기 중에만 표시할 루트 오브젝트")]
+    [SerializeField] private GameObject grogyPanel;
+    [Tooltip("그로기 잔여 시간 슬라이더 (1→0 감소)")]
+    [SerializeField] private Slider     grogySlider;
+
     private BossController trackedBoss;
 
     protected override bool DontDestroy => false;
@@ -45,30 +51,50 @@ public class BossHUDPanel : MonoBehaviourSingleton<BossHUDPanel>
             bossNameText.text = trackedBoss != null ? trackedBoss.BossName : "BOSS";
 
         if (hpSlider) hpSlider.value = 1f;
-        if (panel)    panel.SetActive(true);
+        if (grogyPanel) grogyPanel.SetActive(false);
+        if (panel) panel.SetActive(true);
+
+        if (boss != null)
+        {
+            boss.OnGrogyStart += HandleGrogyStart;
+            boss.OnGrogyEnd   += HandleGrogyEnd;
+        }
     }
 
     /// <summary>보스 사망 시 GameManager에서 호출합니다.</summary>
     public void Hide()
     {
+        if (trackedBoss != null)
+        {
+            trackedBoss.OnGrogyStart -= HandleGrogyStart;
+            trackedBoss.OnGrogyEnd   -= HandleGrogyEnd;
+        }
         trackedBoss = null;
+        if (grogyPanel) grogyPanel.SetActive(false);
         if (panel) panel.SetActive(false);
     }
 
-    // ── 매 프레임 HP 동기화 ──────────────────────────────────────
+    private void HandleGrogyStart() { if (grogyPanel) grogyPanel.SetActive(true); }
+    private void HandleGrogyEnd()   { if (grogyPanel) grogyPanel.SetActive(false); }
+
+    // ── 매 프레임 HP / 그로기 동기화 ────────────────────────────
     private void Update()
     {
         if (trackedBoss == null) return;
+
         if (hpSlider) hpSlider.value = trackedBoss.HPRatio;
 
-        if (skillGaugeSlider) 
+        if (skillGaugeSlider)
             skillGaugeSlider.value = trackedBoss.SkillGauge / trackedBoss.MaxSkillGauge;
 
-        if (hpText && trackedBoss != null)
+        if (hpText)
         {
-            int currentHP = Mathf.CeilToInt(trackedBoss.CurrentHPValue);
-            int maxHP = Mathf.CeilToInt(trackedBoss.MaxHPValue);
-            hpText.text = $"{currentHP}/{maxHP}";
+            int cur = Mathf.CeilToInt(trackedBoss.CurrentHPValue);
+            int max = Mathf.CeilToInt(trackedBoss.MaxHPValue);
+            hpText.text = $"{cur}/{max}";
         }
+
+        if (grogySlider && trackedBoss.IsGrogy)
+            grogySlider.value = trackedBoss.GrogyRemaining / trackedBoss.GrogyDuration;
     }
 }

@@ -164,11 +164,11 @@ public class ImprovCard : MonoBehaviour
         // 증가 → 초록 ↑, 감소 → 빨강 ↓
         desc = desc.Replace("증가", "<color=#55FF88>↑</color>");
         desc = desc.Replace("감소", "<color=#FF5555>↓</color>");
-        // 몸집 커짐 → 빨강 ↑ (부정적 효과), 작아짐 → 초록 ↓ (유리한 경우도 있으므로 중립 색)
+        // 몸집 커짐 → 빨강 ↑ (부정적 효과), 작아짐 → 초록 ↓ (작아질수록 피탄 면적 감소)
         desc = desc.Replace("커지고", "<color=#FF5555>↑</color>");
         desc = desc.Replace("커짐",   "<color=#FF5555>↑</color>");
-        desc = desc.Replace("작아지고", "<color=#55FF88>↑</color>");
-        desc = desc.Replace("작아짐",   "<color=#55FF88>↑</color>");
+        desc = desc.Replace("작아지고", "<color=#55FF88>↓</color>");
+        desc = desc.Replace("작아짐",   "<color=#55FF88>↓</color>");
 
         return desc;
     }

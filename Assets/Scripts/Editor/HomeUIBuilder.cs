@@ -1600,11 +1600,7 @@ public class HomeUIBuilder
 
         // ── 기물 결과 팝업 ───────────────────────────────────────────
         var shopFont2 = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>("Assets/TextMesh Pro/Font/mona12-Bold SDF.asset");
-        var warePopup = BuildWareResultPopup(panelShop.transform, shopFont2);
 
-        // WareDrawButton 전부 찾아서 팝업 직접 연결
-        foreach (var wdb in panelShop.GetComponentsInChildren<WareDrawButton>(true))
-            wdb.resultPopup = warePopup;
 
         // ── HomeShopPanel 컴포넌트 연결 (중복 방지) ─────────────────
         var existingShop = panelShop.GetComponent<HomeShopPanel>();
@@ -2621,76 +2617,7 @@ public class HomeUIBuilder
     }
 
     // ── 기물 결과 팝업 빌드 ──────────────────────────────────────────
-    static WareResultPopup BuildWareResultPopup(Transform parent, TMP_FontAsset font)
-    {
-        // 전체 화면 오버레이
-        var overlayGO = new GameObject("WareResultPopup");
-        overlayGO.transform.SetParent(parent, false);
-        var overlayRT = overlayGO.AddComponent<RectTransform>();
-        SetAnchors(overlayRT, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-        overlayGO.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.75f);
-
-        // 닫기 히트 에어리어 (전체)
-        var closeHit = overlayGO.AddComponent<Button>();
-
-        // 타이틀
-        var titleTmp = CreateTMPText("TitleText", overlayGO.transform, "기물 획득!", 52f, TextAlignmentOptions.Center);
-        titleTmp.color = new Color(1f, 0.85f, 0.20f, 1f);
-        titleTmp.fontStyle = FontStyles.Bold;
-        if (font) titleTmp.font = font;
-        var ttRT = titleTmp.GetComponent<RectTransform>();
-        SetAnchors(ttRT, new Vector2(0.1f, 0.82f), new Vector2(0.9f, 0.92f), Vector2.zero, Vector2.zero);
-
-        // 1회 결과 앵커 (중앙, 230×280 슬롯 1개)
-        var singleGO = new GameObject("SingleAnchor");
-        singleGO.transform.SetParent(overlayGO.transform, false);
-        var singleRT = singleGO.AddComponent<RectTransform>();
-        SetAnchors(singleRT, new Vector2(0.3f, 0.38f), new Vector2(0.7f, 0.78f), Vector2.zero, Vector2.zero);
-
-        // 10회 결과 그리드
-        var multiGO = new GameObject("MultiContent");
-        multiGO.transform.SetParent(overlayGO.transform, false);
-        var multiRT = multiGO.AddComponent<RectTransform>();
-        SetAnchors(multiRT, new Vector2(0.02f, 0.25f), new Vector2(0.98f, 0.80f), Vector2.zero, Vector2.zero);
-        var grid = multiGO.AddComponent<GridLayoutGroup>();
-        grid.cellSize        = new Vector2(180f, 220f);
-        grid.spacing         = new Vector2(10f, 10f);
-        grid.padding         = new RectOffset(8, 8, 8, 8);
-        grid.childAlignment  = TextAnchor.UpperCenter;
-        grid.constraint      = GridLayoutGroup.Constraint.FixedColumnCount;
-        grid.constraintCount = 5;
-        multiGO.SetActive(false);
-
-        // 닫기 힌트
-        var hintTmp = CreateTMPText("CloseHint", overlayGO.transform, "탭하여 닫기", 26f, TextAlignmentOptions.Center);
-        hintTmp.color = new Color(0.65f, 0.65f, 0.65f, 0.85f);
-        if (font) hintTmp.font = font;
-        var htRT = hintTmp.GetComponent<RectTransform>();
-        SetAnchors(htRT, new Vector2(0.1f, 0.18f), new Vector2(0.9f, 0.25f), Vector2.zero, Vector2.zero);
-
-        // 슬롯 프리팹 (비활성)
-        var slotPrefabGO = BuildWareSlotGO("WareSlotPrefab_Result", overlayGO.transform, font,
-            new Color(0.12f, 0.15f, 0.25f, 1f));
-        slotPrefabGO.SetActive(false);
-        var slotPrefabSV = slotPrefabGO.AddComponent<WareSlotView>();
-        AssignWareSlotRefs(slotPrefabGO, slotPrefabSV);
-
-        // WareResultPopup 연결
-        var warePopup = overlayGO.AddComponent<WareResultPopup>();
-        SetField(warePopup, "closeHitArea",  closeHit);
-        SetField(warePopup, "titleText",     titleTmp);
-        SetField(warePopup, "singleAnchor",  singleGO);
-        SetField(warePopup, "multiContent",  multiGO);
-        SetField(warePopup, "slotPrefab",    slotPrefabSV);
-
-        if (font)
-            foreach (var tmp in overlayGO.GetComponentsInChildren<TextMeshProUGUI>(true))
-                tmp.font = font;
-
-        overlayGO.SetActive(false);
-        return warePopup;
-    }
-
+    
     // ── WareDetailPopup 빌드 ─────────────────────────────────────────
     static WareDetailPopup BuildWareDetailPopup(Transform parent, TMP_FontAsset font,
         Color cardCol, Color upgradeCol, Color discardCol)

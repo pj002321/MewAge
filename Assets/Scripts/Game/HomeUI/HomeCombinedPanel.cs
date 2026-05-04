@@ -9,7 +9,7 @@ using UnityEngine.UI;
 ///   Panel_영웅정보   (이 컴포넌트)
 ///     영웅배경        CanvasGroup — Tab[0] 전용 배경
 ///     장비배경        CanvasGroup — Tab[1] 전용 배경
-///     Scroll
+///     Scroll (ScrollRect — Inspector 연결)
 ///       Contents-영웅  Tab[0] 콘텐츠
 ///       Contents-장비  Tab[1] 콘텐츠
 ///       Contents-룬    Tab[2] 콘텐츠
@@ -20,6 +20,7 @@ using UnityEngine.UI;
 /// 탭 전환 시:
 ///   - 배경(CanvasGroup.alpha) → ease-out 크로스페이드
 ///   - 콘텐츠(SetActive)       → 즉시 전환
+///   - ScrollRect.content      → 활성 탭 RectTransform으로 교체 + 스크롤 상단 리셋
 /// </summary>
 public class HomeCombinedPanel : MonoBehaviour
 {
@@ -47,12 +48,16 @@ public class HomeCombinedPanel : MonoBehaviour
     [Header("페이드 시간 (초)")]
     public float fadeDuration = 0.22f;
 
+    [Header("스크롤 (탭 전환 시 Content 자동 교체)")]
+    [SerializeField] private ScrollRect scrollRect;
+
     // ──────────────────────────────────────────────────────────────────
     int       _currentTab = -1;
     Coroutine _fadeRoutine;
 
     // ──────────────────────────────────────────────────────────────────
-    void Start()
+    // Awake: 버튼 리스너 등록 + 초기 탭 상태를 OnEnable 전에 확정
+    void Awake()
     {
         if (tabs == null) return;
         for (int i = 0; i < tabs.Length; i++)
@@ -63,10 +68,24 @@ public class HomeCombinedPanel : MonoBehaviour
         ShowTab(0, instant: true);
     }
 
+    // Start: 캐릭터 드롭인은 다른 싱글톤 초기화 이후이므로 1프레임 뒤 실행
+    void Start()
+    {
+        StartCoroutine(DropInNextFrame());
+    }
+
     void OnEnable()
     {
         if (_currentTab < 0) return;
+        // 재활성화 시 현재 탭 배경·콘텐츠를 즉시 복원
         ApplyInstant(_currentTab);
+        if (_currentTab == 0) StartCoroutine(DropInNextFrame());
+    }
+
+    IEnumerator DropInNextFrame()
+    {
+        yield return null;
+        TriggerMemberDropIn();
     }
 
     // ──────────────────────────────────────────────────────────────────
@@ -81,9 +100,11 @@ public class HomeCombinedPanel : MonoBehaviour
 
         RefreshSprites(index);
 
-        // 콘텐츠 즉시 전환
+        // 콘텐츠 즉시 전환 + ScrollRect Content 교체
         for (int i = 0; i < tabs.Length; i++)
             tabs[i].content?.SetActive(i == index);
+
+        SyncScrollContent(index);
 
         // 영웅 탭으로 전환 시 캐릭터 드롭인
         if (index == 0) TriggerMemberDropIn();
@@ -112,6 +133,8 @@ public class HomeCombinedPanel : MonoBehaviour
         for (int i = 0; i < tabs.Length; i++)
             tabs[i].content?.SetActive(i == index);
 
+        SyncScrollContent(index);
+
         // 모든 배경 숨긴 뒤 현재 탭 배경만 표시
         var seen = new System.Collections.Generic.HashSet<CanvasGroup>();
         foreach (var t in tabs)
@@ -120,6 +143,15 @@ public class HomeCombinedPanel : MonoBehaviour
             SetBgAlpha(t.background, 0f);
         }
         SetBgAlpha(tabs[index].background, 1f);
+    }
+
+    void SyncScrollContent(int index)
+    {
+        if (scrollRect == null || tabs == null || index >= tabs.Length) return;
+        var content = tabs[index].content;
+        if (content == null) return;
+        scrollRect.content = content.GetComponent<RectTransform>();
+        scrollRect.verticalNormalizedPosition = 1f;   // 스크롤 상단 리셋
     }
 
     // ──────────────────────────────────────────────────────────────────

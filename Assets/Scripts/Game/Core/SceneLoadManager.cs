@@ -1,23 +1,19 @@
 using System.Collections;
+using EasyTransition;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.SceneManagement;
 
 /// <summary>
-/// 씬과 씬 사이를 전환할 때 "loading@scene"을 활용해 트랜지션을 연출하는 매니저입니다.
-/// 
-/// 사용법: SceneLoadManager.LoadScene("stage@scene");
-/// 
+/// 씬 전환 매니저.
+///
 /// 흐름:
-///   1. loading@scene을 Additive로 로드하여 화면을 덮습니다.
-///   2. 로딩 씬 안의 Canvas를 찾아 파괴되지 않게(DontDestroyOnLoad) 보호합니다.
-///   3. 타겟 씬(예: stage@scene)을 Single 모드로 비동기 로드합니다 (다른 모든 씬은 언로드됨).
-///   4. 타겟 씬 로딩이 완료(isDone)될 때까지 대기합니다.
-///   5. 로딩 Canvas를 페이드 아웃.
-///   6. 전환 연출이 끝난 로딩 Canvas를 파괴합니다.
-/// 
-/// # 조건:
-///   - Build Settings에 "loading@scene"이 등록되어 있어야 합니다.
-///   - loading@scene 안 최상단에 Canvas 객체가 하나 있어야 정상 작동합니다.
+///   1. loading@scene 로드 → 캔버스/TransitionManager 찾아 DontDestroy 보호
+///   2. openTransition 재생 → cut point에서 로딩 캔버스 표시 → out 완료까지 대기
+///   3. 타겟 씬 로드 → 준비 완료 대기
+///   4. ThrowOut (아이콘 연출)
+///   5. closeTransition 재생 → cut point에서 로딩 캔버스 파괴 → out 완료까지 대기
+///   6. TransitionManager 파괴
 /// </summary>
 public class SceneLoadManager : MonoBehaviour
 {
@@ -25,24 +21,20 @@ public class SceneLoadManager : MonoBehaviour
     private string targetSceneName;
 
     [Header("연출 설정")]
-    [SerializeField] private float fadeOutDuration = 0.5f;
-    [SerializeField] private float readyDelay = 0.3f;
+    [SerializeField] private float readyDelay      = 0.3f;
     [SerializeField] private float slideOutDuration = 0.4f;
 
     public static bool IsWaitingForStage { get; private set; }
-    public static bool IsTransitioning { get; private set; }
+    public static bool IsTransitioning   { get; private set; }
     public static bool IsLoading => IsTransitioning;
 
-    public static void NotifyStageReady()
-    {
-        IsWaitingForStage = false;
-    }
+    public static void NotifyStageReady() => IsWaitingForStage = false;
 
     public static void LoadScene(string sceneName)
     {
         if (IsTransitioning)
         {
-            Debug.LogWarning($"[SceneLoadManager] LoadScene({sceneName}) ignored because transition is already in progress.");
+            Debug.LogWarning($"[SceneLoadManager] LoadScene({sceneName}) ignored — already transitioning.");
             return;
         }
 
@@ -57,24 +49,31 @@ public class SceneLoadManager : MonoBehaviour
         instance.StartCoroutine(instance.LoadRoutine());
     }
 
+    // ── 메인 루틴 ────────────────────────────────────────────────────
+
     private IEnumerator LoadRoutine()
     {
         IsTransitioning = true;
         Time.timeScale = 1f;
 
+        // ── 1. loading@scene 로드 ──────────────────────────────────
         yield return SceneManager.LoadSceneAsync("loading@scene", LoadSceneMode.Additive);
 
         var loadingScene = SceneManager.GetSceneByName("loading@scene");
-        Canvas loadingCanvas = null;
-        CanvasGroup canvasGroup = null;
+
+        Canvas             loadingCanvas    = null;
+        SceneLoadingCanvas loadingCanvasComp = null;
+        CanvasGroup        canvasGroup      = null;
+        TransitionManager  loadingTM        = null;
 
         foreach (var root in loadingScene.GetRootGameObjects())
         {
-            loadingCanvas = root.GetComponentInChildren<Canvas>();
-            if (loadingCanvas != null) break;
+            if (loadingCanvas == null)
+                loadingCanvas = root.GetComponentInChildren<Canvas>();
+            if (loadingTM == null)
+                loadingTM = root.GetComponentInChildren<TransitionManager>();
+            if (loadingCanvas != null && loadingTM != null) break;
         }
-
-        SceneLoadingCanvas loadingCanvasComp = null;
 
         if (loadingCanvas != null)
         {
@@ -83,28 +82,51 @@ public class SceneLoadManager : MonoBehaviour
                 canvasGroup = loadingCanvas.gameObject.AddComponent<CanvasGroup>();
 
             loadingCanvas.sortingOrder = 9999;
-            loadingCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            loadingCanvas.renderMode   = RenderMode.ScreenSpaceOverlay;
             DontDestroyOnLoad(loadingCanvas.transform.root.gameObject);
 
             loadingCanvasComp = loadingCanvas.GetComponentInChildren<SceneLoadingCanvas>();
 
-            // Disable animators except for the icon, and water scrolls to reduce stuttering
-            var animators = loadingCanvas.GetComponentsInChildren<Animator>();
-            foreach (var anim in animators)
-            {
-                if (loadingCanvasComp.iconImg && loadingCanvasComp.iconImg.TryGetComponent(out Animator iconAnim) && anim == iconAnim)
-                    continue; // Keep icon animator enabled
-                anim.enabled = false;
-            }
-            var waterScrolls = loadingCanvas.GetComponentsInChildren<UnityEngine.UI.RawImage>();
-            foreach (var ws in waterScrolls) {
-                var scroll = ws.GetComponent<WaterScroll>();
-                if (scroll) scroll.enabled = false;
-            }
+            foreach (var ws in loadingCanvas.GetComponentsInChildren<WaterScroll>())
+                ws.enabled = false;
 
+            // 로딩 캔버스를 처음에는 숨김 — openTransition cut point에서 공개
+            canvasGroup.alpha          = 0f;
+            canvasGroup.interactable   = false;
+            canvasGroup.blocksRaycasts = false;
+        }
+
+        if (loadingTM != null)
+            DontDestroyOnLoad(loadingTM.gameObject);
+
+        var transSettings = loadingCanvasComp?.transition;
+
+        // ── 2. openTransition: 재생 → cut point에서 캔버스 공개 ───
+        yield return StartCoroutine(PlayTransition(
+            loadingTM, transSettings,
+            onCutPoint: () =>
+            {
+                // 화면이 덮인 순간 로딩 캔버스 표시
+                if (canvasGroup != null)
+                {
+                    canvasGroup.alpha          = 1f;
+                    canvasGroup.blocksRaycasts = true;
+                }
+            }
+        ));
+
+        // transition 없을 때 fallback
+        if (loadingTM == null || transSettings == null)
+        {
+            if (canvasGroup != null)
+            {
+                canvasGroup.alpha          = 1f;
+                canvasGroup.blocksRaycasts = true;
+            }
             yield return new WaitForSecondsRealtime(0.5f);
         }
 
+        // ── 3. 타겟 씬 로드 ────────────────────────────────────────
         var asyncOp = SceneManager.LoadSceneAsync(targetSceneName, LoadSceneMode.Single);
         asyncOp.allowSceneActivation = false;
 
@@ -117,9 +139,7 @@ public class SceneLoadManager : MonoBehaviour
         if (targetSceneName == "stage@scene")
         {
             IsWaitingForStage = true;
-            while (IsWaitingForStage)
-                yield return null;
-            
+            while (IsWaitingForStage) yield return null;
             yield return new WaitForSecondsRealtime(readyDelay);
         }
         else
@@ -127,34 +147,74 @@ public class SceneLoadManager : MonoBehaviour
             yield return new WaitForSecondsRealtime(0.6f);
         }
 
-        // 6. 아이콘 포물선 연출 → 완료 후 캔버스 제거
-        if (loadingCanvasComp != null)
-            yield return StartCoroutine(loadingCanvasComp.ThrowOut());
-        else if (loadingCanvas != null)
-        {
-            // SceneLoadingCanvas 없으면 기존 슬라이드 폴백
-            RectTransform uiRect = loadingCanvas.transform.childCount > 0
-                ? loadingCanvas.transform.GetChild(0) as RectTransform
-                : loadingCanvas.transform as RectTransform;
-            if (uiRect != null)
+        // ── 5. closeTransition: 재생 → cut point에서 캔버스 파괴 ─
+        yield return StartCoroutine(PlayTransition(
+            loadingTM, transSettings,
+            onCutPoint: () =>
             {
-                Vector2 origPos  = uiRect.anchoredPosition;
-                float   elapsed  = 0f;
-                while (elapsed < slideOutDuration)
-                {
-                    elapsed += Time.unscaledDeltaTime;
-                    float t    = elapsed / slideOutDuration;
-                    float ease = t * t * (3f - 2f * t);
-                    uiRect.anchoredPosition = origPos + Vector2.right * (Screen.width * 1.2f) * ease;
-                    yield return null;
-                }
+                // 화면이 다시 덮인 순간 로딩 캔버스 제거
+                if (loadingCanvas != null)
+                    Destroy(loadingCanvas.transform.root.gameObject);
             }
-        }
+        ));
 
-        // 7. 로딩 Canvas 제거
-        if (loadingCanvas != null)
-            Destroy(loadingCanvas.transform.root.gameObject);
+        // transition 없을 때 fallback
+        if (loadingTM == null || transSettings == null)
+            if (loadingCanvas != null)
+                Destroy(loadingCanvas.transform.root.gameObject);
+
+        // ── 6. TransitionManager 제거 ──────────────────────────────
+        if (loadingTM != null)
+            Destroy(loadingTM.gameObject);
 
         IsTransitioning = false;
+    }
+
+    // ── 헬퍼 ─────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// TransitionManager로 transition을 재생하고 완전히 끝날 때까지 기다립니다.
+    /// onCutPoint: 화면이 완전히 덮이는 순간 호출됩니다.
+    /// TM 또는 settings가 null이면 즉시 반환합니다.
+    /// </summary>
+    private IEnumerator PlayTransition(TransitionManager tm, TransitionSettings settings,
+        System.Action onCutPoint = null)
+    {
+        if (tm == null || settings == null) yield break;
+
+        bool cutReached = false;
+        bool ended      = false;
+
+        UnityAction onCut = () => { if (!cutReached) { cutReached = true; onCutPoint?.Invoke(); } };
+        UnityAction onEnd = () => ended = true;
+
+        tm.onTransitionCutPointReached += onCut;
+        tm.onTransitionEnd             += onEnd;
+
+        tm.Transition(settings, 0f);
+
+        yield return new WaitUntil(() => ended);
+
+        tm.onTransitionCutPointReached -= onCut;
+        tm.onTransitionEnd             -= onEnd;
+    }
+
+    private IEnumerator FallbackSlideOut(Canvas canvas)
+    {
+        var uiRect = canvas.transform.childCount > 0
+            ? canvas.transform.GetChild(0) as RectTransform
+            : canvas.transform as RectTransform;
+        if (uiRect == null) yield break;
+
+        Vector2 origPos = uiRect.anchoredPosition;
+        float   elapsed = 0f;
+        while (elapsed < slideOutDuration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float t    = Mathf.Clamp01(elapsed / slideOutDuration);
+            float ease = t * t * (3f - 2f * t);
+            uiRect.anchoredPosition = origPos + Vector2.right * (Screen.width * 1.2f) * ease;
+            yield return null;
+        }
     }
 }

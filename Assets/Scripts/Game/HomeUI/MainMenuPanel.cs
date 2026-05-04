@@ -136,6 +136,18 @@ public class MainMenuPanel : MonoBehaviour
     }
 
     // ── 초기화 ───────────────────────────────────────────────────────
+    void Awake()
+    {
+        // Start보다 먼저 content를 숨겨 첫 프레임 플래시 방지
+        if (content != null)
+        {
+            _contentCG = content.GetComponent<CanvasGroup>();
+            if (_contentCG == null)
+                _contentCG = content.gameObject.AddComponent<CanvasGroup>();
+            _contentCG.alpha = 0f;
+        }
+    }
+
     void Start()
     {
         LoadStagesFromDB();
@@ -153,11 +165,6 @@ public class MainMenuPanel : MonoBehaviour
         achievementButton?.onClick.AddListener(() => achievementPopup.Show());
         autohuntButton?.onClick.AddListener(() => autoHuntPopup.Show());
         breakthroughRewardButton?.onClick.AddListener(() => breakthroughRewardPopup.Show());
-
-        _contentCG = content != null
-            ? (content.GetComponent<CanvasGroup>() ?? content.gameObject.AddComponent<CanvasGroup>())
-            : null;
-        if (_contentCG != null) _contentCG.alpha = 0f;
 
         startButton?.onClick.AddListener(OnStartClicked);
         SetupScrollEvents();
@@ -294,8 +301,11 @@ public class MainMenuPanel : MonoBehaviour
             }
             cachedCardH = targetH;
             Canvas.ForceUpdateCanvases();
+            // 리사이즈 후 레이아웃이 확정되도록 1프레임 대기
+            yield return null;
         }
 
+        Canvas.ForceUpdateCanvases();
         SnapImmediate(currentIndex);
 
         if (stages != null && stages.Length > 0)

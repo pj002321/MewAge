@@ -20,6 +20,13 @@ public class ChargeBehaviour : EnemyBehaviourBase
     [SerializeField] private float preChargeDuration = 0.25f;
     [SerializeField] private float ghostInterval     = 0.06f;
 
+    [Header("경고 라인 (Idle 페이즈)")]
+    [SerializeField] private float    warningLineLength = 5f;
+    [SerializeField] private float    warningLineWidth  = 0.06f;
+    [SerializeField] private Color    warningColor      = Color.red;
+    [Tooltip("Sprites/Default 또는 URP Unlit 머티리얼 할당. null이면 자동 생성")]
+    [SerializeField] private Material warningMaterial;
+
     private enum Phase { Moving, Idle, Charging }
     private Phase   _phase;
     private float   _phaseTimer;
@@ -29,6 +36,8 @@ public class ChargeBehaviour : EnemyBehaviourBase
     private float           ghostTimer;
     private Vector3         originalScale;
     private SpriteRenderer  _cachedSr;
+    private LineRenderer    _warnLine;
+    private float           _origSepStrength;
 
     public override void Init(EnemyController controller)
     {
@@ -36,7 +45,10 @@ public class ChargeBehaviour : EnemyBehaviourBase
         _phase      = Phase.Moving;
         _phaseTimer = moveDuration;
         _cachedSr   = Owner.GetComponent<SpriteRenderer>();
+        DestroyWarningLine();
     }
+
+    private void OnDisable() => DestroyWarningLine();
 
     public override void OnAttackUpdate()
     {
@@ -46,17 +58,70 @@ public class ChargeBehaviour : EnemyBehaviourBase
 
         if (_phase == Phase.Moving && _phaseTimer <= 0f)
         {
-            _phase      = Phase.Idle;
-            _phaseTimer = idleDuration;
+            BeginIdle();
         }
-        else if (_phase == Phase.Idle && _phaseTimer <= 0f)
+        else if (_phase == Phase.Idle)
         {
-            BeginCharge();
+            UpdateWarningLine();
+            if (_phaseTimer <= 0f)
+                BeginCharge();
         }
+    }
+
+    private void BeginIdle()
+    {
+        _phase      = Phase.Idle;
+        _phaseTimer = idleDuration;
+
+        // 떨림 방지: Idle 중 separation 비활성
+        _origSepStrength         = Owner.separationStrength;
+        Owner.separationStrength = 0f;
+
+        SpawnWarningLine();
+    }
+
+    private void SpawnWarningLine()
+    {
+        if (_warnLine != null) return;
+        var go = new GameObject("ChargeWarnLine");
+        _warnLine = go.AddComponent<LineRenderer>();
+        _warnLine.useWorldSpace  = true;
+        _warnLine.positionCount  = 2;
+        _warnLine.startWidth     = warningLineWidth;
+        _warnLine.endWidth       = warningLineWidth;
+        _warnLine.sortingOrder   = 10;
+        _warnLine.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        _warnLine.material = warningMaterial != null
+            ? warningMaterial
+            : new Material(Shader.Find("Sprites/Default"));
+        _warnLine.startColor = warningColor;
+        _warnLine.endColor   = warningColor;
+        _warnLine.SetPosition(0, Owner.transform.position);
+        _warnLine.SetPosition(1, Owner.transform.position);
+    }
+
+    private void UpdateWarningLine()
+    {
+        if (_warnLine == null || Owner.PlayerTransform == null) return;
+        float t = 1f - Mathf.Clamp01(_phaseTimer / idleDuration);
+        Vector2 origin = Owner.transform.position;
+        Vector2 dir    = ((Vector2)Owner.PlayerTransform.position - origin).normalized;
+        _warnLine.SetPosition(0, origin);
+        _warnLine.SetPosition(1, origin + dir * (warningLineLength * t));
+    }
+
+    private void DestroyWarningLine()
+    {
+        if (_warnLine == null) return;
+        UnityEngine.Object.Destroy(_warnLine.gameObject);
+        _warnLine = null;
+        Owner.separationStrength = _origSepStrength;
     }
 
     private void BeginCharge()
     {
+        DestroyWarningLine();
+
         _phase          = Phase.Charging;
         chargeDir       = ((Vector2)Owner.PlayerTransform.position - Owner.Rb.position).normalized;
         chargeRemaining = chargeDuration;
