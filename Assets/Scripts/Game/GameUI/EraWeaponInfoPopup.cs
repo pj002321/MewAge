@@ -89,9 +89,9 @@ public class EraWeaponInfoPopup : MonoBehaviour
 
     static string ChapterToEraName(int chapter) => chapter switch
     {
-        1 => "구석기",
-        2 => "신석기",
-        3 => "청동기",
+        1 => "원시시대",
+        2 => "신석기 시대",
+        3 => "청동시대",
         4 => "철기",
         5 => "중세",
         6 => "근대",

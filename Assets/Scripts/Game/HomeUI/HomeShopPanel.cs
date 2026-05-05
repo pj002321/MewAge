@@ -34,30 +34,11 @@ public class HomeShopPanel : MonoBehaviour
         _pendingBox   = boxType;
         _pendingCount = count;
 
-        MovePopupToRootCanvas();
-
         gachaPopup.OnDrawRequested  = null;
         gachaPopup.OnDrawRequested += OnGachaDrawPressed;
         gachaPopup.OnDrawReset      = null;
         gachaPopup.OnDrawReset     += () => _resultShown = false;
         gachaPopup.OpenForDraw(gemCost, ToGachaBoxType(boxType));
-    }
-
-    void MovePopupToRootCanvas()
-    {
-        Canvas root = null;
-        foreach (var c in FindObjectsOfType<Canvas>())
-            if (c.transform.parent == null || c.transform.parent.GetComponent<Canvas>() == null)
-                if (root == null || c.sortingOrder >= root.sortingOrder)
-                    root = c;
-
-        if (root == null) return;
-
-        gachaPopup.transform.SetParent(root.transform, false);
-        var rt       = gachaPopup.GetComponent<UnityEngine.RectTransform>();
-        rt.anchorMin = UnityEngine.Vector2.zero;
-        rt.anchorMax = UnityEngine.Vector2.one;
-        rt.offsetMin = rt.offsetMax = UnityEngine.Vector2.zero;
     }
 
     void OnGachaDrawPressed()

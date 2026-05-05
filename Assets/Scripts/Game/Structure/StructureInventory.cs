@@ -32,9 +32,6 @@ public class StructureInventory : MonoBehaviourSingleton<StructureInventory>
 
     private void Start()
     {
-        // 인게임 진입 시에도 빈 프리셋 슬롯 자동 채움 (아웃게임에서 변경됐을 수 있음)
-        StructureWareManager.Shared?.EnsurePresetsNotEmpty();
-        LoadFromPresets();
     }
 
     public bool IsAutoMode     { get; private set; }
@@ -111,28 +108,6 @@ public class StructureInventory : MonoBehaviourSingleton<StructureInventory>
         if (slot < 0 || slot >= SlotCount) return 0f;
         float dur = _cooldownDuration[slot];
         return dur > 0f ? Mathf.Clamp01(_cooldownRemaining[slot] / dur) : 0f;
-    }
-
-    // ── 프리셋 로드 ──────────────────────────────────────────────────
-    private void LoadFromPresets()
-    {
-        var ware = StructureWareManager.Shared;
-        if (ware == null) return;
-
-        var assigned = new System.Collections.Generic.HashSet<string>();
-        for (int i = 0; i < SlotCount; i++)
-        {
-            string id = ware.GetPreset(i);
-            if (string.IsNullOrEmpty(id)) continue;
-            if (!assigned.Add(id)) continue;
-
-            var data = DB_기물.FindEntity(r => r.f_기물ID == id);
-            if (data == null) continue;
-
-            slotData[i]  = data;
-            slotCount[i] = 1;
-        }
-        OnChanged?.Invoke();
     }
 
     // ── 기물 설치 ────────────────────────────────────────────────────

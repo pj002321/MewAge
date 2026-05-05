@@ -152,9 +152,15 @@ public class SceneLoadManager : MonoBehaviour
             loadingTM, transSettings,
             onCutPoint: () =>
             {
-                // 화면이 다시 덮인 순간 로딩 캔버스 제거
                 if (loadingCanvas != null)
-                    Destroy(loadingCanvas.transform.root.gameObject);
+                {
+                    var canvasRoot = loadingCanvas.transform.root.gameObject;
+                    // TM가 캔버스와 같은 루트에 있으면 먼저 분리:
+                    // 그대로 Destroy하면 TM도 소멸 → onTransitionEnd 미발화 → WaitUntil 무한 대기.
+                    if (loadingTM != null && loadingTM.transform.root == canvasRoot.transform)
+                        loadingTM.transform.SetParent(null);
+                    Destroy(canvasRoot);
+                }
             }
         ));
 
@@ -193,7 +199,7 @@ public class SceneLoadManager : MonoBehaviour
 
         tm.Transition(settings, 0f);
 
-        yield return new WaitUntil(() => ended);
+        yield return new WaitUntil(() => ended || tm == null);
 
         tm.onTransitionCutPointReached -= onCut;
         tm.onTransitionEnd             -= onEnd;

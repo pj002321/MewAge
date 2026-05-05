@@ -69,19 +69,7 @@ public class StructureOrb : MonoBehaviour
     {
         if (!other.TryGetComponent<PlayerController>(out _)) return;
 
-        // 프리셋에 등록된 기물만 인벤토리에 추가
-        var wareMgr = StructureWareManager.Shared;
-        bool isInPreset = false;
-        for (int i = 0; i < 4; i++)
-        {
-            if (wareMgr?.GetPreset(i) == data.f_기물ID)
-            {
-                isInPreset = true;
-                break;
-            }
-        }
-        if (isInPreset)
-            StructureInventory.Shared?.Push(data);
+        StructureInventory.Shared?.Push(data);
 
         Destroy(gameObject);
     }

@@ -40,7 +40,7 @@ Assets/Scripts/Game/
 | World | CameraFollow, WaveEnvironmentSwitcher, StageEnvironmentSO, ItemDropManager, SpawnMarker/Zone |
 | Player | PlayerController, PlayerStatManager, PlayerStats, PlayerInventory, StatType, StatPanelUI |
 | Character | PlayerCharacterManager, CharacterSkillBase/Manager, SkillBerserker, SkillNormal |
-| Enemy | EnemyController, EnemyBehaviourBase, EnemySpawner, EnemyPool, ChapterRosterSO |
+| Enemy | EnemyController, EnemyBehaviourBase, IEnemyHost, EnemyCombatRoutines, EnemySpawner, EnemyPool, ChapterRosterSO |
 | Boss | BossController, BossPatternBehaviour, BossSkillBase, 7개 Boss 스킬 |
 | Weapon | WeaponData/Manager/Point, Projectile, SynergyHelper, SynergyEffectManager |
 | Structure | StructureInventory/Controller/Ware, WareSynergySystem, 14개 기물 스킬 |
@@ -48,7 +48,7 @@ Assets/Scripts/Game/
 | Augment | ImprovManager/Panel/Card/Data |
 | HomeUI | HomeUIManager, HomeMemberPanel, HomeShopPanel, HomeWarePanel, HomeEquipPanel |
 | GameUI | UpgradeManager/Panel/Card, GameOverPanel/ResultPanel, GameClearPanel, DebugPanel |
-| VFX | FXManager, HitEffect/Flash/Shake, GlobalLightDimmer |
+| VFX | FXManager, HitEffect/Flash/Shake, GlobalLightDimmer, EnemyFX, SpriteYSort, SlimeBobAnimation |
 | Audio | SoundManager, SoundKey, UIButtonSoundAutoAttach |
 
 ---
@@ -131,15 +131,38 @@ sm.EndBatch();  // 이 시점에 ApplyStatSheet 1회 실행
 
 ## Enemy System (`Enemy/`)
 
+### IEnemyHost 인터페이스
+`EnemyController`와 `BossController` 양쪽이 구현하는 공통 적 호스트 API.
+`SelfTransform`, `Rb`, `EnemyAnimator`, `PlayerTransform`, `MoveSpeed`, `MoveInDirection`, `FlipToward`, `MoveTowardPlayer` 노출.
+`EnemyCombatRoutines` 등 공유 행동 로직이 이 인터페이스를 통해 호스트에 접근합니다.
+
 ### EnemyController
 - `static List<EnemyController> All` — 오브젝트 풀 패턴. `WakeFromPool()`에서 `All.Add`, `SleepToPool()`에서 스왑백 제거.
 - `OnDeath` 이벤트 — `BossController`, `SynergyEffectManager` 등에서 구독.
 - HP/데미지 성장: 스테이지 델타와 웨이브 내 델타를 분리 계산 (`EnemySpawner`, `SpawnMarker` 참조).
+- `IEnemyHost` 구현체. 스폰 연출: `EnemyFX.SpawnBounce()` (DOTween).
 
 ### EnemyBehaviourBase
 추상 기반. 오버라이드: `OnAttackUpdate()` (Update), `OnMoveFixedUpdate()` (FixedUpdate), `ApplyWaveScaling(float)`.
 
-구현체: `MeleeBehaviour`, `RangedBehaviour`, `MagicBehaviour`, `HealerBehaviour`, `TankBehaviour`, `ChargeBehaviour`, `SlamBehaviour`, `HordeBehaviour`, `DashComboBehaviour`.
+구현체: `MeleeBehaviour`, `RangedBehaviour`, `MagicBehaviour`, `HealerBehaviour`, `TankBehaviour`, `ChargeBehaviour`, `SlamBehaviour`, `HordeBehaviour`, `DashComboBehaviour`, `TeleportBehaviour`.
+
+### EnemyCombatRoutines (공유 행동 라이브러리)
+Boss · NonBoss 양쪽에서 꺼내 쓰는 정적 전투 루틴 모음. **새 공통 행동은 이 파일에 추가합니다.**
+
+| 항목 | 설명 |
+|------|------|
+| `TeleportConfig` struct | 텔레포트 파라미터 묶음 |
+| `TeleportSequence(host, renderers, cfg, digDone, spawnDone)` | PreDig → FadeOut → 이동 → FadeIn 전체 시퀀스 |
+| `WaitForAnimEnd(condition, timeout)` | 애니메이션 이벤트 대기 (타임아웃 안전장치 포함) |
+| `PickSpawnPosition(host, minR, maxR)` | 플레이어 기준 랜덤 스폰 위치 |
+| `WarningLine.Spawn/UpdateLength/Destroy` | Charge 류 경고 LineRenderer 헬퍼 |
+
+사용 예:
+```csharp
+yield return StartCoroutine(EnemyCombatRoutines.TeleportSequence(
+    Owner, _renderers, cfg, () => _digAnimEnded, () => _spawnAnimEnded));
+```
 
 ### ChapterRosterSO
 ScriptableObject (`Assets/Data/`). 챕터별 일반 적 스폰 항목(가중치/minWave/maxWave), 보스 프리팹, `WaveSpawnRule` 목록. **`MuAge/Enemy Preset Editor`** 창으로 편집.
@@ -148,7 +171,7 @@ ScriptableObject (`Assets/Data/`). 챕터별 일반 적 스폰 항목(가중치/
 
 ## Boss System (`Boss/`)
 
-`BossController` / `BossBehaviour` — 적 패턴과 동일한 구조. 보스 스킬은 `BossSkillBase`를 상속:
+`BossController` / `BossBehaviour` — 적 패턴과 동일한 구조. `IEnemyHost` 구현체. 입장 낙하 squash/stretch: `EnemyFX.ScaleY()` (DOTween). 보스 스킬은 `BossSkillBase`를 상속:
 
 | 스킬 | 클래스 |
 |------|--------|
@@ -310,6 +333,14 @@ ScriptableObject (`Assets/Data/`). 챕터별 일반 적 스폰 항목(가중치/
 - **FXManager** — 풀링. `_prefabScales` 딕셔너리로 프리팹별 원본 스케일 캐시.
 - **GlobalLightDimmer** — static. 레퍼런스 카운트 방식으로 여러 스킬이 동시에 조명 어둡게 할 때 충돌 없이 관리. `Register()` / `Release()` / `SetIntensity()`.
   - 사용법: 스킬 시작 시 `GlobalLightDimmer.Register()`, 종료/파괴 시 `GlobalLightDimmer.Release()`.
+- **EnemyFX** — 적·보스 공통 DOTween 이펙트 헬퍼 (정적). `using DG.Tweening;` 필요.
+  - `FadeSprites(srs, to, duration)` → `Sequence` — SpriteRenderer 배열 알파 페이드.
+  - `SetAlpha(srs, alpha)` — 알파 즉시 설정 (코루틴 완료 후 보정용).
+  - `SpawnBounce(transform, spawnScale)` → `Sequence` — 스폰 팝인 바운스 (0.48s).
+  - `ScaleY(transform, originalScale, targetYMult, duration)` → `Tween` — Y축만 squash/stretch.
+  - 반환값이 `Tween`/`Sequence`이므로 `yield return tween.WaitForCompletion()` 또는 fire-and-forget 둘 다 가능.
+- **SpriteYSort** — Y좌표 기반 sortingOrder 자동 정렬. 적·플레이어·보스 프리팹 루트에 부착.
+- **SlimeBobAnimation** — VisualRoot 스케일 조작 슬라임 바운스. `fixBottom=true` 시 하단 고정. Rigidbody 없는 VisualRoot에서만 Y 보정 (`_rb == null` 가드). 풀 재사용 시 `ResetOrigin()` 호출 필수.
 
 ---
 
@@ -427,3 +458,22 @@ Core / World / Player / Character / Enemy / Boss / Weapon / Structure / Equipmen
 
 ### 디버그
 `WeaponDebugInspector` — 런타임 무기 장착용 Odin Inspector MonoBehaviour.
+
+### 적·보스 공통 행동 라이브러리 + DOTween 전환 (2026-05-05)
+**신규 파일:**
+- `Enemy/IEnemyHost.cs` — EnemyController·BossController 공통 인터페이스.
+- `Enemy/EnemyCombatRoutines.cs` — 공유 행동 라이브러리 (TeleportSequence, WaitForAnimEnd, PickSpawnPosition, WarningLine 헬퍼). 새 공통 행동은 이 파일에 추가.
+- `VFX/EnemyFX.cs` — DOTween 이펙트 헬퍼 (SpawnBounce, FadeSprites, SetAlpha, ScaleY).
+
+**DOTween 전환:**
+- `EnemyController.BounceIn()` → `EnemyFX.SpawnBounce()` (24줄 → 1줄).
+- `BossController.EntryDropRoutine()` squash/stretch → `EnemyFX.ScaleY()`. `ScaleYTo()` 제거.
+- `TeleportBehaviour` / `BossTeleportSkill` 중복 `FadeRoutine` → `EnemyFX.FadeSprites()`.
+
+**리팩터링:**
+- `TeleportBehaviour` State 머신 제거 → `_inSequence` 플래그 + `EnemyCombatRoutines.TeleportSequence` 위임 (182줄 → 98줄).
+- `BossTeleportSkill` 동일 중복 로직 제거 → 공유 루틴 위임 (161줄 → 90줄).
+
+**VFX 추가:**
+- `SpriteYSort` — Y좌표 기반 SpriteRenderer sortingOrder 자동 정렬.
+- `SlimeBobAnimation` — VisualRoot 슬라임 바운스. Rigidbody 충돌 방지(`_rb == null`), 풀 재사용 시 `ResetOrigin()` 필수.

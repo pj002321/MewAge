@@ -22,9 +22,6 @@ public class HomeUIManager : MonoBehaviour
     [Header("Specific Image for Battle Tab")]
     public Image specificImage; // 특정 이미지를 Panel_전투에서만 비활성화
 
-    [Header("디버그 토글")]
-    [SerializeField] private Button debugToggleButton;
-
     [Header("Tab Colors")]
     public Color activeColor = new Color(1f, 0.8f, 0.2f, 1f);
     public Color inactiveColor = new Color(0.5f, 0.5f, 0.5f, 1f);
@@ -105,32 +102,8 @@ public class HomeUIManager : MonoBehaviour
                 tabButtons[i].onClick.AddListener(() => ShowTab(index));
         }
 
-        // 디버그 토글 버튼 (항상 노출하도록 변경)
-        if (debugToggleButton != null)
-        {
-            debugToggleButton.gameObject.SetActive(true);
-            RefreshDebugButtonLabel();
-            debugToggleButton.onClick.AddListener(OnDebugToggle);
-        }
-
         // 전투 탭 기본
         ShowTab(2);
-    }
-
-    private void OnDebugToggle()
-    {
-        bool current = PlayerPrefs.GetInt("DebugMode", 1) == 1;
-        PlayerPrefs.SetInt("DebugMode", current ? 0 : 1);
-        PlayerPrefs.Save();
-        RefreshDebugButtonLabel();
-    }
-
-    private void RefreshDebugButtonLabel()
-    {
-        if (debugToggleButton == null) return;
-        bool on = PlayerPrefs.GetInt("DebugMode", 1) == 1;
-        var label = debugToggleButton.GetComponentInChildren<TMPro.TextMeshProUGUI>();
-        if (label != null) label.text = on ? "디버그 ON" : "디버그 OFF";
     }
 
     public void ShowTab(int index)

@@ -35,7 +35,7 @@ public class StructurePlacer : MonoBehaviourSingleton<StructurePlacer>
         if (installPrefab != null)
         {
             var go    = Instantiate(installPrefab, target, Quaternion.identity);
-            int level = StructureWareManager.Shared?.GetLevel(data.f_기물ID) ?? 1;
+            int level = 1;
             var skill = go.GetComponent<StructureSkillBase>();
             skill?.Init(data, level);
         }

@@ -40,7 +40,7 @@ public abstract class StructureSkillBase : MonoBehaviour
     {
         if (data == null) return;
         StructureLevel = level;
-        mainValue = StructureWareManager.Shared?.GetMainValue(data, level) ?? data.f_주수치;
+        mainValue = data.f_주수치;
         subValue  = data.f_보조수치;
     }
 

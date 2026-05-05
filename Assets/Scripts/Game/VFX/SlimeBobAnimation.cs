@@ -32,10 +32,12 @@ public class SlimeBobAnimation : MonoBehaviour
     // (자식 localPosition + 피벗 오프셋까지 모두 반영)
     private float _spriteBottomLocal;
 
-    private SpriteRenderer _renderer;
+    private SpriteRenderer  _renderer;
+    private Rigidbody2D     _rb;
 
     private void Awake()
     {
+        _rb                 = GetComponent<Rigidbody2D>();
         _origLocalPos       = transform.localPosition;
         _origLocalScaleAbsX = Mathf.Abs(transform.localScale.x);
         _origLocalScaleY    = transform.localScale.y;
@@ -56,6 +58,12 @@ public class SlimeBobAnimation : MonoBehaviour
     public void Reinitialize()
     {
         TryInitRenderer();
+    }
+
+    /// <summary>풀 재사용 시 EnemyController.WakeFromPool에서 호출 — 스폰 위치 기준 재설정</summary>
+    public void ResetOrigin()
+    {
+        _origLocalPos = transform.localPosition;
     }
 
     private void TryInitRenderer()
@@ -97,15 +105,14 @@ public class SlimeBobAnimation : MonoBehaviour
             _origLocalScaleY * scaleY,
             _origLocalScaleZ);
 
-        if (fixBottom)
+        if (fixBottom && _rb == null)
         {
-            // parent 공간에서 스프라이트 바닥 Y를 고정:
-            //   원래 바닥 = _origLocalPos.y + _spriteBottomLocal * _origLocalScaleY
-            //   현재 바닥 = newPos.y       + _spriteBottomLocal * _origLocalScaleY * scaleY
-            //   → newPos.y = _origLocalPos.y + _spriteBottomLocal * _origLocalScaleY * (1 - scaleY)
+            // Rigidbody가 없는 VisualRoot에서만 Y 보정 (루트 물리 오브젝트에선 건너뜀)
             float newY = _origLocalPos.y
                        + _spriteBottomLocal * _origLocalScaleY * (1f - scaleY);
-            transform.localPosition = new Vector3(_origLocalPos.x, newY, _origLocalPos.z);
+            var pos = transform.localPosition;
+            pos.y = newY;
+            transform.localPosition = pos;
         }
     }
 }

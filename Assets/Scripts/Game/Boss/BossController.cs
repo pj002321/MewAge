@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using DG.Tweening;
 using UnityEngine;
 
 /// <summary>
@@ -7,7 +8,7 @@ using UnityEngine;
 /// EnemyController · HitFlash · EnemyFXConfig · BossBehaviour 기능을 모두 포함합니다.
 /// 프리팹 구성: BossController + 스킬 컴포넌트(들) 만으로 동작합니다.
 /// </summary>
-public class BossController : MonoBehaviour
+public class BossController : MonoBehaviour, IEnemyHost
 {
     public static BossController Current { get; private set; }
 
@@ -65,10 +66,11 @@ public class BossController : MonoBehaviour
     public float  MoveSpeed        => moveSpeed * (IsEnraged ? enrageSpeedMult : 1f);
     public float  ContactDamage    => contactDamage;
 
-    // 스킬에서 필요한 공통 참조
+    // 스킬에서 필요한 공통 참조 (IEnemyHost 구현 포함)
     public Transform   PlayerTransform { get; private set; }
     public Rigidbody2D Rb              { get; private set; }
     public Animator    EnemyAnimator   { get; private set; }
+    public Transform   SelfTransform   => transform;   // IEnemyHost
 
     public event System.Action OnEnraged;
     public event System.Action OnDeath;
@@ -182,28 +184,13 @@ public class BossController : MonoBehaviour
         transform.position = landPos;
 
         // Y만 찌부 — X/Z 원본 유지
-        yield return StartCoroutine(ScaleYTo(originalScale, 0.55f, squashDuration));
-        yield return StartCoroutine(ScaleYTo(originalScale, 1.3f,  stretchDuration));
-        yield return StartCoroutine(ScaleYTo(originalScale, 1f,    settleDuration));
+        yield return EnemyFX.ScaleY(transform, originalScale, 0.55f, squashDuration,  DG.Tweening.Ease.InQuad).WaitForCompletion();
+        yield return EnemyFX.ScaleY(transform, originalScale, 1.30f, stretchDuration, DG.Tweening.Ease.OutQuad).WaitForCompletion();
+        yield return EnemyFX.ScaleY(transform, originalScale, 1f,    settleDuration,  DG.Tweening.Ease.InOutSine).WaitForCompletion();
         FXManager.Shared?.SpawnLandingVFX(transform.position);
 
         _dropping = false;
         StartCoroutine(PatternRoutine());
-    }
-
-    /// <summary>X/Z는 originalScale 그대로, Y만 targetYMult(배율) 로 보간합니다.</summary>
-    private IEnumerator ScaleYTo(Vector3 originalScale, float targetYMult, float duration)
-    {
-        Vector3 startScale  = transform.localScale;
-        Vector3 targetScale = new Vector3(originalScale.x, originalScale.y * targetYMult, originalScale.z);
-        float   elapsed     = 0f;
-        while (elapsed < duration)
-        {
-            elapsed += Time.deltaTime;
-            transform.localScale = Vector3.Lerp(startScale, targetScale, elapsed / duration);
-            yield return null;
-        }
-        transform.localScale = targetScale;
     }
 
     // ── 패턴 루프 ──────────────────────────────────────────────────

@@ -1,15 +1,14 @@
 using System.Collections;
 using System.Collections.Generic;
+using DG.Tweening;
 using UnityEngine;
-
-
 
 /// <summary>
 /// 적의 핵심 컴포넌트 — 스탯, HP, 이동 헬퍼, 피격/사망을 담당합니다.
 /// 공격 / 이동 세부 로직은 같은 GameObject에 부착된 <see cref="EnemyBehaviourBase"/>
 /// 서브클래스(MeleeBehaviour, RangedBehaviour 등)에서 처리합니다.
 /// </summary>
-public class EnemyController : MonoBehaviour
+public class EnemyController : MonoBehaviour, IEnemyHost
 {
     // ── 인스펙터 ────────────────────────────────────────────────
     // DB_유닛에서 로드 (ApplyUnitData) — 인스펙터 편의 노출
@@ -49,6 +48,7 @@ public class EnemyController : MonoBehaviour
     public Animator   EnemyAnimator   => animator;
     public float      HPRatio         => maxHP > 0f ? currentHP / maxHP : 0f;
     public float      MaxHP           => maxHP;
+    public Transform  SelfTransform   => transform;   // IEnemyHost
 
     // ── 런타임 상태 ─────────────────────────────────────────────
     private float          currentHP;
@@ -255,7 +255,12 @@ public class EnemyController : MonoBehaviour
         damageTimer = 0f;
         isStunned  = false;
         moveSpeed  = baseSpeed;
-        if (rb != null) rb.linearVelocity = Vector2.zero;
+        if (rb != null)
+        {
+            rb.linearVelocity = Vector2.zero;
+            rb.constraints    = RigidbodyConstraints2D.FreezeRotation;
+        }
+        if (behaviour != null) behaviour.enabled = true;
 
         // 재질 복구
         if (srs != null && _originalMats != null)
@@ -267,6 +272,7 @@ public class EnemyController : MonoBehaviour
             foreach (var col in _cachedColliders) col.enabled = true;
 
         playerTransform = PlayerController.Instance?.transform;
+        GetComponent<SlimeBobAnimation>()?.ResetOrigin();
         _shield?.ResetShield();
         All.Add(this);
     }
@@ -733,27 +739,8 @@ public class EnemyController : MonoBehaviour
         enabled = false;
         if (rb != null) rb.constraints = RigidbodyConstraints2D.FreezeAll;
 
-        (float scale, float time)[] keys =
-        {
-            (0.0f, 0.00f), (1.3f, 0.20f), (0.85f, 0.32f), (1.1f, 0.40f), (1.0f, 0.48f),
-        };
+        yield return EnemyFX.SpawnBounce(transform, SpawnScale).WaitForCompletion();
 
-        for (int i = 0; i < keys.Length - 1; i++)
-        {
-            float fromScale = keys[i].scale;
-            float toScale   = keys[i + 1].scale;
-            float duration  = keys[i + 1].time - keys[i].time;
-            float t = 0f;
-
-            while (t < duration)
-            {
-                t += Time.deltaTime;
-                transform.localScale = SpawnScale * Mathf.Lerp(fromScale, toScale, t / duration);
-                yield return null;
-            }
-        }
-
-        transform.localScale = SpawnScale;
         if (rb != null) rb.constraints = RigidbodyConstraints2D.FreezeRotation;
         enabled = true;
     }

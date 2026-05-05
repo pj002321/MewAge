@@ -1,6 +1,5 @@
 /// <summary>
 /// 기물 시너지가 활성화되었을 때 켜지는 플래그 저장소.
-/// WareSynergySystem.ApplySynergies() 에서 설정되며,
 /// 전투 로직(WeaponPoint, BossController 등)에서 읽습니다.
 ///
 /// 사용 예시 (BossController/WeaponPoint):
