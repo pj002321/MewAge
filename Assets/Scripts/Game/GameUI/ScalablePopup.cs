@@ -25,12 +25,13 @@ public class ScalablePopup : MonoBehaviour
         _canvasGroup   = GetComponent<CanvasGroup>() ?? gameObject.AddComponent<CanvasGroup>();
 
         closeButton?.onClick.AddListener(Hide);
-        backgroundButton?.onClick.AddListener(Hide);
+        backgroundButton?.onClick.AddListener(HideImmediate);
 
-        _rectTransform.localScale    = Vector3.zero;
-        _canvasGroup.alpha           = 0f;
-        _canvasGroup.interactable    = false;
-        _canvasGroup.blocksRaycasts  = false;
+        _rectTransform.localScale   = Vector3.zero;
+        _canvasGroup.alpha          = 0f;
+        _canvasGroup.interactable   = false;
+        _canvasGroup.blocksRaycasts = false;
+        gameObject.SetActive(false);
     }
 
     public void Show()
@@ -44,6 +45,17 @@ public class ScalablePopup : MonoBehaviour
     {
         if (_animationCoroutine != null) StopCoroutine(_animationCoroutine);
         _animationCoroutine = StartCoroutine(Animate(false));
+    }
+
+    public void HideImmediate()
+    {
+        if (_animationCoroutine != null) StopCoroutine(_animationCoroutine);
+        _animationCoroutine = null;
+        _rectTransform.localScale   = Vector3.zero;
+        _canvasGroup.alpha          = 0f;
+        _canvasGroup.interactable   = false;
+        _canvasGroup.blocksRaycasts = false;
+        gameObject.SetActive(false);
     }
 
     private IEnumerator Animate(bool show)

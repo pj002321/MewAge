@@ -23,6 +23,14 @@ public class BossController : MonoBehaviour
     [SerializeField] private float enrageSpeedMult  = 1.5f;
     [SerializeField] private float enrageDamageMult = 1.5f;
 
+    // ── 그로기 ─────────────────────────────────────────────────────
+    [Header("그로기")]
+    [Tooltip("HP 비율 기준 그로기 진입 구간 (내림차순 권장: 0.70, 0.35)")]
+    [SerializeField] private float[] grogyThresholds   = { 0.70f, 0.35f };
+    [SerializeField] private float   grogyDuration     = 5f;
+    [Tooltip("그로기 중 플레이어 공격속도 보너스 (%)")]
+    [SerializeField] private float   grogyAtkSpeedBonus = 50f;
+
     // ── HitFlash ──────────────────────────────────────────────────
     [Header("피격 플래시")]
     [SerializeField] private Color flashColor    = new(1f, 0.2f, 0.2f, 1f);
@@ -65,9 +73,15 @@ public class BossController : MonoBehaviour
     public event System.Action OnEnraged;
     public event System.Action OnDeath;
     public event System.Action<float> OnSkillGaugeChanged;
+    public event System.Action OnGrogyStart;
+    public event System.Action OnGrogyEnd;
 
     public float SkillGauge { get; private set; }
     public float MaxSkillGauge => 100f;
+
+    public bool  IsGrogy        { get; private set; }
+    public float GrogyRemaining { get; private set; }
+    public float GrogyDuration  => grogyDuration;
 
     public void ApplyBleed(float damage) { } // Placeholder for compatibility
 
@@ -89,6 +103,9 @@ public class BossController : MonoBehaviour
     private bool             _dropping;
     private bool             _skillExecuting;
     private bool             _lastFlipX;  // FlipToward 중복 갱신 방지
+
+    // 그로기: 이미 발동된 구간 인덱스 추적
+    private readonly System.Collections.Generic.HashSet<int> _triggeredGrogy = new();
 
     /// <summary>현재 보스가 왼쪽을 바라보고 있으면 true.</summary>
     public bool IsFacingLeft => _lastFlipX;
@@ -195,6 +212,10 @@ public class BossController : MonoBehaviour
     {
         while (!isDead)
         {
+            // 그로기 중에는 대기
+            yield return new WaitUntil(() => !IsGrogy || isDead);
+            if (isDead) break;
+
             // 1) 대기
             yield return new WaitForSeconds(IdleTime());
             if (isDead) break;
@@ -224,13 +245,20 @@ public class BossController : MonoBehaviour
         float elapsed = 0f;
         while (elapsed < chaseDuration)
         {
+            // 그로기 돌입 시 즉시 이동 중단 후 루틴 종료 (PatternRoutine 상단 WaitUntil로 복귀)
+            if (IsGrogy)
+            {
+                EnemyAnimator?.SetBool("bMove", false);
+                yield break;
+            }
+
             elapsed += Time.fixedDeltaTime;
 
             if (!IsFiringSkill && PlayerTransform != null)
             {
                 float dist = Vector2.Distance(transform.position, PlayerTransform.position);
                 if (dist > chaseStopDistance)
-                    MoveTowardPlayer(MoveSpeed); // 내부에서 bMove=true
+                    MoveTowardPlayer(MoveSpeed);
                 else
                     EnemyAnimator?.SetBool("bMove", false);
             }
@@ -355,6 +383,8 @@ public class BossController : MonoBehaviour
 
         if (currentHP <= 0f)
             StartCoroutine(DieRoutine());
+        else
+            CheckGrogyThresholds();
     }
 
     private void AddSkillGauge(float damage)
@@ -375,8 +405,8 @@ public class BossController : MonoBehaviour
         SkillGauge = 0f;
         OnSkillGaugeChanged?.Invoke(0f);
 
-        // 이미 스킬 실행 중이거나 사망/낙하 중이면 취소
-        if (isDead || _dropping || _skillExecuting) yield break;
+        // 이미 스킬 실행 중이거나 사망/낙하/그로기 중이면 취소
+        if (isDead || _dropping || _skillExecuting || IsGrogy) yield break;
 
         var skill = RandomReadySkill();
         if (skill != null)
@@ -436,6 +466,46 @@ public class BossController : MonoBehaviour
     {
         IsEnraged = true;
         OnEnraged?.Invoke();
+    }
+
+    // ── 그로기 ────────────────────────────────────────────────────
+
+    private void CheckGrogyThresholds()
+    {
+        if (IsGrogy || isDead) return;
+        for (int i = 0; i < grogyThresholds.Length; i++)
+        {
+            if (_triggeredGrogy.Contains(i)) continue;
+            if (HPRatio <= grogyThresholds[i])
+            {
+                _triggeredGrogy.Add(i);
+                StartCoroutine(GrogyRoutine());
+                break;
+            }
+        }
+    }
+
+    private IEnumerator GrogyRoutine()
+    {
+        IsGrogy       = true;
+        GrogyRemaining = grogyDuration;
+        EnemyAnimator?.SetBool("bMove", false);
+        OnGrogyStart?.Invoke();
+
+        var sm = PlayerStatManager.Shared;
+        sm?.AddPctMod(StatType.AtkSpeed, grogyAtkSpeedBonus);
+
+        while (GrogyRemaining > 0f)
+        {
+            GrogyRemaining -= Time.deltaTime;
+            yield return null;
+        }
+        GrogyRemaining = 0f;
+
+        sm?.AddPctMod(StatType.AtkSpeed, -grogyAtkSpeedBonus);
+
+        IsGrogy = false;
+        OnGrogyEnd?.Invoke();
     }
 
     // ── 스킬 선택 ─────────────────────────────────────────────────

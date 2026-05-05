@@ -36,11 +36,6 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
     public  int          CurrentChapter => currentChapter;
     public  string       CurrentChapterID => currentChapterID;
 
-    // 이전에 PlayerStatManager에 적용한 시너지 누계 (재계산 시 차감용)
-    private float _prevSynergyAtk;
-    private float _prevSynergyBleed;
-    private float _prevSynergyCrit;
-
     protected override bool DontDestroy => false;
 
     protected override void Awake()
@@ -48,108 +43,6 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
         base.Awake();
         LoadWeaponsFromDB();
         LoadDrawProfiles();
-    }
-
-    private void Start()
-    {
-        // PlayerInventory 변경 시 시너지 적용
-        if (PlayerInventory.Shared != null)
-        {
-            PlayerInventory.Shared.OnChanged += ApplySynergyBonuses;
-            ApplySynergyBonuses(); // 초기 적용
-        }
-    }
-
-    private void OnDestroy()
-    {
-        if (PlayerInventory.Shared != null)
-        {
-            PlayerInventory.Shared.OnChanged -= ApplySynergyBonuses;
-        }
-    }
-
-    /// <summary>장착 무기 시너지 효과를 PlayerStatManager와 PlayerStats에 적용합니다.</summary>
-    private void ApplySynergyBonuses()
-    {
-        var sm = PlayerStatManager.Shared;
-        var ps = PlayerStats.Shared;
-
-        // 이전에 적용한 시너지 보너스를 먼저 차감
-        if (sm != null)
-        {
-            if (_prevSynergyAtk   != 0f) sm.AddPctMod(StatType.ATK,        -_prevSynergyAtk);
-            if (_prevSynergyBleed != 0f) sm.AddPctMod(StatType.BleedPower, -_prevSynergyBleed);
-            if (_prevSynergyCrit  != 0f) sm.AddPctMod(StatType.CritChance, -_prevSynergyCrit);
-        }
-        _prevSynergyAtk = _prevSynergyBleed = _prevSynergyCrit = 0f;
-
-        // 시너지 계산
-        var synergies = SynergyHelper.GetChapterSynergies(currentChapter);
-        float totalExpPct = 0f;
-        float totalGoldPct = 0f;
-
-        foreach (var synergy in synergies)
-        {
-            int count = SynergyHelper.CountEquippedTag(synergy.Tag);
-            // 시너지 효과 적용 (등급에 따라)
-            if (count >= 1)
-            {
-                // 최소 1개: 동 등급
-                ApplySynergyEffect(synergy, 0, sm, ref totalExpPct, ref totalGoldPct);
-            }
-            if (count >= 3)
-            {
-                // 3개: 은 등급 (동에 누적)
-                ApplySynergyEffect(synergy, 1, sm, ref totalExpPct, ref totalGoldPct);
-            }
-            if (count >= 5)
-            {
-                // 5개: 금 등급 (동+은에 누적)
-                ApplySynergyEffect(synergy, 2, sm, ref totalExpPct, ref totalGoldPct);
-            }
-        }
-
-        // PlayerStats에 % 적용
-        ps?.SetSynergyPct(totalGoldPct, totalExpPct);
-    }
-
-    private void ApplySynergyEffect(SynergyHelper.SynergyEntry synergy, int tierIndex, PlayerStatManager sm, ref float totalExpPct, ref float totalGoldPct)
-    {
-        // synergy.Description에서 값 파싱 (예: "공격력 증가\n동 +10%  /  은 +20%  /  금 +30%")
-        var desc = synergy.Description;
-        var lines = desc.Split('\n');
-        if (lines.Length < 2) return;
-        var values = lines[1].Split('/');
-        if (values.Length <= tierIndex) return;
-        var valueStr = values[tierIndex].Trim();
-        // "+10%" 추출
-        var pctStr = valueStr.Split('+')[1].Split('%')[0];
-        if (float.TryParse(pctStr, out float pct))
-        {
-            if (synergy.Tag == WeaponSynergyTag.채집)
-            {
-                // 채집: 경험치 증가
-                totalExpPct += pct;
-            }
-            else
-            {
-                // 다른 시너지: PlayerStatManager에 적용
-                StatType stat = synergy.Tag switch
-                {
-                    WeaponSynergyTag.야수   => StatType.ATK,
-                    WeaponSynergyTag.사냥꾼 => StatType.BleedPower,
-                    WeaponSynergyTag.지혜   => StatType.CritChance,
-                    _ => StatType.ATK
-                };
-                sm?.AddPctMod(stat, pct);
-                switch (stat)
-                {
-                    case StatType.ATK:        _prevSynergyAtk   += pct; break;
-                    case StatType.BleedPower: _prevSynergyBleed += pct; break;
-                    case StatType.CritChance: _prevSynergyCrit  += pct; break;
-                }
-            }
-        }
     }
 
     private void LoadWeaponsFromDB()

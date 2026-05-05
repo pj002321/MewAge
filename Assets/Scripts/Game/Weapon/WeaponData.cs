@@ -23,10 +23,6 @@ public class WeaponData : ScriptableObject
     [Header("성 단계 (합성으로 증가, 프레임 색 결정)")]
     public int star = 1;        // 1~5성
 
-    [Header("시너지 태그")]
-    public WeaponSynergyTag tag1;
-    public WeaponSynergyTag tag2;
-
     [Header("가격 & 출현 조건")]
     public int price   = 20;
     public int chapter = 1;
@@ -92,8 +88,6 @@ public class WeaponData : ScriptableObject
         next.price            = price;
         next.chapter          = chapter;
         next.star             = Mathf.Clamp(targetStar, 1, 5);
-        next.tag1             = tag1;
-        next.tag2             = tag2;
         next.storyDescription = storyDescription;
         next.bonus2Star       = bonus2Star;
         next.bonus3Star       = bonus3Star;
@@ -142,7 +136,6 @@ public class WeaponData : ScriptableObject
             }
             data.chapter = parsed;
         }
-        data.tag1             = ParseSynergyTag(row.f_태그1);
         data.storyDescription = row.f_스토리설명;
         data.bonus2Star = WeaponStatRegistry.Build(row.f_속성2성ID, row.f_S1);
         data.bonus3Star = WeaponStatRegistry.Build(row.f_속성3성ID, row.f_S2);
@@ -230,13 +223,6 @@ public class WeaponData : ScriptableObject
         "얼음" or "Ice"       => MagicElement.Ice,
         _                     => MagicElement.None,
     };
-
-    private static WeaponSynergyTag ParseSynergyTag(string s)
-    {
-        if (string.IsNullOrEmpty(s)) return WeaponSynergyTag.None;
-        if (System.Enum.TryParse<WeaponSynergyTag>(s, out var tag)) return tag;
-        return WeaponSynergyTag.None;
-    }
 
     // ────────────────────────────────────────────────────────────────
     // 내부 헬퍼

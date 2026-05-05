@@ -255,13 +255,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ebf384ff75278374cb62dda6f31d5629, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ChargeBehaviour
-  chargeInterval: 3
   chargeDuration: 1
   chargeSpeedMultiplier: 5
+  moveDuration: 2
+  idleDuration: 2
   chargeColor: {r: 1, g: 0, b: 0, a: 1}
   chargeScale: 0.85
   preChargeDuration: 0.25
   ghostInterval: 0.06
+  warningLineLength: 5
+  warningLineWidth: 0.06
+  warningColor: {r: 1, g: 0, b: 0, a: 1}
+  warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
 --- !u!114 &-3176993990728560225
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -275,6 +280,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HitFlash
   flashDuration: 0.12
+  flashColor: {r: 1, g: 1, b: 1, a: 1}
   BaseColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!114 &-7215124256818786645
 MonoBehaviour:
@@ -293,7 +299,8 @@ MonoBehaviour:
   squashStretchX: 0.5
   frequency: 1.25
   randomPhase: 1
-  spriteTarget: {fileID: 0}
+  fixBottom: 1
+  halfHeightOverride: 0
 --- !u!1 &7331466815635274731
 GameObject:
   m_ObjectHideFlags: 0

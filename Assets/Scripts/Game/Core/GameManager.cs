@@ -134,10 +134,9 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         var sm = PlayerStatManager.Shared;
         if (sm == null) return true;
 
-        // AUG_SKL 저주 = 쿨타임 증가. 쿨타임은 항상 올릴 수 있음
-        if (entry.f_저주 == "AUG_SKL") return true;
-
-        StatType stat    = CurseRewardCard.AugIdToStat(entry.f_저주);
+        StatType? statNullable = AugmentHelper.ToStatType(entry.f_저주);
+        if (statNullable == null) return true;
+        StatType stat    = statNullable.Value;
         float    current = sm.GetFinal(stat);
 
         // 이미 수치가 0 이하면 더 줄여도 의미 없음 → 제외
@@ -268,8 +267,14 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     }
     private IEnumerator WaveClearRoutine()
     {
-        if (waveClearPanel) waveClearPanel.SetActive(true);
         EnemySpawner.Shared?.StopSpawning();
+
+        // 남은 orb 파편 즉시 터뜨리기 (노티 전)
+        ItemDropManager.Shared?.ThrowUpAll();
+
+        yield return new WaitForSeconds(0.15f);  // 파편 연출이 잠깐 보이도록 대기
+
+        if (waveClearPanel) waveClearPanel.SetActive(true);
 
         // 적 사망 연출 + 기물 스케일다운 후 파괴 (DieRoutine 기준 0.45s)
         yield return StartCoroutine(ClearAllWithScaleDown(0.45f));
@@ -278,10 +283,6 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         GlobalLightDimmer.ForceReset();           // 조명 즉시 복구
 
         yield return new WaitForSeconds(waveClearDuration);
-
-        // 남은 orb 위로 튕겨 올리고 잠깐 대기 후 패널 전환
-        ItemDropManager.Shared?.ThrowUpAll();
-        yield return new WaitForSeconds(0.55f);
 
         if (waveClearPanel) waveClearPanel.SetActive(false);
 
@@ -462,8 +463,10 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         if (wave > currentBest)
         {
             PlayerPrefs.SetInt(prefKey, wave);
-            PlayerPrefs.Save();
         }
+        // 전투 1회 완료 기록 (홈 메뉴 잠금 해제용)
+        PlayerPrefs.SetInt("BattleCompleted", 1);
+        PlayerPrefs.Save();
 
         // 일시정지 중 사망 시 퍼즈 패널 강제 닫기
         if (gamePausePanel != null && gamePausePanel.gameObject.activeSelf)
@@ -708,8 +711,9 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         yield return StartCoroutine(LandingSquishRoutine(player.transform));
         FXManager.Shared?.SpawnLandingVFX(player.transform.position);
 
-        // 3,2,1 카운트다운
-        yield return StartCoroutine(CountdownRoutine());
+        _isCountingDown = false;
+        if (timerText) timerText.gameObject.SetActive(true);
+        if (countdownText) countdownText.gameObject.SetActive(false);
 
         player.InputLocked = false;
         StartNextWave();
@@ -992,6 +996,9 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     {
         EnemySpawner.Shared?.StopSpawning();
         EnemySpawner.Shared?.ClearAllEnemies();
+
+        PlayerPrefs.SetInt("BattleCompleted", 1);
+        PlayerPrefs.Save();
 
         if (clearResultPanel != null)
         {

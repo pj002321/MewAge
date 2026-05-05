@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -21,29 +22,29 @@ public class HomeEquipPanel : MonoBehaviour
     [Header("장착 슬롯 (0~2=왼쪽, 3~5=오른쪽)")]
     public EquipmentSlotView[] equipSlots = new EquipmentSlotView[6];
 
-    [Header("탭 버튼")]
-    public Button tabAll;
-    public Button tabByGrade;
-    public Button tabByCiv;
-
-    [Header("탭 스프라이트")]
-    public Sprite tabActiveSprite;
-    public Sprite tabInactiveSprite;
+    [Header("정렬 전환 버튼 (누를 때마다 등급→문명→유형 순환)")]
+    public Button           sortButton;
+    public TMPro.TMP_Text   sortButtonLabel;
 
     [Header("인벤토리")]
-    public Transform            inventoryContent;
-    public EquipmentSlotView    slotPrefab;
+    public Transform inventoryContent;
+    public EquipmentSlotView slotPrefab;
     public EquipmentDetailPopup detailPopup;
 
     [Header("스탯 변화 표시")]
-    public TMPro.TMP_Text statChangeText;
+    public TMP_Text statChangeText;
 
     [Header("캐릭터 이미지")]
-    public UnityEngine.UI.Image characterImage;
+    public RawImage characterImage;
 
-    EquipSortMode _sortMode = EquipSortMode.None;
+    static readonly EquipSortMode[] _sortCycle =
+        { EquipSortMode.ByGrade, EquipSortMode.ByCivilization, EquipSortMode.ByCategory };
+    static readonly string[] _sortLabels = { "등급 순", "문명 순", "유형 순" };
+
+    int           _sortIndex = 0;
+    EquipSortMode _sortMode  = EquipSortMode.ByGrade;
     private bool _showStatChange;
-    private System.Collections.Generic.Dictionary<StatType, float> _prevStats;
+    private Dictionary<StatType, float> _prevStats;
     private Coroutine _statChangeCoroutine;
 
     void Awake()
@@ -58,10 +59,8 @@ public class HomeEquipPanel : MonoBehaviour
 
     void Start()
     {
-        tabAll?.onClick.AddListener(()     => SetSort(EquipSortMode.None));
-        tabByGrade?.onClick.AddListener(() => SetSort(EquipSortMode.ByGrade));
-        tabByCiv?.onClick.AddListener(()   => SetSort(EquipSortMode.ByCivilization));
-        SetSort(EquipSortMode.None);
+        sortButton?.onClick.AddListener(OnSortButtonClicked);
+        SetSort(0);
     }
 
     void OnEnable()
@@ -78,22 +77,20 @@ public class HomeEquipPanel : MonoBehaviour
         if (_statChangeCoroutine != null) StopCoroutine(_statChangeCoroutine);
     }
 
-    void SetSort(EquipSortMode mode)
+    void OnSortButtonClicked()
     {
-        _sortMode = mode;
-        SetTabSprite(tabAll,     mode == EquipSortMode.None);
-        SetTabSprite(tabByGrade, mode == EquipSortMode.ByGrade);
-        SetTabSprite(tabByCiv,   mode == EquipSortMode.ByCivilization);
-        RefreshInventory();
+        _sortIndex = (_sortIndex + 1) % _sortCycle.Length;
+        SetSort(_sortIndex);
     }
 
-    void SetTabSprite(Button btn, bool active)
+    void SetSort(int index)
     {
-        if (btn == null) return;
-        var img = btn.GetComponent<Image>();
-        if (img == null) return;
-        var target = active ? tabActiveSprite : tabInactiveSprite;
-        if (target != null) img.sprite = target;
+        _sortIndex = index;
+        _sortMode  = _sortCycle[index];
+        RefreshInventory();
+
+        if (sortButtonLabel != null)
+            sortButtonLabel.text = _sortLabels[index];
     }
 
     void RefreshAll()
@@ -114,17 +111,9 @@ public class HomeEquipPanel : MonoBehaviour
             characterImage.enabled = false;
             return;
         }
-        string spritePath = $"Character/{charID.ToLower()}";
-        var sprite = Resources.Load<Sprite>(spritePath);
-        if (sprite != null)
-        {
-            characterImage.sprite = sprite;
-            characterImage.enabled = true;
-        }
-        else
-        {
-            characterImage.enabled = false;
-        }
+
+        characterImage.texture = HomeCharacterDisplay.Shared.renderTexture;
+        characterImage.enabled = true;
     }
 
     void RefreshEquipSlots()
@@ -204,7 +193,7 @@ public class HomeEquipPanel : MonoBehaviour
 
         float atkDiff = currStats[StatType.ATK] - _prevStats[StatType.ATK];
         float defDiff = currStats[StatType.DEF] - _prevStats[StatType.DEF];
-        float hpDiff  = currStats[StatType.MaxHP] - _prevStats[StatType.MaxHP];
+        float hpDiff = currStats[StatType.MaxHP] - _prevStats[StatType.MaxHP];
         float critChanceDiff = currStats[StatType.CritChance] - _prevStats[StatType.CritChance];
         float critDmgDiff = currStats[StatType.CritDmg] - _prevStats[StatType.CritDmg];
         float evasionDiff = currStats[StatType.Evasion] - _prevStats[StatType.Evasion];
@@ -212,7 +201,7 @@ public class HomeEquipPanel : MonoBehaviour
         string text = "";
         if (atkDiff != 0) text += $"공격력 {(atkDiff > 0 ? "+" : "")}{atkDiff:F0}\n";
         if (defDiff != 0) text += $"방어력 {(defDiff > 0 ? "+" : "")}{defDiff:F0}\n";
-        if (hpDiff != 0)  text += $"체력 {(hpDiff > 0 ? "+" : "")}{hpDiff:F0}\n";
+        if (hpDiff != 0) text += $"체력 {(hpDiff > 0 ? "+" : "")}{hpDiff:F0}\n";
         if (critChanceDiff != 0) text += $"치명타 확률 {(critChanceDiff > 0 ? "+" : "")}{critChanceDiff:F0}%\n";
         if (critDmgDiff != 0) text += $"치명타 데미지 {(critDmgDiff > 0 ? "+" : "")}{critDmgDiff:F0}%\n";
         if (evasionDiff != 0) text += $"회피율 {(evasionDiff > 0 ? "+" : "")}{evasionDiff:F0}%\n";

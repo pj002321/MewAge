@@ -70,7 +70,7 @@ public class ImprovManager : MonoBehaviourSingleton<ImprovManager>
     // ── 가중치 랜덤 추출 (중복 없이) ─────────────────────────────
     private DB_증강[] DrawImprovs(int count)
     {
-        var pool = DB_증강.FindEntities(_ => true);
+        var pool = DB_증강.FindEntities(e => e.f_증강ID != ImprovType.AUG_SKL);
         if (pool == null || pool.Count == 0)
         {
             this.DLog("[ImprovManager] DB_증강 데이터가 없습니다.");
@@ -127,50 +127,38 @@ public class ImprovManager : MonoBehaviourSingleton<ImprovManager>
 
         switch (data.f_증강ID)
         {
-            // ── 능력치 계열: % 모디파이어 누적 ──────────────────────
+            // ── 절댓값(flat) 계열 — 설명에 % 없음 ───────────────────
             case ImprovType.AUG_ATK:
-                if (RequireSm()) sm.AddPctMod(StatType.ATK, main);
+                if (RequireSm()) sm.SetBase(StatType.ATK, sm.GetBase(StatType.ATK) + main);
                 break;
 
             case ImprovType.AUG_DEF:
-                if (RequireSm()) sm.AddPctMod(StatType.DEF, main);
+                if (RequireSm()) sm.SetBase(StatType.DEF, sm.GetBase(StatType.DEF) + main);
                 break;
 
             case ImprovType.AUG_MAX_HP:
-                if (RequireSm()) sm.AddPctMod(StatType.MaxHP, main);
+                if (RequireSm()) sm.SetBase(StatType.MaxHP, sm.GetBase(StatType.MaxHP) + main);
                 break;
 
             case ImprovType.AUG_SPD_MOV:
-                if (RequireSm()) sm.AddPctMod(StatType.MoveSpeed, main);
-                break;
-
-            case ImprovType.AUG_SPD_ATK:
-                if (RequireSm()) sm.AddPctMod(StatType.AtkSpeed, main);
+                if (RequireSm()) sm.SetBase(StatType.MoveSpeed, sm.GetBase(StatType.MoveSpeed) + main);
                 break;
 
             case ImprovType.AUG_EVA:
-                if (RequireSm()) sm.AddPctMod(StatType.Evasion, main);
-                break;
-
-            case ImprovType.AUG_CRI_RATE:
-                if (RequireSm()) sm.AddPctMod(StatType.CritChance, main);
+                if (RequireSm()) sm.SetBase(StatType.Evasion, sm.GetBase(StatType.Evasion) + main);
                 break;
 
             case ImprovType.AUG_CRI_DMG:
-                if (RequireSm()) sm.AddPctMod(StatType.CritDmg, main);
-                break;
-
-            case ImprovType.AUG_DOT_DMG:
-                if (RequireSm()) sm.AddPctMod(StatType.BleedPower, main);
+                if (RequireSm()) sm.SetBase(StatType.CritDmg, sm.GetBase(StatType.CritDmg) + main);
                 break;
 
             case ImprovType.AUG_REWARD_RNG:
-                if (RequireSm()) sm.AddPctMod(StatType.MagnetRadius, main);
+                if (RequireSm()) sm.SetBase(StatType.MagnetRadius, sm.GetBase(StatType.MagnetRadius) + main);
                 break;
 
             case ImprovType.AUG_SIZE_HP_UP:
                 player.IncreaseSizeHP(main, 0f);
-                if (RequireSm()) sm.AddPctMod(StatType.MaxHP, sub);
+                if (RequireSm()) sm.SetBase(StatType.MaxHP, sm.GetBase(StatType.MaxHP) + sub);
                 break;
 
             case ImprovType.AUG_SIZE_HP_DOWN:
@@ -178,7 +166,20 @@ public class ImprovManager : MonoBehaviourSingleton<ImprovManager>
                 if (RequireSm()) sm.AddPctMod(StatType.MaxHP, -sub);
                 break;
 
-            // ── sm 불필요 ─────────────────────────────────────────
+            // ── % 모디파이어 계열 — 설명에 % 있음 ───────────────────
+            case ImprovType.AUG_SPD_ATK:
+                if (RequireSm()) sm.AddPctMod(StatType.AtkSpeed, main);
+                break;
+
+            case ImprovType.AUG_CRI_RATE:
+                if (RequireSm()) sm.AddPctMod(StatType.CritChance, main);
+                break;
+
+            case ImprovType.AUG_DOT_DMG:
+                if (RequireSm()) sm.AddPctMod(StatType.BleedPower, main);
+                break;
+
+            // ── 특수 계열 ─────────────────────────────────────────
 
             case ImprovType.AUG_HEAL:
                 float healAmount = player.MaxHPValue * (main / 100f);

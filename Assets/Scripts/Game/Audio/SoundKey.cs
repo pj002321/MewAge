@@ -36,4 +36,8 @@ public enum SoundKey
 
     // 기물 설치
     Structure_Place  = 18,
+
+    // 가챠
+    Gacha_Open       = 19,   // 상자 열리는 순간
+    Gacha_ItemReveal = 20,   // 아이템 팝인
 }

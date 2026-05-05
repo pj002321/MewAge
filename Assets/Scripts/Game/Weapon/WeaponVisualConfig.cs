@@ -26,34 +26,11 @@ public class WeaponVisualConfig : ScriptableObject
         public Sprite     sprite;
     }
 
-    // ── 시너지 아이콘 (소형, Image용 Sprite) ────────────────────────
-    [Serializable]
-    public struct SynergyEntry
-    {
-        public WeaponSynergyTag tag;
-        public Sprite           sprite;
-    }
-
-    // ── 시너지 배너 (UpgradePanel 슬롯용) ───────────────────────────
-    [Serializable]
-    public struct SynergyBannerEntry
-    {
-        public WeaponSynergyTag tag;
-        public Sprite           inactiveBanner;   // 비활성화 (장착 0개)
-        public Sprite           activeBanner;     // 활성화 (장착 1개 이상)
-    }
-
     [Header("등급 프레임 스프라이트 (Normal~Legend)")]
     public GradeEntry[] gradeFrames;
 
     [Header("무기 타입 아이콘")]
     public TypeEntry[] typeIcons;
-
-    [Header("시너지 소형 아이콘 (EquipSlot·InvenSlot용)")]
-    public SynergyEntry[] synergyIcons;
-
-    [Header("시너지 배너 아이콘 (UpgradePanel 슬롯용)")]
-    public SynergyBannerEntry[] synergyBanners;
 
     // ── 조회 헬퍼 ───────────────────────────────────────────────────
     public Sprite GetGradeSprite(WeaponGrade grade)
@@ -67,28 +44,6 @@ public class WeaponVisualConfig : ScriptableObject
     {
         foreach (var e in typeIcons)
             if (e.type == type) return e.sprite;
-        return null;
-    }
-
-    public Sprite GetSynergySprite(WeaponSynergyTag tag)
-    {
-        if (tag == WeaponSynergyTag.None) return null;
-        foreach (var e in synergyIcons)
-            if (e.tag == tag) return e.sprite;
-        return null;
-    }
-
-    /// <summary>active=true면 activeBanner, false면 inactiveBanner를 반환합니다.
-    /// activeBanner가 미할당된 경우 inactiveBanner로 폴백합니다.</summary>
-    public Sprite GetSynergyBanner(WeaponSynergyTag tag, bool active = false)
-    {
-        if (tag == WeaponSynergyTag.None) return null;
-        foreach (var e in synergyBanners)
-        {
-            if (e.tag != tag) continue;
-            if (active && e.activeBanner != null) return e.activeBanner;
-            return e.inactiveBanner;
-        }
         return null;
     }
 

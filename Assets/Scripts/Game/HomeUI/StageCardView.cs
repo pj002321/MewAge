@@ -10,12 +10,13 @@ using UnityEngine.UI;
 public class StageCardView : MonoBehaviour
 {
     public Image           iconImage;
-    public Image           overlayImage;  // 잠금 오버레이
+    public Image           overlayImage;   // 잠금 오버레이
     public Image           highlightImage; // 현재 선택 카드 강조
     public RawImage        playerPortrait; // 플레이어 랜딩 애니메이션
     public GameObject      symbolObjects;
     public TextMeshProUGUI stageNameText;
     public TextMeshProUGUI bestWaveText;
+    public TextMeshProUGUI chapterText;    // "챕터\n1-1" 형식
 
     [Header("펀치 대상")]
     public GameObject floatTarget;
@@ -44,6 +45,7 @@ public class StageCardView : MonoBehaviour
         if (stageNameText != null) stageNameText.text = entry.stageName;
         if (bestWaveText  != null)
             bestWaveText.text = entry.bestWave > 0 ? $"최고 웨이브: {entry.bestWave}" : "최고 웨이브: -";
+        if (chapterText   != null) chapterText.text = entry.chapterLabel;
     }
 
     // 중앙 카드: 이름·웨이브·하이라이트 표시 / 비중앙·잠금 카드: 아이콘만 표시
@@ -52,6 +54,7 @@ public class StageCardView : MonoBehaviour
         bool showFull = isCenter && !_isLocked;
         if (stageNameText  != null) stageNameText.gameObject.SetActive(isCenter);
         if (bestWaveText   != null) bestWaveText.gameObject.SetActive(isCenter);
+        if (chapterText    != null) chapterText.gameObject.SetActive(isCenter);
         if (symbolObjects  != null) symbolObjects.SetActive(showFull);
         if (playerPortrait != null) playerPortrait.gameObject.SetActive(showFull);
         if (highlightImage != null) highlightImage.gameObject.SetActive(isCenter);

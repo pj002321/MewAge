@@ -26,11 +26,19 @@ public class HealOrbItem : MonoBehaviour
     [Header("팝인 연출")]
     [SerializeField] private float popDuration = 0.18f;
 
+    [Header("플로팅 (둥둥)")]
+    [SerializeField] private float floatAmplitude = 0.12f;
+    [SerializeField] private float floatFrequency = 1.2f;
+
     private enum State { Idle, Attract }
     private State   _state     = State.Idle;
     private float   _timer;
     private float   _attractSpeed;
     private Vector3 _originScale;
+
+    private bool  _floating;
+    private float _floatBaseY;
+    private float _floatTime;
 
     private void Start()
     {
@@ -41,6 +49,15 @@ public class HealOrbItem : MonoBehaviour
     private void Update()
     {
         _timer += Time.deltaTime;
+
+        // 플로팅 bob (자석 대기 중에도 동작)
+        if (_floating)
+        {
+            _floatTime += Time.deltaTime;
+            float y = _floatBaseY + Mathf.Sin(_floatTime * floatFrequency * Mathf.PI * 2f) * floatAmplitude;
+            transform.position = new Vector3(transform.position.x, y, transform.position.z);
+        }
+
         if (_timer < magnetDelay) return;
 
         var player = PlayerController.Instance;
@@ -48,12 +65,13 @@ public class HealOrbItem : MonoBehaviour
 
         if (_state == State.Idle)
         {
-            float dist           = Vector2.Distance(transform.position, player.Position);
+            float dist            = Vector2.Distance(transform.position, player.Position);
             float effectiveRadius = magnetRadius + (PlayerStats.Shared?.MagnetRadiusBonus ?? 0f);
             if (dist <= effectiveRadius)
             {
-                _state         = State.Attract;
-                _attractSpeed  = 4f;
+                _state        = State.Attract;
+                _attractSpeed = 4f;
+                _floating     = false;
             }
             return;
         }
@@ -103,5 +121,10 @@ public class HealOrbItem : MonoBehaviour
             yield return null;
         }
         transform.localScale = _originScale;
+
+        // PopIn 완료 후 플로팅 시작
+        _floating   = true;
+        _floatBaseY = transform.position.y;
+        _floatTime  = Random.Range(0f, 1f);
     }
 }

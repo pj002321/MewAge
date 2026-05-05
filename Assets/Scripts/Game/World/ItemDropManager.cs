@@ -17,16 +17,16 @@ public class ItemDropManager : MonoBehaviourSingleton<ItemDropManager>
     [SerializeField] private float goldDropChance = 0.5f;
     [SerializeField] private float expDropChance  = 1.0f;
 
-    [Header("보스 Orb 버스트 설정")]
-    [SerializeField] private float bossOrbBurstSpeedMin = 4f;
-    [SerializeField] private float bossOrbBurstSpeedMax = 11f;
-    [SerializeField] private float bossOrbFriction      = 6f;
+    [Header("보스 Orb 포물선 설정")]
+    [SerializeField] private float bossOrbBurstSpeedMin = 5f;
+    [SerializeField] private float bossOrbBurstSpeedMax = 12f;
+    [SerializeField] private float bossOrbGravity       = 16f;
 
-    [Header("엘리트 Orb 버스트 설정")]
-    [SerializeField] private int   eliteOrbCount        = 4;   // 금·경험치 각각 스폰 수
-    [SerializeField] private float eliteOrbSpeedMin     = 5f;
-    [SerializeField] private float eliteOrbSpeedMax     = 9f;
-    [SerializeField] private float eliteOrbFriction     = 5f;
+    [Header("엘리트 Orb 포물선 설정")]
+    [SerializeField] private int   eliteOrbCount    = 4;   // 금·경험치 각각 스폰 수
+    [SerializeField] private float eliteOrbSpeedMin = 5f;
+    [SerializeField] private float eliteOrbSpeedMax = 9f;
+    [SerializeField] private float eliteOrbGravity  = 12f;
 
     // 회복 구슬 프리팹 캐시 (Resources/AUG/aug_spw_hp_skl)
     private const string HealOrbPath = "AUG/aug_spw_hp_skl";
@@ -55,18 +55,17 @@ public class ItemDropManager : MonoBehaviourSingleton<ItemDropManager>
         TrySpawnHealOrb(pos);
     }
 
-    // 위쪽 반원(30°~150°) 부채꼴로 초기 속도를 줘 포물선 궤적을 만듭니다.
+    // 위쪽 부채꼴(60°~120°) 포물선으로 분수처럼 터집니다.
     private void SpawnEliteBurstItem(GameObject prefab, Vector3 pos, DropItem.ItemType type, int value)
     {
         if (prefab == null) return;
         Vector3 offset = new(Random.Range(-0.2f, 0.2f), Random.Range(-0.2f, 0.2f), 0f);
         var go = Instantiate(prefab, pos + offset, Quaternion.identity);
-        float angleDeg = Random.Range(30f, 150f);
+        float angleDeg = Random.Range(60f, 120f);
         float rad      = angleDeg * Mathf.Deg2Rad;
         float speed    = Random.Range(eliteOrbSpeedMin, eliteOrbSpeedMax);
         Vector2 vel    = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad)) * speed;
-        float spd      = type == DropItem.ItemType.Gold ? goldMoveSpeed : expMoveSpeed;
-        go.GetComponent<DropItem>()?.InitBurst(type, value, vel, eliteOrbFriction, spd);
+        go.GetComponent<DropItem>()?.InitParabolic(type, value, vel, eliteOrbGravity);
     }
 
     /// <summary>적 사망 위치에서 아이템을 드롭합니다.</summary>
@@ -87,21 +86,12 @@ public class ItemDropManager : MonoBehaviourSingleton<ItemDropManager>
         if (_healOrbSpawnedThisWave) return;
 
         var player = PlayerController.Instance;
-        if (player == null)
-        {
-            this.DLog("[ItemDrop] TrySpawnHealOrb: PlayerController.Instance null");
-            return;
-        }
+        if (player == null) return;
 
         float chance = player.HealOrbSpawnChance;
-        if (chance <= 0f)
-        {
-            this.DLog($"[ItemDrop] TrySpawnHealOrb: chance={chance} (0이하 → 스킵)");
-            return;
-        }
+        if (chance <= 0f) return;
 
         float roll = Random.value;
-        this.DLog($"[ItemDrop] TrySpawnHealOrb: chance={chance:F2}, roll={roll:F2} → {(roll <= chance ? "스폰" : "미스")}");
         if (roll > chance) return;
 
         SpawnHealOrb(deathPos);
@@ -136,17 +126,17 @@ public class ItemDropManager : MonoBehaviourSingleton<ItemDropManager>
         go.GetComponent<DropItem>()?.Init(type, value, spd);
     }
 
-    /// <summary>보스 드롭 전용 — 360도 랜덤 방향 초기 속도로 사방으로 퍼집니다.</summary>
+    /// <summary>보스 드롭 전용 — 위쪽 부채꼴(45°~135°) 포물선으로 분수처럼 터집니다.</summary>
     private void SpawnBurstItem(GameObject prefab, Vector3 pos, DropItem.ItemType type, int value)
     {
         if (prefab == null) return;
         Vector3 offset = new(Random.Range(-0.4f, 0.4f), Random.Range(-0.4f, 0.4f), 0f);
         var go = Instantiate(prefab, pos + offset, Quaternion.identity);
-        float   angle    = Random.Range(0f, 360f) * Mathf.Deg2Rad;
+        float   angleDeg = Random.Range(45f, 135f);
+        float   rad      = angleDeg * Mathf.Deg2Rad;
         float   speed    = Random.Range(bossOrbBurstSpeedMin, bossOrbBurstSpeedMax);
-        Vector2 velocity = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * speed;
-        float   spd      = type == DropItem.ItemType.Gold ? goldMoveSpeed : expMoveSpeed;
-        go.GetComponent<DropItem>()?.InitBurst(type, value, velocity, bossOrbFriction, spd);
+        Vector2 velocity = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad)) * speed;
+        go.GetComponent<DropItem>()?.InitParabolic(type, value, velocity, bossOrbGravity);
     }
 
     /// <summary>웨이브 종료 시 맵에 남은 골드·경험치 orb를 전부 위로 튕겨 올립니다.</summary>

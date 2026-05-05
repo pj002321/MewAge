@@ -120,12 +120,68 @@ MonoBehaviour:
   pullDuration: 0.25
   projectilePrefab: {fileID: 6277426376135361209, guid: a2cba1009f124e2488b8a8a44f95a538, type: 3}
   projectileSpeed: 30
+  projectileSpeedCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.38761583
+      value: 0.05361573
+      inSlope: 0.08387084
+      outSlope: 0.08387084
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.06679976
+      outWeight: 1
+    - serializedVersion: 3
+      time: 0.643971
+      value: 0.103803225
+      inSlope: 0.35102636
+      outSlope: 0.35102636
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.9795434
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 0.86491126
+      value: 0.2768513
+      inSlope: 1.2938725
+      outSlope: 1.2938725
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 2
+      outSlope: 2
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  projectileRampTime: 1
   useParabolicShot: 0
   parabolicArcHeight: 1.5
   parabolicSpawnLocalPos: {x: 0, y: 0, z: 0}
   shootScalePulse: 1
   scalePulseMax: 1.3
   scalePulseDuration: 0.12
+  shootRecoil: 1
+  recoilDist: 0.15
+  recoilBackDur: 0.06
+  recoilReturnDur: 0.14
   useTrail: 1
   trailTime: 0.1
   trailStartWidth: 0.28

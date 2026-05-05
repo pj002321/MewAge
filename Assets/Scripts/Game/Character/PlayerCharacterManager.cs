@@ -176,8 +176,9 @@ public class PlayerCharacterManager : MonoBehaviourSingleton<PlayerCharacterMana
     /// </summary>
     void SwapPlayerModel(string charId, PlayerController player)
     {
-        // VisualSlot 확보 (없으면 생성)
-        var visualSlot = player.transform.Find("VisualSlot");
+        // VisualSlot 확보 — Inspector 할당 우선, 없으면 이름 탐색, 그래도 없으면 생성
+        var visualSlot = player.VisualSlot
+                      ?? player.transform.Find("VisualSlot");
         if (visualSlot == null)
         {
             var go = new GameObject("VisualSlot");
@@ -225,6 +226,10 @@ public class PlayerCharacterManager : MonoBehaviourSingleton<PlayerCharacterMana
         var anim = _currentPlayerModel.GetComponent<Animator>()
                 ?? _currentPlayerModel.GetComponentInChildren<Animator>();
         if (anim != null) player.SetAnimator(anim);
+
+        // 모델 교체 후 SlimeBobAnimation 재초기화 (Awake 시점엔 모델이 없었을 수 있음)
+        var slimeBob = visualSlot.GetComponentInChildren<SlimeBobAnimation>();
+        slimeBob?.Reinitialize();
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -281,10 +286,8 @@ public class PlayerCharacterManager : MonoBehaviourSingleton<PlayerCharacterMana
                 player.IncreaseDodge(pct / 100f);         // fraction
                 break;
             case "STAT_CUR_REWARD":
-                stats?.SetSynergyBonus(stats.GoldBonus + (int)pct, stats.ExpBonus);
-                break;
             case "STAT_CUR_EXP":
-                stats?.SetSynergyBonus(stats.GoldBonus, stats.ExpBonus + (int)pct);
+                // 시너지 골드/경험치 보너스 시스템 제거됨 — TODO: 새 시너지 효과 적용
                 break;
             // 아래 항목들은 WeaponPoint/WeaponData 직접 연동이 필요합니다 (TODO)
             case "STAT_CRI_RATE":   // 치명타 확률 → WeaponPoint

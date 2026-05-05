@@ -212,4 +212,17 @@ public class SoundManager : MonoBehaviourSingleton<SoundManager>
         else if (currentScene == "game")
             PlayChapterGameBGM(currentChapterId);
     }
+
+    // ─────────────────────────────────────────────────
+    // 설정 (뮤트)
+    // ─────────────────────────────────────────────────
+    public void SetBGMEnabled(bool enabled)
+    {
+        bgmSource.mute = !enabled;
+    }
+
+    public void SetSFXEnabled(bool enabled)
+    {
+        sfxSource.mute = !enabled;
+    }
 }

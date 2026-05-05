@@ -13,6 +13,7 @@ public enum ImprovType
     AUG_SIZE_HP_DOWN = 6,   // 몸집 작아지고 최대 체력 감소
     AUG_SPD_ATK      = 7,   // 공격속도 증가
     AUG_EVA          = 8,   // 회피 확률 증가
+    AUG_SKL          = 9,  // 기물 쿨타임 감소 — 증강 풀 제외
     AUG_REWARD_RNG   = 10,  // 골드·경험치 흡수 반경 증가
     AUG_DOT_DMG      = 11,  // 출혈 데미지 증가
     AUG_CRI_RATE     = 12,  // 크리티컬 확률 증가

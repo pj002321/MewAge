@@ -3,11 +3,10 @@ using TMPro;
 using Mewage.DB;
 using UnityEngine.UI;
 using System.Collections;
-using System.Text.RegularExpressions;
 
 /// <summary>
 /// 저주/축복 카드 UI.
-/// Inspector 연결: titleText, blessingText, curseText, iconImg, highlightImg (하이라이트 이미지)
+/// Inspector 연결: titleText, blessingText, curseText, iconImg
 /// </summary>
 public class CurseRewardCard : MonoBehaviour
 {
@@ -60,66 +59,26 @@ public class CurseRewardCard : MonoBehaviour
     public void Setup(DB_증강 data)
     {
         if (data == null) return;
-        if (titleText)    titleText.text    = data.f_이름;
+        if (titleText) titleText.text = data.f_이름;
 
+        // 아이콘은 축복 AugId로 매칭 (f_증강ID가 아닌 f_축복 사용)
         if (iconImg)
         {
-            string augIdStr = data.f_증강ID.ToString();
-            Sprite sprite = ImprovVisualConfig.Shared?.GetSprite(augIdStr)
-                         ?? Resources.Load<Sprite>("AUG/" + augIdStr.ToLower());
+            string blessingId = data.f_축복;
+            Sprite sprite = ImprovVisualConfig.Shared?.GetSprite(blessingId)
+                         ?? (string.IsNullOrEmpty(blessingId) ? null
+                             : Resources.Load<Sprite>("AUG/" + blessingId.ToLower()));
             iconImg.sprite  = sprite;
             iconImg.enabled = sprite != null;
         }
 
-        if (blessingText) 
-        {
-            blessingText.text = ColorizeNumbers(FormatEffect(data.f_축복, data.f_축복수치, curse: false), false);
-            blessingText.color = Color.white;
-        }
-        if (curseText)    
-        {
-            curseText.text    = ColorizeNumbers(FormatEffect(data.f_저주,  data.f_저주수치, curse: true), true);
-            curseText.color = Color.white;
-        }
+        if (blessingText)
+            blessingText.text = AugmentHelper.BuildEffectLineDouble(data.f_축복, data.f_축복수치, positive: true) ?? "-";
+
+        if (curseText)
+            curseText.text = AugmentHelper.BuildEffectLineDouble(data.f_저주, data.f_저주수치, positive: false) ?? "-";
 
         var button = GetComponent<Button>();
         if (button) button.interactable = true;
-    }
-
-    static string FormatEffect(string augId, float value, bool curse)
-    {
-        if (value <= 0f || string.IsNullOrEmpty(augId)) return "-";
-        string statName = PlayerStatManager.GetStatName(AugIdToStat(augId));
-        bool isSkl = augId == "AUG_SKL";
-        bool isIncrease = curse ? isSkl : !isSkl;
-        string label = isIncrease ? "증가" : "감소";
-        return $"{statName}  {value:0.#}% {label}";
-    }
-
-    public static StatType AugIdToStat(string id) => id switch
-    {
-        "AUG_ATK"          => StatType.ATK,
-        "AUG_DEF"          => StatType.DEF,
-        "AUG_MAX_HP"       => StatType.MaxHP,
-        "AUG_SIZE_HP_UP"   => StatType.MaxHP,
-        "AUG_SIZE_HP_DOWN" => StatType.MaxHP,
-        "AUG_SPD_MOV"      => StatType.MoveSpeed,
-        "AUG_SPD_ATK"      => StatType.AtkSpeed,
-        "AUG_EVA"          => StatType.Evasion,
-        "AUG_CRI_RATE"     => StatType.CritChance,
-        "AUG_CRI_DMG"      => StatType.CritDmg,
-        "AUG_REWARD_RNG"   => StatType.MagnetRadius,
-        "AUG_DOT_DMG"      => StatType.BleedPower,
-        _                  => StatType.ATK,
-    };
-
-    /// <summary>텍스트의 숫자를 축복은 녹색, 저주는 빨강으로 채색합니다.</summary>
-    private static string ColorizeNumbers(string text, bool curse)
-    {
-        return Regex.Replace(text, @"\d+(?:\.\d+)?%", match =>
-        {
-            string color = curse ? "#FF5555" : "#55FF88";
-            return $"<color={color}>{match.Value}</color>";
-        });
     }
 }

@@ -46,7 +46,6 @@ public class AugmentStatPanel : MonoBehaviour
         "STAT_ATK_RNG"    => "공격사거리",
         "STAT_CUR_REWARD" => "추가 골드",
         "STAT_CUR_EXP"    => "추가 경험치",
-        "STAT_SKL_CD"     => "기물 쿨타임",
         "STAT_STUN"       => "적 둔화",
         "STAT_DOT_DMG"    => "출혈 데미지",
         "STAT_DOT"        => "지속피해",

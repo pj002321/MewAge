@@ -93,7 +93,7 @@ public class BossChargeSkill : BossSkillBase
         lr.SetPosition(1, start);
         lr.startWidth   = warningLineWidth;
         lr.endWidth     = warningLineWidth;
-        lr.material     = warningMaterial != null
+        lr.material = warningMaterial != null
             ? warningMaterial
             : new Material(Shader.Find("Sprites/Default"));
         lr.startColor   = warningColor;

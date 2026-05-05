@@ -67,10 +67,16 @@ public class WeaponPoint : MonoBehaviour
     [SerializeField] private float      parabolicArcHeight = 1.5f;
     [SerializeField] private Vector3    parabolicSpawnLocalPos;   // 발사 위치 (부모 기준 로컬)
 
-    [Header("발사 스케일 펄스")]
+    [Header("발사 스케일 펄스 (근접/부메랑 등)")]
     [SerializeField] private bool  shootScalePulse    = true;
-    [SerializeField] private float scalePulseMax      = 1.3f;   // 최대 배율
-    [SerializeField] private float scalePulseDuration = 0.12f;  // 총 지속 시간 (초)
+    [SerializeField] private float scalePulseMax      = 1.3f;
+    [SerializeField] private float scalePulseDuration = 0.12f;
+
+    [Header("원거리 반동 (Ranged 전용)")]
+    [SerializeField] private bool  shootRecoil        = true;
+    [SerializeField] private float recoilDist         = 0.15f;  // 뒤로 밀리는 거리
+    [SerializeField] private float recoilBackDur      = 0.06f;  // 뒤로 당겨지는 시간
+    [SerializeField] private float recoilReturnDur    = 0.14f;  // 원위치 복귀 시간
 
     [Header("잔상 효과 (Striking/Overshooting 구간)")]
     [SerializeField] private bool  useTrail        = true;
@@ -636,6 +642,12 @@ public class WeaponPoint : MonoBehaviour
     private void ShootAtBoss(BossController boss)
     {
         if (projectilePrefab == null) return;
+
+        // 발사 직전 타겟 방향으로 회전 스냅 (노룩 방지)
+        Vector2 aimDir = ((Vector2)boss.transform.position - (Vector2)transform.position).normalized;
+        if (!useParabolicShot)
+            SnapRotationToDir(aimDir);
+
         SoundManager.Shared?.Play(SoundKey.Weapon_Shoot);
         var (finalDmg, isCrit) = RollCrit(attackDamage);
 
@@ -654,19 +666,25 @@ public class WeaponPoint : MonoBehaviour
         }
         else
         {
-            Vector2 dir = ((Vector2)boss.transform.position - (Vector2)transform.position).normalized;
-            proj.Init(finalDmg, dir, projectileSpeed, isPrimaryCritical: isCrit,
+            proj.Init(finalDmg, aimDir, projectileSpeed, isPrimaryCritical: isCrit,
                 lifeSteal: lifeSteal, dotDamage: dotDamage, areaHitRadius: areaHitRadius,
                 areaHitDamageRatio: areaHitDamageRatio, criticalRate: criticalRate,
-                criticalMultiplier: criticalMultiplier, baseDamage: attackDamage, knockbackPower: knockbackPower);
+                criticalMultiplier: criticalMultiplier, baseDamage: attackDamage, knockbackPower: knockbackPower,
+                acceleration: projectileSpeed * 3f);
         }
         TriggerAttackAnimation();
-        TriggerScalePulse();
+        TriggerRecoil(aimDir);
     }
 
     private void ShootAt(EnemyController target)
     {
         if (projectilePrefab == null) return;
+
+        // 발사 직전 타겟 방향으로 회전 스냅 (노룩 방지)
+        Vector2 aimDir = (target.transform.position - transform.position).normalized;
+        if (!useParabolicShot)
+            SnapRotationToDir(aimDir);
+
         SoundManager.Shared?.Play(SoundKey.Weapon_Shoot);
         var (finalDmg, isCrit) = RollCrit(attackDamage);
 
@@ -685,14 +703,14 @@ public class WeaponPoint : MonoBehaviour
         }
         else
         {
-            Vector2 dir = (target.transform.position - transform.position).normalized;
-            proj.Init(finalDmg, dir, projectileSpeed, isPrimaryCritical: isCrit,
+            proj.Init(finalDmg, aimDir, projectileSpeed, isPrimaryCritical: isCrit,
                 lifeSteal: lifeSteal, dotDamage: dotDamage, areaHitRadius: areaHitRadius,
                 areaHitDamageRatio: areaHitDamageRatio, criticalRate: criticalRate,
-                criticalMultiplier: criticalMultiplier, baseDamage: attackDamage, knockbackPower: knockbackPower);
+                criticalMultiplier: criticalMultiplier, baseDamage: attackDamage, knockbackPower: knockbackPower,
+                acceleration: projectileSpeed * 3f);
         }
         TriggerAttackAnimation();
-        TriggerScalePulse();
+        TriggerRecoil(aimDir);
     }
 
     private void ZapAtBoss(BossController boss)   => StartCoroutine(BurstZapRoutine(MuzzleTransform, null, boss));
@@ -1219,6 +1237,46 @@ public class WeaponPoint : MonoBehaviour
     }
 
 
+
+    private void SnapRotationToDir(Vector2 dir)
+    {
+        if (dir.sqrMagnitude < 0.001f) return;
+        float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg - 90f;
+        transform.rotation = Quaternion.Euler(0f, 0f, angle);
+    }
+
+    private void TriggerRecoil(Vector2 shootDir)
+    {
+        if (!shootRecoil) return;
+        if (_scalePulseCoroutine != null) StopCoroutine(_scalePulseCoroutine);
+        _scalePulseCoroutine = StartCoroutine(RecoilRoutine(shootDir));
+    }
+
+    private System.Collections.IEnumerator RecoilRoutine(Vector2 shootDir)
+    {
+        // 발사 방향 반대로 로컬 위치 오프셋 (부모 공간 기준)
+        Vector3 backOffset = transform.parent != null
+            ? transform.parent.InverseTransformVector((Vector3)(-shootDir.normalized) * recoilDist)
+            : (Vector3)(-shootDir.normalized) * recoilDist;
+        Vector3 recoilPos = originLocalPos + backOffset;
+
+        // 뒤로 당겨지기
+        for (float t = 0f; t < recoilBackDur; t += Time.deltaTime)
+        {
+            transform.localPosition = Vector3.Lerp(originLocalPos, recoilPos, t / recoilBackDur);
+            yield return null;
+        }
+        transform.localPosition = recoilPos;
+
+        // 원위치 복귀
+        for (float t = 0f; t < recoilReturnDur; t += Time.deltaTime)
+        {
+            transform.localPosition = Vector3.Lerp(recoilPos, originLocalPos, t / recoilReturnDur);
+            yield return null;
+        }
+        transform.localPosition = originLocalPos;
+        _scalePulseCoroutine = null;
+    }
 
     private void TriggerScalePulse()
     {
@@ -1809,9 +1867,6 @@ public class WeaponPoint : MonoBehaviour
             attackDamage += weaponType == WeaponType.Charge    ? player.MeleeAttackBonus  : 0f;
             attackDamage += weaponType == WeaponType.Hammer    ? player.MeleeAttackBonus  : 0f;
 
-            if (player.SynergyAtkPct > 0f)
-                attackDamage *= (1f + player.SynergyAtkPct / 100f);
-
             var relic = RelicManager.Shared;
             if (relic != null)
             {
@@ -1831,7 +1886,13 @@ public class WeaponPoint : MonoBehaviour
             }
         }
 
-        GetComponentInChildren<SpriteOutline>()?.SetStar(data.star);
+        var outline = GetComponentInChildren<SpriteOutline>();
+        outline?.SetStar(data.star);
+        outline?.SetGrade(data.grade);
+
+        var weaponSr = GetComponentInChildren<SpriteRenderer>();
+        var aura = GetComponent<WeaponAura>() ?? gameObject.AddComponent<WeaponAura>();
+        aura.Apply(weaponSr, data.grade);
     }
 
     /// <summary>크리티컬 판정. isCritical=true이면 데미지에 multiplier를 곱한 값 반환.</summary>

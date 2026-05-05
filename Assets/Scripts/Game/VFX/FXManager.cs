@@ -325,7 +325,7 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
                 vels[i] += deathDir * Random.Range(1f, 2f);
         }
 
-        float duration = 0.55f;
+        float duration = 0.2f;
         float elapsed  = 0f;
 
         while (elapsed < duration)

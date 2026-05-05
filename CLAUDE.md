@@ -371,6 +371,7 @@ ScriptableObject (`Assets/Data/`). 챕터별 일반 적 스폰 항목(가중치/
 - Debug 헬퍼: `this.DLog()` / `this.DError()` ([Assets/Scripts/Extension/StringExtension.cs](Assets/Scripts/Extension/StringExtension.cs)).
 - Inspector Button OnClick 타겟 메서드 → `public` 필수.
 - 버튼 SFX: `IPointerClickHandler` 금지 → `UIButtonSoundAutoAttach`의 `onClick.AddListener` 사용.
+- **버튼 리스너 등록 규칙**: Inspector OnClick 연결 금지. 버튼 레퍼런스는 최상위 부모 스크립트에서 `[SerializeField]`로 선언하고, `Awake()`에서 `onClick.AddListener()`로 연결. 자식/하위 컴포넌트에 버튼 레퍼런스를 분산하지 않음.
 - **Global Light2D 어둡게 패턴**: `GlobalLightDimmer.Register()` / `Release()` 사용. 직접 수정 금지.
 - **에디터에서 비활성 GameObject 탐색**: `Resources.FindObjectsOfTypeAll<GameObject>()` + `go.scene` 필터 사용 (`GameObject.Find()` 비활성 스킵).
 - **SpriteRenderer**: 플레이어 루트가 아닌 자식 오브젝트에 있음 → `GetComponentInChildren<SpriteRenderer>()` 사용.

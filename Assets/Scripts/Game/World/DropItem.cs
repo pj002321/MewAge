@@ -4,7 +4,9 @@ using UnityEngine;
 /// <summary>
 /// 적 사망 시 떨어지는 골드/경험치 아이템.
 /// 자석 반경에 진입하면 잠깐 튕겨났다가(Repel) 가속 흡수됩니다(Attract).
-/// 보스 드롭 시 InitBurst()로 초기 속도를 줘 사방으로 튀어나갑니다.
+/// 보스/엘리트 드롭: InitParabolic()으로 포물선 궤적 → 착지 후 플로팅 → 자동 수집.
+/// 일반 드롭: Init()으로 제자리 스폰, 플로팅 효과 적용.
+/// 웨이브 종료: ThrowUp()으로 짧은 파편 burst 후 강제 수집.
 /// </summary>
 public class DropItem : MonoBehaviour
 {
@@ -21,16 +23,20 @@ public class DropItem : MonoBehaviour
     [Header("흡수 연출")]
     [SerializeField] private float repelDuration  = 0.18f;
     [SerializeField] private float repelForce     = 5f;
-    [SerializeField] private float repelScaleUp   = 1.6f;   // Repel 시 최대 스케일 배율
+    [SerializeField] private float repelScaleUp   = 1.6f;
     [SerializeField] private float attractAccel   = 28f;
     [SerializeField] private float attractMaxSpeed = 20f;
-    [SerializeField] private float attractScaleMin = 0.15f; // Attract 도착 직전 최소 스케일 배율
+    [SerializeField] private float attractScaleMin = 0.15f;
+
+    [Header("플로팅 (둥둥)")]
+    [SerializeField] private float floatAmplitude = 0.12f;
+    [SerializeField] private float floatFrequency = 1.2f;
 
     [Header("잔상 (Ghost Sprite)")]
-    [SerializeField] private bool  useGhost       = true;
-    [SerializeField] private float ghostInterval  = 0.04f;  // 잔상 생성 간격 (초)
-    [SerializeField] private float ghostLifetime  = 0.12f;  // 잔상 소멸 시간 (초)
-    [SerializeField] private float ghostAlpha     = 0.45f;  // 잔상 초기 알파
+    [SerializeField] private bool  useGhost      = true;
+    [SerializeField] private float ghostInterval = 0.04f;
+    [SerializeField] private float ghostLifetime = 0.12f;
+    [SerializeField] private float ghostAlpha    = 0.45f;
 
     private SpriteRenderer _sr;
     private float          _ghostTimer;
@@ -45,9 +51,20 @@ public class DropItem : MonoBehaviour
     private Vector3 orginScale;
     private float   timer;
 
-    // 초기 튕김 속도 (보스 드롭 전용)
+    // 버스트 공통
     private Vector2 burstVelocity;
     private float   burstFriction = 8f;
+
+    // 포물선 전용
+    private bool  _useGravity;
+    private float _gravityAccel;
+    private bool  _blockAttract;
+    private float _spawnY;
+
+    // 플로팅
+    private bool  _floating;
+    private float _floatBaseY;
+    private float _floatTime;
 
     // ── 초기화 ────────────────────────────────────────────────────
 
@@ -63,6 +80,18 @@ public class DropItem : MonoBehaviour
         Init(type, val, speedOverride);
         burstVelocity = velocity;
         burstFriction = friction;
+    }
+
+    /// <summary>보스/엘리트 드롭 — 포물선 궤도로 날아가 착지 후 플로팅 → 자동 수집됩니다.</summary>
+    public void InitParabolic(ItemType type, int val, Vector2 velocity, float gravity = 16f)
+    {
+        Init(type, val);
+        burstVelocity = velocity;
+        burstFriction = 0f;
+        _useGravity   = true;
+        _gravityAccel = gravity;
+        _blockAttract = true;
+        _spawnY       = transform.position.y;
     }
 
     private void Start()
@@ -95,11 +124,35 @@ public class DropItem : MonoBehaviour
     {
         timer += Time.deltaTime;
 
-        if (burstVelocity.sqrMagnitude > 0.01f)
+        // ── 이동 처리 ─────────────────────────────────────────────
+        if (_useGravity)
+        {
+            // 포물선: Y축 중력, X축 공기 저항
+            burstVelocity.y -= _gravityAccel * Time.deltaTime;
+            burstVelocity.x  = Mathf.MoveTowards(burstVelocity.x, 0f, 4f * Time.deltaTime);
+            transform.position += (Vector3)(burstVelocity * Time.deltaTime);
+
+            // 하강 중 스폰 높이 이하면 착지
+            if (_blockAttract && burstVelocity.y <= 0f && transform.position.y <= _spawnY + 0.1f)
+            {
+                burstVelocity = Vector2.zero;
+                _useGravity   = false;
+                _blockAttract = false;
+                StartFloating();
+            }
+        }
+        else if (burstVelocity.sqrMagnitude > 0.01f)
         {
             transform.position += (Vector3)(burstVelocity * Time.deltaTime);
             burstVelocity       = Vector2.MoveTowards(burstVelocity, Vector2.zero,
                                                       burstFriction * Time.deltaTime);
+            if (!_floating && burstVelocity.sqrMagnitude <= 0.01f)
+                StartFloating();
+        }
+        else if (!_floating && _absorbState == AbsorbState.Idle)
+        {
+            // 버스트 없이 스폰된 경우 (일반 드롭)
+            StartFloating();
         }
 
         if (timer < magnetDelay) return;
@@ -111,10 +164,21 @@ public class DropItem : MonoBehaviour
         {
             case AbsorbState.Idle:
             {
-                float dist            = Vector2.Distance(transform.position, player.Position);
-                float effectiveRadius = magnetRadius + (PlayerStats.Shared?.MagnetRadiusBonus ?? 0f);
-                if (dist <= effectiveRadius)
-                    BeginRepel(player);
+                // 플로팅 bob
+                if (_floating)
+                {
+                    _floatTime += Time.deltaTime;
+                    float y = _floatBaseY + Mathf.Sin(_floatTime * floatFrequency * Mathf.PI * 2f) * floatAmplitude;
+                    transform.position = new Vector3(transform.position.x, y, transform.position.z);
+                }
+
+                if (!_blockAttract)
+                {
+                    float dist            = Vector2.Distance(transform.position, player.Position);
+                    float effectiveRadius = magnetRadius + (PlayerStats.Shared?.MagnetRadiusBonus ?? 0f);
+                    if (dist <= effectiveRadius)
+                        BeginRepel(player);
+                }
                 break;
             }
 
@@ -125,7 +189,6 @@ public class DropItem : MonoBehaviour
                 transform.position += (Vector3)(_velocity * Time.deltaTime);
                 _velocity          *= Mathf.Max(0f, 1f - 10f * Time.deltaTime);
 
-                // 스케일: 1 → repelScaleUp → 1 (sin 곡선)
                 float progress = 1f - Mathf.Clamp01(_repelTimer / repelDuration);
                 float s = 1f + Mathf.Sin(progress * Mathf.PI) * (repelScaleUp - 1f);
                 transform.localScale = orginScale * s;
@@ -135,7 +198,6 @@ public class DropItem : MonoBehaviour
                     transform.localScale = orginScale;
                     _absorbState  = AbsorbState.Attract;
                     _attractSpeed = repelForce * 0.5f;
-                
                 }
                 break;
             }
@@ -149,11 +211,9 @@ public class DropItem : MonoBehaviour
                 if (dist > 0.01f)
                     transform.position += dir.normalized * _attractSpeed * Time.deltaTime;
 
-                // 스케일: 1 → attractScaleMin (거리 1.5 이내부터 축소)
                 float scaleFactor = Mathf.Lerp(attractScaleMin, 1f, Mathf.Clamp01(dist / 1.5f));
                 transform.localScale = orginScale * scaleFactor;
 
-                // 잔상 스폰
                 if (useGhost && _sr != null)
                 {
                     _ghostTimer -= Time.deltaTime;
@@ -168,8 +228,16 @@ public class DropItem : MonoBehaviour
         }
     }
 
+    private void StartFloating()
+    {
+        _floating   = true;
+        _floatBaseY = transform.position.y;
+        _floatTime  = Random.Range(0f, 1f); // 위상 무작위화 (오브들이 동기화되지 않도록)
+    }
+
     private void BeginRepel(PlayerController player)
     {
+        _floating    = false;
         _absorbState = AbsorbState.Repel;
         _repelTimer  = repelDuration;
         _ghostTimer  = 0f;
@@ -186,8 +254,8 @@ public class DropItem : MonoBehaviour
         ghost.transform.position   = transform.position;
         ghost.transform.localScale = transform.localScale;
 
-        var ghostSr        = ghost.AddComponent<SpriteRenderer>();
-        ghostSr.sprite     = _sr.sprite;
+        var ghostSr            = ghost.AddComponent<SpriteRenderer>();
+        ghostSr.sprite         = _sr.sprite;
         ghostSr.sortingLayerID = _sr.sortingLayerID;
         ghostSr.sortingOrder   = _sr.sortingOrder - 1;
 
@@ -198,7 +266,7 @@ public class DropItem : MonoBehaviour
         StartCoroutine(FadeGhost(ghostSr, ghostLifetime));
     }
 
-    private System.Collections.IEnumerator FadeGhost(SpriteRenderer ghostSr, float duration)
+    private IEnumerator FadeGhost(SpriteRenderer ghostSr, float duration)
     {
         float elapsed = 0f;
         Color start   = ghostSr.color;
@@ -211,28 +279,13 @@ public class DropItem : MonoBehaviour
         }
     }
 
-    /// <summary>웨이브 종료 시 호출 — 살짝 아래로 내려갔다가 위로 슝 튕겨 올린 뒤 자동 수집합니다.</summary>
+    /// <summary>웨이브 종료 시 호출 — 제자리에서 파편 FX를 터뜨리고 즉시 파괴됩니다.</summary>
     public void ThrowUp()
     {
         StopAllCoroutines();
-        _absorbState = AbsorbState.Idle;
-        timer        = 0f;
-        StartCoroutine(ThrowUpRoutine());
-    }
-
-    private IEnumerator ThrowUpRoutine()
-    {
-        // 1단계: 살짝 아래로
-        burstVelocity = new Vector2(Random.Range(-1f, 1f), Random.Range(-4f, -2f));
-        burstFriction = 0f;
-        yield return new WaitForSeconds(0.08f);
-
-        // 2단계: 위로 슝
-        burstVelocity = new Vector2(Random.Range(-3f, 3f), Random.Range(20f, 28f));
-        burstFriction = 8f;
-
-        yield return new WaitForSeconds(0.55f);
-        if (gameObject != null && gameObject.activeInHierarchy) Collect();
+        if (itemType == ItemType.Gold) FXManager.Shared?.SpawnGoldOrbDebris(transform.position);
+        else                           FXManager.Shared?.SpawnExpOrbDebris(transform.position);
+        Destroy(gameObject);
     }
 
     private IEnumerator AutoCollectDelayed(float delay)
@@ -241,10 +294,13 @@ public class DropItem : MonoBehaviour
         if (gameObject != null && gameObject.activeInHierarchy) Collect();
     }
 
-    /// <summary>웨이브 종료 시 호출 — 즉시 플레이어 방향으로 유도 시작.</summary>
+    /// <summary>즉시 플레이어 방향으로 유도 시작.</summary>
     public void ForceAttract()
     {
         burstVelocity = Vector2.zero;
+        _useGravity   = false;
+        _blockAttract = false;
+        _floating     = false;
         timer         = magnetDelay;
         _velocity     = Vector2.zero;
         _absorbState  = AbsorbState.Attract;
@@ -253,12 +309,12 @@ public class DropItem : MonoBehaviour
         transform.localScale = orginScale;
     }
 
-    /// <summary>즉시 수집 (패널 열릴 때 강제 흡수용)</summary>
+    /// <summary>즉시 수집</summary>
     public void Collect()
     {
         var stats = PlayerStats.Shared;
-        if (itemType == ItemType.Gold) stats?.AddGold(value + (stats?.GoldBonus ?? 0));
-        else                           stats?.AddExp (value + (stats?.ExpBonus  ?? 0));
+        if (itemType == ItemType.Gold) stats?.AddGold(value);
+        else                           stats?.AddExp (value);
 
         var player = PlayerController.Instance;
         Vector3 spawnPos = player != null

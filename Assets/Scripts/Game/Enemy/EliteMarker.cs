@@ -9,7 +9,11 @@ public class EliteMarker : UnityEngine.MonoBehaviour
 
     private EnemyController _ec;
 
-    void Awake() => _ec = GetComponent<EnemyController>();
+    void Awake()
+    {
+        _ec = GetComponent<EnemyController>();
+        if (_ec != null) _ec.KnockbackImmune = true;
+    }
 
     void OnEnable()
     {

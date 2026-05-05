@@ -45,18 +45,32 @@ public class GachaResultPopup : MonoBehaviour
     public float multiDelay  = 0.12f;
 
     public Action OnDrawRequested;
+    public Action OnDrawReset;
 
     // 뽑기 결과 임시 저장 (애니메이션 후 표시)
     EquipmentData       _pendingResult;
     List<EquipmentData> _pendingMultiResult;
+
+    // 한 번 더 뽑기용 저장
+    int          _currentGemCost;
+    GachaBoxType _currentBoxType;
+
+    // 연출 진행 중 플래그 — true 이면 버튼/닫기 차단
+    bool _isRevealing;
 
     // ── 초기화 ─────────────────────────────────────────────────────────
 
     void Awake()
     {
         closeHitArea?.onClick.AddListener(Close);
-        drawButton?.onClick.AddListener(() => OnDrawRequested?.Invoke());
+        drawButton?.onClick.AddListener(OnDrawButtonClicked);
         gameObject.SetActive(false);
+    }
+
+    void OnDrawButtonClicked()
+    {
+        if (_isRevealing) return;
+        OpenForDraw(_currentGemCost, _currentBoxType);
     }
 
     // ── 공개 API ───────────────────────────────────────────────────────
@@ -69,11 +83,17 @@ public class GachaResultPopup : MonoBehaviour
 
         _pendingResult      = null;
         _pendingMultiResult = null;
+        _currentGemCost     = gemCost;
+        _currentBoxType     = boxType;
+
+        // HomeShopPanel의 중복 방지 플래그 리셋
+        OnDrawReset?.Invoke();
 
         if (drawCostText) drawCostText.text = $"x{gemCost}";
 
         gameObject.SetActive(true);
         ApplyGachaVisual(boxType);
+        SetInteractable(false);   // 즉시 차단 — 코루틴 시작 전 연타 방지
 
         // 외부에서 ShowResult / ShowMultiResult 로 결과를 주입받은 뒤
         // 코루틴이 애니메이션 종료 후 표시합니다.
@@ -96,6 +116,7 @@ public class GachaResultPopup : MonoBehaviour
 
     public void Close()
     {
+        if (_isRevealing) return;
         StopAllCoroutines();
         OnDrawRequested = null;
         gameObject.SetActive(false);
@@ -126,6 +147,7 @@ public class GachaResultPopup : MonoBehaviour
 
             // 현재 클립 종료 → bComplete = true
             chestAnimator.SetBool("bComplete", true);
+            SoundManager.Shared?.Play(SoundKey.Gacha_Open);
             this.DLog("[GachaResultPopup] bComplete = true ✅");
 
             // 전환 대기 (2프레임)
@@ -133,13 +155,24 @@ public class GachaResultPopup : MonoBehaviour
             yield return null;
         }
 
-        // 아이템 팝인 표시
+        // 아이템 팝인 표시 (진행 중 버튼·닫기 차단)
+        SetInteractable(false);
+
         if (_pendingResult != null)
             yield return StartCoroutine(RevealSingle(_pendingResult));
         else if (_pendingMultiResult != null)
             yield return StartCoroutine(RevealMulti(_pendingMultiResult));
         else
             this.DLog("[GachaResultPopup] 표시할 결과 없음 (null)");
+
+        SetInteractable(true);
+    }
+
+    void SetInteractable(bool value)
+    {
+        _isRevealing = !value;
+        if (drawButton)    drawButton.interactable    = value;
+        if (closeHitArea)  closeHitArea.interactable  = value;
     }
 
     // ── 아이템 표시 ───────────────────────────────────────────────────
@@ -152,6 +185,7 @@ public class GachaResultPopup : MonoBehaviour
         var slot   = Instantiate(slotPrefab, parent);
         slot.Bind(equip, null);
         slot.StartSpin();
+        SoundManager.Shared?.Play(SoundKey.Gacha_ItemReveal);
 
         var rt = slot.GetComponent<RectTransform>();
         rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
@@ -183,6 +217,7 @@ public class GachaResultPopup : MonoBehaviour
             var slot = Instantiate(slotPrefab, multiResultContent);
             slot.Bind(equip, null);
             slot.StartSpin();
+            SoundManager.Shared?.Play(SoundKey.Gacha_ItemReveal);
             var rt = slot.GetComponent<RectTransform>();
             rt.localScale = Vector3.zero;
             slots.Add(rt);

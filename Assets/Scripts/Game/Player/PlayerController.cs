@@ -53,9 +53,9 @@ public class PlayerController : MonoBehaviour
     private float _knockbackPower;  // 넉백 지수 (PlayerStatManager 설정)
     private float _magnetRadius;    // 흡수 반경 (PlayerStatManager 설정)
 
-    public float CritRateBonus    => critRateBonus    + _synergyCrit;
+    public float CritRateBonus    => critRateBonus;
     public float CritDamageBonus  => critDamageBonus;
-    public float BleedDamageBonus => bleedDamageBonus + _synergyBleed;
+    public float BleedDamageBonus => bleedDamageBonus;
     public float HealOnKillChance => healOnKillChance;
     public float HealOnKillFactor => healOnKillFactor;
     public float HealOrbChance    => healOrbChance;
@@ -65,17 +65,8 @@ public class PlayerController : MonoBehaviour
     public float CurrentHP        => currentHP;
     public float MaxHPValue       => maxHP;
 
-    // 시너지 보너스 (SynergyEffectManager가 재설정 — 재계산 가능)
-    private float _synergyAtk;
-    private float _synergyDef;
-    private float _synergySpeed;
-    private float _synergyMaxHp;
-    private float _synergyBleed;
-    private float _synergyCrit;
-
     public float Attack            => attack; // 기초 스탯 + 증강
-    public float SynergyAtkPct     => _synergyAtk; // 시너지 공격력(%)
-    public float Defense           => defense + _synergyDef;
+    public float Defense           => defense;
     public float MoveSpeedBase     => moveSpeed; // 기초값 (시너지/캐릭터 보너스 제외)
     public float Dodge             => dodge;
     public float RangedAttackBonus => rangedAttackBonus;
@@ -95,8 +86,13 @@ public class PlayerController : MonoBehaviour
 
     private Vector2        moveDirection;
     private Rigidbody2D    rb;
+    [Header("비주얼")]
+    [SerializeField] private Transform visualSlot;   // 미할당 시 Awake에서 "VisualSlot" 자동 탐색
+
+    public Transform VisualSlot => _visualSlot;
+
     private SpriteRenderer spriteRenderer;
-    private Transform      _visualSlot;   // VisualSlot 하위 전체를 한 번에 반전
+    private Transform      _visualSlot;
     private HitFlash       hitFlash;
     private HitShake       hitShake;
 
@@ -110,7 +106,7 @@ public class PlayerController : MonoBehaviour
         Instance      = this;
         rb            = GetComponent<Rigidbody2D>();
         spriteRenderer = GetComponentInChildren<SpriteRenderer>();
-        _visualSlot   = transform.Find("VisualSlot");
+        _visualSlot   = visualSlot != null ? visualSlot : transform.Find("VisualSlot");
         hitFlash      = GetComponentInChildren<HitFlash>();
         hitShake      = GetComponent<HitShake>();
         currentHP     = maxHP;
@@ -132,7 +128,7 @@ public class PlayerController : MonoBehaviour
     public void RefreshVisualReferences()
     {
         spriteRenderer = GetComponentInChildren<SpriteRenderer>();
-        _visualSlot    = transform.Find("VisualSlot");
+        _visualSlot    = visualSlot != null ? visualSlot : transform.Find("VisualSlot");
         hitFlash       = GetComponentInChildren<HitFlash>();
         hitFlash?.RefreshRenderers();
     }
@@ -181,7 +177,7 @@ public class PlayerController : MonoBehaviour
             return;
         }
 
-        Vector2 desired = rb.position + moveDirection * (moveSpeed + _synergySpeed) * Time.fixedDeltaTime;
+        Vector2 desired = rb.position + moveDirection * moveSpeed * Time.fixedDeltaTime;
         desired = ClampToBounds(desired);
 
         rb.linearVelocity = Vector2.zero;
@@ -366,26 +362,6 @@ public class PlayerController : MonoBehaviour
         maxHP     += amount;
         currentHP  = Mathf.Min(currentHP + amount, maxHP);
         SyncHPUI();
-    }
-
-    /// <summary>시너지 보너스를 재설정합니다. (SynergyEffectManager가 장착 변경 시 호출)</summary>
-    public void SetSynergyBonus(float atkAdd, float defAdd, float speedAdd, float maxHpAdd,
-                                float bleedAdd = 0f, float critAdd = 0f)
-    {
-        _synergyAtk   = atkAdd;
-        _synergyDef   = defAdd;
-        _synergySpeed = speedAdd;
-        _synergyBleed = bleedAdd;
-        _synergyCrit  = critAdd;
-
-        float delta = maxHpAdd - _synergyMaxHp;
-        _synergyMaxHp = maxHpAdd;
-        if (!Mathf.Approximately(delta, 0f))
-        {
-            maxHP     = Mathf.Max(10f, maxHP + delta);
-            currentHP = Mathf.Min(currentHP, maxHP);
-            SyncHPUI();
-        }
     }
 
     public void IncreaseAttack(float amount)

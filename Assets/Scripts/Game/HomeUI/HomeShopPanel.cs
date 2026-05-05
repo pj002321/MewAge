@@ -38,6 +38,8 @@ public class HomeShopPanel : MonoBehaviour
 
         gachaPopup.OnDrawRequested  = null;
         gachaPopup.OnDrawRequested += OnGachaDrawPressed;
+        gachaPopup.OnDrawReset      = null;
+        gachaPopup.OnDrawReset     += () => _resultShown = false;
         gachaPopup.OpenForDraw(gemCost, ToGachaBoxType(boxType));
     }
 
@@ -61,7 +63,6 @@ public class HomeShopPanel : MonoBehaviour
     void OnGachaDrawPressed()
     {
         this.DLog($"[HomeShopPanel] OnGachaDrawPressed — _resultShown={_resultShown}");
-        if (_resultShown) return;
         _resultShown = true;
 
         if (EquipmentInventory.Shared == null)
