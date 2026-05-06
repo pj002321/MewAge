@@ -161,16 +161,24 @@ public class ImprovCard : MonoBehaviour
         // 연속 공백 정리
         desc = Regex.Replace(desc, @"\s{2,}", " ").Trim();
 
-        // 증가 → 초록 ↑, 감소 → 빨강 ↓
+        // ── 두 효과를 잇는 연결형(~고) → 화살표 + 줄바꿈 ──────────────
+        // 뒤에 오는 공백까지 포함해 다음 줄이 들여쓰기 없이 시작되도록 합니다.
+        desc = Regex.Replace(desc, @"커지고\s*",    "<color=#FF5555>↑</color>\n");
+        desc = Regex.Replace(desc, @"작아지고\s*",  "<color=#55FF88>↓</color>\n");
+        desc = Regex.Replace(desc, @"증가하고\s*",  "<color=#55FF88>↑</color>\n");
+        desc = Regex.Replace(desc, @"감소하고\s*",  "<color=#FF5555>↓</color>\n");
+
+        // ── 단독 종결형 ────────────────────────────────────────────────
         desc = desc.Replace("증가", "<color=#55FF88>↑</color>");
         desc = desc.Replace("감소", "<color=#FF5555>↓</color>");
-        // 몸집 커짐 → 빨강 ↑ (부정적 효과), 작아짐 → 초록 ↓ (작아질수록 피탄 면적 감소)
-        desc = desc.Replace("커지고", "<color=#FF5555>↑</color>");
         desc = desc.Replace("커짐",   "<color=#FF5555>↑</color>");
-        desc = desc.Replace("작아지고", "<color=#55FF88>↓</color>");
-        desc = desc.Replace("작아짐",   "<color=#55FF88>↓</color>");
+        desc = desc.Replace("작아짐", "<color=#55FF88>↓</color>");
 
-        return desc;
+        // 각 줄 앞뒤 공백 제거
+        var lines = desc.Split('\n');
+        for (int i = 0; i < lines.Length; i++)
+            lines[i] = lines[i].Trim();
+        return string.Join("\n", lines).Trim();
     }
 
     private IEnumerator ScaleRoutine(Transform target, float targetScale, float duration)

@@ -1,3 +1,4 @@
+using Coffee.UIExtensions;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -17,6 +18,7 @@ public class EraWeaponSlot : MonoBehaviour
 
     [Header("신화 등급 전용")]
     public GameObject backlightEffect;
+    public UIShiny    gradeFrameShiny;
 
     // ── 바인딩 ────────────────────────────────────────────────────────
     public void Bind(WeaponData data)
@@ -37,7 +39,7 @@ public class EraWeaponSlot : MonoBehaviour
         // 무기 타입 아이콘
         if (weaponTypeIcon != null)
         {
-            var typeSprite = Resources.Load<Sprite>($"WeaponType/{data.weaponType}");
+            var typeSprite = WeaponVisualConfig.Shared?.GetTypeSprite(data.weaponType);
             weaponTypeIcon.sprite  = typeSprite;
             weaponTypeIcon.enabled = typeSprite != null;
         }
@@ -50,9 +52,12 @@ public class EraWeaponSlot : MonoBehaviour
         if (weaponNameText != null)
             weaponNameText.text = data.weaponName;
 
-        // 신화 등급일 때만 백라이트 켜기
+        // 신화 등급일 때만 백라이트 + gradeFrame UIShiny 켜기
+        bool isMythic = data.grade == WeaponGrade.Mythic;
         if (backlightEffect != null)
-            backlightEffect.SetActive(data.grade == WeaponGrade.Mythic);
+            backlightEffect.SetActive(isMythic);
+        if (gradeFrameShiny != null)
+            gradeFrameShiny.enabled = isMythic;
     }
 
     static string WeaponTypeToKorean(WeaponType t) => t switch

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Mewage.DB;
 using TMPro;
 using UnityEngine;
@@ -13,41 +14,86 @@ using UnityEngine.UI;
 public class SynergySlot : MonoBehaviour
 {
     [Header("등급 이미지")]
-    public Image gradeImage;       // 등급 배지 이미지 (색상으로 등급 구분)
+    public Image gradeImage;
 
     [Header("시너지 아이콘")]
-    public Image iconImage;        // 시너지 아이콘 (Resources/Synergy/{f_시너지ID.lower()})
+    public Image iconImage;
 
     [Header("텍스트")]
-    public TextMeshProUGUI nameText;       // 시너지 이름 (f_이름)
-    public TextMeshProUGUI conditionText;  // 달성 조건 (f_조건설명)
-    public TextMeshProUGUI effectText;     // 효과 설명 (f_효과)
+    public TextMeshProUGUI nameText;
+    public TextMeshProUGUI conditionText;
+    public TextMeshProUGUI effectText;
+
+    [Header("달성 오버레이 (달성 시 비활성화)")]
+    public Image overlayImg;
+
+    private string _synergyId;
+
+    // ── 라이프사이클 ──────────────────────────────────────────────────
+
+    private void OnEnable()
+    {
+        SynergyEffectManager.OnAchievedChanged += RefreshOverlay;
+    }
+
+    private void OnDisable()
+    {
+        SynergyEffectManager.OnAchievedChanged -= RefreshOverlay;
+    }
 
     // ── 바인딩 ────────────────────────────────────────────────────────
     public void Bind(DB_시너지 row)
     {
         if (row == null) return;
 
+        _synergyId = row.f_시너지ID;
+
+        var cfg = SynergyVisualConfig.Shared;
+
         if (gradeImage != null)
-            gradeImage.color = GradeToColor(row.f_등급);
+        {
+            var gradeSprite = cfg?.GetGradeSprite(row.f_등급);
+            if (gradeSprite != null)
+            {
+                gradeImage.sprite = gradeSprite;
+                gradeImage.color  = Color.white;
+            }
+            else
+            {
+                gradeImage.color = GradeToColor(row.f_등급);
+            }
+        }
 
         if (iconImage != null)
         {
-            var sprite = Resources.Load<Sprite>($"Synergy/{row.f_시너지ID.ToLower()}");
-            iconImage.sprite  = sprite;
-            iconImage.enabled = sprite != null;
+            var icon = cfg?.GetIcon(row.f_시너지ID)
+                    ?? Resources.Load<Sprite>($"Synergy/{row.f_시너지ID.ToLower()}");
+            iconImage.sprite  = icon;
+            iconImage.enabled = icon != null;
         }
 
         if (nameText)      nameText.text      = row.f_이름;
         if (conditionText) conditionText.text = row.f_조건설명;
         if (effectText)    effectText.text    = row.f_효과;
+
+        RefreshOverlay(SynergyEffectManager.AchievedSynergies);
     }
 
+    // ── 오버레이 갱신 ─────────────────────────────────────────────────
+
+    private void RefreshOverlay(HashSet<string> achieved)
+    {
+        if (overlayImg == null || string.IsNullOrEmpty(_synergyId)) return;
+        bool isAchieved = achieved != null && achieved.Contains(_synergyId);
+        overlayImg.gameObject.SetActive(!isAchieved);
+    }
+
+    // config에 스프라이트가 없을 때의 색상 폴백
     static Color GradeToColor(string grade) => grade switch
     {
-        "S" => new Color(1f,    0.84f, 0f,    1f),  // 금
-        "A" => new Color(0.56f, 0.24f, 0.9f,  1f),  // 보라
-        "B" => new Color(0.2f,  0.6f,  1f,    1f),  // 파랑
+        "S" => new Color(1f,    0.84f, 0f,    1f),
+        "A" => new Color(0.56f, 0.24f, 0.9f,  1f),
+        "B" => new Color(0.2f,  0.6f,  1f,    1f),
         _   => Color.white,
     };
 }

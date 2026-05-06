@@ -26,8 +26,8 @@ Transform:
   m_GameObject: {fileID: 3566073783235228080}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.08, z: 0}
-  m_LocalScale: {x: 2.18, y: 1.48, z: 1.4}
+  m_LocalPosition: {x: -0.064, y: 0.142, z: 0}
+  m_LocalScale: {x: 3.3603156, y: 1.669144, z: 1.4}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2799849513256322318}
@@ -91,7 +91,7 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
---- !u!1 &4415210760228317228
+--- !u!1 &5762148732665651139
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -99,7 +99,7 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 8078664861803589011}
+  - component: {fileID: 8910736215149982964}
   m_Layer: 0
   m_Name: GameObject
   m_TagString: Untagged
@@ -107,16 +107,16 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &8078664861803589011
+--- !u!4 &8910736215149982964
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4415210760228317228}
+  m_GameObject: {fileID: 5762148732665651139}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.11, z: 0}
+  m_LocalPosition: {x: 3.61, y: 1.85, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -137,9 +137,9 @@ GameObject:
   - component: {fileID: 5337808210302580648}
   - component: {fileID: 7126431795147920118}
   - component: {fileID: -5871980427623642109}
-  - component: {fileID: 297263582989846363}
-  - component: {fileID: 3890210798184681978}
-  - component: {fileID: -829680764859906721}
+  - component: {fileID: 4940363408390448183}
+  - component: {fileID: 6321899902040148537}
+  - component: {fileID: -495577670295495935}
   m_Layer: 0
   m_Name: c1_m14
   m_TagString: Untagged
@@ -161,7 +161,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 4092441220517724094}
-  - {fileID: 8078664861803589011}
+  - {fileID: 8910736215149982964}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &6749509527068973254
@@ -213,7 +213,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 5
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -2386471298208939462, guid: b905086f4b6d7564db952e8bcf554ee5, type: 3}
+  m_Sprite: {fileID: -3598170667420467675, guid: 348855f23bbcdbc41b0244981a909165, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -233,7 +233,7 @@ Animator:
   m_GameObject: {fileID: 7313528007987417252}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 22100000, guid: 31cda434a58761a42ab609d0d20bed55, type: 2}
+  m_Controller: {fileID: 22100000, guid: 103db8b19d5bc1a47990b5d98b0784c3, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -342,8 +342,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HitFlash
   flashDuration: 0.12
+  flashColor: {r: 1, g: 1, b: 1, a: 1}
   BaseColor: {r: 1, g: 1, b: 1, a: 1}
---- !u!114 &297263582989846363
+--- !u!114 &4940363408390448183
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -355,18 +356,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 26ab6620137f93f4290148fd79412968, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RangedBehaviour
-  projectilePrefab: {fileID: 7916182024222986910, guid: 626d85e8f1b7842468211300a67af973, type: 3}
+  projectilePrefab: {fileID: 7916182024222986910, guid: ac6de4b3b52ae944284db65056ca064a, type: 3}
   preferredRange: 4
   shootInterval: 2
-  rangedDamage: 10
-  firePoint: {fileID: 8078664861803589011}
+  rangedDamage: 20
+  firePoint: {fileID: 8910736215149982964}
   warningDuration: 1
   warningLineLength: 8
   warningLineWidth: 0.8
   warningColor: {r: 1, g: 0, b: 0, a: 1}
   warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
   attackVfxPrefab: {fileID: 0}
---- !u!70 &3890210798184681978
+--- !u!70 &6321899902040148537
 CapsuleCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -400,10 +401,10 @@ CapsuleCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 1.72}
-  m_Size: {x: 2.21, y: 3.44}
+  m_Offset: {x: 0.14, y: 1.78684}
+  m_Size: {x: 2.11, y: 3.57368}
   m_Direction: 0
---- !u!114 &-829680764859906721
+--- !u!114 &-495577670295495935
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -420,4 +421,5 @@ MonoBehaviour:
   squashStretchX: 0.5
   frequency: 1.25
   randomPhase: 1
-  spriteTarget: {fileID: 0}
+  fixBottom: 0
+  halfHeightOverride: 0

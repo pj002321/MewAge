@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 /// <summary>
@@ -13,7 +14,8 @@ public class MeleeBehaviour : EnemyBehaviourBase
     [SerializeField] private bool  useAnimationEvent = true; // false면 타이머에서 직접 피해
 
     [Header("VFX")]
-    [SerializeField] private GameObject attackVfxPrefab;
+    [SerializeField] private GameObject attackVfx;      // 프리팹 자식 오브젝트
+    [SerializeField] private float      vfxDuration = 0.3f;
 
     private float attackTimer;
 
@@ -21,6 +23,7 @@ public class MeleeBehaviour : EnemyBehaviourBase
     {
         base.Init(controller);
         attackTimer = attackInterval;
+        attackVfx?.SetActive(false);
     }
 
     public override void OnAttackUpdate()
@@ -37,8 +40,7 @@ public class MeleeBehaviour : EnemyBehaviourBase
         if (dist <= attackRange)
         {
             Owner.EnemyAnimator?.SetTrigger("tAttack");
-            if (attackVfxPrefab != null)
-                Instantiate(attackVfxPrefab, transform.position, Quaternion.identity);
+            if (attackVfx != null) StartCoroutine(ShowVfx());
             if (!useAnimationEvent)
                 PlayerController.Instance?.TakeDamage(Owner.ContactDamage);
         }
@@ -55,6 +57,13 @@ public class MeleeBehaviour : EnemyBehaviourBase
             Owner.MoveInDirection(toPlayer / Mathf.Max(dist, 0.001f), Owner.MoveSpeed);
         else
             Owner.FlipToward(toPlayer);
+    }
+
+    private IEnumerator ShowVfx()
+    {
+        attackVfx.SetActive(true);
+        yield return new WaitForSeconds(vfxDuration);
+        if (attackVfx != null) attackVfx.SetActive(false);
     }
 
 #if UNITY_EDITOR

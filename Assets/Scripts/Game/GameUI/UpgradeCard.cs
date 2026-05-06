@@ -21,7 +21,7 @@ public class UpgradeCard : MonoBehaviour
     [SerializeField] private List<GameObject> starObjects; // 0=1성, 1=2성, 2=3성, 3=4성
     [SerializeField] private Image soldOverlayImg;
     private WeaponData data;
-    private int        cardIndex; // 슬롯 인덱스 추가
+    private int        cardIndex;
     public WeaponData Data => data;
 
     private void Awake()
@@ -29,7 +29,7 @@ public class UpgradeCard : MonoBehaviour
         if (soldOverlayImg != null)
         {
             soldOverlayImg.gameObject.SetActive(false);
-            soldOverlayImg.raycastTarget = false; // 버튼 클릭을 방해하지 않도록 설정
+            soldOverlayImg.raycastTarget = false;
         }
     }
 

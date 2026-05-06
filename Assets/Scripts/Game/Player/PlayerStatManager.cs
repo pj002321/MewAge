@@ -30,6 +30,11 @@ public class PlayerStatManager : MonoBehaviourSingleton<PlayerStatManager>
     private static readonly int StatCount =
         System.Enum.GetValues(typeof(StatType)).Length;
 
+    // Inspector 원본값 — Awake에서 1회 캡처, ResetMods()가 이 값으로 복원
+    private float _defATK, _defDEF, _defMaxHP, _defBleedPower, _defHPRegen;
+    private float _defMoveSpeed, _defMagnetRadius, _defAtkSpeed, _defEvasion;
+    private float _defCritChance, _defCritDmg, _defStructureCooldown, _defKnockback, _defHealOnKill;
+
     // 스탯별 % 모디파이어 누계 (예: 10 = +10%)
     private readonly float[] _pctMods = new float[StatCount];
 
@@ -38,6 +43,26 @@ public class PlayerStatManager : MonoBehaviourSingleton<PlayerStatManager>
 
     // 배치 모드 — true이면 개별 SetBase/AddPctMod 호출 시 ApplyToPlayer를 억제
     private bool _batching;
+
+    protected override void Awake()
+    {
+        base.Awake();
+        // Inspector 직렬화 값을 한 번만 캡처
+        _defATK               = baseATK;
+        _defDEF               = baseDEF;
+        _defMaxHP             = baseMaxHP;
+        _defBleedPower        = baseBleedPower;
+        _defHPRegen           = baseHPRegen;
+        _defMoveSpeed         = baseMoveSpeed;
+        _defMagnetRadius      = baseMagnetRadius;
+        _defAtkSpeed          = baseAtkSpeed;
+        _defEvasion           = baseEvasion;
+        _defCritChance        = baseCritChance;
+        _defCritDmg           = baseCritDmg;
+        _defStructureCooldown = baseStructureCooldown;
+        _defKnockback         = baseKnockback;
+        _defHealOnKill        = baseHealOnKill;
+    }
 
     // ── 외부 API ────────────────────────────────────────────────────
 
@@ -58,21 +83,21 @@ public class PlayerStatManager : MonoBehaviourSingleton<PlayerStatManager>
     {
         System.Array.Clear(_pctMods, 0, _pctMods.Length);
 
-        // base 스탯 초기화 — Inspector 값이 이전 씬에서 오염됐을 경우 대비
-        baseATK               = 0f;
-        baseDEF               = 0f;
-        baseMaxHP             = 100f;
-        baseBleedPower        = 0f;
-        baseHPRegen           = 0f;
-        baseMoveSpeed         = 5f;
-        baseMagnetRadius      = 1.5f;
-        baseAtkSpeed          = 0f;
-        baseEvasion           = 0f;
-        baseCritChance        = 0f;
-        baseCritDmg           = 100f;
-        baseStructureCooldown = 0f;
-        baseKnockback         = 0f;
-        baseHealOnKill        = 0f;
+        // base 스탯 초기화 — Inspector에서 설정한 원본값으로 복원
+        baseATK               = _defATK;
+        baseDEF               = _defDEF;
+        baseMaxHP             = _defMaxHP;
+        baseBleedPower        = _defBleedPower;
+        baseHPRegen           = _defHPRegen;
+        baseMoveSpeed         = _defMoveSpeed;
+        baseMagnetRadius      = _defMagnetRadius;
+        baseAtkSpeed          = _defAtkSpeed;
+        baseEvasion           = _defEvasion;
+        baseCritChance        = _defCritChance;
+        baseCritDmg           = _defCritDmg;
+        baseStructureCooldown = _defStructureCooldown;
+        baseKnockback         = _defKnockback;
+        baseHealOnKill        = _defHealOnKill;
     }
 
     /// <summary>기본값을 런타임에 설정하고 PlayerController에 즉시 반영합니다. (캐릭터 초기화 시 사용)</summary>

@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Coffee.UIExtensions;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -21,6 +22,7 @@ public class UpgradePanel : MonoBehaviour
     [SerializeField] private Button          buyExpButton;
     [SerializeField] private Button          nextWaveButton;
     [SerializeField] private Button          infoButton;
+    [SerializeField] private UIShiny         infoButtonShiny;
     [SerializeField] private Button          eraWeaponInfoButton;
 
     [Header("시대별 무기 정보 팝업")]
@@ -95,6 +97,7 @@ public class UpgradePanel : MonoBehaviour
         rerollButton? .onClick.AddListener(OnRerollClicked);
         nextWaveButton?.onClick.AddListener(OnNextWaveClicked);
         infoButton?   .onClick.AddListener(OnInfoClicked);
+        if (infoButtonShiny != null) infoButtonShiny.enabled = false;
         eraWeaponInfoButton?.onClick.AddListener(() =>
             eraWeaponInfoPopup?.Open(UpgradeManager.Shared?.CurrentChapter ?? 1));
 
@@ -136,6 +139,7 @@ public class UpgradePanel : MonoBehaviour
     // ────────────────────────────────────────────────────────────────
     private void OnEnable()
     {
+        SynergyEffectManager.OnNewSynergyAchieved += OnNewSynergyAchieved;
         foreach (var anim in GetComponentsInChildren<Animator>(true))
             anim.updateMode = AnimatorUpdateMode.UnscaledTime;
 
@@ -160,6 +164,7 @@ public class UpgradePanel : MonoBehaviour
 
     private void OnDisable()
     {
+        SynergyEffectManager.OnNewSynergyAchieved -= OnNewSynergyAchieved;
         if (autoStartCoroutine != null) StopCoroutine(autoStartCoroutine);
         if (notifCoroutine != null) { StopCoroutine(notifCoroutine); notifCoroutine = null; }
         if (buyExpHoldCoroutine != null) { StopCoroutine(buyExpHoldCoroutine); buyExpHoldCoroutine = null; }
@@ -354,8 +359,14 @@ public class UpgradePanel : MonoBehaviour
 
     private void OnInfoClicked()
     {
+        if (infoButtonShiny != null) infoButtonShiny.enabled = false;
         int chapter = UpgradeManager.Shared?.CurrentChapter ?? 1;
         SynergyInfoPanel.Shared?.Show(chapter);
+    }
+
+    private void OnNewSynergyAchieved()
+    {
+        if (infoButtonShiny != null) infoButtonShiny.enabled = true;
     }
 
     // ────────────────────────────────────────────────────────────────
