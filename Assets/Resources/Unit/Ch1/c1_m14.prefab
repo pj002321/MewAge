@@ -77,8 +77,8 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 1049025713
+  m_SortingLayer: 1
   m_SortingOrder: 1
   m_MaskInteraction: 0
   m_Sprite: {fileID: 6863293971250029137, guid: aae5a60f0a493f14da9a00ba91e73b06, type: 3}
@@ -116,7 +116,7 @@ Transform:
   m_GameObject: {fileID: 5762148732665651139}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 3.61, y: 1.85, z: 0}
+  m_LocalPosition: {x: 1.94, y: 1.71, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -140,6 +140,7 @@ GameObject:
   - component: {fileID: 4940363408390448183}
   - component: {fileID: 6321899902040148537}
   - component: {fileID: -495577670295495935}
+  - component: {fileID: -7813013498023383608}
   m_Layer: 0
   m_Name: c1_m14
   m_TagString: Untagged
@@ -209,8 +210,8 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 1049025713
+  m_SortingLayer: 1
   m_SortingOrder: 5
   m_MaskInteraction: 0
   m_Sprite: {fileID: -3598170667420467675, guid: 348855f23bbcdbc41b0244981a909165, type: 3}
@@ -356,17 +357,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 26ab6620137f93f4290148fd79412968, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RangedBehaviour
-  projectilePrefab: {fileID: 7916182024222986910, guid: ac6de4b3b52ae944284db65056ca064a, type: 3}
+  projectilePrefab: {fileID: 7916182024222986910, guid: 4b69f31afea3a604d9932737bc7aaadd, type: 3}
   preferredRange: 4
   shootInterval: 2
   rangedDamage: 20
   firePoint: {fileID: 8910736215149982964}
   warningDuration: 1
-  warningLineLength: 8
+  warningLineLength: 3
   warningLineWidth: 0.8
   warningColor: {r: 1, g: 0, b: 0, a: 1}
   warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
-  attackVfxPrefab: {fileID: 0}
+  attackVfx: {fileID: 0}
+  attackVfxDuration: 0.3
+  useAnimationEvent: 1
+  animEventTimeout: 0.6
 --- !u!70 &6321899902040148537
 CapsuleCollider2D:
   m_ObjectHideFlags: 0
@@ -401,8 +405,8 @@ CapsuleCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0.14, y: 1.78684}
-  m_Size: {x: 2.11, y: 3.57368}
+  m_Offset: {x: 0.14, y: 1.31}
+  m_Size: {x: 2.11, y: 2.67}
   m_Direction: 0
 --- !u!114 &-495577670295495935
 MonoBehaviour:
@@ -423,3 +427,16 @@ MonoBehaviour:
   randomPhase: 1
   fixBottom: 0
   halfHeightOverride: 0
+--- !u!114 &-7813013498023383608
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7313528007987417252}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 25cc23087012616429ecb7c10c6cb557, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpriteYSort
+  multiplier: 100

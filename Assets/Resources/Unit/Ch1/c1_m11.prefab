@@ -26,8 +26,8 @@ Transform:
   m_GameObject: {fileID: 3566073783235228080}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.11, y: -0.93, z: 0}
-  m_LocalScale: {x: 2.18, y: 1.48, z: 1.4}
+  m_LocalPosition: {x: -0.024, y: 0.133, z: 0}
+  m_LocalScale: {x: 1.5441377, y: 1.0483136, z: 0.991648}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2799849513256322318}
@@ -77,8 +77,8 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 1049025713
+  m_SortingLayer: 1
   m_SortingOrder: 1
   m_MaskInteraction: 0
   m_Sprite: {fileID: 6863293971250029137, guid: aae5a60f0a493f14da9a00ba91e73b06, type: 3}
@@ -116,7 +116,7 @@ Transform:
   m_GameObject: {fileID: 6185639099768455503}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.498, y: 0.331, z: 0}
+  m_LocalPosition: {x: 0.773, y: 1.297, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -136,7 +136,8 @@ GameObject:
   - component: {fileID: 4893850151441561591}
   - component: {fileID: 5337808210302580648}
   - component: {fileID: 2583878160409121165}
-  - component: {fileID: -2056243319490886844}
+  - component: {fileID: 8221362606054355817}
+  - component: {fileID: 4395036067561498926}
   m_Layer: 0
   m_Name: c1_m11
   m_TagString: Untagged
@@ -206,11 +207,11 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 1049025713
+  m_SortingLayer: 1
   m_SortingOrder: 5
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -7605788801990122638, guid: 7c19678da59bba845a42af767b6676b4, type: 3}
+  m_Sprite: {fileID: 9017031331827242941, guid: 8e324a97faf3f524696812b9b5a4e4b2, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -281,8 +282,8 @@ CapsuleCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0.12, y: 0}
-  m_Size: {x: 1.11, y: 1.94}
+  m_Offset: {x: 0.15, y: 1.03}
+  m_Size: {x: 0.96, y: 1.97}
   m_Direction: 0
 --- !u!114 &5337808210302580648
 MonoBehaviour:
@@ -321,18 +322,43 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 26ab6620137f93f4290148fd79412968, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RangedBehaviour
-  projectilePrefab: {fileID: 7916182024222986910, guid: ac6de4b3b52ae944284db65056ca064a, type: 3}
+  projectilePrefab: {fileID: 7916182024222986910, guid: 4b69f31afea3a604d9932737bc7aaadd, type: 3}
   preferredRange: 5
   shootInterval: 2
-  rangedDamage: 100
+  rangedDamage: 20
   firePoint: {fileID: 5428772856677564459}
-  warningDuration: 1
-  warningLineLength: 8
+  warningDuration: 0.5
+  warningLineLength: 3
   warningLineWidth: 0.8
   warningColor: {r: 1, g: 0, b: 0, a: 1}
   warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
-  attackVfxPrefab: {fileID: 0}
---- !u!114 &-2056243319490886844
+  attackVfx: {fileID: 0}
+  attackVfxDuration: 0.3
+  useAnimationEvent: 1
+  animEventTimeout: 0.6
+--- !u!95 &8221362606054355817
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7313528007987417252}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 22100000, guid: eed1b0ef53b685b43aaa1941035aeca7, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &4395036067561498926
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -341,12 +367,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 7313528007987417252}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3640172dedd67864e9d6803100a29029, type: 3}
+  m_Script: {fileID: 11500000, guid: 25cc23087012616429ecb7c10c6cb557, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SlimeBobAnimation
-  minScaleY: 0.9
-  maxScaleY: 1.05
-  squashStretchX: 0.5
-  frequency: 1.25
-  randomPhase: 1
-  spriteTarget: {fileID: 0}
+  m_EditorClassIdentifier: Assembly-CSharp::SpriteYSort
+  multiplier: 100

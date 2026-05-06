@@ -83,6 +83,7 @@ public class EnemyController : MonoBehaviour, IEnemyHost
     }
 
     public event System.Action OnDeath;
+    public event System.Action OnHit;
 
     // 원본 재질 캐시 (풀 반환 시 복구용)
     private Material[] _originalMats;
@@ -260,7 +261,12 @@ public class EnemyController : MonoBehaviour, IEnemyHost
             rb.linearVelocity = Vector2.zero;
             rb.constraints    = RigidbodyConstraints2D.FreezeRotation;
         }
-        if (behaviour != null) behaviour.enabled = true;
+        if (behaviour != null)
+        {
+            behaviour.StopAllCoroutines();
+            behaviour.enabled = true;
+            behaviour.Init(this);
+        }
 
         // 재질 복구
         if (srs != null && _originalMats != null)
@@ -553,6 +559,7 @@ public class EnemyController : MonoBehaviour, IEnemyHost
         FXManager.Shared?.SpawnDamageText(textPos, damage, isCritical);
         FXManager.Shared?.SpawnHitEffect(transform.position);
         hitFlash?.Flash();
+        OnHit?.Invoke();
 
         if (!knockbackImmune && knockbackDir != Vector2.zero && knockbackForce > 0f)
             Knockback(knockbackDir, knockbackForce);

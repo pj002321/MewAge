@@ -12,11 +12,13 @@ public class BossController : MonoBehaviour, IEnemyHost
 {
     public static BossController Current { get; private set; }
 
-    // ── 기본 스탯 (DB에서 로드) ───────────────────────────────────
+    // ── 기본 스탯 (DB에서 로드, DB 없을 때 아래 기본값 사용) ────────
+    [Header("기본 스탯 (DB 로드 전 폴백)")]
     [SerializeField] private float damageCooldown = 0.5f;
+    [Tooltip("이동 속도. DB에서 로드되면 덮어씌워집니다.")]
+    [SerializeField] private float moveSpeed     = 3f;
     private float maxHP         = 500f;
     private float contactDamage = 10f;
-    private float moveSpeed     = 3f;
 
     // ── 분노 ──────────────────────────────────────────────────────
     [Header("분노")]

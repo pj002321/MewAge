@@ -153,18 +153,15 @@ public class SoundManager : MonoBehaviourSingleton<SoundManager>
 
     private void PlayBGMWithFade(AudioClip clip, string sceneName)
     {
-        // 씬 이름은 로딩 중이더라도 반드시 기록 (ResumeBGM이 올바른 씬으로 재개할 수 있도록)
         currentScene = sceneName;
 
         if (clip == null) return;
-
-        // 로딩 중에는 재생하지 않음 — ResumeBGM에서 재개됨
-        if (isLoadingIndicatorActive) return;
+        if (!BGMEnabled) return;
 
         // 같은 클립이 재생 중이면 스킵
         if (bgmSource.clip == clip && bgmSource.isPlaying) return;
 
-        // 페이드인으로 재생
+        // 페이드인으로 재생 (로딩 중에도 즉시 전환)
         if (bgmFadeCoroutine != null) StopCoroutine(bgmFadeCoroutine);
         bgmFadeCoroutine = StartCoroutine(FadeInBGM(clip));
     }
@@ -202,23 +199,55 @@ public class SoundManager : MonoBehaviourSingleton<SoundManager>
             yield return null;
         }
         bgmSource.volume = 0f;
-        bgmSource.Stop();
+        bgmSource.Pause();
     }
 
     private void ResumeBGM()
     {
-        if (currentScene == "home")
+        if (!BGMEnabled) return;
+        if (isLoadingIndicatorActive) return;
+
+        // 이미 재생 중이면 아무것도 하지 않음 (PlayBGMWithFade가 로딩 중에 이미 전환)
+        if (bgmSource.isPlaying) return;
+
+        // 일시정지된 클립이 있으면 이어서 재생
+        if (bgmSource.clip != null)
+        {
+            if (bgmFadeCoroutine != null) StopCoroutine(bgmFadeCoroutine);
+            bgmFadeCoroutine = StartCoroutine(FadeInFromPause());
+        }
+        else if (currentScene == "home")
             PlayChapterHomeBGM(currentChapterId);
         else if (currentScene == "game")
             PlayChapterGameBGM(currentChapterId);
     }
 
+    private IEnumerator FadeInFromPause()
+    {
+        bgmSource.volume = 0f;
+        bgmSource.UnPause();
+        float elapsed = 0f;
+        while (elapsed < bgmFadeDuration)
+        {
+            elapsed += Time.deltaTime;
+            bgmSource.volume = Mathf.Lerp(0f, 1f, elapsed / bgmFadeDuration);
+            yield return null;
+        }
+        bgmSource.volume = 1f;
+    }
+
     // ─────────────────────────────────────────────────
     // 설정 (뮤트)
     // ─────────────────────────────────────────────────
+    public bool BGMEnabled { get; private set; } = true;
+
     public void SetBGMEnabled(bool enabled)
     {
-        bgmSource.mute = !enabled;
+        BGMEnabled = enabled;
+        if (!enabled)
+            StopBGM();
+        else
+            ResumeBGM();
     }
 
     public void SetSFXEnabled(bool enabled)

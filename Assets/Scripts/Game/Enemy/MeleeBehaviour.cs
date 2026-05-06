@@ -9,21 +9,38 @@ public class MeleeBehaviour : EnemyBehaviourBase
 {
     [Header("근거리 설정")]
     [SerializeField] private float attackRange    = 1.2f;
-    [SerializeField] private float meleeHitRange  = 1.3f;
     [SerializeField] private float attackInterval = 1.0f;
     [SerializeField] private bool  useAnimationEvent = true; // false면 타이머에서 직접 피해
 
     [Header("VFX")]
     [SerializeField] private GameObject attackVfx;      // 프리팹 자식 오브젝트
     [SerializeField] private float      vfxDuration = 0.3f;
+    [Tooltip("useAnimationEvent=true일 때, 이 시간 후에도 이벤트가 없으면 직접 피해 적용 (0이면 폴백 없음)")]
+    [SerializeField] private float      animEventTimeout = 0.5f;
 
     private float attackTimer;
+    private bool  _pendingHit;
 
     public override void Init(EnemyController controller)
     {
         base.Init(controller);
         attackTimer = attackInterval;
+        _pendingHit = false;
+
+        // Inspector 미할당 시 "AttackVFX" 이름의 자식 오브젝트 자동 탐색
+        if (attackVfx == null)
+            attackVfx = transform.root.Find("AttackVFX")?.gameObject
+                     ?? FindVfxInChildren(transform.root);
+
         attackVfx?.SetActive(false);
+    }
+
+    private static GameObject FindVfxInChildren(Transform root)
+    {
+        foreach (Transform child in root)
+            if (child.name.ToLower().Contains("vfx") || child.name.ToLower().Contains("fx"))
+                return child.gameObject;
+        return null;
     }
 
     public override void OnAttackUpdate()
@@ -39,10 +56,21 @@ public class MeleeBehaviour : EnemyBehaviourBase
         float dist = Vector2.Distance(transform.position, Owner.PlayerTransform.position);
         if (dist <= attackRange)
         {
-            Owner.EnemyAnimator?.SetTrigger("tAttack");
             if (attackVfx != null) StartCoroutine(ShowVfx());
-            if (!useAnimationEvent)
+
+            if (useAnimationEvent)
+            {
+                Owner.EnemyAnimator?.SetTrigger("tAttack");
+                if (animEventTimeout > 0f)
+                {
+                    _pendingHit = true;
+                    StartCoroutine(AnimEventFallback());
+                }
+            }
+            else
+            {
                 PlayerController.Instance?.TakeDamage(Owner.ContactDamage);
+            }
         }
     }
 
@@ -57,6 +85,17 @@ public class MeleeBehaviour : EnemyBehaviourBase
             Owner.MoveInDirection(toPlayer / Mathf.Max(dist, 0.001f), Owner.MoveSpeed);
         else
             Owner.FlipToward(toPlayer);
+    }
+
+    private IEnumerator AnimEventFallback()
+    {
+        yield return new WaitForSeconds(animEventTimeout);
+        if (!_pendingHit) yield break; // 이미 OnMeleeAttackHit에서 처리됨
+        _pendingHit = false;
+        if (Owner == null || Owner.PlayerTransform == null) yield break;
+        float dist = Vector2.Distance(transform.position, Owner.PlayerTransform.position);
+        if (dist <= attackRange)
+            PlayerController.Instance?.TakeDamage(Owner.ContactDamage);
     }
 
     private IEnumerator ShowVfx()
@@ -76,11 +115,6 @@ public class MeleeBehaviour : EnemyBehaviourBase
         UnityEditor.Handles.DrawSolidDisc(pos, Vector3.forward, attackRange);
         UnityEditor.Handles.color = new Color(1f, 0.4f, 0f, 0.8f);
         UnityEditor.Handles.DrawWireDisc(pos, Vector3.forward, attackRange);
-
-        UnityEditor.Handles.color = new Color(1f, 0f, 0f, 0.15f);
-        UnityEditor.Handles.DrawSolidDisc(pos, Vector3.forward, meleeHitRange);
-        UnityEditor.Handles.color = new Color(1f, 0f, 0f, 0.8f);
-        UnityEditor.Handles.DrawWireDisc(pos, Vector3.forward, meleeHitRange);
     }
 #endif
 
@@ -90,9 +124,10 @@ public class MeleeBehaviour : EnemyBehaviourBase
     /// </summary>
     public void OnMeleeAttackHit()
     {
+        _pendingHit = false; // 폴백 코루틴이 중복 적용하지 않도록 취소
         if (Owner == null || Owner.PlayerTransform == null) return;
         float dist = Vector2.Distance(transform.position, Owner.PlayerTransform.position);
-        if (dist <= meleeHitRange)
+        if (dist <= attackRange)
             PlayerController.Instance?.TakeDamage(Owner.ContactDamage);
     }
 }

@@ -24,6 +24,17 @@ public class WeaponDebugInspector : MonoBehaviour
     [Button("인벤토리에 추가", ButtonSizes.Medium)]
     private void AddToInventory() => GiveWeapon(toInventory: true);
 
+    [Button("장착 무기 전체 해제", ButtonSizes.Medium), GUIColor(0.9f, 0.4f, 0.4f)]
+    private void UnequipAll()
+    {
+        var pi = PlayerInventory.Shared;
+        if (pi == null) { Debug.LogWarning("[WeaponDebug] PlayerInventory.Shared가 null입니다."); return; }
+        int count = pi.Equipped.Count;
+        for (int i = count - 1; i >= 0; i--)
+            pi.UnequipToInventory(i);
+        Debug.Log($"[WeaponDebug] 장착 무기 {count}개 전체 해제됨");
+    }
+
     // ── 내부 ──────────────────────────────────────────────────────
 
     private void GiveWeapon(bool toInventory)
@@ -75,7 +86,7 @@ public class WeaponDebugInspector : MonoBehaviour
         var list = new List<ValueDropdownItem<string>>();
         DB_무기.ForEachEntity(row =>
             list.Add(new ValueDropdownItem<string>(
-                $"[Ch{row.f_챕터}] {row.f_등급} | {row.f_이름}", row.f_무기ID)));
+                $"챕터 {row.f_챕터}/{row.f_등급} | {row.f_이름}", row.f_무기ID)));
         return list;
     }
 }

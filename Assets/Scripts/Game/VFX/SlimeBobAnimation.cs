@@ -63,7 +63,7 @@ public class SlimeBobAnimation : MonoBehaviour
     /// <summary>풀 재사용 시 EnemyController.WakeFromPool에서 호출 — 스폰 위치 기준 재설정</summary>
     public void ResetOrigin()
     {
-        _origLocalPos = transform.localPosition;
+        transform.localPosition = _origLocalPos;
     }
 
     private void TryInitRenderer()
@@ -94,7 +94,7 @@ public class SlimeBobAnimation : MonoBehaviour
         if (_renderer != null && !_renderer.isVisible) return;
 
         float t      = (Mathf.Sin((Time.time * frequency + _phase) * Mathf.PI * 2f) + 1f) * 0.5f;
-        float scaleY = Mathf.Lerp(minScaleY, maxScaleY, t);
+        float scaleY = Mathf.Lerp(fixBottom ? 1f : minScaleY, maxScaleY, t);
         float scaleX = 1f + (1f - scaleY) * squashStretchX;
 
         // flip 부호 유지 (PlayerController가 X scale 부호로 flip 제어)

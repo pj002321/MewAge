@@ -12,6 +12,12 @@ public class Projectile : MonoBehaviour
     [Tooltip("이 프리팹 에셋의 기본 Forward 방향 (Z=0일 때 스프라이트가 향하는 쪽)")]
     [SerializeField] private SpriteForward spriteForward = SpriteForward.Up;
 
+    [Header("고스트 트레일")]
+    [SerializeField] private bool  ghostTrail         = false;
+    [SerializeField] private Color ghostColor         = new Color(1f, 0.15f, 0.15f, 0.45f);
+    [SerializeField] private float ghostInterval      = 0.04f;
+    [SerializeField] private float ghostLifetime      = 0.12f;
+
     private BossController _ownerBoss;   // 보스가 발사한 투사체면 설정 → 보스 자해 방지
     private float   primaryDmg;
     private Vector2 direction;
@@ -26,6 +32,10 @@ public class Projectile : MonoBehaviour
     private float   baseDamage;
     private float   knockbackPower;
 
+
+    // 고스트 트레일
+    private SpriteRenderer _sr;
+    private float          _ghostTimer;
 
     // 가속 전용
     private float _curSpeed;
@@ -54,6 +64,7 @@ public class Projectile : MonoBehaviour
 
     public static readonly System.Collections.Generic.List<Projectile> All = new();
 
+    private void Awake() => _sr = GetComponentInChildren<SpriteRenderer>();
     private void OnEnable()  => All.Add(this);
     private void OnDisable() => All.Remove(this);
 
@@ -123,8 +134,32 @@ public class Projectile : MonoBehaviour
         return crit ? (baseDamage * criticalMultiplier, true) : (baseDamage, false);
     }
 
+    private void SpawnGhost()
+    {
+        if (_sr == null || _sr.sprite == null) return;
+        var go    = new GameObject("ProjGhost", typeof(SpriteRenderer));
+        go.transform.SetPositionAndRotation(transform.position, transform.rotation);
+        go.transform.localScale = transform.localScale;
+        var ghost              = go.GetComponent<SpriteRenderer>();
+        ghost.sprite           = _sr.sprite;
+        ghost.color            = ghostColor;
+        ghost.sortingLayerID   = _sr.sortingLayerID;
+        ghost.sortingOrder     = _sr.sortingOrder - 1;
+        Destroy(go, ghostLifetime);
+    }
+
     private void Update()
     {
+        if (ghostTrail)
+        {
+            _ghostTimer -= Time.deltaTime;
+            if (_ghostTimer <= 0f)
+            {
+                SpawnGhost();
+                _ghostTimer = ghostInterval;
+            }
+        }
+
         if (_isParabolic)
         {
             _paraElapsed += Time.deltaTime;

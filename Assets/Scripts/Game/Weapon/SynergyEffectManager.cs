@@ -54,7 +54,17 @@ public class SynergyEffectManager : MonoBehaviourSingleton<SynergyEffectManager>
 
     // ── 핵심 계산 ─────────────────────────────────────────────────────
 
+    private bool _recalculating;
+
     public void RecalculateSynergies()
+    {
+        if (_recalculating) return;
+        _recalculating = true;
+        try { RecalculateSynergiesInternal(); }
+        finally { _recalculating = false; }
+    }
+
+    private void RecalculateSynergiesInternal()
     {
         var equipped     = PlayerInventory.Shared?.Equipped;
         var newAchieved  = SynergyConditionChecker.CheckAll(equipped);

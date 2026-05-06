@@ -18,12 +18,13 @@ public class EraWeaponSlot : MonoBehaviour
 
     [Header("신화 등급 전용")]
     public GameObject backlightEffect;
-    public UIShiny    gradeFrameShiny;
 
     // ── 바인딩 ────────────────────────────────────────────────────────
     public void Bind(WeaponData data)
     {
         if (data == null) return;
+
+        var cfg = WeaponVisualConfig.Shared;
 
         // 무기 아이콘
         if (iconImage != null)
@@ -32,14 +33,29 @@ public class EraWeaponSlot : MonoBehaviour
             iconImage.enabled = data.icon != null;
         }
 
-        // 등급 프레임 색상
+        // 등급 프레임 스프라이트 + 색상
         if (gradeFrameImage != null)
-            gradeFrameImage.color = WeaponGradeColors.Get(data.grade);
+        {
+            var gradeSprite = cfg?.GetGradeSprite(data.grade);
+            if (gradeSprite != null)
+            {
+                gradeFrameImage.sprite = gradeSprite;
+                gradeFrameImage.color  = Color.white;
+            }
+            else
+            {
+                gradeFrameImage.color = WeaponGradeColors.Get(data.grade);
+            }
+
+            // gradeFrameImage에 붙은 UIShiny — 신화 등급만 활성화
+            var shiny = gradeFrameImage.GetComponent<UIShiny>();
+            if (shiny != null) shiny.enabled = data.grade == WeaponGrade.Mythic;
+        }
 
         // 무기 타입 아이콘
         if (weaponTypeIcon != null)
         {
-            var typeSprite = WeaponVisualConfig.Shared?.GetTypeSprite(data.weaponType);
+            var typeSprite = cfg?.GetTypeSprite(data.weaponType);
             weaponTypeIcon.sprite  = typeSprite;
             weaponTypeIcon.enabled = typeSprite != null;
         }
@@ -52,12 +68,9 @@ public class EraWeaponSlot : MonoBehaviour
         if (weaponNameText != null)
             weaponNameText.text = data.weaponName;
 
-        // 신화 등급일 때만 백라이트 + gradeFrame UIShiny 켜기
-        bool isMythic = data.grade == WeaponGrade.Mythic;
+        // 신화 등급일 때만 백라이트
         if (backlightEffect != null)
-            backlightEffect.SetActive(isMythic);
-        if (gradeFrameShiny != null)
-            gradeFrameShiny.enabled = isMythic;
+            backlightEffect.SetActive(data.grade == WeaponGrade.Mythic);
     }
 
     static string WeaponTypeToKorean(WeaponType t) => t switch

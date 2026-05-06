@@ -25,14 +25,25 @@ public class RangedBehaviour : EnemyBehaviourBase
     [SerializeField] private Material warningMaterial;
 
     [Header("VFX")]
-    [SerializeField] private GameObject attackVfxPrefab;
+    [SerializeField] private GameObject attackVfx;
+    [SerializeField] private float      attackVfxDuration = 0.3f;
+
+    [Header("애니메이션 이벤트")]
+    [Tooltip("true: tAttack 애니메이션 이벤트 OnRangedAttackFire()로 발사. false: 경고 후 즉시 발사")]
+    [SerializeField] private bool  useAnimationEvent  = true;
+    [Tooltip("애니메이션 이벤트가 이 시간 내에 오지 않으면 직접 발사 (0이면 폴백 없음)")]
+    [SerializeField] private float animEventTimeout   = 0.6f;
 
     private float        _projSpeed;
     private float        _projBonusDamage;
     private bool         _projCanReflect;
     private float        shootTimer;
     private bool         _isWarning;
+    private bool         _pendingShot;
+    private Vector2      _pendingShotDir;
+    private float        _pendingShotDmg;
     private LineRenderer _activeWarnLine;
+    private Collider2D   _col;
 
     public override void ApplyWaveScaling(float multiplier)
     {
@@ -70,6 +81,21 @@ public class RangedBehaviour : EnemyBehaviourBase
         Owner.FlipToward(toPlayer);
     }
 
+    public override void Init(EnemyController controller)
+    {
+        base.Init(controller);
+        shootTimer   = shootInterval;
+        _isWarning   = false;
+        _pendingShot = false;
+        _col         = controller.GetComponentInChildren<Collider2D>();
+        attackVfx?.SetActive(false);
+        if (_activeWarnLine != null)
+        {
+            Destroy(_activeWarnLine.gameObject);
+            _activeWarnLine = null;
+        }
+    }
+
     /// <summary>DB_유닛 투사체 데이터를 적용합니다.</summary>
     public void ApplyProjectileData(ProjectileData data)
     {
@@ -81,11 +107,18 @@ public class RangedBehaviour : EnemyBehaviourBase
         _projCanReflect  = data.canReflect;
     }
 
+    private Vector2 GetWarningOrigin()
+    {
+        if (firePoint != null) return (Vector2)firePoint.position;
+        if (_col != null) return new Vector2(Owner.Rb.position.x, _col.bounds.min.y);
+        return Owner.Rb.position;
+    }
+
     private IEnumerator WarnAndShoot()
     {
         _isWarning = true;
 
-        Vector2 spawnPos = firePoint != null ? (Vector2)firePoint.position : Owner.Rb.position;
+        Vector2 spawnPos = GetWarningOrigin();
         Vector2 dir      = Owner.PlayerTransform != null
             ? ((Vector2)Owner.PlayerTransform.position - spawnPos).normalized
             : Vector2.right;
@@ -97,11 +130,17 @@ public class RangedBehaviour : EnemyBehaviourBase
         {
             if (Owner == null) { if (lr != null) Destroy(lr.gameObject); _activeWarnLine = null; _isWarning = false; yield break; }
             // 발사 지점이 이동할 수 있으므로 매 프레임 갱신
-            spawnPos = firePoint != null ? (Vector2)firePoint.position : Owner.Rb.position;
-            if (lr != null) lr.SetPosition(0, spawnPos);
+            spawnPos = GetWarningOrigin();
             elapsed += Time.deltaTime;
             float t = Mathf.Clamp01(elapsed / warningDuration);
-            if (lr != null) lr.SetPosition(1, spawnPos + dir * (warningLineLength * t));
+            if (lr != null)
+            {
+                lr.transform.position = new Vector3(spawnPos.x, spawnPos.y, 0f);
+                lr.SetPosition(0, Vector3.zero);
+                Vector3 worldEnd = new Vector3(spawnPos.x + dir.x * warningLineLength * t,
+                                               spawnPos.y + dir.y * warningLineLength * t, 0f);
+                lr.SetPosition(1, lr.transform.InverseTransformPoint(worldEnd));
+            }
             yield return null;
         }
         if (lr != null) Destroy(lr.gameObject);
@@ -117,20 +156,57 @@ public class RangedBehaviour : EnemyBehaviourBase
     {
         if (projectilePrefab == null) return;
 
+        Vector2 spawnPos     = firePoint != null ? (Vector2)firePoint.position : Owner.Rb.position;
+        _pendingShotDir      = ((Vector2)Owner.PlayerTransform.position - spawnPos).normalized;
+        _pendingShotDmg      = rangedDamage > 0f ? rangedDamage : Owner.ContactDamage;
+
+        if (attackVfx != null) StartCoroutine(ShowVfx());
+
         Owner.EnemyAnimator?.SetTrigger("tAttack");
-        if (attackVfxPrefab != null)
-            Instantiate(attackVfxPrefab, transform.position, Quaternion.identity);
 
-        float   dmg      = rangedDamage > 0f ? rangedDamage : Owner.ContactDamage;
-        Vector2 spawnPos = firePoint != null ? (Vector2)firePoint.position : Owner.Rb.position;
-        Vector2 dir      = ((Vector2)Owner.PlayerTransform.position - spawnPos).normalized;
-
-        GameObject proj = Instantiate(projectilePrefab, spawnPos, Quaternion.identity);
-        if (proj.TryGetComponent<Projectile>(out var p))
+        if (useAnimationEvent)
         {
-            float spd = _projSpeed > 0f ? _projSpeed : 6f;
-            p.Init(dmg, dir, spd);
+            _pendingShot = true;
+            if (animEventTimeout > 0f)
+                StartCoroutine(AnimEventFallback());
         }
+        else
+        {
+            FireProjectile();
+        }
+    }
+
+    private IEnumerator ShowVfx()
+    {
+        attackVfx.SetActive(true);
+        yield return new WaitForSeconds(attackVfxDuration);
+        if (attackVfx != null) attackVfx.SetActive(false);
+    }
+
+    private IEnumerator AnimEventFallback()
+    {
+        yield return new WaitForSeconds(animEventTimeout);
+        if (!_pendingShot) yield break;
+        _pendingShot = false;
+        if (Owner == null) yield break;
+        FireProjectile();
+    }
+
+    private void FireProjectile()
+    {
+        if (projectilePrefab == null || Owner == null) return;
+        Vector2 spawnPos = firePoint != null ? (Vector2)firePoint.position : Owner.Rb.position;
+        var proj = Instantiate(projectilePrefab, spawnPos, Quaternion.identity);
+        if (proj.TryGetComponent<Projectile>(out var p))
+            p.Init(_pendingShotDmg, _pendingShotDir, _projSpeed > 0f ? _projSpeed : 6f);
+    }
+
+    /// <summary>tAttack 애니메이션의 발사 프레임에 Animation Event로 호출됩니다.</summary>
+    public void OnRangedAttackFire()
+    {
+        _pendingShot = false;
+        if (Owner == null) return;
+        FireProjectile();
     }
 
     private void OnDisable()
@@ -145,12 +221,15 @@ public class RangedBehaviour : EnemyBehaviourBase
 
     private LineRenderer SpawnWarningLine(Vector2 start, Vector2 dir)
     {
+        if (!WarningLineSettings.Enabled) return null;
         var go = new GameObject("WarnLine");
+        go.transform.position = new Vector3(start.x, start.y, 0f);
+        go.transform.rotation = Quaternion.Euler(60f, 0f, 0f);
         var lr = go.AddComponent<LineRenderer>();
-        lr.useWorldSpace = true;
+        lr.useWorldSpace = false;
         lr.positionCount = 2;
-        lr.SetPosition(0, start);
-        lr.SetPosition(1, start);
+        lr.SetPosition(0, Vector3.zero);
+        lr.SetPosition(1, Vector3.zero);
         lr.startWidth   = warningLineWidth;
         lr.endWidth     = warningLineWidth;
         lr.material     = warningMaterial != null

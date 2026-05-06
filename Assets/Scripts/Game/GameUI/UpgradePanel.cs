@@ -22,7 +22,6 @@ public class UpgradePanel : MonoBehaviour
     [SerializeField] private Button          buyExpButton;
     [SerializeField] private Button          nextWaveButton;
     [SerializeField] private Button          infoButton;
-    [SerializeField] private UIShiny         infoButtonShiny;
     [SerializeField] private Button          eraWeaponInfoButton;
 
     [Header("시대별 무기 정보 팝업")]
@@ -79,6 +78,7 @@ public class UpgradePanel : MonoBehaviour
     [SerializeField] private Animator      portraitAnimator;
 
     // ── 내부 상태 ────────────────────────────────────────────────────
+    private UIShiny            _infoButtonShiny;
     private Coroutine          notifCoroutine;
     private Coroutine          autoStartCoroutine;
     private Coroutine          buyExpHoldCoroutine;
@@ -88,6 +88,7 @@ public class UpgradePanel : MonoBehaviour
     private bool               isFirstWave         = false;
     private float              _lastDisplayedAtk   = -1f;
     private float              _atkBeforeMerge     = -1f; // 합성 직전 ATK 스냅샷
+    private bool               _refreshing         = false;
 
     // ────────────────────────────────────────────────────────────────
     // 초기화
@@ -97,7 +98,8 @@ public class UpgradePanel : MonoBehaviour
         rerollButton? .onClick.AddListener(OnRerollClicked);
         nextWaveButton?.onClick.AddListener(OnNextWaveClicked);
         infoButton?   .onClick.AddListener(OnInfoClicked);
-        if (infoButtonShiny != null) infoButtonShiny.enabled = false;
+        _infoButtonShiny = infoButton?.GetComponent<UIShiny>();
+        if (_infoButtonShiny != null) _infoButtonShiny.enabled = false;
         eraWeaponInfoButton?.onClick.AddListener(() =>
             eraWeaponInfoPopup?.Open(UpgradeManager.Shared?.CurrentChapter ?? 1));
 
@@ -338,6 +340,14 @@ public class UpgradePanel : MonoBehaviour
     // ────────────────────────────────────────────────────────────────
     public void RefreshInventoryUI()
     {
+        if (_refreshing) return;
+        _refreshing = true;
+        try { RefreshInventoryUIInternal(); }
+        finally { _refreshing = false; }
+    }
+
+    private void RefreshInventoryUIInternal()
+    {
         var inv = PlayerInventory.Shared;
         if (inv == null) return;
 
@@ -355,18 +365,19 @@ public class UpgradePanel : MonoBehaviour
 
         RefreshGold();
         RefreshAtkUI();
+        SynergyEffectManager.Shared?.RecalculateSynergies();
     }
 
     private void OnInfoClicked()
     {
-        if (infoButtonShiny != null) infoButtonShiny.enabled = false;
+        if (_infoButtonShiny != null) _infoButtonShiny.enabled = false;
         int chapter = UpgradeManager.Shared?.CurrentChapter ?? 1;
         SynergyInfoPanel.Shared?.Show(chapter);
     }
 
     private void OnNewSynergyAchieved()
     {
-        if (infoButtonShiny != null) infoButtonShiny.enabled = true;
+        if (_infoButtonShiny != null) _infoButtonShiny.enabled = true;
     }
 
     // ────────────────────────────────────────────────────────────────
@@ -483,8 +494,12 @@ public class UpgradePanel : MonoBehaviour
 
     public void NotifyDragBegin()
     {
+        selectedInvenIndex = -1;
+        selectedEquipIndex = -1;
+        WeaponInfoPanel.Shared?.Hide();
         if (nextWaveButton) nextWaveButton.interactable = false;
         if (sellImg) sellImg.gameObject.SetActive(true);
+        RefreshInventoryUI();
     }
 
     public void NotifyDragHover(Vector2 screenPos)

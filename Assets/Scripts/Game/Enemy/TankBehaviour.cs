@@ -1,23 +1,63 @@
+using System.Collections;
 using UnityEngine;
 
 /// <summary>
 /// 탱커형 — 느리지만 고체력으로 플레이어에게 정면으로 돌진합니다.
-/// TODO: 충격파, 방어막, 타격 시 피해 감소 메커니즘 구현.
 /// </summary>
 public class TankBehaviour : EnemyBehaviourBase
 {
     [Header("탱커 설정")]
-    [SerializeField] private float attackRange    = 1.5f;
-    [SerializeField] private float attackInterval = 2.0f;
-    [SerializeField] private float damageMultiplier = 1.5f;   // 타격 피해 배율
-    [SerializeField] private GameObject attackVfxPrefab;
+    [SerializeField] private float attackRange      = 1.5f;
+    [SerializeField] private float attackInterval   = 2.0f;
+    [SerializeField] private float damageMultiplier = 1.5f;
 
-    private float attackTimer;
+    [Header("VFX")]
+    [SerializeField] private GameObject shieldVfx;
+    [SerializeField] private float      shieldVfxDuration = 0.2f;
+
+    private static readonly int OutlineProperty = Shader.PropertyToID("_SolidOutline");
+    private static readonly Color ShieldOutlineColor = Color.yellow;
+    private const float ShieldHPThreshold = 0.4f;
+
+    private float                 attackTimer;
+    private SpriteRenderer        _sr;
+    private MaterialPropertyBlock _mpb;
 
     public override void Init(EnemyController controller)
     {
         base.Init(controller);
         attackTimer = attackInterval;
+        shieldVfx?.SetActive(false);
+
+        _sr  = Owner.GetComponentInChildren<SpriteRenderer>();
+        _mpb = new MaterialPropertyBlock();
+        SetOutline(ShieldOutlineColor); // 시작 시 노란 외곽선
+
+        Owner.OnHit += OnHit;
+    }
+
+    private void OnDisable()
+    {
+        if (Owner != null) Owner.OnHit -= OnHit;
+    }
+
+    private void OnHit()
+    {
+        if (Owner.HPRatio <= ShieldHPThreshold)
+        {
+            SetOutline(Color.clear); // 외곽선 제거
+            return;
+        }
+
+        if (shieldVfx != null)
+            StartCoroutine(ShowVfx(shieldVfx, shieldVfxDuration));
+    }
+
+    private void SetOutline(Color color)
+    {
+        if (_sr == null || _mpb == null) return;
+        _mpb.SetColor(OutlineProperty, color);
+        _sr.SetPropertyBlock(_mpb);
     }
 
     public override void OnAttackUpdate()
@@ -33,17 +73,24 @@ public class TankBehaviour : EnemyBehaviourBase
         if (dist <= attackRange)
         {
             Owner.EnemyAnimator?.SetTrigger("tAttack");
-            if (attackVfxPrefab != null)
-                Instantiate(attackVfxPrefab, transform.position, Quaternion.identity);
-
-            // TODO: 충격파 AoE 또는 강화 타격 구현
         }
+    }
+
+    private IEnumerator ShowVfx(GameObject vfx, float duration)
+    {
+        vfx.SetActive(true);
+        yield return new WaitForSeconds(duration);
+        if (vfx != null) vfx.SetActive(false);
     }
 
     public override void OnMoveFixedUpdate()
     {
-        // 탱커는 느리게 직선으로 접근
-        Owner.MoveTowardPlayer(Owner.MoveSpeed);
+        if (Owner.PlayerTransform == null) return;
+        float dist = Vector2.Distance(transform.position, Owner.PlayerTransform.position);
+        if (dist > attackRange)
+            Owner.MoveTowardPlayer(Owner.MoveSpeed);
+        else
+            Owner.FlipToward((Vector2)Owner.PlayerTransform.position - Owner.Rb.position);
     }
 
     /// <summary>Animation Event — 강화 근접 타격.</summary>

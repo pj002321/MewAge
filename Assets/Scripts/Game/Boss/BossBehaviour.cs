@@ -13,10 +13,13 @@ using UnityEngine;
 public class BossBehaviour : EnemyBehaviourBase
 {
     [Header("추격")]
+    [Tooltip("플레이어와 이 거리 이하가 되면 추격을 멈춥니다 (너무 붙지 않도록)")]
     [SerializeField] private float chaseStopDistance = 1.8f;
+    [Tooltip("스킬 실행 전 플레이어를 추격하는 시간 (초)")]
     [SerializeField] private float chaseDuration     = 2.5f;
 
-    [Header("대기")]
+    [Header("대기 (스킬 사이 쉬는 시간)")]
+    [Tooltip("스킬 → 다음 추격 시작 전 잠깐 멈추는 시간 (초). 격노 시 자동으로 줄어듭니다")]
     [SerializeField] private float idleDuration = 0.6f;
 
     private BossController boss;
