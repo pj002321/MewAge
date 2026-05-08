@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Mewage.DB;
 using UnityEngine;
 
@@ -11,6 +12,7 @@ public enum WeaponGrade { Common, Rare, Epic, Legendary, Mythic }
 public class WeaponData : ScriptableObject
 {
     [Header("기본 정보")]
+    [HideInInspector] public string id;
     public string       weaponName;
     public Sprite       icon;
     public WeaponType   weaponType;
@@ -29,6 +31,11 @@ public class WeaponData : ScriptableObject
 
     [Header("스토리 설명")]
     public string storyDescription;
+
+    [Header("특성 / 특수효과")]
+    public string trait;             // f_특성
+    public string specialEffectId;   // f_특수효과ID
+    public string specialEffectDesc; // f_특수효과설명
 
     // ────────────────────────────────────────────────────────────────
     // 기본 스탯 (1성 기준, DB_무기에서 로드. 합성 중 변하지 않음)
@@ -79,6 +86,7 @@ public class WeaponData : ScriptableObject
     public WeaponData UpgradedTo(int targetStar)
     {
         var next              = CreateInstance<WeaponData>();
+        next.id               = id;
         next.weaponName       = weaponName;
         next.icon             = icon;
         next.weaponType       = weaponType;
@@ -88,7 +96,10 @@ public class WeaponData : ScriptableObject
         next.price            = price;
         next.chapter          = chapter;
         next.star             = Mathf.Clamp(targetStar, 1, 5);
-        next.storyDescription = storyDescription;
+        next.storyDescription  = storyDescription;
+        next.trait             = trait;
+        next.specialEffectId   = specialEffectId;
+        next.specialEffectDesc = specialEffectDesc;
         next.bonus2Star       = bonus2Star;
         next.bonus3Star       = bonus3Star;
         next.bonus4Star       = bonus4Star;
@@ -119,6 +130,7 @@ public class WeaponData : ScriptableObject
         WeaponStatRegistry.EnsureLoaded();
 
         var data              = CreateInstance<WeaponData>();
+        data.id               = row.f_무기ID;
         data.weaponName       = row.f_이름;
         data.grade            = ParseGrade(row.f_등급);
         data.star             = 1;
@@ -136,7 +148,12 @@ public class WeaponData : ScriptableObject
             }
             data.chapter = parsed;
         }
-        data.storyDescription = row.f_스토리설명;
+        data.storyDescription  = row.f_스토리설명;
+        data.trait             = row.f_특성;
+        data.specialEffectId   = row.f_특수효과ID;
+        data.specialEffectDesc = !string.IsNullOrEmpty(data.trait)
+            ? LookupEffectDesc(data.trait)
+            : string.Empty;
         data.bonus2Star = WeaponStatRegistry.Build(row.f_속성2성ID, row.f_S1);
         data.bonus3Star = WeaponStatRegistry.Build(row.f_속성3성ID, row.f_S2);
         data.bonus4Star = WeaponStatRegistry.Build(row.f_속성4성ID, row.f_S3);
@@ -179,6 +196,25 @@ public class WeaponData : ScriptableObject
 
         data.ResetToBase();
         return data;
+    }
+
+    // ── 특수효과 룩업 (DB_무기 내 f_특수효과ID 행에서 설명 조회) ────────
+    private static Dictionary<string, string> s_effectDescMap;
+
+    private static string LookupEffectDesc(string effectId)
+    {
+        if (s_effectDescMap == null)
+        {
+            s_effectDescMap = new Dictionary<string, string>(System.StringComparer.Ordinal);
+            DB_무기.ForEachEntity(r =>
+            {
+                if (r != null
+                    && !string.IsNullOrEmpty(r.f_특수효과ID)
+                    && !string.IsNullOrEmpty(r.f_특수효과설명))
+                    s_effectDescMap[r.f_특수효과ID] = r.f_특수효과설명;
+            });
+        }
+        return s_effectDescMap.TryGetValue(effectId, out var desc) ? desc : string.Empty;
     }
 
     private static WeaponGrade ParseGrade(string s)

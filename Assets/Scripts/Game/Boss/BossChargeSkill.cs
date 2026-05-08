@@ -42,8 +42,8 @@ public class BossChargeSkill : BossSkillBase
 
         float speed = chargeSpeed * (Boss != null && Boss.IsEnraged ? Boss.EnrageSpeedMult : 1f);
 
-        Vector2 origin = Owner.Rb != null ? Owner.Rb.position : (Vector2)Owner.transform.position;
-        Vector2 dir    = ((Vector2)Owner.PlayerTransform.position - origin).normalized;
+        Vector2 dir = ((Vector2)Owner.PlayerTransform.position -
+                       (Owner.Rb != null ? Owner.Rb.position : (Vector2)Owner.transform.position)).normalized;
 
         // 첫 돌진 + 반사 반복
         int totalCharges = 1 + bounceCount;
@@ -51,35 +51,41 @@ public class BossChargeSkill : BossSkillBase
         {
             if (IsInvalid()) yield break;
 
-            // 경고 라인
-            yield return WarnPhase(dir, speed);
-            if (IsInvalid()) yield break;
+            // 경고 라인: 첫 번째 돌진에만 표시
+            if (charge == 0)
+            {
+                yield return WarnPhase(dir, speed);
+                if (IsInvalid()) yield break;
+            }
 
             Owner.EnemyAnimator?.SetTrigger("tCharge");
 
-            // 돌진
-            bool hitWall = false;
-            float elapsed = 0f;
-            while (elapsed < chargeDuration)
+            // 현재 위치를 로컬 변수로 추적 — Rb.MovePosition은 물리 스텝 후 반영되므로
+            // Rb.position에 의존하지 않고 직접 계산합니다.
+            Vector2 pos     = Owner.Rb != null ? Owner.Rb.position : (Vector2)Owner.transform.position;
+            bool    hitWall = false;
+
+            while (true)
             {
                 if (GameManager.Shared != null && GameManager.Shared.IsGameOver) yield break;
                 if (IsInvalid()) yield break;
 
-                Vector2 next = Owner.Rb.position + dir * speed * Time.fixedDeltaTime;
+                Vector2 next = pos + dir * speed * Time.fixedDeltaTime;
 
                 var mb = MovementBounds.Shared;
                 if (mb != null && !mb.IsInside(next))
                 {
-                    // 벽 충돌 위치로 이동 후 방향 반사
                     Vector2 clamped = mb.ClosestPointOnBoundary(next);
                     Owner.Rb.MovePosition(clamped);
+                    pos     = clamped;
                     dir     = Reflect(dir, next, clamped);
                     hitWall = true;
                     break;
                 }
 
-                Owner.MoveInDirection(dir, speed);
-                elapsed += Time.fixedDeltaTime;
+                pos = next;
+                Owner.Rb.MovePosition(next);
+                Owner.FlipToward(dir);
                 yield return new WaitForFixedUpdate();
             }
 

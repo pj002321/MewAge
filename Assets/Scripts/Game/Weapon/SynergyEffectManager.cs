@@ -39,12 +39,28 @@ public class SynergyEffectManager : MonoBehaviourSingleton<SynergyEffectManager>
         if (PlayerInventory.Shared != null)
         {
             PlayerInventory.Shared.OnChanged += RecalculateSynergies;
-            RecalculateSynergies(); // 초기 상태 반영
+            RecalculateSynergies();
+        }
+        else
+        {
+            // PlayerInventory가 Start() 시점에 아직 없으면 한 프레임 후 재시도
+            StartCoroutine(LateSubscribeRoutine());
+        }
+    }
+
+    private System.Collections.IEnumerator LateSubscribeRoutine()
+    {
+        yield return null;
+        if (PlayerInventory.Shared != null)
+        {
+            PlayerInventory.Shared.OnChanged += RecalculateSynergies;
+            RecalculateSynergies();
         }
     }
 
     private void OnDestroy()
     {
+        StopAllCoroutines();
         if (PlayerInventory.Shared != null)
             PlayerInventory.Shared.OnChanged -= RecalculateSynergies;
 
@@ -66,8 +82,12 @@ public class SynergyEffectManager : MonoBehaviourSingleton<SynergyEffectManager>
 
     private void RecalculateSynergiesInternal()
     {
-        var equipped     = PlayerInventory.Shared?.Equipped;
-        var newAchieved  = SynergyConditionChecker.CheckAll(equipped);
+        var equipped    = PlayerInventory.Shared?.Equipped;
+        var newAchieved = SynergyConditionChecker.CheckAll(equipped);
+
+        int equipCount = equipped?.Count ?? 0;
+        string achievedStr = newAchieved.Count > 0 ? string.Join(", ", newAchieved) : "(없음)";
+        Debug.Log($"[Synergy] 장착무기={equipCount}개 | 달성={achievedStr}");
 
         if (newAchieved.SetEquals(_previous)) return;
 

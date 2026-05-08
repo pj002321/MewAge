@@ -41,6 +41,10 @@ public class WeaponInfoPanel : MonoBehaviourSingleton<WeaponInfoPanel>
     [Header("성 강화 보너스 설명")]
     [SerializeField] private TextMeshProUGUI starDesc;   // "공격력 3 / 5 / 7 % 증가" 통합 표시
 
+    [Header("특성 / 특수효과")]
+    [SerializeField] private TextMeshProUGUI traitText;
+    [SerializeField] private Image           traitBadgeImage; // 등급별 뱃지
+
     [Header("스토리 설명")]
     [SerializeField] private TextMeshProUGUI storyText;
 
@@ -185,6 +189,23 @@ public class WeaponInfoPanel : MonoBehaviourSingleton<WeaponInfoPanel>
         // ── 성별 강화 설명 (공격력 3 / 5 / 7 % 증가 형태) ────────────
         SetCombinedStarDesc(starDesc, null, null,
             data.bonus2Star, data.bonus3Star, data.bonus4Star, data.star);
+
+        // ── 특성 / 특수효과 ──────────────────────────────────────
+        bool hasTraitDisplay = false;
+        if (traitText != null)
+        {
+            string display  = BuildTraitDisplay(data);
+            hasTraitDisplay = !string.IsNullOrEmpty(display);
+            traitText.text    = display;
+            traitText.enabled = hasTraitDisplay;
+        }
+
+        if (traitBadgeImage != null)
+        {
+            var badgeSprite = hasTraitDisplay ? WeaponVisualConfig.Shared?.GetTraitBadgeSprite(data.grade) : null;
+            traitBadgeImage.sprite  = badgeSprite;
+            traitBadgeImage.enabled = badgeSprite != null;
+        }
 
         // ── 스토리 설명 ───────────────────────────────────────────
         if (storyText) storyText.text = data.storyDescription ?? string.Empty;
@@ -376,6 +397,12 @@ public class WeaponInfoPanel : MonoBehaviourSingleton<WeaponInfoPanel>
         img.sprite  = sprite;
         img.enabled = sprite != null;
         img.color   = WeaponGradeColors.Get(grade);
+    }
+
+    private static string BuildTraitDisplay(WeaponData data)
+    {
+        if (string.IsNullOrEmpty(data.trait)) return string.Empty;
+        return !string.IsNullOrEmpty(data.specialEffectDesc) ? data.specialEffectDesc : string.Empty;
     }
 
     /// <summary>WeaponGrade → 한글 이름</summary>

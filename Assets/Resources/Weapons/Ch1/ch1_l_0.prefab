@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 2442180650331241265}
   - component: {fileID: -7691689357368657162}
   - component: {fileID: -5742848553004821721}
+  - component: {fileID: -4579049510970656139}
   m_Layer: 0
   m_Name: ch1_l_0
   m_TagString: Untagged
@@ -105,7 +106,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 80572d92ca6952f478c256b7ffc65d80, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponPoint
-  weaponType: 4
+  weaponType: 3
   pullbackDist: 0.5
   anticipationTime: 0.08
   strikeSpeed: 90
@@ -119,7 +120,7 @@ MonoBehaviour:
   pullStrength: 8
   pullDuration: 0.25
   projectilePrefab: {fileID: 0}
-  projectileSpeed: 0
+  projectileSpeed: 20
   useParabolicShot: 0
   parabolicArcHeight: 1.5
   parabolicSpawnLocalPos: {x: 0, y: 0, z: 0}
@@ -186,3 +187,17 @@ MonoBehaviour:
   - {r: 0.39999998, g: 1, b: 0.6414886, a: 1}
   - {r: 0.8, g: 0.4, b: 1, a: 1}
   - {r: 1, g: 0.35, b: 0.35, a: 1}
+--- !u!114 &-4579049510970656139
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5416354146166037338}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 58ba6d1c1a47912408824daa5efedfd6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Utility.BaseAction
+  actionType: 0
+  value: 90

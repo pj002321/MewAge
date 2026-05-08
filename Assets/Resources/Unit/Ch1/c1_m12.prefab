@@ -136,8 +136,6 @@ GameObject:
   - component: {fileID: 3477989986898819601}
   - component: {fileID: 4893850151441561591}
   - component: {fileID: 5337808210302580648}
-  - component: {fileID: 7126431795147920118}
-  - component: {fileID: -5871980427623642109}
   - component: {fileID: -5070660432427263646}
   - component: {fileID: 1160458829131023466}
   m_Layer: 0
@@ -334,53 +332,6 @@ MonoBehaviour:
   bleedInterval: 1
   separationRadius: 3
   separationStrength: 2
---- !u!114 &7126431795147920118
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7313528007987417252}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bce05cdbf4c6c0d4b8e3a23bbeb3fb43, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::EnemyFXConfig
-  onAttack:
-    vfxPrefab: {fileID: 0}
-    spawnOffset: {x: 0, y: 0}
-    sfxClip: {fileID: 0}
-    volume: 1
-  onHit:
-    vfxPrefab: {fileID: 0}
-    spawnOffset: {x: 0, y: 0}
-    sfxClip: {fileID: 0}
-    volume: 1
-  onDeath:
-    vfxPrefab: {fileID: 0}
-    spawnOffset: {x: 0, y: 0}
-    sfxClip: {fileID: 0}
-    volume: 1
-  onSpawn:
-    vfxPrefab: {fileID: 0}
-    spawnOffset: {x: 0, y: 0}
-    sfxClip: {fileID: 0}
-    volume: 1
---- !u!114 &-5871980427623642109
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7313528007987417252}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8dbca1b53536a2b47a8964120af00539, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HitFlash
-  flashDuration: 0.12
-  flashColor: {r: 1, g: 1, b: 1, a: 1}
-  BaseColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!114 &-5070660432427263646
 MonoBehaviour:
   m_ObjectHideFlags: 0

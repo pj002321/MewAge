@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 8709234326183843339}
   - component: {fileID: -6884123450107139104}
   - component: {fileID: 6601740639246217058}
+  - component: {fileID: 1084601168087670013}
   m_Layer: 0
   m_Name: ch1_m_4
   m_TagString: Untagged
@@ -186,3 +187,22 @@ MonoBehaviour:
   - {r: 0.4, g: 0.8, b: 1, a: 1}
   - {r: 0.8, g: 0.4, b: 1, a: 1}
   - {r: 1, g: 0.35, b: 0.35, a: 1}
+--- !u!114 &1084601168087670013
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2655861510816081929}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 06cda30eae9cc994ba01255de6f83106, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MythicSpikeSkill
+  chance: 0.2
+  spikePrefab: {fileID: 0}
+  tickDamage: 5
+  tickInterval: 0.5
+  duration: 5
+  deathAoeRadius: 2.5
+  deathAoeDamage: 20

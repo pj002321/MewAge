@@ -29,10 +29,15 @@ public class BossController : MonoBehaviour, IEnemyHost
     // ── 그로기 ─────────────────────────────────────────────────────
     [Header("그로기")]
     [Tooltip("HP 비율 기준 그로기 진입 구간 (내림차순 권장: 0.70, 0.35)")]
-    [SerializeField] private float[] grogyThresholds   = { 0.70f, 0.35f };
-    [SerializeField] private float   grogyDuration     = 5f;
-    [Tooltip("그로기 중 플레이어 공격속도 보너스 (%)")]
-    [SerializeField] private float   grogyAtkSpeedBonus = 50f;
+    [SerializeField] private float[] grogyThresholds  = { 0.70f, 0.35f };
+    [SerializeField] private float   grogyDuration    = 5f;
+    [SerializeField] private GameObject grogyOverheadPrefab;
+    [Tooltip("할당하면 해당 Transform 위치에 스폰. 없으면 YOffset 사용.")]
+    [SerializeField] private Transform  grogyOverheadAnchor;
+    [SerializeField] private float      grogyOverheadYOffset = 1.5f;
+
+    private static readonly Color GrogyTint        = new(0.45f, 0.45f, 0.45f, 1f);
+    private const           float GrogyAtkSpeedPct = 700f; // 8배 = +700%
 
     // ── HitFlash ──────────────────────────────────────────────────
     [Header("피격 플래시")]
@@ -73,6 +78,8 @@ public class BossController : MonoBehaviour, IEnemyHost
     public Rigidbody2D Rb              { get; private set; }
     public Animator    EnemyAnimator   { get; private set; }
     public Transform   SelfTransform   => transform;   // IEnemyHost
+    public Transform   Decal           => _decal;
+    [SerializeField] private Transform _decal;
 
     public event System.Action OnEnraged;
     public event System.Action OnDeath;
@@ -84,18 +91,17 @@ public class BossController : MonoBehaviour, IEnemyHost
     public float MaxSkillGauge => 100f;
 
     public bool  IsGrogy        { get; private set; }
+    public bool  IsMoveBound    { get; private set; }
     public float GrogyRemaining { get; private set; }
     public float GrogyDuration  => grogyDuration;
 
     public void ApplyBleed(float damage) { } // Placeholder for compatibility
 
-    // ── 입장 낙하 연출 ────────────────────────────────────────────────
-    [Header("입장 낙하 연출")]
-    [SerializeField] private bool  entryDrop       = true;
-    [SerializeField] private float dropSpeed       = 22f;   // 낙하 속도 (units/s)
-    [SerializeField] private float squashDuration  = 0.08f; // 찌부 시간
-    [SerializeField] private float stretchDuration = 0.10f; // 튀어오름 시간
-    [SerializeField] private float settleDuration  = 0.12f; // 정착 시간
+    // ── 입장 연출 ─────────────────────────────────────────────────────
+    [Header("입장 연출")]
+    [SerializeField] private bool  entryDrop            = true;
+    [Tooltip("팝인 완료 시간 (초). OutBack 커브로 오버슈트 바운스")]
+    [SerializeField] private float entryScaleUpDuration = 0.35f;
 
     // ── 내부 상태 ──────────────────────────────────────────────────
     private float            currentHP;
@@ -103,6 +109,7 @@ public class BossController : MonoBehaviour, IEnemyHost
     private SpriteRenderer[] srs;
     private Coroutine        flashCoroutine;
     private Coroutine        knockbackCoroutine;
+    private Coroutine        _patternCoroutine;
     private bool             isDead;
     private bool             _dropping;
     private bool             _skillExecuting;
@@ -110,6 +117,8 @@ public class BossController : MonoBehaviour, IEnemyHost
 
     // 그로기: 이미 발동된 구간 인덱스 추적
     private readonly System.Collections.Generic.HashSet<int> _triggeredGrogy = new();
+    private Coroutine  _grogyFlickerCoroutine;
+    private GameObject _grogyOverheadInstance;
 
     /// <summary>현재 보스가 왼쪽을 바라보고 있으면 true.</summary>
     public bool IsFacingLeft => _lastFlipX;
@@ -158,41 +167,27 @@ public class BossController : MonoBehaviour, IEnemyHost
             StartCoroutine(PatternRoutine());
     }
 
-    // ── 입장 낙하 연출 ─────────────────────────────────────────────
+    // ── 입장 연출 ──────────────────────────────────────────────────
     private IEnumerator EntryDropRoutine()
     {
         _dropping = true;
 
-        // 원본 스케일 저장
         Vector3 originalScale = transform.localScale;
+        Vector3 spawnPos      = transform.position;
 
-        // 착지 목표 = 현재(스폰) 위치
-        Vector3 landPos = transform.position;
+        // 보스 숨김
+        transform.localScale = Vector3.zero;
 
-        // 화면 상단 위로 이동 (카메라 없으면 +12 오프셋)
-        var cam = Camera.main;
-        float topY = cam != null
-            ? cam.ViewportToWorldPoint(new Vector3(0.5f, 1f, cam.nearClipPlane)).y + 2f
-            : landPos.y + 12f;
-        transform.position = new Vector3(landPos.x, topY, landPos.z);
+        // 착지 VFX
+        FXManager.Shared?.SpawnBossEntryLandingVfx(spawnPos);
 
-        // 낙하
-        while (transform.position.y > landPos.y)
-        {
-            float step = dropSpeed * Time.deltaTime;
-            transform.position = Vector3.MoveTowards(transform.position, landPos, step);
-            yield return null;
-        }
-        transform.position = landPos;
-
-        // Y만 찌부 — X/Z 원본 유지
-        yield return EnemyFX.ScaleY(transform, originalScale, 0.55f, squashDuration,  DG.Tweening.Ease.InQuad).WaitForCompletion();
-        yield return EnemyFX.ScaleY(transform, originalScale, 1.30f, stretchDuration, DG.Tweening.Ease.OutQuad).WaitForCompletion();
-        yield return EnemyFX.ScaleY(transform, originalScale, 1f,    settleDuration,  DG.Tweening.Ease.InOutSine).WaitForCompletion();
-        FXManager.Shared?.SpawnLandingVFX(transform.position);
+        // 스케일 0 → 원본, OutBack으로 오버슈트 바운스 (뿅!)
+        yield return transform.DOScale(originalScale, entryScaleUpDuration)
+            .SetEase(DG.Tweening.Ease.OutBack)
+            .WaitForCompletion();
 
         _dropping = false;
-        StartCoroutine(PatternRoutine());
+        _patternCoroutine = StartCoroutine(PatternRoutine());
     }
 
     // ── 패턴 루프 ──────────────────────────────────────────────────
@@ -283,8 +278,49 @@ public class BossController : MonoBehaviour, IEnemyHost
 
     // ── 이동 API (스킬에서 사용) ────────────────────────────────────
 
+    public void TriggerGroggy(float duration)
+    {
+        if (IsGrogy || isDead) return;
+        StartCoroutine(ForcedGrogyRoutine(duration));
+    }
+
+    private IEnumerator ForcedGrogyRoutine(float duration)
+    {
+        if (_patternCoroutine != null) { StopCoroutine(_patternCoroutine); _patternCoroutine = null; }
+        _skillExecuting = false;
+        IsGrogy        = true;
+        GrogyRemaining = duration;
+        EnemyAnimator?.SetBool("bMove", false);
+        OnGrogyStart?.Invoke();
+        StartGrogyVisuals();
+        var sm = PlayerStatManager.Shared;
+        sm?.AddPctMod(StatType.AtkSpeed, GrogyAtkSpeedPct);
+        while (GrogyRemaining > 0f) { GrogyRemaining -= Time.deltaTime; yield return null; }
+        GrogyRemaining = 0f;
+        sm?.AddPctMod(StatType.AtkSpeed, -GrogyAtkSpeedPct);
+        StopGrogyVisuals();
+        IsGrogy = false;
+        OnGrogyEnd?.Invoke();
+        if (!isDead) _patternCoroutine = StartCoroutine(PatternRoutine());
+    }
+
+    public void BindMovement(float duration)
+    {
+        if (IsGrogy || isDead) return;
+        StartCoroutine(BindMovementRoutine(duration));
+    }
+
+    private IEnumerator BindMovementRoutine(float duration)
+    {
+        IsMoveBound = true;
+        EnemyAnimator?.SetBool("bMove", false);
+        yield return new WaitForSeconds(duration);
+        IsMoveBound = false;
+    }
+
     public void MoveTowardPlayer(float speed)
     {
+        if (IsMoveBound) return;
         if (PlayerTransform == null || Rb == null) return;
         Vector2 dir = ((Vector2)PlayerTransform.position - Rb.position).normalized;
         MoveInDirection(dir, speed);
@@ -292,6 +328,7 @@ public class BossController : MonoBehaviour, IEnemyHost
 
     public void MoveInDirection(Vector2 dir, float speed)
     {
+        if (IsMoveBound) return;
         EnemyAnimator?.SetBool("bMove", true);
         Vector2 delta = dir.normalized * speed * Time.fixedDeltaTime;
         if (Rb != null)
@@ -304,8 +341,8 @@ public class BossController : MonoBehaviour, IEnemyHost
     public void FlipToward(Vector2 dir)
     {
         bool newFlipX;
-        if      (dir.x > 0.01f)  newFlipX = false;
-        else if (dir.x < -0.01f) newFlipX = true;
+        if      (dir.x > 0.1f)  newFlipX = false;
+        else if (dir.x < -0.1f) newFlipX = true;
         else return;
 
         _lastFlipX = newFlipX;
@@ -348,6 +385,7 @@ public class BossController : MonoBehaviour, IEnemyHost
     public void TakeDamage(float damage, bool isCritical = false, Vector2 knockbackDir = default, float knockbackForce = 0f)
     {
         if (isDead) return;
+        if (TestMonsterSpawner.EnemyInvincible) return;
 
         float bossAtkBonus = RelicManager.Shared?.BossAtkBonusPct ?? 0f;
         if (bossAtkBonus > 0f) damage *= (1f + bossAtkBonus / 100f);
@@ -409,6 +447,7 @@ public class BossController : MonoBehaviour, IEnemyHost
     private IEnumerator DieRoutine()
     {
         isDead = true;
+        StopGrogyVisuals();
         OnDeath?.Invoke();
 
         PlayFX(onDeathFX);
@@ -446,7 +485,8 @@ public class BossController : MonoBehaviour, IEnemyHost
         if (srs == null) yield break;
         foreach (var sr in srs) sr.color = flashColor;
         yield return new WaitForSeconds(flashDuration);
-        foreach (var sr in srs) sr.color = Color.white;
+        Color restore = IsGrogy ? GrogyTint : Color.white;
+        foreach (var sr in srs) sr.color = restore;
     }
 
     // ── 분노 ─────────────────────────────────────────────────────
@@ -476,13 +516,16 @@ public class BossController : MonoBehaviour, IEnemyHost
 
     private IEnumerator GrogyRoutine()
     {
-        IsGrogy       = true;
+        if (_patternCoroutine != null) { StopCoroutine(_patternCoroutine); _patternCoroutine = null; }
+        _skillExecuting = false;
+        IsGrogy        = true;
         GrogyRemaining = grogyDuration;
         EnemyAnimator?.SetBool("bMove", false);
         OnGrogyStart?.Invoke();
+        StartGrogyVisuals();
 
         var sm = PlayerStatManager.Shared;
-        sm?.AddPctMod(StatType.AtkSpeed, grogyAtkSpeedBonus);
+        sm?.AddPctMod(StatType.AtkSpeed, GrogyAtkSpeedPct);
 
         while (GrogyRemaining > 0f)
         {
@@ -491,10 +534,58 @@ public class BossController : MonoBehaviour, IEnemyHost
         }
         GrogyRemaining = 0f;
 
-        sm?.AddPctMod(StatType.AtkSpeed, -grogyAtkSpeedBonus);
-
+        sm?.AddPctMod(StatType.AtkSpeed, -GrogyAtkSpeedPct);
+        StopGrogyVisuals();
         IsGrogy = false;
         OnGrogyEnd?.Invoke();
+        if (!isDead) _patternCoroutine = StartCoroutine(PatternRoutine());
+    }
+
+    // ── 그로기 비주얼 ─────────────────────────────────────────────────
+
+    private void StartGrogyVisuals()
+    {
+        if (_grogyFlickerCoroutine != null) StopCoroutine(_grogyFlickerCoroutine);
+        _grogyFlickerCoroutine = StartCoroutine(GrogyEntryHighlight());
+
+        if (grogyOverheadPrefab != null)
+        {
+            if (_grogyOverheadInstance != null) Destroy(_grogyOverheadInstance);
+            Transform parent = grogyOverheadAnchor != null ? grogyOverheadAnchor : transform;
+            Vector3 localPos = grogyOverheadAnchor != null ? Vector3.zero : Vector3.up * grogyOverheadYOffset;
+            _grogyOverheadInstance = Instantiate(grogyOverheadPrefab, parent);
+            _grogyOverheadInstance.transform.localPosition = localPos;
+        }
+    }
+
+    private void StopGrogyVisuals()
+    {
+        if (_grogyFlickerCoroutine != null) { StopCoroutine(_grogyFlickerCoroutine); _grogyFlickerCoroutine = null; }
+        if (srs != null) foreach (var sr in srs) if (sr) sr.color = Color.white;
+        if (_grogyOverheadInstance != null) { Destroy(_grogyOverheadInstance); _grogyOverheadInstance = null; }
+    }
+
+    private IEnumerator GrogyEntryHighlight()
+    {
+        // 스케일 펀치
+        transform.DOPunchScale(Vector3.one * 0.3f, 0.6f, 8, 0.4f);
+
+        // 화이트 펄스 3회 → 회색으로 전환
+        float totalTime = 0.6f;
+        float t = 0f;
+        while (t < totalTime)
+        {
+            t += Time.deltaTime;
+            float ratio   = t / totalTime;
+            float flicker = Mathf.Abs(Mathf.Sin(ratio * Mathf.PI * 3f)) * (1f - ratio);
+            Color c = Color.Lerp(GrogyTint, Color.white, flicker);
+            if (srs != null) foreach (var sr in srs) if (sr) sr.color = c;
+            yield return null;
+        }
+
+        // 회색 고정
+        if (srs != null) foreach (var sr in srs) if (sr) sr.color = GrogyTint;
+        _grogyFlickerCoroutine = null;
     }
 
     // ── 스킬 선택 ─────────────────────────────────────────────────

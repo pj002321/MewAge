@@ -17,6 +17,10 @@ public class CameraFollow : MonoBehaviour
     [Header("부드러움 (0 = 즉시, 높을수록 느리게)")]
     [SerializeField] private float smoothTime = 0.15f;
 
+    [Header("기본 동작 (테스트 씬 전용 — 실제 스테이지에서는 WaveEnvironmentSwitcher가 덮어씁니다)")]
+    [Tooltip("true로 설정하면 WaveEnvironmentSwitcher 없이도 target을 즉시 추적합니다.")]
+    [SerializeField] private bool defaultFollowPlayer = false;
+
     [Header("피격 카메라 셰이크")]
     [SerializeField] private float shakeDefaultDuration  = 0.18f;
     [SerializeField] private float shakeDefaultMagnitude = 0.12f;
@@ -42,6 +46,9 @@ public class CameraFollow : MonoBehaviour
 
         if (target == null && PlayerController.Instance != null)
             target = PlayerController.Instance.transform;
+
+        if (defaultFollowPlayer)
+            _followPlayer = true;
     }
 
     private void Start()

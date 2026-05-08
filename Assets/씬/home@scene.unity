@@ -458,7 +458,7 @@ PrefabInstance:
     - target: {fileID: 2198427787174061152, guid: 70332c37f038bc541a8bc3ad5be1c633, type: 3}
       propertyPath: m_Material
       value: 
-      objectReference: {fileID: 2100000, guid: 9dc7e810a87b444ab96919f3215c2fe5, type: 2}
+      objectReference: {fileID: 0}
     - target: {fileID: 2532012811866489362, guid: 70332c37f038bc541a8bc3ad5be1c633, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -1020,9 +1020,9 @@ RectTransform:
   - {fileID: 1215333505}
   m_Father: {fileID: 1883140203}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -469}
+  m_AnchorMin: {x: 0.5, y: 0}
+  m_AnchorMax: {x: 0.5, y: 0}
+  m_AnchoredPosition: {x: 0, y: 637.25}
   m_SizeDelta: {x: 1080, y: 920}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &34536069
@@ -9846,7 +9846,7 @@ PrefabInstance:
     - target: {fileID: 2198427787174061152, guid: 70332c37f038bc541a8bc3ad5be1c633, type: 3}
       propertyPath: m_Material
       value: 
-      objectReference: {fileID: 2100000, guid: 9dc7e810a87b444ab96919f3215c2fe5, type: 2}
+      objectReference: {fileID: 0}
     - target: {fileID: 2198427787174061152, guid: 70332c37f038bc541a8bc3ad5be1c633, type: 3}
       propertyPath: m_RaycastTarget
       value: 0
@@ -13071,7 +13071,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -15.955017, y: 0}
+  m_AnchoredPosition: {x: -15.955078, y: 0}
   m_SizeDelta: {x: 271.2321, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &441780407
@@ -15625,47 +15625,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 526313669}
   m_CullTransparentMesh: 1
---- !u!21 &527544802
-Material:
-  serializedVersion: 8
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: UI/RoundedCorners/RoundedCorners
-  m_Shader: {fileID: 4800000, guid: 0bd2ec5d73751e34a814274a454bec41, type: 3}
-  m_Parent: {fileID: 0}
-  m_ModifiedSerializedProperties: 0
-  m_ValidKeywords: []
-  m_InvalidKeywords: []
-  m_LightmapFlags: 4
-  m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
-  m_CustomRenderQueue: -1
-  stringTagMap: {}
-  disabledShaderPasses: []
-  m_LockedProperties: 
-  m_SavedProperties:
-    serializedVersion: 3
-    m_TexEnvs:
-    - _MainTex:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    m_Ints: []
-    m_Floats:
-    - _ColorMask: 15
-    - _Stencil: 0
-    - _StencilComp: 8
-    - _StencilOp: 0
-    - _StencilReadMask: 255
-    - _StencilWriteMask: 255
-    - _UseUIAlphaClip: 0
-    m_Colors:
-    - _OuterUV: {r: 0, g: 0, b: 1, a: 1}
-    - _WidthHeightRadius: {r: 104, g: 104, b: 3.6, a: 0}
-  m_BuildTextureStacks: []
-  m_AllowLocking: 1
 --- !u!1 &527812119
 GameObject:
   m_ObjectHideFlags: 0
@@ -25511,7 +25470,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: 527544802}
+  m_Material: {fileID: 1408086311}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
@@ -29163,7 +29122,7 @@ PrefabInstance:
     - target: {fileID: 2198427787174061152, guid: 70332c37f038bc541a8bc3ad5be1c633, type: 3}
       propertyPath: m_Material
       value: 
-      objectReference: {fileID: 2100000, guid: 9dc7e810a87b444ab96919f3215c2fe5, type: 2}
+      objectReference: {fileID: 0}
     - target: {fileID: 2532012811866489362, guid: 70332c37f038bc541a8bc3ad5be1c633, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -32490,9 +32449,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 34536067}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -196.68}
+  m_AnchorMin: {x: 0.5, y: 0}
+  m_AnchorMax: {x: 0.5, y: 0}
+  m_AnchoredPosition: {x: 0, y: 270.88}
   m_SizeDelta: {x: 1080, y: 720}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1215333506
@@ -38204,6 +38163,47 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1407328767}
   m_CullTransparentMesh: 1
+--- !u!21 &1408086311
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: UI/RoundedCorners/RoundedCorners
+  m_Shader: {fileID: 4800000, guid: 0bd2ec5d73751e34a814274a454bec41, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _MainTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _ColorMask: 15
+    - _Stencil: 0
+    - _StencilComp: 8
+    - _StencilOp: 0
+    - _StencilReadMask: 255
+    - _StencilWriteMask: 255
+    - _UseUIAlphaClip: 0
+    m_Colors:
+    - _OuterUV: {r: 0, g: 0, b: 1, a: 1}
+    - _WidthHeightRadius: {r: 104, g: 104, b: 3.6, a: 0}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1
 --- !u!1 &1409448284
 GameObject:
   m_ObjectHideFlags: 0
@@ -45950,7 +45950,7 @@ MonoBehaviour:
   baseHPRegen: 1
   baseMoveSpeed: 6
   baseMagnetRadius: 4
-  baseAtkSpeed: 0.5
+  baseAtkSpeed: 0
   baseEvasion: 0
   baseCritChance: 0.1
   baseCritDmg: 1
@@ -51422,33 +51422,53 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 974444820013218462, guid: 6762f7bdcc5f50f47b840f43d6c534bd, type: 3}
+      propertyPath: bossBGM
+      value: 
+      objectReference: {fileID: 8300000, guid: 30fb97ce69da04d4cbdaf3403119a08a, type: 3}
+    - target: {fileID: 974444820013218462, guid: 6762f7bdcc5f50f47b840f43d6c534bd, type: 3}
+      propertyPath: gameBGM
+      value: 
+      objectReference: {fileID: 8300000, guid: 2148a098b1d70b94daf1b019c31212c8, type: 3}
+    - target: {fileID: 974444820013218462, guid: 6762f7bdcc5f50f47b840f43d6c534bd, type: 3}
       propertyPath: chapterBGMList.Array.size
       value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 974444820013218462, guid: 6762f7bdcc5f50f47b840f43d6c534bd, type: 3}
+      propertyPath: chapterBGMList.Array.data[0].bossBGM
+      value: 
+      objectReference: {fileID: 8300000, guid: 30fb97ce69da04d4cbdaf3403119a08a, type: 3}
+    - target: {fileID: 974444820013218462, guid: 6762f7bdcc5f50f47b840f43d6c534bd, type: 3}
       propertyPath: chapterBGMList.Array.data[0].gameBGM
       value: 
-      objectReference: {fileID: 8300000, guid: 97a5a6114597a6344914da7305be24a3, type: 3}
+      objectReference: {fileID: 8300000, guid: 1cb9b97550116524ba2ee21e9e5dd6d1, type: 3}
     - target: {fileID: 974444820013218462, guid: 6762f7bdcc5f50f47b840f43d6c534bd, type: 3}
       propertyPath: chapterBGMList.Array.data[0].homeBGM
       value: 
       objectReference: {fileID: 8300000, guid: 7ee8e11118a928d4687fffb07ad164c3, type: 3}
     - target: {fileID: 974444820013218462, guid: 6762f7bdcc5f50f47b840f43d6c534bd, type: 3}
+      propertyPath: chapterBGMList.Array.data[1].bossBGM
+      value: 
+      objectReference: {fileID: 8300000, guid: 30fb97ce69da04d4cbdaf3403119a08a, type: 3}
+    - target: {fileID: 974444820013218462, guid: 6762f7bdcc5f50f47b840f43d6c534bd, type: 3}
       propertyPath: chapterBGMList.Array.data[1].gameBGM
       value: 
-      objectReference: {fileID: 8300000, guid: 9ed038f8c7d677e41857d422c1715fa9, type: 3}
+      objectReference: {fileID: 8300000, guid: 2148a098b1d70b94daf1b019c31212c8, type: 3}
     - target: {fileID: 974444820013218462, guid: 6762f7bdcc5f50f47b840f43d6c534bd, type: 3}
       propertyPath: chapterBGMList.Array.data[1].homeBGM
       value: 
-      objectReference: {fileID: 8300000, guid: 810530c4b8bfc1f43adc15cb44edd2fe, type: 3}
+      objectReference: {fileID: 8300000, guid: 7ee8e11118a928d4687fffb07ad164c3, type: 3}
+    - target: {fileID: 974444820013218462, guid: 6762f7bdcc5f50f47b840f43d6c534bd, type: 3}
+      propertyPath: chapterBGMList.Array.data[2].bossBGM
+      value: 
+      objectReference: {fileID: 8300000, guid: 30fb97ce69da04d4cbdaf3403119a08a, type: 3}
     - target: {fileID: 974444820013218462, guid: 6762f7bdcc5f50f47b840f43d6c534bd, type: 3}
       propertyPath: chapterBGMList.Array.data[2].gameBGM
       value: 
-      objectReference: {fileID: 8300000, guid: 026c6a2a6a5d73745b16aea49df41ead, type: 3}
+      objectReference: {fileID: 8300000, guid: 1cb9b97550116524ba2ee21e9e5dd6d1, type: 3}
     - target: {fileID: 974444820013218462, guid: 6762f7bdcc5f50f47b840f43d6c534bd, type: 3}
       propertyPath: chapterBGMList.Array.data[2].homeBGM
       value: 
-      objectReference: {fileID: 8300000, guid: 3afa52bddcd8e5e4c9c8649f985547e1, type: 3}
+      objectReference: {fileID: 8300000, guid: 7ee8e11118a928d4687fffb07ad164c3, type: 3}
     - target: {fileID: 974444820013218462, guid: 6762f7bdcc5f50f47b840f43d6c534bd, type: 3}
       propertyPath: chapterBGMList.Array.data[0].chapterId
       value: C1
@@ -58142,7 +58162,7 @@ PrefabInstance:
     - target: {fileID: 2198427787174061152, guid: 70332c37f038bc541a8bc3ad5be1c633, type: 3}
       propertyPath: m_Material
       value: 
-      objectReference: {fileID: 2100000, guid: 9dc7e810a87b444ab96919f3215c2fe5, type: 2}
+      objectReference: {fileID: 0}
     - target: {fileID: 2532012811866489362, guid: 70332c37f038bc541a8bc3ad5be1c633, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -60721,7 +60741,7 @@ PrefabInstance:
     - target: {fileID: 2198427787174061152, guid: 70332c37f038bc541a8bc3ad5be1c633, type: 3}
       propertyPath: m_Material
       value: 
-      objectReference: {fileID: 2100000, guid: 9dc7e810a87b444ab96919f3215c2fe5, type: 2}
+      objectReference: {fileID: 0}
     - target: {fileID: 2532012811866489362, guid: 70332c37f038bc541a8bc3ad5be1c633, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -64097,6 +64117,11 @@ MonoBehaviour:
   nextCardAlpha: 0.85
   snapDuration: 0.5
   flickThreshold: 1500
+  background: {fileID: 1215333506}
+  chapterBackgrounds:
+  - {fileID: 21300000, guid: dae80de3fbda94406b5f5557fa2e2c2d, type: 3}
+  - {fileID: -2124324679701141361, guid: 19d17233b86a5134dac6904b702dda0f, type: 3}
+  - {fileID: -4926128599717665856, guid: 0cc41adeb7aca6d409b38c5571dd565e, type: 3}
 --- !u!114 &8166742744747560892
 MonoBehaviour:
   m_ObjectHideFlags: 0

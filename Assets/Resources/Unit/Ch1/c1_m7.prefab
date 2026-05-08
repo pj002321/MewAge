@@ -78,8 +78,8 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 1049025713
+  m_SortingLayer: 1
   m_SortingOrder: 100
   m_MaskInteraction: 0
   m_Sprite: {fileID: -2335058270119816288, guid: 5eceac69ec16a2d4f8cec1f4b200c277, type: 3}
@@ -125,9 +125,6 @@ GameObject:
   - component: {fileID: 931334913187095521}
   - component: {fileID: 9102388910167449770}
   - component: {fileID: 1418326636329705904}
-  - component: {fileID: 7100162927793639632}
-  - component: {fileID: -3176993990728560225}
-  - component: {fileID: -7215124256818786645}
   - component: {fileID: -5078426479939704437}
   - component: {fileID: -2074937186025372502}
   m_Layer: 7
@@ -323,73 +320,8 @@ MonoBehaviour:
   bleedDuration: 5
   bleedInterval: 1
   separationRadius: 0.7
-  separationStrength: 2
---- !u!114 &7100162927793639632
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5835782802500751313}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bce05cdbf4c6c0d4b8e3a23bbeb3fb43, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::EnemyFXConfig
-  onAttack:
-    vfxPrefab: {fileID: 0}
-    spawnOffset: {x: 0, y: 0}
-    sfxClip: {fileID: 0}
-    volume: 1
-  onHit:
-    vfxPrefab: {fileID: 3063604705314726052, guid: 4af60bfb9e1b34c44888e1e4643fdb65, type: 3}
-    spawnOffset: {x: 0, y: 0}
-    sfxClip: {fileID: 8300000, guid: 0e5edb6bccf05984dad128fb1a9fc914, type: 3}
-    volume: 1
-  onDeath:
-    vfxPrefab: {fileID: 0}
-    spawnOffset: {x: 0, y: 0}
-    sfxClip: {fileID: 0}
-    volume: 1
-  onSpawn:
-    vfxPrefab: {fileID: 0}
-    spawnOffset: {x: 0, y: 0}
-    sfxClip: {fileID: 0}
-    volume: 1
---- !u!114 &-3176993990728560225
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5835782802500751313}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8dbca1b53536a2b47a8964120af00539, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HitFlash
-  flashDuration: 0.12
-  flashColor: {r: 1, g: 1, b: 1, a: 1}
-  BaseColor: {r: 1, g: 1, b: 1, a: 1}
---- !u!114 &-7215124256818786645
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5835782802500751313}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3640172dedd67864e9d6803100a29029, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SlimeBobAnimation
-  minScaleY: 0.9
-  maxScaleY: 1.05
-  squashStretchX: 0.5
-  frequency: 1.25
-  randomPhase: 1
-  fixBottom: 1
-  halfHeightOverride: 0
+  separationStrength: 3
+  _decal: {fileID: 0}
 --- !u!114 &-5078426479939704437
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -49,6 +49,8 @@ public class EnemyController : MonoBehaviour, IEnemyHost
     public float      HPRatio         => maxHP > 0f ? currentHP / maxHP : 0f;
     public float      MaxHP           => maxHP;
     public Transform  SelfTransform   => transform;   // IEnemyHost
+    public Transform  Decal           => _decal;
+    [SerializeField] private Transform _decal;
 
     // ── 런타임 상태 ─────────────────────────────────────────────
     private float          currentHP;
@@ -63,12 +65,22 @@ public class EnemyController : MonoBehaviour, IEnemyHost
     private bool           _lastFlipX;  // FlipToward 중복 갱신 방지
 
     private bool      isStunned;
+    private bool      _isDying;
     private Vector2   _pendingMove;
     private Coroutine knockbackCoroutine;
     private Coroutine bleedCoroutine;
+    private Coroutine _fireCoroutine;
     private float     baseSpeed; // 넉백/스턴 전 원본 속도
     private Vector2   _deathDir;  // 사망 시 날아갈 방향
     private bool      isMoving;
+
+    // 상태효과 VFX 인스턴스 (Resources/VFX/SE_Freeze, SE_Stun, SE_Fire)
+    private GameObject _freezeVfxInst;
+    private GameObject _stunVfxInst;
+    private GameObject _fireVfxInst;
+
+    private Coroutine _stunCoroutine;
+    private Coroutine _freezeCoroutine;
 
     // 사망 흰색 실루엣 재질 (SpriteSilhouette 쉐이더) — 씬 전체 공유
     private static Material _deathFlashMat;
@@ -109,6 +121,7 @@ public class EnemyController : MonoBehaviour, IEnemyHost
         behaviour         = GetComponent<EnemyBehaviourBase>();
         _eliteMarker      = GetComponent<EliteMarker>();
         _shield           = GetComponent<TankShield>();
+        if (_eliteMarker != null) knockbackImmune = true;
 
         // 디버그: SpriteRenderer 확인
         if (srs == null || srs.Length == 0)
@@ -196,7 +209,13 @@ public class EnemyController : MonoBehaviour, IEnemyHost
         ApplySeparation();
 
         if (_pendingMove != Vector2.zero && rb != null)
-            rb.MovePosition(rb.position + _pendingMove);
+        {
+            Vector2 next = rb.position + _pendingMove;
+            var mb = MovementBounds.Shared;
+            if (mb != null && !mb.IsInside(next))
+                next = mb.ClosestPointOnBoundary(next);
+            rb.MovePosition(next);
+        }
         isMoving = _pendingMove != Vector2.zero;
         _pendingMove = Vector2.zero;
     }
@@ -252,10 +271,14 @@ public class EnemyController : MonoBehaviour, IEnemyHost
     public void WakeFromPool()
     {
         StopAllCoroutines();
+        _stunCoroutine   = null;
+        _freezeCoroutine = null;
         enabled    = true;
         damageTimer = 0f;
         isStunned  = false;
+        _isDying   = false;
         moveSpeed  = baseSpeed;
+        if (animator != null) animator.speed = 1f;
         if (rb != null)
         {
             rb.linearVelocity = Vector2.zero;
@@ -268,10 +291,11 @@ public class EnemyController : MonoBehaviour, IEnemyHost
             behaviour.Init(this);
         }
 
-        // 재질 복구
+        // 재질·색상 복구
         if (srs != null && _originalMats != null)
             for (int i = 0; i < srs.Length && i < _originalMats.Length; i++)
                 if (_originalMats[i] != null) srs[i].material = _originalMats[i];
+        SetTint(Color.white);
 
         foreach (var sr in srs)  sr.enabled = true;
         if (_cachedColliders != null)
@@ -332,8 +356,8 @@ public class EnemyController : MonoBehaviour, IEnemyHost
     public void FlipToward(Vector2 dir)
     {
         bool newFlipX;
-        if      (dir.x > 0.01f)  newFlipX = false;
-        else if (dir.x < -0.01f) newFlipX = true;
+        if      (dir.x > 0.1f)  newFlipX = false;
+        else if (dir.x < -0.1f) newFlipX = true;
         else return;
 
         _lastFlipX = newFlipX;
@@ -389,48 +413,119 @@ public class EnemyController : MonoBehaviour, IEnemyHost
     }
 
     /// <summary>지정 시간 동안 이동·공격을 모두 멈추고 스프라이트를 노란색으로 변경합니다.</summary>
-    public void Stun(float seconds)
+    public void Stun(float seconds, int weaponChapter = 1)
     {
-        StopCoroutine(nameof(StunRoutine));
-        StartCoroutine(nameof(StunRoutine), seconds);
+        if (_stunCoroutine != null) StopCoroutine(_stunCoroutine);
+        _stunCoroutine = StartCoroutine(StunRoutineVfx(seconds, weaponChapter));
     }
 
-    private IEnumerator StunRoutine(float seconds)
+    private IEnumerator StunRoutineVfx(float seconds, int weaponChapter)
     {
         isStunned = true;
         if (rb != null) rb.linearVelocity = Vector2.zero;
-        SetTint(new Color(1f, 0.92f, 0f, 1f)); // 노란색
+        SetTint(new Color(1f, 0.92f, 0f, 1f));
+        if (animator != null) animator.speed = 0f;
+
+        if (_stunVfxInst != null) Destroy(_stunVfxInst);
+        var pfb = StatusEffectConfig.Shared?.GetStun(weaponChapter);
+        if (pfb != null) { _stunVfxInst = Instantiate(pfb, transform); _stunVfxInst.transform.localPosition = Vector3.zero; }
 
         yield return new WaitForSeconds(seconds);
 
         isStunned = false;
+        if (animator != null) animator.speed = 1f;
         SetTint(Color.white);
+        if (_stunVfxInst != null) { Destroy(_stunVfxInst); _stunVfxInst = null; }
+        _stunCoroutine = null;
     }
 
-    public void Freeze(float seconds, float damageOnThaw, Color freezeColor)
+    private Coroutine _slowCoroutine;
+
+    /// <summary>지정 시간 동안 이동 속도를 factor 배로 줄입니다. (0.4 = 40% 속도)</summary>
+    public void ApplySlow(float duration, float factor = 0.4f)
     {
-        StopCoroutine(nameof(FreezeRoutine));
-        StopCoroutine(nameof(StunRoutine));
-        StartCoroutine(FreezeRoutine(seconds, damageOnThaw, freezeColor));
+        if (isStunned) return; // 스턴/빙결 중엔 슬로우 적용 불필요
+        if (_slowCoroutine != null) StopCoroutine(_slowCoroutine);
+        _slowCoroutine = StartCoroutine(SlowRoutine(duration, factor));
     }
 
-    private IEnumerator FreezeRoutine(float seconds, float damageOnThaw, Color freezeColor)
+    private IEnumerator SlowRoutine(float duration, float factor)
+    {
+        moveSpeed = baseSpeed * factor;
+        SetTint(new Color(0.5f, 0.8f, 1f, 1f)); // 연파란 틴트
+        yield return new WaitForSeconds(duration);
+        if (!isStunned) // 슬로우 끝날 때 스턴 중이면 스턴이 색 관리
+        {
+            moveSpeed = baseSpeed;
+            SetTint(Color.white);
+        }
+        _slowCoroutine = null;
+    }
+
+    public void Freeze(float seconds, float damageOnThaw, Color freezeColor, int weaponChapter = 1)
+    {
+        if (_freezeCoroutine != null) StopCoroutine(_freezeCoroutine);
+        _freezeCoroutine = StartCoroutine(FreezeRoutine(seconds, damageOnThaw, freezeColor, weaponChapter));
+    }
+
+    private IEnumerator FreezeRoutine(float seconds, float damageOnThaw, Color freezeColor, int weaponChapter)
     {
         isStunned = true;
         if (rb != null) rb.linearVelocity = Vector2.zero;
         SetTint(freezeColor);
+        if (animator != null) animator.speed = 0f;
+
+        if (_freezeVfxInst != null) Destroy(_freezeVfxInst);
+        var pfb = StatusEffectConfig.Shared?.GetFreeze(weaponChapter);
+        if (pfb != null) { _freezeVfxInst = Instantiate(pfb, transform); _freezeVfxInst.transform.localPosition = Vector3.zero; }
 
         var beh = GetComponent<EnemyBehaviourBase>();
         bool wasOn = beh != null && beh.enabled;
         if (beh) beh.enabled = false;
 
-        if (seconds <= 0) seconds = 1f; // 최소 1초 빙결
+        if (seconds <= 0) seconds = 1f;
         yield return new WaitForSeconds(seconds);
 
         isStunned = false;
+        if (animator != null) animator.speed = 1f;
         SetTint(Color.white);
         if (beh && wasOn) beh.enabled = true;
-        // 빙결 해제 시 피해 제거
+        if (_freezeVfxInst != null) { Destroy(_freezeVfxInst); _freezeVfxInst = null; }
+        _freezeCoroutine = null;
+    }
+
+    /// <summary>지속 시간 동안 DoT 화염 피해를 입힙니다. 적 객체에 VFX 프리팹을 부착합니다.</summary>
+    public void ApplyFire(float dotPerTick, float duration, float tickInterval = 0.5f, int weaponChapter = 1)
+    {
+        if (_fireCoroutine != null) StopCoroutine(_fireCoroutine);
+        _fireCoroutine = StartCoroutine(FireRoutine(dotPerTick, duration, tickInterval, weaponChapter));
+    }
+
+    private IEnumerator FireRoutine(float dotPerTick, float duration, float tickInterval, int weaponChapter)
+    {
+        if (_fireVfxInst != null) Destroy(_fireVfxInst);
+        var pfb = StatusEffectConfig.Shared?.GetFire(weaponChapter);
+        if (pfb != null) { _fireVfxInst = Instantiate(pfb, transform); _fireVfxInst.transform.localPosition = Vector3.zero; }
+
+        SetTint(new Color(1f, 0.5f, 0f, 1f));
+
+        float elapsed = 0f;
+        float timer   = 0f;
+        while (elapsed < duration && !_isDying)
+        {
+            elapsed += Time.deltaTime;
+            timer   += Time.deltaTime;
+            if (timer >= tickInterval)
+            {
+                timer -= tickInterval;
+                TakeDamage(dotPerTick);
+            }
+            yield return null;
+        }
+
+        if (!isStunned) SetTint(Color.white);
+        if (_fireVfxInst != null) { Destroy(_fireVfxInst); _fireVfxInst = null; }
+        _fireCoroutine = null;
     }
 
     /// <summary>지정 방향으로 순간적으로 밀어냅니다.</summary>
@@ -545,6 +640,8 @@ public class EnemyController : MonoBehaviour, IEnemyHost
 
     public void TakeDamage(float damage, bool isCritical = false, Vector2 knockbackDir = default, float knockbackForce = 0f)
     {
+        if (_isDying) return;
+        if (TestMonsterSpawner.EnemyInvincible) return;
         // 방어막이 있으면 먼저 흡수 — 잔여 피해만 HP에 적용
         if (_shield != null) damage = _shield.TryAbsorbDamage(damage);
         if (damage <= 0f) return;
@@ -566,6 +663,7 @@ public class EnemyController : MonoBehaviour, IEnemyHost
 
         if (currentHP <= 0f)
         {
+            _isDying  = true;
             _deathDir = knockbackDir.sqrMagnitude > 0.001f ? knockbackDir.normalized : Vector2.up;
             OnDeath?.Invoke();
             CharacterSkillManager.Shared?.AddPoint(1);
@@ -629,8 +727,8 @@ public class EnemyController : MonoBehaviour, IEnemyHost
     // 각 웨이브에서 적용할 절대 배율 키프레임 (wave, hpMult, dmgMult)
     // 스테이지 내 웨이브(1~wavesPerStage) 기준
     private static readonly int[]   s_curveWaves  = {  1,    5,    10,   15,   20,    25,    30   };
-    private static readonly float[] s_curveHp     = { 1.0f, 1.8f, 3.2f, 5.5f, 8.5f, 12.5f, 18.5f };
-    private static readonly float[] s_curveDmg    = { 1.0f, 1.25f,1.6f, 2.1f, 2.8f,  3.6f,  5.0f };
+    private static readonly float[] s_curveHp     = { 1.0f, 2.0f, 4.0f, 7.5f,12.0f, 20.0f, 30.0f };
+    private static readonly float[] s_curveDmg    = { 1.0f, 1.35f,1.8f, 2.5f, 3.4f,  4.5f,  6.0f };
 
     // wave(스테이지 내 1~N)에서의 배율을 키프레임 사이 선형 보간으로 반환
     private static float EvalScaleCurve(int wave, float[] keys)

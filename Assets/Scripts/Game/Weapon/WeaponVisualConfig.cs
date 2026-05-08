@@ -32,6 +32,17 @@ public class WeaponVisualConfig : ScriptableObject
     [Header("무기 타입 아이콘")]
     public TypeEntry[] typeIcons;
 
+    // ── 특성 뱃지 이미지 (등급별) ────────────────────────────────────
+    [Serializable]
+    public struct TraitBadgeEntry
+    {
+        public WeaponGrade grade;
+        public Sprite      sprite;
+    }
+
+    [Header("특성 뱃지 이미지 (등급별, 특수효과 보유 무기에 표시)")]
+    public TraitBadgeEntry[] traitBadges;
+
     // ── 조회 헬퍼 ───────────────────────────────────────────────────
     public Sprite GetGradeSprite(WeaponGrade grade)
     {
@@ -44,6 +55,13 @@ public class WeaponVisualConfig : ScriptableObject
     {
         foreach (var e in typeIcons)
             if (e.type == type) return e.sprite;
+        return null;
+    }
+
+    public Sprite GetTraitBadgeSprite(WeaponGrade grade)
+    {
+        foreach (var e in traitBadges)
+            if (e.grade == grade) return e.sprite;
         return null;
     }
 

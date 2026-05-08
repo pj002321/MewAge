@@ -22,6 +22,13 @@ public class EraWeaponInfoPopup : MonoBehaviour
     [Header("닫기 버튼")]
     public Button          closeButton;
 
+    [Header("등급 출현확률 텍스트 (선택)")]
+    public TextMeshProUGUI normalProbText;
+    public TextMeshProUGUI rareProbText;
+    public TextMeshProUGUI epicProbText;
+    public TextMeshProUGUI legendaryProbText;
+    public TextMeshProUGUI mythicProbText;
+
     // ── 초기화 ────────────────────────────────────────────────────────
     void Awake()
     {
@@ -49,8 +56,20 @@ public class EraWeaponInfoPopup : MonoBehaviour
             slot.Bind(w);
         }
 
+        RefreshProbTexts();
+
         gameObject.SetActive(true);
         StartCoroutine(ScrollToTop());
+    }
+
+    void RefreshProbTexts()
+    {
+        var probs = UpgradeManager.Shared?.GetCurrentProbs() ?? default;
+        if (normalProbText)    normalProbText.text    = $"{probs.common:0.#}%";
+        if (rareProbText)      rareProbText.text      = $"{probs.rare:0.#}%";
+        if (epicProbText)    { epicProbText.text      = $"{probs.epic:0.#}%";      epicProbText.color    = WeaponGradeColors.Get(WeaponGrade.Epic); }
+        if (legendaryProbText) { legendaryProbText.text = $"{probs.legendary:0.#}%"; legendaryProbText.color = WeaponGradeColors.Get(WeaponGrade.Legendary); }
+        if (mythicProbText)  { mythicProbText.text   = $"{probs.mythic:0.#}%";    mythicProbText.color  = WeaponGradeColors.Get(WeaponGrade.Mythic); }
     }
 
     IEnumerator ScrollToTop()

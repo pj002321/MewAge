@@ -52,6 +52,14 @@ public class WaveEnvironmentSwitcher : MonoBehaviourSingleton<WaveEnvironmentSwi
         ApplyCameraFromBounds(_currentStage.followPlayer, _currentStage.useBounds);
     }
 
+    /// <summary>테스트 씬 전용 — 스테이지 SO를 직접 주입합니다. GameManager 없는 dev 씬에서 사용.</summary>
+    public void SetStageForTest(StageEnvironmentSO stageSO)
+    {
+        if (stageSO == null) return;
+        _currentStage = stageSO;
+        SetWave(1);
+    }
+
     /// <summary>보스 웨이브가 끝난 뒤 일반 환경으로 복귀 시 호출합니다.</summary>
     public void SetNormal()
     {

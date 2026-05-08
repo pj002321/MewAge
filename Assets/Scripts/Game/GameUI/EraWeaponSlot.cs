@@ -16,6 +16,10 @@ public class EraWeaponSlot : MonoBehaviour
     public TextMeshProUGUI weaponTypeText;
     public TextMeshProUGUI weaponNameText;
 
+    [Header("특성 / 특수효과")]
+    public TextMeshProUGUI traitText;
+    public Image           traitBadgeImage; // 특수효과 보유 시 등급별 뱃지
+
     [Header("신화 등급 전용")]
     public GameObject backlightEffect;
 
@@ -52,11 +56,12 @@ public class EraWeaponSlot : MonoBehaviour
             if (shiny != null) shiny.enabled = data.grade == WeaponGrade.Mythic;
         }
 
-        // 무기 타입 아이콘
+        // 무기 타입 아이콘 (등급 색상 적용)
         if (weaponTypeIcon != null)
         {
             var typeSprite = cfg?.GetTypeSprite(data.weaponType);
             weaponTypeIcon.sprite  = typeSprite;
+            weaponTypeIcon.color   = WeaponGradeColors.Get(data.grade);
             weaponTypeIcon.enabled = typeSprite != null;
         }
 
@@ -68,9 +73,32 @@ public class EraWeaponSlot : MonoBehaviour
         if (weaponNameText != null)
             weaponNameText.text = data.weaponName;
 
+        // 특성 / 특수효과 텍스트 + 뱃지
+        bool hasTraitDisplay = false;
+        if (traitText != null)
+        {
+            string display    = BuildTraitDisplay(data);
+            hasTraitDisplay   = !string.IsNullOrEmpty(display);
+            traitText.text    = display;
+            traitText.enabled = hasTraitDisplay;
+        }
+
+        if (traitBadgeImage != null)
+        {
+            var badgeSprite = hasTraitDisplay ? cfg?.GetTraitBadgeSprite(data.grade) : null;
+            traitBadgeImage.sprite  = badgeSprite;
+            traitBadgeImage.enabled = badgeSprite != null;
+        }
+
         // 신화 등급일 때만 백라이트
         if (backlightEffect != null)
             backlightEffect.SetActive(data.grade == WeaponGrade.Mythic);
+    }
+
+    static string BuildTraitDisplay(WeaponData data)
+    {
+        if (string.IsNullOrEmpty(data.trait)) return string.Empty;
+        return !string.IsNullOrEmpty(data.specialEffectDesc) ? data.specialEffectDesc : string.Empty;
     }
 
     static string WeaponTypeToKorean(WeaponType t) => t switch

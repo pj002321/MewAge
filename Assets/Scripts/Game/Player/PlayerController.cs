@@ -256,6 +256,8 @@ public class PlayerController : MonoBehaviour
         float reduced   = damage * (1f - reduction);
         var relic = RelicManager.Shared;
         if (isFromBoss  && relic != null) reduced *= (1f - relic.BossDmgReduceTotal);
+        if (isFromBoss) reduced *= (1f - MythicDamageReductionSkill.ActiveReduction);
+        if (isFromBoss) reduced *= (1f - WeaponSpecialEffectState.BossDamageReductionPct);
         if (isFromElite && relic != null) reduced *= (1f - relic.EliteDmgReduceTotal);
         currentHP -= reduced;
         currentHP  = Mathf.Max(0f, currentHP);

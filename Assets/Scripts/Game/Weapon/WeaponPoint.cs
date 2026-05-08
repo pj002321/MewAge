@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -162,6 +163,12 @@ public class WeaponPoint : MonoBehaviour
 
     private float _baseCooldown;
     private float _statMultiplier  = 1f;
+    private WeaponGrade          _grade          = WeaponGrade.Common;
+    private WeaponLegendarySkill _legendarySkill;
+    private WeaponMythicSkill    _mythicSkill;
+
+    // Slash VFX 생성 시 발생하는 이벤트 (LegendarySlashSkill 전용)
+    public event System.Action<Vector3, Vector2> OnSlashVfxSpawned;
 
     // 미아 방지 — 비 Idle 상태에서 이 시간 초과 시 강제 복귀 (최후 안전망)
     private const float MaxStateTime = 4f;
@@ -187,6 +194,24 @@ public class WeaponPoint : MonoBehaviour
     private readonly List<EnemyController> _spinExpiredKeys = new List<EnemyController>();
     private readonly List<EnemyController> _spinKeys        = new List<EnemyController>();
     private bool _hasSpinCollider; // Collider2D가 있으면 OnTriggerStay2D 사용, 없으면 OverlapCircle 폴백
+
+    // ── 특수효과 ────────────────────────────────────────────────────
+    private string _specialEffectId;
+    private int    _weaponChapter = 1;
+    private string _weaponId;
+
+    // HIT_CLONE: 클론이 날아가는 동안 재발동 불가
+    private bool             _cloneFlying = false;
+    private int              _cloneActiveCount = 0;
+    private readonly List<GameObject> _activeClones = new List<GameObject>();
+
+    // HIT_SPIN 궤도 부스트 상태
+    private int   _spinBoostStack;
+    private float _spinBoostOrbit;
+    private float _spinBoostSpeed;
+    private float _spinBoostTimer;
+    private const int   SpinBoostMaxStack = 5;
+    private const float SpinBoostDecay    = 3f;
 
     // 보스 타겟
     private BossController _targetBoss;
@@ -216,8 +241,31 @@ public class WeaponPoint : MonoBehaviour
     private Coroutine _slashSequenceCoroutine;
     private Coroutine _hammerSequenceCoroutine;
 
+    public static event System.Action OnRecallAll;
+    public static void RecallAll() => OnRecallAll?.Invoke();
+
+    private void OnDestroy()
+    {
+        if (_specialEffectId == "PASS_DMG")
+            WeaponSpecialEffectState.RemoveBossDamageReduction();
+        OnRecallAll -= RecallClones;
+        RecallClones();
+    }
+
+    private void OnDisable() => RecallClones();
+
+    public void RecallClones()
+    {
+        foreach (var go in _activeClones)
+            if (go != null) Destroy(go);
+        _activeClones.Clear();
+        _cloneActiveCount = 0;
+        _cloneFlying      = false;
+    }
+
     private void Start()
     {
+        OnRecallAll += RecallClones;
         _baseCooldown  = attackCooldown;
         originLocalPos = transform.localPosition;
         _originalScale = transform.localScale;
@@ -227,6 +275,8 @@ public class WeaponPoint : MonoBehaviour
         InitAnimator();
         if (weaponType == WeaponType.Spin)
             _hasSpinCollider = GetComponent<Collider2D>() != null;
+        _legendarySkill = GetComponentInChildren<WeaponLegendarySkill>();
+        _mythicSkill    = GetComponentInChildren<WeaponMythicSkill>();
     }
 
     private void InitAnimator()
@@ -387,10 +437,24 @@ public class WeaponPoint : MonoBehaviour
     // ─────────────────────────────────────────
     private void UpdateSpin()
     {
+        // HIT_SPIN 부스트 타이머
+        if (_spinBoostTimer > 0f)
+        {
+            _spinBoostTimer -= Time.deltaTime;
+            if (_spinBoostTimer <= 0f)
+            {
+                _spinBoostStack = 0;
+                _spinBoostOrbit = 0f;
+                _spinBoostSpeed = 0f;
+            }
+        }
+
         // 공전 각도 증가 → localPosition 갱신
-        currentAngle += orbitSpeed * Time.deltaTime;
+        float effectOrbitSpeed  = orbitSpeed  + _spinBoostSpeed;
+        float effectOrbitRadius = orbitRadius + _spinBoostOrbit;
+        currentAngle += effectOrbitSpeed * Time.deltaTime;
         float rad = currentAngle * Mathf.Deg2Rad;
-        transform.localPosition = new Vector3(Mathf.Cos(rad), Mathf.Sin(rad), 0f) * orbitRadius;
+        transform.localPosition = new Vector3(Mathf.Cos(rad), Mathf.Sin(rad), 0f) * effectOrbitRadius;
 
         // 무기 스프라이트를 공전 방향으로 자전
         transform.rotation = Quaternion.Euler(0f, 0f, currentAngle - 90f);
@@ -408,10 +472,41 @@ public class WeaponPoint : MonoBehaviour
         for (int i = 0; i < _spinExpiredKeys.Count; i++) spinHitTimers.Remove(_spinExpiredKeys[i]);
         _spinExpiredKeys.Clear();
 
+        // 보스는 레이어 매트릭스에 관계없이 직접 거리 검사
+        SpinBossDirectHit();
+
         // Collider2D가 없는 경우에만 OverlapCircle 폴백 사용
         // Collider2D가 있으면 OnTriggerStay2D에서 처리
         if (!_hasSpinCollider)
             SpinOverlapHit();
+    }
+
+    private void SpinBossDirectHit()
+    {
+        if (_bossSpinHitTimer > 0f) return;
+        var boss = BossController.Current;
+        if (boss == null || !boss.gameObject.activeInHierarchy) return;
+
+        Vector2 weaponPos = transform.position;
+
+        if (_cachedBossForCollider != boss)
+        {
+            _cachedBossForCollider = boss;
+            _cachedBossCollider    = boss.GetComponentInChildren<Collider2D>();
+        }
+
+        float dist = _cachedBossCollider != null
+            ? ((Vector2)_cachedBossCollider.ClosestPoint(weaponPos) - weaponPos).magnitude
+            : Vector2.Distance(weaponPos, (Vector2)boss.transform.position);
+
+        if (dist > spinHitRadius) return;
+
+        var (bossDmg, bossCrit) = RollCrit(attackDamage);
+        Vector2 bossKnock = (boss.transform.position - transform.position).normalized;
+        boss.TakeDamage(bossDmg, bossCrit, bossKnock, spinKnockback);
+        ApplyLifeSteal(bossDmg);
+        TrySpecialEffectBoss(boss, bossDmg);
+        _bossSpinHitTimer = spinHitCooldown;
     }
 
     private void SpinOverlapHit()
@@ -436,6 +531,7 @@ public class WeaponPoint : MonoBehaviour
             Vector2 bossKnock = (boss.transform.position - transform.position).normalized;
             boss.TakeDamage(bossDmg, bossCrit, bossKnock, spinKnockback);
             ApplyLifeSteal(bossDmg);
+            TrySpecialEffectBoss(boss, bossDmg);
             _bossSpinHitTimer = spinHitCooldown;
             return;
         }
@@ -448,6 +544,7 @@ public class WeaponPoint : MonoBehaviour
         enemy.TakeDamage(finalDmg, isCrit, knockDir, spinKnockback);
         ApplyLifeSteal(finalDmg);
         if (dotDamage > 0f) enemy.ApplyBleed(dotDamage);
+        TrySpecialEffectEnemy(enemy, finalDmg, knockDir);
         SoundManager.Shared?.Play(SoundKey.Weapon_Attack);
         spinHitTimers[enemy] = spinHitCooldown;
     }
@@ -672,8 +769,10 @@ public class WeaponPoint : MonoBehaviour
                 criticalMultiplier: criticalMultiplier, baseDamage: attackDamage, knockbackPower: knockbackPower,
                 acceleration: projectileSpeed * 3f);
         }
+        ApplyShootSpecialEffect(proj, spawnPos, aimDir);
         TriggerAttackAnimation();
         TriggerRecoil(aimDir);
+        if (_grade >= WeaponGrade.Legendary) _legendarySkill?.OnShoot(spawnPos, aimDir);
     }
 
     private void ShootAt(EnemyController target)
@@ -709,8 +808,10 @@ public class WeaponPoint : MonoBehaviour
                 criticalMultiplier: criticalMultiplier, baseDamage: attackDamage, knockbackPower: knockbackPower,
                 acceleration: projectileSpeed * 3f);
         }
+        ApplyShootSpecialEffect(proj, spawnPos, aimDir);
         TriggerAttackAnimation();
         TriggerRecoil(aimDir);
+        if (_grade >= WeaponGrade.Legendary) _legendarySkill?.OnShoot(spawnPos, aimDir);
     }
 
     private void ZapAtBoss(BossController boss)   => StartCoroutine(BurstZapRoutine(MuzzleTransform, null, boss));
@@ -934,6 +1035,7 @@ public class WeaponPoint : MonoBehaviour
                             slashVfxDuration, 0.25f, midDir,
                             attackDamage, criticalRate, criticalMultiplier, knockbackPower, dotDamage, lifeSteal);
                         Destroy(vfx, slashVfxDuration);
+                        if (_grade >= WeaponGrade.Legendary) OnSlashVfxSpawned?.Invoke(vfxWorldPos, midDir);
                     }
                 }
 
@@ -1042,12 +1144,12 @@ public class WeaponPoint : MonoBehaviour
         Vector2 impactCenter = (Vector2)impactWorld;
 
         int hitCount = Physics2D.OverlapCircleNonAlloc(impactCenter, hammerImpactRadius, _hitBuffer);
-        bool bossHit = false;
+        BossController hammerHitBoss = null;
         bool anyHit  = false;
         for (int i = 0; i < hitCount; i++)
         {
             var col = _hitBuffer[i];
-            if (!bossHit)
+            if (hammerHitBoss == null)
             {
                 var b = col.GetComponentInParent<BossController>();
                 if (b != null)
@@ -1056,7 +1158,7 @@ public class WeaponPoint : MonoBehaviour
                     Vector2 bKnock = ((Vector2)b.transform.position - impactCenter);
                     b.TakeDamage(bDmg, bCrit, bKnock.sqrMagnitude > 0.001f ? bKnock.normalized : Vector2.up, knockbackPower);
                     ApplyLifeSteal(bDmg);
-                    bossHit = true; anyHit = true;
+                    hammerHitBoss = b; anyHit = true;
                     continue;
                 }
             }
@@ -1069,7 +1171,11 @@ public class WeaponPoint : MonoBehaviour
             if (dotDamage > 0f) e.ApplyBleed(dotDamage);
             anyHit = true;
         }
-        if (anyHit) SoundManager.Shared?.Play(SoundKey.Weapon_Attack);
+        if (anyHit)
+        {
+            SoundManager.Shared?.Play(SoundKey.Weapon_Attack);
+            ApplyGradeProc(hitCount, Vector2.down, hammerHitBoss, (Vector3)impactCenter);
+        }
 
         // VFX 스폰
         if (hammerImpactVfxPrefab != null)
@@ -1205,6 +1311,7 @@ public class WeaponPoint : MonoBehaviour
                     slashVfxDuration, 0.25f, midDir,
                     attackDamage, criticalRate, criticalMultiplier, knockbackPower, dotDamage, lifeSteal);
                 Destroy(vfx, slashVfxDuration);
+                if (_grade >= WeaponGrade.Legendary) OnSlashVfxSpawned?.Invoke(vfxWorldPos, midDir);
             }
         }
 
@@ -1425,6 +1532,13 @@ public class WeaponPoint : MonoBehaviour
                 return;
             }
             Vector3 bossPos = _targetBoss.transform.position;
+            // 보스가 공격 범위의 2배 밖으로 벗어나면 추격 중단
+            if (((Vector2)bossPos - (Vector2)transform.parent.position).sqrMagnitude > attackRange * attackRange * 4f)
+            {
+                _targetBoss = null;
+                BeginReturn(false);
+                return;
+            }
             transform.position = Vector3.MoveTowards(transform.position, bossPos, strikeSpeed * Time.deltaTime);
             if (Vector3.Distance(transform.position, bossPos) <= hitDistance)
             {
@@ -1446,15 +1560,6 @@ public class WeaponPoint : MonoBehaviour
         }
 
         Vector3 targetPos = targetEnemy.transform.position;
-
-        // 적이 플레이어 공격사거리 밖으로 나가면 추격 포기
-        float distToPlayerSq = ((Vector2)targetPos - (Vector2)transform.parent.position).sqrMagnitude;
-        if (distToPlayerSq > attackRange * attackRange)
-        {
-            targetEnemy = null;
-            BeginReturn(false); // 범위 이탈 — 타격 전 중단
-            return;
-        }
 
         transform.position = Vector3.MoveTowards(transform.position, targetPos, strikeSpeed * Time.deltaTime);
 
@@ -1494,9 +1599,21 @@ public class WeaponPoint : MonoBehaviour
     // ─────────────────────────────────────────
     private void HitArea(Vector2 hitDir, EnemyController primaryTarget)
     {
-        int colCount = Physics2D.OverlapCircleNonAlloc(transform.position, Mathf.Max(areaHitRadius, hitDistance), _hitBuffer);
+        // Common: 주변 반경 무시 (즉각 타격 반경만), Rare+: DB 값 사용
+        float hitRadius = _grade >= WeaponGrade.Rare
+            ? Mathf.Max(areaHitRadius, hitDistance)
+            : hitDistance;
+        int colCount = Physics2D.OverlapCircleNonAlloc(transform.position, hitRadius, _hitBuffer);
         bool bossHit = false;
         bool anyHit = false;
+        BossController hitBoss = null;
+        // Common: 넉백 0, Rare: DB 값, Epic+: 절반 (카메라셰이크+2차타격 보상)
+        float effectiveKnockback = _grade switch
+        {
+            WeaponGrade.Common => 0f,
+            WeaponGrade.Rare   => knockbackPower,
+            _                  => knockbackPower * 0.5f,
+        };
         for (int i = 0; i < colCount; i++)
         {
             var hit = _hitBuffer[i];
@@ -1510,9 +1627,11 @@ public class WeaponPoint : MonoBehaviour
                     var (bossDmg, bossCrit) = RollCrit(attackDamage);
                     Vector2 bossKnock = ((Vector2)boss.transform.position - (Vector2)transform.position);
                     if (bossKnock.sqrMagnitude < 0.001f) bossKnock = hitDir;
-                    boss.TakeDamage(bossDmg, bossCrit, bossKnock.normalized, knockbackPower);
+                    boss.TakeDamage(bossDmg, bossCrit, bossKnock.normalized, effectiveKnockback);
                     ApplyLifeSteal(bossDmg);
+                    TrySpecialEffectBoss(boss, bossDmg);
                     bossHit = true;
+                    hitBoss = boss;
                     anyHit = true;
                     continue;
                 }
@@ -1524,69 +1643,139 @@ public class WeaponPoint : MonoBehaviour
             var (finalDmg, isCrit) = RollCrit(baseDmg);
             Vector2 knockDir = ((Vector2)enemy.transform.position - (Vector2)transform.position);
             if (knockDir.sqrMagnitude < 0.001f) knockDir = hitDir;
-                enemy.TakeDamage(finalDmg, isCrit, knockDir.normalized, knockbackPower);
+            enemy.TakeDamage(finalDmg, isCrit, knockDir.normalized, effectiveKnockback);
             ApplyLifeSteal(finalDmg);
             if (dotDamage > 0f) enemy.ApplyBleed(dotDamage);
+            if (isPrimary) TrySpecialEffectEnemy(enemy, finalDmg, knockDir.normalized);
             anyHit = true;
         }
-        if (anyHit) 
+        if (anyHit)
         {
             SoundManager.Shared?.Play(SoundKey.Weapon_Attack);
             if (weaponType == WeaponType.Slash && projectilePrefab != null)
             {
-                // Slash 타입일 때 projectilePrefab을 이펙트용으로 사용합니다.
                 float angle = Mathf.Atan2(hitDir.y, hitDir.x) * Mathf.Rad2Deg - 90f;
                 Instantiate(projectilePrefab, transform.position, Quaternion.Euler(0, 0, angle));
+            }
+            ApplyGradeProc(colCount, hitDir, hitBoss, transform.position);
+        }
+    }
+
+    private void ApplyGradeProc(int colCount, Vector2 hitDir, BossController hitBoss, Vector3 hitPos)
+    {
+        if (_grade >= WeaponGrade.Epic)
+        {
+            CameraFollow.Shared?.Shake(0.08f, 0.06f);
+            StartCoroutine(EpicSecondHitRoutine(hitPos));
+        }
+
+        if (_grade >= WeaponGrade.Legendary)
+            _legendarySkill?.OnHit(hitDir, _hitBuffer, colCount);
+
+        if (_grade >= WeaponGrade.Mythic)
+        {
+            if (hitBoss != null)
+            {
+                _mythicSkill?.OnBossHit(hitBoss, hitDir);
+            }
+            else if (_mythicSkill != null)
+            {
+                for (int i = 0; i < colCount; i++)
+                {
+                    if (_hitBuffer[i] == null) continue;
+                    var e = _hitBuffer[i].GetComponentInParent<EnemyController>();
+                    if (e != null && e.gameObject.activeInHierarchy)
+                        _mythicSkill.OnEnemyHit(e, hitDir);
+                }
             }
         }
     }
 
+    private System.Collections.IEnumerator EpicSecondHitRoutine(Vector3 hitPos)
+    {
+        yield return new WaitForSeconds(0.08f);
+        float radius = _grade >= WeaponGrade.Rare ? Mathf.Max(areaHitRadius, hitDistance) : hitDistance;
+        int count = Physics2D.OverlapCircleNonAlloc(hitPos, radius, _hitBuffer);
+        float dmg   = attackDamage * Random.Range(0.20f, 0.25f);
+        bool anyHit = false;
+        for (int i = 0; i < count; i++)
+        {
+            if (_hitBuffer[i] == null) continue;
+            var boss = _hitBuffer[i].GetComponentInParent<BossController>();
+            if (boss != null && boss.gameObject.activeInHierarchy)
+            {
+                var (fd, ic) = RollCrit(dmg);
+                FXManager.NextIsEpicHit = true;
+                boss.TakeDamage(fd, ic);
+                anyHit = true;
+                continue;
+            }
+            if (_hitBuffer[i].TryGetComponent<EnemyController>(out var e) && e.gameObject.activeInHierarchy)
+            {
+                var (fd, ic) = RollCrit(dmg);
+                FXManager.NextIsEpicHit = true;
+                e.TakeDamage(fd, ic);
+                anyHit = true;
+            }
+        }
+        FXManager.NextIsEpicHit = false; // TakeDamage 조기 리턴 시 잔류 플래그 정리
+        if (anyHit) FXManager.Shared?.SpawnHitEffect(hitPos);
+    }
+
     private void HitAreaBoomerang(Vector2 hitDir, int bounceCount)
     {
-        int colCount = Physics2D.OverlapCircleNonAlloc(transform.position, Mathf.Max(areaHitRadius, hitDistance), _hitBuffer);
+        float hitRadius = _grade >= WeaponGrade.Rare ? Mathf.Max(areaHitRadius, hitDistance) : hitDistance;
+        int colCount = Physics2D.OverlapCircleNonAlloc(transform.position, hitRadius, _hitBuffer);
         bool anyHit = false;
-        
         float damagePenalty = Mathf.Pow(0.75f, bounceCount);
+        float effectiveKnockback = _grade switch
+        {
+            WeaponGrade.Common => 0f,
+            WeaponGrade.Rare   => knockbackPower,
+            _                  => knockbackPower * 0.5f,
+        };
+        BossController hitBoss = null;
 
         for (int i = 0; i < colCount; i++)
         {
             var hit = _hitBuffer[i];
-            EnemyController enemy = null;
-            BossController boss = null;
-            enemy = hit.GetComponentInParent<EnemyController>();
+            var enemy = hit.GetComponentInParent<EnemyController>();
             if (enemy != null && !_boomerangHitEnemies.Contains(enemy))
             {
                 _boomerangHitEnemies.Add(enemy);
-                bool isPrimary = enemy == _boomerangTarget;
-                float baseDmg = isPrimary ? attackDamage : attackDamage * areaHitDamageRatio;
-                baseDmg = Mathf.Max(1f, baseDmg * damagePenalty); // 4분의 1씩 깎이되 최소 1 보장
-                
+                bool isPrimary = (_boomerangTarget as EnemyController) == enemy;
+                float baseDmg = Mathf.Max(1f, (isPrimary ? attackDamage : attackDamage * areaHitDamageRatio) * damagePenalty);
                 var (finalDmg, isCrit) = RollCrit(baseDmg);
                 Vector2 knockDir = ((Vector2)enemy.transform.position - (Vector2)transform.position);
                 if (knockDir.sqrMagnitude < 0.001f) knockDir = hitDir;
-            enemy.TakeDamage(finalDmg, isCrit, knockDir.normalized, knockbackPower);
+                enemy.TakeDamage(finalDmg, isCrit, knockDir.normalized, effectiveKnockback);
                 ApplyLifeSteal(finalDmg);
                 if (dotDamage > 0f) enemy.ApplyBleed(dotDamage);
+                if (isPrimary) TrySpecialEffectEnemy(enemy, finalDmg, knockDir.normalized);
                 anyHit = true;
             }
-            boss = hit.GetComponentInParent<BossController>();
+            var boss = hit.GetComponentInParent<BossController>();
             if (boss != null && !_boomerangHitBosses.Contains(boss))
             {
                 _boomerangHitBosses.Add(boss);
                 bool isPrimary = boss == _boomerangTarget;
-                float baseDmg = isPrimary ? attackDamage : attackDamage * areaHitDamageRatio;
-                baseDmg = Mathf.Max(1f, baseDmg * damagePenalty); // 4분의 1씩 감소
-                
+                float baseDmg = Mathf.Max(1f, (isPrimary ? attackDamage : attackDamage * areaHitDamageRatio) * damagePenalty);
                 var (finalDmg, isCrit) = RollCrit(baseDmg);
                 Vector2 knockDir = ((Vector2)boss.transform.position - (Vector2)transform.position);
                 if (knockDir.sqrMagnitude < 0.001f) knockDir = hitDir;
-                boss.TakeDamage(finalDmg, isCrit, knockDir.normalized, knockbackPower);
+                boss.TakeDamage(finalDmg, isCrit, knockDir.normalized, effectiveKnockback);
                 ApplyLifeSteal(finalDmg);
                 if (dotDamage > 0f) boss.ApplyBleed(dotDamage);
+                if (isPrimary) TrySpecialEffectBoss(boss, finalDmg);
+                hitBoss = boss;
                 anyHit = true;
             }
         }
-        if (anyHit) SoundManager.Shared?.Play(SoundKey.Weapon_Attack);
+        if (anyHit)
+        {
+            SoundManager.Shared?.Play(SoundKey.Weapon_Attack);
+            ApplyGradeProc(colCount, hitDir, hitBoss, transform.position);
+        }
     }
 
     private void ApplyLifeSteal(float dealtDamage)
@@ -1835,6 +2024,12 @@ public class WeaponPoint : MonoBehaviour
         knockbackPower     = data.knockbackPower;
         dotDamage          = data.bleedDamage;
 
+        _specialEffectId = data.trait;
+        _weaponChapter   = data.chapter;
+        _weaponId        = data.id;
+        if (_specialEffectId == "PASS_DMG")
+            WeaponSpecialEffectState.AddBossDamageReduction();
+
         attackCooldown = data.attackCooldown;
         _baseCooldown  = data.attackCooldown;
         attackRange    = data.attackRange;
@@ -1886,6 +2081,12 @@ public class WeaponPoint : MonoBehaviour
             }
         }
 
+        _grade = data.grade;
+        _legendarySkill?.Initialize(this);
+        _legendarySkill?.OnEquip();
+        _mythicSkill?.Initialize(this);
+        _mythicSkill?.OnEquip();
+
         var outline = GetComponentInChildren<SpriteOutline>();
         outline?.SetStar(data.star);
         outline?.SetGrade(data.grade);
@@ -1924,6 +2125,327 @@ public class WeaponPoint : MonoBehaviour
         // _statMultiplier = AtkSpeed 감산량(초), _bonusMultiplier = 배율 보너스
         float reduced = _baseCooldown - _statMultiplier;
         attackCooldown = Mathf.Max(0.1f, reduced / _bonusMultiplier);
+    }
+
+    /// <summary>LegendarySpinSkill에서 호출 — 공전 반경과 속도에 배율 적용.</summary>
+    public void ApplySpinBoost(float radiusMult, float speedMult)
+    {
+        orbitRadius *= radiusMult;
+        orbitSpeed  *= speedMult;
+    }
+
+    // ── 특수효과 디스패처 ─────────────────────────────────────────────
+
+    private float Chance(float fallback) =>
+        StatusEffectConfig.Shared?.GetTriggerChance(_weaponId, fallback) ?? fallback;
+
+    /// <summary>적 타격 시 특수효과 발동. 주 타겟(isPrimary)에만 호출됩니다.</summary>
+    private void TrySpecialEffectEnemy(EnemyController enemy, float damage, Vector2 hitDir)
+    {
+        if (string.IsNullOrEmpty(_specialEffectId) || enemy == null) return;
+        switch (_specialEffectId)
+        {
+            case "HIT_ICE":
+                if (Random.value > Chance(0.30f)) break;
+                {
+                    float r = Mathf.Max(areaHitRadius, 1.5f);
+                    int cnt = Physics2D.OverlapCircleNonAlloc(enemy.transform.position, r, _hitBuffer);
+                    for (int i = 0; i < cnt; i++)
+                    {
+                        var e = _hitBuffer[i].GetComponentInParent<EnemyController>();
+                        if (e != null) e.Freeze(2f, 0f, new Color(0.5f, 0.85f, 1f, 1f), _weaponChapter);
+                    }
+                }
+                break;
+
+            case "HIT_STUN":
+                if (Random.value > Chance(0.25f)) break;
+                enemy.Stun(1.5f, _weaponChapter);
+                break;
+
+            case "HIT_FIRE":
+                if (Random.value > Chance(0.35f)) break;
+                enemy.ApplyFire(damage * 0.3f, 3f, weaponChapter: _weaponChapter);
+                break;
+
+            case "HIT_CLONE":
+                if (_cloneFlying) break;
+                if (Random.value > Chance(0.25f)) break;
+                SpawnCloneProjectiles(enemy.transform.position, damage);
+                break;
+
+            case "BOSS_SPIKE":
+                if (Random.value > Chance(0.25f)) break;
+                BossSpike.SpawnOnEnemy(enemy, _weaponSr?.sprite, damage * 1.5f,
+                    StatusEffectConfig.Shared?.GetSpikePrefab(_weaponId));
+                break;
+
+            case "HIT_SHOCK":
+                if (Random.value > Chance(0.40f)) break;
+                ApplyShockwave(enemy.transform.position, damage * 0.5f);
+                break;
+
+            case "HIT_SPIN":
+                if (weaponType != WeaponType.Spin) break;
+                if (Random.value > Chance(0.30f)) break;
+                _spinBoostStack = Mathf.Min(_spinBoostStack + 1, SpinBoostMaxStack);
+                float boostSign = orbitSpeed < 0 ? -1f : 1f;
+                _spinBoostOrbit = _spinBoostStack * 0.25f;
+                _spinBoostSpeed = _spinBoostStack * boostSign * 40f;
+                _spinBoostTimer = SpinBoostDecay;
+                break;
+        }
+    }
+
+    /// <summary>보스 타격 시 특수효과 발동.</summary>
+    private void TrySpecialEffectBoss(BossController boss, float damage)
+    {
+        if (string.IsNullOrEmpty(_specialEffectId) || boss == null) return;
+        switch (_specialEffectId)
+        {
+            case "BOSS_GROGY":
+                if (Random.value > Chance(0.20f)) break;
+                boss.TriggerGroggy(5f);
+                break;
+
+            case "BOSS_SPIKE":
+                if (Random.value > Chance(0.25f)) break;
+                BossSpike.Spawn(boss, _weaponSr?.sprite, damage * 1.5f,
+                    StatusEffectConfig.Shared?.GetSpikePrefab(_weaponId));
+                break;
+
+            case "BOSS_BIND":
+                if (Random.value > Chance(0.15f)) break;
+                boss.BindMovement(3f);
+                break;
+
+            case "HIT_CLONE":
+                if (_cloneFlying) break;
+                if (Random.value > Chance(0.25f)) break;
+                SpawnCloneProjectiles(boss.transform.position, damage);
+                break;
+
+            case "HIT_SHOCK":
+                if (Random.value > Chance(0.40f)) break;
+                ApplyShockwave(boss.transform.position, damage * 0.5f);
+                break;
+        }
+    }
+
+    /// <summary>투사체 발사 직후 SHOOT 특수효과를 적용합니다.</summary>
+    private void ApplyShootSpecialEffect(Projectile mainProj, Vector3 spawnPos, Vector2 aimDir)
+    {
+        // HIT_* 특수효과: 투사체가 적/보스를 맞출 때 WeaponPoint로 콜백
+        if (!string.IsNullOrEmpty(_specialEffectId) && _specialEffectId.StartsWith("HIT_"))
+        {
+            mainProj.SetOnHitEnemy((e, dmg, dir) => TrySpecialEffectEnemy(e, dmg, dir));
+            mainProj.SetOnHitBoss((b, dmg) => TrySpecialEffectBoss(b, dmg));
+        }
+        // BOSS_* 특수효과: 보스 타격 시 콜백
+        if (!string.IsNullOrEmpty(_specialEffectId) && _specialEffectId.StartsWith("BOSS_"))
+            mainProj.SetOnHitBoss((b, dmg) => TrySpecialEffectBoss(b, dmg));
+
+        if (string.IsNullOrEmpty(_specialEffectId)) return;
+        switch (_specialEffectId)
+        {
+            case "SHOOT_PIERCE":
+                mainProj.SetSpecialFlags(pierce: true, reflect: false);
+                break;
+
+            case "SHOOT_REFLECT":
+                mainProj.SetSpecialFlags(pierce: false, reflect: true);
+                break;
+
+            case "SHOOT_MULTI":
+                FireExtraProjectile(spawnPos, RotateVec(aimDir,  20f), attackDamage * 0.7f);
+                FireExtraProjectile(spawnPos, RotateVec(aimDir, -20f), attackDamage * 0.7f);
+                break;
+
+            case "SHOOT_SUB":
+                FireExtraProjectile(spawnPos, RotateVec(aimDir,  35f), attackDamage * 0.5f);
+                FireExtraProjectile(spawnPos, RotateVec(aimDir, -35f), attackDamage * 0.5f);
+                break;
+
+            case "SHOOT_WAVE":
+                for (int i = 0; i < 8; i++)
+                {
+                    float a   = i * 45f * Mathf.Deg2Rad;
+                    var   dir = new Vector2(Mathf.Cos(a), Mathf.Sin(a));
+                    FireExtraProjectile(spawnPos, dir, attackDamage * 0.4f);
+                }
+                break;
+        }
+    }
+
+    // ── 특수효과 헬퍼 ────────────────────────────────────────────────
+
+    private const float CloneOutTime    = 0.45f;
+    private const float ClonePauseTime  = 0.40f; // 연타 5회(0.06s×5) + 여유
+    private const float CloneReturnTime = 0.35f;
+    private const int   CloneBurstHits  = 5;
+    private const float CloneBurstInterval = 0.06f;
+
+    private void SpawnCloneProjectiles(Vector2 enemyPos, float damage)
+    {
+        var prefab = StatusEffectConfig.Shared?.GetClonePrefab(_weaponId);
+        if (prefab == null) prefab = projectilePrefab;
+        if (prefab == null)
+        {
+            Debug.LogWarning($"[HIT_CLONE] 프리팹 없음 — weaponId='{_weaponId}'. StatusEffectConfig Editor에서 클론 프리팹을 등록하세요.");
+            return;
+        }
+
+        Vector2 origin  = transform.parent != null ? (Vector2)transform.parent.position : enemyPos;
+        Vector2 forward = (enemyPos - origin);
+        if (forward.sqrMagnitude < 0.01f) forward = Vector2.up;
+        forward = forward.normalized;
+
+        var   cfg       = StatusEffectConfig.Shared;
+        float outTime   = cfg?.GetCloneOutTime   (_weaponId, CloneOutTime)    ?? CloneOutTime;
+        float pauseTime = cfg?.GetClonePauseTime (_weaponId, ClonePauseTime)  ?? ClonePauseTime;
+        float retTime   = cfg?.GetCloneReturnTime(_weaponId, CloneReturnTime) ?? CloneReturnTime;
+        float range     = cfg?.GetCloneRange     (_weaponId, 6f)              ?? 6f;
+        float cloneDmg = damage * 0.5f;
+
+        Vector2 dir1 = RotateVec(forward,  15f);
+        Vector2 dir2 = RotateVec(forward, -15f);
+
+        var go1 = SpawnCloneVisual(prefab, origin);
+        var go2 = SpawnCloneVisual(prefab, origin);
+
+        _cloneFlying      = true;
+        _cloneActiveCount = 2;
+        StartCoroutine(CloneArcRoutine(go1, origin, origin + dir1 * range, cloneDmg, outTime, pauseTime, retTime));
+        StartCoroutine(CloneArcRoutine(go2, origin, origin + dir2 * range, cloneDmg, outTime, pauseTime, retTime));
+    }
+
+    private GameObject SpawnCloneVisual(GameObject prefab, Vector2 pos)
+    {
+        var go = Instantiate(prefab, pos, Quaternion.identity);
+        var p  = go.GetComponentInChildren<Projectile>();
+        if (p != null) Destroy(p);
+        _activeClones.Add(go);
+        return go;
+    }
+
+    private void DestroyClone(GameObject go)
+    {
+        _activeClones.Remove(go);
+        if (go != null) Destroy(go);
+        _cloneActiveCount--;
+        if (_cloneActiveCount <= 0)
+        {
+            _cloneActiveCount = 0;
+            _cloneFlying      = false;
+        }
+    }
+
+    private IEnumerator CloneArcRoutine(GameObject go, Vector2 from, Vector2 to, float damage, float outDuration, float pauseDuration, float returnDuration)
+    {
+        Vector3 baseScale = go.transform.localScale;
+        Vector3 minScale  = baseScale * 0.5f;
+        Vector3 maxScale  = baseScale * 1.5f;
+
+        // ── 전진 (작게 → 크게) ────────────────────────────────────
+        var hitIds = new HashSet<int>();
+        float t = 0f;
+        while (t < outDuration)
+        {
+            if (go == null) { DestroyClone(go); yield break; }
+            t += Time.deltaTime;
+            float ratio = Mathf.Clamp01(t / outDuration);
+            go.transform.position   = Vector2.Lerp(from, to, ratio);
+            go.transform.localScale = Vector3.Lerp(minScale, maxScale, ratio);
+
+            var cols = Physics2D.OverlapCircleAll(go.transform.position, 0.35f, LayerMask.GetMask("Enemy"));
+            foreach (var col in cols)
+            {
+                var enemy = col.GetComponentInParent<EnemyController>();
+                if (enemy == null || !hitIds.Add(enemy.GetInstanceID())) continue;
+                bool isCrit = UnityEngine.Random.value < criticalRate;
+                float dmg   = isCrit ? damage * criticalMultiplier : damage;
+                Vector2 knock = ((Vector2)enemy.transform.position - (Vector2)go.transform.position).normalized;
+                enemy.TakeDamage(dmg, isCrit, knock, knockbackPower);
+            }
+            yield return null;
+        }
+
+        if (go == null) { DestroyClone(go); yield break; }
+        go.transform.position   = to;
+        go.transform.localScale = maxScale;
+
+        // ── 정지 + 연타 파바바박 ──────────────────────────────────
+        float burstInterval = Mathf.Max(pauseDuration / CloneBurstHits, CloneBurstInterval);
+        for (int h = 0; h < CloneBurstHits; h++)
+        {
+            if (go == null) { DestroyClone(go); yield break; }
+            var burstCols = Physics2D.OverlapCircleAll(go.transform.position, 0.5f, LayerMask.GetMask("Enemy"));
+            foreach (var col in burstCols)
+            {
+                var e = col.GetComponentInParent<EnemyController>();
+                if (e == null) continue;
+                bool isCrit = UnityEngine.Random.value < criticalRate;
+                float dmg   = isCrit ? damage * criticalMultiplier : damage;
+                Vector2 knock = ((Vector2)e.transform.position - (Vector2)go.transform.position).normalized;
+                e.TakeDamage(dmg, isCrit, knock, knockbackPower);
+            }
+            FXManager.Shared?.SpawnHitEffect(go.transform.position);
+            yield return new WaitForSeconds(burstInterval);
+        }
+
+        // ── 복귀 (X1.5 → X0.5) ────────────────────────────────────
+        t = 0f;
+        while (t < returnDuration)
+        {
+            if (go == null) { DestroyClone(go); yield break; }
+            t += Time.deltaTime;
+            float ratio       = Mathf.Clamp01(t / returnDuration);
+            Vector2 playerPos = transform.parent != null ? (Vector2)transform.parent.position : from;
+            go.transform.position   = Vector2.Lerp(to, playerPos, ratio);
+            go.transform.localScale = Vector3.Lerp(maxScale, minScale, ratio);
+            yield return null;
+        }
+
+        DestroyClone(go);
+    }
+
+
+    private void ApplyShockwave(Vector2 center, float damage)
+    {
+        float radius = Mathf.Max(areaHitRadius * 1.5f, 2f);
+        int   cnt    = Physics2D.OverlapCircleNonAlloc(center, radius, _hitBuffer);
+        for (int i = 0; i < cnt; i++)
+        {
+            var e = _hitBuffer[i].GetComponentInParent<EnemyController>();
+            if (e != null)
+            {
+                Vector2 kDir = ((Vector2)e.transform.position - center).normalized;
+                e.TakeDamage(damage, false, kDir, 8f);
+                continue;
+            }
+            var b = _hitBuffer[i].GetComponentInParent<BossController>();
+            if (b != null) b.TakeDamage(damage);
+        }
+        FXManager.Shared?.SpawnHitEffect(center);
+    }
+
+    private void FireExtraProjectile(Vector3 spawnPos, Vector2 dir, float dmg)
+    {
+        if (projectilePrefab == null) return;
+        var go = Instantiate(projectilePrefab, spawnPos, Quaternion.identity);
+        var p  = go.GetComponent<Projectile>();
+        if (p != null)
+            p.Init(dmg, dir, projectileSpeed, criticalRate: criticalRate,
+                criticalMultiplier: criticalMultiplier, baseDamage: dmg,
+                knockbackPower: knockbackPower);
+    }
+
+    private static Vector2 RotateVec(Vector2 v, float degrees)
+    {
+        float r = degrees * Mathf.Deg2Rad;
+        return new Vector2(
+            v.x * Mathf.Cos(r) - v.y * Mathf.Sin(r),
+            v.x * Mathf.Sin(r) + v.y * Mathf.Cos(r));
     }
 
     private void OnDrawGizmosSelected()

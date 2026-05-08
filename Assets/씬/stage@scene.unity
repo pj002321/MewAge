@@ -791,11 +791,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::FXManager
   damageTextPrefab: {fileID: 3658978802023963887, guid: 29d06461d404fa949b7e70b87a2c3d26, type: 3}
   floatingTextPrefab: {fileID: 3658978802023963887, guid: 0df18ef2fc384f444a1ac68b6f583898, type: 3}
-  hitEffectPrefab: {fileID: 8315657212143604512, guid: c7adaab61032ed14bb76af3477244e86, type: 3}
+  hitEffectPrefab: {fileID: 1066009319504892, guid: 9a3edab34f4a90d4dbbd9b576245b3f9, type: 3}
   debrisPrefab: {fileID: 720859079965321158, guid: acf9b341dea4219418a2ec20cb281669, type: 3}
   goldOrbDebrisPrefab: {fileID: 720859079965321158, guid: 66b364b74c15b45479294308c624a023, type: 3}
   expOrbDebrisPrefab: {fileID: 720859079965321158, guid: f9129b8c18ab32f4f96e9acfe15a2ea5, type: 3}
   landingVfxPrefab: {fileID: 4873479580030643389, guid: 939ba1a6a36ef9748a7525496ad78563, type: 3}
+  bossEntryLandingVfxPrefab: {fileID: 0}
+  bossEntryLandingVfxLifetime: 2
   showGoldOrbDebris: 1
   showExpOrbDebris: 1
 --- !u!4 &43876947
@@ -2020,7 +2022,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: -312, y: 48.1}
-  m_SizeDelta: {x: 48, y: 48}
+  m_SizeDelta: {x: 36, y: 36}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &170220840
 MonoBehaviour:
@@ -2035,14 +2037,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.4666667, g: 0.4666667, b: 0.4666667, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -6046915525794419716, guid: 0398d93ebe4c8474da7991e26c0d3bab, type: 3}
+  m_Sprite: {fileID: 255786102, guid: e90063f7e1ea5724987a05efac2627bc, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -3457,7 +3459,7 @@ Canvas:
   m_VertexColorAlwaysGammaSpace: 1
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
-  m_SortingLayerID: 0
+  m_SortingLayerID: 1049025713
   m_SortingOrder: 200
   m_TargetDisplay: 0
 --- !u!1001 &362911860
@@ -4962,6 +4964,7 @@ MonoBehaviour:
   target: {fileID: 757701469}
   fixedOrthographicSize: 14
   smoothTime: 0.1
+  defaultFollowPlayer: 0
   shakeDefaultDuration: 0.15
   shakeDefaultMagnitude: 0.09
 --- !u!1 &524301903
@@ -5295,7 +5298,7 @@ MonoBehaviour:
   m_StartCorner: 0
   m_StartAxis: 0
   m_CellSize: {x: 100, y: 100}
-  m_Spacing: {x: 0, y: 110}
+  m_Spacing: {x: 0, y: 20}
   m_Constraint: 0
   m_ConstraintCount: 2
 --- !u!114 &558665514
@@ -5565,7 +5568,7 @@ Canvas:
   m_VertexColorAlwaysGammaSpace: 1
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
-  m_SortingLayerID: 0
+  m_SortingLayerID: 1049025713
   m_SortingOrder: 200
   m_TargetDisplay: 0
 --- !u!224 &576245398
@@ -8337,7 +8340,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 350.1, y: -3.8}
+  m_AnchoredPosition: {x: 350.1, y: 0}
   m_SizeDelta: {x: 1000, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &826974398
@@ -8360,10 +8363,10 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\uC57C\uC218 \uC2DC\uB108\uC9C0"
+  m_text: "\uD2B9\uC218\uD6A8\uACFC \uC785\uB825"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8c5fe09c692e11d4ca9132a851bb6129, type: 2}
-  m_sharedMaterial: {fileID: -1555811563548829553, guid: 8c5fe09c692e11d4ca9132a851bb6129, type: 2}
+  m_sharedMaterial: {fileID: 2100000, guid: f2c83520124f9b64bbdc4491bbc54736, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -11896,6 +11899,11 @@ MonoBehaviour:
   content: {fileID: 558665512}
   slotPrefab: {fileID: 3896587480612973278, guid: 4c2f2d90a76879d43b44a382cae6e783, type: 3}
   closeButton: {fileID: 1909142585}
+  normalProbText: {fileID: 1264440627}
+  rareProbText: {fileID: 562429320}
+  epicProbText: {fileID: 944494196}
+  legendaryProbText: {fileID: 1097482556}
+  mythicProbText: {fileID: 1798106545}
 --- !u!1 &1189470341
 GameObject:
   m_ObjectHideFlags: 0
@@ -12528,7 +12536,7 @@ Canvas:
   m_GameObject: {fileID: 1254101465}
   m_Enabled: 1
   serializedVersion: 3
-  m_RenderMode: 1
+  m_RenderMode: 0
   m_Camera: {fileID: 519420031}
   m_PlaneDistance: 100
   m_PixelPerfect: 1
@@ -18955,7 +18963,6 @@ MonoBehaviour:
   clearResultPanel: {fileID: 524301905}
   gameOverResultPanel: {fileID: 1458385735}
   gamePausePanel: {fileID: 643234040}
-  bossWaveTimeLimit: 90
   waveClearPanel: {fileID: 1879206110}
   waveClearDuration: 1
   timerNormalColor: {r: 1, g: 1, b: 1, a: 1}
@@ -24946,7 +24953,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -241.6, y: 1.91}
+  m_AnchoredPosition: {x: -239.31, y: 21.25}
   m_SizeDelta: {x: 328, y: 164}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!224 &748095017463577053
@@ -24998,7 +25005,7 @@ Canvas:
   m_GameObject: {fileID: 8418136751518582369}
   m_Enabled: 1
   serializedVersion: 3
-  m_RenderMode: 1
+  m_RenderMode: 0
   m_Camera: {fileID: 519420031}
   m_PlaneDistance: 100
   m_PixelPerfect: 1
@@ -25010,7 +25017,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 1049025713
-  m_SortingOrder: 210
+  m_SortingOrder: 220
   m_TargetDisplay: 0
 --- !u!114 &868741125402327696
 MonoBehaviour:
@@ -26171,6 +26178,8 @@ MonoBehaviour:
   lifeStealText: {fileID: 106735600}
   knockbackText: {fileID: 1333595028}
   starDesc: {fileID: 1260052503}
+  traitText: {fileID: 826974398}
+  traitBadgeImage: {fileID: 170220840}
   storyText: {fileID: 3170806752230554900}
   closeButton: {fileID: 0}
   equipButton: {fileID: 5399187128093874334}
@@ -28976,7 +28985,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!222 &5595894003711697033
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -31333,7 +31342,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -4.634, y: -897.9103}
+  m_AnchoredPosition: {x: -4.634, y: -861.41}
   m_SizeDelta: {x: 592.938, y: 103.252}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &7896234548306854094
@@ -31765,6 +31774,11 @@ MonoBehaviour:
   content: {fileID: 352351426}
   slotPrefab: {fileID: 5822275365695147737, guid: 51eae3751504752429c377fb127a4b1a, type: 3}
   closeButton: {fileID: 2391162575877399207}
+  normalProbText: {fileID: 6909919638413945972}
+  rareProbText: {fileID: 597505608712167470}
+  epicProbText: {fileID: 79539667017339329}
+  legendaryProbText: {fileID: 1081187546493723451}
+  mythicProbText: {fileID: 438610803623987284}
 --- !u!224 &8310397174786058447
 RectTransform:
   m_ObjectHideFlags: 0
@@ -32232,6 +32246,7 @@ MonoBehaviour:
   goldTextRect: {fileID: 1313192476426341106}
   rootCanvas: {fileID: 5670868293295141406}
   portraitAnimator: {fileID: 6917413212042307676}
+  infoButtonRedDot: {fileID: 0}
 --- !u!114 &9135526227777751204
 MonoBehaviour:
   m_ObjectHideFlags: 0

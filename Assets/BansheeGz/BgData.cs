@@ -696,6 +696,21 @@ namespace Mewage.DB
 			get => _f_흡혈[Index];
 			set => _f_흡혈.SetValue(this, value);
 		}
+		public System.String f_특수효과ID
+		{
+			get => _f_특수효과ID[Index];
+			set => _f_특수효과ID[Index] = value;
+		}
+		public System.String f_특수효과설명
+		{
+			get => _f_특수효과설명[Index];
+			set => _f_특수효과설명[Index] = value;
+		}
+		public System.String f_특성
+		{
+			get => _f_특성[Index];
+			set => _f_특성[Index] = value;
+		}
 		private static BansheeGz.BGDatabase.BGFieldEntityName _ufle12jhs77_f_name;
 		public static BansheeGz.BGDatabase.BGFieldEntityName _f_name => _ufle12jhs77_f_name ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldEntityName>(MetaDefault, new BGId(4873413822836436793UL, 9130358899360770223UL), () => _ufle12jhs77_f_name = null);
 		private static BansheeGz.BGDatabase.BGFieldString _ufle12jhs77_f_무기ID;
@@ -748,6 +763,12 @@ namespace Mewage.DB
 		public static BansheeGz.BGDatabase.BGFieldInt _f_출혈 => _ufle12jhs77_f_출혈 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(MetaDefault, new BGId(5117349830299152111UL, 18275321271005576110UL), () => _ufle12jhs77_f_출혈 = null);
 		private static BansheeGz.BGDatabase.BGFieldInt _ufle12jhs77_f_흡혈;
 		public static BansheeGz.BGDatabase.BGFieldInt _f_흡혈 => _ufle12jhs77_f_흡혈 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(MetaDefault, new BGId(5322275005243636888UL, 6661079844634022538UL), () => _ufle12jhs77_f_흡혈 = null);
+		private static BansheeGz.BGDatabase.BGFieldString _ufle12jhs77_f_특수효과ID;
+		public static BansheeGz.BGDatabase.BGFieldString _f_특수효과ID => _ufle12jhs77_f_특수효과ID ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(MetaDefault, new BGId(5037908776530741108UL, 15716334328883753905UL), () => _ufle12jhs77_f_특수효과ID = null);
+		private static BansheeGz.BGDatabase.BGFieldString _ufle12jhs77_f_특수효과설명;
+		public static BansheeGz.BGDatabase.BGFieldString _f_특수효과설명 => _ufle12jhs77_f_특수효과설명 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(MetaDefault, new BGId(5250163006999271861UL, 13830875835125307796UL), () => _ufle12jhs77_f_특수효과설명 = null);
+		private static BansheeGz.BGDatabase.BGFieldString _ufle12jhs77_f_특성;
+		public static BansheeGz.BGDatabase.BGFieldString _f_특성 => _ufle12jhs77_f_특성 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(MetaDefault, new BGId(5182004102483296168UL, 17739870363473183638UL), () => _ufle12jhs77_f_특성 = null);
 		private DB_무기() : base(MetaDefault) {}
 		private DB_무기(BGId id) : base(MetaDefault, id) {}
 		private DB_무기(BGMetaEntity meta) : base(meta) {}
@@ -790,6 +811,9 @@ namespace Mewage.DB
 			_ufle12jhs77_f_치명타 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(_metaDefault, new BGId(4928906861758726815UL, 7773975797752096432UL));
 			_ufle12jhs77_f_출혈 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(_metaDefault, new BGId(5117349830299152111UL, 18275321271005576110UL));
 			_ufle12jhs77_f_흡혈 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(_metaDefault, new BGId(5322275005243636888UL, 6661079844634022538UL));
+			_ufle12jhs77_f_특수효과ID = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(_metaDefault, new BGId(5037908776530741108UL, 15716334328883753905UL));
+			_ufle12jhs77_f_특수효과설명 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(_metaDefault, new BGId(5250163006999271861UL, 13830875835125307796UL));
+			_ufle12jhs77_f_특성 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(_metaDefault, new BGId(5182004102483296168UL, 17739870363473183638UL));
 		}
 		public static void ReleaseCodeGenRuntime()
 		{
@@ -820,6 +844,9 @@ namespace Mewage.DB
 			_ufle12jhs77_f_치명타 = null;
 			_ufle12jhs77_f_출혈 = null;
 			_ufle12jhs77_f_흡혈 = null;
+			_ufle12jhs77_f_특수효과ID = null;
+			_ufle12jhs77_f_특수효과설명 = null;
+			_ufle12jhs77_f_특성 = null;
 		}
 
 		[Preserve]
@@ -858,6 +885,9 @@ namespace Mewage.DB
 			public const string 치명타 = "치명타";
 			public const string 출혈 = "출혈";
 			public const string 흡혈 = "흡혈";
+			public const string 특수효과ID = "특수효과ID";
+			public const string 특수효과설명 = "특수효과설명";
+			public const string 특성 = "특성";
 		}
 	}
 

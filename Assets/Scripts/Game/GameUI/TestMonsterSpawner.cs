@@ -37,6 +37,10 @@ public class TestMonsterSpawner : MonoBehaviour
     [ListDrawerSettings(ShowItemCount = true, DraggableItems = false)]
     [SerializeField] private List<ChapterConfig> chapters = new();
 
+    [Title("보스 환경 (dev 씬 전용)")]
+    [Tooltip("dev 씬에서 보스 맵으로 전환하려면 해당 챕터의 StageEnvironmentSO를 연결하세요.")]
+    [SerializeField] private StageEnvironmentSO testStageEnv;
+
 #if UNITY_EDITOR
     [Button("프리팹 자동 로드 (에디터 전용)", ButtonSizes.Medium), GUIColor(0.5f, 0.75f, 1f)]
     private void AutoLoadPrefabs()
@@ -106,6 +110,42 @@ public class TestMonsterSpawner : MonoBehaviour
         SpawnPrefab(prefab, pos);
     }
 
+    [Title("보스 빠른 스폰")]
+    [BoxGroup("Boss"), ValueDropdown("GetAllBossOptions"), LabelText("보스 선택")]
+    public int bossQuickIndex = 0;
+
+    [BoxGroup("Boss"), HorizontalGroup("Boss/Nav")]
+    [Button("◀ 이전", ButtonSizes.Medium), GUIColor(0.7f, 0.85f, 1f)]
+    private void PrevBoss()
+    {
+        var list = GetAllBossList();
+        if (list.Count == 0) return;
+        bossQuickIndex = (bossQuickIndex - 1 + list.Count) % list.Count;
+        SpawnQuickBoss();
+    }
+
+    [BoxGroup("Boss"), HorizontalGroup("Boss/Nav")]
+    [Button("다음 ▶", ButtonSizes.Medium), GUIColor(0.7f, 0.85f, 1f)]
+    private void NextBoss()
+    {
+        var list = GetAllBossList();
+        if (list.Count == 0) return;
+        bossQuickIndex = (bossQuickIndex + 1) % list.Count;
+        SpawnQuickBoss();
+    }
+
+    [BoxGroup("Boss")]
+    [Button("보스 스폰", ButtonSizes.Large), GUIColor(1f, 0.75f, 0.2f)]
+    private void SpawnQuickBoss()
+    {
+        var list = GetAllBossList();
+        if (list.Count == 0) { Debug.LogWarning("[TestMonsterSpawner] 등록된 보스 없음"); return; }
+        bossQuickIndex = Mathf.Clamp(bossQuickIndex, 0, list.Count - 1);
+        DespawnCurrent();
+        var pos = spawnPoint != null ? (Vector2)spawnPoint.position : Vector2.zero;
+        SpawnBoss(list[bossQuickIndex], pos);
+    }
+
     [BoxGroup("Control")]
     [Button("제거", ButtonSizes.Medium), GUIColor(0.9f, 0.4f, 0.4f)]
     private void DespawnCurrent()
@@ -125,16 +165,47 @@ public class TestMonsterSpawner : MonoBehaviour
             _currentBoss.OnDeath -= OnBossDied;
             Destroy(_currentBoss.gameObject);
             _currentBoss = null;
+            WaveEnvironmentSwitcher.Shared?.SetNormal();
         }
 
         currentMonsterName = "없음";
     }
+
+    // ── 무적 / 플레이어 설정 ──────────────────────────────────────
+    public static bool EnemyInvincible { get; private set; }
+
+    [Title("테스트 옵션")]
+    [ShowInInspector, ReadOnly, LabelText("적 무적 상태")]
+    private static bool _enemyInvincibleDisplay => EnemyInvincible;
+
+    [Button("$_invincibleBtnLabel", ButtonSizes.Medium)]
+    private void ToggleEnemyInvincible()
+    {
+        EnemyInvincible = !EnemyInvincible;
+        Debug.Log($"[TestMonsterSpawner] 적 무적 {(EnemyInvincible ? "ON" : "OFF")}");
+    }
+    private string _invincibleBtnLabel => EnemyInvincible ? "적 무적 ON  (클릭→OFF)" : "적 무적 OFF (클릭→ON)";
 
     // ── 런타임 상태 ───────────────────────────────────────────────
     private EnemyController _currentEnemy;
     private BossController  _currentBoss;
     private GameObject      _pendingPrefab;
     private Vector2         _lastSpawnPos;
+
+    private void Start()
+    {
+        StartCoroutine(SetPlayerHpRoutine());
+    }
+
+    private System.Collections.IEnumerator SetPlayerHpRoutine()
+    {
+        // PlayerStatManager가 초기화될 때까지 대기
+        while (PlayerStatManager.Shared == null)
+            yield return null;
+        PlayerStatManager.Shared.BeginBatch();
+        PlayerStatManager.Shared.SetBase(StatType.MaxHP, 9999f);
+        PlayerStatManager.Shared.EndBatch();
+    }
 
     // ── 스폰 ─────────────────────────────────────────────────────
     private void SpawnPrefab(GameObject prefab, Vector2 pos)
@@ -177,6 +248,15 @@ public class TestMonsterSpawner : MonoBehaviour
 
     private void SpawnBoss(GameObject prefab, Vector2 pos)
     {
+        // 보스 맵으로 전환
+        var wes = WaveEnvironmentSwitcher.Shared;
+        if (wes != null)
+        {
+            if (testStageEnv != null)
+                wes.SetStageForTest(testStageEnv);
+            wes.SetBoss();
+        }
+
         var go = Instantiate(prefab, pos, Quaternion.identity);
         var boss = go.GetComponent<BossController>();
         if (boss == null) { Debug.LogWarning("[TestMonsterSpawner] BossController 없음"); Destroy(go); return; }
@@ -202,6 +282,8 @@ public class TestMonsterSpawner : MonoBehaviour
             _currentBoss.OnDeath -= OnBossDied;
         _currentBoss = null;
         currentMonsterName = "없음";
+
+        WaveEnvironmentSwitcher.Shared?.SetNormal();
         StartCoroutine(RespawnRoutine());
     }
 
@@ -210,6 +292,25 @@ public class TestMonsterSpawner : MonoBehaviour
         yield return new WaitForSeconds(1f);
         if (_pendingPrefab != null)
             SpawnPrefab(_pendingPrefab, _lastSpawnPos);
+    }
+
+    // ── 전체 보스 플랫 리스트 ─────────────────────────────────────
+    private List<GameObject> GetAllBossList()
+    {
+        var result = new List<GameObject>();
+        foreach (var c in chapters)
+            foreach (var p in c.bossPrefabs)
+                if (p != null) result.Add(p);
+        return result;
+    }
+
+    private IEnumerable<ValueDropdownItem<int>> GetAllBossOptions()
+    {
+        int idx = 0;
+        foreach (var c in chapters)
+            foreach (var p in c.bossPrefabs)
+                if (p != null)
+                    yield return new ValueDropdownItem<int>($"Ch{c.chapter} — {p.name}", idx++);
     }
 
     // ── Odin ValueDropdown 소스 ───────────────────────────────────

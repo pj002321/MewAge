@@ -77,8 +77,8 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 1049025713
+  m_SortingLayer: 1
   m_SortingOrder: 4
   m_MaskInteraction: 0
   m_Sprite: {fileID: 6863293971250029137, guid: aae5a60f0a493f14da9a00ba91e73b06, type: 3}
@@ -116,7 +116,38 @@ Transform:
   m_GameObject: {fileID: 4423835837989258071}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.003, y: -0.654, z: 0}
+  m_LocalPosition: {x: 0.546, y: 0.038, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8663768971914175293}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &5738906714962962642
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6028405126429522411}
+  m_Layer: 7
+  m_Name: tGroggy
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6028405126429522411
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5738906714962962642}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.133, y: 0.549, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -160,6 +191,7 @@ Transform:
   m_Children:
   - {fileID: 687603576478220352}
   - {fileID: 4475026578306635568}
+  - {fileID: 6028405126429522411}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &8663461231204485509
@@ -283,6 +315,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossController
   damageCooldown: 0.5
+  moveSpeed: 3
   enrageThreshold: 0.5
   enrageSpeedMult: 1.5
   enrageDamageMult: 1.5
@@ -291,6 +324,10 @@ MonoBehaviour:
   - 0.35
   grogyDuration: 5
   grogyAtkSpeedBonus: 50
+  grogyOverheadPrefab: {fileID: 7777409954982400410, guid: f66d4f4f0fe9de24182839d83a609535, type: 3}
+  grogyOverheadAnchor: {fileID: 6028405126429522411}
+  grogyOverheadYOffset: 0.5
+  grogyFlickerInterval: 0.08
   flashColor: {r: 1, g: 0.2, b: 0.2, a: 1}
   flashDuration: 0.12
   onDeathFX:
@@ -303,11 +340,9 @@ MonoBehaviour:
   idleDuration: 1.5
   skills:
   - {fileID: 1072981410219997983}
+  _decal: {fileID: 687603576478220352}
   entryDrop: 1
-  dropSpeed: 22
-  squashDuration: 0.08
-  stretchDuration: 0.1
-  settleDuration: 0.12
+  entryScaleUpDuration: 0.35
 --- !u!114 &1072981410219997983
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -331,48 +366,45 @@ MonoBehaviour:
   phases:
   - label: Phase
     type: 1
-    count: 1
-    interval: 0.5
-    burstRepeat: 1
-    burstDelay: 0.6
-    warningDuration: 0.4
-    radialOffset: 0
-    fanAngle: 120
-    chaseDuration: 2
-  - label: Phase
-    type: 3
-    count: 1
-    interval: 0.5
-    burstRepeat: 1
-    burstDelay: 0.6
-    warningDuration: 0.4
-    radialOffset: 0
-    fanAngle: 120
-    chaseDuration: 2
+    "\uACBD\uACE0\uC2DC\uAC04": 0.4
+    "\uC5F0\uC0AC\uD69F\uC218": 1
+    "\uBC1C\uC0AC\uAC04\uACA9": 0.5
+    "\uBC29\uD5A5\uC218": 8
+    "\uBC18\uBCF5\uD69F\uC218": 1
+    "\uBC18\uBCF5\uAC04\uACA9": 0.6
+    "\uAC01\uB3C4\uC624\uD504\uC14B": 0
+    "\uBD80\uCC44\uAF34\uAC01\uB3C4": 120
+    "\uD638\uBC0D\uD69F\uC218": 3
+    "\uD638\uBC0D\uAC04\uACA9": 0.25
+    "\uC544\uD06C\uB192\uC774": 3
+    "\uD638\uBC0D\uC18D\uB3C4": 9
+    "\uAC00\uC18D\uC2DC\uAC04": 0
+    "\uCD08\uAE30\uC18D\uB3C4\uBE44\uC728": 0.1
+    "\uCD94\uACA9\uC2DC\uAC04": 3
   - label: Phase
     type: 0
-    count: 10
-    interval: 0.5
-    burstRepeat: 1
-    burstDelay: 0.6
-    warningDuration: 0.4
-    radialOffset: 0
-    fanAngle: 120
-    chaseDuration: 2
-  - label: Phase
-    type: 3
-    count: 1
-    interval: 0.5
-    burstRepeat: 1
-    burstDelay: 0.6
-    warningDuration: 0.4
-    radialOffset: 0
-    fanAngle: 120
-    chaseDuration: 2
+    "\uACBD\uACE0\uC2DC\uAC04": 0.4
+    "\uC5F0\uC0AC\uD69F\uC218": 8
+    "\uBC1C\uC0AC\uAC04\uACA9": 0.5
+    "\uBC29\uD5A5\uC218": 8
+    "\uBC18\uBCF5\uD69F\uC218": 1
+    "\uBC18\uBCF5\uAC04\uACA9": 0.6
+    "\uAC01\uB3C4\uC624\uD504\uC14B": 0
+    "\uBD80\uCC44\uAF34\uAC01\uB3C4": 120
+    "\uD638\uBC0D\uD69F\uC218": 3
+    "\uD638\uBC0D\uAC04\uACA9": 0.25
+    "\uC544\uD06C\uB192\uC774": 3
+    "\uD638\uBC0D\uC18D\uB3C4": 9
+    "\uAC00\uC18D\uC2DC\uAC04": 0.5
+    "\uCD08\uAE30\uC18D\uB3C4\uBE44\uC728": 0.301
+    "\uCD94\uACA9\uC2DC\uAC04": 3
+  useWarningLines: 1
   warningLineLength: 5
   warningLineWidth: 0.8
   warningColor: {r: 1, g: 1, b: 1, a: 1}
   warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
+  impactVfxPrefab: {fileID: 0}
+  impactVfxLifetime: 1
   chaseStopDistance: 3
   attackTrigger: tAttack
 --- !u!70 &2925710928678679702
@@ -409,7 +441,7 @@ CapsuleCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0.09, y: -0.05}
+  m_Offset: {x: 0.09, y: -0.14}
   m_Size: {x: 0.78, y: 1.1}
   m_Direction: 0
 --- !u!114 &-7432402752852428493

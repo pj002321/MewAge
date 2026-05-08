@@ -23,17 +23,22 @@ public class DamageText : MonoBehaviour
     private float   timer;
     private Color   baseColor;
     private Vector3 originPos;
+    private float   _scale = 1f;
 
     // ── 초기화 ──────────────────────────────────────────────────
-    public void Init(float damage, bool isCritical = false, bool isBleed = false)
+    public void Init(float damage, bool isCritical = false, bool isBleed = false, bool isEpicHit = false, float scale = 1f)
     {
         if (label == null) label = GetComponentInChildren<TMP_Text>();
         int displayDmg = damage > 0f && damage < 1f ? 1 : Mathf.RoundToInt(damage);
         label.text  = isBleed ? $"-{displayDmg}" : displayDmg.ToString();
-        baseColor   = isCritical ? new Color(1f, 0.5f, 0f) : isBleed ? Color.red : label.color;
+        baseColor   = isCritical    ? new Color(1f, 0.5f, 0f)
+                    : isEpicHit     ? new Color(0.8f, 0.4f, 1f)
+                    : isBleed       ? Color.red
+                    :                 label.color;
         label.color = baseColor;
         timer       = lifetime;
         originPos   = transform.position;
+        _scale      = scale;
 
         transform.localScale = Vector3.zero;
     }
@@ -45,7 +50,7 @@ public class DamageText : MonoBehaviour
         float progress = 1f - (timer / lifetime);   // 0 → 1
 
         // 스케일: 빠르게 팝인
-        float s = scaleCurve.Evaluate(progress);
+        float s = scaleCurve.Evaluate(progress) * _scale;
         transform.localScale = Vector3.one * Mathf.Max(s, 0f);
 
         // 떨림: 시간이 갈수록 줄어드는 수평 진동

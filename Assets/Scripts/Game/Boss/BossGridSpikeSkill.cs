@@ -46,8 +46,14 @@ public class BossGridSpikeSkill : BossSkillBase
     [SerializeField] private GameObject warningMarkerPrefab;
     [SerializeField] private Color warningColor = new Color(1f, 0.45f, 0f, 0.45f);
 
-    [Header("낙하 VFX")]
-    [Tooltip("스파이크 낙하 위치에 스폰할 VFX 프리팹")]
+    [Header("낙하 연출")]
+    [Tooltip("경고 위치 위 몇 유닛 높이에서 낙하를 시작할지")]
+    [SerializeField] private float dropHeight   = 8f;
+    [Tooltip("낙하 완료까지 걸리는 시간 (초). 짧을수록 빠르게 꽂힘")]
+    [SerializeField] private float dropDuration = 0.25f;
+
+    [Header("착지 VFX")]
+    [Tooltip("착지 순간 스폰할 VFX 프리팹. 스파이크 Collider2D bounds.min.y 위치에 스폰됩니다.")]
     [SerializeField] private GameObject spawnVfxPrefab;
     [Tooltip("0이면 VFX를 자동으로 제거하지 않음")]
     [SerializeField] private float spawnVfxDuration = 1f;
@@ -226,25 +232,51 @@ public class BossGridSpikeSkill : BossSkillBase
 
     // ── 스파이크 낙하 ────────────────────────────────────────────
 
-    private void SpawnSpike(Vector2 pos)
+    private void SpawnSpike(Vector2 targetPos)
+        => StartCoroutine(SpikeFallRoutine(targetPos));
+
+    private IEnumerator SpikeFallRoutine(Vector2 targetPos)
     {
-        // VFX
+        float dmg = spikeDamage > 0f ? spikeDamage : (Owner != null ? Owner.ContactDamage : 0f);
+
+        Vector2 startPos  = targetPos + Vector2.up * dropHeight;
+        GameObject spikeGo = null;
+
+        if (spikePrefab != null)
+            spikeGo = Instantiate(spikePrefab, new Vector3(startPos.x, startPos.y, 0f), Quaternion.identity);
+
+        // 낙하 (ease-in quad: 중력가속 느낌)
+        float elapsed = 0f;
+        while (elapsed < dropDuration)
+        {
+            elapsed += Time.deltaTime;
+            float t     = Mathf.Clamp01(elapsed / dropDuration);
+            float eased = t * t;
+            Vector2 cur = Vector2.LerpUnclamped(startPos, targetPos, eased);
+            if (spikeGo != null)
+                spikeGo.transform.position = new Vector3(cur.x, cur.y, 0f);
+            yield return null;
+        }
+
+        if (spikeGo != null)
+            spikeGo.transform.position = new Vector3(targetPos.x, targetPos.y, 0f);
+
+        // 착지 VFX: 스파이크 Collider2D bounds.min.y 에 스폰
         if (spawnVfxPrefab != null)
         {
-            var vfx = Instantiate(spawnVfxPrefab, new Vector3(pos.x, pos.y, 0f), Quaternion.identity);
+            float vfxY = targetPos.y;
+            if (spikeGo != null)
+            {
+                var col = spikeGo.GetComponent<Collider2D>();
+                if (col == null) col = spikeGo.GetComponentInChildren<Collider2D>();
+                if (col != null) vfxY = col.bounds.min.y;
+            }
+            var vfx = Instantiate(spawnVfxPrefab, new Vector3(targetPos.x, vfxY, 0f), Quaternion.identity);
             if (spawnVfxDuration > 0f) Destroy(vfx, spawnVfxDuration);
         }
 
-        // 스파이크 (프리팹은 시각적 역할만)
-        if (spikePrefab != null)
-        {
-            var go = Instantiate(spikePrefab, new Vector3(pos.x, pos.y, 0f), Quaternion.identity);
-            Destroy(go, spikeDuration);
-        }
-
-        // spikeDuration 동안 주기적으로 범위 데미지 판정
-        float dmg = spikeDamage > 0f ? spikeDamage : Owner.ContactDamage;
-        StartCoroutine(SpikeHitRoutine(pos, dmg));
+        if (spikeGo != null) Destroy(spikeGo, spikeDuration);
+        StartCoroutine(SpikeHitRoutine(targetPos, dmg));
     }
 
     private IEnumerator SpikeHitRoutine(Vector2 pos, float dmg)

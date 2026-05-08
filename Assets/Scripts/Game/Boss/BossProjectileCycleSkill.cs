@@ -1,19 +1,19 @@
 using System.Collections;
 using System.Collections.Generic;
+using Sirenix.OdinInspector;
 using UnityEngine;
 
 /// <summary>
 /// 보스 스킬: 데이터-드리븐 투사체 사이클 패턴.
 ///
 /// Inspector의 phases 리스트에 페이즈를 원하는 순서로 추가하면
-/// 그 순서대로 무한 반복합니다. 새 발사 패턴이 필요해도 클래스를
-/// 추가할 필요 없이 PhaseConfig 하나만 추가하면 됩니다.
+/// 그 순서대로 무한 반복합니다. 각 페이즈 후 추격시간 &gt; 0이면
+/// 발사 후 해당 시간만큼 플레이어를 추격한 뒤 다음 페이즈로 넘어갑니다.
 ///
 /// 지원 패턴 타입:
-///   AimedRepeat — 플레이어 조준 N회 연사
-///   Radial      — N방향 방사형 버스트 (회전 오프셋 지원)
-///   Fan         — 플레이어 방향 부채꼴 버스트
-///   Chase       — 발사 없이 플레이어 추격
+///   조준연사 — 플레이어 조준 N회 연사
+///   방사형   — N방향 동시 방사형 버스트 (회전 오프셋 지원)
+///   부채꼴   — 플레이어 방향 기준 부채꼴 버스트
 /// </summary>
 public class BossProjectileCycleSkill : BossSkillBase
 {
@@ -22,7 +22,7 @@ public class BossProjectileCycleSkill : BossSkillBase
         조준연사,   // 플레이어 방향으로 N회 한 발씩 발사
         방사형,     // N방향 동시 방사형 버스트
         부채꼴,     // 플레이어 방향 기준 부채꼴 버스트
-        추격,       // 발사 없이 플레이어를 N초 추격
+        호밍,       // 포물선 곡선으로 플레이어 위치에 꽂히는 타입
     }
 
     [System.Serializable]
@@ -31,35 +31,71 @@ public class BossProjectileCycleSkill : BossSkillBase
         public string      label = "페이즈";
         public PatternType type  = PatternType.조준연사;
 
-        [Header("경고")]
         [Tooltip("투사체 발사 전 경고 라인이 표시되는 시간 (초)")]
         public float 경고시간 = 0.4f;
 
-        [Header("조준연사 설정 (조준연사 타입만 사용)")]
+        // ── 조준연사 전용 ─────────────────────────────────────────
+        [ShowIf("type", PatternType.조준연사)]
         [Tooltip("플레이어 방향으로 총 몇 발 쏠지")]
-        public int   연사횟수   = 1;
+        public int   연사횟수 = 1;
+
+        [ShowIf("type", PatternType.조준연사)]
         [Tooltip("각 발사 사이 대기 시간 (초)")]
-        public float 발사간격   = 0.5f;
+        public float 발사간격 = 0.5f;
 
-        [Header("방사형 · 부채꼴 설정 (해당 타입만 사용)")]
+        // ── 방사형 · 부채꼴 공통 ─────────────────────────────────
+        [ShowIf("@type == PatternType.방사형 || type == PatternType.부채꼴")]
         [Tooltip("동시에 발사할 방향 수. 방사형=8이면 45° 간격 8방향, 12이면 30° 간격 12방향")]
-        public int   방향수     = 8;
-        [Tooltip("이 버스트 세트를 몇 번 반복할지 (1이면 한 번만)")]
-        public int   반복횟수   = 1;
-        [Tooltip("버스트 반복 사이 대기 시간 (초)")]
-        public float 반복간격   = 0.6f;
+        public int   방향수   = 8;
 
-        [Header("방사형 전용")]
+        [ShowIf("@type == PatternType.방사형 || type == PatternType.부채꼴")]
+        [Tooltip("이 버스트 세트를 몇 번 반복할지 (1이면 한 번만)")]
+        public int   반복횟수 = 1;
+
+        [ShowIf("@type == PatternType.방사형 || type == PatternType.부채꼴")]
+        [Tooltip("버스트 반복 사이 대기 시간 (초)")]
+        public float 반복간격 = 0.6f;
+
+        // ── 방사형 전용 ───────────────────────────────────────────
+        [ShowIf("type", PatternType.방사형)]
         [Tooltip("첫 번째 방향의 각도 오프셋 (도). 0이면 오른쪽(→) 부터 시작")]
         public float 각도오프셋 = 0f;
 
-        [Header("부채꼴 전용")]
+        // ── 부채꼴 전용 ───────────────────────────────────────────
+        [ShowIf("type", PatternType.부채꼴)]
         [Tooltip("부채꼴 전체 각도 범위 (도). 120이면 플레이어 방향 기준 ±60°")]
         public float 부채꼴각도 = 120f;
 
-        [Header("추격 설정 (추격 타입만 사용)")]
-        [Tooltip("플레이어를 추격할 시간 (초)")]
-        public float 추격시간   = 2f;
+        // ── 호밍 전용 ─────────────────────────────────────────────
+        [ShowIf("type", PatternType.호밍)]
+        [Tooltip("연속으로 발사할 호밍 투사체 수")]
+        public int   호밍횟수 = 3;
+
+        [ShowIf("type", PatternType.호밍)]
+        [Tooltip("각 투사체 발사 사이 대기 시간 (초)")]
+        public float 호밍간격 = 0.25f;
+
+        [ShowIf("type", PatternType.호밍)]
+        [Tooltip("포물선 호 높이. 양수=위로 볼록, 음수=아래로 볼록")]
+        public float 아크높이 = 3f;
+
+        [ShowIf("type", PatternType.호밍)]
+        [Tooltip("호밍 투사체 이동 속도")]
+        public float 호밍속도 = 9f;
+
+        // ── 가속 ─────────────────────────────────────────────────
+        [HideIf("type", PatternType.호밍)]
+        [Tooltip("0이면 일반 발사. 값을 넣으면 느리게 출발해 팍 꽂히는 느낌으로 가속됩니다.\n최고속도에 도달하는 시간 (초). 예: 0.4 → 0.4초 동안 가속 후 최고속도")]
+        public float 가속시간 = 0f;
+
+        [ShowIf("@가속시간 > 0f && type != PatternType.호밍")]
+        [Range(0.01f, 0.5f)]
+        [Tooltip("발사 시작 속도 비율 (0.05 = 최고속도의 5%에서 출발)")]
+        public float 초기속도비율 = 0.05f;
+
+        // ── 페이즈 후 추격 ────────────────────────────────────────
+        [Tooltip("발사 후 플레이어를 추격할 시간 (초). 0이면 즉시 다음 페이즈")]
+        public float 추격시간 = 0f;
     }
 
     [Header("투사체")]
@@ -74,11 +110,17 @@ public class BossProjectileCycleSkill : BossSkillBase
     [SerializeField] private List<PhaseConfig> phases = new();
 
     [Header("경고 라인 공통")]
+    [SerializeField] private bool     useWarningLines   = true;
     [SerializeField] private float    warningLineLength = 10f;
     [SerializeField] private float    warningLineWidth  = 0.06f;
     [SerializeField] private Color    warningColor      = Color.red;
     [Tooltip("null이면 Sprites/Default 자동 생성")]
     [SerializeField] private Material warningMaterial;
+
+    [Header("호밍 착탄 VFX")]
+    [Tooltip("호밍 투사체가 착탄(충돌/도착)할 때 스폰할 VFX 프리팹")]
+    [SerializeField] private GameObject impactVfxPrefab;
+    [SerializeField] private float      impactVfxLifetime = 1f;
 
     [Header("추격 설정")]
     [SerializeField] private float chaseStopDistance = 1.8f;
@@ -124,6 +166,10 @@ public class BossProjectileCycleSkill : BossSkillBase
             {
                 if (IsInvalid()) yield break;
                 yield return RunPhase(phase);
+                if (IsInvalid()) yield break;
+
+                if (phase.추격시간 > 0f)
+                    yield return ChasePhase(phase.추격시간);
             }
         }
     }
@@ -134,10 +180,10 @@ public class BossProjectileCycleSkill : BossSkillBase
     {
         switch (cfg.type)
         {
-            case PatternType.추격:   yield return ChasePhase(cfg.추격시간); break;
-            case PatternType.조준연사: yield return AimedRepeatPhase(cfg);       break;
+            case PatternType.조준연사:                yield return AimedRepeatPhase(cfg); break;
             case PatternType.방사형:
-            case PatternType.부채꼴: yield return BurstPhase(cfg);               break;
+            case PatternType.부채꼴:                  yield return BurstPhase(cfg);       break;
+            case PatternType.호밍:                   yield return HomingPhase(cfg);      break;
         }
     }
 
@@ -158,7 +204,7 @@ public class BossProjectileCycleSkill : BossSkillBase
                     ? ((Vector2)Owner.PlayerTransform.position - spawnPos).normalized
                     : Vector2.right;
 
-                yield return WarnThenFire(spawnPos, new[] { dir }, cfg.경고시간);
+                yield return WarnThenFire(spawnPos, new[] { dir }, cfg.경고시간, cfg.가속시간, cfg.초기속도비율);
                 if (IsInvalid()) yield break;
 
                 if (i < cfg.연사횟수 - 1)
@@ -184,7 +230,7 @@ public class BossProjectileCycleSkill : BossSkillBase
                     ? GetRadialDirs(cfg.방향수, cfg.각도오프셋)
                     : GetFanDirs(spawnPos, cfg.방향수, cfg.부채꼴각도);
 
-                yield return WarnThenFire(spawnPos, dirs, cfg.경고시간);
+                yield return WarnThenFire(spawnPos, dirs, cfg.경고시간, cfg.가속시간, cfg.초기속도비율);
                 if (IsInvalid()) yield break;
 
                 if (r < cfg.반복횟수 - 1)
@@ -221,7 +267,7 @@ public class BossProjectileCycleSkill : BossSkillBase
 
     // ── 경고 라인 → 발사 ─────────────────────────────────────────
 
-    private IEnumerator WarnThenFire(Vector2 spawnPos, Vector2[] dirs, float warnDuration)
+    private IEnumerator WarnThenFire(Vector2 spawnPos, Vector2[] dirs, float warnDuration, float accelDuration = 0f, float initialSpeedRatio = 0.05f)
     {
         var lines = new LineRenderer[dirs.Length];
         for (int i = 0; i < dirs.Length; i++)
@@ -236,6 +282,7 @@ public class BossProjectileCycleSkill : BossSkillBase
             elapsed += Time.deltaTime;
             float t = Mathf.Clamp01(elapsed / warnDuration);
             Vector2 cur = GetSpawnPos();
+            Owner.FlipToward(dirs[0]);
             for (int i = 0; i < lines.Length; i++)
             {
                 if (lines[i] == null) continue;
@@ -258,15 +305,16 @@ public class BossProjectileCycleSkill : BossSkillBase
 
         if (IsInvalid()) yield break;
 
+        Owner.FlipToward(dirs[0]);
         Owner.EnemyAnimator?.SetTrigger(attackTrigger);
         Vector2 firePos = GetSpawnPos();
         foreach (var dir in dirs)
-            SpawnProjectile(firePos, dir);
+            SpawnProjectile(firePos, dir, accelDuration, initialSpeedRatio);
     }
 
     private LineRenderer SpawnWarningLine(Vector2 start)
     {
-        if (!WarningLineSettings.Enabled) return null;
+        if (!useWarningLines || !WarningLineSettings.Enabled) return null;
         var go = new GameObject("WarnLine");
         go.transform.position = new Vector3(start.x, start.y, 0f);
         go.transform.rotation = Quaternion.Euler(60f, 0f, 0f);
@@ -321,6 +369,86 @@ public class BossProjectileCycleSkill : BossSkillBase
         return dirs;
     }
 
+    // ── Homing ───────────────────────────────────────────────────
+
+    private IEnumerator HomingPhase(PhaseConfig cfg)
+    {
+        Boss.IsFiringSkill = true;
+        try
+        {
+            for (int i = 0; i < cfg.호밍횟수; i++)
+            {
+                if (GameManager.Shared != null && GameManager.Shared.IsGameOver) yield break;
+                if (IsInvalid()) yield break;
+
+                // 경고: 라인이 플레이어를 실시간 추적
+                if (cfg.경고시간 > 0f)
+                {
+                    Vector2 warnOrigin = GetSpawnPos();
+                    var lr = SpawnWarningLine(warnOrigin);
+                    if (lr != null) _activeWarnLines.Add(lr);
+
+                    float elapsed = 0f;
+                    while (elapsed < cfg.경고시간)
+                    {
+                        if (IsInvalid()) { if (lr != null) { Destroy(lr.gameObject); _activeWarnLines.Remove(lr); } yield break; }
+                        elapsed += Time.deltaTime;
+
+                        Vector2 cur      = GetSpawnPos();
+                        Vector2 toPlayer = Owner.PlayerTransform != null
+                            ? ((Vector2)Owner.PlayerTransform.position - cur).normalized
+                            : Vector2.right;
+                        Owner.FlipToward(toPlayer);
+
+                        if (lr != null)
+                        {
+                            var tf = lr.transform;
+                            tf.position = new Vector3(cur.x, cur.y, 0f);
+                            lr.SetPosition(0, Vector3.zero);
+                            // 라인 끝을 플레이어 위치로 직접 지정
+                            Vector3 playerPos = Owner.PlayerTransform != null
+                                ? Owner.PlayerTransform.position
+                                : (Vector3)cur + (Vector3)(toPlayer * warningLineLength);
+                            lr.SetPosition(1, tf.InverseTransformPoint(playerPos));
+                        }
+                        yield return null;
+                    }
+
+                    if (lr != null) { Destroy(lr.gameObject); _activeWarnLines.Remove(lr); }
+                    if (IsInvalid()) yield break;
+                }
+
+                // 발사 시점의 플레이어 위치 고정
+                Vector3 lockTarget = Owner.PlayerTransform != null
+                    ? Owner.PlayerTransform.position
+                    : (Vector3)GetSpawnPos();
+
+                Vector2 fireDir = ((Vector2)(lockTarget - (Vector3)GetSpawnPos())).normalized;
+                Owner.FlipToward(fireDir);
+                Owner.EnemyAnimator?.SetTrigger(attackTrigger);
+
+                SpawnHomingProjectile(GetSpawnPos(), lockTarget, cfg.아크높이, cfg.호밍속도);
+
+                if (i < cfg.호밍횟수 - 1)
+                    yield return new WaitForSeconds(cfg.호밍간격);
+            }
+        }
+        finally { if (Boss != null) Boss.IsFiringSkill = false; }
+    }
+
+    private void SpawnHomingProjectile(Vector2 spawnPos, Vector3 targetPos, float arcHeight, float speed)
+    {
+        float dmgMult = Boss != null && Boss.IsEnraged ? Boss.EnrageDamageMult : 1f;
+        float dmg     = Owner.ContactDamage * dmgMult;
+        var go = Instantiate(projectilePrefab, spawnPos, Quaternion.identity);
+        if (!go.TryGetComponent<Projectile>(out var p)) return;
+
+        p.InitParabolic(dmg, targetPos, speed, arcHeight);
+        p.SetOwnerBoss(Boss);
+        if (impactVfxPrefab != null)
+            p.SetImpactVfx(impactVfxPrefab, impactVfxLifetime);
+    }
+
     // ── 헬퍼 ─────────────────────────────────────────────────────
 
     private Vector2 GetSpawnPos()
@@ -328,14 +456,15 @@ public class BossProjectileCycleSkill : BossSkillBase
             ? (Vector2)firePoint.position
             : Owner.Rb != null ? Owner.Rb.position : (Vector2)Owner.transform.position;
 
-    private void SpawnProjectile(Vector2 pos, Vector2 dir)
+    private void SpawnProjectile(Vector2 pos, Vector2 dir, float accel = 0f, float initialSpeedRatio = 0.1f)
     {
         float dmgMult = Boss != null && Boss.IsEnraged ? Boss.EnrageDamageMult : 1f;
         float dmg     = Owner.ContactDamage * dmgMult;
         var go = Instantiate(projectilePrefab, pos, Quaternion.identity);
         if (go.TryGetComponent<Projectile>(out var p))
         {
-            p.Init(dmg, dir, projectileSpeed);
+            // 이름 있는 인자 대신 전체 파라미터를 명시적으로 전달 (바인딩 오류 방지)
+            p.Init(dmg, dir, projectileSpeed, 5f, false, 0f, 0f, 0f, 0f, 0f, 2f, 0f, 16f, accel, initialSpeedRatio);
             p.SetOwnerBoss(Boss);
         }
     }

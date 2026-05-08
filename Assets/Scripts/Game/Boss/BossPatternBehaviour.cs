@@ -55,6 +55,7 @@ public class BossPatternBehaviour : EnemyBehaviourBase
     public override void OnAttackUpdate()
     {
         if (isRunning) return;
+        if (boss != null && boss.IsGrogy) return;
         Owner.StartCoroutine(UseDbSequence ? DbSequenceRoutine() : PatternRoutine());
     }
 

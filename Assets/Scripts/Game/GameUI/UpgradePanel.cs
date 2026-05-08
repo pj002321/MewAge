@@ -77,6 +77,9 @@ public class UpgradePanel : MonoBehaviour
     [Header("초상화 연출")]
     [SerializeField] private Animator      portraitAnimator;
 
+    [Header("시너지 노티피케이션")]
+    [SerializeField] private Image infoButtonRedDot;
+
     // ── 내부 상태 ────────────────────────────────────────────────────
     private UIShiny            _infoButtonShiny;
     private Coroutine          notifCoroutine;
@@ -100,6 +103,7 @@ public class UpgradePanel : MonoBehaviour
         infoButton?   .onClick.AddListener(OnInfoClicked);
         _infoButtonShiny = infoButton?.GetComponent<UIShiny>();
         if (_infoButtonShiny != null) _infoButtonShiny.enabled = false;
+        if (infoButtonRedDot != null) infoButtonRedDot.gameObject.SetActive(false);
         eraWeaponInfoButton?.onClick.AddListener(() =>
             eraWeaponInfoPopup?.Open(UpgradeManager.Shared?.CurrentChapter ?? 1));
 
@@ -141,6 +145,10 @@ public class UpgradePanel : MonoBehaviour
     // ────────────────────────────────────────────────────────────────
     private void OnEnable()
     {
+        // 씬에 SynergyEffectManager가 없으면 자동 생성
+        if (SynergyEffectManager.Shared == null)
+            SynergyEffectManager.Create("SynergyEffectManager");
+
         SynergyEffectManager.OnNewSynergyAchieved += OnNewSynergyAchieved;
         foreach (var anim in GetComponentsInChildren<Animator>(true))
             anim.updateMode = AnimatorUpdateMode.UnscaledTime;
@@ -371,6 +379,7 @@ public class UpgradePanel : MonoBehaviour
     private void OnInfoClicked()
     {
         if (_infoButtonShiny != null) _infoButtonShiny.enabled = false;
+        if (infoButtonRedDot != null) infoButtonRedDot.gameObject.SetActive(false);
         int chapter = UpgradeManager.Shared?.CurrentChapter ?? 1;
         SynergyInfoPanel.Shared?.Show(chapter);
     }
@@ -378,6 +387,7 @@ public class UpgradePanel : MonoBehaviour
     private void OnNewSynergyAchieved()
     {
         if (_infoButtonShiny != null) _infoButtonShiny.enabled = true;
+        if (infoButtonRedDot != null) infoButtonRedDot.gameObject.SetActive(true);
     }
 
     // ────────────────────────────────────────────────────────────────

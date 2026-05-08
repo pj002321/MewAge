@@ -16,6 +16,11 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
     [SerializeField] private GameObject expOrbDebrisPrefab;
     [SerializeField] private GameObject landingVfxPrefab;
 
+    [Header("보스 입장 연출")]
+    [Tooltip("보스 팝인 시 착지 VFX 프리팹")]
+    [SerializeField] private GameObject bossEntryLandingVfxPrefab;
+    [SerializeField] private float      bossEntryLandingVfxLifetime = 2f;
+
     [Header("Orb 파편 연출 on/off")]
     [SerializeField] private bool showGoldOrbDebris = true;
     [SerializeField] private bool showExpOrbDebris  = true;
@@ -73,11 +78,17 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
         _damageTextPool.Enqueue(dt);
     }
 
+    public static bool NextIsEpicHit;
+
     public void SpawnDamageText(Vector3 worldPos, float damage, bool isCritical = false, bool isBleed = false)
     {
         if (damageTextPrefab == null) return;
 
-        Vector3 offset = new(Random.Range(-0.2f, 0.2f), 0.3f, 0f);
+        bool epicHit  = NextIsEpicHit;
+        NextIsEpicHit = false;
+
+        float yOffset  = epicHit ? 0.7f : 0.3f;
+        Vector3 offset = new(Random.Range(-0.2f, 0.2f), yOffset, 0f);
         Vector3 pos    = worldPos + offset;
 
         DamageText dt;
@@ -91,7 +102,7 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
         {
             dt = Instantiate(damageTextPrefab, pos, Quaternion.identity).GetComponent<DamageText>();
         }
-        dt?.Init(damage, isCritical, isBleed);
+        dt?.Init(damage, isCritical, isBleed, epicHit, epicHit ? 0.75f : 1f);
     }
 
     public void ReturnFloatingText(FloatingText ft)
@@ -137,12 +148,15 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
         if (_hitEffectPool.Count > 0)
         {
             go = _hitEffectPool.Dequeue();
-            go.transform.position = worldPos;
+            go.transform.SetPositionAndRotation(worldPos, Quaternion.identity);
+            go.transform.localScale = _prefabScales.TryGetValue(hitEffectPrefab, out var s) ? s : Vector3.one;
             go.SetActive(true);
         }
         else
         {
             go = Instantiate(hitEffectPrefab, worldPos, Quaternion.identity);
+            if (!_prefabScales.ContainsKey(hitEffectPrefab))
+                _prefabScales[hitEffectPrefab] = go.transform.localScale;
         }
         _activeHitEffects.Add(go);
         go.GetComponent<HitEffect>()?.Play(go, this);
@@ -152,6 +166,12 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
     {
         if (landingVfxPrefab == null) return;
         Instantiate(landingVfxPrefab, worldPos, Quaternion.identity);
+    }
+
+    public void SpawnBossEntryLandingVfx(Vector3 worldPos)
+    {
+        if (bossEntryLandingVfxPrefab == null) return;
+        Destroy(Instantiate(bossEntryLandingVfxPrefab, worldPos, Quaternion.identity), bossEntryLandingVfxLifetime);
     }
 
     // ── 사망 파편 ────────────────────────────────────────────────

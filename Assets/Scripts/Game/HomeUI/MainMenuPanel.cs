@@ -68,6 +68,10 @@ public class MainMenuPanel : MonoBehaviour
     public float snapDuration   = 0.18f;
     public float flickThreshold = 400f;
 
+    [Header("배경")]
+    public Image    background;
+    public Sprite[] chapterBackgrounds; // 인덱스 0 = C1, 1 = C2 …
+    
     // ── 런타임 ───────────────────────────────────────────────────────
     StageCardView[] cardViews;
     int             currentIndex;
@@ -83,6 +87,12 @@ public class MainMenuPanel : MonoBehaviour
     float _dragVelocity;
     float _prevPointerY;
     float _prevPointerTime;
+
+    // 배경 크로스페이드
+    Image     _bgOverlay;
+    Coroutine _bgFadeCoroutine;
+    string    _currentBgChapter;
+    const float BG_FADE_DURATION = 0.35f;
 
     static bool _attendanceShownThisSession;
 
@@ -146,6 +156,24 @@ public class MainMenuPanel : MonoBehaviour
                 _contentCG = content.gameObject.AddComponent<CanvasGroup>();
             _contentCG.alpha = 0f;
         }
+        SetupBackgroundOverlay();
+    }
+
+    void SetupBackgroundOverlay()
+    {
+        if (background == null) return;
+        var go = new GameObject("BackgroundOverlay");
+        go.transform.SetParent(background.transform.parent, false);
+        var bgRT = background.GetComponent<RectTransform>();
+        var overlayRT = go.AddComponent<RectTransform>();
+        overlayRT.anchorMin = bgRT.anchorMin;
+        overlayRT.anchorMax = bgRT.anchorMax;
+        overlayRT.pivot     = bgRT.pivot;
+        overlayRT.offsetMin = bgRT.offsetMin;
+        overlayRT.offsetMax = bgRT.offsetMax;
+        _bgOverlay       = go.AddComponent<Image>();
+        _bgOverlay.color = new Color(1f, 1f, 1f, 0f);
+        go.transform.SetSiblingIndex(background.transform.GetSiblingIndex() + 1);
     }
 
     void Start()
@@ -309,7 +337,16 @@ public class MainMenuPanel : MonoBehaviour
         SnapImmediate(currentIndex);
 
         if (stages != null && stages.Length > 0)
+        {
             SoundManager.Shared?.PlayChapterHomeBGM(stages[currentIndex].chapterID);
+            string initChapter = ChapterPrefix(stages[currentIndex].chapterID);
+            _currentBgChapter  = initChapter;
+            if (background != null)
+            {
+                background.sprite = ChapterSprite(initChapter);
+                background.SetNativeSize();
+            }
+        }
 
         if (_contentCG != null) _contentCG.alpha = 1f;
 
@@ -428,12 +465,62 @@ public class MainMenuPanel : MonoBehaviour
         currentIndex = Mathf.Clamp(index, 0, Mathf.Max(0, stages.Length - 1));
         SoundManager.Shared?.PlayChapterHomeBGM(stages[currentIndex].chapterID);
 
+        string newChapter = ChapterPrefix(stages[currentIndex].chapterID);
+        if (newChapter != _currentBgChapter)
+        {
+            _currentBgChapter = newChapter;
+            Sprite bgSprite = ChapterSprite(newChapter);
+            if (_bgFadeCoroutine != null) StopCoroutine(_bgFadeCoroutine);
+            _bgFadeCoroutine = StartCoroutine(CrossfadeBackground(bgSprite));
+        }
+
         if (_snapCoroutine != null) { StopCoroutine(_snapCoroutine); isSnapping = false; }
 
         if (animate)
             _snapCoroutine = StartCoroutine(SnapCoroutine(currentIndex));
         else
             SnapImmediate(currentIndex);
+    }
+
+    IEnumerator CrossfadeBackground(Sprite next)
+    {
+        if (_bgOverlay == null) yield break;
+
+        _bgOverlay.sprite = next;
+        _bgOverlay.color  = new Color(1f, 1f, 1f, 0f);
+
+        float elapsed = 0f;
+        while (elapsed < BG_FADE_DURATION)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            _bgOverlay.color = new Color(1f, 1f, 1f, Mathf.Clamp01(elapsed / BG_FADE_DURATION));
+            yield return null;
+        }
+
+        if (background != null) { background.sprite = next; background.SetNativeSize(); }
+        _bgOverlay.color = new Color(1f, 1f, 1f, 0f);
+        _bgFadeCoroutine = null;
+    }
+
+    static string ChapterPrefix(string chapterID)
+    {
+        if (string.IsNullOrEmpty(chapterID)) return chapterID;
+        int under = chapterID.IndexOf('_');
+        return under >= 0 ? chapterID.Substring(0, under) : chapterID;
+    }
+
+    Sprite ChapterSprite(string chapterPrefix)
+    {
+        // chapterPrefix 형식: "C1", "C2", … → 배열 인덱스 0, 1, …
+        if (chapterBackgrounds == null || chapterBackgrounds.Length == 0) return null;
+        if (chapterPrefix.Length >= 2 && chapterPrefix[0] == 'C' &&
+            int.TryParse(chapterPrefix.Substring(1), out int num))
+        {
+            int idx = num - 1;
+            if (idx >= 0 && idx < chapterBackgrounds.Length)
+                return chapterBackgrounds[idx];
+        }
+        return chapterBackgrounds[0];
     }
 
     // ── 스케일/알파 ──────────────────────────────────────────────────

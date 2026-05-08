@@ -28,6 +28,7 @@ public class TankBehaviour : EnemyBehaviourBase
         base.Init(controller);
         attackTimer = attackInterval;
         shieldVfx?.SetActive(false);
+        controller.KnockbackImmune = true;
 
         _sr  = Owner.GetComponentInChildren<SpriteRenderer>();
         _mpb = new MaterialPropertyBlock();

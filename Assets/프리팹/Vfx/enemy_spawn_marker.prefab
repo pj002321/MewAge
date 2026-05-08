@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 2349920100897504573}
   - component: {fileID: 8425605207816495268}
   - component: {fileID: 1752054646263555884}
+  - component: {fileID: 3193682675305350518}
   m_Layer: 0
   m_Name: enemy_spawn_marker
   m_TagString: Untagged
@@ -26,13 +27,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7905823675861574758}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.2818391, y: 0, z: 0, w: 0.95946175}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 5, y: 5, z: 5}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 32.74, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &8425605207816495268
 SpriteRenderer:
   serializedVersion: 2
@@ -82,8 +83,8 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -3848832273021090971, guid: b6df91bbacc15e744978770b9538f3fd, type: 3}
-  m_Color: {r: 1, g: 0.1273585, b: 0.1273585, a: 1}
+  m_Sprite: {fileID: -5588870656820820612, guid: 2dd24e9bd3ca1664c9e3c1f90110b923, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -106,3 +107,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SpawnMarker
   sr: {fileID: 8425605207816495268}
   warningDuration: 1.5
+--- !u!114 &3193682675305350518
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7905823675861574758}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 223db8059bc77144c9ba478a29ed4cd5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpriteAnimation
+  frames:
+  - {fileID: -5588870656820820612, guid: 2dd24e9bd3ca1664c9e3c1f90110b923, type: 3}
+  - {fileID: 7668112953338554047, guid: 2dd24e9bd3ca1664c9e3c1f90110b923, type: 3}
+  - {fileID: -4271431487340939567, guid: 2dd24e9bd3ca1664c9e3c1f90110b923, type: 3}
+  - {fileID: -5686981444655680617, guid: 2dd24e9bd3ca1664c9e3c1f90110b923, type: 3}
+  - {fileID: 1949746908176469625, guid: 2dd24e9bd3ca1664c9e3c1f90110b923, type: 3}
+  fps: 12
+  loop: 0
+  playOnEnable: 1

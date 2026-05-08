@@ -438,6 +438,25 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
         return result;
     }
 
+    public struct DrawProbs
+    {
+        public float common, rare, epic, legendary, mythic;
+    }
+
+    public DrawProbs GetCurrentProbs()
+    {
+        int playerLevel = PlayerStats.Shared?.Level ?? 1;
+        var p = GetCurrentProfile(playerLevel);
+        return new DrawProbs
+        {
+            common    = p.common,
+            rare      = p.rare,
+            epic      = p.epic,
+            legendary = p.legendary,
+            mythic    = p.mythic,
+        };
+    }
+
     private DrawProfile GetCurrentProfile(int level)
     {
         DrawProfile result = drawProfiles.Length > 0 ? drawProfiles[0] : default;

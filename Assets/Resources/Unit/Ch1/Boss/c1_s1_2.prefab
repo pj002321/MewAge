@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 4092441220517724094}
   - component: {fileID: 2689750303464935565}
   m_Layer: 0
-  m_Name: Square
+  m_Name: decal
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -26,9 +26,9 @@ Transform:
   m_GameObject: {fileID: 3566073783235228080}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.024, y: 0.133, z: 0}
-  m_LocalScale: {x: 1.5441377, y: 1.0483136, z: 0.991648}
-  m_ConstrainProportionsScale: 0
+  m_LocalPosition: {x: -0.028, y: 0.091, z: 0}
+  m_LocalScale: {x: 0.99999994, y: 0.678899, z: 0.6422018}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 2799849513256322318}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -77,8 +77,8 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 1049025713
+  m_SortingLayer: 1
   m_SortingOrder: 1
   m_MaskInteraction: 0
   m_Sprite: {fileID: 6863293971250029137, guid: aae5a60f0a493f14da9a00ba91e73b06, type: 3}
@@ -91,6 +91,37 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!1 &4598119590111948681
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6968078373063109411}
+  m_Layer: 7
+  m_Name: tGroggy
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6968078373063109411
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4598119590111948681}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0.16625, y: 2.165, z: 0}
+  m_LocalScale: {x: 1.25, y: 1.25, z: 1.25}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2799849513256322318}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &6185639099768455503
 GameObject:
   m_ObjectHideFlags: 0
@@ -101,7 +132,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5428772856677564459}
   m_Layer: 0
-  m_Name: GameObject
+  m_Name: tPoint
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -156,9 +187,10 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1.5, y: 1.5, z: 1.5}
+  m_LocalScale: {x: 2, y: 2, z: 2}
   m_ConstrainProportionsScale: 1
   m_Children:
+  - {fileID: 6968078373063109411}
   - {fileID: 5428772856677564459}
   - {fileID: 4092441220517724094}
   m_Father: {fileID: 0}
@@ -330,6 +362,10 @@ MonoBehaviour:
   - 0.35
   grogyDuration: 5
   grogyAtkSpeedBonus: 50
+  grogyOverheadPrefab: {fileID: 7777409954982400410, guid: f66d4f4f0fe9de24182839d83a609535, type: 3}
+  grogyOverheadAnchor: {fileID: 6968078373063109411}
+  grogyOverheadYOffset: 1.5
+  grogyFlickerInterval: 0.08
   flashColor: {r: 1, g: 0.2, b: 0.2, a: 1}
   flashDuration: 0.12
   onDeathFX:
@@ -343,11 +379,9 @@ MonoBehaviour:
   skills:
   - {fileID: 1710631298278963916}
   - {fileID: 6026247222552061546}
+  _decal: {fileID: 4092441220517724094}
   entryDrop: 1
-  dropSpeed: 22
-  squashDuration: 0.08
-  stretchDuration: 0.1
-  settleDuration: 0.12
+  entryScaleUpDuration: 0.35
 --- !u!114 &5759640206326248884
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -380,16 +414,18 @@ MonoBehaviour:
   executeInPattern: 1
   cols: 10
   rows: 10
-  fillMode: 5
+  fillMode: 2
   randomCount: 12
   spikePrefab: {fileID: 109194795691363216, guid: e869b5be33cc76d45920b8efb63d8a6e, type: 3}
   spikeDamage: 20
-  spikeRadius: 0.45
+  spikeRadius: 0.5
   spikeDuration: 3
   warningDuration: 1.2
   waveDelay: 0.25
-  warningMarkerPrefab: {fileID: 2990238766820676548, guid: 99380c197ef498849960f1eb41eb185d, type: 3}
+  warningMarkerPrefab: {fileID: 5515808124668199316, guid: 4676482f183c362489d2902d70a232b3, type: 3}
   warningColor: {r: 1, g: 1, b: 1, a: 0.45}
+  dropHeight: 8
+  dropDuration: 0.25
   spawnVfxPrefab: {fileID: 1372210804763385033, guid: dda2013ffd130984693cbc12d550b536, type: 3}
   spawnVfxDuration: 1
 --- !u!114 &6026247222552061546
@@ -409,7 +445,7 @@ MonoBehaviour:
   enrageCooldownMult: 0.7
   maxRange: 0
   executeInPattern: 1
-  projectilePrefab: {fileID: 7916182024222986910, guid: 4b69f31afea3a604d9932737bc7aaadd, type: 3}
+  projectilePrefab: {fileID: 7916182024222986910, guid: c4927e75acce7be4cb6e4563dac42fff, type: 3}
   projectileSpeed: 4
   firePoint: {fileID: 5428772856677564459}
   phases:
@@ -423,21 +459,19 @@ MonoBehaviour:
     "\uBC18\uBCF5\uAC04\uACA9": 0.6
     "\uAC01\uB3C4\uC624\uD504\uC14B": 0
     "\uBD80\uCC44\uAF34\uAC01\uB3C4": 120
-    "\uCD94\uACA9\uC2DC\uAC04": 2
-  - label: "\uD398\uC774\uC988"
-    type: 3
-    "\uACBD\uACE0\uC2DC\uAC04": 0.4
-    "\uC5F0\uC0AC\uD69F\uC218": 1
-    "\uBC1C\uC0AC\uAC04\uACA9": 0.5
-    "\uBC29\uD5A5\uC218": 8
-    "\uBC18\uBCF5\uD69F\uC218": 1
-    "\uBC18\uBCF5\uAC04\uACA9": 0.6
-    "\uAC01\uB3C4\uC624\uD504\uC14B": 0
-    "\uBD80\uCC44\uAF34\uAC01\uB3C4": 120
-    "\uCD94\uACA9\uC2DC\uAC04": 2
+    "\uD638\uBC0D\uD69F\uC218": 3
+    "\uD638\uBC0D\uAC04\uACA9": 0.25
+    "\uC544\uD06C\uB192\uC774": 3
+    "\uD638\uBC0D\uC18D\uB3C4": 9
+    "\uAC00\uC18D\uC2DC\uAC04": 0
+    "\uCD08\uAE30\uC18D\uB3C4\uBE44\uC728": 0.05
+    "\uCD94\uACA9\uC2DC\uAC04": 3
+  useWarningLines: 1
   warningLineLength: 5
   warningLineWidth: 0.06
   warningColor: {r: 1, g: 0, b: 0, a: 1}
-  warningMaterial: {fileID: 0}
+  warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
+  impactVfxPrefab: {fileID: 0}
+  impactVfxLifetime: 1
   chaseStopDistance: 1.8
   attackTrigger: tAttack

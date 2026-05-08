@@ -1,5 +1,36 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1779424985919708132
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3455923414648585665}
+  m_Layer: 7
+  m_Name: tGroggy
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3455923414648585665
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1779424985919708132}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0.83, y: 2.99, z: 0}
+  m_LocalScale: {x: 2.5, y: 2.5, z: 2.5}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4708227032593916452}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1853499898610612309
 GameObject:
   m_ObjectHideFlags: 0
@@ -26,8 +57,8 @@ Transform:
   m_GameObject: {fileID: 1853499898610612309}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.05, y: 0.07, z: 0}
-  m_LocalScale: {x: 1.49875, y: 1.49875, z: 1.49875}
+  m_LocalPosition: {x: 0.18, y: 0.15, z: 0}
+  m_LocalScale: {x: 2, y: 2, z: 2}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 4708227032593916452}
@@ -77,11 +108,11 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 1049025713
+  m_SortingLayer: 1
   m_SortingOrder: 1
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -6149623692400296304, guid: aae5a60f0a493f14da9a00ba91e73b06, type: 3}
+  m_Sprite: {fileID: -4746052441814772624, guid: aae5a60f0a493f14da9a00ba91e73b06, type: 3}
   m_Color: {r: 0, g: 0, b: 0, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -127,6 +158,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 3455923414648585665}
   - {fileID: 5751587148715433291}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -272,7 +304,7 @@ CapsuleCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0.34, y: 1.02}
+  m_Offset: {x: 0.34, y: 0.95}
   m_Size: {x: 2.82, y: 1.78}
   m_Direction: 1
 --- !u!114 &-3791927773555311642
@@ -297,6 +329,10 @@ MonoBehaviour:
   - 0.35
   grogyDuration: 5
   grogyAtkSpeedBonus: 50
+  grogyOverheadPrefab: {fileID: 7777409954982400410, guid: f66d4f4f0fe9de24182839d83a609535, type: 3}
+  grogyOverheadAnchor: {fileID: 3455923414648585665}
+  grogyOverheadYOffset: 1.5
+  grogyFlickerInterval: 0.08
   flashColor: {r: 1, g: 0.2, b: 0.2, a: 1}
   flashDuration: 0.12
   onDeathFX:
@@ -309,11 +345,9 @@ MonoBehaviour:
   idleDuration: 0.6
   skills:
   - {fileID: -4014336057969135498}
+  _decal: {fileID: 5751587148715433291}
   entryDrop: 1
-  dropSpeed: 22
-  squashDuration: 0.08
-  stretchDuration: 0.1
-  settleDuration: 0.12
+  entryScaleUpDuration: 0.35
 --- !u!114 &-6257905385269776549
 MonoBehaviour:
   m_ObjectHideFlags: 0

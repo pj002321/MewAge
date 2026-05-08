@@ -24,6 +24,13 @@ public class SynergyInfoPanel : MonoBehaviourSingleton<SynergyInfoPanel>
     [Header("닫기 버튼")]
     public Button closeButton;
 
+    [Header("등급 출현확률 텍스트 (선택)")]
+    public TextMeshProUGUI normalProbText;
+    public TextMeshProUGUI rareProbText;
+    public TextMeshProUGUI epicProbText;
+    public TextMeshProUGUI legendaryProbText;
+    public TextMeshProUGUI mythicProbText;
+
     protected override bool DontDestroy => false;
 
     // ── 초기화 ────────────────────────────────────────────────────────
@@ -52,12 +59,23 @@ public class SynergyInfoPanel : MonoBehaviourSingleton<SynergyInfoPanel>
             slot.Bind(row);
         }
 
+        RefreshProbTexts();
+
         gameObject.SetActive(true);
         StartCoroutine(ScrollToTop());
     }
 
-    /// <summary>패널이 열린 상태일 때 갱신이 필요한 경우 호출 (현재는 정적 표시이므로 no-op)</summary>
     public void Refresh() { }
+
+    void RefreshProbTexts()
+    {
+        var probs = UpgradeManager.Shared?.GetCurrentProbs() ?? default;
+        if (normalProbText)    normalProbText.text    = $"{probs.common:0.#}%";
+        if (rareProbText)      rareProbText.text      = $"{probs.rare:0.#}%";
+        if (epicProbText)    { epicProbText.text      = $"{probs.epic:0.#}%";      epicProbText.color    = WeaponGradeColors.Get(WeaponGrade.Epic); }
+        if (legendaryProbText) { legendaryProbText.text = $"{probs.legendary:0.#}%"; legendaryProbText.color = WeaponGradeColors.Get(WeaponGrade.Legendary); }
+        if (mythicProbText)  { mythicProbText.text   = $"{probs.mythic:0.#}%";    mythicProbText.color  = WeaponGradeColors.Get(WeaponGrade.Mythic); }
+    }
 
     public void Hide()
     {

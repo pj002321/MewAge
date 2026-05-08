@@ -20,9 +20,9 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     [SerializeField] private RunResultPanel  gameOverResultPanel;  // 게임오버 결과 패널
     [SerializeField] private GamePausePanel  gamePausePanel;
 
-    [Header("Wave 타이머")]
-    // Normal wave durations: Wave 1~9=20s, 11~19=30s, 21~29=35s. Boss wave: 90s.
-    [SerializeField] private float bossWaveTimeLimit = 90f;  // 보스 웨이브 제한 시간 (초)
+    private const float BossWaveTimeLimit  = 60f;
+    private const float EliteWaveTimeLimit = 25f;
+    private const float NormalWaveTimeLimit = 20f;
 
     [Header("Wave Clear 노티")]
     [SerializeField] private GameObject waveClearPanel;
@@ -280,6 +280,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         yield return StartCoroutine(ClearAllWithScaleDown(0.45f));
 
         FXManager.Shared?.ClearAllFX();          // 투사체·파편 즉시 제거
+        WeaponPoint.RecallAll();                 // 날아가는 클론 즉시 회수
         GlobalLightDimmer.ForceReset();           // 조명 즉시 복구
 
         yield return new WaitForSeconds(waveClearDuration);
@@ -347,14 +348,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         EnemySpawner.Shared?.ClearAllEnemies();
     }
 
-    /// <summary>웨이브 번호에 따른 제한 시간 반환. 보스 웨이브는 호출 전에 별도 처리.</summary>
-    private float WaveDuration(int w)
-    {
-        // Boss wave: handled separately in StartNextWave
-        if      (w >= 21) return 35f;  // Wave 21~29+
-        else if (w >= 11) return 30f;  // Wave 11~19
-        else              return 20f;  // Wave 1~9
-    }
+    private float WaveDuration(int w) => IsEliteWave(w) ? EliteWaveTimeLimit : NormalWaveTimeLimit;
 
     private void UpdateTimerUI()
     {
@@ -556,7 +550,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 
         bool isBossWave = EnemySpawner.Shared?.GetNextBossWave(wave - 1) == wave;
 
-        waveTimer = isBossWave ? bossWaveTimeLimit : WaveDuration(wave);
+        waveTimer = isBossWave ? BossWaveTimeLimit : WaveDuration(wave);
 
         this.DLog($"[GameManager] StartNextWave wave={wave} | isBossWave={isBossWave} | timer={waveTimer}s");
 
@@ -579,6 +573,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         // 일반 웨이브 시작 시 플레이어를 맵 중앙으로 이동
         TeleportPlayerToMapCenter();
 
+        SoundManager.Shared?.PlayChapterGameBGM(currentChapterID);
         EnemySpawner.Shared?.ResumeSpawning(wave);
         WaveEnvironmentSwitcher.Shared?.SetWave(wave);
 
@@ -786,7 +781,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 
         // 입력 해제 + 보스 웨이브 시작
         if (player != null) player.InputLocked = false;
-        waveTimer   = bossWaveTimeLimit;
+        waveTimer   = BossWaveTimeLimit;
         _pauseTimer = false;
         EnemySpawner.Shared?.ResumeSpawning(wave);
         if (BossIntroSequence.Shared != null)
@@ -946,6 +941,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     {
         bossWaveActive = true;
         WaveEnvironmentSwitcher.Shared?.SetBoss();
+        SoundManager.Shared?.PlayChapterBossBGM();
     }
 
     [Header("스테이지 밸런스")]
@@ -963,6 +959,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     {
         bossWaveActive = false;
         WaveEnvironmentSwitcher.Shared?.SetNormal();
+        SoundManager.Shared?.PlayChapterGameBGM(currentChapterID);
         EnemySpawner.Shared?.StopSpawning(); // 보스 죽음 즉시 스폰 중지
         if (waitingForUpgrade) return;
         waitingForUpgrade = true;

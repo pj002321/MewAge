@@ -145,7 +145,10 @@ public class SlamBehaviour : EnemyBehaviourBase
             anim.SetTrigger(slamLandTrigger);
 
         if (landingVfxPrefab != null)
-            Destroy(Instantiate(landingVfxPrefab, slamTarget, Quaternion.identity), vfxLifetime);
+        {
+            Vector3 vfxPos = Owner.Decal != null ? Owner.Decal.position : slamTarget;
+            Destroy(Instantiate(landingVfxPrefab, vfxPos, Quaternion.identity), vfxLifetime);
+        }
 
         // 5) 착지 스쿼시 → 원래 스케일 복귀
         yield return Owner.StartCoroutine(LandSquish(origScale));

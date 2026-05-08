@@ -10,6 +10,7 @@ public interface IEnemyHost
     Rigidbody2D  Rb             { get; }
     Animator     EnemyAnimator  { get; }
     Transform    PlayerTransform { get; }
+    Transform    Decal           { get; }
     float        MoveSpeed      { get; }
     void         MoveInDirection(Vector2 dir, float speed);
     void         FlipToward(Vector2 dir);

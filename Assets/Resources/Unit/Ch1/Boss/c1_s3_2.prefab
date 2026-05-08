@@ -77,8 +77,8 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 1049025713
+  m_SortingLayer: 1
   m_SortingOrder: 4
   m_MaskInteraction: 0
   m_Sprite: {fileID: 6863293971250029137, guid: aae5a60f0a493f14da9a00ba91e73b06, type: 3}
@@ -137,6 +137,8 @@ GameObject:
   - component: {fileID: 8551942015714341839}
   - component: {fileID: 2426648659520439872}
   - component: {fileID: -192365107048031896}
+  - component: {fileID: 2318364815293332815}
+  - component: {fileID: 3632338025058510538}
   m_Layer: 7
   m_Name: c1_s3_2
   m_TagString: Untagged
@@ -155,8 +157,9 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_ConstrainProportionsScale: 1
   m_Children:
+  - {fileID: 8683737430408783739}
   - {fileID: 2984221781699599838}
   - {fileID: 1445574207204750692}
   m_Father: {fileID: 0}
@@ -319,6 +322,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossController
   damageCooldown: 0.5
+  moveSpeed: 3
   enrageThreshold: 0.5
   enrageSpeedMult: 1.5
   enrageDamageMult: 1.5
@@ -327,6 +331,10 @@ MonoBehaviour:
   - 0.35
   grogyDuration: 5
   grogyAtkSpeedBonus: 50
+  grogyOverheadPrefab: {fileID: 7777409954982400410, guid: f66d4f4f0fe9de24182839d83a609535, type: 3}
+  grogyOverheadAnchor: {fileID: 8683737430408783739}
+  grogyOverheadYOffset: 1.5
+  grogyFlickerInterval: 0.08
   flashColor: {r: 1, g: 0.2, b: 0.2, a: 1}
   flashDuration: 0.12
   onDeathFX:
@@ -337,12 +345,12 @@ MonoBehaviour:
   chaseStopDistance: 1.8
   chaseDuration: 2.5
   idleDuration: 0.6
-  skills: []
+  skills:
+  - {fileID: 2318364815293332815}
+  - {fileID: 3632338025058510538}
+  _decal: {fileID: 2984221781699599838}
   entryDrop: 1
-  dropSpeed: 22
-  squashDuration: 0.08
-  stretchDuration: 0.1
-  settleDuration: 0.12
+  entryScaleUpDuration: 0.35
 --- !u!114 &-192365107048031896
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -356,3 +364,107 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpriteYSort
   multiplier: 100
+--- !u!114 &2318364815293332815
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5246812530321141943}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 14d160f41ad8ad445897e06fd775ae2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BossGroundPoundSkill
+  skillId: 
+  cooldown: 5
+  enrageCooldownMult: 0.7
+  maxRange: 0
+  executeInPattern: 1
+  hopHeight: 2
+  hopRiseTime: 0.25
+  hopFallTime: 0.18
+  shakeDuration: 0.45
+  shakeMagnitude: 0.35
+  attackTrigger: tAttack
+  landingVfxPrefab: {fileID: 1645737383650597069, guid: d13e811c376306146ac829de7af32967, type: 3}
+  vfxLifetime: 1
+  floatHeight: 2.8
+  floatRiseTime: 0.35
+  floatHangTime: 0.25
+  floatFallTime: 0.55
+  preChargeDelay: 0.3
+  chargeSpeed: 15
+  chargeMaxTime: 3
+  chargeWarnDuration: 0.5
+  warningLineLength: 12
+  warningLineWidth: 0.08
+  warningLineColor: {r: 1, g: 0, b: 0, a: 1}
+  warningMaterial: {fileID: 0}
+  ghostColor: {r: 1, g: 0.15, b: 0.15, a: 0.45}
+  ghostInterval: 0.04
+  ghostLifetime: 0.12
+--- !u!114 &3632338025058510538
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5246812530321141943}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 45354f0c4ea932b4eb47f11de6d6a2ef, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BossGridSpikeSkill
+  skillId: 
+  cooldown: 5
+  enrageCooldownMult: 0.7
+  maxRange: 0
+  executeInPattern: 1
+  cols: 7
+  rows: 7
+  fillMode: 3
+  randomCount: 12
+  spikePrefab: {fileID: 3040590599161552287, guid: d9879b83c23bb0f458bd7c1a2b03eb98, type: 3}
+  spikeDamage: 0
+  spikeRadius: 0.45
+  spikeDuration: 1.5
+  warningDuration: 1.2
+  waveDelay: 0.25
+  warningMarkerPrefab: {fileID: 5515808124668199316, guid: 4676482f183c362489d2902d70a232b3, type: 3}
+  warningColor: {r: 1, g: 0.45, b: 0, a: 0.45}
+  dropHeight: 8
+  dropDuration: 0.25
+  spawnVfxPrefab: {fileID: 1645737383650597069, guid: d13e811c376306146ac829de7af32967, type: 3}
+  spawnVfxDuration: 1
+--- !u!1 &6049006747251870983
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8683737430408783739}
+  m_Layer: 7
+  m_Name: tGroggy
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8683737430408783739
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6049006747251870983}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0.99, y: 3.11, z: 0}
+  m_LocalScale: {x: 2.5, y: 2.5, z: 2.5}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3334793948444595672}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

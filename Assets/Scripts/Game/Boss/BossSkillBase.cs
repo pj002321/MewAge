@@ -40,6 +40,7 @@ public abstract class BossSkillBase : MonoBehaviour
 
     public IEnumerator Execute()
     {
+        if (Boss != null && Boss.IsGrogy) yield break;
         cooldownTimer = Boss != null && Boss.IsEnraged
             ? cooldown * enrageCooldownMult
             : cooldown;

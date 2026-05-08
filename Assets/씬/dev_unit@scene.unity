@@ -165,7 +165,10 @@ MonoBehaviour:
   debrisPrefab: {fileID: 720859079965321158, guid: acf9b341dea4219418a2ec20cb281669, type: 3}
   goldOrbDebrisPrefab: {fileID: 720859079965321158, guid: 66b364b74c15b45479294308c624a023, type: 3}
   expOrbDebrisPrefab: {fileID: 720859079965321158, guid: f9129b8c18ab32f4f96e9acfe15a2ea5, type: 3}
-  landingVfxPrefab: {fileID: 4873479580030643389, guid: 939ba1a6a36ef9748a7525496ad78563, type: 3}
+  landingVfxPrefab: {fileID: 851543317570617582, guid: 5ee5e8c374903034ba44e80b8498353a, type: 3}
+  bossEntryMarkerPrefab: {fileID: 0}
+  bossEntryLandingVfxPrefab: {fileID: 851543317570617582, guid: 5ee5e8c374903034ba44e80b8498353a, type: 3}
+  bossEntryLandingVfxLifetime: 2
   showGoldOrbDebris: 1
   showExpOrbDebris: 1
 --- !u!4 &43876947
@@ -178,6 +181,37 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -332.45868, y: -1625.3638, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 700477723}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &51735857
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 51735858}
+  m_Layer: 0
+  m_Name: GameObject (3)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &51735858
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 51735857}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -365,11 +399,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TestMonsterSpawner
   chapters: []
+  testStageEnv: {fileID: 0}
   spawnPoint: {fileID: 421121578}
   selectedChapter: 1
   category: 0
   prefabIndex: 0
   currentMonsterName: "\uC5C6\uC74C"
+  bossQuickIndex: 0
 --- !u!1 &86370514
 GameObject:
   m_ObjectHideFlags: 0
@@ -571,12 +607,14 @@ MonoBehaviour:
   - chapter: 1
     normalPrefabs: []
     elitePrefabs: []
-    bossPrefab: {fileID: 0}
+    bossPrefabs: []
+  testStageEnv: {fileID: 11400000, guid: 37578730dc0e07e41b082e2888bf0559, type: 2}
   spawnPoint: {fileID: 421121578}
   selectedChapter: 1
   category: 0
   prefabIndex: 0
   currentMonsterName: "\uC5C6\uC74C"
+  bossQuickIndex: 0
 --- !u!114 &179609093
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1243,7 +1281,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 757701469}
+  m_Father: {fileID: 1599915848}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &519420034
 MonoBehaviour:
@@ -1260,6 +1298,7 @@ MonoBehaviour:
   target: {fileID: 757701469}
   fixedOrthographicSize: 14
   smoothTime: 0.1
+  defaultFollowPlayer: 1
   shakeDefaultDuration: 0.15
   shakeDefaultMagnitude: 0.09
 --- !u!1 &576245394
@@ -1403,7 +1442,7 @@ MonoBehaviour:
   m_Intensity: 1
   m_LightVolumeIntensity: 1
   m_LightVolumeEnabled: 0
-  m_ApplyToSortingLayers: 00000000
+  m_ApplyToSortingLayers: 00000000b1dc863e
   m_LightCookieSprite: {fileID: 0}
   m_DeprecatedPointLightCookieSprite: {fileID: 0}
   m_LightOrder: 0
@@ -1709,6 +1748,7 @@ Transform:
   - {fileID: 1523731477}
   - {fileID: 1854594465}
   - {fileID: 179609091}
+  - {fileID: 51735858}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &756117365
@@ -3574,6 +3614,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 519420032}
   - {fileID: 619394802}
   - {fileID: 1680191009}
   m_Father: {fileID: 0}
@@ -3695,9 +3736,6 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 3768263777332437215, guid: f9a8c0e29c2e9bc4bb518c36b372a05d, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1049553895}
-    - targetCorrespondingSourceObject: {fileID: 3768263777332437215, guid: f9a8c0e29c2e9bc4bb518c36b372a05d, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 519420032}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: f9a8c0e29c2e9bc4bb518c36b372a05d, type: 3}
 --- !u!114 &1675136412 stripped

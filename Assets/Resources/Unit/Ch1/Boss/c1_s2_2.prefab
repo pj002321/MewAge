@@ -1,5 +1,36 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &3015127169061636797
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 733653463726643734}
+  m_Layer: 7
+  m_Name: tGroggy
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &733653463726643734
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3015127169061636797}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0.589, y: 1.946, z: 0}
+  m_LocalScale: {x: 1.6666667, y: 1.6666667, z: 1.6666667}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2799849513256322318}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &3566073783235228080
 GameObject:
   m_ObjectHideFlags: 0
@@ -11,7 +42,7 @@ GameObject:
   - component: {fileID: 4092441220517724094}
   - component: {fileID: 2689750303464935565}
   m_Layer: 0
-  m_Name: Square
+  m_Name: decal
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -77,8 +108,8 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 1049025713
+  m_SortingLayer: 1
   m_SortingOrder: 1
   m_MaskInteraction: 0
   m_Sprite: {fileID: 6863293971250029137, guid: aae5a60f0a493f14da9a00ba91e73b06, type: 3}
@@ -101,7 +132,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5428772856677564459}
   m_Layer: 0
-  m_Name: GameObject
+  m_Name: tPoint
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -137,6 +168,7 @@ GameObject:
   - component: {fileID: 4893850151441561591}
   - component: {fileID: -3800427301400475938}
   - component: {fileID: 6011657456954509436}
+  - component: {fileID: 6165847542367244746}
   m_Layer: 0
   m_Name: c1_s2_2
   m_TagString: Untagged
@@ -154,9 +186,10 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 1.5, y: 1.5, z: 1.5}
+  m_ConstrainProportionsScale: 1
   m_Children:
+  - {fileID: 733653463726643734}
   - {fileID: 5428772856677564459}
   - {fileID: 4092441220517724094}
   m_Father: {fileID: 0}
@@ -319,6 +352,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossController
   damageCooldown: 0.5
+  moveSpeed: 3
   enrageThreshold: 0.5
   enrageSpeedMult: 1.5
   enrageDamageMult: 1.5
@@ -327,6 +361,10 @@ MonoBehaviour:
   - 0.35
   grogyDuration: 5
   grogyAtkSpeedBonus: 50
+  grogyOverheadPrefab: {fileID: 7777409954982400410, guid: f66d4f4f0fe9de24182839d83a609535, type: 3}
+  grogyOverheadAnchor: {fileID: 733653463726643734}
+  grogyOverheadYOffset: 1.5
+  grogyFlickerInterval: 0.08
   flashColor: {r: 1, g: 0.2, b: 0.2, a: 1}
   flashDuration: 0.12
   onDeathFX:
@@ -338,11 +376,9 @@ MonoBehaviour:
   chaseDuration: 2.5
   idleDuration: 0.6
   skills: []
+  _decal: {fileID: 4092441220517724094}
   entryDrop: 1
-  dropSpeed: 22
-  squashDuration: 0.08
-  stretchDuration: 0.1
-  settleDuration: 0.12
+  entryScaleUpDuration: 0.35
 --- !u!114 &6011657456954509436
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -356,3 +392,67 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpriteYSort
   multiplier: 100
+--- !u!114 &6165847542367244746
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7313528007987417252}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 71ecc31d375a1534384e5b1844037cf7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BossProjectileCycleSkill
+  skillId: 
+  cooldown: 5
+  enrageCooldownMult: 0.7
+  maxRange: 0
+  executeInPattern: 1
+  projectilePrefab: {fileID: 7916182024222986910, guid: c4927e75acce7be4cb6e4563dac42fff, type: 3}
+  projectileSpeed: 7
+  firePoint: {fileID: 5428772856677564459}
+  phases:
+  - label: "\uD398\uC774\uC988"
+    type: 3
+    "\uACBD\uACE0\uC2DC\uAC04": 0.4
+    "\uC5F0\uC0AC\uD69F\uC218": 1
+    "\uBC1C\uC0AC\uAC04\uACA9": 0.5
+    "\uBC29\uD5A5\uC218": 8
+    "\uBC18\uBCF5\uD69F\uC218": 1
+    "\uBC18\uBCF5\uAC04\uACA9": 0.6
+    "\uAC01\uB3C4\uC624\uD504\uC14B": 0
+    "\uBD80\uCC44\uAF34\uAC01\uB3C4": 120
+    "\uD638\uBC0D\uD69F\uC218": 8
+    "\uD638\uBC0D\uAC04\uACA9": 0.25
+    "\uC544\uD06C\uB192\uC774": 6
+    "\uD638\uBC0D\uC18D\uB3C4": 12
+    "\uAC00\uC18D\uC2DC\uAC04": 0
+    "\uCD08\uAE30\uC18D\uB3C4\uBE44\uC728": 0.05
+    "\uCD94\uACA9\uC2DC\uAC04": 2
+  - label: "\uD398\uC774\uC988"
+    type: 0
+    "\uACBD\uACE0\uC2DC\uAC04": 0.4
+    "\uC5F0\uC0AC\uD69F\uC218": 10
+    "\uBC1C\uC0AC\uAC04\uACA9": 0.5
+    "\uBC29\uD5A5\uC218": 8
+    "\uBC18\uBCF5\uD69F\uC218": 1
+    "\uBC18\uBCF5\uAC04\uACA9": 0.6
+    "\uAC01\uB3C4\uC624\uD504\uC14B": 0
+    "\uBD80\uCC44\uAF34\uAC01\uB3C4": 120
+    "\uD638\uBC0D\uD69F\uC218": 3
+    "\uD638\uBC0D\uAC04\uACA9": 0.25
+    "\uC544\uD06C\uB192\uC774": 3
+    "\uD638\uBC0D\uC18D\uB3C4": 9
+    "\uAC00\uC18D\uC2DC\uAC04": 0.5
+    "\uCD08\uAE30\uC18D\uB3C4\uBE44\uC728": 0.05
+    "\uCD94\uACA9\uC2DC\uAC04": 3
+  useWarningLines: 1
+  warningLineLength: 10
+  warningLineWidth: 0.06
+  warningColor: {r: 1, g: 0, b: 0, a: 1}
+  warningMaterial: {fileID: 0}
+  impactVfxPrefab: {fileID: 7916182024222986910, guid: c4927e75acce7be4cb6e4563dac42fff, type: 3}
+  impactVfxLifetime: 1
+  chaseStopDistance: 1.8
+  attackTrigger: tAttack

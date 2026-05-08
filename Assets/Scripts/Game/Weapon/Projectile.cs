@@ -19,6 +19,10 @@ public class Projectile : MonoBehaviour
     [SerializeField] private float ghostLifetime      = 0.12f;
 
     private BossController _ownerBoss;   // 보스가 발사한 투사체면 설정 → 보스 자해 방지
+    private bool    _pierce;             // 관통: 적을 파괴 없이 통과
+    private bool    _reflect;            // 반사: 첫 타격 후 방향 반전
+    private bool    _reflected;
+    private readonly System.Collections.Generic.HashSet<EnemyController> _pierced = new();
     private float   primaryDmg;
     private Vector2 direction;
     private float   speed;
@@ -33,6 +37,19 @@ public class Projectile : MonoBehaviour
     private float   knockbackPower;
 
 
+    // 주 타겟 적 타격 시 WeaponPoint로 콜백 (HIT_* 특수효과용)
+    private System.Action<EnemyController, float, Vector2> _onHitEnemy;
+    // 보스 타격 시 WeaponPoint로 콜백 (특수효과용)
+    private System.Action<BossController, float> _onHitBoss;
+
+    // 보스 중복 타격 방지 플래그 (physics layer 우회 수동 체크와 OnTriggerEnter2D 중복 방지)
+    private bool          _bossHitDone;
+    private Collider2D    _cachedBossCol;
+
+    // 착탄 VFX
+    private GameObject _impactVfxPrefab;
+    private float      _impactVfxLifetime;
+
     // 고스트 트레일
     private SpriteRenderer _sr;
     private float          _ghostTimer;
@@ -40,6 +57,9 @@ public class Projectile : MonoBehaviour
     // 가속 전용
     private float _curSpeed;
     private float _accel;
+    private float _accelStartSpeed;
+    private float _accelDuration;
+    private float _accelTimer;
 
     // 포물선 전용
     private bool    _isParabolic;
@@ -82,12 +102,24 @@ public class Projectile : MonoBehaviour
         this.criticalMultiplier = criticalMultiplier;
         this.baseDamage         = baseDamage;
         this.knockbackPower     = knockbackPower;
-        _accel    = acceleration;
-        _curSpeed = acceleration > 0f ? speed * initialSpeedRatio : speed;
+        _accelDuration   = acceleration; // 파라미터 의미: 최고속도 도달까지 걸리는 시간(초), 0=즉시
+        _accelStartSpeed = speed * Mathf.Clamp01(initialSpeedRatio);
+        _curSpeed        = _accelDuration > 0f ? _accelStartSpeed : speed;
+        _accel           = 0f;
+        _accelTimer      = 0f;
         Destroy(gameObject, lifetime);
 
         float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg - ForwardAngle;
         transform.rotation = Quaternion.Euler(0f, 0f, angle);
+    }
+
+    /// <summary>관통/반사 플래그를 설정합니다. Init() 호출 직후 사용하세요.</summary>
+    public void SetSpecialFlags(bool pierce, bool reflect)
+    {
+        _pierce   = pierce;
+        _reflect  = reflect;
+        _reflected = false;
+        _pierced.Clear();
     }
 
     /// <summary>
@@ -181,17 +213,75 @@ public class Projectile : MonoBehaviour
                 transform.rotation = Quaternion.Euler(0f, 0f, angle);
             }
 
-            if (t >= 1f) Destroy(gameObject);
+            if (t >= 1f) { SpawnImpactVfx(); Destroy(gameObject); }
             return;
         }
 
-        if (_accel > 0f)
-            _curSpeed = Mathf.MoveTowards(_curSpeed, speed, _accel * Time.deltaTime);
+        if (_accelDuration > 0f)
+        {
+            _accelTimer += Time.deltaTime;
+            float t = Mathf.Clamp01(_accelTimer / _accelDuration);
+            // ease-in cubic (t³): 초반엔 거의 안 움직이다가 끝에 팍 꽂히는 느낌
+            _curSpeed = Mathf.Lerp(_accelStartSpeed, speed, t * t * t);
+        }
         transform.Translate(direction * _curSpeed * Time.deltaTime, Space.World);
+        CheckBossProximity();
+    }
+
+    // physics layer matrix와 무관하게 보스 collider 직접 체크
+    private void CheckBossProximity()
+    {
+        if (_bossHitDone || _ownerBoss != null) return;
+        var boss = BossController.Current;
+        if (boss == null || !boss.gameObject.activeInHierarchy) return;
+
+        if (_cachedBossCol == null || !_cachedBossCol)
+            _cachedBossCol = boss.GetComponentInChildren<Collider2D>();
+        if (_cachedBossCol == null) return;
+
+        if (!_cachedBossCol.bounds.Contains(transform.position)) return;
+
+        _bossHitDone = true;
+        SoundManager.Shared?.Play(SoundKey.Weapon_Attack);
+        boss.TakeDamage(primaryDmg, isPrimaryCritical);
+        if (lifeSteal > 0f) PlayerController.Instance?.HealHP(primaryDmg * lifeSteal);
+        _onHitBoss?.Invoke(boss, primaryDmg);
+        SpawnImpactVfx();
+        if (_reflect && !_reflected)
+        {
+            _reflected   = true;
+            _bossHitDone = false;
+            direction    = -direction;
+            float ra = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg - ForwardAngle;
+            transform.rotation = Quaternion.Euler(0f, 0f, ra);
+            return;
+        }
+        if (_pierce) return;
+        Destroy(gameObject);
     }
 
     /// <summary>보스가 발사한 투사체임을 표시합니다. 보스 자해를 방지합니다.</summary>
     public void SetOwnerBoss(BossController boss) => _ownerBoss = boss;
+
+    /// <summary>주 타겟 적 타격 시 호출할 콜백을 설정합니다 (HIT_* 특수효과용).</summary>
+    public void SetOnHitEnemy(System.Action<EnemyController, float, Vector2> callback) => _onHitEnemy = callback;
+
+    /// <summary>보스 타격 시 호출할 콜백을 설정합니다 (특수효과용).</summary>
+    public void SetOnHitBoss(System.Action<BossController, float> callback) => _onHitBoss = callback;
+
+    /// <summary>충돌/착탄 시 스폰할 VFX를 설정합니다.</summary>
+    public void SetImpactVfx(GameObject prefab, float lifetime = 1f)
+    {
+        _impactVfxPrefab   = prefab;
+        _impactVfxLifetime = lifetime;
+    }
+
+    private void SpawnImpactVfx()
+    {
+        if (_impactVfxPrefab == null) return;
+        var vfx = Instantiate(_impactVfxPrefab, transform.position, Quaternion.identity);
+        if (_impactVfxLifetime > 0f) Destroy(vfx, _impactVfxLifetime);
+    }
 
     private void OnTriggerEnter2D(Collider2D other)
     {
@@ -199,9 +289,23 @@ public class Projectile : MonoBehaviour
         var boss = _ownerBoss == null ? other.GetComponentInParent<BossController>() : null;
         if (boss != null)
         {
+            if (_bossHitDone) return;
+            _bossHitDone = true;
             SoundManager.Shared?.Play(SoundKey.Weapon_Attack);
             boss.TakeDamage(primaryDmg, isPrimaryCritical);
             if (lifeSteal > 0f) PlayerController.Instance?.HealHP(primaryDmg * lifeSteal);
+            _onHitBoss?.Invoke(boss, primaryDmg);
+            SpawnImpactVfx();
+            if (_reflect && !_reflected)
+            {
+                _reflected   = true;
+                _bossHitDone = false;
+                direction    = -direction;
+                float ra = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg - ForwardAngle;
+                transform.rotation = Quaternion.Euler(0f, 0f, ra);
+                return;
+            }
+            if (_pierce) return;
             Destroy(gameObject);
             return;
         }
@@ -213,12 +317,16 @@ public class Projectile : MonoBehaviour
 
         if (enemy != null)
         {
+            // 관통: 이미 타격한 적은 스킵
+            if (_pierce && _pierced.Contains(enemy)) return;
+
             SoundManager.Shared?.Play(SoundKey.Weapon_Attack);
             // 범위 데미지 적용
             int colCount = Physics2D.OverlapCircleNonAlloc(transform.position, areaHitRadius, _hitBuffer);
             for (int i = 0; i < colCount; i++)
             {
                 if (!_hitBuffer[i].TryGetComponent<EnemyController>(out var areaEnemy)) continue;
+                if (_pierce && _pierced.Contains(areaEnemy)) continue;
                 bool isPrimary = areaEnemy == enemy;
                 float dmg = isPrimary ? primaryDmg : baseDamage * areaHitDamageRatio;
                 bool isCrit = isPrimary ? isPrimaryCritical : RollCrit(dmg).isCritical;
@@ -233,7 +341,27 @@ public class Projectile : MonoBehaviour
                 areaEnemy.TakeDamage(dmg, isCrit, knockDir.normalized, knockbackPower);
                 if (lifeSteal > 0f) PlayerController.Instance?.HealHP(dmg * lifeSteal);
                 if (dotDamage > 0f) areaEnemy.ApplyBleed(dotDamage);
+                if (_pierce) _pierced.Add(areaEnemy);
             }
+
+            // 주 타겟 콜백 (areaHitRadius=0이어도 반드시 발동)
+            Vector2 primaryKnockDir = ((Vector2)enemy.transform.position - (Vector2)transform.position);
+            if (primaryKnockDir.sqrMagnitude < 0.001f) primaryKnockDir = direction;
+            _onHitEnemy?.Invoke(enemy, primaryDmg, primaryKnockDir.normalized);
+
+            SpawnImpactVfx();
+
+            if (_reflect && !_reflected)
+            {
+                _reflected = true;
+                direction  = -direction;
+                float ra = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg - ForwardAngle;
+                transform.rotation = Quaternion.Euler(0f, 0f, ra);
+                return;
+            }
+            if (_pierce) return;
+            Destroy(gameObject);
+            return;
         }
         else if (player != null)
         {
@@ -244,6 +372,7 @@ public class Projectile : MonoBehaviour
             return;
         }
 
+        SpawnImpactVfx();
         Destroy(gameObject);
     }
 }
