@@ -91,6 +91,9 @@ public class GachaResultPopup : MonoBehaviour
 
         if (drawCostText) drawCostText.text = $"x{gemCost}";
 
+        // 부모 체인 중 비활성 오브젝트가 있으면 먼저 활성화
+        var p = transform.parent;
+        while (p != null) { if (!p.gameObject.activeSelf) p.gameObject.SetActive(true); p = p.parent; }
         gameObject.SetActive(true);
         ApplyGachaVisual(boxType);
         SetInteractable(false);   // 즉시 차단 — 코루틴 시작 전 연타 방지
