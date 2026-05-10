@@ -61,6 +61,10 @@ public class Projectile : MonoBehaviour
     private float _accelDuration;
     private float _accelTimer;
 
+    // 유도 전용
+    private bool  _isHoming;
+    private float _homingTurnSpeed;   // deg/s
+
     // 포물선 전용
     private bool    _isParabolic;
     private Vector3 _paraStart;
@@ -78,6 +82,8 @@ public class Projectile : MonoBehaviour
         SpriteForward.Left  => 180f,
         _                   =>  90f,
     };
+
+    public float ForwardAngleDeg => ForwardAngle;
 
     // Physics NonAlloc 버퍼
     private static readonly Collider2D[] _hitBuffer = new Collider2D[32];
@@ -111,6 +117,13 @@ public class Projectile : MonoBehaviour
 
         float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg - ForwardAngle;
         transform.rotation = Quaternion.Euler(0f, 0f, angle);
+    }
+
+    /// <summary>유도탄 활성화. Init() 호출 직후 사용하세요.</summary>
+    public void SetHoming(float turnSpeed = 200f)
+    {
+        _isHoming        = true;
+        _homingTurnSpeed = turnSpeed;
     }
 
     /// <summary>관통/반사 플래그를 설정합니다. Init() 호출 직후 사용하세요.</summary>
@@ -217,6 +230,8 @@ public class Projectile : MonoBehaviour
             return;
         }
 
+        if (_isHoming) UpdateHoming();
+
         if (_accelDuration > 0f)
         {
             _accelTimer += Time.deltaTime;
@@ -226,6 +241,37 @@ public class Projectile : MonoBehaviour
         }
         transform.Translate(direction * _curSpeed * Time.deltaTime, Space.World);
         CheckBossProximity();
+    }
+
+    private void UpdateHoming()
+    {
+        // 보스 우선, 없으면 가장 가까운 일반 적
+        Transform target = null;
+        float     best   = float.MaxValue;
+
+        var boss = BossController.Current;
+        if (boss != null && boss.gameObject.activeInHierarchy)
+        {
+            target = boss.transform;
+        }
+        else
+        {
+            foreach (var e in EnemyController.All)
+            {
+                if (e == null || !e.gameObject.activeInHierarchy) continue;
+                float d = ((Vector2)e.transform.position - (Vector2)transform.position).sqrMagnitude;
+                if (d < best) { best = d; target = e.transform; }
+            }
+        }
+
+        if (target == null) return;
+
+        Vector2 toTarget = ((Vector2)target.position - (Vector2)transform.position).normalized;
+        float   maxDeg   = _homingTurnSpeed * Time.deltaTime;
+        direction = Vector2.MoveTowards(direction, toTarget, maxDeg * Mathf.Deg2Rad).normalized;
+
+        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg - ForwardAngle;
+        transform.rotation = Quaternion.Euler(0f, 0f, angle);
     }
 
     // physics layer matrix와 무관하게 보스 collider 직접 체크

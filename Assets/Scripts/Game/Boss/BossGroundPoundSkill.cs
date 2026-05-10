@@ -15,7 +15,6 @@ public class BossGroundPoundSkill : BossSkillBase
     [Header("착지 충격")]
     [SerializeField] private float  shakeDuration  = 0.45f;
     [SerializeField] private float  shakeMagnitude = 0.35f;
-    [SerializeField] private string attackTrigger  = "tAttack";
     [SerializeField] private GameObject landingVfxPrefab;
     [SerializeField] private float      vfxLifetime = 1f;
 
@@ -81,8 +80,7 @@ public class BossGroundPoundSkill : BossSkillBase
 
         CameraFollow.Shared?.Shake(shakeDuration, shakeMagnitude);
 
-        if (!string.IsNullOrEmpty(attackTrigger))
-            Owner.EnemyAnimator?.SetTrigger(attackTrigger);
+        Owner.EnemyAnimator?.SetTrigger(EnemyAnim.TAttack);
 
         if (landingVfxPrefab != null)
         {
@@ -118,7 +116,7 @@ public class BossGroundPoundSkill : BossSkillBase
     private IEnumerator ChargeAtPlayer(PlayerController player, float speed, Vector2 dir)
     {
         Owner.FlipToward(dir);
-        Owner.EnemyAnimator?.SetTrigger("tCharge");
+        Owner.EnemyAnimator?.SetTrigger(EnemyAnim.TCharge);
 
         var   sr         = Owner.GetComponentInChildren<SpriteRenderer>();
         float ghostTimer = 0f;

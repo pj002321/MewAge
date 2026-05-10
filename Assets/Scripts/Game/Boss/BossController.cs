@@ -236,7 +236,7 @@ public class BossController : MonoBehaviour, IEnemyHost
             // 그로기 돌입 시 즉시 이동 중단 후 루틴 종료 (PatternRoutine 상단 WaitUntil로 복귀)
             if (IsGrogy)
             {
-                EnemyAnimator?.SetBool("bMove", false);
+                EnemyAnimator?.SetBool(EnemyAnim.BMove, false);
                 yield break;
             }
 
@@ -248,16 +248,16 @@ public class BossController : MonoBehaviour, IEnemyHost
                 if (dist > chaseStopDistance)
                     MoveTowardPlayer(MoveSpeed);
                 else
-                    EnemyAnimator?.SetBool("bMove", false);
+                    EnemyAnimator?.SetBool(EnemyAnim.BMove, false);
             }
             else
             {
-                EnemyAnimator?.SetBool("bMove", false);
+                EnemyAnimator?.SetBool(EnemyAnim.BMove, false);
             }
 
             yield return new WaitForFixedUpdate();
         }
-        EnemyAnimator?.SetBool("bMove", false);
+        EnemyAnimator?.SetBool(EnemyAnim.BMove, false);
     }
 
     private void Update()
@@ -295,7 +295,7 @@ public class BossController : MonoBehaviour, IEnemyHost
         _skillExecuting = false;
         IsGrogy        = true;
         GrogyRemaining = duration;
-        EnemyAnimator?.SetBool("bMove", false);
+        EnemyAnimator?.SetBool(EnemyAnim.BMove, false);
         OnGrogyStart?.Invoke();
         StartGrogyVisuals();
         ApplyGrogyAtkSpeed(GrogyAtkSpeedMult);
@@ -317,7 +317,7 @@ public class BossController : MonoBehaviour, IEnemyHost
     private IEnumerator BindMovementRoutine(float duration)
     {
         IsMoveBound = true;
-        EnemyAnimator?.SetBool("bMove", false);
+        EnemyAnimator?.SetBool(EnemyAnim.BMove, false);
         yield return new WaitForSeconds(duration);
         IsMoveBound = false;
     }
@@ -333,7 +333,7 @@ public class BossController : MonoBehaviour, IEnemyHost
     public void MoveInDirection(Vector2 dir, float speed)
     {
         if (IsMoveBound || IsGrogy) return;
-        EnemyAnimator?.SetBool("bMove", true);
+        EnemyAnimator?.SetBool(EnemyAnim.BMove, true);
         Vector2 delta = dir.normalized * speed * Time.fixedDeltaTime;
         if (Rb != null)
             Rb.MovePosition(Rb.position + delta);
@@ -527,7 +527,7 @@ public class BossController : MonoBehaviour, IEnemyHost
         _skillExecuting = false;
         IsGrogy        = true;
         GrogyRemaining = grogyDuration;
-        EnemyAnimator?.SetBool("bMove", false);
+        EnemyAnimator?.SetBool(EnemyAnim.BMove, false);
         OnGrogyStart?.Invoke();
         StartGrogyVisuals();
 

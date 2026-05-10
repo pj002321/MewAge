@@ -77,8 +77,8 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 1049025713
+  m_SortingLayer: 1
   m_SortingOrder: 2
   m_MaskInteraction: 0
   m_Sprite: {fileID: 6863293971250029137, guid: aae5a60f0a493f14da9a00ba91e73b06, type: 3}
@@ -107,6 +107,7 @@ GameObject:
   - component: {fileID: 3956946777425214820}
   - component: {fileID: -4372753262634940898}
   - component: {fileID: 1256630319309987289}
+  - component: {fileID: 2229984310693636056}
   m_Layer: 7
   m_Name: c2_m3
   m_TagString: Untagged
@@ -175,8 +176,8 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 1049025713
+  m_SortingLayer: 1
   m_SortingOrder: 5
   m_MaskInteraction: 0
   m_Sprite: {fileID: 6525751125749666726, guid: 82d93bb577a7831488aa173dafb50e7c, type: 3}
@@ -236,6 +237,7 @@ MonoBehaviour:
   bleedInterval: 1
   separationRadius: 1.2
   separationStrength: 8
+  _decal: {fileID: 0}
 --- !u!50 &4169460820276639604
 Rigidbody2D:
   serializedVersion: 5
@@ -305,7 +307,8 @@ MonoBehaviour:
   squashStretchX: 0.5
   frequency: 1.25
   randomPhase: 1
-  spriteTarget: {fileID: 0}
+  fixBottom: 0
+  halfHeightOverride: 0
 --- !u!70 &1256630319309987289
 CapsuleCollider2D:
   m_ObjectHideFlags: 0
@@ -343,3 +346,16 @@ CapsuleCollider2D:
   m_Offset: {x: 0, y: 0.855}
   m_Size: {x: 1, y: 1.71}
   m_Direction: 0
+--- !u!114 &2229984310693636056
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5298016620640385389}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 25cc23087012616429ecb7c10c6cb557, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpriteYSort
+  multiplier: 100

@@ -72,7 +72,7 @@ public class BossFireCrossSkill : BossSkillBase
         }
 
         Boss.IsFiringSkill = true;
-        Owner.EnemyAnimator?.SetBool("bMove", false);
+        Owner.EnemyAnimator?.SetBool(EnemyAnim.BMove, false);
 
         var warnLines = new List<LineRenderer>();
         var tiles     = new List<GameObject>();

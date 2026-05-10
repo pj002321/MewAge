@@ -17,6 +17,14 @@ MonoBehaviour:
     freezeVfxPrefab: {fileID: 7968452166247501650, guid: 72ff6bce4833c97448526e304497dfa2, type: 3}
     stunVfxPrefab: {fileID: 7777409954982400410, guid: f66d4f4f0fe9de24182839d83a609535, type: 3}
     fireVfxPrefab: {fileID: 4441812789638370998, guid: 1b45098fd21148d4dbffbefff9f947dc, type: 3}
+  - chapter: 2
+    freezeVfxPrefab: {fileID: 7968452166247501650, guid: 72ff6bce4833c97448526e304497dfa2, type: 3}
+    stunVfxPrefab: {fileID: 7777409954982400410, guid: f66d4f4f0fe9de24182839d83a609535, type: 3}
+    fireVfxPrefab: {fileID: 4441812789638370998, guid: 1b45098fd21148d4dbffbefff9f947dc, type: 3}
+  - chapter: 3
+    freezeVfxPrefab: {fileID: 7968452166247501650, guid: 72ff6bce4833c97448526e304497dfa2, type: 3}
+    stunVfxPrefab: {fileID: 7777409954982400410, guid: f66d4f4f0fe9de24182839d83a609535, type: 3}
+    fireVfxPrefab: {fileID: 4441812789638370998, guid: 1b45098fd21148d4dbffbefff9f947dc, type: 3}
   weaponEntries:
   - weaponId: ch1_l_0
     traitId: HIT_CLONE
@@ -27,62 +35,119 @@ MonoBehaviour:
     cloneReturnTime: 0
     cloneRange: 0
     spikePrefab: {fileID: 0}
+    hitStunType: 0
+    hitStunColor: {r: 0, g: 0, b: 0, a: 0}
+    hitSpinPermanent: 0
+    subProjectilePrefab: {fileID: 0}
+    passiveBuffPct: 0
+    passiveBuffVfxPrefab: {fileID: 0}
   - weaponId: CH1_L_0
     traitId: HIT_CLONE
-    triggerChance: 0.5
+    triggerChance: 0.25
     cloneProjectilePrefab: {fileID: 5416354146166037338, guid: 4b6593131c2483a40aa3e20ed07a62e6, type: 3}
     cloneOutTime: 1
     clonePauseTime: 1
     cloneReturnTime: 0.5
     cloneRange: 5
     spikePrefab: {fileID: 0}
+    hitStunType: 0
+    hitStunColor: {r: 0, g: 0, b: 0, a: 0}
+    hitSpinPermanent: 0
+    subProjectilePrefab: {fileID: 0}
+    passiveBuffPct: 0
+    passiveBuffVfxPrefab: {fileID: 0}
   - weaponId: CH1_M_2
     traitId: HIT_CLONE
-    triggerChance: 0.45
+    triggerChance: 0.25
     cloneProjectilePrefab: {fileID: 5416354146166037338, guid: 59b6c0b5db7e03e46904bc7a4c0bb865, type: 3}
     cloneOutTime: 1
     clonePauseTime: 1
     cloneReturnTime: 0.5
     cloneRange: 6
     spikePrefab: {fileID: 0}
+    hitStunType: 0
+    hitStunColor: {r: 0, g: 0, b: 0, a: 0}
+    hitSpinPermanent: 0
+    subProjectilePrefab: {fileID: 0}
+    passiveBuffPct: 0
+    passiveBuffVfxPrefab: {fileID: 0}
   - weaponId: CH1_M_4
     traitId: BOSS_SPIKE
-    triggerChance: 0.5
+    triggerChance: 0.25
     cloneProjectilePrefab: {fileID: 0}
     cloneOutTime: 0
     clonePauseTime: 0
     cloneReturnTime: 0
     cloneRange: 0
     spikePrefab: {fileID: 5416354146166037338, guid: 3bdfc47fae04ded4c9087b112e349e81, type: 3}
+    hitStunType: 0
+    hitStunColor: {r: 0, g: 0, b: 0, a: 0}
+    hitSpinPermanent: 0
+    subProjectilePrefab: {fileID: 0}
+    passiveBuffPct: 0
+    passiveBuffVfxPrefab: {fileID: 0}
   - weaponId: CH1_L_2
     traitId: HIT_ICE
-    triggerChance: 0
+    triggerChance: 0.15
     cloneProjectilePrefab: {fileID: 0}
     cloneOutTime: 0
     clonePauseTime: 0
     cloneReturnTime: 0
     cloneRange: 0
     spikePrefab: {fileID: 5416354146166037338, guid: 3bdfc47fae04ded4c9087b112e349e81, type: 3}
+    hitStunType: 0
+    hitStunColor: {r: 0.35577607, g: 0.36396307, b: 0.3679245, a: 0}
+    hitSpinPermanent: 0
+    subProjectilePrefab: {fileID: 0}
+    passiveBuffPct: 0
+    passiveBuffVfxPrefab: {fileID: 0}
   - weaponId: CH1_L_3
     traitId: HIT_SHOCK
-    triggerChance: 0
+    triggerChance: 0.15
     cloneProjectilePrefab: {fileID: 0}
     cloneOutTime: 0
     clonePauseTime: 0
     cloneReturnTime: 0
     cloneRange: 0
     spikePrefab: {fileID: 5416354146166037338, guid: 3bdfc47fae04ded4c9087b112e349e81, type: 3}
+    hitStunType: 0
+    hitStunColor: {r: 0, g: 0, b: 0, a: 0}
+    hitSpinPermanent: 0
+    subProjectilePrefab: {fileID: 0}
+    passiveBuffPct: 0
+    passiveBuffVfxPrefab: {fileID: 0}
   - weaponId: CH1_L_4
     traitId: HIT_STUN
-    triggerChance: 0
+    triggerChance: 0.15
     cloneProjectilePrefab: {fileID: 0}
     cloneOutTime: 0
     clonePauseTime: 0
     cloneReturnTime: 0
     cloneRange: 0
     spikePrefab: {fileID: 5416354146166037338, guid: 3bdfc47fae04ded4c9087b112e349e81, type: 3}
+    hitStunType: 1
+    hitStunColor: {r: 0.2216981, g: 0.7366543, b: 1, a: 0}
+    hitSpinPermanent: 0
+    subProjectilePrefab: {fileID: 0}
+    passiveBuffPct: 0
+    passiveBuffVfxPrefab: {fileID: 0}
   - weaponId: CH1_M_1
     traitId: BOSS_BIND
+    triggerChance: 1
+    cloneProjectilePrefab: {fileID: 0}
+    cloneOutTime: 0
+    clonePauseTime: 0
+    cloneReturnTime: 0
+    cloneRange: 0
+    spikePrefab: {fileID: 5416354146166037338, guid: 3bdfc47fae04ded4c9087b112e349e81, type: 3}
+    hitStunType: 0
+    hitStunColor: {r: 0, g: 0, b: 0, a: 0}
+    hitSpinPermanent: 0
+    subProjectilePrefab: {fileID: 0}
+    passiveBuffPct: 5
+    passiveBuffVfxPrefab: {fileID: 6239690835715291398, guid: c8f520a64e088c24a91f850c1f37104e, type: 3}
+  - weaponId: CH1_L_1
+    traitId: HIT_SPIN
     triggerChance: 0
     cloneProjectilePrefab: {fileID: 0}
     cloneOutTime: 0
@@ -90,3 +155,339 @@ MonoBehaviour:
     cloneReturnTime: 0
     cloneRange: 0
     spikePrefab: {fileID: 5416354146166037338, guid: 3bdfc47fae04ded4c9087b112e349e81, type: 3}
+    hitStunType: 0
+    hitStunColor: {r: 0, g: 0, b: 0, a: 0}
+    hitSpinPermanent: 1
+    subProjectilePrefab: {fileID: 0}
+    passiveBuffPct: 0
+    passiveBuffVfxPrefab: {fileID: 0}
+  - weaponId: CH1_M_0
+    traitId: HIT_CLONE_BURST
+    triggerChance: 0.25
+    cloneProjectilePrefab: {fileID: 6277426376135361209, guid: 0f39f5577add846409b7586f56b2fcd3, type: 3}
+    cloneOutTime: 0
+    clonePauseTime: 0
+    cloneReturnTime: 0
+    cloneRange: 10
+    spikePrefab: {fileID: 5416354146166037338, guid: 3bdfc47fae04ded4c9087b112e349e81, type: 3}
+    hitStunType: 0
+    hitStunColor: {r: 0, g: 0, b: 0, a: 0}
+    hitSpinPermanent: 0
+    subProjectilePrefab: {fileID: 0}
+    passiveBuffPct: 0
+    passiveBuffVfxPrefab: {fileID: 0}
+  - weaponId: CH2_L_0
+    traitId: HIT_CLONE_BURST
+    triggerChance: 0.25
+    cloneProjectilePrefab: {fileID: 6277426376135361209, guid: f836785b5f326f348a38f3ef2dcf0391, type: 3}
+    cloneOutTime: 0
+    clonePauseTime: 0
+    cloneReturnTime: 0
+    cloneRange: 10
+    spikePrefab: {fileID: 5416354146166037338, guid: 3bdfc47fae04ded4c9087b112e349e81, type: 3}
+    hitStunType: 0
+    hitStunColor: {r: 0, g: 0, b: 0, a: 0}
+    hitSpinPermanent: 0
+    subProjectilePrefab: {fileID: 0}
+    passiveBuffPct: 0
+    passiveBuffVfxPrefab: {fileID: 0}
+  - weaponId: CH2_L_1
+    traitId: HIT_CLONE_RETURN
+    triggerChance: 0.25
+    cloneProjectilePrefab: {fileID: 5416354146166037338, guid: b30c391b08cf0ae468733c432f26c2e0, type: 3}
+    cloneOutTime: 1
+    clonePauseTime: 1
+    cloneReturnTime: 1
+    cloneRange: 5
+    spikePrefab: {fileID: 5416354146166037338, guid: 3bdfc47fae04ded4c9087b112e349e81, type: 3}
+    hitStunType: 0
+    hitStunColor: {r: 0, g: 0, b: 0, a: 0}
+    hitSpinPermanent: 0
+    subProjectilePrefab: {fileID: 0}
+    passiveBuffPct: 0
+    passiveBuffVfxPrefab: {fileID: 0}
+  - weaponId: CH2_L_2
+    traitId: HIT_CLONE_RETURN
+    triggerChance: 0.25
+    cloneProjectilePrefab: {fileID: 5416354146166037338, guid: a6f4314ef07903c43a01fa7ff09e90a1, type: 3}
+    cloneOutTime: 1
+    clonePauseTime: 1
+    cloneReturnTime: 1
+    cloneRange: 5
+    spikePrefab: {fileID: 5416354146166037338, guid: 3bdfc47fae04ded4c9087b112e349e81, type: 3}
+    hitStunType: 0
+    hitStunColor: {r: 0, g: 0, b: 0, a: 0}
+    hitSpinPermanent: 0
+    subProjectilePrefab: {fileID: 0}
+    passiveBuffPct: 0
+    passiveBuffVfxPrefab: {fileID: 0}
+  - weaponId: CH2_M_0
+    traitId: HIT_STUN
+    triggerChance: 0.25
+    cloneProjectilePrefab: {fileID: 0}
+    cloneOutTime: 0
+    clonePauseTime: 0
+    cloneReturnTime: 0
+    cloneRange: 5
+    spikePrefab: {fileID: 5416354146166037338, guid: 3bdfc47fae04ded4c9087b112e349e81, type: 3}
+    hitStunType: 0
+    hitStunColor: {r: 0.504717, g: 0.7218981, b: 1, a: 0}
+    hitSpinPermanent: 0
+    subProjectilePrefab: {fileID: 0}
+    passiveBuffPct: 0
+    passiveBuffVfxPrefab: {fileID: 0}
+  - weaponId: CH2_M_2
+    traitId: HIT_CLONE_CROSS
+    triggerChance: 0.25
+    cloneProjectilePrefab: {fileID: 5416354146166037338, guid: 6d3aff62b446c144d9a5e8bd626c4b63, type: 3}
+    cloneOutTime: 1
+    clonePauseTime: 1
+    cloneReturnTime: 1
+    cloneRange: 7
+    spikePrefab: {fileID: 5416354146166037338, guid: 3bdfc47fae04ded4c9087b112e349e81, type: 3}
+    hitStunType: 0
+    hitStunColor: {r: 0, g: 0, b: 0, a: 0}
+    hitSpinPermanent: 0
+    subProjectilePrefab: {fileID: 0}
+    passiveBuffPct: 0
+    passiveBuffVfxPrefab: {fileID: 0}
+  - weaponId: CH2_M_4
+    traitId: BOSS_GROGY
+    triggerChance: 0.25
+    cloneProjectilePrefab: {fileID: 0}
+    cloneOutTime: 0
+    clonePauseTime: 0
+    cloneReturnTime: 0
+    cloneRange: 5
+    spikePrefab: {fileID: 5416354146166037338, guid: 3bdfc47fae04ded4c9087b112e349e81, type: 3}
+    hitStunType: 0
+    hitStunColor: {r: 0, g: 0, b: 0, a: 0}
+    hitSpinPermanent: 0
+    subProjectilePrefab: {fileID: 0}
+    passiveBuffPct: 0
+    passiveBuffVfxPrefab: {fileID: 0}
+  - weaponId: CH1_M_3
+    traitId: SHOOT_SUB
+    triggerChance: 0.25
+    cloneProjectilePrefab: {fileID: 0}
+    cloneOutTime: 0
+    clonePauseTime: 0
+    cloneReturnTime: 0
+    cloneRange: 5
+    spikePrefab: {fileID: 5416354146166037338, guid: 3bdfc47fae04ded4c9087b112e349e81, type: 3}
+    hitStunType: 0
+    hitStunColor: {r: 0, g: 0, b: 0, a: 0}
+    hitSpinPermanent: 0
+    subProjectilePrefab: {fileID: 6277426376135361209, guid: 1344441c4f5be5740a2657a7842b3453, type: 3}
+    passiveBuffPct: 0
+    passiveBuffVfxPrefab: {fileID: 0}
+  - weaponId: CH2_L_3
+    traitId: SHOOT_PIERCE
+    triggerChance: 0.25
+    cloneProjectilePrefab: {fileID: 0}
+    cloneOutTime: 0
+    clonePauseTime: 0
+    cloneReturnTime: 0
+    cloneRange: 5
+    spikePrefab: {fileID: 5416354146166037338, guid: 3bdfc47fae04ded4c9087b112e349e81, type: 3}
+    hitStunType: 0
+    hitStunColor: {r: 0, g: 0, b: 0, a: 0}
+    hitSpinPermanent: 0
+    subProjectilePrefab: {fileID: 0}
+    passiveBuffPct: 0
+    passiveBuffVfxPrefab: {fileID: 0}
+  - weaponId: CH2_L_4
+    traitId: SHOOT_WAVE
+    triggerChance: 0.25
+    cloneProjectilePrefab: {fileID: 0}
+    cloneOutTime: 0
+    clonePauseTime: 0
+    cloneReturnTime: 0
+    cloneRange: 5
+    spikePrefab: {fileID: 5416354146166037338, guid: 3bdfc47fae04ded4c9087b112e349e81, type: 3}
+    hitStunType: 0
+    hitStunColor: {r: 0, g: 0, b: 0, a: 0}
+    hitSpinPermanent: 0
+    subProjectilePrefab: {fileID: 0}
+    passiveBuffPct: 0
+    passiveBuffVfxPrefab: {fileID: 0}
+  - weaponId: CH2_M_1
+    traitId: SHOOT_WAVE
+    triggerChance: 0.25
+    cloneProjectilePrefab: {fileID: 0}
+    cloneOutTime: 0
+    clonePauseTime: 0
+    cloneReturnTime: 0
+    cloneRange: 5
+    spikePrefab: {fileID: 5416354146166037338, guid: 3bdfc47fae04ded4c9087b112e349e81, type: 3}
+    hitStunType: 0
+    hitStunColor: {r: 0, g: 0, b: 0, a: 0}
+    hitSpinPermanent: 0
+    subProjectilePrefab: {fileID: 0}
+    passiveBuffPct: 0
+    passiveBuffVfxPrefab: {fileID: 0}
+  - weaponId: CH2_M_3
+    traitId: HIT_SPIKE
+    triggerChance: 0.25
+    cloneProjectilePrefab: {fileID: 0}
+    cloneOutTime: 0
+    clonePauseTime: 0
+    cloneReturnTime: 0
+    cloneRange: 5
+    spikePrefab: {fileID: 5416354146166037338, guid: 3bdfc47fae04ded4c9087b112e349e81, type: 3}
+    hitStunType: 0
+    hitStunColor: {r: 0, g: 0, b: 0, a: 0}
+    hitSpinPermanent: 0
+    subProjectilePrefab: {fileID: 0}
+    passiveBuffPct: 0
+    passiveBuffVfxPrefab: {fileID: 0}
+  - weaponId: CH3_L_0
+    traitId: HIT_CLONE_BURST
+    triggerChance: 0.25
+    cloneProjectilePrefab: {fileID: 6277426376135361209, guid: 76f3062b98d1ab948950cadf13c891e9, type: 3}
+    cloneOutTime: 1
+    clonePauseTime: 1
+    cloneReturnTime: 1
+    cloneRange: 10
+    spikePrefab: {fileID: 5416354146166037338, guid: 3bdfc47fae04ded4c9087b112e349e81, type: 3}
+    hitStunType: 0
+    hitStunColor: {r: 0, g: 0, b: 0, a: 0}
+    hitSpinPermanent: 0
+    subProjectilePrefab: {fileID: 0}
+    passiveBuffPct: 0
+    passiveBuffVfxPrefab: {fileID: 0}
+  - weaponId: CH3_L_1
+    traitId: HIT_CLONE_RETURN
+    triggerChance: 0.25
+    cloneProjectilePrefab: {fileID: 5416354146166037338, guid: 1025aba5a4b03e04b9f45f42fbf276b6, type: 3}
+    cloneOutTime: 1
+    clonePauseTime: 1
+    cloneReturnTime: 1
+    cloneRange: 6
+    spikePrefab: {fileID: 5416354146166037338, guid: 3bdfc47fae04ded4c9087b112e349e81, type: 3}
+    hitStunType: 0
+    hitStunColor: {r: 0, g: 0, b: 0, a: 0}
+    hitSpinPermanent: 0
+    subProjectilePrefab: {fileID: 0}
+    passiveBuffPct: 0
+    passiveBuffVfxPrefab: {fileID: 0}
+  - weaponId: CH3_L_2
+    traitId: BUFF_DEF
+    triggerChance: 0.25
+    cloneProjectilePrefab: {fileID: 0}
+    cloneOutTime: 0
+    clonePauseTime: 0
+    cloneReturnTime: 0
+    cloneRange: 5
+    spikePrefab: {fileID: 5416354146166037338, guid: 3bdfc47fae04ded4c9087b112e349e81, type: 3}
+    hitStunType: 0
+    hitStunColor: {r: 0, g: 0, b: 0, a: 0}
+    hitSpinPermanent: 0
+    subProjectilePrefab: {fileID: 0}
+    passiveBuffPct: 5
+    passiveBuffVfxPrefab: {fileID: 6239690835715291398, guid: c8f520a64e088c24a91f850c1f37104e, type: 3}
+  - weaponId: CH3_L_3
+    traitId: HIT_SHOCK
+    triggerChance: 0.25
+    cloneProjectilePrefab: {fileID: 0}
+    cloneOutTime: 0
+    clonePauseTime: 0
+    cloneReturnTime: 0
+    cloneRange: 5
+    spikePrefab: {fileID: 5416354146166037338, guid: 3bdfc47fae04ded4c9087b112e349e81, type: 3}
+    hitStunType: 0
+    hitStunColor: {r: 0, g: 0, b: 0, a: 0}
+    hitSpinPermanent: 0
+    subProjectilePrefab: {fileID: 0}
+    passiveBuffPct: 0
+    passiveBuffVfxPrefab: {fileID: 0}
+  - weaponId: CH3_L_4
+    traitId: HIT_SPIN
+    triggerChance: 0.25
+    cloneProjectilePrefab: {fileID: 0}
+    cloneOutTime: 0
+    clonePauseTime: 0
+    cloneReturnTime: 0
+    cloneRange: 5
+    spikePrefab: {fileID: 5416354146166037338, guid: 3bdfc47fae04ded4c9087b112e349e81, type: 3}
+    hitStunType: 0
+    hitStunColor: {r: 0, g: 0, b: 0, a: 0}
+    hitSpinPermanent: 0
+    subProjectilePrefab: {fileID: 0}
+    passiveBuffPct: 0
+    passiveBuffVfxPrefab: {fileID: 0}
+  - weaponId: CH3_M_0
+    traitId: HIT_STUN
+    triggerChance: 0.25
+    cloneProjectilePrefab: {fileID: 0}
+    cloneOutTime: 0
+    clonePauseTime: 0
+    cloneReturnTime: 0
+    cloneRange: 5
+    spikePrefab: {fileID: 5416354146166037338, guid: 3bdfc47fae04ded4c9087b112e349e81, type: 3}
+    hitStunType: 0
+    hitStunColor: {r: 0.4669811, g: 0.7262441, b: 1, a: 0}
+    hitSpinPermanent: 0
+    subProjectilePrefab: {fileID: 0}
+    passiveBuffPct: 0
+    passiveBuffVfxPrefab: {fileID: 0}
+  - weaponId: CH3_M_1
+    traitId: HIT_SPIKE
+    triggerChance: 0.25
+    cloneProjectilePrefab: {fileID: 0}
+    cloneOutTime: 0
+    clonePauseTime: 0
+    cloneReturnTime: 0
+    cloneRange: 5
+    spikePrefab: {fileID: 5416354146166037338, guid: 3bdfc47fae04ded4c9087b112e349e81, type: 3}
+    hitStunType: 0
+    hitStunColor: {r: 0, g: 0, b: 0, a: 0}
+    hitSpinPermanent: 0
+    subProjectilePrefab: {fileID: 0}
+    passiveBuffPct: 0
+    passiveBuffVfxPrefab: {fileID: 0}
+  - weaponId: CH3_M_2
+    traitId: HIT_CLONE_CROSS
+    triggerChance: 0.25
+    cloneProjectilePrefab: {fileID: 5416354146166037338, guid: d87add9b74d3b624499e68a8273f074c, type: 3}
+    cloneOutTime: 1
+    clonePauseTime: 1
+    cloneReturnTime: 1
+    cloneRange: 10
+    spikePrefab: {fileID: 5416354146166037338, guid: 3bdfc47fae04ded4c9087b112e349e81, type: 3}
+    hitStunType: 0
+    hitStunColor: {r: 0, g: 0, b: 0, a: 0}
+    hitSpinPermanent: 0
+    subProjectilePrefab: {fileID: 0}
+    passiveBuffPct: 0
+    passiveBuffVfxPrefab: {fileID: 0}
+  - weaponId: CH3_M_3
+    traitId: BOSS_GROGY
+    triggerChance: 0.25
+    cloneProjectilePrefab: {fileID: 0}
+    cloneOutTime: 0
+    clonePauseTime: 0
+    cloneReturnTime: 0
+    cloneRange: 5
+    spikePrefab: {fileID: 5416354146166037338, guid: 3bdfc47fae04ded4c9087b112e349e81, type: 3}
+    hitStunType: 0
+    hitStunColor: {r: 0, g: 0, b: 0, a: 0}
+    hitSpinPermanent: 0
+    subProjectilePrefab: {fileID: 0}
+    passiveBuffPct: 0
+    passiveBuffVfxPrefab: {fileID: 0}
+  - weaponId: CH3_M_4
+    traitId: SHOOT_SUB
+    triggerChance: 0.25
+    cloneProjectilePrefab: {fileID: 0}
+    cloneOutTime: 0
+    clonePauseTime: 0
+    cloneReturnTime: 0
+    cloneRange: 5
+    spikePrefab: {fileID: 5416354146166037338, guid: 3bdfc47fae04ded4c9087b112e349e81, type: 3}
+    hitStunType: 0
+    hitStunColor: {r: 0, g: 0, b: 0, a: 0}
+    hitSpinPermanent: 0
+    subProjectilePrefab: {fileID: 0}
+    passiveBuffPct: 0
+    passiveBuffVfxPrefab: {fileID: 0}

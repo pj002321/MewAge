@@ -51,7 +51,7 @@ public class BossTeleportSkill : BossSkillBase
         if (Owner.PlayerTransform == null) yield break;
 
         Boss.IsFiringSkill = true;
-        Owner.EnemyAnimator?.SetBool("bMove", false);
+        Owner.EnemyAnimator?.SetBool(EnemyAnim.BMove, false);
 
         _digAnimEnded   = false;
         _spawnAnimEnded = false;
@@ -76,7 +76,7 @@ public class BossTeleportSkill : BossSkillBase
         }
         finally
         {
-            Owner.EnemyAnimator?.SetBool("bDigging", false);
+            Owner.EnemyAnimator?.SetBool(EnemyAnim.BDigging, false);
             EnemyFX.SetAlpha(_renderers, 1f);
             if (Boss != null) Boss.IsFiringSkill = false;
         }

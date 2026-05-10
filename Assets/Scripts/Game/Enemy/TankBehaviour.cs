@@ -73,7 +73,7 @@ public class TankBehaviour : EnemyBehaviourBase
         float dist = Vector2.Distance(transform.position, Owner.PlayerTransform.position);
         if (dist <= attackRange)
         {
-            Owner.EnemyAnimator?.SetTrigger("tAttack");
+            Owner.EnemyAnimator?.SetTrigger(EnemyAnim.TAttack);
         }
     }
 

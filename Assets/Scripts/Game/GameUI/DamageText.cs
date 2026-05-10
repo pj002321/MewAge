@@ -14,7 +14,7 @@ public class DamageText : MonoBehaviour
     [SerializeField] private float fadeStartRatio = 0.55f;  // 이 비율 이후부터 페이드
 
     [Header("떠오름")]
-    [SerializeField] private float floatSpeed = 0.6f;       // 초당 상승 속도 (월드 단위)
+    [SerializeField] private float floatSpeed = 1.4f;       // 초당 상승 속도 (월드 단위)
 
     [Header("떨림")]
     [SerializeField] private float shakeAmplitude = 0.09f;  // 떨림 폭 (월드 단위)

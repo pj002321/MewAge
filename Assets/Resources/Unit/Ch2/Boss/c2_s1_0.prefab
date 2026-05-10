@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: -4710413047643074451}
   - component: {fileID: -7336705989044592897}
   - component: {fileID: -2298048180237470415}
+  - component: {fileID: 5373153972275024946}
   m_Layer: 7
   m_Name: c2_s1_0
   m_TagString: Untagged
@@ -36,6 +37,7 @@ Transform:
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 1003761722093112731}
+  - {fileID: 1435864111662921224}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &1181058562545553021
@@ -83,8 +85,8 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 1049025713
+  m_SortingLayer: 1
   m_SortingOrder: 5
   m_MaskInteraction: 0
   m_Sprite: {fileID: -314423336, guid: 49c6c46fd2559eb4f96ab6fc9ae1b3f2, type: 3}
@@ -132,9 +134,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossController
   damageCooldown: 0.5
+  moveSpeed: 3
   enrageThreshold: 0.5
   enrageSpeedMult: 1.5
   enrageDamageMult: 1.5
+  grogyThresholds:
+  - 0.7
+  - 0.35
+  grogyDuration: 5
+  grogyOverheadPrefab: {fileID: 5515808124668199316, guid: 4676482f183c362489d2902d70a232b3, type: 3}
+  grogyOverheadAnchor: {fileID: 1435864111662921224}
+  grogyOverheadYOffset: 1.5
   flashColor: {r: 1, g: 0.2, b: 0.2, a: 1}
   flashDuration: 0.12
   onDeathFX:
@@ -147,11 +157,9 @@ MonoBehaviour:
   idleDuration: 0.6
   skills:
   - {fileID: -2298048180237470415}
+  _decal: {fileID: 0}
   entryDrop: 1
-  dropSpeed: 22
-  squashDuration: 0.08
-  stretchDuration: 0.1
-  settleDuration: 0.12
+  entryScaleUpDuration: 0.35
 --- !u!50 &-4710413047643074451
 Rigidbody2D:
   serializedVersion: 5
@@ -236,6 +244,64 @@ MonoBehaviour:
   chaseSpeed: 3
   chaseDuration: 3
   stopDistance: 1
+--- !u!114 &5373153972275024946
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1326216360028315856}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 421dc27616e41804c9fcb163146852ec, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BossSummonCycleSkill
+  skillId: 
+  cooldown: 5
+  enrageCooldownMult: 0.7
+  maxRange: 8
+  executeInPattern: 1
+  minionPrefab: {fileID: 1326216360028315856, guid: b71d17893617b9b4da707bd526180777, type: 3}
+  spawnMarkerPrefab: {fileID: 5515808124668199316, guid: 4676482f183c362489d2902d70a232b3, type: 3}
+  summonCount: 2
+  maxActiveMinions: 8
+  summonInterval: 8
+  markerWarningTime: 0.8
+  minionDuration: 30
+  minionMoveSpeed: 6.8
+  minionContactDamage: 12
+  spawnRadius: 3
+--- !u!1 &6343863625544315502
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1435864111662921224}
+  m_Layer: 7
+  m_Name: GameObject
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1435864111662921224
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6343863625544315502}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 2.055, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8912246183259105812}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &7090112564176035574
 GameObject:
   m_ObjectHideFlags: 0

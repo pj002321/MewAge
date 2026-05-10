@@ -20,7 +20,6 @@ public class DashComboBehaviour : EnemyBehaviourBase
     [SerializeField] private int   hitCount      = 3;
     [SerializeField] private float hitInterval   = 0.25f;
     [SerializeField] private float hitRange      = 1.4f;
-    [SerializeField] private string attackTrigger = "tAttack";
 
     [Header("VFX")]
     [SerializeField] private GameObject attackVfxPrefab;
@@ -77,7 +76,7 @@ public class DashComboBehaviour : EnemyBehaviourBase
             {
                 if (Owner.PlayerTransform == null) break;
 
-                Owner.EnemyAnimator?.SetTrigger(attackTrigger);
+                Owner.EnemyAnimator?.SetTrigger(EnemyAnim.TAttack);
 
                 if (attackVfxPrefab != null)
                     Instantiate(attackVfxPrefab, Owner.transform.position, Quaternion.identity);

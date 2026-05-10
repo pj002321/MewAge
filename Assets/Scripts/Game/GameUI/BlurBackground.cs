@@ -15,6 +15,12 @@ public class BlurBackground : MonoBehaviour
 
     private void Awake() => _rawImage = GetComponent<RawImage>();
 
+    public Color Tint
+    {
+        get => tint;
+        set { tint = value; if (_rawImage != null && _rt != null) _rawImage.color = value; }
+    }
+
     private void OnDisable()
     {
         if (_rt == null) return;
@@ -55,7 +61,8 @@ public class BlurBackground : MonoBehaviour
         }
 
         _rawImage.texture = _rt;
-        _rawImage.color   = tint;          // 어두운 톤 적용
+        _rawImage.color   = tint;
+
         _rawImage.uvRect  = new Rect(0, 0, 1, 1); // UV 정규화 (확대 방지)
         panel.SetActive(true);
     }

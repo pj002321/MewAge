@@ -170,7 +170,7 @@ public class EnemyController : MonoBehaviour, IEnemyHost
         if (GameManager.Shared != null && GameManager.Shared.IsGameOver) return;
         if (isStunned) return;
         if (behaviour != null && behaviour.enabled) behaviour.OnAttackUpdate();
-        animator?.SetBool("bMove", isMoving);
+        animator?.SetBool(EnemyAnim.BMove, isMoving);
         CheckPlayerContact();
     }
 

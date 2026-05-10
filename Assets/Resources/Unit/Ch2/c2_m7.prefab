@@ -105,8 +105,8 @@ GameObject:
   - component: {fileID: 454587040804232524}
   - component: {fileID: 5386464800514531288}
   - component: {fileID: 4986148234344503057}
-  - component: {fileID: -4284824386247900274}
-  - component: {fileID: -3304319415946184951}
+  - component: {fileID: 4664553793025097031}
+  - component: {fileID: 8468580085830175302}
   m_Layer: 7
   m_Name: c2_m7
   m_TagString: Untagged
@@ -175,8 +175,8 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 1049025713
+  m_SortingLayer: 1
   m_SortingOrder: 5
   m_MaskInteraction: 0
   m_Sprite: {fileID: 18779425253511567, guid: 59c8a1ccd66fef04380f4e3bedde5ce9, type: 3}
@@ -236,6 +236,7 @@ MonoBehaviour:
   bleedInterval: 1
   separationRadius: 1.2
   separationStrength: 8
+  _decal: {fileID: 0}
 --- !u!50 &5386464800514531288
 Rigidbody2D:
   serializedVersion: 5
@@ -300,7 +301,7 @@ CapsuleCollider2D:
   m_Offset: {x: 0.31, y: 0.91}
   m_Size: {x: 0.91, y: 1.82}
   m_Direction: 0
---- !u!114 &-4284824386247900274
+--- !u!114 &4664553793025097031
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -309,14 +310,22 @@ MonoBehaviour:
   m_GameObject: {fileID: 3312402149363571138}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 287a445e29fc7094190cd8b6c44671ab, type: 3}
+  m_Script: {fileID: 11500000, guid: b4959e08f69e67545962601be639bd9d, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TankBehaviour
-  attackRange: 1.5
-  attackInterval: 2
-  damageMultiplier: 1.5
-  attackVfxPrefab: {fileID: 0}
---- !u!114 &-3304319415946184951
+  m_EditorClassIdentifier: Assembly-CSharp::SlamBehaviour
+  chaseSpeed: 2.5
+  slamRange: 2
+  slamDamage: 20
+  slamRadius: 4
+  slamCooldown: 4
+  slamJumpHeight: 20
+  slamRiseTime: 0.3
+  slamHangTime: 0.5
+  slamFallSpeed: 30
+  slamMarkerPrefab: {fileID: 7905823675861574758, guid: eb504c3569ed60a46b3b3ac595323378, type: 3}
+  landingVfxPrefab: {fileID: 1645737383650597069, guid: d13e811c376306146ac829de7af32967, type: 3}
+  vfxLifetime: 1
+--- !u!114 &8468580085830175302
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -325,12 +334,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 3312402149363571138}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3640172dedd67864e9d6803100a29029, type: 3}
+  m_Script: {fileID: 11500000, guid: 25cc23087012616429ecb7c10c6cb557, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SlimeBobAnimation
-  minScaleY: 0.9
-  maxScaleY: 1.1
-  squashStretchX: 0.5
-  frequency: 1.25
-  randomPhase: 1
-  spriteTarget: {fileID: 0}
+  m_EditorClassIdentifier: Assembly-CSharp::SpriteYSort
+  multiplier: 100

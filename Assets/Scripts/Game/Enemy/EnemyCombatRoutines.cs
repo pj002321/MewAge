@@ -50,7 +50,7 @@ public static class EnemyCombatRoutines
             yield return new WaitForSeconds(cfg.PreDigDelay);
 
         // ② 숨기 애니메이션 대기
-        host.EnemyAnimator?.SetBool("bDigging", true);
+        host.EnemyAnimator?.SetBool(EnemyAnim.BDigging, true);
         yield return WaitForAnimEnd(digAnimEnded, cfg.AnimEventTimeout);
 
         // ③ 페이드 아웃
@@ -65,7 +65,7 @@ public static class EnemyCombatRoutines
         host.SelfTransform.position = spawnPos;
         if (host.Rb != null) host.Rb.position = spawnPos;
 
-        host.EnemyAnimator?.SetBool("bDigging", false);
+        host.EnemyAnimator?.SetBool(EnemyAnim.BDigging, false);
         EnemyFX.FadeSprites(renderers, 1f, cfg.FadeInDuration);   // fire-and-forget: 애니와 병렬
         yield return WaitForAnimEnd(spawnAnimEnded, cfg.AnimEventTimeout);
 

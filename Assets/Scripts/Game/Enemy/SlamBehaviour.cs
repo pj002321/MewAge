@@ -24,7 +24,6 @@ public class SlamBehaviour : EnemyBehaviourBase
     [SerializeField] private GameObject slamMarkerPrefab;
     [SerializeField] private GameObject landingVfxPrefab;
     [SerializeField] private float      vfxLifetime     = 1f;
-    [SerializeField] private string     slamLandTrigger = "SlamLand";
 
     private float cooldownTimer;
     private bool  isSlamming;
@@ -141,8 +140,7 @@ public class SlamBehaviour : EnemyBehaviourBase
 
         if (marker != null) Destroy(marker);
 
-        if (anim != null && !string.IsNullOrEmpty(slamLandTrigger))
-            anim.SetTrigger(slamLandTrigger);
+        anim?.SetTrigger(EnemyAnim.TAttack);
 
         if (landingVfxPrefab != null)
         {

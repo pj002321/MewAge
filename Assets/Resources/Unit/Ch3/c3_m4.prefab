@@ -17,6 +17,7 @@ GameObject:
   - component: {fileID: 9077217671976798113}
   - component: {fileID: 2893873691657769378}
   - component: {fileID: 3074230842741288782}
+  - component: {fileID: -4759251989209069777}
   m_Layer: 7
   m_Name: c3_m4
   m_TagString: Untagged
@@ -86,8 +87,8 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 1049025713
+  m_SortingLayer: 1
   m_SortingOrder: 5
   m_MaskInteraction: 0
   m_Sprite: {fileID: 1004060114691005567, guid: c015b8b3e6c952d479eae0d39a3c180b, type: 3}
@@ -211,6 +212,7 @@ MonoBehaviour:
   bleedInterval: 1
   separationRadius: 1.2
   separationStrength: 8
+  _decal: {fileID: 0}
 --- !u!114 &9077217671976798113
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -228,7 +230,8 @@ MonoBehaviour:
   squashStretchX: 0.5
   frequency: 1.25
   randomPhase: 1
-  spriteTarget: {fileID: 0}
+  fixBottom: 0
+  halfHeightOverride: 0
 --- !u!114 &2893873691657769378
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -244,7 +247,8 @@ MonoBehaviour:
   attackRange: 1.5
   attackInterval: 2
   damageMultiplier: 1.5
-  attackVfxPrefab: {fileID: 0}
+  shieldVfx: {fileID: 0}
+  shieldVfxDuration: 0.2
 --- !u!114 &3074230842741288782
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -262,6 +266,19 @@ MonoBehaviour:
   rechargeDelay: 4
   rechargeRate: 20
   breakFlashDuration: 0.25
+--- !u!114 &-4759251989209069777
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1326216360028315856}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 25cc23087012616429ecb7c10c6cb557, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpriteYSort
+  multiplier: 100
 --- !u!1 &1437633771341022566
 GameObject:
   m_ObjectHideFlags: 0
@@ -442,7 +459,7 @@ SpriteRenderer:
   m_Size: {x: 0.59, y: 0.58}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 1
+  m_WasSpriteAssigned: 0
   m_SpriteSortPoint: 0
 --- !u!1 &3013933246293191107
 GameObject:
@@ -533,7 +550,7 @@ SpriteRenderer:
   m_Size: {x: 0.59, y: 0.58}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 1
+  m_WasSpriteAssigned: 0
   m_SpriteSortPoint: 0
 --- !u!1 &3500723423843257105
 GameObject:
@@ -624,7 +641,7 @@ SpriteRenderer:
   m_Size: {x: 0.59, y: 0.58}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 1
+  m_WasSpriteAssigned: 0
   m_SpriteSortPoint: 0
 --- !u!1 &4136209220506239963
 GameObject:
@@ -715,7 +732,7 @@ SpriteRenderer:
   m_Size: {x: 0.59, y: 0.58}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 1
+  m_WasSpriteAssigned: 0
   m_SpriteSortPoint: 0
 --- !u!1 &5774446860792155620
 GameObject:
@@ -806,7 +823,7 @@ SpriteRenderer:
   m_Size: {x: 0.59, y: 0.58}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 1
+  m_WasSpriteAssigned: 0
   m_SpriteSortPoint: 0
 --- !u!1 &7193412618418957009
 GameObject:
@@ -897,7 +914,7 @@ SpriteRenderer:
   m_Size: {x: 0.59, y: 0.58}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 1
+  m_WasSpriteAssigned: 0
   m_SpriteSortPoint: 0
 --- !u!1 &8340960842696708949
 GameObject:
@@ -1026,5 +1043,5 @@ SpriteRenderer:
   m_Size: {x: 0.59, y: 0.58}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 1
+  m_WasSpriteAssigned: 0
   m_SpriteSortPoint: 0

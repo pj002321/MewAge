@@ -13932,6 +13932,47 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 726f852229c4a4944809a67c9f937f3e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AlarmNoti
+--- !u!21 &472598975
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: UI/RoundedCorners/RoundedCorners
+  m_Shader: {fileID: 4800000, guid: 0bd2ec5d73751e34a814274a454bec41, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _MainTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _ColorMask: 15
+    - _Stencil: 0
+    - _StencilComp: 8
+    - _StencilOp: 0
+    - _StencilReadMask: 255
+    - _StencilWriteMask: 255
+    - _UseUIAlphaClip: 0
+    m_Colors:
+    - _OuterUV: {r: 0, g: 0, b: 1, a: 1}
+    - _WidthHeightRadius: {r: 104, g: 104, b: 3.6, a: 0}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1
 --- !u!1 &475139072
 GameObject:
   m_ObjectHideFlags: 0
@@ -25434,7 +25475,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: 1211408438}
+  m_Material: {fileID: 472598975}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
@@ -32306,47 +32347,6 @@ RectTransform:
   m_AnchoredPosition: {x: -261.72, y: -73.149994}
   m_SizeDelta: {x: 357.34998, y: 146.29999}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!21 &1211408438
-Material:
-  serializedVersion: 8
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: UI/RoundedCorners/RoundedCorners
-  m_Shader: {fileID: 4800000, guid: 0bd2ec5d73751e34a814274a454bec41, type: 3}
-  m_Parent: {fileID: 0}
-  m_ModifiedSerializedProperties: 0
-  m_ValidKeywords: []
-  m_InvalidKeywords: []
-  m_LightmapFlags: 4
-  m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
-  m_CustomRenderQueue: -1
-  stringTagMap: {}
-  disabledShaderPasses: []
-  m_LockedProperties: 
-  m_SavedProperties:
-    serializedVersion: 3
-    m_TexEnvs:
-    - _MainTex:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    m_Ints: []
-    m_Floats:
-    - _ColorMask: 15
-    - _Stencil: 0
-    - _StencilComp: 8
-    - _StencilOp: 0
-    - _StencilReadMask: 255
-    - _StencilWriteMask: 255
-    - _UseUIAlphaClip: 0
-    m_Colors:
-    - _OuterUV: {r: 0, g: 0, b: 1, a: 1}
-    - _WidthHeightRadius: {r: 104, g: 104, b: 3.6, a: 0}
-  m_BuildTextureStacks: []
-  m_AllowLocking: 1
 --- !u!1 &1212349935
 GameObject:
   m_ObjectHideFlags: 0
@@ -51408,7 +51408,7 @@ PrefabInstance:
     - target: {fileID: 974444820013218462, guid: 6762f7bdcc5f50f47b840f43d6c534bd, type: 3}
       propertyPath: chapterBGMList.Array.data[0].gameBGM
       value: 
-      objectReference: {fileID: 8300000, guid: 97a5a6114597a6344914da7305be24a3, type: 3}
+      objectReference: {fileID: 8300000, guid: d43f6956e1170e04d917ef67fd28ad92, type: 3}
     - target: {fileID: 974444820013218462, guid: 6762f7bdcc5f50f47b840f43d6c534bd, type: 3}
       propertyPath: chapterBGMList.Array.data[0].homeBGM
       value: 
@@ -51416,11 +51416,11 @@ PrefabInstance:
     - target: {fileID: 974444820013218462, guid: 6762f7bdcc5f50f47b840f43d6c534bd, type: 3}
       propertyPath: chapterBGMList.Array.data[1].bossBGM
       value: 
-      objectReference: {fileID: 8300000, guid: df314c3b02f6049ecac22cafbedeb4ca, type: 3}
+      objectReference: {fileID: 8300000, guid: 5273b4b06dbc29a4686ae9519e88adc1, type: 3}
     - target: {fileID: 974444820013218462, guid: 6762f7bdcc5f50f47b840f43d6c534bd, type: 3}
       propertyPath: chapterBGMList.Array.data[1].gameBGM
       value: 
-      objectReference: {fileID: 8300000, guid: 97a5a6114597a6344914da7305be24a3, type: 3}
+      objectReference: {fileID: 8300000, guid: 2148a098b1d70b94daf1b019c31212c8, type: 3}
     - target: {fileID: 974444820013218462, guid: 6762f7bdcc5f50f47b840f43d6c534bd, type: 3}
       propertyPath: chapterBGMList.Array.data[1].homeBGM
       value: 

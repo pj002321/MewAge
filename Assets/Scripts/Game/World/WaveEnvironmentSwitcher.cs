@@ -50,6 +50,17 @@ public class WaveEnvironmentSwitcher : MonoBehaviourSingleton<WaveEnvironmentSwi
         DestroyBossInstance();
         SpawnWaveBackground(_currentStage, wave);
         ApplyCameraFromBounds(_currentStage.followPlayer, _currentStage.useBounds);
+        TriggerFormationsForWave(_currentStage, wave);
+    }
+
+    private void TriggerFormationsForWave(StageEnvironmentSO stage, int wave)
+    {
+        if (stage.formations == null) return;
+        foreach (var entry in stage.formations)
+        {
+            if (entry.onWave == wave)
+                EnemySpawner.Shared?.TriggerFormation(entry);
+        }
     }
 
     /// <summary>테스트 씬 전용 — 스테이지 SO를 직접 주입합니다. GameManager 없는 dev 씬에서 사용.</summary>

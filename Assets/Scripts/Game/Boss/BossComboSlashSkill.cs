@@ -25,9 +25,6 @@ public class BossComboSlashSkill : BossSkillBase
     [Tooltip("공격과 다음 공격 사이 딜레이 (초)")]
     [SerializeField] private float betweenDelay   = 0.45f;
 
-    [Header("애니메이션")]
-    [SerializeField] private string slashTrigger = "tAttack";
-
     [Header("VFX")]
     [SerializeField] private GameObject slashVfxPrefab;
 
@@ -56,7 +53,7 @@ public class BossComboSlashSkill : BossSkillBase
         if (Owner.PlayerTransform == null) yield break;
 
         // 2) 정지 + 조준 딜레이
-        Owner.EnemyAnimator?.SetBool("bMove", false);
+        Owner.EnemyAnimator?.SetBool(EnemyAnim.BMove, false);
         Boss.IsFiringSkill = true;
         try
         {
@@ -74,7 +71,7 @@ public class BossComboSlashSkill : BossSkillBase
                 Vector2 toPlayer = (Vector2)Owner.PlayerTransform.position - (Vector2)Owner.transform.position;
                 Owner.FlipToward(toPlayer);
 
-                Owner.EnemyAnimator?.SetTrigger(slashTrigger);
+                Owner.EnemyAnimator?.SetTrigger(EnemyAnim.TAttack);
 
                 if (slashVfxPrefab != null)
                     Instantiate(slashVfxPrefab, Owner.transform.position, Quaternion.identity);

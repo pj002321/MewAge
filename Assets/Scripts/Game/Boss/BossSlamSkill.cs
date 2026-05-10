@@ -19,7 +19,6 @@ public class BossSlamSkill : BossSkillBase
     [SerializeField] private GameObject slamMarkerPrefab;
     [SerializeField] private GameObject landingVfxPrefab;
     [SerializeField] private float      vfxLifetime      = 1f;
-    [SerializeField] private string     slamLandTrigger  = "SlamLand";
 
     private Animator anim;
 
@@ -102,8 +101,7 @@ public class BossSlamSkill : BossSkillBase
 
         if (marker != null) Destroy(marker);
 
-        if (anim != null && !string.IsNullOrEmpty(slamLandTrigger))
-            anim.SetTrigger(slamLandTrigger);
+        anim?.SetTrigger(EnemyAnim.TAttack);
 
         if (landingVfxPrefab != null)
         {

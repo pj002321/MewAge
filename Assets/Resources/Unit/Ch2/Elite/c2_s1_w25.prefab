@@ -16,6 +16,7 @@ GameObject:
   - component: {fileID: 907566172734922977}
   - component: {fileID: 4950081078187605302}
   - component: {fileID: -3310641572088407229}
+  - component: {fileID: 4063013874160250428}
   m_Layer: 7
   m_Name: c2_s1_w25
   m_TagString: Untagged
@@ -84,8 +85,8 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 1049025713
+  m_SortingLayer: 1
   m_SortingOrder: 100
   m_MaskInteraction: 0
   m_Sprite: {fileID: -8440555559137891319, guid: f3b94f77151910648b1c8d0bf1a44512, type: 3}
@@ -209,6 +210,7 @@ MonoBehaviour:
   bleedInterval: 1
   separationRadius: 0.7
   separationStrength: 2
+  _decal: {fileID: 0}
 --- !u!114 &4950081078187605302
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -221,14 +223,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ebf384ff75278374cb62dda6f31d5629, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ChargeBehaviour
-  chargeDuration: 0.6
+  chargeDistance: 6
   chargeSpeedMultiplier: 3.5
   moveDuration: 2
   idleDuration: 2
+  chargeRange: 4
   chargeColor: {r: 1, g: 0, b: 0, a: 1}
   chargeScale: 0.85
-  preChargeDuration: 0.25
   ghostInterval: 0.06
+  warningLineLength: 5
+  warningLineWidth: 0.06
+  warningColor: {r: 1, g: 0, b: 0, a: 1}
+  warningMaterial: {fileID: 0}
+  warningLineOrigin: {fileID: 0}
 --- !u!114 &-3310641572088407229
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -241,6 +248,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d9c58f3ba0addd845b2803f0d001d294, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EliteMarker
+--- !u!114 &4063013874160250428
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 574793032822915054}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 25cc23087012616429ecb7c10c6cb557, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpriteYSort
+  multiplier: 100
 --- !u!1 &3354211901654412982
 GameObject:
   m_ObjectHideFlags: 0

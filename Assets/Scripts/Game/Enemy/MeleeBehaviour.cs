@@ -60,7 +60,7 @@ public class MeleeBehaviour : EnemyBehaviourBase
 
             if (useAnimationEvent)
             {
-                Owner.EnemyAnimator?.SetTrigger("tAttack");
+                Owner.EnemyAnimator?.SetTrigger(EnemyAnim.TAttack);
                 if (animEventTimeout > 0f)
                 {
                     _pendingHit = true;

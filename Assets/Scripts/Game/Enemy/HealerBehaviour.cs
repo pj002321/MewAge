@@ -63,7 +63,7 @@ public class HealerBehaviour : EnemyBehaviourBase
                 Instantiate(healVfxPrefab, ally.transform.position, Quaternion.identity);
         }
 
-        Owner.EnemyAnimator?.SetTrigger("tAttack");
+        Owner.EnemyAnimator?.SetTrigger(EnemyAnim.TAttack);
     }
 
     private void OnDrawGizmosSelected()

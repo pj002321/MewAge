@@ -10,6 +10,10 @@ using UnityEngine;
 public class WeaponDebugInspector : MonoBehaviour
 {
     [BoxGroup("무기 선택")]
+    [LabelText("챕터 필터 (0 = 전체)"), PropertyRange(0, 10)]
+    public int filterChapter = 0;
+
+    [BoxGroup("무기 선택")]
     [ValueDropdown(nameof(GetWeaponOptions))]
     [LabelText("무기")]
     public string selectedWeaponId;
@@ -85,8 +89,21 @@ public class WeaponDebugInspector : MonoBehaviour
     {
         var list = new List<ValueDropdownItem<string>>();
         DB_무기.ForEachEntity(row =>
+        {
+            int ch = row.f_챕터 > 0 ? row.f_챕터 : ChapterFromId(row.f_무기ID);
+            if (filterChapter > 0 && ch != filterChapter) return;
             list.Add(new ValueDropdownItem<string>(
-                $"챕터 {row.f_챕터}/{row.f_등급} | {row.f_이름}", row.f_무기ID)));
+                $"Ch{ch}/{row.f_등급} | {row.f_이름} ({row.f_무기ID})", row.f_무기ID));
+        });
+        list.Sort((a, b) => string.Compare(a.Text, b.Text, System.StringComparison.Ordinal));
         return list;
+    }
+
+    private static int ChapterFromId(string weaponId)
+    {
+        if (string.IsNullOrEmpty(weaponId)) return 0;
+        var part = weaponId.ToLower().Split('_')[0];
+        if (part.StartsWith("ch") && int.TryParse(part.Substring(2), out int n)) return n;
+        return 0;
     }
 }

@@ -41,3 +41,30 @@
 @SynergyInfoPanel내부의 @SynergySlot의 Overlay를 활성화 해야함.
 
  @SynergyInfoPanel의 창을 열어서 확인 시 UIShiny를 비활성화 & RedDot 이미지를 비활성화 
+
+
+ # 스킬 시스템 (특수효과)
+ - 구현된 스킬 시스템
+ - HIT_CLONE
+-> 투사체 2개 던지고 돌아옴
+[DONE] 수정사항 : 에픽은 1개만 던지기 , 신화는 2개
+[DONE] 타입 추가: HIT_CLONE_CROSS — 십자 4방향 발사
+[DONE] 타입 추가: HIT_CLONE_BURST — 플레이어 위치에서 4개 뭉쳐서 날리기
+[DONE] 타입 추가: HIT_CLONE_SPREAD — 타격 위치에서 8방향 분산 (근접 전용, 복귀 없음)
+
+[DONE] BOSS_SPIKE → HIT_SPIKE 로 통합 (BOSS_SPIKE는 alias 유지)
+[DONE] HIT_SPIKE : 맞은 위치 주변 반경 모든 적에게 동시에 스파이크 착지
+[DONE] HIT_ICE, HIT_FIRE → HIT_STUN 통합 (StatusEffectConfig.hitStunType/hitStunColor 으로 무기별 설정)
+
+[DONE] BUFF_* 패시브 버프 : 무기 장착 시 즉시 스탯 버프 적용 (BUFF_DEF/BUFF_CRI/BUFF_ATK/BUFF_HP/BUFF_SPD/BUFF_REGEN)
+    무기 해제 시 OnDestroy에서 자동 제거. StatusEffectConfig.WeaponEntry.passiveBuffPct 로 수치 설정 (기본 2%)
+
+[DONE] HIT_CLONE → THROW_RETURN 이름 변경, 변형 타입도 동일하게 변경
+    THROW_RETURN / THROW_CROSS / THROW_BURST / THROW_SPREAD
+
+[DONE] HIT_SPIN 개선 : 발동 시 무기 스프라이트 고스트 6개가 플레이어 중심으로 4초간 공전
+
+
+
+
+ 

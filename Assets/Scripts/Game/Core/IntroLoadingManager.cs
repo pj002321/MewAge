@@ -32,7 +32,12 @@ public class IntroLoadingManager : MonoBehaviour
     private IEnumerator LoadingRoutine()
     {
         float elapsed = 0f;
-        
+
+        // 프롤로그를 아직 보지 않은 유저면 home 대신 prologue로 보냄
+        string destination = PlayerPrefs.GetInt(PrologueManager.SeenKey, 0) == 0
+            ? "prologue@scene"
+            : targetSceneName;
+
         // UI 초기화 세팅
         UpdateUI(0f);
 
@@ -40,7 +45,7 @@ public class IntroLoadingManager : MonoBehaviour
         AsyncOperation asyncOp = null;
         try
         {
-            asyncOp = SceneManager.LoadSceneAsync(targetSceneName);
+            asyncOp = SceneManager.LoadSceneAsync(destination);
         }
         catch (System.Exception e)
         {

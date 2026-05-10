@@ -34,6 +34,13 @@ public class RangedBehaviour : EnemyBehaviourBase
     [Tooltip("애니메이션 이벤트가 이 시간 내에 오지 않으면 직접 발사 (0이면 폴백 없음)")]
     [SerializeField] private float animEventTimeout   = 0.6f;
 
+    [Header("이동 상태")]
+    [SerializeField] private float retreatDuration = 1.4f;
+
+    private enum MoveState { Approaching, Idle, Retreating }
+    private MoveState _moveState = MoveState.Approaching;
+    private float     _retreatTimer;
+
     private float        _projSpeed;
     private float        _projBonusDamage;
     private bool         _projCanReflect;
@@ -69,24 +76,50 @@ public class RangedBehaviour : EnemyBehaviourBase
 
         float   dist     = Vector2.Distance(Owner.Rb.position, Owner.PlayerTransform.position);
         Vector2 toPlayer = ((Vector2)Owner.PlayerTransform.position - Owner.Rb.position).normalized;
-
-        Vector2 moveDir;
-        if (dist < preferredRange * 0.75f)      moveDir = -toPlayer;  // 너무 가까우면 후퇴
-        else if (dist > preferredRange * 1.3f)  moveDir = toPlayer;   // 너무 멀면 접근
-        else                                    moveDir = Vector2.zero;
-
-        if (moveDir != Vector2.zero)
-            Owner.MoveInDirection(moveDir, Owner.MoveSpeed);
-
         Owner.FlipToward(toPlayer);
+
+        switch (_moveState)
+        {
+            case MoveState.Retreating:
+                _retreatTimer -= Time.fixedDeltaTime;
+                Owner.MoveInDirection(-toPlayer, Owner.MoveSpeed);
+                SetWalk(true);
+                if (_retreatTimer <= 0f)
+                    _moveState = MoveState.Approaching;
+                break;
+
+            case MoveState.Idle:
+                // 경고 중 제자리. 경고가 끝나면 Approaching으로 전환
+                SetWalk(false);
+                if (!_isWarning)
+                    _moveState = MoveState.Approaching;
+                break;
+
+            case MoveState.Approaching:
+                if (dist > preferredRange)
+                {
+                    Owner.MoveInDirection(toPlayer, Owner.MoveSpeed);
+                    SetWalk(true);
+                }
+                else
+                {
+                    SetWalk(false);
+                }
+                break;
+        }
     }
+
+    private void SetWalk(bool walking)
+        => Owner.EnemyAnimator?.SetBool(EnemyAnim.BMove, walking);
 
     public override void Init(EnemyController controller)
     {
         base.Init(controller);
-        shootTimer   = shootInterval;
-        _isWarning   = false;
-        _pendingShot = false;
+        shootTimer    = shootInterval;
+        _isWarning    = false;
+        _pendingShot  = false;
+        _moveState    = MoveState.Approaching;
+        _retreatTimer = 0f;
         _col         = controller.GetComponentInChildren<Collider2D>();
         attackVfx?.SetActive(false);
         if (_activeWarnLine != null)
@@ -117,6 +150,7 @@ public class RangedBehaviour : EnemyBehaviourBase
     private IEnumerator WarnAndShoot()
     {
         _isWarning = true;
+        _moveState = MoveState.Idle;   // 경고 중 제자리
 
         Vector2 spawnPos = GetWarningOrigin();
         Vector2 dir      = Owner.PlayerTransform != null
@@ -149,7 +183,9 @@ public class RangedBehaviour : EnemyBehaviourBase
         if (Owner != null && Owner.PlayerTransform != null)
             ShootProjectile();
 
-        _isWarning = false;
+        _isWarning  = false;
+        _moveState  = MoveState.Retreating;   // 발사 후 후퇴
+        _retreatTimer = retreatDuration;
     }
 
     private void ShootProjectile()
@@ -162,7 +198,7 @@ public class RangedBehaviour : EnemyBehaviourBase
 
         if (attackVfx != null) StartCoroutine(ShowVfx());
 
-        Owner.EnemyAnimator?.SetTrigger("tAttack");
+        Owner.EnemyAnimator?.SetTrigger(EnemyAnim.TAttack);
 
         if (useAnimationEvent)
         {
@@ -217,6 +253,7 @@ public class RangedBehaviour : EnemyBehaviourBase
             _activeWarnLine = null;
         }
         _isWarning = false;
+        SetWalk(false);
     }
 
     private LineRenderer SpawnWarningLine(Vector2 start, Vector2 dir)

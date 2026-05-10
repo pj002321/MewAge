@@ -107,6 +107,7 @@ GameObject:
   - component: {fileID: 2695589287446260924}
   - component: {fileID: 6051558221528239939}
   - component: {fileID: 6640574387249183861}
+  - component: {fileID: -1816126433151113325}
   m_Layer: 7
   m_Name: c2_s3_w15
   m_TagString: Untagged
@@ -175,8 +176,8 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 1049025713
+  m_SortingLayer: 1
   m_SortingOrder: 100
   m_MaskInteraction: 0
   m_Sprite: {fileID: 18779425253511567, guid: 59c8a1ccd66fef04380f4e3bedde5ce9, type: 3}
@@ -236,6 +237,7 @@ MonoBehaviour:
   bleedInterval: 1
   separationRadius: 1.2
   separationStrength: 8
+  _decal: {fileID: 0}
 --- !u!114 &3851822225035260425
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -272,7 +274,6 @@ MonoBehaviour:
   slamMarkerPrefab: {fileID: 7905823675861574758, guid: 2c45f609030a63849b36336032979582, type: 3}
   landingVfxPrefab: {fileID: 4873479580030643389, guid: 939ba1a6a36ef9748a7525496ad78563, type: 3}
   vfxLifetime: 1
-  slamLandTrigger: tCharge
 --- !u!70 &6051558221528239939
 CapsuleCollider2D:
   m_ObjectHideFlags: 0
@@ -337,3 +338,16 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
+--- !u!114 &-1816126433151113325
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3312402149363571138}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 25cc23087012616429ecb7c10c6cb557, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpriteYSort
+  multiplier: 100

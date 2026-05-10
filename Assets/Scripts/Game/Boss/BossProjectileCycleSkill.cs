@@ -125,9 +125,6 @@ public class BossProjectileCycleSkill : BossSkillBase
     [Header("추격 설정")]
     [SerializeField] private float chaseStopDistance = 1.8f;
 
-    [Header("애니메이션")]
-    [SerializeField] private string attackTrigger = "tAttack";
-
     private readonly List<LineRenderer> _activeWarnLines = new();
 
     // ── 생명주기 ─────────────────────────────────────────────────
@@ -335,7 +332,7 @@ public class BossProjectileCycleSkill : BossSkillBase
         if (IsInvalid()) yield break;
 
         Owner.FlipToward(dirs[0]);
-        Owner.EnemyAnimator?.SetTrigger(attackTrigger);
+        Owner.EnemyAnimator?.SetTrigger(EnemyAnim.TAttack);
         Vector2 firePos = GetSpawnPos();
         foreach (var dir in dirs)
             SpawnProjectile(firePos, dir, accelDuration, initialSpeedRatio);
@@ -454,7 +451,7 @@ public class BossProjectileCycleSkill : BossSkillBase
 
                 Vector2 fireDir = ((Vector2)(lockTarget - (Vector3)GetSpawnPos())).normalized;
                 Owner.FlipToward(fireDir);
-                Owner.EnemyAnimator?.SetTrigger(attackTrigger);
+                Owner.EnemyAnimator?.SetTrigger(EnemyAnim.TAttack);
 
                 SpawnHomingProjectile(GetSpawnPos(), lockTarget, cfg.아크높이, cfg.호밍속도);
 

@@ -115,8 +115,8 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 1049025713
+  m_SortingLayer: 1
   m_SortingOrder: 5
   m_MaskInteraction: 0
   m_Sprite: {fileID: 4153640981644938364, guid: 70e40fa9cfd10464cb00378383411119, type: 3}
@@ -164,9 +164,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossController
   damageCooldown: 0.5
+  moveSpeed: 3
   enrageThreshold: 0.5
   enrageSpeedMult: 1.5
   enrageDamageMult: 1.5
+  grogyThresholds:
+  - 0.7
+  - 0.35
+  grogyDuration: 5
+  grogyOverheadPrefab: {fileID: 0}
+  grogyOverheadAnchor: {fileID: 0}
+  grogyOverheadYOffset: 1.5
   flashColor: {r: 1, g: 0.2, b: 0.2, a: 1}
   flashDuration: 0.12
   onDeathFX:
@@ -178,11 +186,9 @@ MonoBehaviour:
   chaseDuration: 2.5
   idleDuration: 0.6
   skills: []
+  _decal: {fileID: 0}
   entryDrop: 1
-  dropSpeed: 22
-  squashDuration: 0.08
-  stretchDuration: 0.1
-  settleDuration: 0.12
+  entryScaleUpDuration: 0.35
 --- !u!50 &1774644437137481360
 Rigidbody2D:
   serializedVersion: 5
@@ -266,19 +272,50 @@ MonoBehaviour:
   executeInPattern: 1
   projectilePrefab: {fileID: 7916182024222986910, guid: 47dbd72006f17c24e909af1468326e13, type: 3}
   projectileSpeed: 7
-  projectileDamage: 0
   firePoint: {fileID: 4042531504965790265}
-  enableLinearFire: 1
-  linearDuration: 4
-  linearInterval: 1
-  chaseAfterLinear: 2
-  fanCount: 5
-  fanAngle: 120
-  fanRepeat: 3
-  fanRepeatDelay: 1.5
-  chaseAfterFan: 2
+  phases:
+  - label: "\uD398\uC774\uC988"
+    type: 0
+    "\uACBD\uACE0\uC2DC\uAC04": 0.4
+    "\uC5F0\uC0AC\uD69F\uC218": 5
+    "\uBC1C\uC0AC\uAC04\uACA9": 0.5
+    "\uBC29\uD5A5\uC218": 8
+    "\uBC18\uBCF5\uD69F\uC218": 1
+    "\uBC18\uBCF5\uAC04\uACA9": 0.6
+    "\uAC01\uB3C4\uC624\uD504\uC14B": 0
+    "\uBD80\uCC44\uAF34\uAC01\uB3C4": 120
+    "\uD638\uBC0D\uD69F\uC218": 3
+    "\uD638\uBC0D\uAC04\uACA9": 0.25
+    "\uC544\uD06C\uB192\uC774": 3
+    "\uD638\uBC0D\uC18D\uB3C4": 9
+    "\uAC00\uC18D\uC2DC\uAC04": 0.4
+    "\uCD08\uAE30\uC18D\uB3C4\uBE44\uC728": 0.05
+    "\uCD94\uACA9\uC2DC\uAC04": 3
+  - label: "\uD398\uC774\uC988"
+    type: 2
+    "\uACBD\uACE0\uC2DC\uAC04": 0.4
+    "\uC5F0\uC0AC\uD69F\uC218": 1
+    "\uBC1C\uC0AC\uAC04\uACA9": 0.5
+    "\uBC29\uD5A5\uC218": 8
+    "\uBC18\uBCF5\uD69F\uC218": 2
+    "\uBC18\uBCF5\uAC04\uACA9": 0.6
+    "\uAC01\uB3C4\uC624\uD504\uC14B": 0
+    "\uBD80\uCC44\uAF34\uAC01\uB3C4": 120
+    "\uD638\uBC0D\uD69F\uC218": 3
+    "\uD638\uBC0D\uAC04\uACA9": 0.25
+    "\uC544\uD06C\uB192\uC774": 3
+    "\uD638\uBC0D\uC18D\uB3C4": 9
+    "\uAC00\uC18D\uC2DC\uAC04": 0
+    "\uCD08\uAE30\uC18D\uB3C4\uBE44\uC728": 0.05
+    "\uCD94\uACA9\uC2DC\uAC04": 3
+  useWarningLines: 1
+  warningLineLength: 10
+  warningLineWidth: 0.06
+  warningColor: {r: 1, g: 0, b: 0, a: 1}
+  warningMaterial: {fileID: 0}
+  impactVfxPrefab: {fileID: 0}
+  impactVfxLifetime: 1
   chaseStopDistance: 1.8
-  attackTrigger: tAttack
 --- !u!1 &3628999252177199525
 GameObject:
   m_ObjectHideFlags: 0

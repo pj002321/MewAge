@@ -74,7 +74,7 @@ public class MagicBehaviour : EnemyBehaviourBase
         float dist = Vector2.Distance(transform.position, Owner.PlayerTransform.position);
         if (dist > castRange) return;
 
-        Owner.EnemyAnimator?.SetTrigger("tAttack");
+        Owner.EnemyAnimator?.SetTrigger(EnemyAnim.TAttack);
         StartCoroutine(skillType == MagicSkillType.Spike ? SpikeRoutine() : SummonRoutine());
     }
 

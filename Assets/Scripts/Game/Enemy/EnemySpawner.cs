@@ -452,4 +452,66 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
             _ => new Vector2( 5.5f, Random.Range(-9f, 9f)),
         };
     }
+
+    // ── 포메이션 스폰 ────────────────────────────────────────────
+
+    /// <summary>
+    /// 지정한 형태로 적을 포메이션 스폰합니다.
+    /// GameManager 등 외부에서 StartCoroutine으로 호출하세요.
+    /// </summary>
+    /// <param name="shape">X형·사각형·H형·십자형·직선·원형</param>
+    /// <param name="spacing">적 간 간격 (유닛)</param>
+    /// <param name="countPerArm">팔/열/변당 적 수</param>
+    /// <param name="interval">각 적 스폰 사이 딜레이 (초). 0이면 동시 스폰.</param>
+    /// <summary>StageEnvironmentSO.FormationEntry에서 직접 호출합니다.</summary>
+    public void TriggerFormation(StageEnvironmentSO.FormationEntry entry)
+        => StartCoroutine(SpawnFormation(entry.shape, entry.spacing, entry.countPerArm, entry.interval, entry.startDelay));
+
+    public IEnumerator SpawnFormation(
+        FormationLayout.Shape shape,
+        float spacing     = 2f,
+        int   countPerArm = 3,
+        float interval    = 0.08f,
+        float startDelay  = 0f)
+    {
+        if (startDelay > 0f)
+            yield return new WaitForSeconds(startDelay);
+
+        Vector2 center    = GetFormationCenter();
+        var     positions = FormationLayout.GetPositions(shape, center, spacing, countPerArm);
+
+        foreach (var pos in positions)
+        {
+            var data = PickUnitData();
+            if (data?.prefab != null)
+                DoSpawn(data.prefab, pos, data);
+
+            if (interval > 0f)
+                yield return new WaitForSeconds(interval);
+        }
+    }
+
+    /// <summary>플레이어에서 minDist 이상 떨어진 랜덤 내부 위치를 반환합니다.</summary>
+    private Vector2 GetFormationCenter(float minDist = 3.5f)
+    {
+        Vector2 playerPos = PlayerController.Instance != null
+            ? (Vector2)PlayerController.Instance.transform.position
+            : Vector2.zero;
+
+        Bounds b = SpawnZone.Shared != null
+            ? new Bounds(SpawnZone.Shared.BoundsCenter, SpawnZone.Shared.BoundsSize * 0.65f)
+            : new Bounds(Vector3.zero, new Vector3(8f, 14f, 0f));
+
+        for (int i = 0; i < 20; i++)
+        {
+            var pos = new Vector2(
+                Random.Range(b.min.x, b.max.x),
+                Random.Range(b.min.y, b.max.y));
+            if (Vector2.Distance(pos, playerPos) >= minDist)
+                return pos;
+        }
+
+        // fallback: 플레이어 기준 랜덤 방향 오프셋
+        return playerPos + Random.insideUnitCircle.normalized * minDist;
+    }
 }

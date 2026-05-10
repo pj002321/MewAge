@@ -174,8 +174,8 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 1049025713
+  m_SortingLayer: 1
   m_SortingOrder: 5
   m_MaskInteraction: 0
   m_Sprite: {fileID: 4488652361002873627, guid: e8caf574564fa114dbd2a4199ec37c82, type: 3}
@@ -223,9 +223,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossController
   damageCooldown: 0.5
+  moveSpeed: 3
   enrageThreshold: 0.5
   enrageSpeedMult: 1.5
   enrageDamageMult: 1.5
+  grogyThresholds:
+  - 0.7
+  - 0.35
+  grogyDuration: 5
+  grogyOverheadPrefab: {fileID: 0}
+  grogyOverheadAnchor: {fileID: 0}
+  grogyOverheadYOffset: 1.5
   flashColor: {r: 1, g: 0.2, b: 0.2, a: 1}
   flashDuration: 0.12
   onDeathFX:
@@ -237,11 +245,9 @@ MonoBehaviour:
   chaseDuration: 2.5
   idleDuration: 0.6
   skills: []
+  _decal: {fileID: 0}
   entryDrop: 1
-  dropSpeed: 22
-  squashDuration: 0.08
-  stretchDuration: 0.1
-  settleDuration: 0.12
+  entryScaleUpDuration: 0.35
 --- !u!50 &7493410442888071280
 Rigidbody2D:
   serializedVersion: 5

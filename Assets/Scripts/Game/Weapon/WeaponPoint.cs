@@ -223,7 +223,7 @@ public class WeaponPoint : MonoBehaviour
     private int    _weaponChapter = 1;
     private string _weaponId;
 
-    // HIT_CLONE: 클론이 날아가는 동안 재발동 불가
+    // HIT_CLONE_RETURN: 투사체 날아가는 동안 재발동 불가
     private bool             _cloneFlying = false;
     private int              _cloneActiveCount = 0;
     private readonly List<GameObject> _activeClones = new List<GameObject>();
@@ -235,6 +235,13 @@ public class WeaponPoint : MonoBehaviour
     private float _spinBoostTimer;
     private const int   SpinBoostMaxStack = 5;
     private const float SpinBoostDecay    = 3f;
+
+    // HIT_SPIN 고스트 클론
+    private readonly List<GameObject> _spinGhosts = new();
+
+    private StatType?   _passiveBuffStat;
+    private float       _passiveBuffAmount;
+    private GameObject  _passiveBuffVfxInstance;
 
     private float _bossSpinHitTimer;
 
@@ -267,10 +274,12 @@ public class WeaponPoint : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (_specialEffectId == "PASS_DMG")
-            WeaponSpecialEffectState.RemoveBossDamageReduction();
+        if (_passiveBuffStat.HasValue)
+            PlayerStatManager.Shared?.AddPctMod(_passiveBuffStat.Value, -_passiveBuffAmount);
         OnRecallAll -= RecallClones;
         RecallClones();
+        foreach (var g in _spinGhosts) if (g != null) Destroy(g);
+        _spinGhosts.Clear();
     }
 
     private void OnDisable() => RecallClones();
@@ -672,7 +681,7 @@ public class WeaponPoint : MonoBehaviour
                 lifeSteal: lifeSteal, dotDamage: dotDamage, areaHitRadius: areaHitRadius,
                 areaHitDamageRatio: areaHitDamageRatio, criticalRate: criticalRate,
                 criticalMultiplier: criticalMultiplier, baseDamage: attackDamage, knockbackPower: knockbackPower,
-                acceleration: projectileSpeed * 3f);
+                acceleration: Mathf.Clamp(projectileSpeed * 0.05f, 0.1f, 0.4f));
         }
         ApplyShootSpecialEffect(proj, spawnPos, aimDir);
         TriggerAttackAnimation();
@@ -1827,8 +1836,26 @@ public class WeaponPoint : MonoBehaviour
         _specialEffectId = data.trait;
         _weaponChapter   = data.chapter;
         _weaponId        = data.id;
-        if (_specialEffectId == "PASS_DMG")
-            WeaponSpecialEffectState.AddBossDamageReduction();
+        _passiveBuffStat        = null;
+        _passiveBuffAmount      = 0f;
+        _passiveBuffVfxInstance = null;
+        if (!string.IsNullOrEmpty(_specialEffectId) && _specialEffectId.StartsWith("BUFF_"))
+        {
+            var stat = BuffTraitToStat(_specialEffectId);
+            if (stat.HasValue)
+            {
+                var cfg            = StatusEffectConfig.Shared;
+                float pct          = cfg?.GetPassiveBuffPct(_weaponId, 2f) ?? 2f;
+                _passiveBuffStat   = stat;
+                _passiveBuffAmount = pct;
+                PlayerStatManager.Shared?.AddPctMod(stat.Value, pct);
+
+                var vfxPrefab  = cfg?.GetPassiveBuffVfx(_weaponId);
+                var buffPlayer = PlayerController.Instance;
+                if (vfxPrefab != null && buffPlayer != null)
+                    StartCoroutine(PlayBuffEquipVfx(vfxPrefab, buffPlayer.transform));
+            }
+        }
 
         attackCooldown = data.attackCooldown;
         _baseCooldown  = data.attackCooldown;
@@ -1945,39 +1972,57 @@ public class WeaponPoint : MonoBehaviour
         if (string.IsNullOrEmpty(_specialEffectId) || enemy == null) return;
         switch (_specialEffectId)
         {
+            // ── HIT_ICE / HIT_FIRE / HIT_STUN 통합 ─────────────
             case "HIT_ICE":
-                if (Random.value > Chance(0.30f)) break;
-                {
-                    float r = Mathf.Max(areaHitRadius, 1.5f);
-                    int cnt = Physics2D.OverlapCircleNonAlloc(enemy.transform.position, r, _hitBuffer);
-                    for (int i = 0; i < cnt; i++)
-                    {
-                        var e = _hitBuffer[i].GetComponentInParent<EnemyController>();
-                        if (e != null) e.Freeze(2f, 0f, new Color(0.5f, 0.85f, 1f, 1f), _weaponChapter);
-                    }
-                }
-                break;
-
-            case "HIT_STUN":
-                if (Random.value > Chance(0.25f)) break;
-                enemy.Stun(1.5f, _weaponChapter);
-                break;
-
             case "HIT_FIRE":
-                if (Random.value > Chance(0.35f)) break;
-                enemy.ApplyFire(damage * 0.3f, 3f, weaponChapter: _weaponChapter);
+            case "HIT_STUN":
+            {
+                float chance = _specialEffectId switch
+                {
+                    "HIT_ICE"  => Chance(0.30f),
+                    "HIT_FIRE" => Chance(0.35f),
+                    _          => Chance(0.25f),
+                };
+                if (Random.value > chance) break;
+                ApplyHitStun(enemy, damage);
                 break;
+            }
 
-            case "HIT_CLONE":
+            // ── HIT_CLONE 변형들 ─────────────────────────────────
+            case "HIT_CLONE_RETURN":
                 if (_cloneFlying) break;
                 if (Random.value > Chance(0.25f)) break;
                 SpawnCloneProjectiles(enemy.transform.position, damage);
                 break;
 
-            case "BOSS_SPIKE":
+            case "HIT_CLONE_CROSS":
+                if (_cloneFlying) break;
                 if (Random.value > Chance(0.25f)) break;
-                BossSpike.SpawnOnEnemy(enemy, _weaponSr?.sprite, damage * 1.5f,
-                    StatusEffectConfig.Shared?.GetSpikePrefab(_weaponId));
+                SpawnCloneCross(enemy.transform.position, damage);
+                break;
+
+            case "HIT_CLONE_BURST":
+                if (_cloneFlying) break;
+                if (Random.value > Chance(0.25f)) break;
+                SpawnCloneBurst(enemy.transform.position, damage);
+                break;
+
+            case "HIT_CLONE_SPREAD":
+                if (_cloneFlying) break;
+                if (Random.value > Chance(0.25f)) break;
+                SpawnCloneSpread(enemy.transform.position, damage);
+                break;
+
+            // ── HIT_SPIKE: 타격 위치 주변 범위 AOE 스파이크 ──────
+            case "BOSS_SPIKE":
+            case "HIT_SPIKE":
+                if (Random.value > Chance(0.25f)) break;
+                SpawnAoeSpike(enemy.transform.position, damage);
+                break;
+
+            case "HIT_DOT":
+                if (Random.value > Chance(0.35f)) break;
+                ApplyAreaFire(enemy.transform.position);
                 break;
 
             case "HIT_SHOCK":
@@ -1993,6 +2038,7 @@ public class WeaponPoint : MonoBehaviour
                 _spinBoostOrbit = _spinBoostStack * 0.25f;
                 _spinBoostSpeed = _spinBoostStack * boostSign * 40f;
                 _spinBoostTimer = SpinBoostDecay;
+                StartSpinGhosts();
                 break;
         }
     }
@@ -2008,21 +2054,46 @@ public class WeaponPoint : MonoBehaviour
                 boss.TriggerGroggy(5f);
                 break;
 
-            case "BOSS_SPIKE":
-                if (Random.value > Chance(0.25f)) break;
-                BossSpike.Spawn(boss, _weaponSr?.sprite, damage * 1.5f,
-                    StatusEffectConfig.Shared?.GetSpikePrefab(_weaponId));
-                break;
-
             case "BOSS_BIND":
                 if (Random.value > Chance(0.15f)) break;
                 boss.BindMovement(3f);
                 break;
 
-            case "HIT_CLONE":
+            // ── HIT_SPIKE: 보스 위치 주변 AOE 스파이크 ───────────
+            case "BOSS_SPIKE":
+            case "HIT_SPIKE":
+                if (Random.value > Chance(0.25f)) break;
+                SpawnAoeSpike(boss.transform.position, damage);
+                break;
+
+            // ── HIT_CLONE 변형들 ─────────────────────────────────
+            case "HIT_CLONE_RETURN":
                 if (_cloneFlying) break;
                 if (Random.value > Chance(0.25f)) break;
                 SpawnCloneProjectiles(boss.transform.position, damage);
+                break;
+
+            case "HIT_CLONE_CROSS":
+                if (_cloneFlying) break;
+                if (Random.value > Chance(0.25f)) break;
+                SpawnCloneCross(boss.transform.position, damage);
+                break;
+
+            case "HIT_CLONE_BURST":
+                if (_cloneFlying) break;
+                if (Random.value > Chance(0.25f)) break;
+                SpawnCloneBurst(boss.transform.position, damage);
+                break;
+
+            case "HIT_CLONE_SPREAD":
+                if (_cloneFlying) break;
+                if (Random.value > Chance(0.25f)) break;
+                SpawnCloneSpread(boss.transform.position, damage);
+                break;
+
+            case "HIT_DOT":
+                if (Random.value > Chance(0.35f)) break;
+                ApplyAreaFire(boss.transform.position);
                 break;
 
             case "HIT_SHOCK":
@@ -2062,8 +2133,8 @@ public class WeaponPoint : MonoBehaviour
                 break;
 
             case "SHOOT_SUB":
-                FireExtraProjectile(spawnPos, RotateVec(aimDir,  35f), attackDamage * 0.5f);
-                FireExtraProjectile(spawnPos, RotateVec(aimDir, -35f), attackDamage * 0.5f);
+                FireHomingProjectile(spawnPos, RotateVec(aimDir,  35f), attackDamage * 0.5f);
+                FireHomingProjectile(spawnPos, RotateVec(aimDir, -35f), attackDamage * 0.5f);
                 break;
 
             case "SHOOT_WAVE":
@@ -2091,7 +2162,7 @@ public class WeaponPoint : MonoBehaviour
         if (prefab == null) prefab = projectilePrefab;
         if (prefab == null)
         {
-            Debug.LogWarning($"[HIT_CLONE] 프리팹 없음 — weaponId='{_weaponId}'. StatusEffectConfig Editor에서 클론 프리팹을 등록하세요.");
+            Debug.LogWarning($"[HIT_CLONE_RETURN] 프리팹 없음 — weaponId='{_weaponId}'. StatusEffectConfig Editor에서 클론 프리팹을 등록하세요.");
             return;
         }
 
@@ -2110,20 +2181,33 @@ public class WeaponPoint : MonoBehaviour
         Vector2 dir1 = RotateVec(forward,  15f);
         Vector2 dir2 = RotateVec(forward, -15f);
 
-        var go1 = SpawnCloneVisual(prefab, origin);
-        var go2 = SpawnCloneVisual(prefab, origin);
-
+        // 에픽=1개, 신화=2개
+        int cloneCount    = _grade == WeaponGrade.Epic ? 1 : 2;
         _cloneFlying      = true;
-        _cloneActiveCount = 2;
+        _cloneActiveCount = cloneCount;
+
+        var go1 = SpawnCloneVisual(prefab, origin);
         StartCoroutine(CloneArcRoutine(go1, origin, origin + dir1 * range, cloneDmg, outTime, pauseTime, retTime));
-        StartCoroutine(CloneArcRoutine(go2, origin, origin + dir2 * range, cloneDmg, outTime, pauseTime, retTime));
+        if (cloneCount >= 2)
+        {
+            var go2 = SpawnCloneVisual(prefab, origin);
+            StartCoroutine(CloneArcRoutine(go2, origin, origin + dir2 * range, cloneDmg, outTime, pauseTime, retTime));
+        }
     }
 
-    private GameObject SpawnCloneVisual(GameObject prefab, Vector2 pos)
+    private GameObject SpawnCloneVisual(GameObject prefab, Vector2 pos, Vector2 dir = default)
     {
         var go = Instantiate(prefab, pos, Quaternion.identity);
         var p  = go.GetComponentInChildren<Projectile>();
-        if (p != null) Destroy(p);
+        if (p != null)
+        {
+            if (dir != default && dir.sqrMagnitude > 0.001f)
+            {
+                float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg - p.ForwardAngleDeg;
+                go.transform.rotation = Quaternion.Euler(0f, 0f, angle);
+            }
+            Destroy(p);
+        }
         _activeClones.Add(go);
         return go;
     }
@@ -2234,6 +2318,389 @@ public class WeaponPoint : MonoBehaviour
     }
 
 
+    // ── HIT_STUN 통합 핸들러 ─────────────────────────────────────
+
+    private void ApplyAreaFire(Vector2 center)
+    {
+        float r   = Mathf.Max(areaHitRadius, 2f);
+        int   cnt = Physics2D.OverlapCircleNonAlloc(center, r, _hitBuffer);
+        float dotDmg = attackDamage * 0.15f;
+        for (int i = 0; i < cnt; i++)
+        {
+            var e = _hitBuffer[i].GetComponentInParent<EnemyController>();
+            if (e != null && e.gameObject.activeInHierarchy)
+                e.ApplyFire(dotDmg, 3f, 0.5f, _weaponChapter);
+        }
+    }
+
+    private void ApplyHitStun(EnemyController enemy, float damage)
+    {
+        var cfg   = StatusEffectConfig.Shared;
+        var type  = cfg?.GetHitStunType (_weaponId, _specialEffectId) ?? DefaultStunType();
+        var color = cfg?.GetHitStunColor(_weaponId, DefaultStunColor(type)) ?? DefaultStunColor(type);
+
+        switch (type)
+        {
+            case StatusEffectConfig.HitStunType.Stun:
+                enemy.Stun(1.5f, _weaponChapter);
+                break;
+
+            case StatusEffectConfig.HitStunType.Freeze:
+            {
+                float r   = Mathf.Max(areaHitRadius, 1.5f);
+                int   cnt = Physics2D.OverlapCircleNonAlloc(enemy.transform.position, r, _hitBuffer);
+                for (int i = 0; i < cnt; i++)
+                {
+                    var e = _hitBuffer[i].GetComponentInParent<EnemyController>();
+                    if (e != null) e.Freeze(2f, 0f, color, _weaponChapter);
+                }
+                break;
+            }
+
+            case StatusEffectConfig.HitStunType.Fire:
+                enemy.ApplyFire(damage * 0.3f, 3f, weaponChapter: _weaponChapter);
+                break;
+        }
+    }
+
+    private StatusEffectConfig.HitStunType DefaultStunType() => _specialEffectId switch
+    {
+        "HIT_ICE"  => StatusEffectConfig.HitStunType.Freeze,
+        "HIT_FIRE" => StatusEffectConfig.HitStunType.Fire,
+        _          => StatusEffectConfig.HitStunType.Stun,
+    };
+
+    private static Color DefaultStunColor(StatusEffectConfig.HitStunType type) => type switch
+    {
+        StatusEffectConfig.HitStunType.Freeze => new Color(0.5f, 0.85f, 1f, 1f),
+        StatusEffectConfig.HitStunType.Fire   => new Color(1f,   0.4f,  0.1f, 1f),
+        _                                     => Color.white,
+    };
+
+    // ── HIT_CLONE 변형 ────────────────────────────────────────────
+
+    /// <summary>십자 4방향으로 클론 발사.</summary>
+    private void SpawnCloneCross(Vector2 targetPos, float damage)
+    {
+        var prefab = GetClonePrefab(); if (prefab == null) return;
+        Vector2 origin = GetWeaponOrigin(targetPos);
+        float range = StatusEffectConfig.Shared?.GetCloneRange(_weaponId, 6f) ?? 6f;
+        var   cfg   = StatusEffectConfig.Shared;
+        float ot = cfg?.GetCloneOutTime   (_weaponId, CloneOutTime)    ?? CloneOutTime;
+        float pt = cfg?.GetClonePauseTime (_weaponId, ClonePauseTime)  ?? ClonePauseTime;
+        float rt = cfg?.GetCloneReturnTime(_weaponId, CloneReturnTime) ?? CloneReturnTime;
+
+        Vector2[] dirs = { Vector2.right, Vector2.up, Vector2.left, Vector2.down };
+        _cloneFlying      = true;
+        _cloneActiveCount = dirs.Length;
+        foreach (var d in dirs)
+        {
+            var go = SpawnCloneVisual(prefab, origin);
+            StartCoroutine(CloneArcRoutine(go, origin, origin + d * range, damage * 0.5f, ot, pt, rt));
+        }
+    }
+
+    /// <summary>가운데 집결 → 수직 나열 → 랜덤 순서로 하나씩 팍! 직선 발사.</summary>
+    private void SpawnCloneBurst(Vector2 targetPos, float damage)
+    {
+        var prefab = GetClonePrefab(); if (prefab == null) return;
+        Vector2 origin  = GetWeaponOrigin(targetPos);
+        Vector2 forward = targetPos - origin;
+        if (forward.sqrMagnitude < 0.01f) forward = Vector2.up;
+        forward = forward.normalized;
+        Vector2 perp       = new Vector2(-forward.y, forward.x);
+        float   range      = StatusEffectConfig.Shared?.GetCloneRange(_weaponId, 7f)          ?? 7f;
+        float   travelTime = StatusEffectConfig.Shared?.GetCloneOutTime(_weaponId, 0.22f)      ?? 0.22f;
+
+        float[] slots = { -1.5f, -0.5f, 0.5f, 1.5f };
+        _cloneFlying      = true;
+        _cloneActiveCount = slots.Length;
+        StartCoroutine(BurstSequenceRoutine(prefab, origin, forward, perp, slots, range, damage * 0.4f, travelTime));
+    }
+
+    private IEnumerator BurstSequenceRoutine(GameObject prefab, Vector2 origin, Vector2 forward,
+        Vector2 perp, float[] slots, float range, float damage, float travelTime)
+    {
+        const float gatherDuration = 0.12f;
+        const float holdDuration   = 0.06f;
+        const float minFireDelay   = 0.04f;
+        const float maxFireDelay   = 0.12f;
+
+        // ① 4개 모두 origin에 생성
+        var gos   = new GameObject[slots.Length];
+        var poses = new Vector2[slots.Length];
+        for (int i = 0; i < slots.Length; i++)
+        {
+            poses[i] = origin + perp * slots[i];
+            gos[i]   = SpawnCloneVisual(prefab, origin, forward);
+        }
+
+        // ② 중앙 → 나열 위치로 펼쳐짐
+        float t = 0f;
+        while (t < gatherDuration)
+        {
+            t += Time.deltaTime;
+            float ratio = Mathf.SmoothStep(0f, 1f, t / gatherDuration);
+            for (int i = 0; i < gos.Length; i++)
+                if (gos[i] != null) gos[i].transform.position = Vector2.Lerp(origin, poses[i], ratio);
+            yield return null;
+        }
+
+        yield return new WaitForSeconds(holdDuration);
+
+        // ③ 랜덤 순서로 하나씩 발사
+        var remaining = new List<int>(new[] { 0, 1, 2, 3 });
+        while (remaining.Count > 0)
+        {
+            int pick = Random.Range(0, remaining.Count);
+            int idx  = remaining[pick];
+            remaining.RemoveAt(pick);
+
+            if (gos[idx] != null)
+                StartCoroutine(CloneBurstRoutine(gos[idx], poses[idx], forward, range, damage, travelTime));
+
+            if (remaining.Count > 0)
+                yield return new WaitForSeconds(Random.Range(minFireDelay, maxFireDelay));
+        }
+    }
+
+    private IEnumerator CloneBurstRoutine(GameObject go, Vector2 from, Vector2 dir, float range, float damage, float duration)
+    {
+        const int   maxHitsPerEnemy = 3;
+        const float hitCooldown     = 0.15f;
+
+        var   hitCounts  = new Dictionary<int, int>();
+        var   hitTimers  = new Dictionary<int, float>();
+        float t          = 0f;
+
+        while (t < duration)
+        {
+            if (go == null) { DestroyClone(go); yield break; }
+            t += Time.deltaTime;
+            go.transform.position = from + dir * (range * Mathf.Clamp01(t / duration));
+
+            var cols = Physics2D.OverlapCircleAll(go.transform.position, 0.35f, LayerMask.GetMask("Enemy"));
+            foreach (var col in cols)
+            {
+                var boss = col.GetComponentInParent<BossController>();
+                if (boss != null) { boss.TakeDamage(damage); continue; }
+
+                var enemy = col.GetComponentInParent<EnemyController>();
+                if (enemy == null || !enemy.gameObject.activeInHierarchy) continue;
+                int id = enemy.GetInstanceID();
+
+                hitCounts.TryGetValue(id, out int count);
+                hitTimers.TryGetValue(id, out float lastHit);
+                if (count >= maxHitsPerEnemy) continue;
+                if (count > 0 && Time.time - lastHit < hitCooldown) continue;
+
+                var (ed, ec) = RollCrit(damage);
+                enemy.TakeDamage(ed, ec, dir, knockbackPower);
+                hitCounts[id] = count + 1;
+                hitTimers[id] = Time.time;
+            }
+            yield return null;
+        }
+        DestroyClone(go);
+    }
+
+    /// <summary>타격 위치에서 8방향으로 분산 (근접 전용, 복귀 없음).</summary>
+    private void SpawnCloneSpread(Vector2 hitPos, float damage)
+    {
+        var prefab = GetClonePrefab(); if (prefab == null) return;
+        float range = StatusEffectConfig.Shared?.GetCloneRange(_weaponId, 4f) ?? 4f;
+        float ot    = StatusEffectConfig.Shared?.GetCloneOutTime(_weaponId, CloneOutTime * 0.8f) ?? CloneOutTime * 0.8f;
+
+        _cloneFlying      = true;
+        _cloneActiveCount = 8;
+        for (int i = 0; i < 8; i++)
+        {
+            float angle = i * 45f * Mathf.Deg2Rad;
+            var   dir   = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
+            var   go    = SpawnCloneVisual(prefab, hitPos);
+            StartCoroutine(CloneOneWayRoutine(go, hitPos, hitPos + dir * range, damage * 0.3f, ot));
+        }
+    }
+
+    private GameObject GetClonePrefab()
+    {
+        var p = StatusEffectConfig.Shared?.GetClonePrefab(_weaponId) ?? projectilePrefab;
+        if (p == null) Debug.LogWarning($"[HIT_CLONE_RETURN] 프리팹 없음 — weaponId='{_weaponId}'.");
+        return p;
+    }
+
+    private Vector2 GetWeaponOrigin(Vector2 fallback)
+        => transform.parent != null ? (Vector2)transform.parent.position : fallback;
+
+    /// <summary>복귀 없이 목표 방향으로만 날아가는 클론 루틴.</summary>
+    private IEnumerator CloneOneWayRoutine(GameObject go, Vector2 from, Vector2 to, float damage, float duration)
+    {
+        Vector3 baseScale = go.transform.localScale;
+        var     hitIds    = new HashSet<int>();
+        float   t         = 0f;
+        while (t < duration)
+        {
+            if (go == null) { DestroyClone(go); yield break; }
+            t += Time.deltaTime;
+            float ratio = Mathf.Clamp01(t / duration);
+            go.transform.position   = Vector2.Lerp(from, to, ratio);
+            go.transform.localScale = Vector3.Lerp(baseScale * 0.5f, baseScale * 1.5f, ratio);
+
+            var cols = Physics2D.OverlapCircleAll(go.transform.position, 0.35f, LayerMask.GetMask("Enemy"));
+            foreach (var col in cols)
+            {
+                var boss = col.GetComponentInParent<BossController>();
+                if (boss != null) { boss.TakeDamage(damage); continue; }
+                var enemy = col.GetComponentInParent<EnemyController>();
+                if (enemy == null || !hitIds.Add(enemy.GetInstanceID())) continue;
+                var (ed, ec) = RollCrit(damage);
+                enemy.TakeDamage(ed, ec, ((Vector2)enemy.transform.position - (Vector2)go.transform.position).normalized, knockbackPower);
+            }
+            yield return null;
+        }
+        DestroyClone(go);
+    }
+
+    // ── HIT_SPIKE AOE ─────────────────────────────────────────────
+
+    /// <summary>타격 위치 주변 반경의 모든 적/보스에게 동시에 스파이크 착지.</summary>
+    private void SpawnAoeSpike(Vector2 hitPos, float damage)
+    {
+        float r           = Mathf.Max(areaHitRadius, 2.5f);
+        int   cnt         = Physics2D.OverlapCircleNonAlloc(hitPos, r, _hitBuffer);
+        var   spikePrefab = StatusEffectConfig.Shared?.GetSpikePrefab(_weaponId);
+        var   sprite      = _weaponSr?.sprite;
+        float spikeDmg    = damage * 1.5f;
+
+        for (int i = 0; i < cnt; i++)
+        {
+            var boss = _hitBuffer[i].GetComponentInParent<BossController>();
+            if (boss != null) { BossSpike.Spawn(boss, sprite, spikeDmg, spikePrefab); continue; }
+            var enemy = _hitBuffer[i].GetComponentInParent<EnemyController>();
+            if (enemy != null) BossSpike.SpawnOnEnemy(enemy, sprite, spikeDmg, spikePrefab);
+        }
+    }
+
+    // ── BUFF_* 패시브 헬퍼 ───────────────────────────────────────────
+
+    private IEnumerator PlayBuffEquipVfx(GameObject prefab, Transform playerTransform)
+    {
+        const float totalDuration = 0.7f;
+        const float flipPeriod    = 0.12f;
+        const float riseHeight    = 2.5f;
+
+        var go = Instantiate(prefab, playerTransform.position + Vector3.up * 1.5f, Quaternion.identity);
+        Destroy(go, totalDuration + 0.15f); // 코루틴이 중단돼도 확실히 제거
+        var sr = go.GetComponentInChildren<SpriteRenderer>();
+
+        Vector3 startPos  = go.transform.position;
+        float   elapsed   = 0f;
+        float   flipTimer = 0f;
+        int     flipDir   = 1;
+
+        while (elapsed < totalDuration)
+        {
+            if (go == null) yield break;
+            elapsed   += Time.deltaTime;
+            flipTimer += Time.deltaTime;
+
+            float ratio = elapsed / totalDuration;
+
+            // 위로 부드럽게 상승
+            go.transform.position = startPos + Vector3.up * (riseHeight * Mathf.SmoothStep(0f, 1f, ratio));
+
+            // Y축 회전 연출: scaleX를 1→-1→1 반복으로 코인플립 시뮬레이션
+            if (flipTimer >= flipPeriod * 0.5f)
+            {
+                flipDir   = -flipDir;
+                flipTimer = 0f;
+                var s = go.transform.localScale;
+                go.transform.localScale = new Vector3(s.x * -1f, s.y, s.z);
+            }
+
+            // 후반부 페이드 아웃
+            if (sr != null && ratio > 0.5f)
+            {
+                float alpha = Mathf.Lerp(1f, 0f, (ratio - 0.5f) / 0.5f);
+                var   c     = sr.color;
+                sr.color = new Color(c.r, c.g, c.b, alpha);
+            }
+
+            yield return null;
+        }
+
+        if (go != null) Destroy(go);
+    }
+
+    private static StatType? BuffTraitToStat(string traitId) => traitId switch
+    {
+        "BUFF_DEF"  => StatType.DEF,
+        "BUFF_CRI"  => StatType.CritChance,
+        "BUFF_ATK"  => StatType.ATK,
+        "BUFF_HP"   => StatType.MaxHP,
+        "BUFF_SPD"  => StatType.MoveSpeed,
+        "BUFF_REGEN"=> StatType.HPRegen,
+        _           => (StatType?)null,
+    };
+
+    // ── HIT_SPIN 고스트 ───────────────────────────────────────────
+
+    private void StartSpinGhosts()
+    {
+        if (_spinGhosts.Count > 0) return; // 이미 활성 중이면 스킵
+        StartCoroutine(SpinGhostRoutine());
+    }
+
+    private IEnumerator SpinGhostRoutine()
+    {
+        if (_weaponSr == null || PlayerController.Instance == null) yield break;
+
+        const int   GhostCount  = 6;
+        const float OrbitRadius = 1.8f;
+        const float RotSpeed    = 180f;  // deg/sec
+        const float Alpha       = 0.45f;
+        const float Duration    = 4f;
+
+        bool permanent = StatusEffectConfig.Shared?.GetHitSpinPermanent(_weaponId) ?? false;
+
+        var parent = PlayerController.Instance.transform;
+        var ghosts = new GameObject[GhostCount];
+        for (int i = 0; i < GhostCount; i++)
+        {
+            var go = new GameObject("SpinGhost");
+            go.transform.SetParent(parent);
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite       = _weaponSr.sprite;
+            sr.color        = new Color(1f, 1f, 1f, Alpha);
+            sr.sortingOrder = _weaponSr.sortingOrder - 1;
+            _spinGhosts.Add(go);
+            ghosts[i] = go;
+        }
+
+        float elapsed = 0f;
+        // permanent=true면 Duration 조건 무시하고 파괴될 때까지 공전
+        while (permanent || elapsed < Duration)
+        {
+            if (PlayerController.Instance == null) break;
+            elapsed += Time.deltaTime;
+            float baseAngle = elapsed * RotSpeed;
+            for (int i = 0; i < GhostCount; i++)
+            {
+                if (ghosts[i] == null) continue;
+                float a = (baseAngle + i * (360f / GhostCount)) * Mathf.Deg2Rad;
+                ghosts[i].transform.localPosition = new Vector3(Mathf.Cos(a) * OrbitRadius, Mathf.Sin(a) * OrbitRadius, 0f);
+                ghosts[i].transform.rotation      = Quaternion.Euler(0f, 0f, baseAngle + i * (360f / GhostCount));
+            }
+            yield return null;
+        }
+
+        foreach (var go in ghosts)
+        {
+            _spinGhosts.Remove(go);
+            if (go != null) Destroy(go);
+        }
+    }
+
     private void ApplyShockwave(Vector2 center, float damage)
     {
         float radius = Mathf.Max(areaHitRadius * 1.5f, 2f);
@@ -2262,6 +2729,19 @@ public class WeaponPoint : MonoBehaviour
             p.Init(dmg, dir, projectileSpeed, criticalRate: criticalRate,
                 criticalMultiplier: criticalMultiplier, baseDamage: dmg,
                 knockbackPower: knockbackPower);
+    }
+
+    private void FireHomingProjectile(Vector3 spawnPos, Vector2 initialDir, float dmg)
+    {
+        var prefab = StatusEffectConfig.Shared?.GetSubProjectilePrefab(_weaponId) ?? projectilePrefab;
+        if (prefab == null) return;
+        var go = Instantiate(prefab, spawnPos, Quaternion.identity);
+        var p  = go.GetComponent<Projectile>();
+        if (p == null) return;
+        p.Init(dmg, initialDir, projectileSpeed, criticalRate: criticalRate,
+            criticalMultiplier: criticalMultiplier, baseDamage: dmg,
+            knockbackPower: knockbackPower);
+        p.SetHoming(turnSpeed: 220f);
     }
 
     private static Vector2 RotateVec(Vector2 v, float degrees)

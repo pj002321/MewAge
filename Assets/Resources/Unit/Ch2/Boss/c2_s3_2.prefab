@@ -119,9 +119,9 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 100
+  m_SortingLayerID: 1049025713
+  m_SortingLayer: 1
+  m_SortingOrder: 5
   m_MaskInteraction: 0
   m_Sprite: {fileID: -7107599029960354954, guid: 0b60ff11a8b46d34396982f29ac82f67, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -227,6 +227,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HitFlash
   flashDuration: 0.12
+  flashColor: {r: 1, g: 1, b: 1, a: 1}
   BaseColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!114 &6012793344544136166
 MonoBehaviour:
@@ -241,9 +242,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossController
   damageCooldown: 0.5
+  moveSpeed: 3
   enrageThreshold: 0.5
   enrageSpeedMult: 1.5
   enrageDamageMult: 1.5
+  grogyThresholds:
+  - 0.7
+  - 0.35
+  grogyDuration: 5
+  grogyOverheadPrefab: {fileID: 0}
+  grogyOverheadAnchor: {fileID: 0}
+  grogyOverheadYOffset: 1.5
   flashColor: {r: 1, g: 0.2, b: 0.2, a: 1}
   flashDuration: 0.12
   onDeathFX:
@@ -258,11 +267,9 @@ MonoBehaviour:
   - {fileID: 4920938319397271602}
   - {fileID: 4596225152492531232}
   - {fileID: 3594604641412481875}
+  _decal: {fileID: 0}
   entryDrop: 1
-  dropSpeed: 22
-  squashDuration: 0.08
-  stretchDuration: 0.1
-  settleDuration: 0.12
+  entryScaleUpDuration: 0.35
 --- !u!70 &5821915655939214708
 CapsuleCollider2D:
   m_ObjectHideFlags: 0
@@ -318,13 +325,15 @@ MonoBehaviour:
   maxRange: 0
   executeInPattern: 1
   minionPrefab: {fileID: 4510239993999273466, guid: b2d30e24f9d58964092e76d7a4fc1a99, type: 3}
+  spawnMarkerPrefab: {fileID: 0}
   summonCount: 2
+  maxActiveMinions: 4
   summonInterval: 8
+  markerWarningTime: 0.8
   minionDuration: 10
   minionMoveSpeed: 2.5
   minionContactDamage: 5
   spawnRadius: 3
-  summonTrigger: tSummon
 --- !u!114 &4596225152492531232
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -360,7 +369,6 @@ MonoBehaviour:
   chaseAfterSpike: 2
   chaseStopDist: 1.8
   useSpikePhase: 1
-  attackTrigger: tAttack
 --- !u!114 &3594604641412481875
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -381,22 +389,15 @@ MonoBehaviour:
   projectilePrefab: {fileID: 109194795691363216, guid: ce238d64c4c9c384ea458dd616a5c30a, type: 3}
   projectileSpeed: 7
   firePoint: {fileID: 2908955346115048226}
-  enableLinearFire: 1
-  linearCount: 3
-  linearInterval: 1
-  chaseAfterLinear: 2
-  fanCount: 5
-  fanAngle: 120
-  fanRepeat: 3
-  fanRepeatDelay: 0.6
-  chaseAfterFan: 2
-  chaseStopDistance: 1.8
-  warningDuration: 0.6
+  phases: []
+  useWarningLines: 1
   warningLineLength: 10
   warningLineWidth: 1
   warningColor: {r: 1, g: 1, b: 1, a: 1}
   warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
-  attackTrigger: tAttack
+  impactVfxPrefab: {fileID: 0}
+  impactVfxLifetime: 1
+  chaseStopDistance: 1.8
 --- !u!1 &5233518724168949262
 GameObject:
   m_ObjectHideFlags: 0

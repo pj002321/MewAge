@@ -28,9 +28,6 @@ public class BossSummonCycleSkill : BossSkillBase
     [SerializeField] private float minionContactDamage = 5f;   // 소환체 접촉 피해
     [SerializeField] private float spawnRadius         = 3f;   // 보스 주변 소환 반경
 
-    [Header("애니메이션")]
-    [SerializeField] private string summonTrigger = "tSummon"; // 소환 시 Animator 트리거
-
     private readonly List<BossSummonMinion> _activeMinions = new();
 
     public override void Init(BossController boss)
@@ -112,7 +109,7 @@ public class BossSummonCycleSkill : BossSkillBase
         if (Boss == null) yield break;
 
         // 소환체 스폰
-        Owner.EnemyAnimator?.SetTrigger(summonTrigger);
+        Owner.EnemyAnimator?.SetTrigger(EnemyAnim.TAttack);
 
         float dmgMult = Boss.IsEnraged ? Boss.EnrageDamageMult : 1f;
         for (int i = 0; i < canSpawn; i++)

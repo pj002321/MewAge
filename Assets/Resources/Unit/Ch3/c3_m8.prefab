@@ -16,6 +16,7 @@ GameObject:
   - component: {fileID: 118957687783763765}
   - component: {fileID: 9077217671976798113}
   - component: {fileID: 1926615043382288382}
+  - component: {fileID: 5383463193663799302}
   m_Layer: 7
   m_Name: c3_m8
   m_TagString: Untagged
@@ -85,8 +86,8 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 1049025713
+  m_SortingLayer: 1
   m_SortingOrder: 5
   m_MaskInteraction: 0
   m_Sprite: {fileID: -3195648837092477483, guid: 003dfe1e676cc984ab05d538486fe52a, type: 3}
@@ -210,6 +211,7 @@ MonoBehaviour:
   bleedInterval: 1
   separationRadius: 1.2
   separationStrength: 8
+  _decal: {fileID: 0}
 --- !u!114 &9077217671976798113
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -227,7 +229,8 @@ MonoBehaviour:
   squashStretchX: 0.5
   frequency: 1.25
   randomPhase: 1
-  spriteTarget: {fileID: 0}
+  fixBottom: 0
+  halfHeightOverride: 0
 --- !u!114 &1926615043382288382
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -250,7 +253,24 @@ MonoBehaviour:
   warningLineWidth: 0.8
   warningColor: {r: 1, g: 0, b: 0, a: 1}
   warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
-  attackVfxPrefab: {fileID: 0}
+  attackVfx: {fileID: 0}
+  attackVfxDuration: 0.3
+  useAnimationEvent: 1
+  animEventTimeout: 0.6
+  retreatDuration: 1.4
+--- !u!114 &5383463193663799302
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1326216360028315856}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 25cc23087012616429ecb7c10c6cb557, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpriteYSort
+  multiplier: 100
 --- !u!1 &1437633771341022566
 GameObject:
   m_ObjectHideFlags: 0
@@ -367,7 +387,7 @@ Transform:
   m_GameObject: {fileID: 5643284796631675162}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0.84, y: 0.84, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

@@ -58,7 +58,7 @@ public class BossChargeSkill : BossSkillBase
                 if (IsInvalid()) yield break;
             }
 
-            Owner.EnemyAnimator?.SetTrigger("tCharge");
+            Owner.EnemyAnimator?.SetTrigger(EnemyAnim.TCharge);
 
             // 현재 위치를 로컬 변수로 추적 — Rb.MovePosition은 물리 스텝 후 반영되므로
             // Rb.position에 의존하지 않고 직접 계산합니다.

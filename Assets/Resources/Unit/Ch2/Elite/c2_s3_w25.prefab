@@ -105,6 +105,7 @@ GameObject:
   - component: {fileID: -8064270260581281733}
   - component: {fileID: 1175593344357663669}
   - component: {fileID: 3578680548654450111}
+  - component: {fileID: -6439894099720948288}
   m_Layer: 7
   m_Name: c2_s3_w25
   m_TagString: Untagged
@@ -174,8 +175,8 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 1049025713
+  m_SortingLayer: 1
   m_SortingOrder: 100
   m_MaskInteraction: 0
   m_Sprite: {fileID: 4153640981644938364, guid: 70e40fa9cfd10464cb00378383411119, type: 3}
@@ -235,6 +236,7 @@ MonoBehaviour:
   bleedInterval: 1
   separationRadius: 1.2
   separationStrength: 8
+  _decal: {fileID: 0}
 --- !u!114 &1175593344357663669
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -269,7 +271,24 @@ MonoBehaviour:
   warningLineWidth: 1
   warningColor: {r: 1, g: 1, b: 1, a: 1}
   warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
-  attackVfxPrefab: {fileID: 0}
+  attackVfx: {fileID: 0}
+  attackVfxDuration: 0.3
+  useAnimationEvent: 1
+  animEventTimeout: 0.6
+  retreatDuration: 1.4
+--- !u!114 &-6439894099720948288
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3570372466586305526}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 25cc23087012616429ecb7c10c6cb557, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpriteYSort
+  multiplier: 100
 --- !u!1 &4692798851076999978
 GameObject:
   m_ObjectHideFlags: 0

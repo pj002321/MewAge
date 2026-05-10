@@ -26,7 +26,7 @@ Transform:
   m_GameObject: {fileID: 2564884055585582475}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.004, y: -0.844, z: 0}
+  m_LocalPosition: {x: 0.04, y: 0.1, z: 0}
   m_LocalScale: {x: 1.15, y: 1.49, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -101,7 +101,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2980433386105245889}
   m_Layer: 7
-  m_Name: GameObject
+  m_Name: tPoint
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -136,10 +136,8 @@ GameObject:
   - component: {fileID: 350663147606329290}
   - component: {fileID: 7828306383268276600}
   - component: {fileID: 7956984884046668424}
-  - component: {fileID: 818218120322630538}
-  - component: {fileID: 2036998758936243981}
   - component: {fileID: -2974002644493037850}
-  - component: {fileID: -7653101291628219810}
+  - component: {fileID: 7104981991845133511}
   m_Layer: 7
   m_Name: c2_m14
   m_TagString: Untagged
@@ -209,16 +207,16 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 1049025713
+  m_SortingLayer: 1
   m_SortingOrder: 5
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 360348864808446448, guid: f4e829aeff172274dbf763ebc74e8c52, type: 3}
+  m_Sprite: {fileID: 315038056, guid: f4e829aeff172274dbf763ebc74e8c52, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 5.1400003, y: 3.8108504}
+  m_Size: {x: 1.0000411, y: 1.7333333}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
@@ -306,8 +304,8 @@ CapsuleCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
-  m_Size: {x: 1.1, y: 1.78}
+  m_Offset: {x: 0, y: 0.85833335}
+  m_Size: {x: 1.2133833, y: 1.7166667}
   m_Direction: 0
 --- !u!114 &7956984884046668424
 MonoBehaviour:
@@ -334,52 +332,7 @@ MonoBehaviour:
   bleedInterval: 1
   separationRadius: 0.7
   separationStrength: 1.5
---- !u!114 &818218120322630538
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6872330745170493892}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bce05cdbf4c6c0d4b8e3a23bbeb3fb43, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::EnemyFXConfig
-  onAttack:
-    vfxPrefab: {fileID: 0}
-    spawnOffset: {x: 0, y: 0}
-    sfxClip: {fileID: 0}
-    volume: 1
-  onHit:
-    vfxPrefab: {fileID: 0}
-    spawnOffset: {x: 0, y: 0}
-    sfxClip: {fileID: 0}
-    volume: 1
-  onDeath:
-    vfxPrefab: {fileID: 0}
-    spawnOffset: {x: 0, y: 0}
-    sfxClip: {fileID: 0}
-    volume: 1
-  onSpawn:
-    vfxPrefab: {fileID: 0}
-    spawnOffset: {x: 0, y: 0}
-    sfxClip: {fileID: 0}
-    volume: 1
---- !u!114 &2036998758936243981
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6872330745170493892}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8dbca1b53536a2b47a8964120af00539, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HitFlash
-  flashDuration: 0.12
-  BaseColor: {r: 1, g: 1, b: 1, a: 1}
+  _decal: {fileID: 0}
 --- !u!114 &-2974002644493037850
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -402,8 +355,12 @@ MonoBehaviour:
   warningLineWidth: 0.8
   warningColor: {r: 1, g: 0, b: 0, a: 1}
   warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
-  attackVfxPrefab: {fileID: 0}
---- !u!114 &-7653101291628219810
+  attackVfx: {fileID: 0}
+  attackVfxDuration: 0.3
+  useAnimationEvent: 1
+  animEventTimeout: 0.6
+  retreatDuration: 1.4
+--- !u!114 &7104981991845133511
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -412,12 +369,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 6872330745170493892}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3640172dedd67864e9d6803100a29029, type: 3}
+  m_Script: {fileID: 11500000, guid: 25cc23087012616429ecb7c10c6cb557, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SlimeBobAnimation
-  minScaleY: 0.9
-  maxScaleY: 1.05
-  squashStretchX: 0.5
-  frequency: 1.25
-  randomPhase: 1
-  spriteTarget: {fileID: 0}
+  m_EditorClassIdentifier: Assembly-CSharp::SpriteYSort
+  multiplier: 100

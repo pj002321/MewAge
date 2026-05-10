@@ -94,7 +94,7 @@ public class MainMenuPanel : MonoBehaviour
     string    _currentBgChapter;
     const float BG_FADE_DURATION = 0.35f;
 
-    static bool _attendanceShownThisSession;
+    private const string AttendanceDateKey = "Attendance_LastShownDate";
 
     // ── DB 로드 ──────────────────────────────────────────────────────
     void LoadStagesFromDB()
@@ -350,9 +350,11 @@ public class MainMenuPanel : MonoBehaviour
 
         if (_contentCG != null) _contentCG.alpha = 1f;
 
-        if (!_attendanceShownThisSession)
+        string today = System.DateTime.Now.ToString("yyyyMMdd");
+        if (PlayerPrefs.GetString(AttendanceDateKey, "") != today)
         {
-            _attendanceShownThisSession = true;
+            PlayerPrefs.SetString(AttendanceDateKey, today);
+            PlayerPrefs.Save();
             attendancePopup?.Show();
         }
     }

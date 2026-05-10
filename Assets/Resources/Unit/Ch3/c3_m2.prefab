@@ -104,11 +104,9 @@ GameObject:
   - component: {fileID: 8622318352103326421}
   - component: {fileID: 3477989986898819601}
   - component: {fileID: 5337808210302580648}
-  - component: {fileID: 7126431795147920118}
-  - component: {fileID: -5871980427623642109}
   - component: {fileID: 3890210798184681978}
-  - component: {fileID: -8786370359422839295}
   - component: {fileID: 1081087116650721157}
+  - component: {fileID: -8841937240781607966}
   m_Layer: 0
   m_Name: c3_m2
   m_TagString: Untagged
@@ -177,8 +175,8 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 1049025713
+  m_SortingLayer: 1
   m_SortingOrder: 5
   m_MaskInteraction: 0
   m_Sprite: {fileID: 6899806166967514638, guid: 0a10580d681048743a4d8032533da4d7, type: 3}
@@ -201,7 +199,7 @@ Animator:
   m_GameObject: {fileID: 7313528007987417252}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 22100000, guid: 142bad391fcec1848a5d61d3625524cc, type: 2}
+  m_Controller: {fileID: 22100000, guid: 2941a9783c23e5043ab7fe466ac332fb, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -265,52 +263,7 @@ MonoBehaviour:
   bleedInterval: 1
   separationRadius: 3
   separationStrength: 2
---- !u!114 &7126431795147920118
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7313528007987417252}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bce05cdbf4c6c0d4b8e3a23bbeb3fb43, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::EnemyFXConfig
-  onAttack:
-    vfxPrefab: {fileID: 0}
-    spawnOffset: {x: 0, y: 0}
-    sfxClip: {fileID: 0}
-    volume: 1
-  onHit:
-    vfxPrefab: {fileID: 0}
-    spawnOffset: {x: 0, y: 0}
-    sfxClip: {fileID: 0}
-    volume: 1
-  onDeath:
-    vfxPrefab: {fileID: 0}
-    spawnOffset: {x: 0, y: 0}
-    sfxClip: {fileID: 0}
-    volume: 1
-  onSpawn:
-    vfxPrefab: {fileID: 0}
-    spawnOffset: {x: 0, y: 0}
-    sfxClip: {fileID: 0}
-    volume: 1
---- !u!114 &-5871980427623642109
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7313528007987417252}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8dbca1b53536a2b47a8964120af00539, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HitFlash
-  flashDuration: 0.12
-  BaseColor: {r: 1, g: 1, b: 1, a: 1}
+  _decal: {fileID: 0}
 --- !u!70 &3890210798184681978
 CapsuleCollider2D:
   m_ObjectHideFlags: 0
@@ -341,31 +294,13 @@ CapsuleCollider2D:
   m_CallbackLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 1.28}
   m_Size: {x: 1.64, y: 2.56}
   m_Direction: 0
---- !u!114 &-8786370359422839295
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7313528007987417252}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3640172dedd67864e9d6803100a29029, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SlimeBobAnimation
-  minScaleY: 0.9
-  maxScaleY: 1.05
-  squashStretchX: 0.5
-  frequency: 1.25
-  randomPhase: 1
-  spriteTarget: {fileID: 0}
 --- !u!114 &1081087116650721157
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -387,5 +322,19 @@ MonoBehaviour:
   slamRiseTime: 0.3
   slamHangTime: 0.5
   slamFallSpeed: 20
-  slamMarkerPrefab: {fileID: 0}
-  slamLandTrigger: tCharge
+  slamMarkerPrefab: {fileID: 7905823675861574758, guid: eb504c3569ed60a46b3b3ac595323378, type: 3}
+  landingVfxPrefab: {fileID: 1645737383650597069, guid: d13e811c376306146ac829de7af32967, type: 3}
+  vfxLifetime: 1
+--- !u!114 &-8841937240781607966
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7313528007987417252}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 25cc23087012616429ecb7c10c6cb557, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpriteYSort
+  multiplier: 100

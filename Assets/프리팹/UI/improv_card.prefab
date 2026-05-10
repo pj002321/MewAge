@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 7123537884776723998}
   - component: {fileID: 7734365604631804297}
   - component: {fileID: 5073992513011345435}
+  - component: {fileID: 4222847109600553848}
   m_Layer: 5
   m_Name: Image
   m_TagString: Untagged
@@ -40,7 +41,7 @@ RectTransform:
   m_AnchorMin: {x: 0.45000002, y: 0.5}
   m_AnchorMax: {x: 0.45000002, y: 0.5}
   m_AnchoredPosition: {x: -6.8609, y: -822.39}
-  m_SizeDelta: {x: 336, y: 640}
+  m_SizeDelta: {x: 360, y: 720}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1889255746754018996
 CanvasRenderer:
@@ -70,7 +71,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 276dff4c7b778d04ebcd4f951397355b, type: 3}
+  m_Sprite: {fileID: 1071291321092289550, guid: b0a374ec852254f4e80c504cfefbfd44, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -146,6 +147,27 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &4222847109600553848
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 742128393392360673}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 223db8059bc77144c9ba478a29ed4cd5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpriteAnimation
+  frames:
+  - {fileID: -7131460021389391225, guid: b0a374ec852254f4e80c504cfefbfd44, type: 3}
+  - {fileID: -3820004149671014923, guid: b0a374ec852254f4e80c504cfefbfd44, type: 3}
+  - {fileID: -1363028723259224585, guid: b0a374ec852254f4e80c504cfefbfd44, type: 3}
+  - {fileID: 9123042645903658974, guid: b0a374ec852254f4e80c504cfefbfd44, type: 3}
+  - {fileID: 1071291321092289550, guid: b0a374ec852254f4e80c504cfefbfd44, type: 3}
+  fps: 12
+  loop: 0
+  playOnEnable: 1
 --- !u!1 &1389610450285603866
 GameObject:
   m_ObjectHideFlags: 0

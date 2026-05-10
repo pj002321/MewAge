@@ -50,9 +50,6 @@ public class BossRollingBoulderSkill : BossSkillBase
     [Tooltip("Sprites/Default 또는 URP Unlit 머티리얼 할당. null이면 자동 생성")]
     [SerializeField] private Material warningMaterial;
 
-    [Header("애니메이션")]
-    [SerializeField] private string attackTrigger = "tAttack";
-
     private LineRenderer _warnLine;
 
     private void OnDisable()
@@ -97,7 +94,7 @@ public class BossRollingBoulderSkill : BossSkillBase
             {
                 if (Owner.PlayerTransform == null) yield break;
 
-                Owner.EnemyAnimator?.SetTrigger(attackTrigger);
+                Owner.EnemyAnimator?.SetTrigger(EnemyAnim.TAttack);
                 this.DLog($"Rolling boulder {i + 1}/{rollCount}");
                 SpawnBoulder();
 

@@ -51,9 +51,6 @@ public class BossGroundSpikeSkill : BossSkillBase
     [Header("페이즈 ON/OFF")]
     [SerializeField] private bool useSpikePhase = true;
 
-    [Header("애니메이션")]
-    [SerializeField] private string attackTrigger = "tAttack";
-
     public override void Init(BossController boss)
     {
         base.Init(boss);
@@ -137,7 +134,7 @@ public class BossGroundSpikeSkill : BossSkillBase
             yield return new WaitForSeconds(postMarkerDelay);
             if (IsInvalid()) yield break;
 
-            Owner.EnemyAnimator?.SetTrigger(attackTrigger);
+            Owner.EnemyAnimator?.SetTrigger(EnemyAnim.TAttack);
 
             // ③ 스파이크 수직 낙하 — 코루틴이 직접 이동 제어 (컴포넌트 무관)
             float spawnY  = GetSpawnY();

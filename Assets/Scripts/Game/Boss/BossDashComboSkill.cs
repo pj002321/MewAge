@@ -17,7 +17,6 @@ public class BossDashComboSkill : BossSkillBase
     [SerializeField] private float   hitInterval   = 0.18f;   // 타격 사이 간격
     [SerializeField] private float   hitRange      = 1.6f;
     [SerializeField] private float   hitDamage     = 0f;      // 0이면 ContactDamage 사용
-    [SerializeField] private string  attackTrigger = "tAttack";
 
     [Header("돌진 준비 시각")]
     [SerializeField] private Color   chargeColor      = Color.red;
@@ -116,7 +115,7 @@ public class BossDashComboSkill : BossSkillBase
                 hitTimer -= Time.fixedDeltaTime;
                 if (hitTimer <= 0f)
                 {
-                    Owner.EnemyAnimator?.SetTrigger(attackTrigger);
+                    Owner.EnemyAnimator?.SetTrigger(EnemyAnim.TAttack);
                     PlayerController.Instance?.TakeDamage(dmg * (Boss != null && Boss.IsEnraged ? Boss.EnrageDamageMult : 1f));
                     hits++;
                     hitTimer = hitInterval;
@@ -134,7 +133,7 @@ public class BossDashComboSkill : BossSkillBase
             float dist = Vector2.Distance(Owner.Rb.position, Owner.PlayerTransform.position);
             if (dist > hitRange) break;
 
-            Owner.EnemyAnimator?.SetTrigger(attackTrigger);
+            Owner.EnemyAnimator?.SetTrigger(EnemyAnim.TAttack);
             PlayerController.Instance?.TakeDamage(dmg * (Boss != null && Boss.IsEnraged ? Boss.EnrageDamageMult : 1f));
             hits++;
             yield return new WaitForSeconds(hitInterval);

@@ -161,7 +161,7 @@ public class ChargeBehaviour : EnemyBehaviourBase
         chargeRemaining = chargeDistance;
         ghostTimer      = 0f;
 
-        Owner.EnemyAnimator?.SetTrigger("tCharge");
+        Owner.EnemyAnimator?.SetTrigger(EnemyAnim.TCharge);
     }
 
     private void EndCharge()

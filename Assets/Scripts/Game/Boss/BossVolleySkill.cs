@@ -42,15 +42,12 @@ public class BossVolleySkill : BossSkillBase
     [SerializeField] private float shakeDuration  = 0.2f;
     [SerializeField] private float shakeMagnitude = 0.25f;
 
-    [Header("애니메이션")]
-    [SerializeField] private string attackTrigger = "tAttack";
-
     protected override IEnumerator OnExecute()
     {
         if (Owner.PlayerTransform == null) yield break;
 
         // 1) 애니메이션 트리거
-        Owner.EnemyAnimator?.SetTrigger(attackTrigger);
+        Owner.EnemyAnimator?.SetTrigger(EnemyAnim.TAttack);
 
         if (preDelay > 0f)
             yield return new WaitForSeconds(preDelay);
