@@ -37,7 +37,7 @@ public class BossController : MonoBehaviour, IEnemyHost
     [SerializeField] private float      grogyOverheadYOffset = 1.5f;
 
     private static readonly Color GrogyTint        = new(0.45f, 0.45f, 0.45f, 1f);
-    private const           float GrogyAtkSpeedPct = 700f; // 8배 = +700%
+    private const           float GrogyAtkSpeedMult = 8f;
 
     // ── HitFlash ──────────────────────────────────────────────────
     [Header("피격 플래시")]
@@ -117,8 +117,12 @@ public class BossController : MonoBehaviour, IEnemyHost
 
     // 그로기: 이미 발동된 구간 인덱스 추적
     private readonly System.Collections.Generic.HashSet<int> _triggeredGrogy = new();
+    private Coroutine  _gaugeSkillCoroutine;
     private Coroutine  _grogyFlickerCoroutine;
     private GameObject _grogyOverheadInstance;
+    private Color[]    _originalSrColors;
+    private Material[] _originalMaterials;
+    private static Material _grogyMatInstance;
 
     /// <summary>현재 보스가 왼쪽을 바라보고 있으면 true.</summary>
     public bool IsFacingLeft => _lastFlipX;
@@ -286,18 +290,18 @@ public class BossController : MonoBehaviour, IEnemyHost
 
     private IEnumerator ForcedGrogyRoutine(float duration)
     {
-        if (_patternCoroutine != null) { StopCoroutine(_patternCoroutine); _patternCoroutine = null; }
+        if (_patternCoroutine   != null) { StopCoroutine(_patternCoroutine);   _patternCoroutine   = null; }
+        if (_gaugeSkillCoroutine != null) { StopCoroutine(_gaugeSkillCoroutine); _gaugeSkillCoroutine = null; }
         _skillExecuting = false;
         IsGrogy        = true;
         GrogyRemaining = duration;
         EnemyAnimator?.SetBool("bMove", false);
         OnGrogyStart?.Invoke();
         StartGrogyVisuals();
-        var sm = PlayerStatManager.Shared;
-        sm?.AddPctMod(StatType.AtkSpeed, GrogyAtkSpeedPct);
+        ApplyGrogyAtkSpeed(GrogyAtkSpeedMult);
         while (GrogyRemaining > 0f) { GrogyRemaining -= Time.deltaTime; yield return null; }
         GrogyRemaining = 0f;
-        sm?.AddPctMod(StatType.AtkSpeed, -GrogyAtkSpeedPct);
+        ApplyGrogyAtkSpeed(1f / GrogyAtkSpeedMult);
         StopGrogyVisuals();
         IsGrogy = false;
         OnGrogyEnd?.Invoke();
@@ -320,7 +324,7 @@ public class BossController : MonoBehaviour, IEnemyHost
 
     public void MoveTowardPlayer(float speed)
     {
-        if (IsMoveBound) return;
+        if (IsMoveBound || IsGrogy) return;
         if (PlayerTransform == null || Rb == null) return;
         Vector2 dir = ((Vector2)PlayerTransform.position - Rb.position).normalized;
         MoveInDirection(dir, speed);
@@ -328,7 +332,7 @@ public class BossController : MonoBehaviour, IEnemyHost
 
     public void MoveInDirection(Vector2 dir, float speed)
     {
-        if (IsMoveBound) return;
+        if (IsMoveBound || IsGrogy) return;
         EnemyAnimator?.SetBool("bMove", true);
         Vector2 delta = dir.normalized * speed * Time.fixedDeltaTime;
         if (Rb != null)
@@ -423,7 +427,8 @@ public class BossController : MonoBehaviour, IEnemyHost
         // 게이지 100% 시 즉시 스킬 발동
         if (SkillGauge >= MaxSkillGauge)
         {
-            StartCoroutine(TriggerSkillFromGauge());
+            if (_gaugeSkillCoroutine != null) StopCoroutine(_gaugeSkillCoroutine);
+            _gaugeSkillCoroutine = StartCoroutine(TriggerSkillFromGauge());
         }
     }
 
@@ -433,7 +438,7 @@ public class BossController : MonoBehaviour, IEnemyHost
         OnSkillGaugeChanged?.Invoke(0f);
 
         // 이미 스킬 실행 중이거나 사망/낙하/그로기 중이면 취소
-        if (isDead || _dropping || _skillExecuting || IsGrogy) yield break;
+        if (isDead || _dropping || _skillExecuting || IsGrogy) { _gaugeSkillCoroutine = null; yield break; }
 
         var skill = RandomReadySkill();
         if (skill != null)
@@ -442,6 +447,7 @@ public class BossController : MonoBehaviour, IEnemyHost
             yield return skill.Execute();
             _skillExecuting = false;
         }
+        _gaugeSkillCoroutine = null;
     }
 
     private IEnumerator DieRoutine()
@@ -516,7 +522,8 @@ public class BossController : MonoBehaviour, IEnemyHost
 
     private IEnumerator GrogyRoutine()
     {
-        if (_patternCoroutine != null) { StopCoroutine(_patternCoroutine); _patternCoroutine = null; }
+        if (_patternCoroutine   != null) { StopCoroutine(_patternCoroutine);   _patternCoroutine   = null; }
+        if (_gaugeSkillCoroutine != null) { StopCoroutine(_gaugeSkillCoroutine); _gaugeSkillCoroutine = null; }
         _skillExecuting = false;
         IsGrogy        = true;
         GrogyRemaining = grogyDuration;
@@ -524,8 +531,7 @@ public class BossController : MonoBehaviour, IEnemyHost
         OnGrogyStart?.Invoke();
         StartGrogyVisuals();
 
-        var sm = PlayerStatManager.Shared;
-        sm?.AddPctMod(StatType.AtkSpeed, GrogyAtkSpeedPct);
+        ApplyGrogyAtkSpeed(GrogyAtkSpeedMult);
 
         while (GrogyRemaining > 0f)
         {
@@ -534,7 +540,7 @@ public class BossController : MonoBehaviour, IEnemyHost
         }
         GrogyRemaining = 0f;
 
-        sm?.AddPctMod(StatType.AtkSpeed, -GrogyAtkSpeedPct);
+        ApplyGrogyAtkSpeed(1f / GrogyAtkSpeedMult);
         StopGrogyVisuals();
         IsGrogy = false;
         OnGrogyEnd?.Invoke();
@@ -543,8 +549,39 @@ public class BossController : MonoBehaviour, IEnemyHost
 
     // ── 그로기 비주얼 ─────────────────────────────────────────────────
 
+    private static Material GetGrogyMaterial()
+    {
+        if (_grogyMatInstance != null) return _grogyMatInstance;
+        var sh = Shader.Find("Custom/SpriteGrogyColor");
+        if (sh == null) return null;
+        _grogyMatInstance = new Material(sh) { hideFlags = HideFlags.HideAndDontSave };
+        return _grogyMatInstance;
+    }
+
     private void StartGrogyVisuals()
     {
+        if (srs != null)
+        {
+            _originalSrColors  = new Color[srs.Length];
+            _originalMaterials = new Material[srs.Length];
+            for (int i = 0; i < srs.Length; i++)
+            {
+                if (srs[i] == null) continue;
+                _originalSrColors[i]  = srs[i].color;
+                _originalMaterials[i] = srs[i].sharedMaterial;
+            }
+
+            // 실루엣 재질로 교체 → SpriteRenderer.color가 단색 출력으로 직결
+            var grogyMat = GetGrogyMaterial();
+            if (grogyMat != null)
+                foreach (var sr in srs)
+                    if (sr) sr.sharedMaterial = grogyMat;
+
+            // 진입 하이라이트가 흰색에서 시작할 수 있도록 초기화
+            foreach (var sr in srs)
+                if (sr) sr.color = Color.white;
+        }
+
         if (_grogyFlickerCoroutine != null) StopCoroutine(_grogyFlickerCoroutine);
         _grogyFlickerCoroutine = StartCoroutine(GrogyEntryHighlight());
 
@@ -561,31 +598,99 @@ public class BossController : MonoBehaviour, IEnemyHost
     private void StopGrogyVisuals()
     {
         if (_grogyFlickerCoroutine != null) { StopCoroutine(_grogyFlickerCoroutine); _grogyFlickerCoroutine = null; }
-        if (srs != null) foreach (var sr in srs) if (sr) sr.color = Color.white;
+
+        if (srs != null && _originalMaterials != null && _originalSrColors != null)
+        {
+            for (int i = 0; i < srs.Length; i++)
+            {
+                if (srs[i] == null || i >= _originalMaterials.Length || i >= _originalSrColors.Length) continue;
+                srs[i].sharedMaterial = _originalMaterials[i];
+                srs[i].color          = _originalSrColors[i];
+            }
+        }
+        else if (srs != null)
+        {
+            foreach (var sr in srs) if (sr) sr.color = Color.white;
+        }
+
+        _originalSrColors  = null;
+        _originalMaterials = null;
+
         if (_grogyOverheadInstance != null) { Destroy(_grogyOverheadInstance); _grogyOverheadInstance = null; }
     }
 
     private IEnumerator GrogyEntryHighlight()
     {
-        // 스케일 펀치
         transform.DOPunchScale(Vector3.one * 0.3f, 0.6f, 8, 0.4f);
+        StartCoroutine(GrogyWaveEffect());
 
-        // 화이트 펄스 3회 → 회색으로 전환
+        // 흰색에서 시작해 번쩍이며 회색으로 정착 (0.6s)
         float totalTime = 0.6f;
         float t = 0f;
         while (t < totalTime)
         {
             t += Time.deltaTime;
             float ratio   = t / totalTime;
-            float flicker = Mathf.Abs(Mathf.Sin(ratio * Mathf.PI * 3f)) * (1f - ratio);
-            Color c = Color.Lerp(GrogyTint, Color.white, flicker);
+            float flicker = Mathf.Abs(Mathf.Sin(ratio * Mathf.PI * 4f)) * (1f - ratio) * 0.5f;
+            float white   = Mathf.Clamp01(1f - ratio + flicker);
+            Color c = Color.Lerp(GrogyTint, Color.white, white);
             if (srs != null) foreach (var sr in srs) if (sr) sr.color = c;
             yield return null;
         }
 
-        // 회색 고정
         if (srs != null) foreach (var sr in srs) if (sr) sr.color = GrogyTint;
         _grogyFlickerCoroutine = null;
+    }
+
+    private IEnumerator GrogyWaveEffect()
+    {
+        // 유효한 스프라이트가 있는 SpriteRenderer 탐색 (Animator 미업데이트 시 null 가능)
+        SpriteRenderer sr0 = null;
+        if (srs != null)
+            foreach (var sr in srs)
+                if (sr && sr.sprite != null) { sr0 = sr; break; }
+        if (sr0 == null) yield break;
+
+        var go = new GameObject("GrogyWave");
+        // 보스 루트 위치가 아닌 스프라이트 실제 월드 중심에 배치
+        go.transform.position = sr0.bounds.center;
+
+        var waveSR = go.AddComponent<SpriteRenderer>();
+        waveSR.sprite         = sr0.sprite;
+        waveSR.sortingLayerID = sr0.sortingLayerID;
+        waveSR.sortingOrder   = sr0.sortingOrder + 1;
+
+        // 그로기 실루엣 재질 사용 → color = 흰색 단색 파동
+        var grogyMat = GetGrogyMaterial();
+        if (grogyMat != null) waveSR.sharedMaterial = grogyMat;
+        waveSR.color = new Color(1f, 1f, 1f, 0.9f);
+
+        // 보스 월드 스케일 기준으로 파동 시작 크기 결정
+        float bossScale = Mathf.Max(Mathf.Abs(transform.lossyScale.x), Mathf.Abs(transform.lossyScale.y));
+        go.transform.localScale = Vector3.one * bossScale;
+
+        const float duration  = 0.5f;
+        const float scaleMult = 1.8f;
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            if (go == null) yield break;
+            elapsed += Time.deltaTime;
+            float f    = elapsed / duration;
+            float ease = 1f - (1f - f) * (1f - f);
+            go.transform.localScale = Vector3.one * Mathf.LerpUnclamped(bossScale, bossScale * scaleMult, ease);
+            waveSR.color = new Color(1f, 1f, 1f, Mathf.Lerp(0.9f, 0f, ease));
+            yield return null;
+        }
+        if (go != null) Destroy(go);
+    }
+
+    private static void ApplyGrogyAtkSpeed(float mult)
+    {
+        var player = PlayerController.Instance;
+        if (player == null) return;
+        foreach (var wp in player.GetComponentsInChildren<WeaponPoint>())
+            wp.MultiplyAttackSpeed(mult);
     }
 
     // ── 스킬 선택 ─────────────────────────────────────────────────

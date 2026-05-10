@@ -145,6 +145,9 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
     {
         if (hitEffectPrefab == null) return;
         GameObject go;
+        while (_hitEffectPool.Count > 0 && _hitEffectPool.Peek() == null)
+            _hitEffectPool.Dequeue();
+
         if (_hitEffectPool.Count > 0)
         {
             go = _hitEffectPool.Dequeue();

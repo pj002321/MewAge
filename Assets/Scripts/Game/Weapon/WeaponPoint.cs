@@ -151,12 +151,35 @@ public class WeaponPoint : MonoBehaviour
     private AnimatorOverrideController _animOverride;
     private float _chargeTimer;
 
+    private readonly struct CombatTarget
+    {
+        public readonly EnemyController Enemy;
+        public readonly BossController  Boss;
+
+        public CombatTarget(EnemyController e) { Enemy = e; Boss = null; }
+        public CombatTarget(BossController  b) { Enemy = null; Boss = b; }
+
+        public static readonly CombatTarget None = default;
+        public bool IsNone  => Enemy == null && Boss == null;
+        public bool IsValid => (Enemy != null && Enemy.gameObject.activeInHierarchy) ||
+                               (Boss  != null && Boss.gameObject.activeInHierarchy);
+        public Vector3 Position
+        {
+            get
+            {
+                if (Enemy != null) return Enemy.transform.position;
+                if (Boss  != null) return Boss.transform.position;
+                return Vector3.zero;
+            }
+        }
+    }
+
     private enum State { Idle, Pullback, Anticipation, Striking, Overshooting, Returning, Slashing, Charging, SlashSequence, HammerSequence }
     private State state = State.Idle;
 
     private Vector3 originLocalPos;
     private Vector3 pullbackLocalPos;  // 뒤로 뺀 로컬 목표
-    private EnemyController targetEnemy;
+    private CombatTarget _target;
     private Vector3 overshootTarget;
     private float cooldownTimer;
     private float anticipationTimer;
@@ -213,8 +236,6 @@ public class WeaponPoint : MonoBehaviour
     private const int   SpinBoostMaxStack = 5;
     private const float SpinBoostDecay    = 3f;
 
-    // 보스 타겟
-    private BossController _targetBoss;
     private float _bossSpinHitTimer;
 
     // 보스 Collider2D 캐시 (매 UpdateIdle 마다 GetComponentInChildren 방지)
@@ -225,7 +246,7 @@ public class WeaponPoint : MonoBehaviour
 
     // 부메랑 필드 (직접 이동 모드)
     private int _boomerangBouncesLeft;
-    private object _boomerangTarget; // EnemyController or BossController
+    private CombatTarget _boomerang;
     private Vector3 _boomerangOvershootTarget;
     private readonly HashSet<EnemyController> _boomerangHitEnemies = new();
     private readonly HashSet<BossController>  _boomerangHitBosses  = new();
@@ -404,9 +425,8 @@ public class WeaponPoint : MonoBehaviour
             _stateTimer += Time.deltaTime;
             if (_stateTimer >= MaxStateTime)
             {
-                targetEnemy = null;
-                _targetBoss = null;
-                _boomerangTarget = null;
+                _target   = CombatTarget.None;
+                _boomerang = CombatTarget.None;
                 BeginReturn(false); // 타임아웃 — 공격 미완료이므로 쿨다운 미리셋
                 _stateTimer = 0f;
                 return;
@@ -566,168 +586,54 @@ public class WeaponPoint : MonoBehaviour
     {
         if (cooldownTimer > 0f) return;
 
-        Vector2 origin = transform.parent != null ? (Vector2)transform.parent.position : (Vector2)transform.position;
+        CombatTarget best = FindBestTarget();
+        if (best.IsNone) return;
 
-        // 보스 인식 (활성화 상태인지 확인)
-        var boss = BossController.Current != null && BossController.Current.gameObject.activeInHierarchy ? BossController.Current : null;
-
-        EnemyController nearest = FindNearestInRange();
-
-        // 보스가 사정거리 내에 있고, 더 가깝거나 일반 적이 없으면 보스 우선
-        bool bossInRange = false;
-        if (boss != null)
-        {
-            if (_cachedBossForCollider != boss)
-            {
-                _cachedBossForCollider = boss;
-                _cachedBossCollider    = boss.GetComponentInChildren<Collider2D>();
-            }
-            bossInRange = _cachedBossCollider != null
-                ? (_cachedBossCollider.ClosestPoint(origin) - origin).sqrMagnitude <= attackRange * attackRange
-                : ((Vector2)boss.transform.position - origin).sqrMagnitude <= attackRange * attackRange;
-        }
-        
-        bool preferBoss = bossInRange && (nearest == null ||
-            ((Vector2)boss.transform.position - origin).sqrMagnitude <
-            ((Vector2)nearest.transform.position - origin).sqrMagnitude);
+        _noAttackDiagTimer = 0f;
 
         bool isLightning = weaponType == WeaponType.Magic && magicElement == MagicElement.Lightning;
         bool isFireMagic = weaponType == WeaponType.Magic && magicElement == MagicElement.Fire;
 
-        if (preferBoss)
+        if (isFireMagic)  { FireHoming(best); cooldownTimer = attackCooldown; return; }
+        if (isLightning)  { Zap(best);        cooldownTimer = attackCooldown; return; }
+        if (weaponType == WeaponType.Ranged)
         {
-            if (isFireMagic)
-            {
-                _noAttackDiagTimer = 0f;
-                FireHomingAtBoss(boss);
-                cooldownTimer = attackCooldown;
-                return;
-            }
-            if (isLightning)
-            {
-                _noAttackDiagTimer = 0f;
-                ZapAtBoss(boss);
-                cooldownTimer = attackCooldown;
-                return;
-            }
-            if (weaponType == WeaponType.Ranged)
-            {
-                _noAttackDiagTimer = 0f;
-                ShootAtBoss(boss);
-                cooldownTimer = attackCooldown;
-                return;
-            }
-            if (weaponType == WeaponType.Boomerang)
-            {
-                _noAttackDiagTimer = 0f;
-                _boomerangTarget = boss;
-                _boomerangBouncesLeft = GetBoomerangBounces();
-                _boomerangHitEnemies.Clear();
-                _boomerangHitBosses.Clear();
-                pullbackLocalPos = -(Vector3)(GetTargetDir(_boomerangTarget) * pullbackDist);
-                state = State.Pullback;
-                return;
-            }
-            if (weaponType == WeaponType.Slash) { BeginSlash(boss); return; }
-            if (weaponType == WeaponType.Charge)
-            {
-                _noAttackDiagTimer = 0f;
-                _targetBoss = boss;
-                _chargeTimer = chargeDuration;
-                cooldownTimer = attackCooldown;
-                weaponAnimator?.SetTrigger("tCharge");
-                state = State.Charging;
-                return;
-            }
-            // Melee / Magic
-            _noAttackDiagTimer = 0f;
-            _targetBoss = boss;
-            Vector2 toBoss = ((Vector2)boss.transform.position - origin).normalized;
-            pullbackLocalPos = -(Vector3)toBoss * pullbackDist;
-            state = State.Pullback;
-            return;
-        }
-
-        if (isFireMagic && nearest != null)
-        {
-            _noAttackDiagTimer = 0f;
-            FireHomingAt(nearest);
+            Shoot(best);
             cooldownTimer = attackCooldown;
             return;
         }
-
-        if (isLightning && nearest != null)
-        {
-            _noAttackDiagTimer = 0f;
-            ZapAt(nearest);
-            cooldownTimer = attackCooldown;
-            return;
-        }
-
-        if (weaponType == WeaponType.Ranged && nearest != null)
-        {
-            _noAttackDiagTimer = 0f;
-            ShootAt(nearest);
-            cooldownTimer = attackCooldown;
-            return;
-        }
-
-        if (weaponType == WeaponType.Boomerang && nearest != null)
-        {
-            _noAttackDiagTimer = 0f;
-            _boomerangTarget = nearest;
-            _boomerangBouncesLeft = GetBoomerangBounces();
-            _boomerangHitEnemies.Clear();
-            _boomerangHitBosses.Clear();
-            pullbackLocalPos = -(Vector3)(GetTargetDir(_boomerangTarget) * pullbackDist);
-            state = State.Pullback;
-            return;
-        }
-
         if (weaponType == WeaponType.Boomerang)
         {
-            _boomerangTarget = preferBoss ? (object)boss : nearest;
-            if (_boomerangTarget == null) return;
-            _noAttackDiagTimer = 0f;
+            _boomerang = best;
             _boomerangBouncesLeft = GetBoomerangBounces();
             _boomerangHitEnemies.Clear();
             _boomerangHitBosses.Clear();
-            pullbackLocalPos = -(Vector3)(GetTargetDir(_boomerangTarget) * pullbackDist);
+            Vector2 toBoomerang = ((Vector2)_boomerang.Position - (Vector2)transform.parent.position).normalized;
+            pullbackLocalPos = -(Vector3)toBoomerang * pullbackDist;
             state = State.Pullback;
             return;
         }
-
-        if (weaponType == WeaponType.Slash && nearest != null) { BeginSlash(nearest); return; }
-
-        if (weaponType == WeaponType.Charge && nearest != null)
+        if (weaponType == WeaponType.Slash) { BeginSlash(best); return; }
+        if (weaponType == WeaponType.Charge)
         {
-            _noAttackDiagTimer = 0f;
-            targetEnemy = nearest;
+            _target = best;
             _chargeTimer = chargeDuration;
             cooldownTimer = attackCooldown;
             weaponAnimator?.SetTrigger("tCharge");
             state = State.Charging;
             return;
         }
-
-        if (weaponType == WeaponType.Hammer && (nearest != null || bossInRange))
+        if (weaponType == WeaponType.Hammer)
         {
-            _noAttackDiagTimer = 0f;
             if (_hammerSequenceCoroutine != null) StopCoroutine(_hammerSequenceCoroutine);
-            _hammerSequenceCoroutine = StartCoroutine(HammerSequenceRoutine(nearest, bossInRange ? boss : null));
+            _hammerSequenceCoroutine = StartCoroutine(HammerSequenceRoutine(best.Enemy, best.Boss));
             return;
         }
-
-        if (nearest != null)
-        {
-            _noAttackDiagTimer = 0f;
-            targetEnemy = nearest;
-            Vector2 toTarget = (nearest.transform.position - transform.parent.position).normalized;
-            pullbackLocalPos = -(Vector3)toTarget * pullbackDist;
-            state = State.Pullback;
-            return;
-        }
-
+        // Melee / Magic
+        _target = best;
+        Vector2 toTarget = ((Vector2)best.Position - (Vector2)transform.parent.position).normalized;
+        pullbackLocalPos = -(Vector3)toTarget * pullbackDist;
+        state = State.Pullback;
     }
 
     private Vector3 GetParabolicSpawnPos()
@@ -736,12 +642,11 @@ public class WeaponPoint : MonoBehaviour
         return parent.TransformPoint(parabolicSpawnLocalPos);
     }
 
-    private void ShootAtBoss(BossController boss)
+    private void Shoot(CombatTarget tgt)
     {
         if (projectilePrefab == null) return;
 
-        // 발사 직전 타겟 방향으로 회전 스냅 (노룩 방지)
-        Vector2 aimDir = ((Vector2)boss.transform.position - (Vector2)transform.position).normalized;
+        Vector2 aimDir = ((Vector2)tgt.Position - (Vector2)transform.position).normalized;
         if (!useParabolicShot)
             SnapRotationToDir(aimDir);
 
@@ -755,7 +660,7 @@ public class WeaponPoint : MonoBehaviour
 
         if (useParabolicShot)
         {
-            proj.InitParabolic(finalDmg, boss.transform.position, projectileSpeed, parabolicArcHeight,
+            proj.InitParabolic(finalDmg, tgt.Position, projectileSpeed, parabolicArcHeight,
                 isPrimaryCritical: isCrit, lifeSteal: lifeSteal, dotDamage: dotDamage,
                 areaHitRadius: areaHitRadius, areaHitDamageRatio: areaHitDamageRatio,
                 criticalRate: criticalRate, criticalMultiplier: criticalMultiplier,
@@ -775,72 +680,23 @@ public class WeaponPoint : MonoBehaviour
         if (_grade >= WeaponGrade.Legendary) _legendarySkill?.OnShoot(spawnPos, aimDir);
     }
 
-    private void ShootAt(EnemyController target)
-    {
-        if (projectilePrefab == null) return;
+    private void Zap(CombatTarget tgt) => StartCoroutine(BurstZapRoutine(MuzzleTransform, tgt.Enemy, tgt.Boss));
 
-        // 발사 직전 타겟 방향으로 회전 스냅 (노룩 방지)
-        Vector2 aimDir = (target.transform.position - transform.position).normalized;
-        if (!useParabolicShot)
-            SnapRotationToDir(aimDir);
-
-        SoundManager.Shared?.Play(SoundKey.Weapon_Shoot);
-        var (finalDmg, isCrit) = RollCrit(attackDamage);
-
-        Vector3 spawnPos = useParabolicShot ? GetParabolicSpawnPos() : transform.position;
-        var go   = Instantiate(projectilePrefab, spawnPos, Quaternion.identity);
-        var proj = go.GetComponent<Projectile>();
-        if (proj == null) { Destroy(go); return; }
-
-        if (useParabolicShot)
-        {
-            proj.InitParabolic(finalDmg, target.transform.position, projectileSpeed, parabolicArcHeight,
-                isPrimaryCritical: isCrit, lifeSteal: lifeSteal, dotDamage: dotDamage,
-                areaHitRadius: areaHitRadius, areaHitDamageRatio: areaHitDamageRatio,
-                criticalRate: criticalRate, criticalMultiplier: criticalMultiplier,
-                baseDamage: attackDamage, knockbackPower: knockbackPower);
-        }
-        else
-        {
-            proj.Init(finalDmg, aimDir, projectileSpeed, isPrimaryCritical: isCrit,
-                lifeSteal: lifeSteal, dotDamage: dotDamage, areaHitRadius: areaHitRadius,
-                areaHitDamageRatio: areaHitDamageRatio, criticalRate: criticalRate,
-                criticalMultiplier: criticalMultiplier, baseDamage: attackDamage, knockbackPower: knockbackPower,
-                acceleration: projectileSpeed * 3f);
-        }
-        ApplyShootSpecialEffect(proj, spawnPos, aimDir);
-        TriggerAttackAnimation();
-        TriggerRecoil(aimDir);
-        if (_grade >= WeaponGrade.Legendary) _legendarySkill?.OnShoot(spawnPos, aimDir);
-    }
-
-    private void ZapAtBoss(BossController boss)   => StartCoroutine(BurstZapRoutine(MuzzleTransform, null, boss));
-    private void ZapAt(EnemyController target)    => StartCoroutine(BurstZapRoutine(MuzzleTransform, target, null));
-
-    private void FireHomingAt(EnemyController target)
+    private void FireHoming(CombatTarget tgt)
     {
         if (projectilePrefab == null) return;
         var (finalDmg, isCrit) = RollCrit(attackDamage);
-        var go   = Instantiate(projectilePrefab, transform.position, Quaternion.identity);
+        var go     = Instantiate(projectilePrefab, transform.position, Quaternion.identity);
         var homing = go.GetComponent<FireHomingProjectile>();
         if (homing == null) homing = go.AddComponent<FireHomingProjectile>();
-        homing.Init(finalDmg, projectileSpeed, target,
-            lifeSteal: lifeSteal, dotDamage: dotDamage,
-            knockbackPower: knockbackPower, critRate: criticalRate, critMult: criticalMultiplier);
-        TriggerFireSpriteColor();
-        TriggerScalePulse();
-    }
-
-    private void FireHomingAtBoss(BossController boss)
-    {
-        if (projectilePrefab == null) return;
-        var (finalDmg, isCrit) = RollCrit(attackDamage);
-        var go   = Instantiate(projectilePrefab, transform.position, Quaternion.identity);
-        var homing = go.GetComponent<FireHomingProjectile>();
-        if (homing == null) homing = go.AddComponent<FireHomingProjectile>();
-        homing.InitBoss(finalDmg, projectileSpeed, boss,
-            lifeSteal: lifeSteal, dotDamage: dotDamage,
-            knockbackPower: knockbackPower, critRate: criticalRate, critMult: criticalMultiplier);
+        if (tgt.Enemy != null)
+            homing.Init(finalDmg, projectileSpeed, tgt.Enemy,
+                lifeSteal: lifeSteal, dotDamage: dotDamage,
+                knockbackPower: knockbackPower, critRate: criticalRate, critMult: criticalMultiplier);
+        else if (tgt.Boss != null)
+            homing.InitBoss(finalDmg, projectileSpeed, tgt.Boss,
+                lifeSteal: lifeSteal, dotDamage: dotDamage,
+                knockbackPower: knockbackPower, critRate: criticalRate, critMult: criticalMultiplier);
         TriggerFireSpriteColor();
         TriggerScalePulse();
     }
@@ -950,15 +806,12 @@ public class WeaponPoint : MonoBehaviour
 
 
 
-    private void BeginSlash(object target)
+    private void BeginSlash(CombatTarget tgt)
     {
         _noAttackDiagTimer = 0f;
-        EnemyController ec = target as EnemyController;
-        BossController  bc = target as BossController;
-        if (ec == null && bc == null) return;
-
+        if (tgt.IsNone) return;
         if (_slashSequenceCoroutine != null) StopCoroutine(_slashSequenceCoroutine);
-        _slashSequenceCoroutine = StartCoroutine(SlashSequenceRoutine(ec, bc));
+        _slashSequenceCoroutine = StartCoroutine(SlashSequenceRoutine(tgt.Enemy, tgt.Boss));
     }
 
     private System.Collections.IEnumerator SlashSequenceRoutine(EnemyController enemy, BossController boss)
@@ -1280,8 +1133,7 @@ public class WeaponPoint : MonoBehaviour
         float startRad = _slashCurrentAngle * Mathf.Deg2Rad;
         transform.localPosition = new Vector3(Mathf.Cos(startRad), Mathf.Sin(startRad), 0f) * _slashActiveRadius;
 
-        targetEnemy = null;
-        _targetBoss = null;
+        _target = CombatTarget.None;
         state = State.Slashing;
     }
 
@@ -1321,12 +1173,9 @@ public class WeaponPoint : MonoBehaviour
 
     private void UpdateCharging()
     {
-        bool bossGone  = _targetBoss == null || !_targetBoss.gameObject.activeInHierarchy;
-        bool enemyGone = targetEnemy == null  || !targetEnemy.gameObject.activeInHierarchy;
-        if (bossGone && enemyGone)
+        if (!_target.IsValid)
         {
-            targetEnemy = null;
-            _targetBoss = null;
+            _target = CombatTarget.None;
             BeginReturn(false);
             return;
         }
@@ -1334,10 +1183,7 @@ public class WeaponPoint : MonoBehaviour
         _chargeTimer -= Time.deltaTime;
         if (_chargeTimer <= 0f)
         {
-            Vector3 targetPos = _targetBoss != null
-                ? _targetBoss.transform.position
-                : targetEnemy.transform.position;
-            Vector2 toTarget = (targetPos - transform.parent.position).normalized;
+            Vector2 toTarget = ((Vector2)_target.Position - (Vector2)transform.parent.position).normalized;
             pullbackLocalPos = -(Vector3)toTarget * pullbackDist;
             state = State.Pullback;
         }
@@ -1417,12 +1263,9 @@ public class WeaponPoint : MonoBehaviour
     private void UpdatePullback()
     {
         // 타겟 유효성 조기 체크 — 비활성(풀 반환) 포함 모든 소멸 케이스 감지
-        bool boomerangGone = IsBoomerangTargetGone();
-        bool bossGone      = _targetBoss == null || !_targetBoss.gameObject.activeInHierarchy;
-        bool enemyGone     = targetEnemy == null  || !targetEnemy.gameObject.activeInHierarchy;
-        if (boomerangGone && bossGone && enemyGone)
+        if (!_boomerang.IsValid && !_target.IsValid)
         {
-            targetEnemy = null;
+            _target = CombatTarget.None;
             BeginReturn(false); // 타겟 소멸 — 타격 전 중단
             return;
         }
@@ -1441,12 +1284,9 @@ public class WeaponPoint : MonoBehaviour
     private void UpdateAnticipation()
     {
         // 타겟 유효성 조기 체크 — 비활성(풀 반환) 포함 모든 소멸 케이스 감지
-        bool boomerangGone = IsBoomerangTargetGone();
-        bool bossGone      = _targetBoss == null || !_targetBoss.gameObject.activeInHierarchy;
-        bool enemyGone     = targetEnemy == null  || !targetEnemy.gameObject.activeInHierarchy;
-        if (boomerangGone && bossGone && enemyGone)
+        if (!_boomerang.IsValid && !_target.IsValid)
         {
-            targetEnemy = null;
+            _target = CombatTarget.None;
             BeginReturn(false); // 타겟 소멸 — 타격 전 중단
             return;
         }
@@ -1481,97 +1321,70 @@ public class WeaponPoint : MonoBehaviour
     private void UpdateStriking()
     {
         // 부메랑 모드 처리
-        if (weaponType == WeaponType.Boomerang && _boomerangTarget != null)
+        if (weaponType == WeaponType.Boomerang && !_boomerang.IsNone)
         {
-            // 타겟이 파괴된 경우 즉시 복귀 (Unity fake-null 방어)
-            if (IsBoomerangTargetGone())
+            if (!_boomerang.IsValid)
             {
-                _boomerangTarget = null;
-                BeginReturn(false); // 타겟 소멸 — 타격 전 중단
+                _boomerang = CombatTarget.None;
+                BeginReturn(false);
                 return;
             }
 
-            Vector3 boomerangTargetPos = GetTargetPos(_boomerangTarget);
-            float curSpeed = strikeSpeed * 0.35f; // 부메랑은 기존 대비 느리게 비행
-            transform.position = Vector3.MoveTowards(transform.position, boomerangTargetPos, curSpeed * Time.deltaTime);
+            Vector3 boomerangTargetPos = _boomerang.Position;
+            transform.position = Vector3.MoveTowards(transform.position, boomerangTargetPos, strikeSpeed * 0.35f * Time.deltaTime);
             if (Vector3.Distance(transform.position, boomerangTargetPos) <= hitDistance)
             {
-                Vector2 hitDir = (boomerangTargetPos - transform.parent.position).normalized;
+                Vector2 hitDir = ((Vector2)boomerangTargetPos - (Vector2)transform.parent.position).normalized;
                 int bounceHappened = GetBoomerangBounces() - _boomerangBouncesLeft;
                 HitAreaBoomerang(hitDir, bounceHappened);
                 _boomerangBouncesLeft--;
                 if (_boomerangBouncesLeft <= 0)
                 {
-                    _boomerangTarget = null;
+                    _boomerang = CombatTarget.None;
                     BeginReturn();
                     return;
                 }
-                object next = FindNextBoomerangTarget(boomerangTargetPos);
-                if (next != null)
+                CombatTarget next = FindNextBoomerangTarget(boomerangTargetPos);
+                if (!next.IsNone)
                 {
-                    _boomerangTarget = next;
-                    _boomerangOvershootTarget = boomerangTargetPos + (Vector3)(GetTargetPos(next) - boomerangTargetPos).normalized * overshootDistance;
+                    _boomerangOvershootTarget = boomerangTargetPos + (next.Position - boomerangTargetPos).normalized * overshootDistance;
+                    _boomerang = next;
                     state = State.Overshooting;
                 }
                 else
                 {
-                    _boomerangTarget = null;
+                    _boomerang = CombatTarget.None;
                     BeginReturn();
                 }
             }
             return;
         }
 
-        // 보스 타겟 처리
-        if (_targetBoss != null)
+        if (!_target.IsValid)
         {
-            if (!_targetBoss.gameObject.activeInHierarchy)
-            {
-                _targetBoss = null;
-                BeginReturn(false); // 보스 소멸 — 타격 전 중단
-                return;
-            }
-            Vector3 bossPos = _targetBoss.transform.position;
-            // 보스가 공격 범위의 2배 밖으로 벗어나면 추격 중단
-            if (((Vector2)bossPos - (Vector2)transform.parent.position).sqrMagnitude > attackRange * attackRange * 4f)
-            {
-                _targetBoss = null;
-                BeginReturn(false);
-                return;
-            }
-            transform.position = Vector3.MoveTowards(transform.position, bossPos, strikeSpeed * Time.deltaTime);
-            if (Vector3.Distance(transform.position, bossPos) <= hitDistance)
-            {
-                if (weaponType == WeaponType.Slash) { StartSlashSweep(); return; }
-                Vector2 hitDir = (bossPos - transform.parent.position).normalized;
-                HitArea(hitDir, null);
-                overshootTarget = bossPos + (Vector3)(hitDir * overshootDistance);
-                _targetBoss = null;
-                state = State.Overshooting;
-            }
+            _target = CombatTarget.None;
+            BeginReturn(false);
             return;
         }
 
-        if (targetEnemy == null || !targetEnemy.gameObject.activeInHierarchy)
+        Vector3 targetPos = _target.Position;
+
+        // 보스: 공격 범위의 2배 밖으로 벗어나면 추격 중단
+        if (_target.Boss != null && ((Vector2)targetPos - (Vector2)transform.parent.position).sqrMagnitude > attackRange * attackRange * 4f)
         {
-            targetEnemy = null;
-            BeginReturn(false); // 타겟 소멸 — 타격 전 중단
+            _target = CombatTarget.None;
+            BeginReturn(false);
             return;
         }
-
-        Vector3 targetPos = targetEnemy.transform.position;
 
         transform.position = Vector3.MoveTowards(transform.position, targetPos, strikeSpeed * Time.deltaTime);
-
         if (Vector3.Distance(transform.position, targetPos) <= hitDistance)
         {
             if (weaponType == WeaponType.Slash) { StartSlashSweep(); return; }
-            Vector2 hitDir = (targetPos - transform.parent.position).normalized;
-            HitArea(hitDir, targetEnemy);
-
+            Vector2 hitDir = ((Vector2)targetPos - (Vector2)transform.parent.position).normalized;
+            HitArea(hitDir, _target.Enemy);
             overshootTarget = targetPos + (Vector3)(hitDir * overshootDistance);
-
-            targetEnemy = null;
+            _target = CombatTarget.None;
             state = State.Overshooting;
         }
     }
@@ -1587,7 +1400,7 @@ public class WeaponPoint : MonoBehaviour
         transform.position = Vector3.MoveTowards(transform.position, target, speed * Time.deltaTime);
         if (Vector3.Distance(transform.position, target) <= 0.05f)
         {
-            if (weaponType == WeaponType.Boomerang && _boomerangTarget != null)
+            if (weaponType == WeaponType.Boomerang && !_boomerang.IsNone)
                 state = State.Striking; // 튕김 계속
             else
                 BeginReturn();
@@ -1627,6 +1440,7 @@ public class WeaponPoint : MonoBehaviour
                     var (bossDmg, bossCrit) = RollCrit(attackDamage);
                     Vector2 bossKnock = ((Vector2)boss.transform.position - (Vector2)transform.position);
                     if (bossKnock.sqrMagnitude < 0.001f) bossKnock = hitDir;
+                    if (_grade >= WeaponGrade.Epic) FXManager.NextIsEpicHit = true;
                     boss.TakeDamage(bossDmg, bossCrit, bossKnock.normalized, effectiveKnockback);
                     ApplyLifeSteal(bossDmg);
                     TrySpecialEffectBoss(boss, bossDmg);
@@ -1643,12 +1457,14 @@ public class WeaponPoint : MonoBehaviour
             var (finalDmg, isCrit) = RollCrit(baseDmg);
             Vector2 knockDir = ((Vector2)enemy.transform.position - (Vector2)transform.position);
             if (knockDir.sqrMagnitude < 0.001f) knockDir = hitDir;
+            if (_grade >= WeaponGrade.Epic) FXManager.NextIsEpicHit = true;
             enemy.TakeDamage(finalDmg, isCrit, knockDir.normalized, effectiveKnockback);
             ApplyLifeSteal(finalDmg);
             if (dotDamage > 0f) enemy.ApplyBleed(dotDamage);
             if (isPrimary) TrySpecialEffectEnemy(enemy, finalDmg, knockDir.normalized);
             anyHit = true;
         }
+        FXManager.NextIsEpicHit = false; // TakeDamage 조기 리턴 시 잔류 플래그 정리
         if (anyHit)
         {
             SoundManager.Shared?.Play(SoundKey.Weapon_Attack);
@@ -1743,7 +1559,7 @@ public class WeaponPoint : MonoBehaviour
             if (enemy != null && !_boomerangHitEnemies.Contains(enemy))
             {
                 _boomerangHitEnemies.Add(enemy);
-                bool isPrimary = (_boomerangTarget as EnemyController) == enemy;
+                bool isPrimary = _boomerang.Enemy == enemy;
                 float baseDmg = Mathf.Max(1f, (isPrimary ? attackDamage : attackDamage * areaHitDamageRatio) * damagePenalty);
                 var (finalDmg, isCrit) = RollCrit(baseDmg);
                 Vector2 knockDir = ((Vector2)enemy.transform.position - (Vector2)transform.position);
@@ -1758,7 +1574,7 @@ public class WeaponPoint : MonoBehaviour
             if (boss != null && !_boomerangHitBosses.Contains(boss))
             {
                 _boomerangHitBosses.Add(boss);
-                bool isPrimary = boss == _boomerangTarget;
+                bool isPrimary = _boomerang.Boss == boss;
                 float baseDmg = Mathf.Max(1f, (isPrimary ? attackDamage : attackDamage * areaHitDamageRatio) * damagePenalty);
                 var (finalDmg, isCrit) = RollCrit(baseDmg);
                 Vector2 knockDir = ((Vector2)boss.transform.position - (Vector2)transform.position);
@@ -1868,34 +1684,33 @@ public class WeaponPoint : MonoBehaviour
             // 타겟이 살아있는 동안 방향 갱신
             if (state == State.Pullback || state == State.Striking)
             {
-                Vector2 dir = Vector2.zero;
-                if (weaponType == WeaponType.Boomerang && _boomerangTarget != null)
-                    dir = (GetTargetPos(_boomerangTarget) - transform.position).normalized;
-                else if (_targetBoss != null)
-                    dir = ((Vector2)_targetBoss.transform.position - (Vector2)transform.position).normalized;
-                else if (targetEnemy != null)
-                    dir = (targetEnemy.transform.position - transform.position).normalized;
-                if (dir.sqrMagnitude > 0.001f)
-                    _attackLookDir = dir;
+                CombatTarget active = !_boomerang.IsNone ? _boomerang : _target;
+                if (active.IsValid)
+                {
+                    Vector2 dir = ((Vector2)active.Position - (Vector2)transform.position).normalized;
+                    if (dir.sqrMagnitude > 0.001f)
+                        _attackLookDir = dir;
+                }
             }
             // 타겟이 사라진 이후(Overshooting/Returning)에도 마지막 방향 유지
             if (_attackLookDir.sqrMagnitude > 0.001f)
                 return _attackLookDir;
         }
 
-        // 적이 있으면 가장 가까운 적 방향
+        // 적이 있으면 가장 가까운 적 방향 (보스 포함)
         EnemyController nearest = FindNearestAny();
-        var boss = BossController.Current != null && BossController.Current.gameObject.activeInHierarchy ? BossController.Current : null;
-        if (nearest != null && boss != null)
+        var currentBoss = BossController.Current;
+        bool bossAlive  = currentBoss != null && currentBoss.gameObject.activeInHierarchy;
+        if (nearest != null && bossAlive)
         {
             float eDist = ((Vector2)nearest.transform.position - (Vector2)transform.position).sqrMagnitude;
-            float bDist = ((Vector2)boss.transform.position - (Vector2)transform.position).sqrMagnitude;
+            float bDist = ((Vector2)currentBoss.transform.position - (Vector2)transform.position).sqrMagnitude;
             return bDist < eDist
-                ? ((Vector2)boss.transform.position - (Vector2)transform.position).normalized
+                ? ((Vector2)currentBoss.transform.position - (Vector2)transform.position).normalized
                 : (nearest.transform.position - transform.position).normalized;
         }
-        if (boss != null)
-            return ((Vector2)boss.transform.position - (Vector2)transform.position).normalized;
+        if (bossAlive)
+            return ((Vector2)currentBoss.transform.position - (Vector2)transform.position).normalized;
         if (nearest != null)
             return (nearest.transform.position - transform.position).normalized;
 
@@ -1911,84 +1726,69 @@ public class WeaponPoint : MonoBehaviour
         return Vector2.up;
     }
 
-    private Vector3 GetTargetPos(object target)
-    {
-        if (target is EnemyController ec && ec != null) return ec.transform.position;
-        if (target is BossController bc && bc != null) return bc.transform.position;
-        return Vector3.zero;
-    }
-
-    /// <summary>부메랑 타겟이 파괴/비활성화됐는지 확인. Unity fake-null 방어용.</summary>
-    private bool IsBoomerangTargetGone()
-    {
-        if (_boomerangTarget is EnemyController ec)
-            return ec == null || !ec.gameObject.activeInHierarchy;
-        if (_boomerangTarget is BossController bc)
-            return bc == null || !bc.gameObject.activeInHierarchy;
-        return true;
-    }
-
-    private Vector2 GetTargetDir(object target)
-    {
-        return (GetTargetPos(target) - transform.parent.position).normalized;
-    }
-
-    private object FindNextBoomerangTarget(Vector2 fromPos)
+    private CombatTarget FindNextBoomerangTarget(Vector2 fromPos)
     {
         EnemyController nearestEnemy = null;
-        BossController nearestBoss = null;
-        float minDist = float.MaxValue; // 거리 제한 없이 맵 전체의 다음 적을 찾음
+        BossController  nearestBoss  = null;
+        float minDist = float.MaxValue;
 
         foreach (var e in EnemyController.All)
         {
-            if (e == null || !e.gameObject.activeInHierarchy) continue; // 비활성화(사망) 적 무시
+            if (e == null || !e.gameObject.activeInHierarchy) continue;
             if (_boomerangHitEnemies.Contains(e)) continue;
             float d = Vector2.Distance(fromPos, e.transform.position);
             if (d < minDist) { minDist = d; nearestEnemy = e; }
         }
 
-        if (BossController.Current != null && BossController.Current.gameObject.activeInHierarchy && !_boomerangHitBosses.Contains(BossController.Current))
+        var currentBoss = BossController.Current;
+        if (currentBoss != null && currentBoss.gameObject.activeInHierarchy && !_boomerangHitBosses.Contains(currentBoss))
         {
-            float d = Vector2.Distance(fromPos, BossController.Current.transform.position);
-            if (d < minDist) { minDist = d; nearestBoss = BossController.Current; }
+            float d = Vector2.Distance(fromPos, currentBoss.transform.position);
+            if (d < minDist) { minDist = d; nearestBoss = currentBoss; }
         }
 
         if (nearestEnemy != null && nearestBoss != null)
         {
             float dE = Vector2.Distance(fromPos, nearestEnemy.transform.position);
             float dB = Vector2.Distance(fromPos, nearestBoss.transform.position);
-            return dE < dB ? nearestEnemy : nearestBoss;
+            return dE < dB ? new CombatTarget(nearestEnemy) : new CombatTarget(nearestBoss);
         }
-        else if (nearestEnemy != null) return nearestEnemy;
-        else if (nearestBoss != null) return nearestBoss;
-        else return null;
+        if (nearestEnemy != null) return new CombatTarget(nearestEnemy);
+        if (nearestBoss  != null) return new CombatTarget(nearestBoss);
+        return CombatTarget.None;
     }
 
     // ─────────────────────────────────────────
     // 적 탐색 유틸
     // ─────────────────────────────────────────
-    private EnemyController FindNearestInRange()
+    private CombatTarget FindBestTarget()
     {
-        EnemyController nearest = null;
-        float minSqDist = float.MaxValue;
-        Vector2 origin = transform.parent != null ? transform.parent.position : transform.position;
+        Vector2 origin = transform.parent != null ? (Vector2)transform.parent.position : (Vector2)transform.position;
+        int colCount = Physics2D.OverlapCircleNonAlloc(origin, attackRange, _hitBuffer, LayerMask.GetMask("Enemy"));
 
-        int colCount = Physics2D.OverlapCircleNonAlloc(origin, attackRange, _hitBuffer);
+        CombatTarget best = CombatTarget.None;
+        float minSqDist = float.MaxValue;
+
         for (int i = 0; i < colCount; i++)
         {
             var hit = _hitBuffer[i];
-            var enemy = hit.GetComponentInParent<EnemyController>();
-            
-            if (enemy == null || !enemy.gameObject.activeInHierarchy) continue;
 
-            float sqDist = ((Vector2)enemy.transform.position - origin).sqrMagnitude;
-            if (sqDist < minSqDist) 
-            { 
-                minSqDist = sqDist; 
-                nearest = enemy; 
+            var boss = hit.GetComponentInParent<BossController>();
+            if (boss != null && boss.gameObject.activeInHierarchy)
+            {
+                float sq = ((Vector2)boss.transform.position - origin).sqrMagnitude;
+                if (sq < minSqDist) { minSqDist = sq; best = new CombatTarget(boss); }
+                continue;
+            }
+
+            var enemy = hit.GetComponentInParent<EnemyController>();
+            if (enemy != null && enemy.gameObject.activeInHierarchy)
+            {
+                float sq = ((Vector2)enemy.transform.position - origin).sqrMagnitude;
+                if (sq < minSqDist) { minSqDist = sq; best = new CombatTarget(enemy); }
             }
         }
-        return nearest;
+        return best;
     }
 
     // 거리 제한 없이 씬 전체에서 가장 가까운 적 (회전용)
@@ -2347,7 +2147,8 @@ public class WeaponPoint : MonoBehaviour
         Vector3 maxScale  = baseScale * 1.5f;
 
         // ── 전진 (작게 → 크게) ────────────────────────────────────
-        var hitIds = new HashSet<int>();
+        var hitIds   = new HashSet<int>();
+        bool bossHitFly = false;
         float t = 0f;
         while (t < outDuration)
         {
@@ -2360,12 +2161,23 @@ public class WeaponPoint : MonoBehaviour
             var cols = Physics2D.OverlapCircleAll(go.transform.position, 0.35f, LayerMask.GetMask("Enemy"));
             foreach (var col in cols)
             {
+                if (!bossHitFly)
+                {
+                    var boss = col.GetComponentInParent<BossController>();
+                    if (boss != null && hitIds.Add(boss.GetInstanceID()))
+                    {
+                        bossHitFly = true;
+                        var (bd, bc) = RollCrit(damage);
+                        Vector2 bk = ((Vector2)boss.transform.position - (Vector2)go.transform.position).normalized;
+                        boss.TakeDamage(bd, bc, bk, knockbackPower);
+                        continue;
+                    }
+                }
                 var enemy = col.GetComponentInParent<EnemyController>();
                 if (enemy == null || !hitIds.Add(enemy.GetInstanceID())) continue;
-                bool isCrit = UnityEngine.Random.value < criticalRate;
-                float dmg   = isCrit ? damage * criticalMultiplier : damage;
+                var (ed, ec) = RollCrit(damage);
                 Vector2 knock = ((Vector2)enemy.transform.position - (Vector2)go.transform.position).normalized;
-                enemy.TakeDamage(dmg, isCrit, knock, knockbackPower);
+                enemy.TakeDamage(ed, ec, knock, knockbackPower);
             }
             yield return null;
         }
@@ -2380,14 +2192,26 @@ public class WeaponPoint : MonoBehaviour
         {
             if (go == null) { DestroyClone(go); yield break; }
             var burstCols = Physics2D.OverlapCircleAll(go.transform.position, 0.5f, LayerMask.GetMask("Enemy"));
+            bool bossHitBurst = false;
             foreach (var col in burstCols)
             {
+                if (!bossHitBurst)
+                {
+                    var boss = col.GetComponentInParent<BossController>();
+                    if (boss != null)
+                    {
+                        bossHitBurst = true;
+                        var (bd, bc) = RollCrit(damage);
+                        Vector2 bk = ((Vector2)boss.transform.position - (Vector2)go.transform.position).normalized;
+                        boss.TakeDamage(bd, bc, bk, knockbackPower);
+                        continue;
+                    }
+                }
                 var e = col.GetComponentInParent<EnemyController>();
                 if (e == null) continue;
-                bool isCrit = UnityEngine.Random.value < criticalRate;
-                float dmg   = isCrit ? damage * criticalMultiplier : damage;
+                var (ed, ec) = RollCrit(damage);
                 Vector2 knock = ((Vector2)e.transform.position - (Vector2)go.transform.position).normalized;
-                e.TakeDamage(dmg, isCrit, knock, knockbackPower);
+                e.TakeDamage(ed, ec, knock, knockbackPower);
             }
             FXManager.Shared?.SpawnHitEffect(go.transform.position);
             yield return new WaitForSeconds(burstInterval);

@@ -13,10 +13,11 @@ GameObject:
   - component: {fileID: 4689158621692052240}
   - component: {fileID: 1310786639833578689}
   - component: {fileID: 703370321471693037}
-  - component: {fileID: 9021280855282658191}
-  - component: {fileID: 521998807764507218}
+  - component: {fileID: 118957687783763765}
+  - component: {fileID: 9077217671976798113}
+  - component: {fileID: 6461381361130333326}
   m_Layer: 7
-  m_Name: c3_s1_0
+  m_Name: sub0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -32,8 +33,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 2, y: 2, z: 2}
-  m_ConstrainProportionsScale: 1
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 9052888758413563378}
   m_Father: {fileID: 0}
@@ -183,7 +184,7 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
---- !u!114 &9021280855282658191
+--- !u!114 &118957687783763765
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -192,30 +193,23 @@ MonoBehaviour:
   m_GameObject: {fileID: 1326216360028315856}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bfce9f499de271b4c8ab1d03e8957395, type: 3}
+  m_Script: {fileID: 11500000, guid: 05b90058a78bdf242ada91d00c9db68b, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BossController
-  damageCooldown: 0.5
-  enrageThreshold: 0.5
-  enrageSpeedMult: 1.5
-  enrageDamageMult: 1.5
-  flashColor: {r: 1, g: 0.2, b: 0.2, a: 1}
-  flashDuration: 0.12
-  onDeathFX:
-    vfxPrefab: {fileID: 0}
-    spawnOffset: {x: 0, y: 0}
-    sfxClip: {fileID: 0}
-    volume: 1
-  chaseStopDistance: 1.8
-  chaseDuration: 2.5
-  idleDuration: 0.6
-  skills: []
-  entryDrop: 1
-  dropSpeed: 22
-  squashDuration: 0.08
-  stretchDuration: 0.1
-  settleDuration: 0.12
---- !u!114 &521998807764507218
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyController
+  moveSpeed: 2
+  maxHP: 30
+  contactDamage: 10
+  goldDrop: 5
+  expDrop: 10
+  scoreValue: 10
+  damageCooldown: 1
+  contactMaxDist: 0.8
+  knockbackImmune: 0
+  bleedDuration: 5
+  bleedInterval: 1
+  separationRadius: 1.2
+  separationStrength: 8
+--- !u!114 &9077217671976798113
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -224,21 +218,32 @@ MonoBehaviour:
   m_GameObject: {fileID: 1326216360028315856}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4f59276fb7dc5c04c8aeaf3aafa5f594, type: 3}
+  m_Script: {fileID: 11500000, guid: 3640172dedd67864e9d6803100a29029, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BossChargeSkill
-  skillId: 
-  cooldown: 2
-  enrageCooldownMult: 0.7
-  maxRange: 0
-  executeInPattern: 1
-  chargeSpeed: 10
-  chargeDuration: 0.4
-  warningDuration: 1
-  warningLineLength: 10
-  warningLineWidth: 1
-  warningColor: {r: 1, g: 0, b: 0, a: 1}
-  warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
+  m_EditorClassIdentifier: Assembly-CSharp::SlimeBobAnimation
+  minScaleY: 0.9
+  maxScaleY: 1.1
+  squashStretchX: 0.5
+  frequency: 1.25
+  randomPhase: 1
+  spriteTarget: {fileID: 0}
+--- !u!114 &6461381361130333326
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1326216360028315856}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0ef9839f1a3088e4cad5cf9d4fc2f5ca, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MeleeBehaviour
+  attackRange: 1.2
+  meleeHitRange: 1.3
+  attackInterval: 1
+  useAnimationEvent: 1
+  attackVfxPrefab: {fileID: 0}
 --- !u!1 &1437633771341022566
 GameObject:
   m_ObjectHideFlags: 0

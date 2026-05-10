@@ -160,6 +160,9 @@ public class BossProjectileCycleSkill : BossSkillBase
             if (GameManager.Shared != null && GameManager.Shared.IsGameOver)
                 yield return new WaitUntil(() => GameManager.Shared == null || !GameManager.Shared.IsGameOver);
 
+            if (Boss != null && Boss.IsGrogy)
+                yield return new WaitUntil(() => Boss == null || !Boss.IsGrogy);
+
             if (IsInvalid()) yield break;
 
             foreach (var phase in phases)
@@ -197,6 +200,7 @@ public class BossProjectileCycleSkill : BossSkillBase
             for (int i = 0; i < cfg.연사횟수; i++)
             {
                 if (GameManager.Shared != null && GameManager.Shared.IsGameOver) yield break;
+                if (Boss != null && Boss.IsGrogy) yield break;
                 if (IsInvalid()) yield break;
 
                 Vector2 spawnPos = GetSpawnPos();
@@ -223,6 +227,7 @@ public class BossProjectileCycleSkill : BossSkillBase
         {
             for (int r = 0; r < cfg.반복횟수; r++)
             {
+                if (Boss != null && Boss.IsGrogy) yield break;
                 if (IsInvalid()) yield break;
 
                 Vector2 spawnPos = GetSpawnPos();
