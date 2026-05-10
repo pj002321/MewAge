@@ -134,6 +134,7 @@ public class SoundManager : MonoBehaviourSingleton<SoundManager>
     {
         currentChapterId = ChapterPrefix(chapterID);
         var clip = FindBGM(currentChapterId, BgmType.Game) ?? gameBGM;
+        if (clip == null) { StopBGM(); return; }
         PlayBGMWithFade(clip, "game");
     }
 
@@ -193,7 +194,7 @@ public class SoundManager : MonoBehaviourSingleton<SoundManager>
         float elapsed = 0f;
         while (elapsed < bgmFadeDuration)
         {
-            elapsed += Time.deltaTime;
+            elapsed += Time.unscaledDeltaTime;
             bgmSource.volume = Mathf.Lerp(0f, 1f, elapsed / bgmFadeDuration);
             yield return null;
         }
@@ -212,7 +213,7 @@ public class SoundManager : MonoBehaviourSingleton<SoundManager>
         float elapsed = 0f;
         while (elapsed < bgmFadeDuration)
         {
-            elapsed += Time.deltaTime;
+            elapsed += Time.unscaledDeltaTime;
             bgmSource.volume = Mathf.Lerp(startVolume, 0f, elapsed / bgmFadeDuration);
             yield return null;
         }
@@ -249,7 +250,7 @@ public class SoundManager : MonoBehaviourSingleton<SoundManager>
         float elapsed = 0f;
         while (elapsed < bgmFadeDuration)
         {
-            elapsed += Time.deltaTime;
+            elapsed += Time.unscaledDeltaTime;
             bgmSource.volume = Mathf.Lerp(0f, 1f, elapsed / bgmFadeDuration);
             yield return null;
         }
