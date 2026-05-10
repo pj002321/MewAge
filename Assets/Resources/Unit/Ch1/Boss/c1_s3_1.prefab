@@ -25,7 +25,7 @@ Transform:
   m_GameObject: {fileID: 2318292507590160415}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.83, y: 2.93, z: 0}
+  m_LocalPosition: {x: 0.572, y: 1.954, z: 0}
   m_LocalScale: {x: 2.5, y: 2.5, z: 2.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -42,7 +42,7 @@ GameObject:
   - component: {fileID: 4092441220517724094}
   - component: {fileID: 2689750303464935565}
   m_Layer: 0
-  m_Name: Square
+  m_Name: decal
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -57,8 +57,8 @@ Transform:
   m_GameObject: {fileID: 3566073783235228080}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.064, y: 0.142, z: 0}
-  m_LocalScale: {x: 3.3603156, y: 1.669144, z: 1.4}
+  m_LocalPosition: {x: 0.077, y: 0.142, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2799849513256322318}
@@ -132,7 +132,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8910736215149982964}
   m_Layer: 0
-  m_Name: GameObject
+  m_Name: tPoint
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -147,7 +147,7 @@ Transform:
   m_GameObject: {fileID: 5762148732665651139}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.94, y: 1.71, z: 0}
+  m_LocalPosition: {x: 1.294, y: 1.058, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -168,6 +168,7 @@ GameObject:
   - component: {fileID: 6321899902040148537}
   - component: {fileID: 728645305363153929}
   - component: {fileID: -2037389566666223451}
+  - component: {fileID: 4783267815962749479}
   m_Layer: 0
   m_Name: c1_s3_1
   m_TagString: Untagged
@@ -185,7 +186,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1.5, y: 1.5, z: 1.5}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 4007057684831220766}
@@ -242,12 +243,12 @@ SpriteRenderer:
   m_SortingLayer: 1
   m_SortingOrder: 5
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -3598170667420467675, guid: 348855f23bbcdbc41b0244981a909165, type: 3}
+  m_Sprite: {fileID: 7632105832006240238, guid: 93f1edcc495dba2409a45e69282b40d4, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 0.77, y: 0.65}
+  m_Size: {x: 2.56, y: 2.56}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
@@ -335,8 +336,8 @@ CapsuleCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0.14, y: 1.31}
-  m_Size: {x: 2.11, y: 2.67}
+  m_Offset: {x: 0.14, y: 0.88}
+  m_Size: {x: 1.53, y: 1.43}
   m_Direction: 0
 --- !u!114 &728645305363153929
 MonoBehaviour:
@@ -359,11 +360,9 @@ MonoBehaviour:
   - 0.7
   - 0.35
   grogyDuration: 5
-  grogyAtkSpeedBonus: 50
   grogyOverheadPrefab: {fileID: 7777409954982400410, guid: f66d4f4f0fe9de24182839d83a609535, type: 3}
   grogyOverheadAnchor: {fileID: 4007057684831220766}
   grogyOverheadYOffset: 1.5
-  grogyFlickerInterval: 0.08
   flashColor: {r: 1, g: 0.2, b: 0.2, a: 1}
   flashDuration: 0.12
   onDeathFX:
@@ -374,7 +373,8 @@ MonoBehaviour:
   chaseStopDistance: 1.8
   chaseDuration: 2.5
   idleDuration: 0.6
-  skills: []
+  skills:
+  - {fileID: 4783267815962749479}
   _decal: {fileID: 4092441220517724094}
   entryDrop: 1
   entryScaleUpDuration: 0.35
@@ -391,3 +391,67 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpriteYSort
   multiplier: 100
+--- !u!114 &4783267815962749479
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7313528007987417252}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 71ecc31d375a1534384e5b1844037cf7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BossProjectileCycleSkill
+  skillId: 
+  cooldown: 5
+  enrageCooldownMult: 0.7
+  maxRange: 0
+  executeInPattern: 1
+  projectilePrefab: {fileID: 7916182024222986910, guid: 4b69f31afea3a604d9932737bc7aaadd, type: 3}
+  projectileSpeed: 20
+  firePoint: {fileID: 8910736215149982964}
+  phases:
+  - label: "\uD398\uC774\uC988"
+    type: 0
+    "\uACBD\uACE0\uC2DC\uAC04": 0.4
+    "\uC5F0\uC0AC\uD69F\uC218": 15
+    "\uBC1C\uC0AC\uAC04\uACA9": 0.5
+    "\uBC29\uD5A5\uC218": 8
+    "\uBC18\uBCF5\uD69F\uC218": 1
+    "\uBC18\uBCF5\uAC04\uACA9": 0.6
+    "\uAC01\uB3C4\uC624\uD504\uC14B": 0
+    "\uBD80\uCC44\uAF34\uAC01\uB3C4": 120
+    "\uD638\uBC0D\uD69F\uC218": 3
+    "\uD638\uBC0D\uAC04\uACA9": 0.25
+    "\uC544\uD06C\uB192\uC774": 3
+    "\uD638\uBC0D\uC18D\uB3C4": 9
+    "\uAC00\uC18D\uC2DC\uAC04": 0.4
+    "\uCD08\uAE30\uC18D\uB3C4\uBE44\uC728": 0.05
+    "\uCD94\uACA9\uC2DC\uAC04": 2
+  - label: "\uD398\uC774\uC988"
+    type: 3
+    "\uACBD\uACE0\uC2DC\uAC04": 0.4
+    "\uC5F0\uC0AC\uD69F\uC218": 1
+    "\uBC1C\uC0AC\uAC04\uACA9": 0.5
+    "\uBC29\uD5A5\uC218": 8
+    "\uBC18\uBCF5\uD69F\uC218": 1
+    "\uBC18\uBCF5\uAC04\uACA9": 0.6
+    "\uAC01\uB3C4\uC624\uD504\uC14B": 0
+    "\uBD80\uCC44\uAF34\uAC01\uB3C4": 120
+    "\uD638\uBC0D\uD69F\uC218": 5
+    "\uD638\uBC0D\uAC04\uACA9": 0.25
+    "\uC544\uD06C\uB192\uC774": 8
+    "\uD638\uBC0D\uC18D\uB3C4": 9
+    "\uAC00\uC18D\uC2DC\uAC04": 0
+    "\uCD08\uAE30\uC18D\uB3C4\uBE44\uC728": 0.05
+    "\uCD94\uACA9\uC2DC\uAC04": 3
+  useWarningLines: 1
+  warningLineLength: 10
+  warningLineWidth: 0.06
+  warningColor: {r: 1, g: 0, b: 0, a: 1}
+  warningMaterial: {fileID: 0}
+  impactVfxPrefab: {fileID: 7916182024222986910, guid: c4927e75acce7be4cb6e4563dac42fff, type: 3}
+  impactVfxLifetime: 1
+  chaseStopDistance: 4
+  attackTrigger: tAttack

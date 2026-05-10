@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4092441220517724094}
   - component: {fileID: 2689750303464935565}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Square
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -139,7 +139,7 @@ GameObject:
   - component: {fileID: -1537220520014159406}
   - component: {fileID: -4861455100317653660}
   - component: {fileID: 3329482227692561882}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: c1_s3_0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -330,11 +330,9 @@ MonoBehaviour:
   - 0.7
   - 0.35
   grogyDuration: 5
-  grogyAtkSpeedBonus: 50
   grogyOverheadPrefab: {fileID: 7777409954982400410, guid: f66d4f4f0fe9de24182839d83a609535, type: 3}
   grogyOverheadAnchor: {fileID: 3883397052985769762}
   grogyOverheadYOffset: 1.5
-  grogyFlickerInterval: 0.08
   flashColor: {r: 1, g: 0.2, b: 0.2, a: 1}
   flashDuration: 0.12
   onDeathFX:
@@ -509,6 +507,10 @@ PrefabInstance:
     - target: {fileID: 2734155779453642268, guid: 66e6618ee7949024cb7610bd6bc60058, type: 3}
       propertyPath: m_Name
       value: Muzzle_dron
+      objectReference: {fileID: 0}
+    - target: {fileID: 2734155779453642268, guid: 66e6618ee7949024cb7610bd6bc60058, type: 3}
+      propertyPath: m_Layer
+      value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 2734155779453642268, guid: 66e6618ee7949024cb7610bd6bc60058, type: 3}
       propertyPath: m_IsActive

@@ -249,8 +249,13 @@ public class BossProjectileCycleSkill : BossSkillBase
 
     private IEnumerator ChasePhase(float duration)
     {
+        const float xAvoidDist = 2.5f;
+
         float elapsed   = 0f;
         float speedMult = Boss != null && Boss.IsEnraged ? Boss.EnrageSpeedMult : 1f;
+
+        // 페이즈 시작 시 어느 쪽으로 비킬지 결정 (0이면 아직 미결정)
+        float xSide = 0f;
 
         while (elapsed < duration)
         {
@@ -259,10 +264,29 @@ public class BossProjectileCycleSkill : BossSkillBase
 
             if (Owner.PlayerTransform != null)
             {
-                float dist = Vector2.Distance(Owner.transform.position, Owner.PlayerTransform.position);
-                if (dist > chaseStopDistance)
-                    Owner.MoveTowardPlayer(Owner.MoveSpeed * speedMult);
-                Owner.FlipToward(((Vector2)Owner.PlayerTransform.position - (Vector2)Owner.transform.position).normalized);
+                Vector2 myPos     = Owner.transform.position;
+                Vector2 playerPos = Owner.PlayerTransform.position;
+                float   dx        = myPos.x - playerPos.x;
+
+                // x가 너무 가까우면 옆으로 비킬 방향 결정 후 유지
+                if (Mathf.Abs(dx) < xAvoidDist)
+                {
+                    if (xSide == 0f) xSide = dx >= 0f ? 1f : -1f;
+                }
+                else
+                {
+                    xSide = 0f; // 충분히 벗어나면 리셋
+                }
+
+                Vector2 targetPos = xSide != 0f
+                    ? new Vector2(playerPos.x + xSide * xAvoidDist, playerPos.y)
+                    : playerPos;
+
+                Vector2 toTarget = targetPos - myPos;
+                if (toTarget.magnitude > chaseStopDistance)
+                    Owner.MoveInDirection(toTarget.normalized, Owner.MoveSpeed * speedMult);
+
+                Owner.FlipToward((playerPos - myPos).normalized);
             }
 
             elapsed += Time.fixedDeltaTime;
