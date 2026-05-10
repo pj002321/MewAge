@@ -74,6 +74,9 @@ public class BossGroundSpikeSkill : BossSkillBase
             if (GameManager.Shared != null && GameManager.Shared.IsGameOver)
                 yield return new WaitUntil(() => GameManager.Shared == null || !GameManager.Shared.IsGameOver);
 
+            if (Boss != null && Boss.IsGrogy)
+                yield return new WaitUntil(() => Boss == null || !Boss.IsGrogy);
+
             if (IsInvalid()) yield break;
 
             if (useSpikePhase)

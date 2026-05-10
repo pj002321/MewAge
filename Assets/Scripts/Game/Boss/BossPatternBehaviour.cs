@@ -42,12 +42,27 @@ public class BossPatternBehaviour : EnemyBehaviourBase
     private BossController boss;
     private bool           isRunning;
     private int            patternIndex;
+    private Coroutine      _activeCoroutine;
 
     public override void Init(EnemyController controller)
     {
         base.Init(controller);
         boss = controller.GetComponent<BossController>();
-        if (boss != null) boss.OnEnraged += OnBossEnraged;
+        if (boss != null)
+        {
+            boss.OnEnraged   += OnBossEnraged;
+            boss.OnGrogyStart += OnGrogyStarted;
+        }
+    }
+
+    private void OnGrogyStarted()
+    {
+        if (_activeCoroutine != null)
+        {
+            Owner.StopCoroutine(_activeCoroutine);
+            _activeCoroutine = null;
+            isRunning = false;
+        }
     }
 
     public override void OnMoveFixedUpdate() { }
@@ -56,7 +71,7 @@ public class BossPatternBehaviour : EnemyBehaviourBase
     {
         if (isRunning) return;
         if (boss != null && boss.IsGrogy) return;
-        Owner.StartCoroutine(UseDbSequence ? DbSequenceRoutine() : PatternRoutine());
+        _activeCoroutine = Owner.StartCoroutine(UseDbSequence ? DbSequenceRoutine() : PatternRoutine());
     }
 
     // 일반 패턴 루틴
@@ -83,6 +98,7 @@ public class BossPatternBehaviour : EnemyBehaviourBase
             yield return entry.skill.Execute();
 
         isRunning = false;
+        _activeCoroutine = null;
     }
 
     // DB 시퀀스 루틴: 스킬 -> 딜레이 -> 추격 -> 반복
@@ -103,6 +119,7 @@ public class BossPatternBehaviour : EnemyBehaviourBase
             yield return ChaseRoutine(_dbChaseTime);
 
         isRunning = false;
+        _activeCoroutine = null;
     }
 
     private IEnumerator ChaseRoutine(float duration)
@@ -125,7 +142,11 @@ public class BossPatternBehaviour : EnemyBehaviourBase
 
     private void OnDestroy()
     {
-        if (boss != null) boss.OnEnraged -= OnBossEnraged;
+        if (boss != null)
+        {
+            boss.OnEnraged    -= OnBossEnraged;
+            boss.OnGrogyStart -= OnGrogyStarted;
+        }
     }
 
     private void OnBossEnraged()

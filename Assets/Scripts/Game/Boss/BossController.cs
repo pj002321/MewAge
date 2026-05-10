@@ -117,6 +117,7 @@ public class BossController : MonoBehaviour, IEnemyHost
 
     // 그로기: 이미 발동된 구간 인덱스 추적
     private readonly System.Collections.Generic.HashSet<int> _triggeredGrogy = new();
+    private Coroutine  _gaugeSkillCoroutine;
     private Coroutine  _grogyFlickerCoroutine;
     private GameObject _grogyOverheadInstance;
     private Color[]    _originalSrColors;
@@ -289,7 +290,8 @@ public class BossController : MonoBehaviour, IEnemyHost
 
     private IEnumerator ForcedGrogyRoutine(float duration)
     {
-        if (_patternCoroutine != null) { StopCoroutine(_patternCoroutine); _patternCoroutine = null; }
+        if (_patternCoroutine   != null) { StopCoroutine(_patternCoroutine);   _patternCoroutine   = null; }
+        if (_gaugeSkillCoroutine != null) { StopCoroutine(_gaugeSkillCoroutine); _gaugeSkillCoroutine = null; }
         _skillExecuting = false;
         IsGrogy        = true;
         GrogyRemaining = duration;
@@ -425,7 +427,8 @@ public class BossController : MonoBehaviour, IEnemyHost
         // 게이지 100% 시 즉시 스킬 발동
         if (SkillGauge >= MaxSkillGauge)
         {
-            StartCoroutine(TriggerSkillFromGauge());
+            if (_gaugeSkillCoroutine != null) StopCoroutine(_gaugeSkillCoroutine);
+            _gaugeSkillCoroutine = StartCoroutine(TriggerSkillFromGauge());
         }
     }
 
@@ -435,7 +438,7 @@ public class BossController : MonoBehaviour, IEnemyHost
         OnSkillGaugeChanged?.Invoke(0f);
 
         // 이미 스킬 실행 중이거나 사망/낙하/그로기 중이면 취소
-        if (isDead || _dropping || _skillExecuting || IsGrogy) yield break;
+        if (isDead || _dropping || _skillExecuting || IsGrogy) { _gaugeSkillCoroutine = null; yield break; }
 
         var skill = RandomReadySkill();
         if (skill != null)
@@ -444,6 +447,7 @@ public class BossController : MonoBehaviour, IEnemyHost
             yield return skill.Execute();
             _skillExecuting = false;
         }
+        _gaugeSkillCoroutine = null;
     }
 
     private IEnumerator DieRoutine()
@@ -518,7 +522,8 @@ public class BossController : MonoBehaviour, IEnemyHost
 
     private IEnumerator GrogyRoutine()
     {
-        if (_patternCoroutine != null) { StopCoroutine(_patternCoroutine); _patternCoroutine = null; }
+        if (_patternCoroutine   != null) { StopCoroutine(_patternCoroutine);   _patternCoroutine   = null; }
+        if (_gaugeSkillCoroutine != null) { StopCoroutine(_gaugeSkillCoroutine); _gaugeSkillCoroutine = null; }
         _skillExecuting = false;
         IsGrogy        = true;
         GrogyRemaining = grogyDuration;
@@ -665,7 +670,7 @@ public class BossController : MonoBehaviour, IEnemyHost
         go.transform.localScale = Vector3.one * bossScale;
 
         const float duration  = 0.5f;
-        const float scaleMult = 2.5f;
+        const float scaleMult = 1.8f;
         float elapsed = 0f;
         while (elapsed < duration)
         {
