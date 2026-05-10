@@ -1440,6 +1440,7 @@ public class WeaponPoint : MonoBehaviour
                     var (bossDmg, bossCrit) = RollCrit(attackDamage);
                     Vector2 bossKnock = ((Vector2)boss.transform.position - (Vector2)transform.position);
                     if (bossKnock.sqrMagnitude < 0.001f) bossKnock = hitDir;
+                    if (_grade >= WeaponGrade.Epic) FXManager.NextIsEpicHit = true;
                     boss.TakeDamage(bossDmg, bossCrit, bossKnock.normalized, effectiveKnockback);
                     ApplyLifeSteal(bossDmg);
                     TrySpecialEffectBoss(boss, bossDmg);
@@ -1456,12 +1457,14 @@ public class WeaponPoint : MonoBehaviour
             var (finalDmg, isCrit) = RollCrit(baseDmg);
             Vector2 knockDir = ((Vector2)enemy.transform.position - (Vector2)transform.position);
             if (knockDir.sqrMagnitude < 0.001f) knockDir = hitDir;
+            if (_grade >= WeaponGrade.Epic) FXManager.NextIsEpicHit = true;
             enemy.TakeDamage(finalDmg, isCrit, knockDir.normalized, effectiveKnockback);
             ApplyLifeSteal(finalDmg);
             if (dotDamage > 0f) enemy.ApplyBleed(dotDamage);
             if (isPrimary) TrySpecialEffectEnemy(enemy, finalDmg, knockDir.normalized);
             anyHit = true;
         }
+        FXManager.NextIsEpicHit = false; // TakeDamage 조기 리턴 시 잔류 플래그 정리
         if (anyHit)
         {
             SoundManager.Shared?.Play(SoundKey.Weapon_Attack);

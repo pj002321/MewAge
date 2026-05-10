@@ -13,6 +13,9 @@ public class DamageText : MonoBehaviour
     [SerializeField] private float lifetime       = 0.7f;   // 총 표시 시간
     [SerializeField] private float fadeStartRatio = 0.55f;  // 이 비율 이후부터 페이드
 
+    [Header("떠오름")]
+    [SerializeField] private float floatSpeed = 0.6f;       // 초당 상승 속도 (월드 단위)
+
     [Header("떨림")]
     [SerializeField] private float shakeAmplitude = 0.09f;  // 떨림 폭 (월드 단위)
     [SerializeField] private float shakeFrequency = 55f;    // 떨림 빈도 (Hz)
@@ -53,10 +56,12 @@ public class DamageText : MonoBehaviour
         float s = scaleCurve.Evaluate(progress) * _scale;
         transform.localScale = Vector3.one * Mathf.Max(s, 0f);
 
-        // 떨림: 시간이 갈수록 줄어드는 수평 진동
-        float decay  = 1f - progress;
-        float shakeX = Mathf.Sin(Time.time * shakeFrequency) * shakeAmplitude * decay;
-        transform.position = originPos + new Vector3(shakeX, 0f, 0f);
+        // 떨림: 시간이 갈수록 줄어드는 수평 진동 + 위로 떠오름
+        float elapsed = lifetime - timer;
+        float decay   = 1f - progress;
+        float shakeX  = Mathf.Sin(Time.time * shakeFrequency) * shakeAmplitude * decay;
+        float riseY   = floatSpeed * elapsed;
+        transform.position = originPos + new Vector3(shakeX, riseY, 0f);
 
         // 페이드아웃
         float fadeLen = 1f - fadeStartRatio;

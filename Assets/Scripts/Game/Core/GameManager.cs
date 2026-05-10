@@ -722,6 +722,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 
         // 보스 환경 전환 — 이 시점에 CurrentBossEnterPoint 세팅됨
         WaveEnvironmentSwitcher.Shared?.SetBoss();
+        SoundManager.Shared?.PlayChapterBossBGM(currentChapterID);
 
         // 1프레임 대기 (환경 오브젝트 활성화 완료)
         yield return null;
