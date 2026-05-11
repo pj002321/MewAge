@@ -9352,6 +9352,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 862115adfdcd2324ebd6f55445449850, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponDebugInspector
+  filterChapter: 0
   selectedWeaponId: 
   star: 1
 --- !u!1001 &970814245
@@ -16789,6 +16790,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3953135899010041423, guid: f9a8c0e29c2e9bc4bb518c36b372a05d, type: 3}
+      propertyPath: expGrowthPerLevel
+      value: 30
+      objectReference: {fileID: 0}
     - target: {fileID: 5718016485335126889, guid: f9a8c0e29c2e9bc4bb518c36b372a05d, type: 3}
       propertyPath: m_IsActive
       value: 1
@@ -18844,7 +18849,7 @@ MonoBehaviour:
   timerWarningThreshold: 5
   normalWaveColor: {r: 0.3160377, g: 0.7747207, b: 1, a: 1}
   bossWaveColor: {r: 1, g: 0.4198113, b: 0.4198113, a: 1}
-  dropHeight: 6
+  dropHeight: 12
   dropGravity: 28
   notifyLabel: {fileID: 1895992989}
   notifyFadeIn: 0.35

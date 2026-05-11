@@ -1530,7 +1530,7 @@ public class WeaponPoint : MonoBehaviour
             if (boss != null && boss.gameObject.activeInHierarchy)
             {
                 var (fd, ic) = RollCrit(dmg);
-                FXManager.NextIsEpicHit = true;
+                if (_grade >= WeaponGrade.Epic) FXManager.NextIsEpicHit = true;
                 boss.TakeDamage(fd, ic);
                 anyHit = true;
                 continue;
@@ -1538,7 +1538,7 @@ public class WeaponPoint : MonoBehaviour
             if (_hitBuffer[i].TryGetComponent<EnemyController>(out var e) && e.gameObject.activeInHierarchy)
             {
                 var (fd, ic) = RollCrit(dmg);
-                FXManager.NextIsEpicHit = true;
+                if (_grade >= WeaponGrade.Epic) FXManager.NextIsEpicHit = true;
                 e.TakeDamage(fd, ic);
                 anyHit = true;
             }

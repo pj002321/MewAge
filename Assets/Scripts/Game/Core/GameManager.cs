@@ -287,6 +287,8 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 
         if (waveClearPanel) waveClearPanel.SetActive(false);
 
+        PlayerStats.Shared?.AddExp(10);
+
         // 대기 중 사망(부활 패널)했다가 아직 isGameOver 상태면 패널 표시 중단
         if (isGameOver) yield break;
 
