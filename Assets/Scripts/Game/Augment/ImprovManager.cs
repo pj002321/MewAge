@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Mewage.DB;
@@ -54,6 +55,21 @@ public class ImprovManager : MonoBehaviourSingleton<ImprovManager>
             StartCoroutine(blur.Capture(improvPanel.gameObject));
         else
             improvPanel.gameObject.SetActive(true);
+
+        // 안전망: 0.5초 후에도 패널이 안 떠있으면 강제 활성화
+        StartCoroutine(EnsurePanelVisible());
+    }
+
+    private IEnumerator EnsurePanelVisible()
+    {
+        // WaitForEndOfFrame은 timeScale 0에서도 동작
+        yield return new WaitForEndOfFrame();
+        yield return new WaitForEndOfFrame();
+        if (improvPanel != null && !improvPanel.gameObject.activeSelf)
+        {
+            this.DError("[ImprovManager] BlurBackground 캡처 후에도 패널이 비활성 — 강제 활성화");
+            improvPanel.gameObject.SetActive(true);
+        }
     }
 
     // ── 리롤 ──────────────────────────────────────────────────────
@@ -222,10 +238,7 @@ public class ImprovManager : MonoBehaviourSingleton<ImprovManager>
 
         Time.timeScale = 1f;
 
-        if (UpgradeManager.Shared != null)
-            UpgradeManager.Shared.ShowPanel(pendingWave);
-        else
-            GameManager.Shared?.StartNextWave();
+        GameManager.Shared?.StartNextWave();
     }
 }
 

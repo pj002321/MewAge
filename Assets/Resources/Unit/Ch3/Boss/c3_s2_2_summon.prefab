@@ -17,6 +17,7 @@ GameObject:
   - component: {fileID: 9077217671976798113}
   - component: {fileID: -2660997517696984413}
   - component: {fileID: 6942949540760629351}
+  - component: {fileID: 2368404944936599325}
   m_Layer: 7
   m_Name: c3_s2_2_summon
   m_TagString: Untagged
@@ -211,6 +212,7 @@ MonoBehaviour:
   bleedInterval: 1
   separationRadius: 1.2
   separationStrength: 8
+  _decal: {fileID: 0}
 --- !u!114 &9077217671976798113
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -228,7 +230,8 @@ MonoBehaviour:
   squashStretchX: 0.5
   frequency: 1.25
   randomPhase: 1
-  spriteTarget: {fileID: 0}
+  fixBottom: 0
+  halfHeightOverride: 0
 --- !u!114 &-2660997517696984413
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -254,14 +257,35 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ebf384ff75278374cb62dda6f31d5629, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ChargeBehaviour
-  chargeDuration: 0.6
+  chargeDistance: 6
   chargeSpeedMultiplier: 2
   moveDuration: 2
   idleDuration: 2
+  chargeRange: 4
   chargeColor: {r: 1, g: 0, b: 0, a: 1}
   chargeScale: 0.85
-  preChargeDuration: 0.25
   ghostInterval: 0.06
+  warningLineLength: 5
+  warningLineWidth: 0.06
+  warningColor: {r: 1, g: 0, b: 0, a: 1}
+  warningMaterial: {fileID: 0}
+  warningLineOrigin: {fileID: 0}
+--- !u!114 &2368404944936599325
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1326216360028315856}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8dbca1b53536a2b47a8964120af00539, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitFlash
+  flashDuration: 0.1
+  flashMaterial: {fileID: 2100000, guid: f6d87d58797b8b9478efae2c2271cbe7, type: 2}
+  flashColor: {r: 1, g: 1, b: 1, a: 1}
+  BaseColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &1437633771341022566
 GameObject:
   m_ObjectHideFlags: 0

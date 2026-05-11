@@ -40,13 +40,14 @@ public class BossController : MonoBehaviour, IEnemyHost
     [SerializeField] private Transform  grogyOverheadAnchor;
     [SerializeField] private float      grogyOverheadYOffset = 1.5f;
 
+    [Tooltip("그로기 중 단색 실루엣 머티리얼. Inspector에서 할당. 없으면 sr.color만 변경.")]
+    [SerializeField] private Material grogyMaterial;
+
     private static readonly Color GrogyTint        = new(0.45f, 0.45f, 0.45f, 1f);
     private const           float GrogyAtkSpeedMult = 8f;
 
     // ── HitFlash ──────────────────────────────────────────────────
-    [Header("피격 플래시")]
-    [SerializeField] private Color flashColor    = new(1f, 0.2f, 0.2f, 1f);
-    [SerializeField] private float flashDuration = 0.12f;
+    private HitFlash _hitFlash;
 
     // ── FX ────────────────────────────────────────────────────────
     [Header("이펙트")]
@@ -111,7 +112,6 @@ public class BossController : MonoBehaviour, IEnemyHost
     private float            currentHP;
     private float            damageTimer;
     private SpriteRenderer[] srs;
-    private Coroutine        flashCoroutine;
     private Coroutine        knockbackCoroutine;
     private Coroutine        _patternCoroutine;
     private bool             isDead;
@@ -126,12 +126,12 @@ public class BossController : MonoBehaviour, IEnemyHost
     private GameObject _grogyOverheadInstance;
     private Color[]    _originalSrColors;
     private Material[] _originalMaterials;
-    private static Material _grogyMatInstance;
 
     /// <summary>현재 보스가 왼쪽을 바라보고 있으면 true.</summary>
     public bool IsFacingLeft => _lastFlipX;
 
-    private readonly List<BossSkillBase> _readySkills = new();
+    private BossSkillBase[] _patternSkills = System.Array.Empty<BossSkillBase>();
+    private int             _skillIndex;
 
     public bool IsDropping    => _dropping;
     /// <summary>투사체 발사 페이즈 중임을 표시 — ChaseRoutine이 이동을 중단합니다.</summary>
@@ -156,7 +156,8 @@ public class BossController : MonoBehaviour, IEnemyHost
         if (!_isClone) Current = this;
         Rb            = GetComponent<Rigidbody2D>();
         EnemyAnimator = GetComponentInChildren<Animator>();
-        srs           = GetComponentsInChildren<SpriteRenderer>(true);
+        srs      = GetComponentsInChildren<SpriteRenderer>(true);
+        _hitFlash = GetComponentInChildren<HitFlash>(true);
 
         if (skills == null || skills.Length == 0)
             skills = GetComponents<BossSkillBase>();
@@ -182,12 +183,8 @@ public class BossController : MonoBehaviour, IEnemyHost
         }
 
         // 클론: 원본이 피격 중일 때 복제되면 flash 색상이 그대로 복사됨 → 초기화
-        if (_isClone)
-        {
-            flashCoroutine = null;
-            if (srs != null)
-                foreach (var sr in srs) sr.color = Color.white;
-        }
+        if (_isClone && srs != null)
+            foreach (var sr in srs) sr.color = Color.white;
 
         if (Rb != null)
         {
@@ -201,6 +198,26 @@ public class BossController : MonoBehaviour, IEnemyHost
 
         foreach (var s in skills)
             s.Init(this);
+
+        RebuildPatternSkills();
+    }
+
+    private void RebuildPatternSkills()
+    {
+        var list = new System.Collections.Generic.List<BossSkillBase>();
+        foreach (var s in skills)
+            if (s != null && s.executeInPattern) list.Add(s);
+        _patternSkills = list.ToArray();
+        _skillIndex    = 0;
+    }
+
+    /// <summary>패턴 스킬 목록에서 다음 스킬을 순차 반환합니다.</summary>
+    public BossSkillBase NextPatternSkill()
+    {
+        if (_patternSkills.Length == 0) return null;
+        var skill = _patternSkills[_skillIndex % _patternSkills.Length];
+        _skillIndex++;
+        return skill;
     }
 
     private void Start()
@@ -215,7 +232,7 @@ public class BossController : MonoBehaviour, IEnemyHost
         if (entryDrop && !_isClone)
             StartCoroutine(EntryDropRoutine());
         else
-            StartCoroutine(PatternRoutine());
+            _patternCoroutine = StartCoroutine(PatternRoutine());
     }
 
     // ── 입장 연출 ──────────────────────────────────────────────────
@@ -259,16 +276,18 @@ public class BossController : MonoBehaviour, IEnemyHost
             yield return ChaseRoutine();
             if (isDead) break;
 
-            // 3) 스킬 실행 (executeInPattern=false 인 자율 스킬 제외, 중복 실행 방지)
-            if (!_skillExecuting)
+            // 3) 스킬 실행 — 순차 플레이리스트 방식
+            if (!_skillExecuting && _patternSkills.Length > 0)
             {
-                var skill = RandomReadySkill();
-                if (skill != null)
-                {
-                    _skillExecuting = true;
-                    yield return skill.Execute();
-                    _skillExecuting = false;
-                }
+                var skill = _patternSkills[_skillIndex % _patternSkills.Length];
+                _skillIndex++;
+                _skillExecuting = true;
+                yield return skill.Execute();
+                _skillExecuting = false;
+
+                // 스킬별 쿨타임 (분노 시 0.6배)
+                float cd = skill.cooldown * (IsEnraged ? 0.6f : 1f);
+                if (cd > 0f) yield return new WaitForSeconds(cd);
             }
         }
     }
@@ -322,9 +341,6 @@ public class BossController : MonoBehaviour, IEnemyHost
         if (!IsEnraged && HPRatio <= enrageThreshold)
             TriggerEnrage();
 
-        // 스킬 쿨다운 틱
-        foreach (var s in skills)
-            s.TickCooldown(Time.deltaTime);
     }
 
     // ── 이동 API (스킬에서 사용) ────────────────────────────────────
@@ -391,12 +407,9 @@ public class BossController : MonoBehaviour, IEnemyHost
 
     public void FlipToward(Vector2 dir)
     {
-        bool newFlipX;
-        if      (dir.x > 0.1f)  newFlipX = false;
-        else if (dir.x < -0.1f) newFlipX = true;
-        else return;
-
-        _lastFlipX = newFlipX;
+        if      (dir.x > 0.1f)  _lastFlipX = false;
+        else if (dir.x < -0.1f) _lastFlipX = true;
+        // dir.x ≈ 0 (플레이어가 보스와 X가 같은 경우) → 현재 방향 유지
     }
 
     private void LateUpdate()
@@ -457,7 +470,7 @@ public class BossController : MonoBehaviour, IEnemyHost
         FXManager.Shared?.SpawnDamageText(textPos, damage, isCritical);
         FXManager.Shared?.SpawnHitEffect(transform.position);
 
-        HitFlash();
+        _hitFlash?.Flash();
 
         if (currentHP <= 0f)
             StartCoroutine(DieRoutine());
@@ -487,7 +500,7 @@ public class BossController : MonoBehaviour, IEnemyHost
         // 이미 스킬 실행 중이거나 사망/낙하/그로기 중이면 취소
         if (isDead || _dropping || _skillExecuting || IsGrogy) { _gaugeSkillCoroutine = null; yield break; }
 
-        var skill = RandomReadySkill();
+        var skill = NextPatternSkill();
         if (skill != null)
         {
             _skillExecuting = true;
@@ -545,23 +558,6 @@ public class BossController : MonoBehaviour, IEnemyHost
         Destroy(gameObject);
     }
 
-    // ── HitFlash ─────────────────────────────────────────────────
-
-    private void HitFlash()
-    {
-        if (flashCoroutine != null) StopCoroutine(flashCoroutine);
-        flashCoroutine = StartCoroutine(FlashRoutine());
-    }
-
-    private IEnumerator FlashRoutine()
-    {
-        if (srs == null) yield break;
-        foreach (var sr in srs) sr.color = flashColor;
-        yield return new WaitForSeconds(flashDuration);
-        Color restore = IsGrogy ? GrogyTint : Color.white;
-        foreach (var sr in srs) sr.color = restore;
-    }
-
     // ── 분노 ─────────────────────────────────────────────────────
 
     private void TriggerEnrage()
@@ -616,37 +612,28 @@ public class BossController : MonoBehaviour, IEnemyHost
 
     // ── 그로기 비주얼 ─────────────────────────────────────────────────
 
-    private static Material GetGrogyMaterial()
-    {
-        if (_grogyMatInstance != null) return _grogyMatInstance;
-        var sh = Shader.Find("Custom/SpriteGrogyColor");
-        if (sh == null) return null;
-        _grogyMatInstance = new Material(sh) { hideFlags = HideFlags.HideAndDontSave };
-        return _grogyMatInstance;
-    }
-
     private void StartGrogyVisuals()
     {
+        // 피격 flash 중이면 먼저 중단해야 원본 색상을 올바르게 스냅샷할 수 있음
+        _hitFlash?.StopFlash();
+
         if (srs != null)
         {
-            _originalSrColors  = new Color[srs.Length];
-            _originalMaterials = new Material[srs.Length];
+            _originalSrColors    = new Color[srs.Length];
+            _originalMaterials   = new Material[srs.Length];
             for (int i = 0; i < srs.Length; i++)
             {
                 if (srs[i] == null) continue;
                 _originalSrColors[i]  = srs[i].color;
-                _originalMaterials[i] = srs[i].sharedMaterial;
+                _originalMaterials[i] = srs[i].material;
             }
 
-            // 실루엣 재질로 교체 → SpriteRenderer.color가 단색 출력으로 직결
-            var grogyMat = GetGrogyMaterial();
-            if (grogyMat != null)
-                foreach (var sr in srs)
-                    if (sr) sr.sharedMaterial = grogyMat;
-
-            // 진입 하이라이트가 흰색에서 시작할 수 있도록 초기화
             foreach (var sr in srs)
-                if (sr) sr.color = Color.white;
+            {
+                if (!sr) continue;
+                sr.color = Color.white;
+                if (grogyMaterial != null) sr.material = grogyMaterial;
+            }
         }
 
         if (_grogyFlickerCoroutine != null) StopCoroutine(_grogyFlickerCoroutine);
@@ -666,13 +653,14 @@ public class BossController : MonoBehaviour, IEnemyHost
     {
         if (_grogyFlickerCoroutine != null) { StopCoroutine(_grogyFlickerCoroutine); _grogyFlickerCoroutine = null; }
 
-        if (srs != null && _originalMaterials != null && _originalSrColors != null)
+        if (srs != null && _originalSrColors != null)
         {
             for (int i = 0; i < srs.Length; i++)
             {
-                if (srs[i] == null || i >= _originalMaterials.Length || i >= _originalSrColors.Length) continue;
-                srs[i].sharedMaterial = _originalMaterials[i];
-                srs[i].color          = _originalSrColors[i];
+                if (srs[i] == null) continue;
+                if (i < _originalSrColors.Length)  srs[i].color    = _originalSrColors[i];
+                if (_originalMaterials != null && i < _originalMaterials.Length && _originalMaterials[i] != null)
+                    srs[i].material = _originalMaterials[i];
             }
         }
         else if (srs != null)
@@ -727,9 +715,6 @@ public class BossController : MonoBehaviour, IEnemyHost
         waveSR.sortingLayerID = sr0.sortingLayerID;
         waveSR.sortingOrder   = sr0.sortingOrder + 1;
 
-        // 그로기 실루엣 재질 사용 → color = 흰색 단색 파동
-        var grogyMat = GetGrogyMaterial();
-        if (grogyMat != null) waveSR.sharedMaterial = grogyMat;
         waveSR.color = new Color(1f, 1f, 1f, 0.9f);
 
         // 보스 월드 스케일 기준으로 파동 시작 크기 결정
@@ -760,19 +745,6 @@ public class BossController : MonoBehaviour, IEnemyHost
             wp.MultiplyAttackSpeed(mult);
     }
 
-    // ── 스킬 선택 ─────────────────────────────────────────────────
-
-    public BossSkillBase RandomReadySkill()
-    {
-        if (skills == null || skills.Length == 0) return null;
-
-        _readySkills.Clear();
-        foreach (var s in skills)
-            if (s.executeInPattern && s.IsReady) _readySkills.Add(s);
-
-        if (_readySkills.Count == 0) return null;
-        return _readySkills[Random.Range(0, _readySkills.Count)];
-    }
 
     // ── DB 데이터 적용 ────────────────────────────────────────────
 

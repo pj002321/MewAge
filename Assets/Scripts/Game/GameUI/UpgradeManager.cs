@@ -57,8 +57,7 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
         var list = new List<DrawProfile>();
         DB_확률.ForEachEntity(row =>
         {
-            // 장비 가챠 행(f_가챠타입이 설정된 행)은 무기 상점 드로우와 무관하므로 제외
-            if (!string.IsNullOrEmpty(row.f_가챠타입)) return;
+            if (row.f_레벨 <= 0) return;
             list.Add(new DrawProfile
             {
                 minLevel  = row.f_레벨,
@@ -459,9 +458,21 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
 
     private DrawProfile GetCurrentProfile(int level)
     {
-        DrawProfile result = drawProfiles.Length > 0 ? drawProfiles[0] : default;
+        if (drawProfiles.Length == 0) return default;
+
+        // 플레이어 레벨을 충족하는 프로필 중 minLevel이 가장 높은 것을 선택
+        DrawProfile result    = drawProfiles[0]; // minLevel 최솟값 프로필을 기본 폴백으로
+        int         bestLevel = int.MinValue;
         foreach (var p in drawProfiles)
-            if (level >= p.minLevel) result = p;
+        {
+            if (p.minLevel < result.minLevel)
+                result = p; // 가장 낮은 minLevel 프로필 추적 (폴백용)
+            if (level >= p.minLevel && p.minLevel > bestLevel)
+            {
+                bestLevel = p.minLevel;
+                result    = p;
+            }
+        }
         return result;
     }
 

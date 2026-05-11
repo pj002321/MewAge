@@ -64,6 +64,8 @@ public class Projectile : MonoBehaviour
     // 유도 전용
     private bool  _isHoming;
     private float _homingTurnSpeed;   // deg/s
+    private bool  _homingTargetPlayer;
+    private float _homingTimeLeft = float.MaxValue;
 
     // 포물선 전용
     private bool    _isParabolic;
@@ -119,11 +121,20 @@ public class Projectile : MonoBehaviour
         transform.rotation = Quaternion.Euler(0f, 0f, angle);
     }
 
-    /// <summary>유도탄 활성화. Init() 호출 직후 사용하세요.</summary>
+    /// <summary>유도탄 활성화 (적 추적). Init() 호출 직후 사용하세요.</summary>
     public void SetHoming(float turnSpeed = 200f)
     {
         _isHoming        = true;
         _homingTurnSpeed = turnSpeed;
+    }
+
+    /// <summary>플레이어 추적 유도탄 활성화. 보스 스킬용. Init() 호출 직후 사용하세요.</summary>
+    public void SetHomingPlayer(float turnSpeed = 200f, float homingDuration = 2f)
+    {
+        _isHoming           = true;
+        _homingTurnSpeed    = turnSpeed;
+        _homingTargetPlayer = true;
+        _homingTimeLeft     = homingDuration;
     }
 
     /// <summary>관통/반사 플래그를 설정합니다. Init() 호출 직후 사용하세요.</summary>
@@ -230,7 +241,12 @@ public class Projectile : MonoBehaviour
             return;
         }
 
-        if (_isHoming) UpdateHoming();
+        if (_isHoming)
+        {
+            _homingTimeLeft -= Time.deltaTime;
+            if (_homingTimeLeft <= 0f) _isHoming = false;
+            else UpdateHoming();
+        }
 
         if (_accelDuration > 0f)
         {
@@ -245,22 +261,30 @@ public class Projectile : MonoBehaviour
 
     private void UpdateHoming()
     {
-        // 보스 우선, 없으면 가장 가까운 일반 적
         Transform target = null;
-        float     best   = float.MaxValue;
 
-        var boss = BossController.Current;
-        if (boss != null && boss.gameObject.activeInHierarchy)
+        if (_homingTargetPlayer)
         {
-            target = boss.transform;
+            var player = PlayerController.Instance;
+            if (player != null) target = player.transform;
         }
         else
         {
-            foreach (var e in EnemyController.All)
+            // 보스 우선, 없으면 가장 가까운 일반 적
+            float best = float.MaxValue;
+            var boss = BossController.Current;
+            if (boss != null && boss.gameObject.activeInHierarchy)
             {
-                if (e == null || !e.gameObject.activeInHierarchy) continue;
-                float d = ((Vector2)e.transform.position - (Vector2)transform.position).sqrMagnitude;
-                if (d < best) { best = d; target = e.transform; }
+                target = boss.transform;
+            }
+            else
+            {
+                foreach (var e in EnemyController.All)
+                {
+                    if (e == null || !e.gameObject.activeInHierarchy) continue;
+                    float d = ((Vector2)e.transform.position - (Vector2)transform.position).sqrMagnitude;
+                    if (d < best) { best = d; target = e.transform; }
+                }
             }
         }
 

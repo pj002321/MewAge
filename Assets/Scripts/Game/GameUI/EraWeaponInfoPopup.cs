@@ -62,7 +62,7 @@ public class EraWeaponInfoPopup : MonoBehaviour
         StartCoroutine(ScrollToTop());
     }
 
-    void RefreshProbTexts()
+    public void RefreshProbTexts()
     {
         var probs = UpgradeManager.Shared?.GetCurrentProbs() ?? default;
         if (normalProbText)    normalProbText.text    = $"{probs.common:0.#}%";

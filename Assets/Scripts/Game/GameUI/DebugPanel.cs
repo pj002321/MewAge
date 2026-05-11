@@ -180,7 +180,9 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
     {
         PlayerPrefs.DeleteAll();
         PlayerPrefs.Save();
-        this.DLog("[Debug] PlayerPrefs 전체 초기화 완료");
+        this.DLog("[Debug] PlayerPrefs 전체 초기화 완료 — 프롤로그 씬으로 이동");
+        // Application.Quit 대신 직접 프롤로그 씬 로드 → 즉시 초기화 상태 확인 가능
+        UnityEngine.SceneManagement.SceneManager.LoadScene("prologue@scene");
     }
 
     // ── 인게임 핸들러 ─────────────────────────────────────────────────
@@ -206,8 +208,7 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
         if (weapon == null) return;
         var inv = PlayerInventory.Shared;
         if (inv == null) return;
-        inv.ForceAddToInventory(weapon);
-        inv.EquipFromInventory(inv.Inventory.Count - 1);
+        inv.QuietEquip(weapon);
     }
 
     private void PopulateWeaponDropdown()

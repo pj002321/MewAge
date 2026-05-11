@@ -46,6 +46,7 @@ GameObject:
   - component: {fileID: 1774644437137481360}
   - component: {fileID: -6582521404503198944}
   - component: {fileID: 315366870377334667}
+  - component: {fileID: 6005970421494329333}
   m_Layer: 7
   m_Name: c2_s2_0
   m_TagString: Untagged
@@ -172,12 +173,11 @@ MonoBehaviour:
   grogyThresholds:
   - 0.7
   - 0.35
-  grogyDuration: 5
+  grogyDuration: 2
   grogyOverheadPrefab: {fileID: 0}
   grogyOverheadAnchor: {fileID: 0}
   grogyOverheadYOffset: 1.5
-  flashColor: {r: 1, g: 0.2, b: 0.2, a: 1}
-  flashDuration: 0.12
+  grogyMaterial: {fileID: 2100000, guid: 65ccb7b6cbefce14eb6f884cfc33ba91, type: 2}
   onDeathFX:
     vfxPrefab: {fileID: 0}
     spawnOffset: {x: 0, y: 0}
@@ -266,9 +266,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 71ecc31d375a1534384e5b1844037cf7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossProjectileCycleSkill
-  cooldown: 5
-  enrageCooldownMult: 0.7
   executeInPattern: 1
+  cooldown: 2
   projectilePrefab: {fileID: 7916182024222986910, guid: 47dbd72006f17c24e909af1468326e13, type: 3}
   projectileSpeed: 7
   firePoint: {fileID: 4042531504965790265}
@@ -315,6 +314,21 @@ MonoBehaviour:
   impactVfxPrefab: {fileID: 0}
   impactVfxLifetime: 1
   chaseStopDistance: 1.8
+--- !u!114 &6005970421494329333
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3570372466586305526}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8dbca1b53536a2b47a8964120af00539, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitFlash
+  flashDuration: 0.1
+  flashMaterial: {fileID: 2100000, guid: f6d87d58797b8b9478efae2c2271cbe7, type: 2}
+  BaseColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &3628999252177199525
 GameObject:
   m_ObjectHideFlags: 0

@@ -138,6 +138,7 @@ GameObject:
   - component: {fileID: 6321899902040148537}
   - component: {fileID: -7813013498023383608}
   - component: {fileID: -618635328822314122}
+  - component: {fileID: 4554111660559845394}
   m_Layer: 0
   m_Name: c1_m14
   m_TagString: Untagged
@@ -364,6 +365,7 @@ MonoBehaviour:
   shootInterval: 2
   rangedDamage: 30
   firePoint: {fileID: 8910736215149982964}
+  useWarningLines: 1
   warningDuration: 0.5
   warningLineLength: 4
   warningLineWidth: 0.5
@@ -373,6 +375,22 @@ MonoBehaviour:
   attackVfxDuration: 0.5
   useAnimationEvent: 1
   animEventTimeout: 0.6
+  retreatDuration: 1.4
+--- !u!114 &4554111660559845394
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7313528007987417252}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8dbca1b53536a2b47a8964120af00539, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitFlash
+  flashDuration: 0.1
+  flashMaterial: {fileID: 2100000, guid: f6d87d58797b8b9478efae2c2271cbe7, type: 2}
+  BaseColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1001 &2146482331128868166
 PrefabInstance:
   m_ObjectHideFlags: 0

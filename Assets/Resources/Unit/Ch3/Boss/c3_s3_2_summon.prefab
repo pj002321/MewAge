@@ -16,6 +16,7 @@ GameObject:
   - component: {fileID: 943707339566565793}
   - component: {fileID: -88253163262595315}
   - component: {fileID: -103154799615280463}
+  - component: {fileID: 8624099617207595615}
   m_Layer: 7
   m_Name: c3_s3_2_summon
   m_TagString: Untagged
@@ -145,6 +146,7 @@ MonoBehaviour:
   bleedInterval: 1
   separationRadius: 1.2
   separationStrength: 8
+  _decal: {fileID: 0}
 --- !u!50 &2531985962442067216
 Rigidbody2D:
   serializedVersion: 5
@@ -238,6 +240,22 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossSummonMinion
   maxHP: 30
+--- !u!114 &8624099617207595615
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5780791762247049258}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8dbca1b53536a2b47a8964120af00539, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitFlash
+  flashDuration: 0.1
+  flashMaterial: {fileID: 2100000, guid: f6d87d58797b8b9478efae2c2271cbe7, type: 2}
+  flashColor: {r: 1, g: 1, b: 1, a: 1}
+  BaseColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &9095108348472895431
 GameObject:
   m_ObjectHideFlags: 0

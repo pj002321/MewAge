@@ -34,6 +34,7 @@ public class BossPatternBehaviour : EnemyBehaviourBase
     private bool           isRunning;
     private int            patternIndex;
     private Coroutine      _activeCoroutine;
+    private bool           _skipIdleChaseOnce; // 그로기 해제 직후 첫 패턴은 즉시 실행
 
     public override void Init(IEnemyHost host)
     {
@@ -41,8 +42,9 @@ public class BossPatternBehaviour : EnemyBehaviourBase
         boss = host.SelfTransform.GetComponent<BossController>();
         if (boss != null)
         {
-            boss.OnEnraged    += OnBossEnraged;
+            boss.OnEnraged  += OnBossEnraged;
             boss.OnGrogyStart += OnGrogyStarted;
+            boss.OnGrogyEnd   += OnGrogyEnded;
         }
     }
 
@@ -55,6 +57,8 @@ public class BossPatternBehaviour : EnemyBehaviourBase
             isRunning = false;
         }
     }
+
+    private void OnGrogyEnded() => _skipIdleChaseOnce = true;
 
     public override void OnMoveFixedUpdate() { }
 
@@ -73,9 +77,12 @@ public class BossPatternBehaviour : EnemyBehaviourBase
         var entry = pattern[patternIndex % pattern.Count];
         patternIndex++;
 
-        if (entry.chain)
+        bool skipDelay = entry.chain || _skipIdleChaseOnce;
+        _skipIdleChaseOnce = false;
+
+        if (skipDelay)
         {
-            if (entry.chainDelay > 0f)
+            if (entry.chain && entry.chainDelay > 0f)
                 yield return new WaitForSeconds(entry.chainDelay);
         }
         else
@@ -115,6 +122,7 @@ public class BossPatternBehaviour : EnemyBehaviourBase
         {
             boss.OnEnraged    -= OnBossEnraged;
             boss.OnGrogyStart -= OnGrogyStarted;
+            boss.OnGrogyEnd   -= OnGrogyEnded;
         }
     }
 

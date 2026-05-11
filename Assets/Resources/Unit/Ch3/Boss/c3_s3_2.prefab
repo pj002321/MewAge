@@ -1,5 +1,36 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1277996436760358443
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4039304846186446666}
+  m_Layer: 7
+  m_Name: tGrogy
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4039304846186446666
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1277996436760358443}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 2.015, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8912246183259105812}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1326216360028315856
 GameObject:
   m_ObjectHideFlags: 0
@@ -16,6 +47,7 @@ GameObject:
   - component: {fileID: -6983293918771508383}
   - component: {fileID: 1312257813220651438}
   - component: {fileID: 3570653029507297606}
+  - component: {fileID: 8013241851858456192}
   m_Layer: 7
   m_Name: c3_s3_2
   m_TagString: Untagged
@@ -36,6 +68,7 @@ Transform:
   m_LocalScale: {x: 2, y: 2, z: 2}
   m_ConstrainProportionsScale: 1
   m_Children:
+  - {fileID: 4039304846186446666}
   - {fileID: 9052888758413563378}
   - {fileID: 2436184059496450301}
   m_Father: {fileID: 0}
@@ -85,8 +118,8 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 1049025713
+  m_SortingLayer: 1
   m_SortingOrder: 5
   m_MaskInteraction: 0
   m_Sprite: {fileID: 4731747989236855100, guid: 68e49b6888d228b479e1381d151669ac, type: 3}
@@ -182,8 +215,8 @@ CapsuleCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0.85, y: 0.82}
-  m_Size: {x: 0.73, y: 1.43}
+  m_Offset: {x: 0, y: 0}
+  m_Size: {x: 1.1, y: 1.94}
   m_Direction: 0
 --- !u!114 &-6983293918771508383
 MonoBehaviour:
@@ -198,11 +231,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossController
   damageCooldown: 0.5
+  moveSpeed: 3
+  _isClone: 0
   enrageThreshold: 0.5
   enrageSpeedMult: 1.5
   enrageDamageMult: 1.5
-  flashColor: {r: 1, g: 0.2, b: 0.2, a: 1}
-  flashDuration: 0.12
+  grogyThresholds:
+  - 0.7
+  - 0.35
+  grogyDuration: 2
+  grogyOverheadPrefab: {fileID: 7777409954982400410, guid: f66d4f4f0fe9de24182839d83a609535, type: 3}
+  grogyOverheadAnchor: {fileID: 4039304846186446666}
+  grogyOverheadYOffset: 1.5
+  grogyMaterial: {fileID: 2100000, guid: f6d87d58797b8b9478efae2c2271cbe7, type: 2}
   onDeathFX:
     vfxPrefab: {fileID: 0}
     spawnOffset: {x: 0, y: 0}
@@ -214,11 +255,9 @@ MonoBehaviour:
   skills:
   - {fileID: 1312257813220651438}
   - {fileID: 3570653029507297606}
+  _decal: {fileID: 9052888758413563378}
   entryDrop: 1
-  dropSpeed: 22
-  squashDuration: 0.08
-  stretchDuration: 0.1
-  settleDuration: 0.12
+  entryScaleUpDuration: 0.35
 --- !u!114 &1312257813220651438
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -231,19 +270,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 421dc27616e41804c9fcb163146852ec, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossSummonCycleSkill
-  skillId: 
-  cooldown: 5
-  enrageCooldownMult: 0.7
-  maxRange: 0
   executeInPattern: 1
+  cooldown: 5
   minionPrefab: {fileID: 5780791762247049258, guid: a7092e06a177108429b305007a57b6c5, type: 3}
+  spawnMarkerPrefab: {fileID: 0}
   summonCount: 2
+  maxActiveMinions: 4
   summonInterval: 8
+  markerWarningTime: 0.8
   minionDuration: 10
   minionMoveSpeed: 2.5
   minionContactDamage: 5
   spawnRadius: 3
-  summonTrigger: tAttack
 --- !u!114 &3570653029507297606
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -256,11 +294,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0f8495f4ccac6f34a9faaaa2e8921428, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossFireCrossSkill
-  skillId: 
-  cooldown: 4
-  enrageCooldownMult: 0.7
-  maxRange: 0
   executeInPattern: 1
+  cooldown: 4
   tilePrefab: {fileID: 38222733961658620, guid: 0ebbd7c7ca572c7418fb960c48b39412, type: 3}
   warningDuration: 1
   warningLineWidth: 1
@@ -272,6 +307,22 @@ MonoBehaviour:
   fireDuration: 3
   tileDamage: 35
   tickInterval: 0.5
+--- !u!114 &8013241851858456192
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1326216360028315856}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8dbca1b53536a2b47a8964120af00539, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitFlash
+  flashDuration: 0.1
+  flashMaterial: {fileID: 2100000, guid: f6d87d58797b8b9478efae2c2271cbe7, type: 2}
+  flashColor: {r: 1, g: 1, b: 1, a: 1}
+  BaseColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &1437633771341022566
 GameObject:
   m_ObjectHideFlags: 0

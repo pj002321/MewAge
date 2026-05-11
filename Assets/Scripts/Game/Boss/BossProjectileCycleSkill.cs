@@ -416,6 +416,14 @@ public class BossProjectileCycleSkill : BossSkillBase
                     var lr = SpawnWarningLine(warnOrigin);
                     if (lr != null) _activeWarnLines.Add(lr);
 
+                    // 경고 시작 시점에 한 번만 플립 (매 프레임 플립하면 무한 진동)
+                    {
+                        Vector2 initDir = Owner.PlayerTransform != null
+                            ? ((Vector2)Owner.PlayerTransform.position - GetSpawnPos()).normalized
+                            : Vector2.right;
+                        Owner.FlipToward(initDir);
+                    }
+
                     float elapsed = 0f;
                     while (elapsed < cfg.경고시간)
                     {
@@ -426,7 +434,6 @@ public class BossProjectileCycleSkill : BossSkillBase
                         Vector2 toPlayer = Owner.PlayerTransform != null
                             ? ((Vector2)Owner.PlayerTransform.position - cur).normalized
                             : Vector2.right;
-                        Owner.FlipToward(toPlayer);
 
                         if (lr != null)
                         {

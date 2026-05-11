@@ -301,6 +301,27 @@ public class PlayerInventory : MonoBehaviourSingleton<PlayerInventory>
         OnChanged?.Invoke();
     }
 
+    /// <summary>디버그 전용 — 인벤 경유 없이 무기를 장착 슬롯에 직접 추가합니다. OnChanged 1회만 발행.</summary>
+    public void QuietEquip(WeaponData data)
+    {
+        int emptySlot = -1;
+        for (int i = 0; i < equipped.Count; i++)
+            if (equipped[i] == null) { emptySlot = i; break; }
+        if (emptySlot < 0 && equipped.Count < MaxEquipped)
+            emptySlot = equipped.Count;
+
+        if (emptySlot >= 0)
+        {
+            if (emptySlot == equipped.Count) equipped.Add(data);
+            else equipped[emptySlot] = data;
+        }
+        else
+        {
+            equipped[equipped.Count - 1] = data;
+        }
+        OnChanged?.Invoke();
+    }
+
     // ────────────────────────────────────────────────────────────────
     // 드래그 & 드롭 교체
     // ────────────────────────────────────────────────────────────────

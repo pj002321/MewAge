@@ -22,24 +22,11 @@ public class SoundManager : MonoBehaviourSingleton<SoundManager>
     [Header("사운드 딕셔너리")]
     [SerializeField] private List<SoundEntry> soundList = new();
 
-    [System.Serializable]
-    public class ChapterBGMEntry
-    {
-        [Tooltip("챕터 접두어 (예: C1, C2)")]
-        public string chapterId;
-        public AudioClip homeBGM;
-        public AudioClip gameBGM;
-        public AudioClip bossBGM;
-    }
-
-    [Header("BGM — 기본 (챕터 미지정 폴백)")]
+    [Header("BGM")]
     [SerializeField] private AudioClip homeBGM;
     [SerializeField] private AudioClip gameBGM;
     [SerializeField] private AudioClip bossBGM;
     [SerializeField] private float bgmFadeDuration = 1f;
-
-    [Header("BGM — 챕터별")]
-    [SerializeField] private List<ChapterBGMEntry> chapterBGMList = new();
 
     private readonly Dictionary<SoundKey, SoundEntry> soundDict = new();
     private readonly Dictionary<SoundKey, float> lastPlayTime = new();
@@ -49,7 +36,6 @@ public class SoundManager : MonoBehaviourSingleton<SoundManager>
     private Coroutine bgmFadeCoroutine;
 
     private string currentScene;
-    private string currentChapterId;
     private bool isLoadingIndicatorActive;
 
     protected override void Awake()
@@ -118,57 +104,11 @@ public class SoundManager : MonoBehaviourSingleton<SoundManager>
     // ─────────────────────────────────────────────────
     // BGM
     // ─────────────────────────────────────────────────
-    public void PlayHomeBGM() => PlayChapterHomeBGM(null);
-    public void PlayGameBGM() => PlayChapterGameBGM(null);
-
-    /// <summary>chapterID 예: "C1_S1" → "C1" 접두어로 챕터별 홈 BGM 재생.</summary>
-    public void PlayChapterHomeBGM(string chapterID)
-    {
-        currentChapterId = ChapterPrefix(chapterID);
-        var clip = FindBGM(currentChapterId, BgmType.Home) ?? homeBGM;
-        PlayBGMWithFade(clip, "home");
-    }
-
-    /// <summary>chapterID 예: "C1_S1" → "C1" 접두어로 챕터별 인게임 BGM 재생.</summary>
-    public void PlayChapterGameBGM(string chapterID)
-    {
-        currentChapterId = ChapterPrefix(chapterID);
-        var clip = FindBGM(currentChapterId, BgmType.Game) ?? gameBGM;
-        if (clip == null) { StopBGM(); return; }
-        PlayBGMWithFade(clip, "game");
-    }
-
-    /// <summary>보스 웨이브 BGM 재생. 없으면 일반 게임 BGM 유지.</summary>
-    public void PlayChapterBossBGM(string chapterID = null)
-    {
-        var prefix = chapterID != null ? ChapterPrefix(chapterID) : currentChapterId;
-        var clip   = FindBGM(prefix, BgmType.Boss) ?? bossBGM;
-        if (clip == null) return;
-        PlayBGMWithFade(clip, "boss");
-    }
-
-    private enum BgmType { Home, Game, Boss }
-
-    private static string ChapterPrefix(string chapterID)
-    {
-        if (string.IsNullOrEmpty(chapterID)) return null;
-        int under = chapterID.IndexOf('_');
-        return under > 0 ? chapterID.Substring(0, under) : chapterID;
-    }
-
-    private AudioClip FindBGM(string prefix, BgmType type)
-    {
-        if (string.IsNullOrEmpty(prefix)) return null;
-        foreach (var e in chapterBGMList)
-            if (e.chapterId == prefix)
-                return type switch
-                {
-                    BgmType.Home => e.homeBGM,
-                    BgmType.Boss => e.bossBGM,
-                    _            => e.gameBGM,
-                };
-        return null;
-    }
+    public void PlayHomeBGM()                          => PlayBGMWithFade(homeBGM, "home");
+    public void PlayGameBGM()                          => PlayBGMWithFade(gameBGM, "game");
+    public void PlayChapterHomeBGM(string chapterID)   => PlayBGMWithFade(homeBGM, "home");
+    public void PlayChapterGameBGM(string chapterID)   => PlayBGMWithFade(gameBGM, "game");
+    public void PlayChapterBossBGM(string chapterID = null) => PlayBGMWithFade(bossBGM, "boss");
 
     private void PlayBGMWithFade(AudioClip clip, string sceneName)
     {
@@ -236,11 +176,11 @@ public class SoundManager : MonoBehaviourSingleton<SoundManager>
             bgmFadeCoroutine = StartCoroutine(FadeInFromPause());
         }
         else if (currentScene == "home")
-            PlayChapterHomeBGM(currentChapterId);
+            PlayHomeBGM();
         else if (currentScene == "boss")
             PlayChapterBossBGM();
         else if (currentScene == "game")
-            PlayChapterGameBGM(currentChapterId);
+            PlayGameBGM();
     }
 
     private IEnumerator FadeInFromPause()

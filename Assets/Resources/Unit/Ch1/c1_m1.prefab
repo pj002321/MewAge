@@ -15,9 +15,9 @@ GameObject:
   - component: {fileID: 6453839904366324668}
   - component: {fileID: 5650901321275164484}
   - component: {fileID: -5874366549243020845}
-  - component: {fileID: -2434905160088638796}
   - component: {fileID: 6781448397647558850}
   - component: {fileID: 2009250769436359712}
+  - component: {fileID: 328252618777965352}
   m_Layer: 7
   m_Name: c1_m1
   m_TagString: Untagged
@@ -67,7 +67,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: a97c105638bdf8b4a8650670310a4cd3, type: 2}
+  - {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -211,6 +211,7 @@ MonoBehaviour:
   bleedInterval: 1
   separationRadius: 1.2
   separationStrength: 1.5
+  _decal: {fileID: 0}
 --- !u!114 &-5874366549243020845
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -229,21 +230,6 @@ MonoBehaviour:
   attackVfx: {fileID: 0}
   vfxDuration: 0.3
   animEventTimeout: 0.5
---- !u!114 &-2434905160088638796
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2860284734646843584}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8dbca1b53536a2b47a8964120af00539, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HitFlash
-  flashDuration: 0.12
-  flashColor: {r: 1, g: 1, b: 1, a: 1}
-  BaseColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!114 &6781448397647558850
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -276,6 +262,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpriteYSort
   multiplier: 100
+--- !u!114 &328252618777965352
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2860284734646843584}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8dbca1b53536a2b47a8964120af00539, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitFlash
+  flashDuration: 0.1
+  flashMaterial: {fileID: 2100000, guid: f6d87d58797b8b9478efae2c2271cbe7, type: 2}
+  BaseColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &5355396286084888952
 GameObject:
   m_ObjectHideFlags: 0

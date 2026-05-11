@@ -19,6 +19,7 @@ GameObject:
   - component: {fileID: 8635708321786010924}
   - component: {fileID: -3198427878130431828}
   - component: {fileID: 242148250730634391}
+  - component: {fileID: 3682863031726590876}
   m_Layer: 7
   m_Name: c2_s2_w5
   m_TagString: Untagged
@@ -276,7 +277,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HitFlash
   flashDuration: 0.12
-  flashColor: {r: 1, g: 1, b: 1, a: 1}
+  flashMaterial: {fileID: 2100000, guid: f6d87d58797b8b9478efae2c2271cbe7, type: 2}
   BaseColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!114 &-3198427878130431828
 MonoBehaviour:
@@ -303,6 +304,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpriteYSort
   multiplier: 100
+--- !u!114 &3682863031726590876
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1651568199920207753}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8dbca1b53536a2b47a8964120af00539, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitFlash
+  flashDuration: 0.1
+  flashMaterial: {fileID: 0}
+  BaseColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &2474228134311596660
 GameObject:
   m_ObjectHideFlags: 0

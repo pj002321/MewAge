@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
 
@@ -120,6 +121,8 @@ public static class EnemyCombatRoutines
     /// </summary>
     public static class WarningLine
     {
+        private static readonly List<LineRenderer> _all = new();
+
         public static LineRenderer Spawn(Vector2 origin, float lineWidth, Color color,
                                          Material material = null)
         {
@@ -138,6 +141,7 @@ public static class EnemyCombatRoutines
                 : new Material(Shader.Find("Sprites/Default"));
             lr.SetPosition(0, origin);
             lr.SetPosition(1, origin);
+            _all.Add(lr);
             return lr;
         }
 
@@ -152,7 +156,19 @@ public static class EnemyCombatRoutines
 
         public static void Destroy(LineRenderer lr)
         {
+            _all.Remove(lr);
             if (lr != null) UnityEngine.Object.Destroy(lr.gameObject);
+        }
+
+        /// <summary>씬에 남아있는 모든 경고선을 일괄 제거합니다. 웨이브 전환 시 호출하세요.</summary>
+        public static void DestroyAll()
+        {
+            for (int i = _all.Count - 1; i >= 0; i--)
+            {
+                var lr = _all[i];
+                if (lr != null) UnityEngine.Object.Destroy(lr.gameObject);
+            }
+            _all.Clear();
         }
     }
 }

@@ -57,8 +57,8 @@ public class BossBehaviour : EnemyBehaviourBase
         // 2) Chase
         yield return ChaseRoutine();
 
-        // 3) 준비된 스킬 실행 (없으면 스킵)
-        var skill = boss?.RandomReadySkill();
+        // 3) 스킬 순차 실행
+        var skill = boss?.NextPatternSkill();
         if (skill != null)
             yield return skill.Execute();
 

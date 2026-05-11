@@ -186,6 +186,7 @@ public class WeaponPoint : MonoBehaviour
 
     private float _baseCooldown;
     private float _statMultiplier  = 1f;
+    private bool                  _initialized;
     private WeaponGrade          _grade          = WeaponGrade.Common;
     private WeaponLegendarySkill _legendarySkill;
     private WeaponMythicSkill    _mythicSkill;
@@ -296,17 +297,28 @@ public class WeaponPoint : MonoBehaviour
     private void Start()
     {
         OnRecallAll += RecallClones;
-        _baseCooldown  = attackCooldown;
+        if (!_initialized)
+            _baseCooldown = attackCooldown;
         originLocalPos = transform.localPosition;
         _originalScale = transform.localScale;
         cooldownTimer  = attackCooldown;
-        _weaponSr      = GetComponentInChildren<SpriteRenderer>();
+        if (_weaponSr == null)
+            _weaponSr = GetComponentInChildren<SpriteRenderer>();
         InitTrail();
         InitAnimator();
         if (weaponType == WeaponType.Spin)
             _hasSpinCollider = GetComponent<Collider2D>() != null;
-        _legendarySkill = GetComponentInChildren<WeaponLegendarySkill>();
-        _mythicSkill    = GetComponentInChildren<WeaponMythicSkill>();
+        if (_legendarySkill == null)
+            _legendarySkill = GetComponentInChildren<WeaponLegendarySkill>();
+        if (_mythicSkill == null)
+            _mythicSkill = GetComponentInChildren<WeaponMythicSkill>();
+        if (!_initialized)
+        {
+            _legendarySkill?.Initialize(this);
+            _legendarySkill?.OnEquip();
+            _mythicSkill?.Initialize(this);
+            _mythicSkill?.OnEquip();
+        }
     }
 
     private void InitAnimator()
@@ -594,6 +606,7 @@ public class WeaponPoint : MonoBehaviour
     private void UpdateIdle()
     {
         if (cooldownTimer > 0f) return;
+        if (PlayerController.Instance != null && PlayerController.Instance.InputLocked) return;
 
         CombatTarget best = FindBestTarget();
         if (best.IsNone) return;
@@ -1797,6 +1810,18 @@ public class WeaponPoint : MonoBehaviour
                 if (sq < minSqDist) { minSqDist = sq; best = new CombatTarget(enemy); }
             }
         }
+        // 보스가 Enemy 레이어가 아닌 경우 overlap에 안 잡힘 → 직접 거리 체크
+        var directBoss = BossController.Current;
+        if (directBoss != null && directBoss.gameObject.activeInHierarchy)
+        {
+            float sq = ((Vector2)directBoss.transform.position - origin).sqrMagnitude;
+            if (sq <= attackRange * attackRange && sq < minSqDist)
+            {
+                minSqDist = sq;
+                best = new CombatTarget(directBoss);
+            }
+        }
+
         return best;
     }
 
@@ -1819,6 +1844,12 @@ public class WeaponPoint : MonoBehaviour
     /// <summary>WeaponManager가 장착 시 호출 — DB 스탯 및 플레이어 보너스 적용.</summary>
     public void Init(WeaponData data)
     {
+        // Start()보다 먼저 호출되므로 여기서 자식 컴포넌트를 직접 캐싱한다.
+        _initialized    = true;
+        _legendarySkill = GetComponentInChildren<WeaponLegendarySkill>();
+        _mythicSkill    = GetComponentInChildren<WeaponMythicSkill>();
+        _weaponSr       = GetComponentInChildren<SpriteRenderer>();
+
         // weaponType / magicElement: 프리팹 Inspector가 기준.
         // DB f_타입은 상점 필터·표시용 — ParseWeaponType 폴백(Melee)이 프리팹을 덮어쓰지 않도록 하지 않음.
         if (data.weaponType != WeaponType.Melee)   // Melee는 폴백 기본값이므로 명시적인 타입일 때만 적용

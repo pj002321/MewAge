@@ -22,7 +22,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField, Range(0f, 0.9f)] private float dodge = 0f;  // 회피 확률 0~0.9
 
     [Header("피격 무적 시간")]
-    [SerializeField] private float hitInvincibleDuration = 0.3f;  // 피격 후 무적 시간(초)
+    [SerializeField] private float hitInvincibleDuration = 0.2f;
 
     [Header("플로팅 텍스트 앵커")]
     [SerializeField] private Transform floatingTextAnchor;  // 플레이어 자식 오브젝트로 배치
@@ -468,7 +468,22 @@ public class PlayerController : MonoBehaviour
     private IEnumerator HitInvincibleRoutine(float duration)
     {
         isInvincible = true;
-        yield return new WaitForSeconds(duration);
+
+        float elapsed    = 0f;
+        float blinkInterval = 0.05f;
+        bool  yellowOn   = false;
+        Color yellow     = new Color(1f, 0.92f, 0.2f, 1f);
+
+        while (elapsed < duration)
+        {
+            elapsed += blinkInterval;
+            yellowOn = !yellowOn;
+            if (spriteRenderer != null)
+                spriteRenderer.color = yellowOn ? yellow : Color.white;
+            yield return new WaitForSeconds(blinkInterval);
+        }
+
+        if (spriteRenderer != null) spriteRenderer.color = Color.white;
         isInvincible = false;
     }
 

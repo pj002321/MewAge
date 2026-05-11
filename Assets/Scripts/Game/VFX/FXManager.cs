@@ -241,7 +241,19 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
         for (int i = BoomerangProjectile.All.Count - 1; i >= 0; i--)
             if (BoomerangProjectile.All[i] != null) Destroy(BoomerangProjectile.All[i].gameObject);
 
-        this.DLog("[FXManager] ClearAllFX — 파편·투사체 정리 완료");
+        // 보스/적 스킬이 남긴 경고선 일괄 제거
+        // 각 스킬은 "WarnLine" 이름으로 GameObject를 생성하므로 이름으로 탐색
+        EnemyCombatRoutines.WarningLine.DestroyAll();
+        var lineRenderers = FindObjectsByType<LineRenderer>(FindObjectsSortMode.None);
+        foreach (var lr in lineRenderers)
+            if (lr != null && lr.gameObject.name == "WarnLine")
+                Destroy(lr.gameObject);
+
+        var markers = FindObjectsByType<ImpactMarker>(FindObjectsSortMode.None);
+        foreach (var m in markers)
+            if (m != null) Destroy(m.gameObject);
+
+        this.DLog("[FXManager] ClearAllFX — 파편·투사체·경고선·마커 정리 완료");
     }
 
     /// <summary>파편이 위로 상승하며 페이드아웃 (흡수 시 연출)</summary>

@@ -16742,6 +16742,10 @@ PrefabInstance:
       propertyPath: m_AnchorMax.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1794194899514802716, guid: f9a8c0e29c2e9bc4bb518c36b372a05d, type: 3}
+      propertyPath: visualRoot
+      value: 
+      objectReference: {fileID: 1049553895}
     - target: {fileID: 2189030230229822359, guid: f9a8c0e29c2e9bc4bb518c36b372a05d, type: 3}
       propertyPath: m_LocalPosition.y
       value: 0
@@ -16794,6 +16798,22 @@ PrefabInstance:
       propertyPath: expGrowthPerLevel
       value: 30
       objectReference: {fileID: 0}
+    - target: {fileID: 5686210844332902491, guid: f9a8c0e29c2e9bc4bb518c36b372a05d, type: 3}
+      propertyPath: flashColor.b
+      value: 0.064257726
+      objectReference: {fileID: 0}
+    - target: {fileID: 5686210844332902491, guid: f9a8c0e29c2e9bc4bb518c36b372a05d, type: 3}
+      propertyPath: flashColor.g
+      value: 0.064257726
+      objectReference: {fileID: 0}
+    - target: {fileID: 5686210844332902491, guid: f9a8c0e29c2e9bc4bb518c36b372a05d, type: 3}
+      propertyPath: flashColor.r
+      value: 0.7169812
+      objectReference: {fileID: 0}
+    - target: {fileID: 5686210844332902491, guid: f9a8c0e29c2e9bc4bb518c36b372a05d, type: 3}
+      propertyPath: flashMaterial
+      value: 
+      objectReference: {fileID: 2100000, guid: f6d87d58797b8b9478efae2c2271cbe7, type: 2}
     - target: {fileID: 5718016485335126889, guid: f9a8c0e29c2e9bc4bb518c36b372a05d, type: 3}
       propertyPath: m_IsActive
       value: 1
@@ -20840,6 +20860,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1899249700}
   - component: {fileID: 1899249699}
+  - component: {fileID: 1899249701}
   m_Layer: 0
   m_Name: EnemySpawner
   m_TagString: Untagged
@@ -20881,6 +20902,18 @@ Transform:
   m_Children: []
   m_Father: {fileID: 700477723}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1899249701
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1899249698}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e5c692f1a424c3c4c89af3f3e8d280c2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyPool
 --- !u!1 &1904145924
 GameObject:
   m_ObjectHideFlags: 0

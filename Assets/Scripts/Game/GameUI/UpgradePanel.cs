@@ -341,6 +341,12 @@ public class UpgradePanel : MonoBehaviour
             int buyExpAmount = UpgradeManager.Shared?.BuyExpAmount ?? 30;
             expGainText.text = $"경험치 +{buyExpAmount}";
         }
+
+        // 열린 서브패널 확률 텍스트 레벨 동기화
+        if (SynergyInfoPanel.Shared != null && SynergyInfoPanel.Shared.gameObject.activeSelf)
+            SynergyInfoPanel.Shared.RefreshProbTexts();
+        if (eraWeaponInfoPopup != null && eraWeaponInfoPopup.gameObject.activeSelf)
+            eraWeaponInfoPopup.RefreshProbTexts();
     }
 
     // ────────────────────────────────────────────────────────────────

@@ -18,6 +18,7 @@ GameObject:
   - component: {fileID: 5821915655939214708}
   - component: {fileID: 6776094281009757095}
   - component: {fileID: 1037645356348669543}
+  - component: {fileID: -4450484315999154288}
   m_Layer: 7
   m_Name: c3_s1_1
   m_TagString: Untagged
@@ -195,6 +196,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HitFlash
   flashDuration: 0.12
+  flashMaterial: {fileID: 2100000, guid: f6d87d58797b8b9478efae2c2271cbe7, type: 2}
+  flashColor: {r: 1, g: 1, b: 1, a: 1}
   BaseColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!114 &6012793344544136166
 MonoBehaviour:
@@ -209,11 +212,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossController
   damageCooldown: 0.5
+  moveSpeed: 3
+  _isClone: 0
   enrageThreshold: 0.5
   enrageSpeedMult: 1.5
   enrageDamageMult: 1.5
-  flashColor: {r: 1, g: 0.2, b: 0.2, a: 1}
-  flashDuration: 0.12
+  grogyThresholds:
+  - 0.7
+  - 0.35
+  grogyDuration: 5
+  grogyOverheadPrefab: {fileID: 0}
+  grogyOverheadAnchor: {fileID: 0}
+  grogyOverheadYOffset: 1.5
+  grogyMaterial: {fileID: 0}
   onDeathFX:
     vfxPrefab: {fileID: 0}
     spawnOffset: {x: 0, y: 0}
@@ -225,11 +236,9 @@ MonoBehaviour:
   skills:
   - {fileID: 6776094281009757095}
   - {fileID: 1037645356348669543}
+  _decal: {fileID: 0}
   entryDrop: 1
-  dropSpeed: 22
-  squashDuration: 0.08
-  stretchDuration: 0.1
-  settleDuration: 0.12
+  entryScaleUpDuration: 0.35
 --- !u!70 &5821915655939214708
 CapsuleCollider2D:
   m_ObjectHideFlags: 0
@@ -279,11 +288,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 147182f963a62a94d9c382a6e5dad514, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossRollingBoulderSkill
-  skillId: 
-  cooldown: 5
-  enrageCooldownMult: 0.7
-  maxRange: 0
   executeInPattern: 1
+  cooldown: 5
   boulderPrefab: {fileID: 3040590599161552287, guid: d9879b83c23bb0f458bd7c1a2b03eb98, type: 3}
   boulderData: {fileID: 0}
   boulderSpeed: 6
@@ -296,7 +302,10 @@ MonoBehaviour:
   preDelay: 0.6
   rollCount: 2
   rollInterval: 0.8
-  attackTrigger: tAttack
+  warningLineLength: 12
+  warningLineWidth: 0.12
+  warningColor: {r: 1, g: 0, b: 0, a: 1}
+  warningMaterial: {fileID: 0}
 --- !u!114 &1037645356348669543
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -309,18 +318,33 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4f59276fb7dc5c04c8aeaf3aafa5f594, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossChargeSkill
-  skillId: 
-  cooldown: 5
-  enrageCooldownMult: 0.7
-  maxRange: 0
   executeInPattern: 1
+  cooldown: 5
   chargeSpeed: 10
   chargeDuration: 1
+  bounceCount: 0
+  bouncePause: 0.1
   warningDuration: 1.5
   warningLineLength: 5
   warningLineWidth: 1
   warningColor: {r: 1, g: 1, b: 1, a: 1}
   warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
+--- !u!114 &-4450484315999154288
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4510239993999273466}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8dbca1b53536a2b47a8964120af00539, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitFlash
+  flashDuration: 0.1
+  flashMaterial: {fileID: 0}
+  flashColor: {r: 1, g: 1, b: 1, a: 1}
+  BaseColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &5233518724168949262
 GameObject:
   m_ObjectHideFlags: 0

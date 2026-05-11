@@ -15,6 +15,11 @@ public class BlurBackground : MonoBehaviour
 
     private void Awake() => _rawImage = GetComponent<RawImage>();
 
+    private void EnsureComponents()
+    {
+        if (_rawImage == null) _rawImage = GetComponent<RawImage>();
+    }
+
     public Color Tint
     {
         get => tint;
@@ -33,37 +38,52 @@ public class BlurBackground : MonoBehaviour
 
     public IEnumerator Capture(GameObject panel)
     {
+        EnsureComponents();
+
         panel.SetActive(false);
         yield return new WaitForEndOfFrame();
 
-        int w = Mathf.Max(1, Mathf.RoundToInt(Screen.width  * downscale));
-        int h = Mathf.Max(1, Mathf.RoundToInt(Screen.height * downscale));
-
-        // 화면 캡처 (원본 해상도로 받아서 dst로 Blit — 확대 방지)
-        var src = new RenderTexture(Screen.width, Screen.height, 0, RenderTextureFormat.ARGB32);
-        ScreenCapture.CaptureScreenshotIntoRenderTexture(src);
-
-        if (_rt != null) { _rt.Release(); Destroy(_rt); }
-        _rt = new RenderTexture(w, h, 0, RenderTextureFormat.ARGB32);
-        Graphics.Blit(src, _rt); // 다운스케일 Blit
-        src.Release();
-
-        // 블러
-        if (blurMaterial != null)
+        bool blurOk = false;
+        if (_rawImage != null)
         {
-            var tmp = RenderTexture.GetTemporary(w, h, 0, RenderTextureFormat.ARGB32);
-            for (int i = 0; i < iterations; i++)
+            try
             {
-                Graphics.Blit(_rt, tmp, blurMaterial, 0); // 수평
-                Graphics.Blit(tmp, _rt, blurMaterial, 1); // 수직
+                int w = Mathf.Max(1, Mathf.RoundToInt(Screen.width  * downscale));
+                int h = Mathf.Max(1, Mathf.RoundToInt(Screen.height * downscale));
+
+                var src = new RenderTexture(Screen.width, Screen.height, 0, RenderTextureFormat.ARGB32);
+                ScreenCapture.CaptureScreenshotIntoRenderTexture(src);
+
+                if (_rt != null) { _rt.Release(); Destroy(_rt); }
+                _rt = new RenderTexture(w, h, 0, RenderTextureFormat.ARGB32);
+                Graphics.Blit(src, _rt);
+                src.Release();
+
+                if (blurMaterial != null)
+                {
+                    var tmp = RenderTexture.GetTemporary(w, h, 0, RenderTextureFormat.ARGB32);
+                    for (int i = 0; i < iterations; i++)
+                    {
+                        Graphics.Blit(_rt, tmp, blurMaterial, 0);
+                        Graphics.Blit(tmp, _rt, blurMaterial, 1);
+                    }
+                    RenderTexture.ReleaseTemporary(tmp);
+                }
+
+                _rawImage.texture = _rt;
+                _rawImage.color   = tint;
+                _rawImage.uvRect  = new Rect(0, 0, 1, 1);
+                blurOk = true;
             }
-            RenderTexture.ReleaseTemporary(tmp);
+            catch (System.Exception e)
+            {
+                Debug.LogWarning($"[BlurBackground] 캡처 실패, 블러 없이 패널을 표시합니다: {e.Message}");
+            }
         }
 
-        _rawImage.texture = _rt;
-        _rawImage.color   = tint;
+        if (!blurOk && _rawImage != null)
+            _rawImage.gameObject.SetActive(false); // 블러 실패 시 RawImage 숨기고 패널만 표시
 
-        _rawImage.uvRect  = new Rect(0, 0, 1, 1); // UV 정규화 (확대 방지)
         panel.SetActive(true);
     }
 }

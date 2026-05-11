@@ -138,6 +138,7 @@ GameObject:
   - component: {fileID: 6321899902040148537}
   - component: {fileID: 8832575523523893197}
   - component: {fileID: 1931378137336340790}
+  - component: {fileID: 4766266050408955046}
   m_Layer: 7
   m_Name: c1_m15
   m_TagString: Untagged
@@ -365,6 +366,21 @@ MonoBehaviour:
   attackVfx: {fileID: 6886179163699399506}
   vfxDuration: 0.3
   animEventTimeout: 0
+--- !u!114 &4766266050408955046
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7313528007987417252}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8dbca1b53536a2b47a8964120af00539, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitFlash
+  flashDuration: 0.1
+  flashMaterial: {fileID: 2100000, guid: f6d87d58797b8b9478efae2c2271cbe7, type: 2}
+  BaseColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1001 &5537714187208681220
 PrefabInstance:
   m_ObjectHideFlags: 0

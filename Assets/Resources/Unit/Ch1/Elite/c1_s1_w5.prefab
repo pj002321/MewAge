@@ -18,6 +18,7 @@ GameObject:
   - component: {fileID: -2434905160088638796}
   - component: {fileID: 8621657598592681965}
   - component: {fileID: 8850092068662030050}
+  - component: {fileID: 6803901218711807821}
   m_Layer: 7
   m_Name: c1_s1_w5
   m_TagString: Untagged
@@ -212,6 +213,7 @@ MonoBehaviour:
   bleedInterval: 1
   separationRadius: 1.2
   separationStrength: 1.5
+  _decal: {fileID: 0}
 --- !u!114 &945605578375847875
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -257,7 +259,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HitFlash
   flashDuration: 0.12
-  flashColor: {r: 1, g: 1, b: 1, a: 1}
+  flashMaterial: {fileID: 2100000, guid: f6d87d58797b8b9478efae2c2271cbe7, type: 2}
   BaseColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!114 &8621657598592681965
 MonoBehaviour:
@@ -276,6 +278,7 @@ MonoBehaviour:
   shootInterval: 2
   rangedDamage: 50
   firePoint: {fileID: 5727613956503103848}
+  useWarningLines: 1
   warningDuration: 0.4
   warningLineLength: 8
   warningLineWidth: 0.05
@@ -285,6 +288,7 @@ MonoBehaviour:
   attackVfxDuration: 0.3
   useAnimationEvent: 1
   animEventTimeout: 0.6
+  retreatDuration: 1.4
 --- !u!114 &8850092068662030050
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -298,6 +302,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpriteYSort
   multiplier: 100
+--- !u!114 &6803901218711807821
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2860284734646843584}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8dbca1b53536a2b47a8964120af00539, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitFlash
+  flashDuration: 0.1
+  flashMaterial: {fileID: 0}
+  BaseColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &3635078499002654668
 GameObject:
   m_ObjectHideFlags: 0

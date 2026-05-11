@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 1310786639833578689}
   - component: {fileID: 4629372107703159518}
   - component: {fileID: 4985584416179625141}
+  - component: {fileID: -5747700691309269725}
   m_Layer: 7
   m_Name: c3_s3_1
   m_TagString: Untagged
@@ -37,6 +38,7 @@ Transform:
   m_Children:
   - {fileID: 9052888758413563378}
   - {fileID: 2436184059496450301}
+  - {fileID: 7616795736363397515}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &1181058562545553021
@@ -197,11 +199,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossController
   damageCooldown: 0.5
+  moveSpeed: 3
+  _isClone: 0
   enrageThreshold: 0.5
   enrageSpeedMult: 1.5
   enrageDamageMult: 1.5
-  flashColor: {r: 1, g: 0.2, b: 0.2, a: 1}
-  flashDuration: 0.12
+  grogyThresholds:
+  - 0.7
+  - 0.35
+  grogyDuration: 2
+  grogyOverheadPrefab: {fileID: 7777409954982400410, guid: f66d4f4f0fe9de24182839d83a609535, type: 3}
+  grogyOverheadAnchor: {fileID: 7616795736363397515}
+  grogyOverheadYOffset: 1.5
+  grogyMaterial: {fileID: 2100000, guid: f6d87d58797b8b9478efae2c2271cbe7, type: 2}
   onDeathFX:
     vfxPrefab: {fileID: 0}
     spawnOffset: {x: 0, y: 0}
@@ -212,11 +222,9 @@ MonoBehaviour:
   idleDuration: 0.6
   skills:
   - {fileID: 4985584416179625141}
+  _decal: {fileID: 0}
   entryDrop: 1
-  dropSpeed: 22
-  squashDuration: 0.08
-  stretchDuration: 0.1
-  settleDuration: 0.12
+  entryScaleUpDuration: 0.35
 --- !u!114 &4985584416179625141
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -229,11 +237,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8dfd76e215b008d4285f48f9f9776993, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossComboSlashSkill
-  skillId: 
-  cooldown: 2
-  enrageCooldownMult: 0.7
-  maxRange: 0
   executeInPattern: 1
+  cooldown: 2
   chaseTimeout: 3
   hitCount: 2
   slashDamage: 25
@@ -241,8 +246,23 @@ MonoBehaviour:
   preDelay: 0.1
   hitDelay: 0.3
   betweenDelay: 0.35
-  slashTrigger: tAttack
   slashVfxPrefab: {fileID: 0}
+--- !u!114 &-5747700691309269725
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1326216360028315856}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8dbca1b53536a2b47a8964120af00539, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitFlash
+  flashDuration: 0.1
+  flashMaterial: {fileID: 2100000, guid: f6d87d58797b8b9478efae2c2271cbe7, type: 2}
+  flashColor: {r: 1, g: 1, b: 1, a: 1}
+  BaseColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &1437633771341022566
 GameObject:
   m_ObjectHideFlags: 0
@@ -360,6 +380,37 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -0.108, y: 0.138, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8912246183259105812}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &6046736786739461965
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7616795736363397515}
+  m_Layer: 7
+  m_Name: tGrogy
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7616795736363397515
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6046736786739461965}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 2.015, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

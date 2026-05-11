@@ -16,6 +16,7 @@ GameObject:
   - component: {fileID: 9189877949620743694}
   - component: {fileID: 8601145948347601226}
   - component: {fileID: 4444013725548554132}
+  - component: {fileID: -7335607511727229818}
   m_Layer: 7
   m_Name: c3_s1_2
   m_TagString: Untagged
@@ -197,11 +198,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossController
   damageCooldown: 0.5
+  moveSpeed: 3
+  _isClone: 0
   enrageThreshold: 0.5
   enrageSpeedMult: 1.5
   enrageDamageMult: 1.5
-  flashColor: {r: 1, g: 0.2, b: 0.2, a: 1}
-  flashDuration: 0.12
+  grogyThresholds:
+  - 0.7
+  - 0.35
+  grogyDuration: 5
+  grogyOverheadPrefab: {fileID: 0}
+  grogyOverheadAnchor: {fileID: 0}
+  grogyOverheadYOffset: 1.5
+  grogyMaterial: {fileID: 0}
   onDeathFX:
     vfxPrefab: {fileID: 0}
     spawnOffset: {x: 0, y: 0}
@@ -213,11 +222,9 @@ MonoBehaviour:
   skills:
   - {fileID: 8601145948347601226}
   - {fileID: 4444013725548554132}
+  _decal: {fileID: 0}
   entryDrop: 1
-  dropSpeed: 22
-  squashDuration: 0.08
-  stretchDuration: 0.1
-  settleDuration: 0.12
+  entryScaleUpDuration: 0.35
 --- !u!114 &8601145948347601226
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -230,14 +237,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 41b513309ac63c040b1c0ced00cf17f4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossFastChaseSkill
-  skillId: 
-  cooldown: 5
-  enrageCooldownMult: 0.7
-  maxRange: 0
   executeInPattern: 1
+  cooldown: 5
   chaseSpeed: 3
   chaseDuration: 2
   stopDistance: 1
+  attackCooldown: 0.6
+  animEventTimeout: 0.5
+  attackVfx: {fileID: 0}
+  vfxDuration: 0.3
 --- !u!114 &4444013725548554132
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -250,18 +258,33 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4f59276fb7dc5c04c8aeaf3aafa5f594, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossChargeSkill
-  skillId: 
-  cooldown: 5
-  enrageCooldownMult: 0.7
-  maxRange: 0
   executeInPattern: 1
+  cooldown: 5
   chargeSpeed: 10
   chargeDuration: 0.4
+  bounceCount: 0
+  bouncePause: 0.1
   warningDuration: 1
   warningLineLength: 10
   warningLineWidth: 1
   warningColor: {r: 1, g: 0, b: 0, a: 1}
   warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
+--- !u!114 &-7335607511727229818
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1326216360028315856}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8dbca1b53536a2b47a8964120af00539, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitFlash
+  flashDuration: 0.1
+  flashMaterial: {fileID: 2100000, guid: f6d87d58797b8b9478efae2c2271cbe7, type: 2}
+  flashColor: {r: 1, g: 1, b: 1, a: 1}
+  BaseColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &1437633771341022566
 GameObject:
   m_ObjectHideFlags: 0

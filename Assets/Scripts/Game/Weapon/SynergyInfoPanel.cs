@@ -67,7 +67,7 @@ public class SynergyInfoPanel : MonoBehaviourSingleton<SynergyInfoPanel>
 
     public void Refresh() { }
 
-    void RefreshProbTexts()
+    public void RefreshProbTexts()
     {
         var probs = UpgradeManager.Shared?.GetCurrentProbs() ?? default;
         if (normalProbText)    normalProbText.text    = $"{probs.common:0.#}%";

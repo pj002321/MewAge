@@ -107,6 +107,7 @@ GameObject:
   - component: {fileID: -1516203895122136579}
   - component: {fileID: 2493143103034262532}
   - component: {fileID: 5171375789277945818}
+  - component: {fileID: 7095818865235369741}
   m_Layer: 7
   m_Name: c2_s1_1
   m_TagString: Untagged
@@ -234,12 +235,11 @@ MonoBehaviour:
   grogyThresholds:
   - 0.7
   - 0.35
-  grogyDuration: 5
+  grogyDuration: 2
   grogyOverheadPrefab: {fileID: 7777409954982400410, guid: f66d4f4f0fe9de24182839d83a609535, type: 3}
   grogyOverheadAnchor: {fileID: 2141414984096736144}
   grogyOverheadYOffset: 1.5
-  flashColor: {r: 1, g: 0.2, b: 0.2, a: 1}
-  flashDuration: 0.12
+  grogyMaterial: {fileID: 2100000, guid: 65ccb7b6cbefce14eb6f884cfc33ba91, type: 2}
   onDeathFX:
     vfxPrefab: {fileID: 0}
     spawnOffset: {x: 0, y: 0}
@@ -330,9 +330,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4f59276fb7dc5c04c8aeaf3aafa5f594, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossChargeSkill
-  cooldown: 5
-  enrageCooldownMult: 0.7
   executeInPattern: 1
+  cooldown: 2
   chargeSpeed: 10
   chargeDuration: 0.4
   bounceCount: 0
@@ -354,9 +353,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 71ecc31d375a1534384e5b1844037cf7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossProjectileCycleSkill
-  cooldown: 3
-  enrageCooldownMult: 0.7
   executeInPattern: 1
+  cooldown: 2
   projectilePrefab: {fileID: 7916182024222986910, guid: 6fdaa66d16c2778419b4b59caeb166ea, type: 3}
   projectileSpeed: 7
   firePoint: {fileID: 6392908186972708575}
@@ -386,6 +384,21 @@ MonoBehaviour:
   impactVfxPrefab: {fileID: 0}
   impactVfxLifetime: 1
   chaseStopDistance: 2.5
+--- !u!114 &7095818865235369741
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5780791762247049258}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8dbca1b53536a2b47a8964120af00539, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitFlash
+  flashDuration: 0.1
+  flashMaterial: {fileID: 2100000, guid: f6d87d58797b8b9478efae2c2271cbe7, type: 2}
+  BaseColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &6035902291268328409
 GameObject:
   m_ObjectHideFlags: 0

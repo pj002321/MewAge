@@ -62,7 +62,7 @@ public class BossGridSpikeSkill : BossSkillBase
 
     protected override IEnumerator OnExecute()
     {
-        if (IsInvalid()) yield break;
+        if (IsInvalid()) { this.DLog("[GridSpike] Owner null — skip"); yield break; }
 
         GetMapBounds(out Vector2 bMin, out Vector2 bMax);
         Vector2 mapSize  = bMax - bMin;
@@ -233,7 +233,13 @@ public class BossGridSpikeSkill : BossSkillBase
     // ── 스파이크 낙하 ────────────────────────────────────────────
 
     private void SpawnSpike(Vector2 targetPos)
-        => StartCoroutine(SpikeFallRoutine(targetPos));
+    {
+        if (spikePrefab == null)
+        {
+            this.DLog("[GridSpike] spikePrefab이 Inspector에 할당되지 않았습니다 — 데미지 판정만 실행됩니다.");
+        }
+        StartCoroutine(SpikeFallRoutine(targetPos));
+    }
 
     private IEnumerator SpikeFallRoutine(Vector2 targetPos)
     {

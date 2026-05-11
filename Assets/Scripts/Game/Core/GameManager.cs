@@ -323,9 +323,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
             }
         }
 
-        if (ImprovManager.Shared != null)
-            ImprovManager.Shared.ShowPanel(wave);
-        else if (UpgradeManager.Shared != null)
+        if (UpgradeManager.Shared != null)
             UpgradeManager.Shared.ShowPanel(wave);
         else
             StartNextWave();
@@ -714,8 +712,9 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 
         player.InputLocked = false;
 
-        // 착지 후 증강 패널 → 선택 완료 시 StartNextWave() 자동 호출
-        if (ImprovManager.Shared != null)
+        // 첫 입장(wave 0)에만 증강 패널 표시 → 선택 후 StartNextWave() 자동 호출
+        // 이후 웨이브는 wave clear 후 업그레이드 패널에서 진행
+        if (wave == 0 && ImprovManager.Shared != null)
             ImprovManager.Shared.ShowPanel(wave);
         else
             StartNextWave();
@@ -726,6 +725,10 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     {
         var player = PlayerController.Instance;
         if (player != null) player.InputLocked = true;
+
+        // 보스 웨이브 진입 시 일반 적 즉시 정리
+        EnemySpawner.Shared?.StopSpawning();
+        EnemySpawner.Shared?.ClearAllEnemies();
 
         // 보스 환경 전환 — 이 시점에 CurrentBossEnterPoint 세팅됨
         WaveEnvironmentSwitcher.Shared?.SetBoss();
@@ -1041,6 +1044,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 
         StopAllCoroutines();
         Time.timeScale    = 1f;
+        _pauseTimer       = false;
         waitingForUpgrade = false;
 
         // 보스 웨이브 중 스킵 시 보스 상태 초기화
@@ -1052,9 +1056,16 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         }
         WaveEnvironmentSwitcher.Shared?.DeactivateExitGate();
 
+        // 보스 + 분신 명시 파괴 (ClearAllEnemies는 EnemyController만 처리)
+        if (BossController.Current != null)
+            Destroy(BossController.Current.gameObject);
+        foreach (var clone in BossClone.All.ToArray())
+            if (clone != null) Destroy(clone.gameObject);
+
         EnemySpawner.Shared?.StopSpawning();
         EnemySpawner.Shared?.ClearAllEnemies();
         FXManager.Shared?.ClearAllFX();
+        WeaponPoint.RecallAll();
 
         Debug.Log("[Debug] 증강 스킵하고 바로 웨이브 시작");
         StartNextWave();
@@ -1066,12 +1077,15 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         if (isGameOver) return;
 
         StopAllCoroutines();
-        Time.timeScale = 1f;
+        Time.timeScale    = 1f;
+        _pauseTimer       = false;
         EnemySpawner.Shared?.StopSpawning();
         EnemySpawner.Shared?.ClearAllEnemies();
 
         if (BossController.Current != null)
             Object.Destroy(BossController.Current.gameObject);
+        foreach (var clone in BossClone.All.ToArray())
+            if (clone != null) Destroy(clone.gameObject);
 
         if (bossWaveActive)
         {
@@ -1079,6 +1093,9 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
             WaveEnvironmentSwitcher.Shared?.SetNormal();
             BossHUDPanel.Shared?.Hide();
         }
+
+        FXManager.Shared?.ClearAllFX();
+        WeaponPoint.RecallAll();
 
         bossWaveActive    = false;
         wave              = targetWave - 1;
@@ -1110,17 +1127,23 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 
         StopAllCoroutines();
         Time.timeScale    = 1f;
+        _pauseTimer       = false;
         EnemySpawner.Shared?.StopSpawning();
         EnemySpawner.Shared?.ClearAllEnemies();
 
         if (BossController.Current != null)
             Object.Destroy(BossController.Current.gameObject);
+        foreach (var clone in BossClone.All.ToArray())
+            if (clone != null) Destroy(clone.gameObject);
 
         if (bossWaveActive)
         {
             WaveEnvironmentSwitcher.Shared?.SetNormal();
             BossHUDPanel.Shared?.Hide();
         }
+
+        FXManager.Shared?.ClearAllFX();
+        WeaponPoint.RecallAll();
 
         bossWaveActive    = false;
         wave              = targetWave - 1;

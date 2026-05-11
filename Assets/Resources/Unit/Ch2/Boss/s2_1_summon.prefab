@@ -136,10 +136,10 @@ GameObject:
   - component: {fileID: 5709863596310658779}
   - component: {fileID: 5276884967252989119}
   - component: {fileID: -8845133069609423324}
-  - component: {fileID: -6392639672834926353}
   - component: {fileID: 3485694867882643644}
   - component: {fileID: 6649752058689448536}
   - component: {fileID: 1394116967725181549}
+  - component: {fileID: 440686362616144100}
   m_Layer: 7
   m_Name: s2_1_summon
   m_TagString: Untagged
@@ -335,25 +335,6 @@ CapsuleCollider2D:
   m_Offset: {x: 0, y: 0.64}
   m_Size: {x: 1.34, y: 0.0001}
   m_Direction: 0
---- !u!114 &-6392639672834926353
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5780791762247049258}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3640172dedd67864e9d6803100a29029, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SlimeBobAnimation
-  minScaleY: 0.9
-  maxScaleY: 1.1
-  squashStretchX: 0.5
-  frequency: 1.25
-  randomPhase: 1
-  fixBottom: 1
-  halfHeightOverride: 0
 --- !u!114 &3485694867882643644
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -371,6 +352,7 @@ MonoBehaviour:
   shootInterval: 3
   rangedDamage: 15
   firePoint: {fileID: 6088732849757114419}
+  useWarningLines: 1
   warningDuration: 0.4
   warningLineLength: 8
   warningLineWidth: 0.05
@@ -407,3 +389,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossSummonMinion
   maxHP: 60
+--- !u!114 &440686362616144100
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5780791762247049258}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8dbca1b53536a2b47a8964120af00539, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitFlash
+  flashDuration: 0.1
+  flashMaterial: {fileID: 2100000, guid: f6d87d58797b8b9478efae2c2271cbe7, type: 2}
+  flashColor: {r: 1, g: 1, b: 1, a: 1}
+  BaseColor: {r: 1, g: 1, b: 1, a: 1}

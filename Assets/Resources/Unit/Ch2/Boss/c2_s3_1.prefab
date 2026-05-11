@@ -91,6 +91,37 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!1 &2671993942193811256
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3969145250017933543}
+  m_Layer: 7
+  m_Name: tGrogy
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3969145250017933543
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2671993942193811256}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0.296, y: 2.108, z: 0}
+  m_LocalScale: {x: 1.3333334, y: 1.3333334, z: 1.3333334}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 5192456429474456666}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &3312402149363571138
 GameObject:
   m_ObjectHideFlags: 0
@@ -107,6 +138,7 @@ GameObject:
   - component: {fileID: -3998777981678266923}
   - component: {fileID: 4382858811831378813}
   - component: {fileID: 3871775641527460410}
+  - component: {fileID: 1687801677029909339}
   m_Layer: 7
   m_Name: c2_s3_1
   m_TagString: Untagged
@@ -127,6 +159,7 @@ Transform:
   m_LocalScale: {x: 1.5, y: 1.5, z: 1.5}
   m_ConstrainProportionsScale: 1
   m_Children:
+  - {fileID: 3969145250017933543}
   - {fileID: 3248781302469269118}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -232,12 +265,11 @@ MonoBehaviour:
   grogyThresholds:
   - 0.7
   - 0.35
-  grogyDuration: 5
-  grogyOverheadPrefab: {fileID: 0}
-  grogyOverheadAnchor: {fileID: 0}
+  grogyDuration: 2
+  grogyOverheadPrefab: {fileID: 7777409954982400410, guid: f66d4f4f0fe9de24182839d83a609535, type: 3}
+  grogyOverheadAnchor: {fileID: 3969145250017933543}
   grogyOverheadYOffset: 1.5
-  flashColor: {r: 1, g: 0.2, b: 0.2, a: 1}
-  flashDuration: 0.12
+  grogyMaterial: {fileID: 2100000, guid: 65ccb7b6cbefce14eb6f884cfc33ba91, type: 2}
   onDeathFX:
     vfxPrefab: {fileID: 0}
     spawnOffset: {x: 0, y: 0}
@@ -249,7 +281,7 @@ MonoBehaviour:
   skills:
   - {fileID: 4382858811831378813}
   - {fileID: 3871775641527460410}
-  _decal: {fileID: 0}
+  _decal: {fileID: 3248781302469269118}
   entryDrop: 1
   entryScaleUpDuration: 0.35
 --- !u!50 &-4472806890882306662
@@ -328,9 +360,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0fce8968cf717a2438582076ab21189b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossSlamSkill
-  cooldown: 5
-  enrageCooldownMult: 0.7
   executeInPattern: 1
+  cooldown: 2
   slamDamage: 30
   slamRadius: 2.5
   jumpHeight: 6
@@ -351,9 +382,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 14d160f41ad8ad445897e06fd775ae2b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossGroundPoundSkill
-  cooldown: 5
-  enrageCooldownMult: 0.7
   executeInPattern: 1
+  cooldown: 2
   hopHeight: 2
   hopRiseTime: 0.25
   hopFallTime: 0.18
@@ -369,10 +399,25 @@ MonoBehaviour:
   chargeSpeed: 20
   chargeMaxTime: 3
   chargeWarnDuration: 0.5
-  warningLineLength: 12
-  warningLineWidth: 0.08
-  warningLineColor: {r: 1, g: 0, b: 0, a: 1}
-  warningMaterial: {fileID: 0}
+  warningLineLength: 6
+  warningLineWidth: 0.5
+  warningLineColor: {r: 1, g: 0, b: 0, a: 0.5882353}
+  warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
   ghostColor: {r: 1, g: 0.15, b: 0.15, a: 0.45}
   ghostInterval: 0.04
   ghostLifetime: 0.12
+--- !u!114 &1687801677029909339
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3312402149363571138}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8dbca1b53536a2b47a8964120af00539, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitFlash
+  flashDuration: 0.1
+  flashMaterial: {fileID: 2100000, guid: f6d87d58797b8b9478efae2c2271cbe7, type: 2}
+  BaseColor: {r: 1, g: 1, b: 1, a: 1}

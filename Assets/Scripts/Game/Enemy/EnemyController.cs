@@ -20,7 +20,7 @@ public class EnemyController : MonoBehaviour, IEnemyHost
 
     [Header("전투")]
     [SerializeField] private int   scoreValue     = 10;
-    [SerializeField] private float damageCooldown = 1f;
+    [SerializeField] private float damageCooldown = 0.5f;
     [Tooltip("OnTrigger 접촉 데미지 최대 거리 — 콜라이더가 스프라이트보다 클 때 보정.")]
     [SerializeField] private float contactMaxDist = 0.8f;
 
@@ -355,12 +355,9 @@ public class EnemyController : MonoBehaviour, IEnemyHost
     /// <summary>방향 벡터에 따라 좌우 반전 플래그를 갱신합니다. 실제 scale 적용은 LateUpdate.</summary>
     public void FlipToward(Vector2 dir)
     {
-        bool newFlipX;
-        if      (dir.x > 0.1f)  newFlipX = false;
-        else if (dir.x < -0.1f) newFlipX = true;
-        else return;
-
-        _lastFlipX = newFlipX;
+        if      (dir.x > 0.1f)  _lastFlipX = false;
+        else if (dir.x < -0.1f) _lastFlipX = true;
+        // dir.x ≈ 0 → 현재 방향 유지 (무한 플립 방지)
     }
 
 

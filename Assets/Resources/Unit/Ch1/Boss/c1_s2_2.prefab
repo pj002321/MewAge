@@ -57,7 +57,7 @@ Transform:
   m_GameObject: {fileID: 3566073783235228080}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.09, y: 0.07, z: 0}
+  m_LocalPosition: {x: -0.09, y: 0.057, z: 0}
   m_LocalScale: {x: 1.6019295, y: 1.0875485, z: 1.028762}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -169,6 +169,7 @@ GameObject:
   - component: {fileID: -3800427301400475938}
   - component: {fileID: 6011657456954509436}
   - component: {fileID: 6165847542367244746}
+  - component: {fileID: 2999160989239867875}
   m_Layer: 7
   m_Name: c1_s2_2
   m_TagString: Untagged
@@ -360,12 +361,11 @@ MonoBehaviour:
   grogyThresholds:
   - 0.7
   - 0.35
-  grogyDuration: 5
+  grogyDuration: 2
   grogyOverheadPrefab: {fileID: 7777409954982400410, guid: f66d4f4f0fe9de24182839d83a609535, type: 3}
   grogyOverheadAnchor: {fileID: 733653463726643734}
   grogyOverheadYOffset: 1.5
-  flashColor: {r: 1, g: 0.2, b: 0.2, a: 1}
-  flashDuration: 0.12
+  grogyMaterial: {fileID: 2100000, guid: 65ccb7b6cbefce14eb6f884cfc33ba91, type: 2}
   onDeathFX:
     vfxPrefab: {fileID: 0}
     spawnOffset: {x: 0, y: 0}
@@ -374,7 +374,8 @@ MonoBehaviour:
   chaseStopDistance: 2.5
   chaseDuration: 2.5
   idleDuration: 2
-  skills: []
+  skills:
+  - {fileID: 6165847542367244746}
   _decal: {fileID: 4092441220517724094}
   entryDrop: 1
   entryScaleUpDuration: 0.35
@@ -403,8 +404,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 71ecc31d375a1534384e5b1844037cf7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossProjectileCycleSkill
-  cooldown: 5
-  enrageCooldownMult: 0.7
   executeInPattern: 1
   projectilePrefab: {fileID: 7916182024222986910, guid: 4b69f31afea3a604d9932737bc7aaadd, type: 3}
   projectileSpeed: 7
@@ -423,7 +422,7 @@ MonoBehaviour:
     "\uD638\uBC0D\uD69F\uC218": 8
     "\uD638\uBC0D\uAC04\uACA9": 0.25
     "\uC544\uD06C\uB192\uC774": 6
-    "\uD638\uBC0D\uC18D\uB3C4": 12
+    "\uD638\uBC0D\uC18D\uB3C4": 4
     "\uAC00\uC18D\uC2DC\uAC04": 0
     "\uCD08\uAE30\uC18D\uB3C4\uBE44\uC728": 0.05
     "\uCD94\uACA9\uC2DC\uAC04": 2
@@ -445,10 +444,25 @@ MonoBehaviour:
     "\uCD08\uAE30\uC18D\uB3C4\uBE44\uC728": 0.05
     "\uCD94\uACA9\uC2DC\uAC04": 3
   useWarningLines: 0
-  warningLineLength: 10
-  warningLineWidth: 0.06
+  warningLineLength: 6
+  warningLineWidth: 0.5
   warningColor: {r: 1, g: 0, b: 0, a: 1}
-  warningMaterial: {fileID: 0}
+  warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
   impactVfxPrefab: {fileID: 7916182024222986910, guid: 4b69f31afea3a604d9932737bc7aaadd, type: 3}
   impactVfxLifetime: 1
-  chaseStopDistance: 2.5
+  chaseStopDistance: 4
+--- !u!114 &2999160989239867875
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7313528007987417252}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8dbca1b53536a2b47a8964120af00539, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitFlash
+  flashDuration: 0.1
+  flashMaterial: {fileID: 2100000, guid: f6d87d58797b8b9478efae2c2271cbe7, type: 2}
+  BaseColor: {r: 1, g: 1, b: 1, a: 1}

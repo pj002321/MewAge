@@ -18,7 +18,11 @@ public class BossSummonMinion : MonoBehaviour
     public void Init(float duration, float moveSpeed, float contactDamage)
     {
         _ec = GetComponent<EnemyController>();
-        _ec?.ApplySummonStats(maxHP, contactDamage, moveSpeed);
+        if (_ec != null)
+        {
+            _ec.ApplySummonStats(maxHP, contactDamage, moveSpeed);
+            _ec.WakeFromPool();  // 비활성 프리팹 기준으로 스폰되므로 컨트롤러·Behaviour 활성화
+        }
         All.Add(this);
         StartCoroutine(LifeRoutine(duration));
     }
