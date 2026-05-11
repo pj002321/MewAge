@@ -154,6 +154,8 @@ public class BossProjectileCycleSkill : BossSkillBase
 
         while (true)
         {
+            if (phases == null || phases.Count == 0) { yield return new WaitForSeconds(1f); continue; }
+
             if (GameManager.Shared != null && GameManager.Shared.IsGameOver)
                 yield return new WaitUntil(() => GameManager.Shared == null || !GameManager.Shared.IsGameOver);
 
@@ -280,7 +282,7 @@ public class BossProjectileCycleSkill : BossSkillBase
                     : playerPos;
 
                 Vector2 toTarget = targetPos - myPos;
-                if (toTarget.magnitude > chaseStopDistance)
+                if (toTarget.magnitude > chaseStopDistance && !(Boss != null && Boss.IsFiringSkill))
                     Owner.MoveInDirection(toTarget.normalized, Owner.MoveSpeed * speedMult);
 
                 Owner.FlipToward((playerPos - myPos).normalized);

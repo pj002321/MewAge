@@ -18,14 +18,16 @@ public class MeleeBehaviour : EnemyBehaviourBase
     [Tooltip("useAnimationEvent=true일 때, 이 시간 후에도 이벤트가 없으면 직접 피해 적용 (0이면 폴백 없음)")]
     [SerializeField] private float      animEventTimeout = 0.5f;
 
-    private float attackTimer;
-    private bool  _pendingHit;
+    private float     attackTimer;
+    private bool      _pendingHit;
+    private Coroutine _vfxCoroutine;
 
-    public override void Init(EnemyController controller)
+    public override void Init(IEnemyHost host)
     {
-        base.Init(controller);
-        attackTimer = attackInterval;
-        _pendingHit = false;
+        base.Init(host);
+        attackTimer   = attackInterval;
+        _pendingHit   = false;
+        _vfxCoroutine = null;
 
         // Inspector 미할당 시 "AttackVFX" 이름의 자식 오브젝트 자동 탐색
         if (attackVfx == null)
@@ -56,7 +58,11 @@ public class MeleeBehaviour : EnemyBehaviourBase
         float dist = Vector2.Distance(transform.position, Owner.PlayerTransform.position);
         if (dist <= attackRange)
         {
-            if (attackVfx != null) StartCoroutine(ShowVfx());
+            if (attackVfx != null)
+            {
+                if (_vfxCoroutine != null) StopCoroutine(_vfxCoroutine);
+                _vfxCoroutine = StartCoroutine(ShowVfx());
+            }
 
             if (useAnimationEvent)
             {
@@ -103,6 +109,7 @@ public class MeleeBehaviour : EnemyBehaviourBase
         attackVfx.SetActive(true);
         yield return new WaitForSeconds(vfxDuration);
         if (attackVfx != null) attackVfx.SetActive(false);
+        _vfxCoroutine = null;
     }
 
 #if UNITY_EDITOR

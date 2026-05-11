@@ -77,8 +77,8 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 1049025713
+  m_SortingLayer: 1
   m_SortingOrder: 2
   m_MaskInteraction: 0
   m_Sprite: {fileID: 6863293971250029137, guid: aae5a60f0a493f14da9a00ba91e73b06, type: 3}
@@ -106,6 +106,7 @@ GameObject:
   - component: {fileID: 5297367921795593197}
   - component: {fileID: -1516203895122136579}
   - component: {fileID: 2493143103034262532}
+  - component: {fileID: 5171375789277945818}
   m_Layer: 7
   m_Name: c2_s1_1
   m_TagString: Untagged
@@ -127,6 +128,8 @@ Transform:
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 1078143633512093590}
+  - {fileID: 6392908186972708575}
+  - {fileID: 2141414984096736144}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &4158209311869695610
@@ -224,6 +227,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BossController
   damageCooldown: 0.5
   moveSpeed: 3
+  _isClone: 0
   enrageThreshold: 0.5
   enrageSpeedMult: 1.5
   enrageDamageMult: 1.5
@@ -231,8 +235,8 @@ MonoBehaviour:
   - 0.7
   - 0.35
   grogyDuration: 5
-  grogyOverheadPrefab: {fileID: 0}
-  grogyOverheadAnchor: {fileID: 0}
+  grogyOverheadPrefab: {fileID: 7777409954982400410, guid: f66d4f4f0fe9de24182839d83a609535, type: 3}
+  grogyOverheadAnchor: {fileID: 2141414984096736144}
   grogyOverheadYOffset: 1.5
   flashColor: {r: 1, g: 0.2, b: 0.2, a: 1}
   flashDuration: 0.12
@@ -246,7 +250,8 @@ MonoBehaviour:
   idleDuration: 0.6
   skills:
   - {fileID: 2493143103034262532}
-  _decal: {fileID: 0}
+  - {fileID: 5171375789277945818}
+  _decal: {fileID: 1078143633512093590}
   entryDrop: 1
   entryScaleUpDuration: 0.35
 --- !u!50 &5297367921795593197
@@ -325,10 +330,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4f59276fb7dc5c04c8aeaf3aafa5f594, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossChargeSkill
-  skillId: 
   cooldown: 5
   enrageCooldownMult: 0.7
-  maxRange: 0
   executeInPattern: 1
   chargeSpeed: 10
   chargeDuration: 0.4
@@ -336,6 +339,112 @@ MonoBehaviour:
   bouncePause: 0.1
   warningDuration: 0.5
   warningLineLength: 12
-  warningLineWidth: 0.08
+  warningLineWidth: 0.8
   warningColor: {r: 1, g: 0, b: 0, a: 1}
-  warningMaterial: {fileID: 0}
+  warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
+--- !u!114 &5171375789277945818
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5780791762247049258}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 71ecc31d375a1534384e5b1844037cf7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BossProjectileCycleSkill
+  cooldown: 3
+  enrageCooldownMult: 0.7
+  executeInPattern: 1
+  projectilePrefab: {fileID: 7916182024222986910, guid: 6fdaa66d16c2778419b4b59caeb166ea, type: 3}
+  projectileSpeed: 7
+  firePoint: {fileID: 6392908186972708575}
+  phases:
+  - label: "\uD398\uC774\uC988"
+    type: 0
+    "\uACBD\uACE0\uC2DC\uAC04": 0.4
+    "\uC5F0\uC0AC\uD69F\uC218": 5
+    "\uBC1C\uC0AC\uAC04\uACA9": 0.5
+    "\uBC29\uD5A5\uC218": 8
+    "\uBC18\uBCF5\uD69F\uC218": 1
+    "\uBC18\uBCF5\uAC04\uACA9": 0.6
+    "\uAC01\uB3C4\uC624\uD504\uC14B": 0
+    "\uBD80\uCC44\uAF34\uAC01\uB3C4": 120
+    "\uD638\uBC0D\uD69F\uC218": 3
+    "\uD638\uBC0D\uAC04\uACA9": 0.25
+    "\uC544\uD06C\uB192\uC774": 3
+    "\uD638\uBC0D\uC18D\uB3C4": 9
+    "\uAC00\uC18D\uC2DC\uAC04": 0.4
+    "\uCD08\uAE30\uC18D\uB3C4\uBE44\uC728": 0.05
+    "\uCD94\uACA9\uC2DC\uAC04": 2
+  useWarningLines: 0
+  warningLineLength: 4
+  warningLineWidth: 0.8
+  warningColor: {r: 1, g: 0, b: 0, a: 1}
+  warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
+  impactVfxPrefab: {fileID: 0}
+  impactVfxLifetime: 1
+  chaseStopDistance: 2.5
+--- !u!1 &6035902291268328409
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6392908186972708575}
+  m_Layer: 7
+  m_Name: tPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6392908186972708575
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6035902291268328409}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2038140515738551518}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &7267592133570111700
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2141414984096736144}
+  m_Layer: 7
+  m_Name: tGrogy
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2141414984096736144
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7267592133570111700}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.299, y: 1.85, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2038140515738551518}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

@@ -25,7 +25,38 @@ Transform:
   m_GameObject: {fileID: 669834849754594387}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 1.05, y: 1.48, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7709635535999324975}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &4489705013931107913
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9175215281644974734}
+  m_Layer: 7
+  m_Name: tGrogy
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9175215281644974734
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4489705013931107913}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 3.16, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -47,9 +78,9 @@ GameObject:
   - component: {fileID: 6397333588183594770}
   - component: {fileID: 6012793344544136166}
   - component: {fileID: 5821915655939214708}
-  - component: {fileID: 4920938319397271602}
-  - component: {fileID: 4596225152492531232}
   - component: {fileID: 3594604641412481875}
+  - component: {fileID: 4751249032348286303}
+  - component: {fileID: -54616506668535500}
   m_Layer: 7
   m_Name: c2_s3_2
   m_TagString: Untagged
@@ -72,6 +103,7 @@ Transform:
   m_Children:
   - {fileID: 4088361612343034944}
   - {fileID: 2908955346115048226}
+  - {fileID: 9175215281644974734}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &3195705286543801482
@@ -242,7 +274,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossController
   damageCooldown: 0.5
-  moveSpeed: 3
+  moveSpeed: 2
+  _isClone: 0
   enrageThreshold: 0.5
   enrageSpeedMult: 1.5
   enrageDamageMult: 1.5
@@ -250,8 +283,8 @@ MonoBehaviour:
   - 0.7
   - 0.35
   grogyDuration: 5
-  grogyOverheadPrefab: {fileID: 0}
-  grogyOverheadAnchor: {fileID: 0}
+  grogyOverheadPrefab: {fileID: 7777409954982400410, guid: f66d4f4f0fe9de24182839d83a609535, type: 3}
+  grogyOverheadAnchor: {fileID: 9175215281644974734}
   grogyOverheadYOffset: 1.5
   flashColor: {r: 1, g: 0.2, b: 0.2, a: 1}
   flashDuration: 0.12
@@ -260,14 +293,14 @@ MonoBehaviour:
     spawnOffset: {x: 0, y: 0}
     sfxClip: {fileID: 0}
     volume: 0.202
-  chaseStopDistance: 0.8
+  chaseStopDistance: 2.5
   chaseDuration: 2
-  idleDuration: 1
+  idleDuration: 2
   skills:
-  - {fileID: 4920938319397271602}
-  - {fileID: 4596225152492531232}
   - {fileID: 3594604641412481875}
-  _decal: {fileID: 0}
+  - {fileID: 4751249032348286303}
+  - {fileID: -54616506668535500}
+  _decal: {fileID: 4088361612343034944}
   entryDrop: 1
   entryScaleUpDuration: 0.35
 --- !u!70 &5821915655939214708
@@ -307,68 +340,6 @@ CapsuleCollider2D:
   m_Offset: {x: 0, y: 1.3}
   m_Size: {x: 1.31, y: 1.93}
   m_Direction: 0
---- !u!114 &4920938319397271602
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4510239993999273466}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 421dc27616e41804c9fcb163146852ec, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BossSummonCycleSkill
-  skillId: 
-  cooldown: 5
-  enrageCooldownMult: 0.7
-  maxRange: 0
-  executeInPattern: 1
-  minionPrefab: {fileID: 4510239993999273466, guid: b2d30e24f9d58964092e76d7a4fc1a99, type: 3}
-  spawnMarkerPrefab: {fileID: 0}
-  summonCount: 2
-  maxActiveMinions: 4
-  summonInterval: 8
-  markerWarningTime: 0.8
-  minionDuration: 10
-  minionMoveSpeed: 2.5
-  minionContactDamage: 5
-  spawnRadius: 3
---- !u!114 &4596225152492531232
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4510239993999273466}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a233ce0baffc0ab48855a92a6a6bf5ee, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BossGroundSpikeSkill
-  skillId: 
-  cooldown: 5
-  enrageCooldownMult: 0.7
-  maxRange: 0
-  executeInPattern: 1
-  spikeProjectilePrefab: {fileID: 109194795691363216, guid: 02a8381dcd24d4a478deecdc7af3d22d, type: 3}
-  spikeDropSpeed: 30
-  spikeHitRadius: 0.7
-  stickDuration: 0.8
-  spikeDamage: 0
-  spikeImpactVfx: {fileID: 6220896372230165779, guid: 6c4493b7955c99b42b25f630d3c23194, type: 3}
-  vfxLifetime: 1
-  spikeMarkerPrefab: {fileID: 7905823675861574758, guid: e965097e70b2e9d47807ebf0614a30a6, type: 3}
-  spikeWarningTime: 0.9
-  postMarkerDelay: 0.1
-  spikeCount: 10
-  spikeDistance: 1.2
-  spikeStrikeDelay: 0.15
-  spawnHeightOffset: 3
-  pivotToTipOffset: 0.5
-  chaseAfterSpike: 2
-  chaseStopDist: 1.8
-  useSpikePhase: 1
 --- !u!114 &3594604641412481875
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -381,23 +352,129 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 71ecc31d375a1534384e5b1844037cf7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossProjectileCycleSkill
-  skillId: 
   cooldown: 5
   enrageCooldownMult: 0.7
-  maxRange: 0
   executeInPattern: 1
   projectilePrefab: {fileID: 109194795691363216, guid: ce238d64c4c9c384ea458dd616a5c30a, type: 3}
   projectileSpeed: 7
   firePoint: {fileID: 2908955346115048226}
-  phases: []
-  useWarningLines: 1
-  warningLineLength: 10
-  warningLineWidth: 1
+  phases:
+  - label: "\uD398\uC774\uC988"
+    type: 0
+    "\uACBD\uACE0\uC2DC\uAC04": 0.4
+    "\uC5F0\uC0AC\uD69F\uC218": 5
+    "\uBC1C\uC0AC\uAC04\uACA9": 0.5
+    "\uBC29\uD5A5\uC218": 8
+    "\uBC18\uBCF5\uD69F\uC218": 1
+    "\uBC18\uBCF5\uAC04\uACA9": 0.6
+    "\uAC01\uB3C4\uC624\uD504\uC14B": 0
+    "\uBD80\uCC44\uAF34\uAC01\uB3C4": 120
+    "\uD638\uBC0D\uD69F\uC218": 3
+    "\uD638\uBC0D\uAC04\uACA9": 0.25
+    "\uC544\uD06C\uB192\uC774": 3
+    "\uD638\uBC0D\uC18D\uB3C4": 9
+    "\uAC00\uC18D\uC2DC\uAC04": 0.2
+    "\uCD08\uAE30\uC18D\uB3C4\uBE44\uC728": 0.05
+    "\uCD94\uACA9\uC2DC\uAC04": 3
+  - label: "\uD398\uC774\uC988"
+    type: 2
+    "\uACBD\uACE0\uC2DC\uAC04": 0.4
+    "\uC5F0\uC0AC\uD69F\uC218": 1
+    "\uBC1C\uC0AC\uAC04\uACA9": 0.5
+    "\uBC29\uD5A5\uC218": 8
+    "\uBC18\uBCF5\uD69F\uC218": 1
+    "\uBC18\uBCF5\uAC04\uACA9": 0.6
+    "\uAC01\uB3C4\uC624\uD504\uC14B": 0
+    "\uBD80\uCC44\uAF34\uAC01\uB3C4": 120
+    "\uD638\uBC0D\uD69F\uC218": 3
+    "\uD638\uBC0D\uAC04\uACA9": 0.25
+    "\uC544\uD06C\uB192\uC774": 3
+    "\uD638\uBC0D\uC18D\uB3C4": 9
+    "\uAC00\uC18D\uC2DC\uAC04": 0.4
+    "\uCD08\uAE30\uC18D\uB3C4\uBE44\uC728": 0.05
+    "\uCD94\uACA9\uC2DC\uAC04": 2
+  - label: "\uD398\uC774\uC988"
+    type: 1
+    "\uACBD\uACE0\uC2DC\uAC04": 0.4
+    "\uC5F0\uC0AC\uD69F\uC218": 1
+    "\uBC1C\uC0AC\uAC04\uACA9": 0.5
+    "\uBC29\uD5A5\uC218": 8
+    "\uBC18\uBCF5\uD69F\uC218": 2
+    "\uBC18\uBCF5\uAC04\uACA9": 0.6
+    "\uAC01\uB3C4\uC624\uD504\uC14B": 120
+    "\uBD80\uCC44\uAF34\uAC01\uB3C4": 120
+    "\uD638\uBC0D\uD69F\uC218": 3
+    "\uD638\uBC0D\uAC04\uACA9": 0.25
+    "\uC544\uD06C\uB192\uC774": 3
+    "\uD638\uBC0D\uC18D\uB3C4": 9
+    "\uAC00\uC18D\uC2DC\uAC04": 0
+    "\uCD08\uAE30\uC18D\uB3C4\uBE44\uC728": 0.05
+    "\uCD94\uACA9\uC2DC\uAC04": 2
+  useWarningLines: 0
+  warningLineLength: 6
+  warningLineWidth: 0.5
   warningColor: {r: 1, g: 1, b: 1, a: 1}
   warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
   impactVfxPrefab: {fileID: 0}
   impactVfxLifetime: 1
   chaseStopDistance: 1.8
+--- !u!114 &4751249032348286303
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4510239993999273466}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 45354f0c4ea932b4eb47f11de6d6a2ef, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BossGridSpikeSkill
+  cooldown: 5
+  enrageCooldownMult: 0.7
+  executeInPattern: 1
+  cols: 6
+  rows: 5
+  fillMode: 2
+  randomCount: 12
+  spikePrefab: {fileID: 109194795691363216, guid: 02a8381dcd24d4a478deecdc7af3d22d, type: 3}
+  spikeDamage: 50
+  spikeRadius: 0.45
+  spikeDuration: 1.5
+  warningDuration: 1.2
+  waveDelay: 0.25
+  warningMarkerPrefab: {fileID: 5515808124668199316, guid: 4676482f183c362489d2902d70a232b3, type: 3}
+  warningColor: {r: 1, g: 0.45, b: 0, a: 0.45}
+  dropHeight: 8
+  dropDuration: 0.25
+  spawnVfxPrefab: {fileID: 6573129432423270027, guid: 3bb5522a7ac59e74f9f94bb44d4666d5, type: 3}
+  spawnVfxDuration: 1
+--- !u!114 &-54616506668535500
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4510239993999273466}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 68407384a130487479114f8a85d0da71, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BossCloneSkill
+  cooldown: 5
+  enrageCooldownMult: 0.7
+  executeInPattern: 1
+  cloneSkills:
+  - {fileID: 3594604641412481875}
+  cloneCount: 3
+  cloneHP: 50000
+  cloneContactDmg: 25
+  cloneMoveSpeed: 3
+  cloneLifetime: 15
+  spreadSpacing: 5
+  spreadDuration: 0.35
+  deathVfxPrefab: {fileID: 141950, guid: 1a084b5cc7dd00546bebe480e703a744, type: 3}
+  deathVfxLifetime: 1
 --- !u!1 &5233518724168949262
 GameObject:
   m_ObjectHideFlags: 0

@@ -12,6 +12,7 @@ public interface IEnemyHost
     Transform    PlayerTransform { get; }
     Transform    Decal           { get; }
     float        MoveSpeed      { get; }
+    float        ContactDamage  { get; }
     void         MoveInDirection(Vector2 dir, float speed);
     void         FlipToward(Vector2 dir);
     void         MoveTowardPlayer(float speed);

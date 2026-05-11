@@ -15,6 +15,8 @@ GameObject:
   - component: {fileID: 8829713175602211872}
   - component: {fileID: -3704317132031060373}
   - component: {fileID: -3298224257173087319}
+  - component: {fileID: 8380234923682906872}
+  - component: {fileID: 8233072276021628811}
   m_Layer: 7
   m_Name: c2_s2_1
   m_TagString: Untagged
@@ -36,6 +38,7 @@ Transform:
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 8661759970146083267}
+  - {fileID: 4963895025837847388}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &1730632055688686968
@@ -139,9 +142,9 @@ MonoBehaviour:
   grogyThresholds:
   - 0.7
   - 0.35
-  grogyDuration: 5
-  grogyOverheadPrefab: {fileID: 0}
-  grogyOverheadAnchor: {fileID: 0}
+  grogyDuration: 3
+  grogyOverheadPrefab: {fileID: 7777409954982400410, guid: f66d4f4f0fe9de24182839d83a609535, type: 3}
+  grogyOverheadAnchor: {fileID: 4963895025837847388}
   grogyOverheadYOffset: 1.5
   flashColor: {r: 1, g: 0.2, b: 0.2, a: 1}
   flashDuration: 0.12
@@ -150,11 +153,13 @@ MonoBehaviour:
     spawnOffset: {x: 0, y: 0}
     sfxClip: {fileID: 0}
     volume: 1
-  chaseStopDistance: 1.8
+  chaseStopDistance: 2.5
   chaseDuration: 2.5
-  idleDuration: 0.6
-  skills: []
-  _decal: {fileID: 0}
+  idleDuration: 2
+  skills:
+  - {fileID: -3298224257173087319}
+  - {fileID: 8380234923682906872}
+  _decal: {fileID: 8661759970146083267}
   entryDrop: 1
   entryScaleUpDuration: 0.35
 --- !u!50 &8829713175602211872
@@ -247,6 +252,77 @@ MonoBehaviour:
   warningLineWidth: 0.08
   warningColor: {r: 1, g: 0, b: 0, a: 1}
   warningMaterial: {fileID: 0}
+--- !u!114 &8380234923682906872
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2217421304044356619}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 421dc27616e41804c9fcb163146852ec, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BossSummonCycleSkill
+  skillId: 
+  cooldown: 5
+  enrageCooldownMult: 0.7
+  maxRange: 0
+  executeInPattern: 1
+  minionPrefab: {fileID: 5780791762247049258, guid: 061632170c91fe04db151c7ff974af64, type: 3}
+  spawnMarkerPrefab: {fileID: 5515808124668199316, guid: 4676482f183c362489d2902d70a232b3, type: 3}
+  summonCount: 5
+  maxActiveMinions: 5
+  summonInterval: 1
+  markerWarningTime: 0.8
+  minionDuration: 15
+  minionMoveSpeed: 4
+  minionContactDamage: 20
+  spawnRadius: 8
+--- !u!114 &8233072276021628811
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2217421304044356619}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 25cc23087012616429ecb7c10c6cb557, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpriteYSort
+  multiplier: 100
+--- !u!1 &4049270665498813753
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4963895025837847388}
+  m_Layer: 7
+  m_Name: tGrogy
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4963895025837847388
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4049270665498813753}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.302, y: 2.042, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2729239689777574900}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &4854692676630613003
 GameObject:
   m_ObjectHideFlags: 0
@@ -324,8 +400,8 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 1049025713
+  m_SortingLayer: 1
   m_SortingOrder: 2
   m_MaskInteraction: 0
   m_Sprite: {fileID: 6863293971250029137, guid: aae5a60f0a493f14da9a00ba91e73b06, type: 3}

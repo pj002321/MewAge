@@ -23,28 +23,29 @@ public class TankBehaviour : EnemyBehaviourBase
     private SpriteRenderer        _sr;
     private MaterialPropertyBlock _mpb;
 
-    public override void Init(EnemyController controller)
+    public override void Init(IEnemyHost host)
     {
-        base.Init(controller);
+        base.Init(host);
         attackTimer = attackInterval;
         shieldVfx?.SetActive(false);
-        controller.KnockbackImmune = true;
+        var ec = EC;
+        if (ec != null) ec.KnockbackImmune = true;
 
-        _sr  = Owner.GetComponentInChildren<SpriteRenderer>();
+        _sr  = Owner.SelfTransform.GetComponentInChildren<SpriteRenderer>();
         _mpb = new MaterialPropertyBlock();
-        SetOutline(ShieldOutlineColor); // 시작 시 노란 외곽선
+        SetOutline(ShieldOutlineColor);
 
-        Owner.OnHit += OnHit;
+        if (ec != null) ec.OnHit += OnHit;
     }
 
     private void OnDisable()
     {
-        if (Owner != null) Owner.OnHit -= OnHit;
+        if (EC != null) EC.OnHit -= OnHit;
     }
 
     private void OnHit()
     {
-        if (Owner.HPRatio <= ShieldHPThreshold)
+        if (EC?.HPRatio <= ShieldHPThreshold)
         {
             SetOutline(Color.clear); // 외곽선 제거
             return;

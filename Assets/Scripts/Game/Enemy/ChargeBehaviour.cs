@@ -42,12 +42,12 @@ public class ChargeBehaviour : EnemyBehaviourBase
     private LineRenderer    _warnLine;
     private float           _origSepStrength;
 
-    public override void Init(EnemyController controller)
+    public override void Init(IEnemyHost host)
     {
-        base.Init(controller);
+        base.Init(host);
         _phase      = Phase.Moving;
         _phaseTimer = moveDuration;
-        _cachedSr   = Owner.GetComponent<SpriteRenderer>();
+        _cachedSr   = Owner.SelfTransform.GetComponent<SpriteRenderer>();
         DestroyWarningLine();
     }
 
@@ -61,7 +61,7 @@ public class ChargeBehaviour : EnemyBehaviourBase
 
         if (_phase == Phase.Moving)
         {
-            float dist = Vector2.Distance(Owner.transform.position, Owner.PlayerTransform.position);
+            float dist = Vector2.Distance(Owner.SelfTransform.position, Owner.PlayerTransform.position);
             if (_phaseTimer <= 0f || dist <= chargeRange)
                 BeginIdle();
         }
@@ -70,9 +70,9 @@ public class ChargeBehaviour : EnemyBehaviourBase
             float t = 1f - Mathf.Clamp01(_phaseTimer / idleDuration);
             if (_cachedSr != null)
                 _cachedSr.color = Color.Lerp(Color.white, chargeColor, t);
-            var s = Owner.transform.localScale;
+            var s = Owner.SelfTransform.localScale;
             s.y = Mathf.Lerp(originalScale.y, originalScale.y * chargeScale, t);
-            Owner.transform.localScale = s;
+            Owner.SelfTransform.localScale = s;
 
             UpdateWarningLine();
             if (_phaseTimer <= 0f)
@@ -85,13 +85,14 @@ public class ChargeBehaviour : EnemyBehaviourBase
         _phase      = Phase.Idle;
         _phaseTimer = idleDuration;
 
-        originalScale            = Owner.transform.localScale;
-        _origSepStrength         = Owner.separationStrength;
-        Owner.separationStrength = 0f;
+        originalScale    = Owner.SelfTransform.localScale;
+        var chargeEC     = EC;
+        _origSepStrength = chargeEC != null ? chargeEC.separationStrength : 0f;
+        if (chargeEC != null) chargeEC.separationStrength = 0f;
 
         Vector2 origin = warningLineOrigin != null
             ? (Vector2)warningLineOrigin.position
-            : (Vector2)Owner.transform.position;
+            : (Vector2)Owner.SelfTransform.position;
         _lockedChargeDir = Owner.PlayerTransform != null
             ? ((Vector2)Owner.PlayerTransform.position - origin).normalized
             : Vector2.right;
@@ -127,7 +128,7 @@ public class ChargeBehaviour : EnemyBehaviourBase
         float t = 1f - Mathf.Clamp01(_phaseTimer / idleDuration);
         Vector2 origin = warningLineOrigin != null
             ? (Vector2)warningLineOrigin.position
-            : (Vector2)Owner.transform.position;
+            : (Vector2)Owner.SelfTransform.position;
         var tf = _warnLine.transform;
         tf.position = new Vector3(origin.x, origin.y, 0f);
         _warnLine.SetPosition(0, Vector3.zero);
@@ -141,7 +142,7 @@ public class ChargeBehaviour : EnemyBehaviourBase
         if (_warnLine == null) return;
         UnityEngine.Object.Destroy(_warnLine.gameObject);
         _warnLine = null;
-        Owner.separationStrength = _origSepStrength;
+        if (EC != null) EC.separationStrength = _origSepStrength;
     }
 
     private void BeginCharge()
@@ -150,9 +151,9 @@ public class ChargeBehaviour : EnemyBehaviourBase
 
         // 즉시 원상복구 후 돌진
         if (_cachedSr != null) _cachedSr.color = Color.white;
-        var s = Owner.transform.localScale;
+        var s = Owner.SelfTransform.localScale;
         s.y = originalScale.y;
-        Owner.transform.localScale = s;
+        Owner.SelfTransform.localScale = s;
 
         _phase          = Phase.Charging;
         chargeDir       = _lockedChargeDir.sqrMagnitude > 0f
@@ -170,9 +171,9 @@ public class ChargeBehaviour : EnemyBehaviourBase
         if (sr != null)
         {
             sr.color = Color.white;
-            var s = Owner.transform.localScale;
+            var s = Owner.SelfTransform.localScale;
             s.y = originalScale.y;
-            Owner.transform.localScale = s;
+            Owner.SelfTransform.localScale = s;
         }
         _phase      = Phase.Moving;
         _phaseTimer = moveDuration;
@@ -195,7 +196,7 @@ public class ChargeBehaviour : EnemyBehaviourBase
             chargeRemaining -= chargeSpeed * Time.fixedDeltaTime;
 
             // 맵 경계 도달 시 돌진 중단 + 위치 클램프
-            if (IsOutOfBounds(Owner.transform.position))
+            if (IsOutOfBounds(Owner.SelfTransform.position))
             {
                 ClampToBounds();
                 EndCharge();
@@ -225,8 +226,8 @@ public class ChargeBehaviour : EnemyBehaviourBase
     private void ClampToBounds()
     {
         GetBounds(out Vector2 c, out Vector2 half);
-        Vector3 p = Owner.transform.position;
-        Owner.transform.position = new Vector3(
+        Vector3 p = Owner.SelfTransform.position;
+        Owner.SelfTransform.position = new Vector3(
             Mathf.Clamp(p.x, c.x - half.x, c.x + half.x),
             Mathf.Clamp(p.y, c.y - half.y, c.y + half.y),
             p.z);
@@ -267,8 +268,8 @@ public class ChargeBehaviour : EnemyBehaviourBase
         if (sprite == null) return;
 
         var go = new GameObject("ChargeGhost", typeof(SpriteRenderer));
-        go.transform.position   = Owner.transform.position;
-        go.transform.localScale = Owner.transform.localScale;
+        go.transform.position   = Owner.SelfTransform.position;
+        go.transform.localScale = Owner.SelfTransform.localScale;
 
         var ghostSr = go.GetComponent<SpriteRenderer>();
         ghostSr.sprite         = sprite;

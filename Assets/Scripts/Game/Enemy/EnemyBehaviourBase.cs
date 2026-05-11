@@ -6,15 +6,15 @@ using UnityEngine;
 ///   1. 이 클래스를 상속한 새 컴포넌트를 만드세요.
 ///   2. 적 프리팹에 EnemyController와 함께 새 컴포넌트를 부착하세요.
 /// </summary>
-[RequireComponent(typeof(EnemyController))]
 public abstract class EnemyBehaviourBase : MonoBehaviour
 {
-    protected EnemyController Owner { get; private set; }
+    protected IEnemyHost Owner { get; private set; }
+    protected EnemyController EC => Owner as EnemyController;
 
-    /// <summary>EnemyController.Awake()에서 자동 호출됩니다.</summary>
-    public virtual void Init(EnemyController controller)
+    /// <summary>EnemyController.Awake() 또는 BossSummonMinion.Init()에서 호출됩니다.</summary>
+    public virtual void Init(IEnemyHost host)
     {
-        Owner = controller;
+        Owner = host;
     }
 
     /// <summary>웨이브 스케일링 시 행동-특화 수치를 보정합니다.</summary>

@@ -18,9 +18,9 @@ public class HealerBehaviour : EnemyBehaviourBase
     private float healTimer;
     private static readonly Collider2D[] _healBuffer = new Collider2D[32];
 
-    public override void Init(EnemyController controller)
+    public override void Init(IEnemyHost host)
     {
-        base.Init(controller);
+        base.Init(host);
         healTimer = healInterval;
     }
 

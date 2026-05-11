@@ -20,6 +20,7 @@ public class MainMenuPanel : MonoBehaviour
         public string chapterLabel;  // "구석기 - 원시의 마을"
         public Sprite icon;
         public int    bestWave;
+        public int    totalWaves;
         public bool   isLocked;
     }
 
@@ -87,6 +88,9 @@ public class MainMenuPanel : MonoBehaviour
     float _dragVelocity;
     float _prevPointerY;
     float _prevPointerTime;
+    // BeginDrag에서 캐시 — Drag 중 SnapY() 반복 호출 방지
+    float _dragMinY;
+    float _dragMaxY;
 
     // 배경 크로스페이드
     Image     _bgOverlay;
@@ -94,12 +98,13 @@ public class MainMenuPanel : MonoBehaviour
     string    _currentBgChapter;
     const float BG_FADE_DURATION = 0.35f;
 
-    private const string AttendanceDateKey = "Attendance_LastShownDate";
 
     // ── DB 로드 ──────────────────────────────────────────────────────
     void LoadStagesFromDB()
     {
         var list = new System.Collections.Generic.List<StageEntry>();
+        // (chapterNum, stageNum, row) 임시 저장 후 정렬해 순번 할당
+        var raw = new System.Collections.Generic.List<(int c, int s, Mewage.DB.DB_챕터 row)>();
         Mewage.DB.DB_챕터.ForEachEntity(row =>
         {
             string chapterID = row.f_챕터ID;
@@ -111,20 +116,27 @@ public class MainMenuPanel : MonoBehaviour
                 Debug.LogWarning($"[MainMenuPanel] Invalid chapterID: {chapterID}");
                 return;
             }
-
+            raw.Add((chapterNum, stageNum, row));
+        });
+        raw.Sort((a, b) => a.c != b.c ? a.c.CompareTo(b.c) : a.s.CompareTo(b.s));
+        for (int i = 0; i < raw.Count; i++)
+        {
+            var (chapterNum, _, row) = raw[i];
+            string chapterID = row.f_챕터ID;
             Sprite icon    = Resources.Load<Sprite>($"Chapter/Icon/{chapterID}");
             int bestWave   = PlayerPrefs.GetInt($"BestWave_{chapterID}", 0);
-
+            int totalWaves = CalcTotalWaves(chapterID);
             list.Add(new StageEntry
             {
                 chapterID    = chapterID,
-                stageName    = $"{chapterNum}-{stageNum}.{row.f_이름}",
+                stageName    = $"{i + 1}.{row.f_이름}",
                 chapterLabel = BuildChapterLabel(chapterNum),
                 icon         = icon,
                 bestWave     = bestWave,
+                totalWaves   = totalWaves,
                 isLocked     = false
             });
-        });
+        }
 
         if (list.Count == 0)
         {
@@ -133,6 +145,19 @@ public class MainMenuPanel : MonoBehaviour
             list.Add(new StageEntry { chapterID = "C1_S3", stageName = "3.폐허 도시"  });
         }
         stages = list.ToArray();
+    }
+
+    static int CalcTotalWaves(string chapterID)
+    {
+        string prefix = chapterID + "_W";
+        int max = 0;
+        Mewage.DB.DB_웨이브.ForEachEntity(row =>
+        {
+            if (row.f_웨이브ID != null && row.f_웨이브ID.StartsWith(prefix) &&
+                int.TryParse(row.f_웨이브ID.Substring(prefix.Length), out int n) && n > max)
+                max = n;
+        });
+        return max > 0 ? max : 30;
     }
 
     int FindSavedStageIndex()
@@ -250,6 +275,9 @@ public class MainMenuPanel : MonoBehaviour
             _dragVelocity   = 0f;
             _prevPointerY   = ptr.position.y;
             _prevPointerTime = Time.unscaledTime;
+            float rubber = SlotH() * 0.3f;
+            _dragMinY = SnapY(stages.Length - 1) - rubber;
+            _dragMaxY = SnapY(0)                 + rubber;
         });
         trigger.triggers.Add(beginEntry);
 
@@ -269,12 +297,8 @@ public class MainMenuPanel : MonoBehaviour
             _prevPointerY    = y;
             _prevPointerTime = Time.unscaledTime;
 
-            float rawY  = _contentStartY + (y - _dragStartY);
-            // 양 끝 클램프 + rubber-band (슬롯 30% 여유)
-            float rubber = SlotH() * 0.3f;
-            float minY   = SnapY(stages.Length - 1) - rubber;
-            float maxY   = SnapY(0)                 + rubber;
-            float newY   = Mathf.Clamp(rawY, minY, maxY);
+            float rawY = _contentStartY + (y - _dragStartY);
+            float newY = Mathf.Clamp(rawY, _dragMinY, _dragMaxY);
             content.anchoredPosition = new Vector2(content.anchoredPosition.x, newY);
 
             ApplyCardScales(SnapYToVirtualCenter(newY), suppressAnimation: true);
@@ -350,13 +374,6 @@ public class MainMenuPanel : MonoBehaviour
 
         if (_contentCG != null) _contentCG.alpha = 1f;
 
-        string today = System.DateTime.Now.ToString("yyyyMMdd");
-        if (PlayerPrefs.GetString(AttendanceDateKey, "") != today)
-        {
-            PlayerPrefs.SetString(AttendanceDateKey, today);
-            PlayerPrefs.Save();
-            attendancePopup?.Show();
-        }
     }
 
     // ── 카드 생성 ────────────────────────────────────────────────────
@@ -442,7 +459,7 @@ public class MainMenuPanel : MonoBehaviour
         nameTmp.color     = Color.white;
         nameTmp.alignment = TextAlignmentOptions.Left;
 
-        string waveStr   = stages[i].bestWave > 0 ? $"최고 웨이브: {stages[i].bestWave}" : "최고 웨이브: -";
+        string waveStr   = stages[i].bestWave > 0 ? $"최고생존 : {stages[i].bestWave}/{stages[i].totalWaves}" : "";
         var waveRT       = MakeTMP("BestWave", cardRT, waveStr, 28f);
         waveRT.anchorMin = new Vector2(0.5f, 0.05f);
         waveRT.anchorMax = new Vector2(1.0f, 0.50f);

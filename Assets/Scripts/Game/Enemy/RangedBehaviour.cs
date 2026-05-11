@@ -17,6 +17,7 @@ public class RangedBehaviour : EnemyBehaviourBase
     [SerializeField] private Transform firePoint;
 
     [Header("경고 라인")]
+    [SerializeField] private bool     useWarningLines   = true;
     [SerializeField] private float    warningDuration   = 0.4f;
     [SerializeField] private float    warningLineLength = 8f;
     [SerializeField] private float    warningLineWidth  = 0.05f;
@@ -112,15 +113,15 @@ public class RangedBehaviour : EnemyBehaviourBase
     private void SetWalk(bool walking)
         => Owner.EnemyAnimator?.SetBool(EnemyAnim.BMove, walking);
 
-    public override void Init(EnemyController controller)
+    public override void Init(IEnemyHost host)
     {
-        base.Init(controller);
+        base.Init(host);
         shootTimer    = shootInterval;
         _isWarning    = false;
         _pendingShot  = false;
         _moveState    = MoveState.Approaching;
         _retreatTimer = 0f;
-        _col         = controller.GetComponentInChildren<Collider2D>();
+        _col         = host.SelfTransform.GetComponentInChildren<Collider2D>();
         attackVfx?.SetActive(false);
         if (_activeWarnLine != null)
         {
@@ -258,7 +259,7 @@ public class RangedBehaviour : EnemyBehaviourBase
 
     private LineRenderer SpawnWarningLine(Vector2 start, Vector2 dir)
     {
-        if (!WarningLineSettings.Enabled) return null;
+        if (!useWarningLines || !WarningLineSettings.Enabled) return null;
         var go = new GameObject("WarnLine");
         go.transform.position = new Vector3(start.x, start.y, 0f);
         go.transform.rotation = Quaternion.Euler(60f, 0f, 0f);

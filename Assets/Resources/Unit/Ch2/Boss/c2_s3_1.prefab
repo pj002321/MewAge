@@ -106,6 +106,7 @@ GameObject:
   - component: {fileID: -4472806890882306662}
   - component: {fileID: -3998777981678266923}
   - component: {fileID: 4382858811831378813}
+  - component: {fileID: 3871775641527460410}
   m_Layer: 7
   m_Name: c2_s3_1
   m_TagString: Untagged
@@ -123,7 +124,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1.25, y: 1.25, z: 1.25}
+  m_LocalScale: {x: 1.5, y: 1.5, z: 1.5}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 3248781302469269118}
@@ -224,6 +225,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BossController
   damageCooldown: 0.5
   moveSpeed: 3
+  _isClone: 0
   enrageThreshold: 0.5
   enrageSpeedMult: 1.5
   enrageDamageMult: 1.5
@@ -246,6 +248,7 @@ MonoBehaviour:
   idleDuration: 0.6
   skills:
   - {fileID: 4382858811831378813}
+  - {fileID: 3871775641527460410}
   _decal: {fileID: 0}
   entryDrop: 1
   entryScaleUpDuration: 0.35
@@ -325,18 +328,51 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0fce8968cf717a2438582076ab21189b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossSlamSkill
-  skillId: 
   cooldown: 5
   enrageCooldownMult: 0.7
-  maxRange: 0
   executeInPattern: 1
   slamDamage: 30
   slamRadius: 2.5
-  slamJumpHeight: 6
-  slamRiseTime: 0.4
-  slamHangTime: 0.8
-  slamFallSpeed: 25
-  slamFallDuration: 0.5
+  jumpHeight: 6
+  jumpDuration: 0.7
+  markerWarningTime: 0.8
   slamMarkerPrefab: {fileID: 7905823675861574758, guid: 2c45f609030a63849b36336032979582, type: 3}
-  landingVfxPrefab: {fileID: 0}
+  landingVfxPrefab: {fileID: 1645737383650597069, guid: d13e811c376306146ac829de7af32967, type: 3}
   vfxLifetime: 1
+--- !u!114 &3871775641527460410
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3312402149363571138}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 14d160f41ad8ad445897e06fd775ae2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BossGroundPoundSkill
+  cooldown: 5
+  enrageCooldownMult: 0.7
+  executeInPattern: 1
+  hopHeight: 2
+  hopRiseTime: 0.25
+  hopFallTime: 0.18
+  shakeDuration: 0.45
+  shakeMagnitude: 0.35
+  landingVfxPrefab: {fileID: 1645737383650597069, guid: d13e811c376306146ac829de7af32967, type: 3}
+  vfxLifetime: 1
+  floatHeight: 2.8
+  floatRiseTime: 0.35
+  floatHangTime: 0.25
+  floatFallTime: 0.55
+  preChargeDelay: 0.3
+  chargeSpeed: 20
+  chargeMaxTime: 3
+  chargeWarnDuration: 0.5
+  warningLineLength: 12
+  warningLineWidth: 0.08
+  warningLineColor: {r: 1, g: 0, b: 0, a: 1}
+  warningMaterial: {fileID: 0}
+  ghostColor: {r: 1, g: 0.15, b: 0.15, a: 0.45}
+  ghostInterval: 0.04
+  ghostLifetime: 0.12

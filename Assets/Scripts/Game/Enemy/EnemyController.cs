@@ -818,6 +818,18 @@ public class EnemyController : MonoBehaviour, IEnemyHost
             GetComponent<RangedBehaviour>()?.ApplyProjectileData(data.projectile);
     }
 
+    /// <summary>소환 미니언 스탯을 덮어씁니다 (BossSummonMinion.Init 에서 호출).</summary>
+    public void ApplySummonStats(float hp, float contactDmg, float speed)
+    {
+        maxHP         = hp;
+        currentHP     = hp;
+        contactDamage = contactDmg;
+        moveSpeed     = speed;
+        baseSpeed     = speed;
+        goldDrop      = 0;
+        expDrop       = 0;
+    }
+
     /// <summary>보스 스탯을 적용합니다 (BossController.ApplyBossData 에서 호출).</summary>
     public void ApplyBossStats(int hp, int contactDmg, float speed)
     {

@@ -31,10 +31,10 @@ public class SlamBehaviour : EnemyBehaviourBase
     private WaitForSeconds _waitHangTime;
     private WaitForSeconds _waitAfterLand;
 
-    public override void Init(EnemyController controller)
+    public override void Init(IEnemyHost host)
     {
-        base.Init(controller);
-        anim           = controller.GetComponentInChildren<Animator>();
+        base.Init(host);
+        anim           = host.SelfTransform.GetComponentInChildren<Animator>();
         _waitHangTime  = new WaitForSeconds(slamHangTime);
         _waitAfterLand = new WaitForSeconds(0.3f);
     }
@@ -56,7 +56,7 @@ public class SlamBehaviour : EnemyBehaviourBase
         if (cooldownTimer <= 0f && dist <= slamRange)
         {
             cooldownTimer = slamCooldown;
-            Owner.StartCoroutine(SlamRoutine());
+            StartCoroutine(SlamRoutine());
         }
     }
 
@@ -73,8 +73,8 @@ public class SlamBehaviour : EnemyBehaviourBase
         isSlamming = true;
         if (Owner.PlayerTransform == null) { isSlamming = false; yield break; }
 
-        Vector3 origScale = Owner.transform.localScale;
-        Vector3 startPos  = Owner.transform.position;
+        Vector3 origScale = Owner.SelfTransform.localScale;
+        Vector3 startPos  = Owner.SelfTransform.position;
 
         // 1) 점프 준비 — Y 찌부 후 원래 스케일로 복귀
         const float anticipationDur = 0.18f;
@@ -85,10 +85,10 @@ public class SlamBehaviour : EnemyBehaviourBase
             t += Time.deltaTime;
             float pct     = Mathf.Clamp01(t / anticipationDur);
             float squishT = pct < 0.5f ? pct * 2f : (1f - pct) * 2f; // 찌부 → 복귀
-            Owner.transform.localScale = Vector3.Lerp(origScale, crouchScale, squishT);
+            Owner.SelfTransform.localScale = Vector3.Lerp(origScale, crouchScale, squishT);
             yield return null;
         }
-        Owner.transform.localScale = origScale;
+        Owner.SelfTransform.localScale = origScale;
 
         // 2) 빠른 상승 — 세로 스트레치하며 화면 밖으로
         Vector3 apexPos = new(startPos.x, startPos.y + slamJumpHeight, startPos.z);
@@ -97,15 +97,15 @@ public class SlamBehaviour : EnemyBehaviourBase
         {
             t += Time.deltaTime;
             float pct = Mathf.Clamp01(t / slamRiseTime);
-            Owner.transform.position   = Vector3.Lerp(startPos, apexPos, pct);
-            Owner.transform.localScale = new Vector3(
+            Owner.SelfTransform.position   = Vector3.Lerp(startPos, apexPos, pct);
+            Owner.SelfTransform.localScale = new Vector3(
                 origScale.x * Mathf.Lerp(1f, 0.7f, pct),
                 origScale.y * Mathf.Lerp(1f, 1.4f, pct),
                 origScale.z);
             yield return null;
         }
-        Owner.transform.position   = apexPos;
-        Owner.transform.localScale = origScale;
+        Owner.SelfTransform.position   = apexPos;
+        Owner.SelfTransform.localScale = origScale;
 
         // 3) 공중 대기 — 플레이어 위치 위로 수평 이동 + 마커 표시
         Vector3 slamTarget = Owner.PlayerTransform != null
@@ -117,26 +117,26 @@ public class SlamBehaviour : EnemyBehaviourBase
 
         // 플레이어 바로 위로 수평 이동 (hang 중에 은밀히)
         Vector3 aboveTarget = new(slamTarget.x, apexPos.y, apexPos.z);
-        Owner.transform.position = aboveTarget;
+        Owner.SelfTransform.position = aboveTarget;
 
         yield return _waitHangTime;
 
         // 4) 수직 낙하 — 세로 스트레치하며 내려꽂기
-        while (Vector3.Distance(Owner.transform.position, slamTarget) > 0.05f)
+        while (Vector3.Distance(Owner.SelfTransform.position, slamTarget) > 0.05f)
         {
             float totalFall = Vector3.Distance(aboveTarget, slamTarget);
-            float remaining = Vector3.Distance(Owner.transform.position, slamTarget);
+            float remaining = Vector3.Distance(Owner.SelfTransform.position, slamTarget);
             float fallPct   = totalFall > 0f ? 1f - Mathf.Clamp01(remaining / totalFall) : 1f;
-            Owner.transform.localScale = new Vector3(
+            Owner.SelfTransform.localScale = new Vector3(
                 origScale.x * Mathf.Lerp(0.7f, 1f, fallPct),
                 origScale.y * Mathf.Lerp(1.4f, 1f, fallPct),
                 origScale.z);
-            Owner.transform.position = Vector3.MoveTowards(
-                Owner.transform.position, slamTarget, slamFallSpeed * Time.deltaTime);
+            Owner.SelfTransform.position = Vector3.MoveTowards(
+                Owner.SelfTransform.position, slamTarget, slamFallSpeed * Time.deltaTime);
             yield return null;
         }
-        Owner.transform.position   = slamTarget;
-        Owner.transform.localScale = origScale;
+        Owner.SelfTransform.position   = slamTarget;
+        Owner.SelfTransform.localScale = origScale;
 
         if (marker != null) Destroy(marker);
 
@@ -149,12 +149,12 @@ public class SlamBehaviour : EnemyBehaviourBase
         }
 
         // 5) 착지 스쿼시 → 원래 스케일 복귀
-        yield return Owner.StartCoroutine(LandSquish(origScale));
+        yield return StartCoroutine(LandSquish(origScale));
 
         // 6) 범위 피해 판정
         var player = PlayerController.Instance;
         if (player != null &&
-            Vector2.Distance(Owner.transform.position, player.transform.position) <= slamRadius)
+            Vector2.Distance(Owner.SelfTransform.position, player.transform.position) <= slamRadius)
             player.TakeDamage(slamDamage);
 
         yield return _waitAfterLand;
@@ -171,17 +171,17 @@ public class SlamBehaviour : EnemyBehaviourBase
         while (t < squishDur)
         {
             t += Time.deltaTime;
-            Owner.transform.localScale = Vector3.Lerp(origScale, squishScale, Mathf.Clamp01(t / squishDur));
+            Owner.SelfTransform.localScale = Vector3.Lerp(origScale, squishScale, Mathf.Clamp01(t / squishDur));
             yield return null;
         }
         t = 0f;
         while (t < restoreDur)
         {
             t += Time.deltaTime;
-            Owner.transform.localScale = Vector3.Lerp(squishScale, origScale, Mathf.Clamp01(t / restoreDur));
+            Owner.SelfTransform.localScale = Vector3.Lerp(squishScale, origScale, Mathf.Clamp01(t / restoreDur));
             yield return null;
         }
-        Owner.transform.localScale = origScale;
+        Owner.SelfTransform.localScale = origScale;
     }
 
     private void OnDrawGizmosSelected()

@@ -20,6 +20,10 @@ public class BossController : MonoBehaviour, IEnemyHost
     private float maxHP         = 500f;
     private float contactDamage = 10f;
 
+    [Header("분신 설정")]
+    [Tooltip("true면 HUD·GameManager 알림·드롭을 건너뜁니다. 분신 프리팹에서 체크.")]
+    [SerializeField] private bool _isClone;
+
     // ── 분노 ──────────────────────────────────────────────────────
     [Header("분노")]
     [SerializeField] private float enrageThreshold  = 0.5f;
@@ -133,17 +137,57 @@ public class BossController : MonoBehaviour, IEnemyHost
     /// <summary>투사체 발사 페이즈 중임을 표시 — ChaseRoutine이 이동을 중단합니다.</summary>
     public bool IsFiringSkill { get; set; }
 
+    // ── 분신 소환용 static 플래그 (BossCloneSkill → Awake 통신) ──────
+    /// <summary>다음 Instantiate 될 BossController 를 분신으로 표시합니다.</summary>
+    public static bool             NextIsClone;
+    /// <summary>분신이 유지할 스킬 타입 목록. null이면 모든 스킬 유지.</summary>
+    public static System.Type[]    NextCloneSkillTypes;
+
     // ── Unity 생명주기 ─────────────────────────────────────────────
 
     private void Awake()
     {
-        Current      = this;
-        Rb           = GetComponent<Rigidbody2D>();
+        // static 플래그로 분신 여부 설정 (BossCloneSkill → Awake 통신)
+        if (NextIsClone) _isClone = true;
+        var cloneSkillTypes = NextCloneSkillTypes;
+        NextIsClone         = false;
+        NextCloneSkillTypes = null;
+
+        if (!_isClone) Current = this;
+        Rb            = GetComponent<Rigidbody2D>();
         EnemyAnimator = GetComponentInChildren<Animator>();
-        srs          = GetComponentsInChildren<SpriteRenderer>(true);
-        
+        srs           = GetComponentsInChildren<SpriteRenderer>(true);
+
         if (skills == null || skills.Length == 0)
             skills = GetComponents<BossSkillBase>();
+
+        // 분신: BossCloneSkill 항상 제거 + 허용 타입 필터 적용
+        if (_isClone)
+        {
+            var allowed  = cloneSkillTypes != null
+                ? new System.Collections.Generic.HashSet<System.Type>(cloneSkillTypes)
+                : null;
+            var filtered = new System.Collections.Generic.List<BossSkillBase>();
+            foreach (var s in skills)
+            {
+                if (s == null) continue;
+                bool isCloneSkill = s is BossCloneSkill;
+                bool notAllowed   = allowed != null && !allowed.Contains(s.GetType());
+                if (isCloneSkill || notAllowed)
+                    DestroyImmediate(s);
+                else
+                    filtered.Add(s);
+            }
+            skills = filtered.ToArray();
+        }
+
+        // 클론: 원본이 피격 중일 때 복제되면 flash 색상이 그대로 복사됨 → 초기화
+        if (_isClone)
+        {
+            flashCoroutine = null;
+            if (srs != null)
+                foreach (var sr in srs) sr.color = Color.white;
+        }
 
         if (Rb != null)
         {
@@ -162,10 +206,13 @@ public class BossController : MonoBehaviour, IEnemyHost
     private void Start()
     {
         PlayerTransform = PlayerController.Instance?.transform;
-        GameManager.Shared?.StartBossWave();
-        BossHUDPanel.Shared?.Show(this);
+        if (!_isClone)
+        {
+            GameManager.Shared?.StartBossWave();
+            BossHUDPanel.Shared?.Show(this);
+        }
 
-        if (entryDrop)
+        if (entryDrop && !_isClone)
             StartCoroutine(EntryDropRoutine());
         else
             StartCoroutine(PatternRoutine());
@@ -450,6 +497,20 @@ public class BossController : MonoBehaviour, IEnemyHost
         _gaugeSkillCoroutine = null;
     }
 
+    public void ForceDie()
+    {
+        if (!isDead) StartCoroutine(DieRoutine());
+    }
+
+    /// <summary>분신 스탯 초기화. BossClone.Init() 에서 Awake 직후·Start 직전에 호출.</summary>
+    public void ApplyCloneStats(float hp, float contactDmg, float speed)
+    {
+        maxHP         = hp;
+        currentHP     = hp;
+        contactDamage = contactDmg;
+        moveSpeed     = speed;
+    }
+
     private IEnumerator DieRoutine()
     {
         isDead = true;
@@ -457,9 +518,15 @@ public class BossController : MonoBehaviour, IEnemyHost
         OnDeath?.Invoke();
 
         PlayFX(onDeathFX);
-        ItemDropManager.Shared?.SpawnBossDrops(transform.position, bossGoldCount, 1, bossExpCount, 1);
-        BossHUDPanel.Shared?.Hide();
-        GameManager.Shared?.OnBossDefeated();
+        if (!_isClone)
+        {
+            foreach (var clone in BossClone.All.ToArray())
+                if (clone != null) Destroy(clone.gameObject);
+
+            ItemDropManager.Shared?.SpawnBossDrops(transform.position, bossGoldCount, 1, bossExpCount, 1);
+            BossHUDPanel.Shared?.Hide();
+            GameManager.Shared?.OnBossDefeated();
+        }
 
         // 사망 연출
         if (srs != null)
@@ -699,13 +766,9 @@ public class BossController : MonoBehaviour, IEnemyHost
     {
         if (skills == null || skills.Length == 0) return null;
 
-        float dist = PlayerTransform != null
-            ? Vector2.Distance(transform.position, PlayerTransform.position)
-            : 0f;
-
         _readySkills.Clear();
         foreach (var s in skills)
-            if (s.executeInPattern && s.CanUse(dist)) _readySkills.Add(s);
+            if (s.executeInPattern && s.IsReady) _readySkills.Add(s);
 
         if (_readySkills.Count == 0) return null;
         return _readySkills[Random.Range(0, _readySkills.Count)];

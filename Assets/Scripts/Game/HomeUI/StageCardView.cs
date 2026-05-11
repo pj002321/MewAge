@@ -44,7 +44,7 @@ public class StageCardView : MonoBehaviour
         }
         if (stageNameText != null) stageNameText.text = entry.stageName;
         if (bestWaveText  != null)
-            bestWaveText.text = entry.bestWave > 0 ? $"최고 웨이브: {entry.bestWave}" : "최고 웨이브: -";
+            bestWaveText.text = entry.bestWave > 0 ? $"최고생존 : {entry.bestWave}/{entry.totalWaves}" : "";
         if (chapterText   != null) chapterText.text = entry.chapterLabel;
     }
 

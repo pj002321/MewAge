@@ -323,6 +323,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BossController
   damageCooldown: 0.5
   moveSpeed: 3
+  _isClone: 0
   enrageThreshold: 0.5
   enrageSpeedMult: 1.5
   enrageDamageMult: 1.5
@@ -372,14 +373,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 41b513309ac63c040b1c0ced00cf17f4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossFastChaseSkill
-  skillId: 
   cooldown: 5
   enrageCooldownMult: 0.7
-  maxRange: 0
   executeInPattern: 1
   chaseSpeed: 6
   chaseDuration: 2
   stopDistance: 3
+  attackCooldown: 0.6
+  animEventTimeout: 0.5
+  attackVfx: {fileID: 0}
+  vfxDuration: 0.3
 --- !u!114 &3329482227692561882
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -392,10 +395,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 71ecc31d375a1534384e5b1844037cf7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossProjectileCycleSkill
-  skillId: 
   cooldown: 5
   enrageCooldownMult: 0.7
-  maxRange: 0
   executeInPattern: 1
   projectilePrefab: {fileID: 7916182024222986910, guid: c4927e75acce7be4cb6e4563dac42fff, type: 3}
   projectileSpeed: 7
@@ -435,7 +436,7 @@ MonoBehaviour:
     "\uAC00\uC18D\uC2DC\uAC04": 0
     "\uCD08\uAE30\uC18D\uB3C4\uBE44\uC728": 0.05
     "\uCD94\uACA9\uC2DC\uAC04": 3
-  useWarningLines: 1
+  useWarningLines: 0
   warningLineLength: 5
   warningLineWidth: 0.5
   warningColor: {r: 1, g: 0, b: 0, a: 1}
@@ -443,7 +444,6 @@ MonoBehaviour:
   impactVfxPrefab: {fileID: 0}
   impactVfxLifetime: 1
   chaseStopDistance: 3
-  attackTrigger: tAttack
 --- !u!1001 &8460030400336165565
 PrefabInstance:
   m_ObjectHideFlags: 0

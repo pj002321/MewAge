@@ -34,6 +34,7 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
     [Header("홈씬 (homeContent 하위)")]
     [SerializeField] private MainMenuPanel mainMenuPanel;
     [SerializeField] private Button        menuToggleButton; // label → GetComponentInChildren
+    [SerializeField] private Button        resetDataButton;
 
     // ── 인게임 전용 ──────────────────────────────────────────────────
     [Header("인게임 (gameContent 하위)")]
@@ -71,6 +72,7 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
         panelContainer?.onClick.AddListener(OnToggleContent);
 
         menuToggleButton?.onClick.AddListener(OnToggleMenuButtons);
+        resetDataButton?.onClick.AddListener(OnResetData);
 
         skipWaveButton?.onClick.AddListener(OnSkipWave);
         invincibleButton?.onClick.AddListener(OnToggleInvincible);
@@ -172,6 +174,13 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
     {
         _menuUnlocked = !_menuUnlocked;
         ApplyMenuButtons();
+    }
+
+    private void OnResetData()
+    {
+        PlayerPrefs.DeleteAll();
+        PlayerPrefs.Save();
+        this.DLog("[Debug] PlayerPrefs 전체 초기화 완료");
     }
 
     // ── 인게임 핸들러 ─────────────────────────────────────────────────

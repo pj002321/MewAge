@@ -713,7 +713,12 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         if (countdownText) countdownText.gameObject.SetActive(false);
 
         player.InputLocked = false;
-        StartNextWave();
+
+        // 착지 후 증강 패널 → 선택 완료 시 StartNextWave() 자동 호출
+        if (ImprovManager.Shared != null)
+            ImprovManager.Shared.ShowPanel(wave);
+        else
+            StartNextWave();
     }
 
     /// <summary>보스 맵으로 즉시 전환 후 플레이어를 bossEnterPoint에서 낙하시킵니다.</summary>

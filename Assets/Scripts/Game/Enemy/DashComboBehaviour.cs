@@ -29,9 +29,9 @@ public class DashComboBehaviour : EnemyBehaviourBase
     private WaitForSeconds _waitIdle;
     private WaitForSeconds _waitHitInterval;
 
-    public override void Init(EnemyController controller)
+    public override void Init(IEnemyHost host)
     {
-        base.Init(controller);
+        base.Init(host);
         _waitIdle        = new WaitForSeconds(idleDuration);
         _waitHitInterval = new WaitForSeconds(hitInterval);
     }
@@ -41,7 +41,7 @@ public class DashComboBehaviour : EnemyBehaviourBase
     public override void OnAttackUpdate()
     {
         if (isRunning) return;
-        Owner.StartCoroutine(PatternRoutine());
+        StartCoroutine(PatternRoutine());
     }
 
     private IEnumerator PatternRoutine()
@@ -79,7 +79,7 @@ public class DashComboBehaviour : EnemyBehaviourBase
                 Owner.EnemyAnimator?.SetTrigger(EnemyAnim.TAttack);
 
                 if (attackVfxPrefab != null)
-                    Instantiate(attackVfxPrefab, Owner.transform.position, Quaternion.identity);
+                    Instantiate(attackVfxPrefab, Owner.SelfTransform.position, Quaternion.identity);
 
                 yield return _waitHitInterval;
             }
@@ -93,7 +93,7 @@ public class DashComboBehaviour : EnemyBehaviourBase
     public void OnDashComboHit()
     {
         if (Owner == null || Owner.PlayerTransform == null) return;
-        float dist = Vector2.Distance(Owner.transform.position, Owner.PlayerTransform.position);
+        float dist = Vector2.Distance(Owner.SelfTransform.position, Owner.PlayerTransform.position);
         if (dist <= hitRange)
             PlayerController.Instance?.TakeDamage(Owner.ContactDamage);
     }

@@ -1490,7 +1490,7 @@ public class WeaponPoint : MonoBehaviour
     {
         if (_grade >= WeaponGrade.Epic)
         {
-            CameraFollow.Shared?.Shake(0.08f, 0.06f);
+
             StartCoroutine(EpicSecondHitRoutine(hitPos));
         }
 

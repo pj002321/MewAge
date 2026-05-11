@@ -1,7 +1,6 @@
 using System.Collections;
 using TMPro;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using Mewage.DB;
 
@@ -22,16 +21,13 @@ public class ImprovPanel : MonoBehaviour
     {
         if (statPanelHoldButton == null) return;
 
-        var trigger = statPanelHoldButton.GetComponent<EventTrigger>()
-                   ?? statPanelHoldButton.gameObject.AddComponent<EventTrigger>();
-
-        var down = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
-        down.callback.AddListener(_ => StatPanelUI.Shared?.Show());
-        trigger.triggers.Add(down);
-
-        var up = new EventTrigger.Entry { eventID = EventTriggerType.PointerUp };
-        up.callback.AddListener(_ => StatPanelUI.Shared?.Hide());
-        trigger.triggers.Add(up);
+        statPanelHoldButton.onClick.AddListener(() =>
+        {
+            var panel = StatPanelUI.Shared;
+            if (panel == null) return;
+            if (panel.gameObject.activeSelf) panel.Hide();
+            else                              panel.Show();
+        });
     }
 
     private void OnEnable()

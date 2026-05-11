@@ -55,9 +55,9 @@ public class MagicBehaviour : EnemyBehaviourBase
     private GameObject[] _activeMarkers;
 
     // ── 초기화 ───────────────────────────────────────────────────────
-    public override void Init(EnemyController controller)
+    public override void Init(IEnemyHost host)
     {
-        base.Init(controller);
+        base.Init(host);
         castTimer = castInterval;
     }
 

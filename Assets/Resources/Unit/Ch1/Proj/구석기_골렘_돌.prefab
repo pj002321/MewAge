@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 4191757891340204224}
   - component: {fileID: 6617722678722838961}
   - component: {fileID: 3988562143122650962}
+  - component: {fileID: 3713078325777575677}
   m_Layer: 0
   m_Name: "\uAD6C\uC11D\uAE30_\uACE8\uB818_\uB3CC"
   m_TagString: Untagged
@@ -81,9 +82,9 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 3
+  m_SortingLayerID: 1049025713
+  m_SortingLayer: 1
+  m_SortingOrder: 4
   m_MaskInteraction: 0
   m_Sprite: {fileID: 2422261467669963806, guid: 53d4f8068ab50934baffa4a5313ad439, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -193,3 +194,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossRollingProjectile
   flipOnBounce: 1
+--- !u!114 &3713078325777575677
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3040590599161552287}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 25cc23087012616429ecb7c10c6cb557, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpriteYSort
+  multiplier: 99

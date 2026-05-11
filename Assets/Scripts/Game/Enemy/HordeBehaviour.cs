@@ -35,7 +35,7 @@ public class HordeBehaviour : EnemyBehaviourBase
 
     private void Burst()
     {
-        Vector3 targetScale = Owner.SpawnScale;
+        Vector3 targetScale = EC != null ? EC.SpawnScale : Owner.SelfTransform.localScale;
 
         var     spawner = EnemySpawner.Shared;
         Vector2 aCenter = spawner != null ? spawner.AreaCenter : Vector2.zero;
@@ -54,8 +54,8 @@ public class HordeBehaviour : EnemyBehaviourBase
             Vector2 offset   = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * clusterRadius;
             Vector2 spawnPos = cornerPos + offset;
 
-            var clone = Instantiate(Owner.gameObject,
-                                    new Vector3(spawnPos.x, spawnPos.y, Owner.transform.position.z),
+            var clone = Instantiate(Owner.SelfTransform.gameObject,
+                                    new Vector3(spawnPos.x, spawnPos.y, Owner.SelfTransform.position.z),
                                     Quaternion.identity);
 
             clone.transform.localScale = targetScale;
@@ -63,8 +63,9 @@ public class HordeBehaviour : EnemyBehaviourBase
             if (clone.TryGetComponent<EnemyController>(out var ec))
             {
                 ec.enabled = true;
-                if (Owner.ActiveUnitData != null)
-                    ec.ApplyUnitData(Owner.ActiveUnitData);
+                var ownerEC = EC;
+                if (ownerEC?.ActiveUnitData != null)
+                    ec.ApplyUnitData(ownerEC.ActiveUnitData);
                 // SpawnScale = targetScale 로 저장 + BounceIn이 매 프레임 scale을 쓰므로
                 // Animator에 scale 키프레임이 있어도 덮어쓰기를 방지함
                 ec.PlaySpawnBounce();
@@ -74,7 +75,7 @@ public class HordeBehaviour : EnemyBehaviourBase
                 hb.SetAsClone();
         }
 
-        Destroy(Owner.gameObject);
+        Destroy(Owner.SelfTransform.gameObject);
     }
 
     // ── 이동: 클론만 동작 — 스폰 시 방향 고정 후 직진 ──────────
@@ -105,6 +106,6 @@ public class HordeBehaviour : EnemyBehaviourBase
 
         if (pos.x < center.x - half.x || pos.x > center.x + half.x ||
             pos.y < center.y - half.y || pos.y > center.y + half.y)
-            Destroy(Owner.gameObject);
+            Destroy(Owner.SelfTransform.gameObject);
     }
 }

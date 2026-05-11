@@ -135,6 +135,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BossController
   damageCooldown: 0.5
   moveSpeed: 3
+  _isClone: 0
   enrageThreshold: 0.5
   enrageSpeedMult: 1.5
   enrageDamageMult: 1.5
@@ -156,8 +157,9 @@ MonoBehaviour:
   chaseDuration: 2.5
   idleDuration: 0.6
   skills:
+  - {fileID: 5373153972275024946}
   - {fileID: -2298048180237470415}
-  _decal: {fileID: 0}
+  _decal: {fileID: 1003761722093112731}
   entryDrop: 1
   entryScaleUpDuration: 0.35
 --- !u!50 &-4710413047643074451
@@ -236,14 +238,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 41b513309ac63c040b1c0ced00cf17f4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossFastChaseSkill
-  skillId: 
   cooldown: 3
   enrageCooldownMult: 0.7
-  maxRange: 0
   executeInPattern: 1
   chaseSpeed: 3
   chaseDuration: 3
   stopDistance: 1
+  attackCooldown: 0.6
+  animEventTimeout: 0.5
+  attackVfx: {fileID: 0}
+  vfxDuration: 0.3
 --- !u!114 &5373153972275024946
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -256,21 +260,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 421dc27616e41804c9fcb163146852ec, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossSummonCycleSkill
-  skillId: 
   cooldown: 5
   enrageCooldownMult: 0.7
-  maxRange: 8
   executeInPattern: 1
   minionPrefab: {fileID: 1326216360028315856, guid: b71d17893617b9b4da707bd526180777, type: 3}
   spawnMarkerPrefab: {fileID: 5515808124668199316, guid: 4676482f183c362489d2902d70a232b3, type: 3}
-  summonCount: 2
-  maxActiveMinions: 8
-  summonInterval: 8
+  summonCount: 3
+  maxActiveMinions: 12
+  summonInterval: 0.5
   markerWarningTime: 0.8
   minionDuration: 30
-  minionMoveSpeed: 6.8
-  minionContactDamage: 12
-  spawnRadius: 3
+  minionMoveSpeed: 4
+  minionContactDamage: 15
+  spawnRadius: 6
 --- !u!1 &6343863625544315502
 GameObject:
   m_ObjectHideFlags: 0

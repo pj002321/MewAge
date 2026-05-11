@@ -43,9 +43,9 @@ public class TeleportBehaviour : EnemyBehaviourBase
     private SpriteRenderer[] _renderers;
 
     // ── 초기화 ───────────────────────────────────────────────
-    public override void Init(EnemyController controller)
+    public override void Init(IEnemyHost host)
     {
-        base.Init(controller);
+        base.Init(host);
         _chaseTimer = chaseInterval;
         _renderers  = GetComponentsInChildren<SpriteRenderer>(true);
     }

@@ -26,10 +26,10 @@ public class BossBehaviour : EnemyBehaviourBase
     private bool           isRunning;
 
     // ── 초기화 ──────────────────────────────────────────────────────
-    public override void Init(EnemyController controller)
+    public override void Init(IEnemyHost host)
     {
-        base.Init(controller);
-        boss = controller.GetComponent<BossController>();
+        base.Init(host);
+        boss = host.SelfTransform.GetComponent<BossController>();
         if (boss != null) boss.OnEnraged += OnBossEnraged;
     }
 
@@ -40,7 +40,7 @@ public class BossBehaviour : EnemyBehaviourBase
     public override void OnAttackUpdate()
     {
         if (isRunning) return;
-        Owner.StartCoroutine(PatternRoutine());
+        StartCoroutine(PatternRoutine());
     }
 
     // ══════════════════════════════════════════════════════════════
@@ -77,7 +77,7 @@ public class BossBehaviour : EnemyBehaviourBase
 
             if (Owner.PlayerTransform == null) { yield return new WaitForFixedUpdate(); continue; }
 
-            float dist = Vector2.Distance(Owner.transform.position, Owner.PlayerTransform.position);
+            float dist = Vector2.Distance(Owner.SelfTransform.position, Owner.PlayerTransform.position);
             if (dist > chaseStopDistance)
                 Owner.MoveTowardPlayer(Owner.MoveSpeed * speedMult);
 

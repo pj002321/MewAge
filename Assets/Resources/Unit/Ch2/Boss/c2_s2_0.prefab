@@ -165,6 +165,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BossController
   damageCooldown: 0.5
   moveSpeed: 3
+  _isClone: 0
   enrageThreshold: 0.5
   enrageSpeedMult: 1.5
   enrageDamageMult: 1.5
@@ -265,10 +266,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 71ecc31d375a1534384e5b1844037cf7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossProjectileCycleSkill
-  skillId: 
   cooldown: 5
   enrageCooldownMult: 0.7
-  maxRange: 0
   executeInPattern: 1
   projectilePrefab: {fileID: 7916182024222986910, guid: 47dbd72006f17c24e909af1468326e13, type: 3}
   projectileSpeed: 7
@@ -308,7 +307,7 @@ MonoBehaviour:
     "\uAC00\uC18D\uC2DC\uAC04": 0
     "\uCD08\uAE30\uC18D\uB3C4\uBE44\uC728": 0.05
     "\uCD94\uACA9\uC2DC\uAC04": 3
-  useWarningLines: 1
+  useWarningLines: 0
   warningLineLength: 10
   warningLineWidth: 0.06
   warningColor: {r: 1, g: 0, b: 0, a: 1}
