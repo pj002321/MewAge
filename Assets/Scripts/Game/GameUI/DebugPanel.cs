@@ -180,8 +180,9 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
     {
         PlayerPrefs.DeleteAll();
         PlayerPrefs.Save();
-        this.DLog("[Debug] PlayerPrefs 전체 초기화 완료 — 프롤로그 씬으로 이동");
-        SceneLoadManager.LoadScene("prologue@scene");
+        SoundManager.Shared?.StopBGM();
+        this.DLog("[Debug] PlayerPrefs 전체 초기화 완료 — 인트로 씬으로 이동");
+        SceneLoadManager.LoadScene("introloading@scene");
     }
 
     // ── 인게임 핸들러 ─────────────────────────────────────────────────

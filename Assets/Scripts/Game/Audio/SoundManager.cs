@@ -141,7 +141,7 @@ public class SoundManager : MonoBehaviourSingleton<SoundManager>
         bgmSource.volume = 1f;
     }
 
-    private void StopBGM()
+    public void StopBGM()
     {
         if (bgmFadeCoroutine != null) StopCoroutine(bgmFadeCoroutine);
         bgmFadeCoroutine = StartCoroutine(FadeOutBGM());

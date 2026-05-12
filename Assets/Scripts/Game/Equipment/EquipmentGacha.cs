@@ -182,11 +182,22 @@ public static class EquipmentGacha
     static EquipmentData DrawByGrade(string grade)
     {
         var candidates = DB_장비.FindEntities(e => e.f_등급 == grade);
-        if (candidates == null || candidates.Count == 0)
+        if (candidates != null && candidates.Count > 0)
+            return EquipmentData.FromDB(candidates[Random.Range(0, candidates.Count)]);
+
+        // 해당 등급 풀이 비어있으면 다른 등급으로 폴백
+        foreach (var fallback in GradeKeys)
         {
-            Debug.LogWarning($"[EquipmentGacha] DB_장비에 '{grade}' 등급 아이템 없음");
-            return null;
+            if (fallback == grade) continue;
+            var fb = DB_장비.FindEntities(e => e.f_등급 == fallback);
+            if (fb != null && fb.Count > 0)
+            {
+                Debug.LogWarning($"[EquipmentGacha] '{grade}' 등급 아이템 없음 → '{fallback}'으로 폴백");
+                return EquipmentData.FromDB(fb[Random.Range(0, fb.Count)]);
+            }
         }
-        return EquipmentData.FromDB(candidates[Random.Range(0, candidates.Count)]);
+
+        Debug.LogError("[EquipmentGacha] DB_장비에 사용 가능한 아이템이 없습니다");
+        return null;
     }
 }
