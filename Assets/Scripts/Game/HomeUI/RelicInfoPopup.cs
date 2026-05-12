@@ -23,7 +23,8 @@ public class RelicInfoPopup : MonoBehaviour
     [SerializeField] private Image iconImage;
     [SerializeField] private Image iconGradeImage;   // 아이콘 등급 프레임
     [SerializeField] private Image bannerImage;      // 등급 배너
-
+    [SerializeField] private Image relicpieceIcon;    
+    
     [Header("정보 텍스트")]
     [SerializeField] private TextMeshProUGUI nameText;
     [SerializeField] private TextMeshProUGUI gradeText;
@@ -32,6 +33,7 @@ public class RelicInfoPopup : MonoBehaviour
     [SerializeField] private TextMeshProUGUI specialAttrText;
     [SerializeField] private TextMeshProUGUI descriptionText;
     [SerializeField] private TextMeshProUGUI fragmentText;
+    [SerializeField] private TextMeshProUGUI relicpieceCountText;
 
     [Header("등급 태그 / 성급")]
     [SerializeField] private Image tagGradeImg;

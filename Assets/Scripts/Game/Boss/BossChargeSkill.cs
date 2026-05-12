@@ -64,8 +64,9 @@ public class BossChargeSkill : BossSkillBase
             // Rb.position에 의존하지 않고 직접 계산합니다.
             Vector2 pos     = Owner.Rb != null ? Owner.Rb.position : (Vector2)Owner.transform.position;
             bool    hitWall = false;
+            float   elapsed = 0f;
 
-            while (true)
+            while (elapsed < chargeDuration)
             {
                 if (GameManager.Shared != null && GameManager.Shared.IsGameOver) yield break;
                 if (IsInvalid()) yield break;
@@ -86,6 +87,7 @@ public class BossChargeSkill : BossSkillBase
                 pos = next;
                 Owner.Rb.MovePosition(next);
                 Owner.FlipToward(dir);
+                elapsed += Time.fixedDeltaTime;
                 yield return new WaitForFixedUpdate();
             }
 

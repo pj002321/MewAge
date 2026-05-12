@@ -87,6 +87,13 @@ public class WaveEnvironmentSwitcher : MonoBehaviourSingleton<WaveEnvironmentSwi
         if (_activeBgInstance != null)
             _activeBgInstance.SetActive(false);
 
+        // 이미 보스 배경이 활성화된 경우 재생성 방지 (BossController.Start → GameManager.StartBossWave 중복 호출 대응)
+        if (_activeBossInstance != null)
+        {
+            ApplyCameraFromBounds(_currentStage.bossFollowPlayer, _currentStage.useBounds);
+            return;
+        }
+
         // 보스 배경 스폰
         DestroyBossInstance();
         if (_currentStage.bossBackground != null)

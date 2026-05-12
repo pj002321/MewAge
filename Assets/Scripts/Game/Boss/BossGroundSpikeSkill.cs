@@ -51,6 +51,9 @@ public class BossGroundSpikeSkill : BossSkillBase
     [Header("페이즈 ON/OFF")]
     [SerializeField] private bool useSpikePhase = true;
 
+    // 코루틴 out 파라미터 대신 사용하는 실행 여부 플래그
+    private bool _spikePhaseExecuted;
+
     public override void Init(BossController boss)
     {
         base.Init(boss);
@@ -78,10 +81,23 @@ public class BossGroundSpikeSkill : BossSkillBase
 
             if (useSpikePhase)
             {
+                _spikePhaseExecuted = false;
                 yield return SpikeLinePhase();
                 if (IsInvalid()) yield break;
+
+                // 플레이어 없음 등으로 조기 종료된 경우 짧게 대기 후 재시도
+                if (!_spikePhaseExecuted)
+                {
+                    yield return new WaitForSeconds(0.5f);
+                    continue;
+                }
+
                 yield return ChasePhase(chaseAfterSpike);
                 if (IsInvalid()) yield break;
+            }
+            else
+            {
+                yield return null; // useSpikePhase=false 시 무한루프 방지
             }
         }
     }
@@ -102,15 +118,24 @@ public class BossGroundSpikeSkill : BossSkillBase
             // 플레이어 위치 중심, 보스→플레이어 수직 방향으로 균등 배치
             Vector2 playerPos  = Owner.PlayerTransform.position;
             Vector2 toPlayer   = ((Vector2)Owner.PlayerTransform.position - (Vector2)Owner.transform.position).normalized;
+            // toPlayer가 영벡터(보스·플레이어 동위치)면 수평 스프레드로 fallback
+            if (toPlayer == Vector2.zero) toPlayer = Vector2.right;
             Vector2 spreadDir  = new Vector2(-toPlayer.y, toPlayer.x); // 수직 방향
 
             float totalSpan = spikeDistance * (spikeCount - 1);
             Vector2 startPos = playerPos - spreadDir * (totalSpan * 0.5f);
 
+            float spawnY = GetSpawnY();
+
             // 마커 일괄 생성
             for (int i = 0; i < spikeCount; i++)
             {
                 positions[i] = startPos + spreadDir * spikeDistance * i;
+
+                // spawnY보다 높은 위치의 스파이크는 낙하 불가 — 플레이어 쪽으로 클램핑
+                if (positions[i].y >= spawnY - 0.5f)
+                    positions[i].y = spawnY - 1f;
+
                 if (spikeMarkerPrefab != null)
                 {
                     var obj = Instantiate(spikeMarkerPrefab, positions[i], Quaternion.identity);
@@ -137,7 +162,7 @@ public class BossGroundSpikeSkill : BossSkillBase
             Owner.EnemyAnimator?.SetTrigger(EnemyAnim.TAttack);
 
             // ③ 스파이크 수직 낙하 — 코루틴이 직접 이동 제어 (컴포넌트 무관)
-            float spawnY  = GetSpawnY();
+            // spawnY는 마커 생성 시 이미 계산됨 (카메라 상단 기준)
             float dmgMult = Boss != null && Boss.IsEnraged ? Boss.EnrageDamageMult : 1f;
             float dmg     = (spikeDamage > 0f ? spikeDamage : Owner.ContactDamage) * dmgMult;
 
@@ -147,9 +172,11 @@ public class BossGroundSpikeSkill : BossSkillBase
 
                 if (spikeProjectilePrefab != null)
                 {
-                    var spawnPos = new Vector3(positions[i].x, spawnY, 0f);
-                    var go = Instantiate(spikeProjectilePrefab, spawnPos, Quaternion.identity);
-                    float targetY = positions[i].y + pivotToTipOffset;
+                    float targetY  = positions[i].y + pivotToTipOffset;
+                    // spawnY가 targetY보다 충분히 높은지 보장
+                    float actualSpawnY = Mathf.Max(spawnY, targetY + 2f);
+                    var   spawnPos     = new Vector3(positions[i].x, actualSpawnY, 0f);
+                    var   go           = Instantiate(spikeProjectilePrefab, spawnPos, Quaternion.identity);
                     StartCoroutine(MoveSpikeDown(go, targetY, dmg));
                 }
 
@@ -157,8 +184,14 @@ public class BossGroundSpikeSkill : BossSkillBase
                     yield return new WaitForSeconds(spikeStrikeDelay);
             }
 
+            _spikePhaseExecuted = true;
+
             // ④ 마지막 스파이크가 착지 + 박힘 시간까지 대기
-            float fallHeight = spawnY - positions[0].y;
+            float maxTargetY  = float.MaxValue;
+            for (int i = 0; i < spikeCount; i++)
+                maxTargetY = Mathf.Min(maxTargetY, positions[i].y + pivotToTipOffset);
+            float fallHeight = spawnY - maxTargetY;
+            if (fallHeight < 0f) fallHeight = 0f;
             yield return new WaitForSeconds(fallHeight / spikeDropSpeed + stickDuration + 0.2f);
         }
         finally
@@ -217,8 +250,18 @@ public class BossGroundSpikeSkill : BossSkillBase
         // 프리팹에 Rigidbody2D가 있으면 물리가 간섭하지 않도록 Kinematic으로 설정
         if (spike.TryGetComponent<Rigidbody2D>(out var rb))
         {
-            rb.bodyType = RigidbodyType2D.Kinematic;
+            rb.bodyType       = RigidbodyType2D.Kinematic;
             rb.linearVelocity = Vector2.zero;
+        }
+
+        // 프리팹에 자체 이동 스크립트가 있으면 비활성화
+        var behaviours = spike.GetComponents<MonoBehaviour>();
+        foreach (var b in behaviours)
+        {
+            if (b == null) continue;
+            // BossGroundSpikeSkill 자신은 건드리지 않음
+            if (b is BossGroundSpikeSkill) continue;
+            b.enabled = false;
         }
 
         // targetY까지 수직 낙하
