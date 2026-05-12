@@ -140,6 +140,7 @@ GameObject:
   - component: {fileID: 6649752058689448536}
   - component: {fileID: 1394116967725181549}
   - component: {fileID: 440686362616144100}
+  - component: {fileID: 5259499747754953172}
   m_Layer: 7
   m_Name: s2_1_summon
   m_TagString: Untagged
@@ -211,7 +212,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 1049025713
   m_SortingLayer: 1
-  m_SortingOrder: 4
+  m_SortingOrder: 7
   m_MaskInteraction: 0
   m_Sprite: {fileID: 5008298238806890910, guid: da2d251cb9c75f042b654397d0e04b4b, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -401,7 +402,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8dbca1b53536a2b47a8964120af00539, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HitFlash
-  flashDuration: 0.1
+  flashDuration: 0.05
   flashMaterial: {fileID: 2100000, guid: f6d87d58797b8b9478efae2c2271cbe7, type: 2}
   flashColor: {r: 1, g: 1, b: 1, a: 1}
   BaseColor: {r: 1, g: 1, b: 1, a: 1}
+--- !u!114 &5259499747754953172
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5780791762247049258}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 25cc23087012616429ecb7c10c6cb557, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpriteYSort
+  multiplier: 100

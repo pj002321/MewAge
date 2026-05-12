@@ -56,7 +56,7 @@ public class EnemyProjectile : MonoBehaviour
     {
         if (other.TryGetComponent<PlayerController>(out var player))
         {
-            player.TakeDamage(damage);
+            player.TakeDamage(damage, sourceName: gameObject.name);
             Destroy(gameObject);
         }
     }

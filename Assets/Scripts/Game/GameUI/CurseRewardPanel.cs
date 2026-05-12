@@ -13,6 +13,7 @@ public class CurseRewardPanel : MonoBehaviour
 {
     [SerializeField] CurseRewardCard card;
     [SerializeField] Button          skipButton;
+    [SerializeField] Button statButton;
 
     private Action _onConfirm;
     private DB_증강 _pending;
@@ -23,6 +24,14 @@ public class CurseRewardPanel : MonoBehaviour
         if (btn != null) btn.onClick.AddListener(OnAccept);
         skipButton?.onClick.AddListener(OnSkip);
         gameObject.SetActive(false);
+
+        statButton.onClick.AddListener(() =>
+        {
+            var panel = StatPanelUI.Shared;
+            if (panel == null) return;
+            if (panel.gameObject.activeSelf) panel.Hide();
+            else panel.Show();
+        });
     }
 
     void OnEnable()

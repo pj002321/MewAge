@@ -56,6 +56,9 @@ public class BossPatternBehaviour : EnemyBehaviourBase
             _activeCoroutine = null;
             isRunning = false;
         }
+        // 현재 패턴의 스킬이 StartCoroutine으로 생성한 자식 코루틴(FloatPlayer 등)을 중단하고 상태 복구
+        foreach (var entry in pattern)
+            entry.skill?.OnInterrupted();
     }
 
     private void OnGrogyEnded() => _skipIdleChaseOnce = true;

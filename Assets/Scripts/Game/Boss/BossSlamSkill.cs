@@ -71,7 +71,7 @@ public class BossSlamSkill : BossSkillBase
         var player = PlayerController.Instance;
         if (player != null &&
             Vector2.Distance(Owner.transform.position, player.transform.position) <= slamRadius)
-            player.TakeDamage(dmg);
+            player.TakeDamage(dmg, sourceName: Owner.gameObject.name);
 
         yield return new WaitForSeconds(0.3f);
     }

@@ -75,7 +75,7 @@ public class MeleeBehaviour : EnemyBehaviourBase
             }
             else
             {
-                PlayerController.Instance?.TakeDamage(Owner.ContactDamage);
+                PlayerController.Instance?.TakeDamage(Owner.ContactDamage, sourceName: Owner.SelfTransform.name);
             }
         }
     }
@@ -101,7 +101,7 @@ public class MeleeBehaviour : EnemyBehaviourBase
         if (Owner == null || Owner.PlayerTransform == null) yield break;
         float dist = Vector2.Distance(transform.position, Owner.PlayerTransform.position);
         if (dist <= attackRange)
-            PlayerController.Instance?.TakeDamage(Owner.ContactDamage);
+            PlayerController.Instance?.TakeDamage(Owner.ContactDamage, sourceName: Owner.SelfTransform.name);
     }
 
     private IEnumerator ShowVfx()
@@ -135,6 +135,6 @@ public class MeleeBehaviour : EnemyBehaviourBase
         if (Owner == null || Owner.PlayerTransform == null) return;
         float dist = Vector2.Distance(transform.position, Owner.PlayerTransform.position);
         if (dist <= attackRange)
-            PlayerController.Instance?.TakeDamage(Owner.ContactDamage);
+            PlayerController.Instance?.TakeDamage(Owner.ContactDamage, sourceName: Owner.SelfTransform.name);
     }
 }

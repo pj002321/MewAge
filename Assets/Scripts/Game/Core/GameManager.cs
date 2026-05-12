@@ -532,6 +532,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 
     public void GoHome()
     {
+        StopAllCoroutines();
         Time.timeScale = 1f;
         SceneLoadManager.LoadScene("home@scene");
     }
@@ -720,6 +721,9 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         if (countdownText) countdownText.gameObject.SetActive(false);
 
         player.InputLocked = false;
+
+        // 씬 전환이 시작된 경우 패널/웨이브 시작을 건너뜀 (레이스 컨디션 방지)
+        if (isGameOver || SceneLoadManager.IsTransitioning) yield break;
 
         // 첫 입장(wave 0)에만 증강 패널 표시 → 선택 후 StartNextWave() 자동 호출
         // 이후 웨이브는 wave clear 후 업그레이드 패널에서 진행
@@ -997,16 +1001,20 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     /// </summary>
     private IEnumerator BossOrbCollectRoutine(int nextBoss)
     {
-        // 타이머를 수집 대기 시간으로 덮어써 Update가 카운트다운 UI를 그리게 함
+        // 마지막 보스: 카운트다운 없이 즉시 게임 클리어
+        if (nextBoss <= 0)
+        {
+            ShowGameClear();
+            yield break;
+        }
+
+        // 중간 보스: 타이머를 수집 대기 시간으로 덮어써 Update가 카운트다운 UI를 그리게 함
         waveTimer = orbCollectWait;
 
         this.DLog($"[GameManager] Orb 수집 대기 {orbCollectWait}s 시작");
         yield return new WaitForSeconds(orbCollectWait);
 
-        if (nextBoss > 0)
-            StartCoroutine(WaveClearRoutine());   // 중간 보스 → 업그레이드 패널
-        else
-            ShowGameClear();                      // 마지막 보스 → 게임 클리어
+        StartCoroutine(WaveClearRoutine());   // 중간 보스 → 업그레이드 패널
     }
 
     private void ShowGameClear()

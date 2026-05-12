@@ -298,7 +298,7 @@ public class BossGroundSpikeSkill : BossSkillBase
         var player = PlayerController.Instance;
         if (player != null &&
             Vector2.Distance(spike.transform.position, player.transform.position) <= spikeHitRadius)
-            player.TakeDamage(damage);
+            player.TakeDamage(damage, sourceName: Owner.gameObject.name);
 
         // stickDuration 동안 박힌 채 유지
         yield return new WaitForSeconds(stickDuration);

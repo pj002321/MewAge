@@ -29,7 +29,7 @@ public class UpgradeCard : MonoBehaviour
         if (soldOverlayImg != null)
         {
             soldOverlayImg.gameObject.SetActive(false);
-            soldOverlayImg.raycastTarget = false;
+            soldOverlayImg.raycastTarget = false; // 숨긴 상태에선 입력 통과
         }
     }
 
@@ -68,10 +68,19 @@ public class UpgradeCard : MonoBehaviour
         }
         else
         {
-            soldOverlayImg?.gameObject.SetActive(false);
+            if (soldOverlayImg != null)
+            {
+                soldOverlayImg.gameObject.SetActive(false);
+                soldOverlayImg.raycastTarget = false;
+            }
             buyButton.gameObject.SetActive(true);
             buyButton.interactable = true;
-            if (adButton) adButton.interactable = true; // interactable 복구
+            if (adButton) adButton.interactable = true;
+            if (infoButton != null)
+            {
+                infoButton.onClick.RemoveAllListeners();
+                infoButton.onClick.AddListener(OnClickInfo);
+            }
         }
 
         buyButton.onClick.RemoveAllListeners();
@@ -79,9 +88,6 @@ public class UpgradeCard : MonoBehaviour
 
         // 기본적으로 광고 버튼은 끔 (SetupAdCard에서 필요 시 켬)
         adButton?.gameObject.SetActive(false);
-
-        infoButton?.onClick.RemoveAllListeners();
-        infoButton?.onClick.AddListener(OnClickInfo);
     }
 
     public void SetupAdCard(WeaponData weaponData, int index, System.Action onAdWatch, bool isSold = false)
@@ -106,6 +112,7 @@ public class UpgradeCard : MonoBehaviour
         if (soldOverlayImg != null)
         {
             soldOverlayImg.gameObject.SetActive(true);
+            soldOverlayImg.raycastTarget = true; // 오버레이가 하위 버튼 클릭을 차단
             if (shake && gameObject.activeInHierarchy)
             {
                 StopAllCoroutines();
@@ -114,11 +121,19 @@ public class UpgradeCard : MonoBehaviour
         }
         buyButton.interactable = false;
         if (adButton) adButton.interactable = false;
+
+        // 판매 후 info 버튼은 구매 콜백 없이 정보만 표시
+        if (infoButton != null)
+        {
+            infoButton.onClick.RemoveAllListeners();
+            infoButton.onClick.AddListener(OnClickInfoOnly);
+        }
     }
 
-    private void OnClickBuy()  => UpgradeManager.Shared?.TryBuy(data, cardIndex);
-    private void OnClickInfo() => WeaponInfoPanel.Shared?.Show(data,
+    private void OnClickBuy()      => UpgradeManager.Shared?.TryBuy(data, cardIndex);
+    private void OnClickInfo()     => WeaponInfoPanel.Shared?.Show(data,
         onBuy: () => UpgradeManager.Shared?.TryBuy(data, cardIndex));
+    private void OnClickInfoOnly() => WeaponInfoPanel.Shared?.Show(data);
 
     private static void SetStarObject(List<GameObject> objs, int star)
     {

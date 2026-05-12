@@ -46,7 +46,7 @@ public class EnemyPool : MonoBehaviourSingleton<EnemyPool>
 
     public void Return(EnemyController enemy)
     {
-        if (enemy == null) return;
+        if (enemy == null || enemy.IsPooled) return;
 
         enemy.SleepToPool();                            // 렌더러·콜라이더 끄기, All 제거
         enemy.transform.SetPositionAndRotation(ParkPos, Quaternion.identity);

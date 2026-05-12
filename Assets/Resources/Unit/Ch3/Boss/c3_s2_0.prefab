@@ -210,7 +210,6 @@ MonoBehaviour:
   grogyOverheadPrefab: {fileID: 0}
   grogyOverheadAnchor: {fileID: 0}
   grogyOverheadYOffset: 1.5
-  grogyMaterial: {fileID: 0}
   onDeathFX:
     vfxPrefab: {fileID: 0}
     spawnOffset: {x: 0, y: 0}
@@ -219,7 +218,8 @@ MonoBehaviour:
   chaseStopDistance: 1.8
   chaseDuration: 2.5
   idleDuration: 0.6
-  skills: []
+  skills:
+  - {fileID: 4693810845654686163}
   _decal: {fileID: 0}
   entryDrop: 1
   entryScaleUpDuration: 0.35

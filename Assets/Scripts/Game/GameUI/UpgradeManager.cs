@@ -163,6 +163,10 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
     {
         if (data == null) return;
 
+        // 이미 판매된 카드 재구매 방지
+        if (index >= 0 && index < isCardSold.Length && isCardSold[index]) return;
+        if (index == 3 && isAdCardSold) return;
+
         var inv = PlayerInventory.Shared;
         if (inv == null) return;
 

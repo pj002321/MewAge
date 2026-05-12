@@ -177,7 +177,7 @@ public class WeaponData : ScriptableObject
         data.baseCriticalDamage = 2f;            // 치명타 배율 고정 2배
         data.baseBleedDamage    = row.f_출혈;
         data.baseLifeSteal      = row.f_흡혈;
-        data.baseKnockbackPower = row.f_넉백;
+        data.baseKnockbackPower = (row.f_넉백 <= 0f && data.grade == WeaponGrade.Common) ? 2 : row.f_넉백;
 
         // 무기ID 기반으로 Resources에서 프리팹 로드 (예: Resources/Weapons/Ch1/ch1_n_00)
         string weaponId = row.f_무기ID;

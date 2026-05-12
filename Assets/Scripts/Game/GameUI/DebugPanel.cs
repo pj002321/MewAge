@@ -89,7 +89,7 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
             jumpButtons[i]?.onClick.AddListener(() => GameManager.Shared?.DebugJumpToWave(wave));
         }
 
-        weaponDropdown?.onValueChanged.AddListener(OnWeaponDropdownChanged);
+        // onValueChanged 리스너는 PopulateWeaponDropdown 내부에서 갱신 후 등록합니다.
     }
 
     protected override void OnDestroy()
@@ -215,6 +215,10 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
     {
         if (weaponDropdown == null) return;
         _debugWeaponList.Clear();
+
+        // ClearOptions() 내부에서 value=0 이 설정되면 onValueChanged 가 발화할 수 있으므로
+        // 갱신 중에는 리스너를 제거합니다.
+        weaponDropdown.onValueChanged.RemoveListener(OnWeaponDropdownChanged);
         weaponDropdown.ClearOptions();
 
         string chapterID = PlayerPrefs.GetString("SelectedChapterID", "C1_S1");
@@ -236,6 +240,7 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
         weaponDropdown.AddOptions(options);
         weaponDropdown.value = 0;
         weaponDropdown.RefreshShownValue();
+        weaponDropdown.onValueChanged.AddListener(OnWeaponDropdownChanged);
 
         if (weaponDropdown.template != null)
         {

@@ -239,8 +239,10 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    public void TakeDamage(float damage, bool isFromBoss = false, bool isFromElite = false)
+    public void TakeDamage(float damage, bool isFromBoss = false, bool isFromElite = false, string sourceName = null)
     {
+        this.DLog($"[피해] {damage:0.#}  ← {sourceName ?? "unknown"}");
+
         if (_debugInvincible) return;
         if (isInvincible)
             return;

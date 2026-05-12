@@ -90,7 +90,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 1049025713
   m_SortingLayer: 1
-  m_SortingOrder: 100
+  m_SortingOrder: 6
   m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: e9d5c02322930924c8f6238ff2e1e2fd, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -260,6 +260,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HitFlash
   flashDuration: 0.12
   flashMaterial: {fileID: 2100000, guid: f6d87d58797b8b9478efae2c2271cbe7, type: 2}
+  flashColor: {r: 1, g: 1, b: 1, a: 1}
   BaseColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!114 &8621657598592681965
 MonoBehaviour:
@@ -316,6 +317,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HitFlash
   flashDuration: 0.1
   flashMaterial: {fileID: 0}
+  flashColor: {r: 1, g: 1, b: 1, a: 1}
   BaseColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &3635078499002654668
 GameObject:

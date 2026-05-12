@@ -232,13 +232,12 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
         }
         else
         {
-            var enemy = EnemyPool.Shared != null
-                ? EnemyPool.Shared.Get(prefab, pos)
-                : Instantiate(prefab, pos, Quaternion.identity).GetComponent<EnemyController>();
+            var go    = Instantiate(prefab, pos, Quaternion.identity);
+            var enemy = go.GetComponent<EnemyController>();
 
             if (enemy != null)
             {
-                if (data != null) enemy.ApplyUnitData(data);      // 먼저 — InitForWave가 ActiveUnitData 필요
+                if (data != null) enemy.ApplyUnitData(data);
                 enemy.InitForWave(globalWave, designGlobalWave, wavesPerStage);
                 enemy.PlaySpawnBounce();
             }
@@ -339,18 +338,14 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
         // SpawnMarker 먼저 정리 — FadeAndSpawn 코루틴이 추가 스폰하지 못하도록
         SpawnMarker.CancelAll();
 
-        // 스냅샷 순회 — Return 내부에서 All 수정(AllRemoveSwapBack)이 일어나므로 복사본 사용
+        // 스냅샷 순회 — Destroy 중 All이 수정되므로 복사본 사용
         var snapshot = new System.Collections.Generic.List<EnemyController>(EnemyController.All);
         foreach (var enemy in snapshot)
         {
             if (enemy == null) continue;
-            enemy.StopAllCoroutines();
-            // 풀로 반환 — Destroy 대신 Return 사용으로 풀 큐 보존
-            if (EnemyPool.Shared != null)
-                EnemyPool.Shared.Return(enemy);
-            else
-                Destroy(enemy.gameObject);
+            Destroy(enemy.gameObject);
         }
+        EnemyController.All.Clear();
     }
 
     public void ResumeSpawning(int wave)
@@ -386,10 +381,8 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
         }
         else
         {
-            var enemy = EnemyPool.Shared != null
-                ? EnemyPool.Shared.Get(prefab, pos)
-                : Instantiate(prefab, pos, Quaternion.identity).GetComponent<EnemyController>();
-
+            var go    = Instantiate(prefab, pos, Quaternion.identity);
+            var enemy = go.GetComponent<EnemyController>();
             if (enemy != null)
                 enemy.InitForWave(globalWave, globalWave, wavesPerStage);
         }

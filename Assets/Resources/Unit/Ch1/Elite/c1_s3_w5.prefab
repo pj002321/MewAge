@@ -182,7 +182,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 1049025713
   m_SortingLayer: 1
-  m_SortingOrder: 5
+  m_SortingOrder: 6
   m_MaskInteraction: 0
   m_Sprite: {fileID: 2405278064453551489, guid: 46c9df881e072b14f8b045d730587529, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -315,6 +315,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HitFlash
   flashDuration: 0.12
   flashMaterial: {fileID: 2100000, guid: f6d87d58797b8b9478efae2c2271cbe7, type: 2}
+  flashColor: {r: 1, g: 1, b: 1, a: 1}
   BaseColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!70 &6321899902040148537
 CapsuleCollider2D:
@@ -410,6 +411,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HitFlash
   flashDuration: 0.1
   flashMaterial: {fileID: 0}
+  flashColor: {r: 1, g: 1, b: 1, a: 1}
   BaseColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1001 &8460030400336165565
 PrefabInstance:

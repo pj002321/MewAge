@@ -24,9 +24,22 @@ public class SceneLoadManager : MonoBehaviour
     [SerializeField] private float readyDelay      = 0.3f;
     [SerializeField] private float slideOutDuration = 0.4f;
 
+    private const float TransitionTimeout  = 10f;
+    private const float StageReadyTimeout  = 30f;
+
     public static bool IsWaitingForStage { get; private set; }
     public static bool IsTransitioning   { get; private set; }
     public static bool IsLoading => IsTransitioning;
+
+    // 에디터에서 Domain Reload가 꺼진 경우 정적 필드가 플레이 세션 간에 유지되어
+    // IsTransitioning이 true로 고착될 수 있으므로 매 플레이 시작 시 초기화합니다.
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStatics()
+    {
+        IsTransitioning   = false;
+        IsWaitingForStage = false;
+        instance          = null;
+    }
 
     public static void NotifyStageReady() => IsWaitingForStage = false;
 
@@ -51,9 +64,16 @@ public class SceneLoadManager : MonoBehaviour
 
     // ── 메인 루틴 ────────────────────────────────────────────────────
 
+    // LoadRoutineBody 실행 후 예외·조기 종료 여부와 관계없이 IsTransitioning을 해제합니다.
     private IEnumerator LoadRoutine()
     {
         IsTransitioning = true;
+        yield return StartCoroutine(LoadRoutineBody());
+        IsTransitioning = false;
+    }
+
+    private IEnumerator LoadRoutineBody()
+    {
         Time.timeScale = 1f;
 
         // ── 1. loading@scene 로드 ──────────────────────────────────
@@ -139,7 +159,17 @@ public class SceneLoadManager : MonoBehaviour
         if (targetSceneName == "stage@scene")
         {
             IsWaitingForStage = true;
-            while (IsWaitingForStage) yield return null;
+            float stageWait = 0f;
+            while (IsWaitingForStage && stageWait < StageReadyTimeout)
+            {
+                stageWait += Time.unscaledDeltaTime;
+                yield return null;
+            }
+            if (IsWaitingForStage)
+            {
+                Debug.LogWarning("[SceneLoadManager] NotifyStageReady 타임아웃 — 강제 진행");
+                IsWaitingForStage = false;
+            }
             yield return new WaitForSecondsRealtime(readyDelay);
         }
         else
@@ -148,6 +178,7 @@ public class SceneLoadManager : MonoBehaviour
         }
 
         // ── 5. closeTransition: 재생 → cut point에서 캔버스 파괴 ─
+        Time.timeScale = 1f; // 전환 중 외부에서 0으로 변경된 경우 대비
         yield return StartCoroutine(PlayTransition(
             loadingTM, transSettings,
             onCutPoint: () =>
@@ -172,8 +203,6 @@ public class SceneLoadManager : MonoBehaviour
         // ── 6. TransitionManager 제거 ──────────────────────────────
         if (loadingTM != null)
             Destroy(loadingTM.gameObject);
-
-        IsTransitioning = false;
     }
 
     // ── 헬퍼 ─────────────────────────────────────────────────────────
@@ -199,10 +228,23 @@ public class SceneLoadManager : MonoBehaviour
 
         tm.Transition(settings, 0f);
 
-        yield return new WaitUntil(() => ended || tm == null);
+        // WaitUntil 대신 unscaledDeltaTime 기반 타임아웃 사용:
+        // Time.timeScale=0 상태에서도 진행하며, onTransitionEnd 미발화 시 무한 대기를 방지합니다.
+        float elapsed = 0f;
+        while (!ended && tm != null && elapsed < TransitionTimeout)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            yield return null;
+        }
 
-        tm.onTransitionCutPointReached -= onCut;
-        tm.onTransitionEnd             -= onEnd;
+        if (!ended && elapsed >= TransitionTimeout)
+            Debug.LogWarning("[SceneLoadManager] PlayTransition 타임아웃 — 강제 종료");
+
+        if (tm != null)
+        {
+            tm.onTransitionCutPointReached -= onCut;
+            tm.onTransitionEnd             -= onEnd;
+        }
     }
 
     private IEnumerator FallbackSlideOut(Canvas canvas)

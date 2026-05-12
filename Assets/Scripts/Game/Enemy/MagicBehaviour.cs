@@ -123,7 +123,7 @@ public class MagicBehaviour : EnemyBehaviourBase
             Vector2.Distance(player.transform.position, targetPos) <= spikeHitRadius)
         {
             float dmg = spikeDamage > 0f ? spikeDamage : Owner.ContactDamage;
-            player.TakeDamage(dmg);
+            player.TakeDamage(dmg, sourceName: Owner.SelfTransform.name);
         }
 
         isCasting = false;

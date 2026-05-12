@@ -2,25 +2,25 @@ using System.Collections;
 using UnityEngine;
 
 /// <summary>
-/// 피격 시 SpriteSilhouette 머티리얼로 교체해 완전한 실루엣 플래시를 연출합니다.
-/// flashMaterial에 SpriteSilhouette 셰이더 머티리얼을 연결하고,
-/// flashColor로 실루엣 색상을 지정하세요 (흰색=일반 적, 빨간색=플레이어, 회색=그로기 등).
+/// 피격/상태이상 실루엣 플래시.
+/// · flashColor : 피격 플래시 색 (플레이어=빨강, 적=흰색) — Inspector에서 컴포넌트별 지정
+/// · 셰이더 색상은 _instanceMat._Color 로 제어합니다 (버텍스 컬러 아님).
+/// · EnterPersistentState(gray) : 그로기 진입. GrogyEntryHighlight가 UpdatePersistentColor()로 페이드.
+/// · ExitPersistentState()       : 그로기 종료 — 원본 머티리얼 복구.
 /// </summary>
 public class HitFlash : MonoBehaviour
 {
     [SerializeField] private float    flashDuration = 0.1f;
-    [Tooltip("SpriteSilhouette 셰이더 머티리얼 (공유 에셋 — 색상은 flashColor로 제어)")]
     [SerializeField] private Material flashMaterial;
-    [Tooltip("실루엣 색상. 흰색=적, 빨간색=플레이어, 회색=그로기")]
     [SerializeField] private Color    flashColor    = Color.white;
 
-    private SpriteRenderer[] srs;
-    private Material[]       _originalMats;
-    private Color[]          _originalColors;
-    private Material         _instanceMat;   // flashMaterial의 컴포넌트별 인스턴스 (색상 독립)
-    private Coroutine        _flashCoroutine;
-    private bool             _isFlashing;
-    private bool             _isPersistent;
+    private SpriteRenderer[] _srs;
+    private Material[]       _origMats;
+    private Color[]          _origColors;
+    private Material         _instanceMat;   // 컴포넌트별 독립 인스턴스 — _Color로 색상 제어
+    private Coroutine        _co;
+    private bool             _flashing;
+    private bool             _persistent;
     private Color            _persistentColor;
 
     [HideInInspector] public Color BaseColor = Color.white;
@@ -28,115 +28,140 @@ public class HitFlash : MonoBehaviour
     private void Awake()
     {
         RefreshRenderers();
-        BuildInstanceMat();
+        if (flashMaterial != null)
+        {
+            _instanceMat = new Material(flashMaterial);
+            _instanceMat.SetColor("_Color", flashColor);
+        }
     }
 
     public void RefreshRenderers()
     {
-        srs = GetComponentsInChildren<SpriteRenderer>(true);
-        if (srs.Length == 0) srs = GetComponentsInParent<SpriteRenderer>();
+        _srs = GetComponentsInChildren<SpriteRenderer>(true);
+        if (_srs.Length == 0) _srs = GetComponentsInParent<SpriteRenderer>();
     }
 
-    private void BuildInstanceMat()
-    {
-        if (flashMaterial == null) return;
-        if (_instanceMat != null) Destroy(_instanceMat);
-        _instanceMat = new Material(flashMaterial);
-        _instanceMat.SetColor("_Color", flashColor);
-    }
+    // ── 피격 플래시 ───────────────────────────────────────────────
 
     public void Flash()
     {
-        if (srs == null || srs.Length == 0) return;
-        if (_instanceMat == null)
-        {
-            this.DError("[HitFlash] flashMaterial이 할당되지 않았습니다.");
-            return;
-        }
-        if (_flashCoroutine != null) StopCoroutine(_flashCoroutine);
-        _flashCoroutine = StartCoroutine(FlashRoutine());
+        if (_srs == null || _srs.Length == 0 || _instanceMat == null) return;
+        if (_co != null) StopCoroutine(_co);
+        _co = StartCoroutine(FlashRoutine());
     }
 
-    /// <summary>실루엣 머티리얼을 지속 적용합니다 (예: 그로기 회색). Flash()는 이 상태에서도 정상 작동합니다.</summary>
-    public void EnterPersistentState(Color color)
+    public void StopFlash()
+    {
+        if (!_flashing) return;
+        if (_co != null) { StopCoroutine(_co); _co = null; }
+        if (_persistent) SetMatColor(_persistentColor);
+        else             Restore();
+        _flashing = false;
+    }
+
+    // ── 지속 상태 (그로기 = 회색) ─────────────────────────────────
+
+    /// <summary>
+    /// 실루엣 머티리얼을 지속 적용합니다.
+    /// 애니메이션은 GrogyEntryHighlight에서 UpdatePersistentColor()를 매 프레임 호출해 진행합니다.
+    /// </summary>
+    public void EnterPersistentState(Color persistentColor)
     {
         if (_instanceMat == null) return;
-        if (_flashCoroutine != null) { StopCoroutine(_flashCoroutine); _flashCoroutine = null; _isFlashing = false; }
-        if (!_isPersistent) Snapshot();
-        _isPersistent    = true;
+        // 플래시 중이었다면 원본 복구 후 스냅샷 (그래야 _instanceMat이 아닌 원본을 저장)
+        if (_co != null) { StopCoroutine(_co); _co = null; }
+        if (_isFlashing) { Restore(); _isFlashing = false; }
+        if (!_persistent) SaveOriginals();
+        _persistent      = true;
+        _persistentColor = persistentColor;
+        SetMatColor(Color.white);   // 애니메이션 시작점: 흰색 → GrogyEntryHighlight가 회색으로 페이드
+        ApplyMaterial();
+    }
+
+    // 플래시 여부 별도 프로퍼티 (StopFlash 내부 guard용)
+    private bool _isFlashing;
+
+    /// <summary>BossController.GrogyEntryHighlight에서 매 프레임 호출 — 실루엣 색상 페이드.</summary>
+    public void UpdatePersistentColor(Color color)
+    {
         _persistentColor = color;
-        foreach (var sr in srs)
-            if (sr != null) { sr.sharedMaterial = _instanceMat; sr.color = Color.white; }
+        if (_persistent && !_flashing) SetMatColor(color);
     }
 
     /// <summary>지속 상태를 해제하고 원본 머티리얼/색상을 복구합니다.</summary>
     public void ExitPersistentState()
     {
-        if (!_isPersistent) return;
-        if (_flashCoroutine != null) { StopCoroutine(_flashCoroutine); _flashCoroutine = null; _isFlashing = false; }
-        _isPersistent = false;
+        if (!_persistent) return;
+        if (_co != null) { StopCoroutine(_co); _co = null; _flashing = false; _isFlashing = false; }
+        _persistent = false;
+        SetMatColor(flashColor);    // 인스턴스 mat 색상을 원래 flashColor로 리셋
         Restore();
     }
 
-    /// <summary>진행 중인 플래시를 즉시 중단하고 원본 머티리얼/색상을 복구합니다.</summary>
-    public void StopFlash()
-    {
-        if (!_isFlashing) return;
-        if (_flashCoroutine != null) { StopCoroutine(_flashCoroutine); _flashCoroutine = null; }
-        if (_isPersistent)
-            foreach (var sr in srs) if (sr != null) sr.color = _persistentColor;
-        else
-            Restore();
-        _isFlashing = false;
-    }
+    // ── 내부 ─────────────────────────────────────────────────────
 
     private IEnumerator FlashRoutine()
     {
-        if (!_isPersistent && !_isFlashing) Snapshot();
-
+        if (!_persistent && !_flashing) SaveOriginals();
+        _flashing   = true;
         _isFlashing = true;
-        foreach (var sr in srs)
-            if (sr != null) { sr.sharedMaterial = _instanceMat; sr.color = Color.white; }
+        SetMatColor(flashColor);
+        ApplyMaterial();
 
         yield return new WaitForSecondsRealtime(flashDuration);
 
-        if (_isPersistent)
-            foreach (var sr in srs) if (sr != null) sr.color = _persistentColor;
-        else
-            Restore();
+        if (_persistent) SetMatColor(_persistentColor);
+        else             Restore();
+        _flashing   = false;
         _isFlashing = false;
-        _flashCoroutine = null;
+        _co = null;
     }
 
-    private void Snapshot()
+    private void SetMatColor(Color color)
     {
-        if (srs == null) return;
-        _originalMats   = new Material[srs.Length];
-        _originalColors = new Color[srs.Length];
-        for (int i = 0; i < srs.Length; i++)
+        if (_instanceMat != null) _instanceMat.SetColor("_Color", color);
+    }
+
+    private void ApplyMaterial()
+    {
+        foreach (var sr in _srs)
+            if (sr) sr.sharedMaterial = _instanceMat;
+    }
+
+    private void SaveOriginals()
+    {
+        _origMats   = new Material[_srs.Length];
+        _origColors = new Color[_srs.Length];
+        for (int i = 0; i < _srs.Length; i++)
         {
-            if (srs[i] == null) continue;
-            _originalMats[i]   = srs[i].sharedMaterial;  // 인스턴스 생성 없이 공유 머티리얼 참조
-            _originalColors[i] = srs[i].color;
+            if (!_srs[i]) continue;
+            _origMats[i]   = _srs[i].sharedMaterial;
+            _origColors[i] = _srs[i].color;
         }
     }
 
     private void Restore()
     {
-        if (srs == null || _originalMats == null) return;
-        for (int i = 0; i < srs.Length && i < _originalMats.Length; i++)
+        if (_origMats == null) return;
+        for (int i = 0; i < _srs.Length && i < _origMats.Length; i++)
         {
-            if (srs[i] == null) continue;
-            if (_originalMats[i] != null) srs[i].sharedMaterial = _originalMats[i];
-            if (_originalColors != null && i < _originalColors.Length)
-                srs[i].color = _originalColors[i];
+            if (!_srs[i] || _origMats[i] == null) continue;
+            _srs[i].sharedMaterial = _origMats[i];
+            _srs[i].color          = _origColors[i];
         }
     }
 
     private void OnDisable()
     {
-        if (_isPersistent || _isFlashing) { Restore(); _isFlashing = false; _isPersistent = false; }
         StopAllCoroutines();
+        _co = null;
+        if (_persistent || _flashing || _isFlashing)
+        {
+            Restore();
+            _flashing   = false;
+            _isFlashing = false;
+            _persistent = false;
+        }
     }
 
     private void OnDestroy()

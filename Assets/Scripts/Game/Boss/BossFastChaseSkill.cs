@@ -70,7 +70,7 @@ public class BossFastChaseSkill : BossSkillBase
         _pendingHit = false;
         if (Owner == null || Owner.PlayerTransform == null) return;
         if (Vector2.Distance(Owner.transform.position, Owner.PlayerTransform.position) <= stopDistance)
-            PlayerController.Instance?.TakeDamage(Boss.ContactDamage * _dmgMult);
+            PlayerController.Instance?.TakeDamage(Boss.ContactDamage * _dmgMult, sourceName: Owner.gameObject.name);
     }
 
     private IEnumerator AnimEventFallback()
@@ -80,7 +80,7 @@ public class BossFastChaseSkill : BossSkillBase
         _pendingHit = false;
         if (Owner == null || Owner.PlayerTransform == null) yield break;
         if (Vector2.Distance(Owner.transform.position, Owner.PlayerTransform.position) <= stopDistance)
-            PlayerController.Instance?.TakeDamage(Boss.ContactDamage * _dmgMult);
+            PlayerController.Instance?.TakeDamage(Boss.ContactDamage * _dmgMult, sourceName: Owner.gameObject.name);
     }
 
     private IEnumerator ShowVfx()

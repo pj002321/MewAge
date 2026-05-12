@@ -180,7 +180,7 @@ public class BossRollingProjectile : MonoBehaviour
         var player = other.GetComponentInParent<PlayerController>();
         if (player == null) return;
 
-        player.TakeDamage(_damage);
+        player.TakeDamage(_damage, sourceName: gameObject.name);
         Destroy(gameObject);
     }
 }

@@ -187,7 +187,7 @@ public class EnemyController : MonoBehaviour, IEnemyHost
         if (((Vector2)transform.position - (Vector2)playerTransform.position).sqrMagnitude > contactMaxDist * contactMaxDist) return;
         var player = PlayerController.Instance;
         if (player == null) return;
-        player.TakeDamage(contactDamage, isFromElite: _eliteMarker != null);
+        player.TakeDamage(contactDamage, isFromElite: _eliteMarker != null, sourceName: gameObject.name);
         damageTimer = damageCooldown;
     }
 
@@ -317,7 +317,6 @@ public class EnemyController : MonoBehaviour, IEnemyHost
         playerTransform = PlayerController.Instance?.transform;
         GetComponent<SlimeBobAnimation>()?.ResetOrigin();
         _shield?.ResetShield();
-        All.Add(this);
     }
 
     /// <summary>EnemyPool이 풀로 반환하기 전 호출 — 렌더러·콜라이더 비활성화 + All 제거.</summary>
@@ -325,6 +324,7 @@ public class EnemyController : MonoBehaviour, IEnemyHost
     {
         IsPooled = true;
         StopAllCoroutines();
+        DG.Tweening.DOTween.Kill(transform); // BounceIn DOTween이 다음 웨이브 재사용 시 충돌하지 않도록 즉시 제거
         enabled = false;
         if (rb != null) rb.linearVelocity = Vector2.zero;
 
@@ -393,7 +393,7 @@ public class EnemyController : MonoBehaviour, IEnemyHost
         if (other.gameObject != p.gameObject) return;
         
         if (((Vector2)transform.position - (Vector2)p.transform.position).sqrMagnitude > contactMaxDist * contactMaxDist) return;
-        p.TakeDamage(contactDamage);
+        p.TakeDamage(contactDamage, sourceName: gameObject.name);
         damageTimer = damageCooldown;
     }
 
@@ -405,7 +405,7 @@ public class EnemyController : MonoBehaviour, IEnemyHost
         // 플레이어 본체(PlayerController가 달린 오브젝트)가 아닌 자식의 투명 트리거(자석 등) 무시
         if (other.gameObject != p.gameObject) return;
         if (((Vector2)transform.position - (Vector2)p.transform.position).sqrMagnitude > contactMaxDist * contactMaxDist) return;
-        p.TakeDamage(contactDamage);
+        p.TakeDamage(contactDamage, sourceName: gameObject.name);
         damageTimer = damageCooldown;
     }
 
@@ -737,9 +737,7 @@ public class EnemyController : MonoBehaviour, IEnemyHost
             yield return null;
         }
 
-        // 풀이 있으면 반환, 없으면 파괴
-        if (EnemyPool.Shared != null) EnemyPool.Shared.Return(this);
-        else                          Destroy(gameObject);
+        Destroy(gameObject);
     }
 
     // ── 웨이브 스케일링 커브 ─────────────────────────────────────

@@ -14,8 +14,9 @@ public class ImprovPanel : MonoBehaviour
 
     [SerializeField] private float autoNextDelay = 0.4f; // 카드 선택 후 자동 진행 딜레이
 
-    [Header("스탯 패널 홀드 버튼 (누르는 동안 StatPanel 표시)")]
     [SerializeField] private Button statPanelHoldButton;
+
+    private bool _inputLocked;
 
     private void Awake()
     {
@@ -38,6 +39,7 @@ public class ImprovPanel : MonoBehaviour
 
     public void Setup(DB_증강[] improvs)
     {
+        _inputLocked = false;
         StatPanelUI.Shared?.ClearPreview();
 
         int visibleCount = 0;
@@ -57,6 +59,9 @@ public class ImprovPanel : MonoBehaviour
 
     private void OnCardClicked(ImprovCard card, DB_증강 data)
     {
+        if (_inputLocked) return;
+        _inputLocked = true;
+
         // 선택된 카드 외 나머지를 어둡게
         foreach (var c in cards)
         {

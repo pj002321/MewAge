@@ -101,6 +101,6 @@ public class TankBehaviour : EnemyBehaviourBase
         if (Owner == null || Owner.PlayerTransform == null) return;
         float dist = Vector2.Distance(transform.position, Owner.PlayerTransform.position);
         if (dist <= attackRange)
-            PlayerController.Instance?.TakeDamage(Owner.ContactDamage * damageMultiplier);
+            PlayerController.Instance?.TakeDamage(Owner.ContactDamage * damageMultiplier, sourceName: Owner.SelfTransform.name);
     }
 }

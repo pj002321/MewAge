@@ -28,7 +28,7 @@ public class BossFireTile : MonoBehaviour
         if (_timer > 0f) return;
         var p = other.GetComponentInParent<PlayerController>();
         if (p == null) return;
-        p.TakeDamage(_damage);
+        p.TakeDamage(_damage, sourceName: gameObject.name);
         _timer = _interval;
     }
 }

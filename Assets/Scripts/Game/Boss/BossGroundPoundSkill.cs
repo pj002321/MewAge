@@ -1,4 +1,5 @@
 using System.Collections;
+using DG.Tweening;
 using UnityEngine;
 
 /// <summary>
@@ -42,11 +43,37 @@ public class BossGroundPoundSkill : BossSkillBase
     [SerializeField] private float ghostInterval = 0.04f;
     [SerializeField] private float ghostLifetime = 0.12f;
 
-    private LineRenderer _warnLine;
+    // 현재 스킬 실행 중 원본 스케일 — OnInterrupted에서 복구
+    private Vector3             _origScale;
+    private LineRenderer        _warnLine;
+    private PlayerController    _activeFloatingPlayer;
+    private SlimeBobAnimation   _activeFloatingBob;
 
     private void OnDisable()
     {
         if (_warnLine != null) { Destroy(_warnLine.gameObject); _warnLine = null; }
+    }
+
+    public override void OnInterrupted()
+    {
+        base.OnInterrupted(); // StopAllCoroutines
+        // DOTween이 transform 스케일을 건드리고 있을 수 있으므로 즉시 Kill
+        if (Owner != null)
+        {
+            DOTween.Kill(Owner.transform, complete: false);
+            Owner.transform.localScale = _origScale;
+        }
+        RestoreFloatingPlayer();
+        CleanupWarnLine();
+    }
+
+    private void RestoreFloatingPlayer()
+    {
+        if (_activeFloatingPlayer == null) return;
+        _activeFloatingPlayer.InputLocked = false;
+        if (_activeFloatingBob != null) { _activeFloatingBob.ResetOrigin(); _activeFloatingBob.enabled = true; }
+        _activeFloatingPlayer = null;
+        _activeFloatingBob    = null;
     }
 
     protected override IEnumerator OnExecute()
@@ -56,39 +83,42 @@ public class BossGroundPoundSkill : BossSkillBase
 
         float speed = chargeSpeed * (Boss != null && Boss.IsEnraged ? Boss.EnrageSpeedMult : 1f);
 
+        // 스케일 기준값 저장 — OnInterrupted에서 복구
+        _origScale = Owner.transform.localScale;
+
         // ── 1. 보스 소점프 ──────────────────────────────────────
-        Vector3 origScale  = Owner.transform.localScale;
-        Vector3 startPos   = Owner.transform.position;
-        Vector3 apexPos    = startPos + Vector3.up * hopHeight;
+        Vector2 startPos = Owner.Rb != null ? Owner.Rb.position : (Vector2)Owner.transform.position;
+        Vector2 apexPos  = startPos + Vector2.up * hopHeight;
 
         // 찌부 예비동작
-        yield return StartCoroutine(Squish(origScale, 0.14f, 1.3f, 0.55f));
+        yield return StartCoroutine(Squish(_origScale, 0.14f, 1.3f, 0.55f));
 
-        // 상승
+        // 상승 (Rigidbody 기반, FixedUpdate 타이밍)
         yield return StartCoroutine(LerpPos(startPos, apexPos, hopRiseTime,
-            origScale, stretchX: 0.75f, stretchY: 1.35f));
+            _origScale, stretchX: 0.75f, stretchY: 1.35f));
 
-        // 하강 (빠르게)
+        // 하강
         yield return StartCoroutine(LerpPos(apexPos, startPos, hopFallTime,
-            origScale, stretchX: 1.35f, stretchY: 0.6f));
+            _origScale, stretchX: 1.35f, stretchY: 0.6f));
 
+        // 착지 확정: Rigidbody 위치와 transform 위치 동기화
+        if (Owner.Rb != null) Owner.Rb.position = startPos;
         Owner.transform.position   = startPos;
-        Owner.transform.localScale = origScale;
+        Owner.transform.localScale = _origScale;
 
         // ── 2. 착지 충격 ───────────────────────────────────────
-        yield return StartCoroutine(Squish(origScale, 0.07f, 1.5f, 0.4f));
+        yield return StartCoroutine(Squish(_origScale, 0.07f, 1.5f, 0.4f));
 
         CameraFollow.Shared?.Shake(shakeDuration, shakeMagnitude);
-
         Owner.EnemyAnimator?.SetTrigger(EnemyAnim.TAttack);
 
         if (landingVfxPrefab != null)
         {
-            Vector3 vfxPos = Owner.Decal != null ? Owner.Decal.position : startPos;
+            Vector3 vfxPos = Owner.Decal != null ? Owner.Decal.position : (Vector3)startPos;
             Destroy(Instantiate(landingVfxPrefab, vfxPos, Quaternion.identity), vfxLifetime);
         }
 
-        // ── 3. 플레이어 부유 (완전히 끝날 때까지 대기) ────────────
+        // ── 3. 플레이어 부유 ────────────────────────────────────
         var player = PlayerController.Instance;
         yield return StartCoroutine(FloatPlayer(player));
 
@@ -96,7 +126,7 @@ public class BossGroundPoundSkill : BossSkillBase
         if (preChargeDelay > 0f)
             yield return new WaitForSeconds(preChargeDelay);
 
-        // 돌진 방향 계산 (경고 라인과 실제 돌진 공유)
+        // 돌진 방향 계산
         Vector2 chargeOrigin = Owner.Rb != null ? Owner.Rb.position : (Vector2)Owner.transform.position;
         Vector2 chargeDir    = player != null
             ? ((Vector2)player.transform.position - chargeOrigin).normalized
@@ -108,12 +138,12 @@ public class BossGroundPoundSkill : BossSkillBase
         if (Owner == null) yield break;
 
         // ── 6. 보스 돌진 ───────────────────────────────────────
-        yield return StartCoroutine(ChargeAtPlayer(player, speed, chargeDir));
+        yield return StartCoroutine(ChargeAtPlayer(speed, chargeDir));
     }
 
     // ── 보스 돌진 ──────────────────────────────────────────────────
 
-    private IEnumerator ChargeAtPlayer(PlayerController player, float speed, Vector2 dir)
+    private IEnumerator ChargeAtPlayer(float speed, Vector2 dir)
     {
         Owner.FlipToward(dir);
         Owner.EnemyAnimator?.SetTrigger(EnemyAnim.TCharge);
@@ -136,9 +166,23 @@ public class BossGroundPoundSkill : BossSkillBase
             var mb = MovementBounds.Shared;
             if (mb != null && !mb.IsInside(next))
             {
-                Vector2 clamped = mb.ClosestPointOnBoundary(next);
-                Owner.Rb.MovePosition(clamped);
+                Owner.Rb.MovePosition(mb.ClosestPointOnBoundary(next));
                 yield break;
+            }
+
+            // SpawnZone AABB 폴백 (보스 전용 배경처럼 MovementBounds가 없는 경우)
+            if (mb == null && SpawnZone.Shared != null)
+            {
+                Vector2 c = SpawnZone.Shared.BoundsCenter;
+                Vector2 s = SpawnZone.Shared.BoundsSize * 0.5f;
+                if (next.x < c.x - s.x || next.x > c.x + s.x ||
+                    next.y < c.y - s.y || next.y > c.y + s.y)
+                {
+                    next.x = Mathf.Clamp(next.x, c.x - s.x, c.x + s.x);
+                    next.y = Mathf.Clamp(next.y, c.y - s.y, c.y + s.y);
+                    Owner.Rb.MovePosition(next);
+                    yield break;
+                }
             }
 
             pos = next;
@@ -195,7 +239,6 @@ public class BossGroundPoundSkill : BossSkillBase
         if (!WarningLineSettings.Enabled) return null;
         var go = new GameObject("WarnLine");
         go.transform.position = new Vector3(start.x, start.y, 0f);
-        go.transform.rotation = Quaternion.Euler(60f, 0f, 0f);
         var lr = go.AddComponent<LineRenderer>();
         lr.useWorldSpace     = false;
         lr.positionCount     = 2;
@@ -239,28 +282,29 @@ public class BossGroundPoundSkill : BossSkillBase
 
         var playerRb  = player.GetComponent<Rigidbody2D>();
         var bob       = player.GetComponentInChildren<SlimeBobAnimation>();
+        _activeFloatingPlayer = player;
+        _activeFloatingBob    = bob;
         player.InputLocked = true;
         if (bob != null) bob.enabled = false;
 
         Vector2 originWorld = playerRb != null ? playerRb.position : (Vector2)player.transform.position;
 
-        // 비주얼 스케일 고정 (bob 비활성 전 이미 변형된 경우 대비)
-        var visualSlot = player.VisualSlot;
+        var visualSlot  = player.VisualSlot;
         Vector3 lockedScale = visualSlot != null ? visualSlot.localScale : Vector3.one;
 
         try
         {
-            // 상승 (ease-out)
+            // 상승 (ease-out) — FixedUpdate 타이밍으로 물리 이동
             float t = 0f;
             while (t < floatRiseTime)
             {
-                t += Time.deltaTime;
+                t += Time.fixedDeltaTime;
                 float pct  = Mathf.Clamp01(t / floatRiseTime);
                 float ease = 1f - (1f - pct) * (1f - pct);
                 Vector2 target = originWorld + Vector2.up * (floatHeight * ease);
                 if (playerRb != null) playerRb.MovePosition(target);
                 else player.transform.position = target;
-                yield return null;
+                yield return new WaitForFixedUpdate();
             }
 
             Vector2 apex = originWorld + Vector2.up * floatHeight;
@@ -270,17 +314,17 @@ public class BossGroundPoundSkill : BossSkillBase
             // 체공
             yield return new WaitForSeconds(floatHangTime);
 
-            // 하강 (ease-in)
+            // 하강 (ease-in) — FixedUpdate 타이밍
             t = 0f;
             while (t < floatFallTime)
             {
-                t += Time.deltaTime;
+                t += Time.fixedDeltaTime;
                 float pct  = Mathf.Clamp01(t / floatFallTime);
                 float ease = pct * pct;
                 Vector2 target = originWorld + Vector2.up * (floatHeight * (1f - ease));
                 if (playerRb != null) playerRb.MovePosition(target);
                 else player.transform.position = target;
-                yield return null;
+                yield return new WaitForFixedUpdate();
             }
         }
         finally
@@ -289,13 +333,14 @@ public class BossGroundPoundSkill : BossSkillBase
             else if (player != null) player.transform.position = originWorld;
             if (visualSlot != null) visualSlot.localScale = lockedScale;
             if (bob != null) { bob.ResetOrigin(); bob.enabled = true; }
-            player.InputLocked = false;
+            if (player != null) player.InputLocked = false;
+            _activeFloatingPlayer = null;
+            _activeFloatingBob    = null;
         }
     }
 
     // ── 보조 스쿼시/스트레치 헬퍼 ───────────────────────────────────
 
-    /// <summary>찌부(squishX > 1, squishY < 1) 후 원래 스케일로 복귀.</summary>
     private IEnumerator Squish(Vector3 orig, float dur, float squishX, float squishY)
     {
         Vector3 squished = new(orig.x * squishX, orig.y * squishY, orig.z);
@@ -318,19 +363,27 @@ public class BossGroundPoundSkill : BossSkillBase
         Owner.transform.localScale = orig;
     }
 
-    /// <summary>위치 보간 + 스트레치 연출.</summary>
-    private IEnumerator LerpPos(Vector3 from, Vector3 to, float dur,
+    /// <summary>
+    /// Rigidbody 기반 위치 보간 + 스트레치 연출.
+    /// WaitForFixedUpdate 타이밍을 사용해 Rigidbody 위치와 transform 위치 불일치를 방지합니다.
+    /// </summary>
+    private IEnumerator LerpPos(Vector2 from, Vector2 to, float dur,
         Vector3 origScale, float stretchX, float stretchY)
     {
         Vector3 stretchedScale = new(origScale.x * stretchX, origScale.y * stretchY, origScale.z);
         float t = 0f;
         while (t < dur)
         {
-            t += Time.deltaTime;
-            float pct = Mathf.Clamp01(t / dur);
-            Owner.transform.position   = Vector3.Lerp(from, to, pct);
+            t += Time.fixedDeltaTime;
+            float pct  = Mathf.Clamp01(t / dur);
+            Vector2 pos = Vector2.Lerp(from, to, pct);
+            if (Owner.Rb != null) Owner.Rb.MovePosition(pos);
+            else Owner.transform.position = pos;
             Owner.transform.localScale = Vector3.Lerp(origScale, stretchedScale, pct);
-            yield return null;
+            yield return new WaitForFixedUpdate();
         }
+        // 끝에서 위치 확정 (스케일은 OnExecute에서 origScale로 복구)
+        if (Owner.Rb != null) Owner.Rb.MovePosition(to);
+        else Owner.transform.position = to;
     }
 }

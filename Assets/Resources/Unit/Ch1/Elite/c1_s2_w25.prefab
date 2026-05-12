@@ -212,7 +212,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 1049025713
   m_SortingLayer: 1
-  m_SortingOrder: 5
+  m_SortingOrder: 6
   m_MaskInteraction: 0
   m_Sprite: {fileID: 4837718628325969937, guid: 6ac9a7ca933529549951e77e7bcac8f2, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -380,6 +380,7 @@ MonoBehaviour:
   warningColor: {r: 1, g: 0, b: 0, a: 1}
   warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
   warningLineOrigin: {fileID: 1445574207204750692}
+  showWarningLine: 1
 --- !u!114 &-7921563463421818115
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -419,4 +420,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HitFlash
   flashDuration: 0.1
   flashMaterial: {fileID: 2100000, guid: f6d87d58797b8b9478efae2c2271cbe7, type: 2}
+  flashColor: {r: 1, g: 1, b: 1, a: 1}
   BaseColor: {r: 1, g: 1, b: 1, a: 1}

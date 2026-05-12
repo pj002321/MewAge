@@ -435,7 +435,7 @@ public class Projectile : MonoBehaviour
         }
         else if (player != null)
         {
-            player.TakeDamage(primaryDmg);
+            player.TakeDamage(primaryDmg, sourceName: gameObject.name);
         }
         else
         {

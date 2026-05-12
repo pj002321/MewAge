@@ -1,5 +1,6 @@
-using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 /// <summary>
@@ -60,54 +61,55 @@ public class BossGridSpikeSkill : BossSkillBase
 
     // ── BossSkillBase ────────────────────────────────────────────
 
-    protected override IEnumerator OnExecute()
+    protected override async UniTask OnExecuteAsync(CancellationToken ct)
     {
-        if (IsInvalid()) { this.DLog("[GridSpike] Owner null — skip"); yield break; }
+        if (IsInvalid()) { this.DLog("[GridSpike] Owner null — skip"); return; }
 
         GetMapBounds(out Vector2 bMin, out Vector2 bMax);
         Vector2 mapSize  = bMax - bMin;
         Vector2 cellSize = new Vector2(mapSize.x / cols, mapSize.y / rows);
-        // 셀 중심 원점: 맵 좌하단 + 셀 반칸
         Vector2 origin   = bMin + cellSize * 0.5f;
 
         List<Vector2Int> cells = SelectCells();
 
+        // 경고→낙하 체인을 this 컴포넌트의 수명에만 묶고 패턴 루프 취소(그로기)와는 독립시킵니다.
+        var destroyCt = this.GetCancellationTokenOnDestroy();
+
         if (fillMode == FillMode.WaveRow || fillMode == FillMode.WaveCol)
-            yield return WaveDrop(cells, origin, cellSize);
+            WaveDropAsync(cells, origin, cellSize, destroyCt).Forget();
         else
-            yield return SimultaneousDrop(cells, origin, cellSize);
+            SimultaneousDropAsync(cells, origin, cellSize, destroyCt).Forget();
+
+        // 패턴 루프 측은 경고 + 낙하 시간만큼 대기 후 다음 사이클로 넘어갑니다.
+        // 그로기로 ct가 취소돼도 drop은 독립 실행 중이므로 스파이크는 정상 낙하합니다.
+        await UniTask.Delay(System.TimeSpan.FromSeconds(warningDuration + dropDuration), cancellationToken: ct)
+                     .SuppressCancellationThrow();
     }
 
     // ── 동시 낙하 ────────────────────────────────────────────────
 
-    private IEnumerator SimultaneousDrop(List<Vector2Int> cells, Vector2 origin, Vector2 cellSize)
+    private async UniTaskVoid SimultaneousDropAsync(List<Vector2Int> cells, Vector2 origin, Vector2 cellSize, CancellationToken ct)
     {
         var markers = SpawnMarkers(cells, origin, cellSize);
-
-        yield return WarnAnimation(markers);
+        await WarnAnimationAsync(markers, ct);
         CleanupAll(markers);
-        if (IsInvalid()) yield break;
+        if (IsInvalid() || ct.IsCancellationRequested) return;
 
         foreach (var cell in cells)
-            SpawnSpike(CellToWorld(cell, origin, cellSize));
+            SpikeFallAsync(CellToWorld(cell, origin, cellSize), ct).Forget();
     }
 
     // ── 순차 낙하 (행/열) ────────────────────────────────────────
 
-    private IEnumerator WaveDrop(List<Vector2Int> cells, Vector2 origin, Vector2 cellSize)
+    private async UniTaskVoid WaveDropAsync(List<Vector2Int> cells, Vector2 origin, Vector2 cellSize, CancellationToken ct)
     {
         bool byRow = fillMode == FillMode.WaveRow;
 
-        // 행/열 별 그룹화
         var groups = new Dictionary<int, List<Vector2Int>>();
         foreach (var cell in cells)
         {
             int key = byRow ? cell.y : cell.x;
-            if (!groups.TryGetValue(key, out var list))
-            {
-                list = new List<Vector2Int>();
-                groups[key] = list;
-            }
+            if (!groups.TryGetValue(key, out var list)) { list = new List<Vector2Int>(); groups[key] = list; }
             list.Add(cell);
         }
 
@@ -116,33 +118,105 @@ public class BossGridSpikeSkill : BossSkillBase
 
         foreach (int key in keys)
         {
-            if (IsInvalid()) yield break;
+            if (IsInvalid() || ct.IsCancellationRequested) return;
 
             var group   = groups[key];
             var markers = SpawnMarkers(group, origin, cellSize);
 
-            yield return WarnAnimation(markers);
+            await WarnAnimationAsync(markers, ct);
             CleanupAll(markers);
-            if (IsInvalid()) yield break;
+            if (IsInvalid() || ct.IsCancellationRequested) return;
 
             foreach (var cell in group)
-                SpawnSpike(CellToWorld(cell, origin, cellSize));
+                SpikeFallAsync(CellToWorld(cell, origin, cellSize), ct).Forget();
 
             if (waveDelay > 0f)
-                yield return new WaitForSeconds(waveDelay);
+                await UniTask.Delay(System.TimeSpan.FromSeconds(waveDelay), cancellationToken: ct)
+                             .SuppressCancellationThrow();
         }
     }
 
     // ── 경고 애니메이션 ──────────────────────────────────────────
 
-    private IEnumerator WarnAnimation(GameObject[] markers)
+    private async UniTask WarnAnimationAsync(GameObject[] markers, CancellationToken ct)
     {
         float elapsed = 0f;
         while (elapsed < warningDuration)
         {
-            if (IsInvalid()) { CleanupAll(markers); yield break; }
+            if (IsInvalid()) return;
             elapsed += Time.deltaTime;
-            yield return null;
+            bool cancelled = await UniTask.Yield(ct).SuppressCancellationThrow();
+            if (cancelled) return;
+        }
+    }
+
+    // ── 스파이크 낙하 ────────────────────────────────────────────
+
+    private async UniTaskVoid SpikeFallAsync(Vector2 targetPos, CancellationToken ct)
+    {
+        float dmg = spikeDamage > 0f ? spikeDamage : (Owner != null ? Owner.ContactDamage : 0f);
+
+        Vector2    startPos = targetPos + Vector2.up * dropHeight;
+        GameObject spikeGo  = null;
+
+        if (spikePrefab != null)
+            spikeGo = Instantiate(spikePrefab, new Vector3(startPos.x, startPos.y, 0f), Quaternion.identity);
+
+        // 낙하 (ease-in quad)
+        float elapsed = 0f;
+        while (elapsed < dropDuration)
+        {
+            elapsed += Time.deltaTime;
+            float t     = Mathf.Clamp01(elapsed / dropDuration);
+            float eased = t * t;
+            Vector2 cur = Vector2.LerpUnclamped(startPos, targetPos, eased);
+            if (spikeGo != null)
+                spikeGo.transform.position = new Vector3(cur.x, cur.y, 0f);
+
+            bool cancelled = await UniTask.Yield(ct).SuppressCancellationThrow();
+            if (cancelled) { if (spikeGo != null) Destroy(spikeGo); return; }
+        }
+
+        if (spikeGo != null)
+            spikeGo.transform.position = new Vector3(targetPos.x, targetPos.y, 0f);
+
+        // 착지 VFX
+        if (spawnVfxPrefab != null)
+        {
+            float vfxY = targetPos.y;
+            if (spikeGo != null)
+            {
+                var col = spikeGo.GetComponent<Collider2D>() ?? spikeGo.GetComponentInChildren<Collider2D>();
+                if (col != null) vfxY = col.bounds.min.y;
+            }
+            var vfx = Instantiate(spawnVfxPrefab, new Vector3(targetPos.x, vfxY, 0f), Quaternion.identity);
+            if (spawnVfxDuration > 0f) Destroy(vfx, spawnVfxDuration);
+        }
+
+        if (spikeGo != null) Destroy(spikeGo, spikeDuration);
+
+        await SpikeHitAsync(targetPos, dmg, ct);
+    }
+
+    private async UniTask SpikeHitAsync(Vector2 pos, float dmg, CancellationToken ct)
+    {
+        float elapsed     = 0f;
+        float hitCooldown = 0f;
+        while (elapsed < spikeDuration)
+        {
+            elapsed     += Time.deltaTime;
+            hitCooldown -= Time.deltaTime;
+
+            var player = PlayerController.Instance;
+            if (hitCooldown <= 0f && player != null &&
+                Vector2.Distance(pos, player.transform.position) < spikeRadius)
+            {
+                player.TakeDamage(dmg, sourceName: Owner.gameObject.name);
+                hitCooldown = 0.5f;
+            }
+
+            bool cancelled = await UniTask.Yield(ct).SuppressCancellationThrow();
+            if (cancelled) return;
         }
     }
 
@@ -226,84 +300,7 @@ public class BossGridSpikeSkill : BossSkillBase
             sr.color        = warningColor;
             sr.sortingOrder = 5;
         }
-
         return go;
-    }
-
-    // ── 스파이크 낙하 ────────────────────────────────────────────
-
-    private void SpawnSpike(Vector2 targetPos)
-    {
-        if (spikePrefab == null)
-        {
-            this.DLog("[GridSpike] spikePrefab이 Inspector에 할당되지 않았습니다 — 데미지 판정만 실행됩니다.");
-        }
-        StartCoroutine(SpikeFallRoutine(targetPos));
-    }
-
-    private IEnumerator SpikeFallRoutine(Vector2 targetPos)
-    {
-        float dmg = spikeDamage > 0f ? spikeDamage : (Owner != null ? Owner.ContactDamage : 0f);
-
-        Vector2 startPos  = targetPos + Vector2.up * dropHeight;
-        GameObject spikeGo = null;
-
-        if (spikePrefab != null)
-            spikeGo = Instantiate(spikePrefab, new Vector3(startPos.x, startPos.y, 0f), Quaternion.identity);
-
-        // 낙하 (ease-in quad: 중력가속 느낌)
-        float elapsed = 0f;
-        while (elapsed < dropDuration)
-        {
-            elapsed += Time.deltaTime;
-            float t     = Mathf.Clamp01(elapsed / dropDuration);
-            float eased = t * t;
-            Vector2 cur = Vector2.LerpUnclamped(startPos, targetPos, eased);
-            if (spikeGo != null)
-                spikeGo.transform.position = new Vector3(cur.x, cur.y, 0f);
-            yield return null;
-        }
-
-        if (spikeGo != null)
-            spikeGo.transform.position = new Vector3(targetPos.x, targetPos.y, 0f);
-
-        // 착지 VFX: 스파이크 Collider2D bounds.min.y 에 스폰
-        if (spawnVfxPrefab != null)
-        {
-            float vfxY = targetPos.y;
-            if (spikeGo != null)
-            {
-                var col = spikeGo.GetComponent<Collider2D>();
-                if (col == null) col = spikeGo.GetComponentInChildren<Collider2D>();
-                if (col != null) vfxY = col.bounds.min.y;
-            }
-            var vfx = Instantiate(spawnVfxPrefab, new Vector3(targetPos.x, vfxY, 0f), Quaternion.identity);
-            if (spawnVfxDuration > 0f) Destroy(vfx, spawnVfxDuration);
-        }
-
-        if (spikeGo != null) Destroy(spikeGo, spikeDuration);
-        StartCoroutine(SpikeHitRoutine(targetPos, dmg));
-    }
-
-    private IEnumerator SpikeHitRoutine(Vector2 pos, float dmg)
-    {
-        float elapsed  = 0f;
-        float cooldown = 0f;
-        while (elapsed < spikeDuration)
-        {
-            elapsed  += Time.deltaTime;
-            cooldown -= Time.deltaTime;
-
-            var player = PlayerController.Instance;
-            if (cooldown <= 0f && player != null &&
-                Vector2.Distance(pos, player.transform.position) < spikeRadius)
-            {
-                player.TakeDamage(dmg);
-                cooldown = 0.5f; // 0.5초마다 최대 1회 데미지
-            }
-
-            yield return null;
-        }
     }
 
     // ── 유틸 ─────────────────────────────────────────────────────
@@ -329,11 +326,7 @@ public class BossGridSpikeSkill : BossSkillBase
     private static void GetMapBounds(out Vector2 min, out Vector2 max)
     {
         var mb = MovementBounds.Shared;
-        if (mb != null)
-        {
-            mb.GetPlayerBoundsMinMax(out min, out max);
-            return;
-        }
+        if (mb != null) { mb.GetPlayerBoundsMinMax(out min, out max); return; }
 
         var spawner = EnemySpawner.Shared;
         if (spawner != null)
@@ -370,7 +363,6 @@ public class BossGridSpikeSkill : BossSkillBase
         _whiteSprite = Sprite.Create(tex, new Rect(0, 0, 4, 4), new Vector2(0.5f, 0.5f), 4f);
         return _whiteSprite;
     }
-    // alertColor 제거됨 — 경고 마커 색상 변화 없음
 
     private bool IsInvalid() => Owner == null;
 
@@ -392,7 +384,6 @@ public class BossGridSpikeSkill : BossSkillBase
                             new Vector3(cellSize.x * 0.85f, cellSize.y * 0.85f, 0.01f));
         }
 
-        // 그리드 외곽선
         Gizmos.color = new Color(1f, 1f, 0f, 0.4f);
         for (int x = 0; x <= cols; x++)
         {

@@ -8,6 +8,11 @@ using UnityEngine;
 /// </summary>
 public class MortarShell : MonoBehaviour
 {
+    public static readonly System.Collections.Generic.List<MortarShell> All = new();
+
+    private void OnEnable()  => All.Add(this);
+    private void OnDisable() => All.Remove(this);
+
     [SerializeField] private float arcHeight = 3f;
 
     private float   damage;
@@ -62,7 +67,7 @@ public class MortarShell : MonoBehaviour
         var player = other.GetComponentInParent<PlayerController>();
         if (player == null) return;
         hasHit = true;
-        player.TakeDamage(damage);
+        player.TakeDamage(damage, sourceName: gameObject.name);
         Destroy(gameObject);
     }
 
@@ -73,7 +78,7 @@ public class MortarShell : MonoBehaviour
         if (dist <= hitRadius)
         {
             hasHit = true;
-            PlayerController.Instance.TakeDamage(damage);
+            PlayerController.Instance.TakeDamage(damage, sourceName: gameObject.name);
         }
     }
 }

@@ -38,8 +38,8 @@ public static class SynergyConditionChecker
         if (active.All(w => w.grade == WeaponGrade.Mythic))
             achieved.Add("SYN_ALL_MYTH_REVIVE");
 
-        // SYN_RARE4_LOWGRADE_UP: 희귀 등급 이상 4개 이상 장착
-        if (active.Count(w => w.grade >= WeaponGrade.Rare) >= 4)
+        // SYN_RARE4_LOWGRADE_UP: 희귀(Epic) 등급 이상 4개 이상 장착
+        if (active.Count(w => w.grade >= WeaponGrade.Epic) >= 4)
             achieved.Add("SYN_RARE4_LOWGRADE_UP");
 
         // ── 타입 기반 ────────────────────────────────────────────────

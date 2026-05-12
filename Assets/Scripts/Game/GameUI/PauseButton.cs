@@ -40,6 +40,9 @@ public class PauseButton : MonoBehaviour
     public void Retreat()
     {
         Time.timeScale = 1f;
-        SceneLoadManager.LoadScene("home@scene");
+        if (GameManager.Shared != null)
+            GameManager.Shared.GoHome();
+        else
+            SceneLoadManager.LoadScene("home@scene");
     }
 }

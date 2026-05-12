@@ -82,6 +82,7 @@ GameObject:
   - component: {fileID: 4751249032348286303}
   - component: {fileID: -54616506668535500}
   - component: {fileID: -7036604553645386291}
+  - component: {fileID: -7406436143827032111}
   m_Layer: 7
   m_Name: c2_s3_2
   m_TagString: Untagged
@@ -154,7 +155,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 1049025713
   m_SortingLayer: 1
-  m_SortingOrder: 5
+  m_SortingOrder: 7
   m_MaskInteraction: 0
   m_Sprite: {fileID: -7107599029960354954, guid: 0b60ff11a8b46d34396982f29ac82f67, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -259,8 +260,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8dbca1b53536a2b47a8964120af00539, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HitFlash
-  flashDuration: 0.12
+  flashDuration: 0.05
   flashMaterial: {fileID: 2100000, guid: f6d87d58797b8b9478efae2c2271cbe7, type: 2}
+  flashColor: {r: 1, g: 1, b: 1, a: 1}
   BaseColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!114 &6012793344544136166
 MonoBehaviour:
@@ -287,7 +289,6 @@ MonoBehaviour:
   grogyOverheadPrefab: {fileID: 7777409954982400410, guid: f66d4f4f0fe9de24182839d83a609535, type: 3}
   grogyOverheadAnchor: {fileID: 9175215281644974734}
   grogyOverheadYOffset: 1.5
-  grogyMaterial: {fileID: 2100000, guid: 65ccb7b6cbefce14eb6f884cfc33ba91, type: 2}
   onDeathFX:
     vfxPrefab: {fileID: 0}
     spawnOffset: {x: 0, y: 0}
@@ -486,7 +487,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HitFlash
   flashDuration: 0.1
   flashMaterial: {fileID: 0}
+  flashColor: {r: 1, g: 1, b: 1, a: 1}
   BaseColor: {r: 1, g: 1, b: 1, a: 1}
+--- !u!114 &-7406436143827032111
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4510239993999273466}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 25cc23087012616429ecb7c10c6cb557, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpriteYSort
+  multiplier: 100
 --- !u!1 &5233518724168949262
 GameObject:
   m_ObjectHideFlags: 0

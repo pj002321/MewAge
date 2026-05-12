@@ -155,7 +155,7 @@ public class SlamBehaviour : EnemyBehaviourBase
         var player = PlayerController.Instance;
         if (player != null &&
             Vector2.Distance(Owner.SelfTransform.position, player.transform.position) <= slamRadius)
-            player.TakeDamage(slamDamage);
+            player.TakeDamage(slamDamage, sourceName: Owner.SelfTransform.name);
 
         yield return _waitAfterLand;
         isSlamming = false;

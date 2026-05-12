@@ -18,7 +18,6 @@ GameObject:
   - component: {fileID: 5821915655939214708}
   - component: {fileID: 6776094281009757095}
   - component: {fileID: 1037645356348669543}
-  - component: {fileID: -4450484315999154288}
   m_Layer: 7
   m_Name: c3_s1_1
   m_TagString: Untagged
@@ -88,9 +87,9 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 100
+  m_SortingLayerID: 1049025713
+  m_SortingLayer: 1
+  m_SortingOrder: 7
   m_MaskInteraction: 0
   m_Sprite: {fileID: 6899806166967514638, guid: 0a10580d681048743a4d8032533da4d7, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -112,7 +111,7 @@ Animator:
   m_GameObject: {fileID: 4510239993999273466}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 22100000, guid: 142bad391fcec1848a5d61d3625524cc, type: 2}
+  m_Controller: {fileID: 22100000, guid: 2941a9783c23e5043ab7fe466ac332fb, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -195,7 +194,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8dbca1b53536a2b47a8964120af00539, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HitFlash
-  flashDuration: 0.12
+  flashDuration: 0.05
   flashMaterial: {fileID: 2100000, guid: f6d87d58797b8b9478efae2c2271cbe7, type: 2}
   flashColor: {r: 1, g: 1, b: 1, a: 1}
   BaseColor: {r: 1, g: 1, b: 1, a: 1}
@@ -224,7 +223,6 @@ MonoBehaviour:
   grogyOverheadPrefab: {fileID: 0}
   grogyOverheadAnchor: {fileID: 0}
   grogyOverheadYOffset: 1.5
-  grogyMaterial: {fileID: 0}
   onDeathFX:
     vfxPrefab: {fileID: 0}
     spawnOffset: {x: 0, y: 0}
@@ -236,7 +234,7 @@ MonoBehaviour:
   skills:
   - {fileID: 6776094281009757095}
   - {fileID: 1037645356348669543}
-  _decal: {fileID: 0}
+  _decal: {fileID: 4088361612343034944}
   entryDrop: 1
   entryScaleUpDuration: 0.35
 --- !u!70 &5821915655939214708
@@ -329,22 +327,6 @@ MonoBehaviour:
   warningLineWidth: 1
   warningColor: {r: 1, g: 1, b: 1, a: 1}
   warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
---- !u!114 &-4450484315999154288
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4510239993999273466}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8dbca1b53536a2b47a8964120af00539, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HitFlash
-  flashDuration: 0.1
-  flashMaterial: {fileID: 0}
-  flashColor: {r: 1, g: 1, b: 1, a: 1}
-  BaseColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &5233518724168949262
 GameObject:
   m_ObjectHideFlags: 0

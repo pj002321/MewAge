@@ -77,7 +77,7 @@ public class BossOrbitSkill : BossSkillBase
                     float dist = Vector2.Distance(pos, (Vector2)player.transform.position);
                     if (dist <= hitRadius)
                     {
-                        player.TakeDamage(dmg);
+                        player.TakeDamage(dmg, sourceName: Owner.gameObject.name);
                         _hitTimers[i] = hitCooldown;
                     }
                 }

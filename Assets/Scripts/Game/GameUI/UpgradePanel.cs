@@ -311,11 +311,11 @@ public class UpgradePanel : MonoBehaviour
         {
             elapsed += Time.unscaledDeltaTime;
             float roll = Random.Range(Mathf.Min(from, to), Mathf.Max(from, to));
-            playerAtkText.text = $"공격력 {roll:0}";
+            playerAtkText.text = $"{roll:0}";
             yield return null;
         }
 
-        playerAtkText.text = $"공격력 {to:0}";
+        playerAtkText.text = $"{to:0}";
         yield return new WaitForSecondsRealtime(2f);
 
         const float fadeDuration = 0.3f;

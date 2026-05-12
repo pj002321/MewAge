@@ -165,22 +165,25 @@ public class SoundManager : MonoBehaviourSingleton<SoundManager>
     {
         if (!BGMEnabled) return;
         if (isLoadingIndicatorActive) return;
-
-        // 이미 재생 중이면 아무것도 하지 않음 (PlayBGMWithFade가 로딩 중에 이미 전환)
         if (bgmSource.isPlaying) return;
 
-        // 일시정지된 클립이 있으면 이어서 재생
-        if (bgmSource.clip != null)
+        // currentScene에 맞는 정상 클립을 찾아 재생 (씬 전환 후 잘못된 클립 재개 방지)
+        AudioClip targetClip = currentScene switch
         {
-            if (bgmFadeCoroutine != null) StopCoroutine(bgmFadeCoroutine);
+            "home" => homeBGM,
+            "boss" => bossBGM,
+            "game" => gameBGM,
+            _      => bgmSource.clip
+        };
+
+        if (targetClip == null) return;
+
+        if (bgmFadeCoroutine != null) StopCoroutine(bgmFadeCoroutine);
+
+        if (bgmSource.clip == targetClip)
             bgmFadeCoroutine = StartCoroutine(FadeInFromPause());
-        }
-        else if (currentScene == "home")
-            PlayHomeBGM();
-        else if (currentScene == "boss")
-            PlayChapterBossBGM();
-        else if (currentScene == "game")
-            PlayGameBGM();
+        else
+            bgmFadeCoroutine = StartCoroutine(FadeInBGM(targetClip));
     }
 
     private IEnumerator FadeInFromPause()

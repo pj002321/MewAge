@@ -95,6 +95,6 @@ public class DashComboBehaviour : EnemyBehaviourBase
         if (Owner == null || Owner.PlayerTransform == null) return;
         float dist = Vector2.Distance(Owner.SelfTransform.position, Owner.PlayerTransform.position);
         if (dist <= hitRange)
-            PlayerController.Instance?.TakeDamage(Owner.ContactDamage);
+            PlayerController.Instance?.TakeDamage(Owner.ContactDamage, sourceName: Owner.SelfTransform.name);
     }
 }

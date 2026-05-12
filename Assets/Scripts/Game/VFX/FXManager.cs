@@ -241,6 +241,9 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
         for (int i = BoomerangProjectile.All.Count - 1; i >= 0; i--)
             if (BoomerangProjectile.All[i] != null) Destroy(BoomerangProjectile.All[i].gameObject);
 
+        for (int i = MortarShell.All.Count - 1; i >= 0; i--)
+            if (MortarShell.All[i] != null) Destroy(MortarShell.All[i].gameObject);
+
         // 보스/적 스킬이 남긴 경고선 일괄 제거
         // 각 스킬은 "WarnLine" 이름으로 GameObject를 생성하므로 이름으로 탐색
         EnemyCombatRoutines.WarningLine.DestroyAll();

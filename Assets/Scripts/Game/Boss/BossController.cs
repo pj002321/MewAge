@@ -1,5 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using UnityEngine;
 
@@ -97,7 +99,7 @@ public class BossController : MonoBehaviour, IEnemyHost
     public float GrogyRemaining { get; private set; }
     public float GrogyDuration  => grogyDuration;
 
-    public void ApplyBleed(float damage) { } // Placeholder for compatibility
+    public void ApplyBleed(float damage) { }
 
     // ── 입장 연출 ─────────────────────────────────────────────────────
     [Header("입장 연출")]
@@ -110,17 +112,19 @@ public class BossController : MonoBehaviour, IEnemyHost
     private float            damageTimer;
     private SpriteRenderer[] srs;
     private Coroutine        knockbackCoroutine;
-    private Coroutine        _patternCoroutine;
     private bool             isDead;
     private bool             _dropping;
     private bool             _skillExecuting;
-    private bool             _lastFlipX;  // FlipToward 중복 갱신 방지
+    private bool             _lastFlipX;
 
     // 그로기: 이미 발동된 구간 인덱스 추적
-    private readonly System.Collections.Generic.HashSet<int> _triggeredGrogy = new();
-    private Coroutine  _gaugeSkillCoroutine;
+    private readonly HashSet<int> _triggeredGrogy = new();
     private Coroutine  _grogyFlickerCoroutine;
     private GameObject _grogyOverheadInstance;
+
+    // UniTask CancellationTokenSource
+    private CancellationTokenSource _patternCts;
+    private CancellationTokenSource _gaugeCts;
 
     /// <summary>현재 보스가 왼쪽을 바라보고 있으면 true.</summary>
     public bool IsFacingLeft => _lastFlipX;
@@ -133,16 +137,13 @@ public class BossController : MonoBehaviour, IEnemyHost
     public bool IsFiringSkill { get; set; }
 
     // ── 분신 소환용 static 플래그 (BossCloneSkill → Awake 통신) ──────
-    /// <summary>다음 Instantiate 될 BossController 를 분신으로 표시합니다.</summary>
     public static bool             NextIsClone;
-    /// <summary>분신이 유지할 스킬 타입 목록. null이면 모든 스킬 유지.</summary>
     public static System.Type[]    NextCloneSkillTypes;
 
     // ── Unity 생명주기 ─────────────────────────────────────────────
 
     private void Awake()
     {
-        // static 플래그로 분신 여부 설정 (BossCloneSkill → Awake 통신)
         if (NextIsClone) _isClone = true;
         var cloneSkillTypes = NextCloneSkillTypes;
         NextIsClone         = false;
@@ -157,27 +158,23 @@ public class BossController : MonoBehaviour, IEnemyHost
         if (skills == null || skills.Length == 0)
             skills = GetComponents<BossSkillBase>();
 
-        // 분신: BossCloneSkill 항상 제거 + 허용 타입 필터 적용
         if (_isClone)
         {
             var allowed  = cloneSkillTypes != null
-                ? new System.Collections.Generic.HashSet<System.Type>(cloneSkillTypes)
+                ? new HashSet<System.Type>(cloneSkillTypes)
                 : null;
-            var filtered = new System.Collections.Generic.List<BossSkillBase>();
+            var filtered = new List<BossSkillBase>();
             foreach (var s in skills)
             {
                 if (s == null) continue;
                 bool isCloneSkill = s is BossCloneSkill;
                 bool notAllowed   = allowed != null && !allowed.Contains(s.GetType());
-                if (isCloneSkill || notAllowed)
-                    DestroyImmediate(s);
-                else
-                    filtered.Add(s);
+                if (isCloneSkill || notAllowed) DestroyImmediate(s);
+                else                            filtered.Add(s);
             }
             skills = filtered.ToArray();
         }
 
-        // 클론: 원본이 피격 중일 때 복제되면 flash 색상이 그대로 복사됨 → 초기화
         if (_isClone && srs != null)
             foreach (var sr in srs) sr.color = Color.white;
 
@@ -191,22 +188,19 @@ public class BossController : MonoBehaviour, IEnemyHost
 
         currentHP = maxHP;
 
-        foreach (var s in skills)
-            s.Init(this);
-
+        foreach (var s in skills) s.Init(this);
         RebuildPatternSkills();
     }
 
     private void RebuildPatternSkills()
     {
-        var list = new System.Collections.Generic.List<BossSkillBase>();
+        var list = new List<BossSkillBase>();
         foreach (var s in skills)
             if (s != null && s.executeInPattern) list.Add(s);
         _patternSkills = list.ToArray();
         _skillIndex    = 0;
     }
 
-    /// <summary>패턴 스킬 목록에서 다음 스킬을 순차 반환합니다.</summary>
     public BossSkillBase NextPatternSkill()
     {
         if (_patternSkills.Length == 0) return null;
@@ -227,7 +221,28 @@ public class BossController : MonoBehaviour, IEnemyHost
         if (entryDrop && !_isClone)
             StartCoroutine(EntryDropRoutine());
         else
-            _patternCoroutine = StartCoroutine(PatternRoutine());
+            StartPatternLoop();
+    }
+
+    // ── 패턴 루프 관리 ────────────────────────────────────────────
+
+    private void CancelPattern()
+    {
+        _patternCts?.Cancel();
+        _patternCts?.Dispose();
+        _patternCts = new CancellationTokenSource();
+
+        _gaugeCts?.Cancel();
+        _gaugeCts?.Dispose();
+        _gaugeCts = new CancellationTokenSource();
+
+        _skillExecuting = false;
+    }
+
+    private void StartPatternLoop()
+    {
+        CancelPattern();
+        PatternLoopAsync(_patternCts.Token).Forget();
     }
 
     // ── 입장 연출 ──────────────────────────────────────────────────
@@ -238,67 +253,63 @@ public class BossController : MonoBehaviour, IEnemyHost
         Vector3 originalScale = transform.localScale;
         Vector3 spawnPos      = transform.position;
 
-        // 보스 숨김
         transform.localScale = Vector3.zero;
-
-        // 착지 VFX
         FXManager.Shared?.SpawnBossEntryLandingVfx(spawnPos);
 
-        // 스케일 0 → 원본, OutBack으로 오버슈트 바운스 (뿅!)
         yield return transform.DOScale(originalScale, entryScaleUpDuration)
-            .SetEase(DG.Tweening.Ease.OutBack)
+            .SetEase(Ease.OutBack)
             .WaitForCompletion();
 
         _dropping = false;
-        _patternCoroutine = StartCoroutine(PatternRoutine());
+        StartPatternLoop();
     }
 
     // ── 패턴 루프 ──────────────────────────────────────────────────
 
-    private IEnumerator PatternRoutine()
+    private async UniTaskVoid PatternLoopAsync(CancellationToken ct)
     {
-        while (!isDead)
+        try
         {
-            // 그로기 중에는 대기
-            yield return new WaitUntil(() => !IsGrogy || isDead);
-            if (isDead) break;
-
-            // 1) 대기
-            yield return new WaitForSeconds(IdleTime());
-            if (isDead) break;
-
-            // 2) 추격
-            yield return ChaseRoutine();
-            if (isDead) break;
-
-            // 3) 스킬 실행 — 순차 플레이리스트 방식
-            if (!_skillExecuting && _patternSkills.Length > 0)
+            while (!isDead)
             {
-                var skill = _patternSkills[_skillIndex % _patternSkills.Length];
-                _skillIndex++;
-                _skillExecuting = true;
-                yield return skill.Execute();
-                _skillExecuting = false;
+                await UniTask.WaitUntil(() => !IsGrogy || isDead, cancellationToken: ct);
+                if (isDead) break;
 
-                // 스킬별 쿨타임 (분노 시 0.6배)
-                float cd = skill.cooldown * (IsEnraged ? 0.6f : 1f);
-                if (cd > 0f) yield return new WaitForSeconds(cd);
+                await UniTask.Delay(System.TimeSpan.FromSeconds(IdleTime()), cancellationToken: ct);
+                if (isDead) break;
+
+                await ChaseAsync(ct);
+                if (isDead) break;
+
+                if (!_skillExecuting && _patternSkills.Length > 0)
+                {
+                    var skill = _patternSkills[_skillIndex % _patternSkills.Length];
+                    _skillIndex++;
+                    _skillExecuting = true;
+                    await skill.ExecuteAsync(ct);
+                    _skillExecuting = false;
+
+                    float cd = skill.cooldown * (IsEnraged ? 0.6f : 1f);
+                    if (cd > 0f)
+                        await UniTask.Delay(System.TimeSpan.FromSeconds(cd), cancellationToken: ct);
+                }
             }
         }
+        catch (System.OperationCanceledException) { }
+        finally { _skillExecuting = false; }
     }
 
     private float IdleTime() => IsEnraged ? idleDuration * 0.6f : idleDuration;
 
-    private IEnumerator ChaseRoutine()
+    private async UniTask ChaseAsync(CancellationToken ct)
     {
         float elapsed = 0f;
         while (elapsed < chaseDuration)
         {
-            // 그로기 돌입 시 즉시 이동 중단 후 루틴 종료 (PatternRoutine 상단 WaitUntil로 복귀)
             if (IsGrogy)
             {
                 EnemyAnimator?.SetBool(EnemyAnim.BMove, false);
-                yield break;
+                return;
             }
 
             elapsed += Time.fixedDeltaTime;
@@ -306,17 +317,15 @@ public class BossController : MonoBehaviour, IEnemyHost
             if (!IsFiringSkill && PlayerTransform != null)
             {
                 float dist = Vector2.Distance(transform.position, PlayerTransform.position);
-                if (dist > chaseStopDistance)
-                    MoveTowardPlayer(MoveSpeed);
-                else
-                    EnemyAnimator?.SetBool(EnemyAnim.BMove, false);
+                if (dist > chaseStopDistance) MoveTowardPlayer(MoveSpeed);
+                else                          EnemyAnimator?.SetBool(EnemyAnim.BMove, false);
             }
             else
             {
                 EnemyAnimator?.SetBool(EnemyAnim.BMove, false);
             }
 
-            yield return new WaitForFixedUpdate();
+            await UniTask.WaitForFixedUpdate(cancellationToken: ct);
         }
         EnemyAnimator?.SetBool(EnemyAnim.BMove, false);
     }
@@ -328,14 +337,11 @@ public class BossController : MonoBehaviour, IEnemyHost
 
         damageTimer -= Time.deltaTime;
 
-        // 플레이어 참조 갱신
         if (PlayerTransform == null)
             PlayerTransform = PlayerController.Instance?.transform;
 
-        // 분노 체크
         if (!IsEnraged && HPRatio <= enrageThreshold)
             TriggerEnrage();
-
     }
 
     // ── 이동 API (스킬에서 사용) ────────────────────────────────────
@@ -343,27 +349,7 @@ public class BossController : MonoBehaviour, IEnemyHost
     public void TriggerGroggy(float duration)
     {
         if (IsGrogy || isDead) return;
-        StartCoroutine(ForcedGrogyRoutine(duration));
-    }
-
-    private IEnumerator ForcedGrogyRoutine(float duration)
-    {
-        if (_patternCoroutine   != null) { StopCoroutine(_patternCoroutine);   _patternCoroutine   = null; }
-        if (_gaugeSkillCoroutine != null) { StopCoroutine(_gaugeSkillCoroutine); _gaugeSkillCoroutine = null; }
-        _skillExecuting = false;
-        IsGrogy        = true;
-        GrogyRemaining = duration;
-        EnemyAnimator?.SetBool(EnemyAnim.BMove, false);
-        OnGrogyStart?.Invoke();
-        StartGrogyVisuals();
-        ApplyGrogyAtkSpeed(GrogyAtkSpeedMult);
-        while (GrogyRemaining > 0f) { GrogyRemaining -= Time.deltaTime; yield return null; }
-        GrogyRemaining = 0f;
-        ApplyGrogyAtkSpeed(1f / GrogyAtkSpeedMult);
-        StopGrogyVisuals();
-        IsGrogy = false;
-        OnGrogyEnd?.Invoke();
-        if (!isDead) _patternCoroutine = StartCoroutine(PatternRoutine());
+        GrogyAsync(duration).Forget();
     }
 
     public void BindMovement(float duration)
@@ -393,10 +379,8 @@ public class BossController : MonoBehaviour, IEnemyHost
         if (IsMoveBound || IsGrogy) return;
         EnemyAnimator?.SetBool(EnemyAnim.BMove, true);
         Vector2 delta = dir.normalized * speed * Time.fixedDeltaTime;
-        if (Rb != null)
-            Rb.MovePosition(Rb.position + delta);
-        else
-            transform.position += (Vector3)delta;
+        if (Rb != null) Rb.MovePosition(Rb.position + delta);
+        else            transform.position += (Vector3)delta;
         FlipToward(dir);
     }
 
@@ -404,7 +388,6 @@ public class BossController : MonoBehaviour, IEnemyHost
     {
         if      (dir.x > 0.1f)  _lastFlipX = false;
         else if (dir.x < -0.1f) _lastFlipX = true;
-        // dir.x ≈ 0 (플레이어가 보스와 X가 같은 경우) → 현재 방향 유지
     }
 
     private void LateUpdate()
@@ -418,7 +401,6 @@ public class BossController : MonoBehaviour, IEnemyHost
 
     // ── 피격 / 사망 ─────────────────────────────────────────────────
 
-    /// <summary>지정 방향으로 순간적으로 밀어냅니다.</summary>
     public void Knockback(Vector2 dir, float force)
     {
         if (knockbackCoroutine != null) StopCoroutine(knockbackCoroutine);
@@ -429,12 +411,10 @@ public class BossController : MonoBehaviour, IEnemyHost
     {
         float elapsed  = 0f;
         float duration = 0.5f;
-
         while (elapsed < duration)
         {
             float t    = elapsed / duration;
             Vector2 next = Rb.position + dir * force * (1f - t) * Time.fixedDeltaTime;
-
             Rb?.MovePosition(next);
             elapsed += Time.fixedDeltaTime;
             yield return new WaitForFixedUpdate();
@@ -451,10 +431,7 @@ public class BossController : MonoBehaviour, IEnemyHost
 
         currentHP -= damage;
 
-        // 플레이어 스킬 게이지 증가
         CharacterSkillManager.Shared?.AddPoint(1);
-
-        // 보스 스킬 게이지 증가
         AddSkillGauge(damage);
 
         SoundManager.Shared?.Play(SoundKey.Enemy_Hit);
@@ -467,10 +444,8 @@ public class BossController : MonoBehaviour, IEnemyHost
 
         _hitFlash?.Flash();
 
-        if (currentHP <= 0f)
-            StartCoroutine(DieRoutine());
-        else
-            CheckGrogyThresholds();
+        if (currentHP <= 0f) StartCoroutine(DieRoutine());
+        else                 CheckGrogyThresholds();
     }
 
     private void AddSkillGauge(float damage)
@@ -479,30 +454,30 @@ public class BossController : MonoBehaviour, IEnemyHost
         SkillGauge = Mathf.Min(SkillGauge + damage, MaxSkillGauge);
         OnSkillGaugeChanged?.Invoke(SkillGauge);
 
-        // 게이지 100% 시 즉시 스킬 발동
         if (SkillGauge >= MaxSkillGauge)
         {
-            if (_gaugeSkillCoroutine != null) StopCoroutine(_gaugeSkillCoroutine);
-            _gaugeSkillCoroutine = StartCoroutine(TriggerSkillFromGauge());
+            _gaugeCts?.Cancel();
+            _gaugeCts?.Dispose();
+            _gaugeCts = new CancellationTokenSource();
+            TriggerSkillFromGaugeAsync(_gaugeCts.Token).Forget();
         }
     }
 
-    private IEnumerator TriggerSkillFromGauge()
+    private async UniTaskVoid TriggerSkillFromGaugeAsync(CancellationToken ct)
     {
         SkillGauge = 0f;
         OnSkillGaugeChanged?.Invoke(0f);
 
-        // 이미 스킬 실행 중이거나 사망/낙하/그로기 중이면 취소
-        if (isDead || _dropping || _skillExecuting || IsGrogy) { _gaugeSkillCoroutine = null; yield break; }
+        if (isDead || _dropping || _skillExecuting || IsGrogy) return;
 
         var skill = NextPatternSkill();
         if (skill != null)
         {
             _skillExecuting = true;
-            yield return skill.Execute();
-            _skillExecuting = false;
+            try   { await skill.ExecuteAsync(ct); }
+            catch (System.OperationCanceledException) { }
+            finally { _skillExecuting = false; }
         }
-        _gaugeSkillCoroutine = null;
     }
 
     public void ForceDie()
@@ -510,7 +485,6 @@ public class BossController : MonoBehaviour, IEnemyHost
         if (!isDead) StartCoroutine(DieRoutine());
     }
 
-    /// <summary>분신 스탯 초기화. BossClone.Init() 에서 Awake 직후·Start 직전에 호출.</summary>
     public void ApplyCloneStats(float hp, float contactDmg, float speed)
     {
         maxHP         = hp;
@@ -522,6 +496,7 @@ public class BossController : MonoBehaviour, IEnemyHost
     private IEnumerator DieRoutine()
     {
         isDead = true;
+        CancelPattern();
         StopGrogyVisuals();
         OnDeath?.Invoke();
 
@@ -536,7 +511,6 @@ public class BossController : MonoBehaviour, IEnemyHost
             GameManager.Shared?.OnBossDefeated();
         }
 
-        // 사망 연출
         if (srs != null)
             foreach (var sr in srs) sr.color = Color.white;
 
@@ -572,37 +546,45 @@ public class BossController : MonoBehaviour, IEnemyHost
             if (HPRatio <= grogyThresholds[i])
             {
                 _triggeredGrogy.Add(i);
-                StartCoroutine(GrogyRoutine());
+                GrogyAsync(grogyDuration).Forget();
                 break;
             }
         }
     }
 
-    private IEnumerator GrogyRoutine()
+    private async UniTaskVoid GrogyAsync(float duration)
     {
-        if (_patternCoroutine   != null) { StopCoroutine(_patternCoroutine);   _patternCoroutine   = null; }
-        if (_gaugeSkillCoroutine != null) { StopCoroutine(_gaugeSkillCoroutine); _gaugeSkillCoroutine = null; }
-        _skillExecuting = false;
+        CancelPattern();
+
+        // 현재 실행 중인 스킬 코루틴을 중단하고 상태 복구 (orphan coroutine 방지)
+        if (skills != null)
+            foreach (var s in skills)
+                s?.OnInterrupted();
+
         IsGrogy        = true;
-        GrogyRemaining = grogyDuration;
+        GrogyRemaining = duration;
         EnemyAnimator?.SetBool(EnemyAnim.BMove, false);
         OnGrogyStart?.Invoke();
         StartGrogyVisuals();
-
         ApplyGrogyAtkSpeed(GrogyAtkSpeedMult);
 
-        while (GrogyRemaining > 0f)
+        try
         {
-            GrogyRemaining -= Time.deltaTime;
-            yield return null;
+            var ct = this.GetCancellationTokenOnDestroy();
+            while (GrogyRemaining > 0f && !isDead)
+            {
+                GrogyRemaining -= Time.deltaTime;
+                await UniTask.Yield(ct);
+            }
         }
-        GrogyRemaining = 0f;
+        catch (System.OperationCanceledException) { return; }
 
+        GrogyRemaining = 0f;
         ApplyGrogyAtkSpeed(1f / GrogyAtkSpeedMult);
         StopGrogyVisuals();
         IsGrogy = false;
         OnGrogyEnd?.Invoke();
-        if (!isDead) _patternCoroutine = StartCoroutine(PatternRoutine());
+        if (!isDead) StartPatternLoop();
     }
 
     // ── 그로기 비주얼 ─────────────────────────────────────────────────
@@ -617,8 +599,8 @@ public class BossController : MonoBehaviour, IEnemyHost
         if (grogyOverheadPrefab != null)
         {
             if (_grogyOverheadInstance != null) Destroy(_grogyOverheadInstance);
-            Transform parent = grogyOverheadAnchor != null ? grogyOverheadAnchor : transform;
-            Vector3 localPos = grogyOverheadAnchor != null ? Vector3.zero : Vector3.up * grogyOverheadYOffset;
+            Transform parent   = grogyOverheadAnchor != null ? grogyOverheadAnchor : transform;
+            Vector3   localPos = grogyOverheadAnchor != null ? Vector3.zero : Vector3.up * grogyOverheadYOffset;
             _grogyOverheadInstance = Instantiate(grogyOverheadPrefab, parent);
             _grogyOverheadInstance.transform.localPosition = localPos;
         }
@@ -636,7 +618,6 @@ public class BossController : MonoBehaviour, IEnemyHost
         transform.DOPunchScale(Vector3.one * 0.3f, 0.6f, 8, 0.4f);
         StartCoroutine(GrogyWaveEffect());
 
-        // 흰색에서 시작해 번쩍이며 회색으로 정착 (0.6s)
         float totalTime = 0.6f;
         float t = 0f;
         while (t < totalTime)
@@ -646,17 +627,16 @@ public class BossController : MonoBehaviour, IEnemyHost
             float flicker = Mathf.Abs(Mathf.Sin(ratio * Mathf.PI * 4f)) * (1f - ratio) * 0.5f;
             float white   = Mathf.Clamp01(1f - ratio + flicker);
             Color c = Color.Lerp(GrogyTint, Color.white, white);
-            if (srs != null) foreach (var sr in srs) if (sr) sr.color = c;
+            _hitFlash?.UpdatePersistentColor(c);
             yield return null;
         }
 
-        if (srs != null) foreach (var sr in srs) if (sr) sr.color = GrogyTint;
+        _hitFlash?.UpdatePersistentColor(GrogyTint);
         _grogyFlickerCoroutine = null;
     }
 
     private IEnumerator GrogyWaveEffect()
     {
-        // 유효한 스프라이트가 있는 SpriteRenderer 탐색 (Animator 미업데이트 시 null 가능)
         SpriteRenderer sr0 = null;
         if (srs != null)
             foreach (var sr in srs)
@@ -664,17 +644,14 @@ public class BossController : MonoBehaviour, IEnemyHost
         if (sr0 == null) yield break;
 
         var go = new GameObject("GrogyWave");
-        // 보스 루트 위치가 아닌 스프라이트 실제 월드 중심에 배치
         go.transform.position = sr0.bounds.center;
 
         var waveSR = go.AddComponent<SpriteRenderer>();
         waveSR.sprite         = sr0.sprite;
         waveSR.sortingLayerID = sr0.sortingLayerID;
         waveSR.sortingOrder   = sr0.sortingOrder + 1;
-
         waveSR.color = new Color(1f, 1f, 1f, 0.9f);
 
-        // 보스 월드 스케일 기준으로 파동 시작 크기 결정
         float bossScale = Mathf.Max(Mathf.Abs(transform.lossyScale.x), Mathf.Abs(transform.lossyScale.y));
         go.transform.localScale = Vector3.one * bossScale;
 
@@ -702,7 +679,6 @@ public class BossController : MonoBehaviour, IEnemyHost
             wp.MultiplyAttackSpeed(mult);
     }
 
-
     // ── DB 데이터 적용 ────────────────────────────────────────────
 
     public void ApplyBossData(BossData data)
@@ -719,6 +695,10 @@ public class BossController : MonoBehaviour, IEnemyHost
     private void OnDestroy()
     {
         if (Current == this) Current = null;
+        _patternCts?.Cancel();
+        _patternCts?.Dispose();
+        _gaugeCts?.Cancel();
+        _gaugeCts?.Dispose();
     }
 
     // ── FX 유틸 ──────────────────────────────────────────────────
@@ -735,16 +715,11 @@ public class BossController : MonoBehaviour, IEnemyHost
     private void OnTriggerStay2D(Collider2D other)
     {
         if (damageTimer > 0f) return;
-
         var p = other.GetComponentInParent<PlayerController>();
         if (p == null) return;
-
-        // 플레이어 본체(PlayerController가 있는 바로 그 오브젝트)의 콜라이더가 아니라
-        // 자식 오브젝트에 달려 있는 투명한 자석(Magnet)이나 공격 반경 트리거라면 무시!
         if (other.gameObject != p.gameObject) return;
-
-        damageTimer = damageCooldown; // TakeDamage 전에 설정 — OnCollisionStay2D 동프레임 중복 방지
-        p.TakeDamage(contactDamage, isFromBoss: true);
+        damageTimer = damageCooldown;
+        p.TakeDamage(contactDamage, isFromBoss: true, sourceName: gameObject.name);
     }
 
     private void OnCollisionStay2D(Collision2D collision)
@@ -752,7 +727,7 @@ public class BossController : MonoBehaviour, IEnemyHost
         if (damageTimer > 0f) return;
         var p = collision.collider.GetComponentInParent<PlayerController>();
         if (p == null) return;
-        damageTimer = damageCooldown; // TakeDamage 전에 설정 — OnTriggerStay2D 동프레임 중복 방지
-        p.TakeDamage(contactDamage);
+        damageTimer = damageCooldown;
+        p.TakeDamage(contactDamage, sourceName: gameObject.name);
     }
 }

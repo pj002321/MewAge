@@ -59,6 +59,11 @@ public class SpawnMarker : MonoBehaviour
 
         while (elapsed < warningDuration)
         {
+            if (EnemySpawner.Shared != null && !EnemySpawner.Shared.IsSpawning)
+            {
+                Destroy(gameObject);
+                yield break;
+            }
             elapsed += Time.deltaTime;
             SetAlpha(1f - elapsed / warningDuration);
             yield return null;
@@ -82,20 +87,12 @@ public class SpawnMarker : MonoBehaviour
 
         if (spawnPrefab != null)
         {
-            EnemyController enemy;
-            if (EnemyPool.Shared != null)
-            {
-                enemy = EnemyPool.Shared.Get(spawnPrefab, transform.position);
-            }
-            else
-            {
-                var obj = Instantiate(spawnPrefab, transform.position, Quaternion.identity);
-                enemy   = obj.GetComponent<EnemyController>();
-            }
+            var go    = Instantiate(spawnPrefab, transform.position, Quaternion.identity);
+            var enemy = go.GetComponent<EnemyController>();
 
             if (enemy != null)
             {
-                if (_unitData != null) enemy.ApplyUnitData(_unitData);  // 먼저 — InitForWave가 ActiveUnitData 필요
+                if (_unitData != null) enemy.ApplyUnitData(_unitData);
                 enemy.InitForWave(_globalWave, _designGlobalWave, _wavesPerStage);
                 enemy.PlaySpawnBounce();
             }

@@ -116,7 +116,7 @@ public class BossDashComboSkill : BossSkillBase
                 if (hitTimer <= 0f)
                 {
                     Owner.EnemyAnimator?.SetTrigger(EnemyAnim.TAttack);
-                    PlayerController.Instance?.TakeDamage(dmg * (Boss != null && Boss.IsEnraged ? Boss.EnrageDamageMult : 1f));
+                    PlayerController.Instance?.TakeDamage(dmg * (Boss != null && Boss.IsEnraged ? Boss.EnrageDamageMult : 1f), sourceName: Owner.gameObject.name);
                     hits++;
                     hitTimer = hitInterval;
                 }
@@ -134,7 +134,7 @@ public class BossDashComboSkill : BossSkillBase
             if (dist > hitRange) break;
 
             Owner.EnemyAnimator?.SetTrigger(EnemyAnim.TAttack);
-            PlayerController.Instance?.TakeDamage(dmg * (Boss != null && Boss.IsEnraged ? Boss.EnrageDamageMult : 1f));
+            PlayerController.Instance?.TakeDamage(dmg * (Boss != null && Boss.IsEnraged ? Boss.EnrageDamageMult : 1f), sourceName: Owner.gameObject.name);
             hits++;
             yield return new WaitForSeconds(hitInterval);
         }

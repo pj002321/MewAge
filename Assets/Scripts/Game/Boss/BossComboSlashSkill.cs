@@ -84,7 +84,7 @@ public class BossComboSlashSkill : BossSkillBase
                 if (player != null &&
                     DistanceToPlayer((Vector2)player.transform.position) <= slashRange)
                 {
-                    player.TakeDamage(slashDamage * damageMult);
+                    player.TakeDamage(slashDamage * damageMult, sourceName: Owner.gameObject.name);
                 }
 
                 if (i < hitCount - 1)

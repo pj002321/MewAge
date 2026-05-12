@@ -17,6 +17,7 @@ GameObject:
   - component: {fileID: -2298048180237470415}
   - component: {fileID: 5373153972275024946}
   - component: {fileID: 1087019096054123856}
+  - component: {fileID: 6848499975529979262}
   m_Layer: 7
   m_Name: c2_s1_0
   m_TagString: Untagged
@@ -88,7 +89,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 1049025713
   m_SortingLayer: 1
-  m_SortingOrder: 5
+  m_SortingOrder: 7
   m_MaskInteraction: 0
   m_Sprite: {fileID: -314423336, guid: 49c6c46fd2559eb4f96ab6fc9ae1b3f2, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -147,7 +148,6 @@ MonoBehaviour:
   grogyOverheadPrefab: {fileID: 5515808124668199316, guid: 4676482f183c362489d2902d70a232b3, type: 3}
   grogyOverheadAnchor: {fileID: 1435864111662921224}
   grogyOverheadYOffset: 1.5
-  grogyMaterial: {fileID: 2100000, guid: 65ccb7b6cbefce14eb6f884cfc33ba91, type: 2}
   onDeathFX:
     vfxPrefab: {fileID: 0}
     spawnOffset: {x: 0, y: 0}
@@ -283,9 +283,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8dbca1b53536a2b47a8964120af00539, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HitFlash
-  flashDuration: 0.1
+  flashDuration: 0.05
   flashMaterial: {fileID: 2100000, guid: f6d87d58797b8b9478efae2c2271cbe7, type: 2}
+  flashColor: {r: 1, g: 1, b: 1, a: 1}
   BaseColor: {r: 1, g: 1, b: 1, a: 1}
+--- !u!114 &6848499975529979262
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1326216360028315856}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 25cc23087012616429ecb7c10c6cb557, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpriteYSort
+  multiplier: 100
 --- !u!1 &6343863625544315502
 GameObject:
   m_ObjectHideFlags: 0
