@@ -321,35 +321,38 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
         bool  hasDir  = deathDir.sqrMagnitude > 0.001f;
         float baseRad = hasDir ? Mathf.Atan2(deathDir.y, deathDir.x) * Mathf.Rad2Deg : 0f;
 
+        _prefabScales.TryGetValue(prefab, out var baseScale);
+
         for (int i = 0; i < count; i++)
         {
             gos[i] = GetDebris(prefab, pos);
             activeDebris.Add(gos[i]);
             srs[i] = gos[i].GetComponent<SpriteRenderer>();
+
+            float randomScale = Random.Range(0.7f, 1.2f);
+            gos[i].transform.localScale = baseScale * randomScale;
             initialScales[i] = gos[i].transform.localScale;
 
             float angleDeg, speed;
-            // 원본 스케일 저장
-            _prefabScales.TryGetValue(prefab, out var initialScale);
             if (hasDir)
             {
-                // 앞 절반: deathDir 방향 ±20° 좁은 cone — 빠르게 쌔게
-                // 뒤 절반: ±70° 넓게 퍼지는 잔해 — 느리게
+                // 앞 절반: deathDir 방향 ±35° cone — 빠르게 쌔게
+                // 뒤 절반: ±100° 넓게 퍼지는 잔해 — 보통 속도
                 if (i < count * 0.6f)
                 {
-                    angleDeg = baseRad + Random.Range(-20f, 20f);
-                    speed    = Random.Range(6f, 10f);
+                    angleDeg = baseRad + Random.Range(-35f, 35f);
+                    speed    = Random.Range(12f, 20f);
                 }
                 else
                 {
-                    angleDeg = baseRad + Random.Range(-70f, 70f);
-                    speed    = Random.Range(2f, 5f);
+                    angleDeg = baseRad + Random.Range(-100f, 100f);
+                    speed    = Random.Range(6f, 12f);
                 }
             }
             else
             {
                 angleDeg = Random.Range(0f, 360f);
-                speed    = Random.Range(3f, 7f);
+                speed    = Random.Range(8f, 16f);
             }
 
             float rad = angleDeg * Mathf.Deg2Rad;
@@ -357,10 +360,10 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
 
             // deathDir 방향 전체에 추가 부스트 (모든 파편이 그 방향으로 쏠림)
             if (hasDir)
-                vels[i] += deathDir * Random.Range(1f, 2f);
+                vels[i] += deathDir * Random.Range(2f, 4f);
         }
 
-        float duration = 0.2f;
+        float duration = 0.35f;
         float elapsed  = 0f;
 
         while (elapsed < duration)
@@ -370,7 +373,7 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
             {
                 if (gos[i] == null) continue;
                 gos[i].transform.position += (Vector3)(vels[i] * Time.deltaTime);
-                vels[i] *= 1f - 6f * Time.deltaTime; // 감속
+                vels[i] *= 1f - 3.5f * Time.deltaTime; // 감속
 
                 // 후반부터 페이드아웃 및 사이즈 축소
                 if (t > 0.4f)

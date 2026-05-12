@@ -136,6 +136,15 @@ public class RelicInfoPopup : MonoBehaviour
                 : $"조각  {frags}  (최대 등급)";
         }
 
+        // 유물 조각 아이콘 / 조각 개수
+        if (relicpieceIcon)
+        {
+            relicpieceIcon.sprite = cfg?.GetRelicIcon(data.relicId);
+            relicpieceIcon.color  = locked ? LockedTint : Color.white;
+        }
+        if (relicpieceCountText)
+            relicpieceCountText.text = frags.ToString();
+
         // 등급 태그 이미지 (f_등급 기반)
         if (tagGradeImg)
         {

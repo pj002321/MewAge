@@ -610,7 +610,6 @@ public class MainMenuPanel : MonoBehaviour
 
         isSnapping     = false;
         _snapCoroutine = null;
-        cardViews?[currentIndex]?.PlayPunch();
     }
 
     // ── 수학 헬퍼 ───────────────────────────────────────────────────

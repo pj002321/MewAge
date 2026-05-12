@@ -56,7 +56,15 @@ public class StageCardView : MonoBehaviour
         if (bestWaveText   != null) bestWaveText.gameObject.SetActive(isCenter);
         if (chapterText    != null) chapterText.gameObject.SetActive(isCenter);
         if (symbolObjects  != null) symbolObjects.SetActive(showFull);
-        if (playerPortrait != null) playerPortrait.gameObject.SetActive(showFull);
+        if (playerPortrait != null)
+        {
+            playerPortrait.gameObject.SetActive(showFull);
+            if (showFull)
+            {
+                var anim = playerPortrait.GetComponent<Animator>();
+                if (anim != null) anim.speed = 2f;
+            }
+        }
         if (highlightImage != null) highlightImage.gameObject.SetActive(isCenter);
     }
 
