@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using Coffee.UIExtensions;
+using Mewage.DB;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -79,6 +80,9 @@ public class UpgradePanel : MonoBehaviour
 
     [Header("시너지 노티피케이션")]
     [SerializeField] private Image infoButtonRedDot;
+    [SerializeField] private NewSynergyNoti newSynergyNoti; // 신규시너지 달성 시에만 활성화 애니메이션 시간 끝나면 비활성화. 처음에는 비활성화
+    [SerializeField] private Transform synergyCompleteContetns; // completeSlot이 자식으로 들어갈 곳.
+    [SerializeField] private GameObject synergyCompleteSlot;    // 자식에 있는 이미지를 이용하여 현재 획득한 시너지 목록을 슬롯으로 표기
 
     // ── 내부 상태 ────────────────────────────────────────────────────
     private UIShiny            _infoButtonShiny;
@@ -150,6 +154,7 @@ public class UpgradePanel : MonoBehaviour
             SynergyEffectManager.Create("SynergyEffectManager");
 
         SynergyEffectManager.OnNewSynergyAchieved += OnNewSynergyAchieved;
+        SynergyEffectManager.OnAchievedChanged    += OnAchievedChanged;
         foreach (var anim in GetComponentsInChildren<Animator>(true))
             anim.updateMode = AnimatorUpdateMode.UnscaledTime;
 
@@ -164,6 +169,7 @@ public class UpgradePanel : MonoBehaviour
         PlayerInventory.OnBeforeMerge += OnBeforeMerge;
 
         RefreshInventoryUI();
+        RefreshSynergyCompleteSlots();
         RefreshExpUI();
 
         portraitAnimator?.Play("enter_portrait");
@@ -175,6 +181,7 @@ public class UpgradePanel : MonoBehaviour
     private void OnDisable()
     {
         SynergyEffectManager.OnNewSynergyAchieved -= OnNewSynergyAchieved;
+        SynergyEffectManager.OnAchievedChanged    -= OnAchievedChanged;
         if (autoStartCoroutine != null) StopCoroutine(autoStartCoroutine);
         if (notifCoroutine != null) { StopCoroutine(notifCoroutine); notifCoroutine = null; }
         if (buyExpHoldCoroutine != null) { StopCoroutine(buyExpHoldCoroutine); buyExpHoldCoroutine = null; }
@@ -330,7 +337,7 @@ public class UpgradePanel : MonoBehaviour
         if (ps == null) return;
         int exp = ps.Exp;
         int level = ps.Level;
-        int expToNext = 20 + (level - 1) * 50;
+        int expToNext = PlayerStats.Shared?.ExpToNext ?? (20 + (level - 1) * 50);
 
         if (levelText) levelText.text = $"LV.{level}";
         if (expSlider) expSlider.value = (float)exp / expToNext;
@@ -390,10 +397,45 @@ public class UpgradePanel : MonoBehaviour
         SynergyInfoPanel.Shared?.Show(chapter);
     }
 
-    private void OnNewSynergyAchieved()
+    private void OnNewSynergyAchieved(IReadOnlyList<string> newIds)
     {
         if (_infoButtonShiny != null) _infoButtonShiny.enabled = true;
         if (infoButtonRedDot != null) infoButtonRedDot.gameObject.SetActive(true);
+
+        if (newSynergyNoti == null || newIds == null || newIds.Count == 0) return;
+
+        string id = newIds[0];
+        DB_시너지 row = null;
+        DB_시너지.ForEachEntity(r => { if (r?.f_시너지ID == id) row = r; });
+        if (row == null) return;
+
+        var icon = SynergyVisualConfig.Shared?.GetIcon(id)
+                ?? Resources.Load<Sprite>($"Synergy/{id.ToLower()}");
+        newSynergyNoti.Show(icon, row.f_이름);
+    }
+
+    private void OnAchievedChanged(HashSet<string> _) => RefreshSynergyCompleteSlots();
+
+    private void RefreshSynergyCompleteSlots()
+    {
+        if (synergyCompleteContetns == null || synergyCompleteSlot == null) return;
+
+        for (int i = synergyCompleteContetns.childCount - 1; i >= 0; i--)
+            Destroy(synergyCompleteContetns.GetChild(i).gameObject);
+
+        var achieved = SynergyEffectManager.AchievedSynergies;
+        if (achieved == null || achieved.Count == 0) return;
+
+        var cfg = SynergyVisualConfig.Shared;
+        foreach (var id in achieved)
+        {
+            var slot = Instantiate(synergyCompleteSlot, synergyCompleteContetns);
+            var img  = slot.GetComponentInChildren<Image>();
+            if (img == null) continue;
+            var icon = cfg?.GetIcon(id) ?? Resources.Load<Sprite>($"Synergy/{id.ToLower()}");
+            img.sprite  = icon;
+            img.enabled = icon != null;
+        }
     }
 
     // ────────────────────────────────────────────────────────────────
@@ -480,7 +522,12 @@ public class UpgradePanel : MonoBehaviour
                     DoSellEquip(slotIndex);
                     selectedEquipIndex = -1;
                     RefreshInventoryUI();
-                })
+                }),
+                onClose: () =>
+                {
+                    selectedEquipIndex = -1;
+                    RefreshInventoryUI();
+                }
             );
         }
 

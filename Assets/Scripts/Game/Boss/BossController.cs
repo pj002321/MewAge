@@ -40,9 +40,6 @@ public class BossController : MonoBehaviour, IEnemyHost
     [SerializeField] private Transform  grogyOverheadAnchor;
     [SerializeField] private float      grogyOverheadYOffset = 1.5f;
 
-    [Tooltip("그로기 중 단색 실루엣 머티리얼. Inspector에서 할당. 없으면 sr.color만 변경.")]
-    [SerializeField] private Material grogyMaterial;
-
     private static readonly Color GrogyTint        = new(0.45f, 0.45f, 0.45f, 1f);
     private const           float GrogyAtkSpeedMult = 8f;
 
@@ -124,8 +121,6 @@ public class BossController : MonoBehaviour, IEnemyHost
     private Coroutine  _gaugeSkillCoroutine;
     private Coroutine  _grogyFlickerCoroutine;
     private GameObject _grogyOverheadInstance;
-    private Color[]    _originalSrColors;
-    private Material[] _originalMaterials;
 
     /// <summary>현재 보스가 왼쪽을 바라보고 있으면 true.</summary>
     public bool IsFacingLeft => _lastFlipX;
@@ -614,27 +609,7 @@ public class BossController : MonoBehaviour, IEnemyHost
 
     private void StartGrogyVisuals()
     {
-        // 피격 flash 중이면 먼저 중단해야 원본 색상을 올바르게 스냅샷할 수 있음
-        _hitFlash?.StopFlash();
-
-        if (srs != null)
-        {
-            _originalSrColors    = new Color[srs.Length];
-            _originalMaterials   = new Material[srs.Length];
-            for (int i = 0; i < srs.Length; i++)
-            {
-                if (srs[i] == null) continue;
-                _originalSrColors[i]  = srs[i].color;
-                _originalMaterials[i] = srs[i].material;
-            }
-
-            foreach (var sr in srs)
-            {
-                if (!sr) continue;
-                sr.color = Color.white;
-                if (grogyMaterial != null) sr.material = grogyMaterial;
-            }
-        }
+        _hitFlash?.EnterPersistentState(GrogyTint);
 
         if (_grogyFlickerCoroutine != null) StopCoroutine(_grogyFlickerCoroutine);
         _grogyFlickerCoroutine = StartCoroutine(GrogyEntryHighlight());
@@ -652,25 +627,7 @@ public class BossController : MonoBehaviour, IEnemyHost
     private void StopGrogyVisuals()
     {
         if (_grogyFlickerCoroutine != null) { StopCoroutine(_grogyFlickerCoroutine); _grogyFlickerCoroutine = null; }
-
-        if (srs != null && _originalSrColors != null)
-        {
-            for (int i = 0; i < srs.Length; i++)
-            {
-                if (srs[i] == null) continue;
-                if (i < _originalSrColors.Length)  srs[i].color    = _originalSrColors[i];
-                if (_originalMaterials != null && i < _originalMaterials.Length && _originalMaterials[i] != null)
-                    srs[i].material = _originalMaterials[i];
-            }
-        }
-        else if (srs != null)
-        {
-            foreach (var sr in srs) if (sr) sr.color = Color.white;
-        }
-
-        _originalSrColors  = null;
-        _originalMaterials = null;
-
+        _hitFlash?.ExitPersistentState();
         if (_grogyOverheadInstance != null) { Destroy(_grogyOverheadInstance); _grogyOverheadInstance = null; }
     }
 

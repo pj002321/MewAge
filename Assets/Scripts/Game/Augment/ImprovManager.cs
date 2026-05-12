@@ -86,7 +86,9 @@ public class ImprovManager : MonoBehaviourSingleton<ImprovManager>
     // ── 가중치 랜덤 추출 (중복 없이) ─────────────────────────────
     private DB_증강[] DrawImprovs(int count)
     {
-        var pool = DB_증강.FindEntities(e => e.f_증강ID != ImprovType.AUG_SKL);
+        var pool = DB_증강.FindEntities(e =>
+            e.f_증강ID != ImprovType.AUG_SKL &&
+            !(pendingWave == 0 && e.f_증강ID == ImprovType.AUG_HEAL));
         if (pool == null || pool.Count == 0)
         {
             this.DLog("[ImprovManager] DB_증강 데이터가 없습니다.");

@@ -174,6 +174,9 @@ public class TestMonsterSpawner : MonoBehaviour
     // ── 무적 / 플레이어 설정 ──────────────────────────────────────
     public static bool EnemyInvincible { get; private set; }
 
+    /// <summary>씬 재로드 시 GameManager에서 호출 — 이전 테스트 세션의 정적 플래그를 초기화합니다.</summary>
+    public static void ResetDebugFlags() => EnemyInvincible = false;
+
     [Title("테스트 옵션")]
     [ShowInInspector, ReadOnly, LabelText("적 무적 상태")]
     private static bool _enemyInvincibleDisplay => EnemyInvincible;

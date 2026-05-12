@@ -93,9 +93,10 @@ public class WeaponData : ScriptableObject
         next.magicElement     = magicElement;
         next.prefab           = prefab;
         next.grade            = grade;
-        next.price            = price;
         next.chapter          = chapter;
         next.star             = Mathf.Clamp(targetStar, 1, 5);
+        // 성 차이만큼 3^n 배 (1성 기준: 2성=3배, 3성=9배)
+        next.price            = Mathf.RoundToInt(price * Mathf.Pow(3f, next.star - star));
         next.storyDescription  = storyDescription;
         next.trait             = trait;
         next.specialEffectId   = specialEffectId;

@@ -1,3 +1,43 @@
+6. 2026.5.12 ✅ 해결
+버그 수정 (9건)
+
+(1) 장착 무기 클릭 후 팝업 닫아도 슬롯 크기가 커진 상태로 유지되는 현상
+- 원인: WeaponInfoPanel이 열릴 때 EquipSlot의 scale을 키우고, 닫힐 때 복구하는 콜백이 등록되지 않음.
+- 해결: WeaponInfoPanel.Open()에서 슬롯 원본 scale 캐시 후 onClose 콜백에서 복구.
+
+(2) 웨이브 시작 전 포메이션 존이 즉시 활성화되는 현상 (증강 패널보다 먼저 트리거)
+- 원인: WaveEnvironmentSwitcher.SetWave() 내부에서 TriggerFormationsForWave()를 호출하여, 게임 초기화(SetStage → SetWave(1)) 시점에도 포메이션이 발동됨.
+- 해결: SetWave()에서 포메이션 호출 제거. GameManager.DoStartWave()에서 SetWave() 이후 명시적으로 TriggerFormations(wave) 호출.
+
+(3) 앱 일시정지(timeScale=0) 중 피격 시 HitFlash가 흰색으로 굳는 현상
+- 원인: FlashRoutine의 WaitForSeconds가 timeScale의 영향을 받아 정지됨.
+- 해결: WaitForSeconds → WaitForSecondsRealtime으로 교체.
+
+(4) 업그레이드 패널의 EXP 게이지 수치가 실제와 다른 현상
+- 원인: UpgradePanel.RefreshExpUI()가 baseExpPerLevel/expGrowthPerLevel 상수를 직접 하드코딩하여 계산, PlayerStats 내부 값과 불일치.
+- 해결: PlayerStats에 ExpToNext 프로퍼티 추가. RefreshExpUI()에서 PlayerStats.Shared.ExpToNext를 참조.
+
+(5) 씬 재로드 후 EnemyInvincible 디버그 플래그가 ON으로 유지되는 현상
+- 원인: TestMonsterSpawner.EnemyInvincible이 static 필드로 씬 전환 후에도 초기화되지 않음.
+- 해결: TestMonsterSpawner.ResetDebugFlags() 정적 메서드 추가. GameManager.InitAndStartRoutine() 초기화 구간에서 호출.
+
+(6) 오브젝트 풀에서 재사용된 적에게 이전 상태 VFX(빙결·스턴·화염)가 잔존하는 현상
+- 원인: EnemyController.WakeFromPool()에서 _freezeVfxInst / _stunVfxInst / _fireVfxInst를 Destroy하지 않고, 코루틴 레퍼런스도 null 처리하지 않음. 재사용된 적에게 VFX 오브젝트가 남아있고 ApplyBleed 등이 블로킹됨.
+- 해결: WakeFromPool() 앞부분에서 세 VFX 인스턴스 Destroy + null, bleedCoroutine / _fireCoroutine / _slowCoroutine / knockbackCoroutine / _fireTintCoroutine null 처리.
+
+(7) 패널 열림(timeScale=0) 중 무기가 공격 대기 상태에 고착되는 현상
+- 원인: WeaponPoint의 MaxStateTime 타임아웃 타이머가 Time.deltaTime으로 증가하여, timeScale=0 구간에서 카운트가 멈춤.
+- 해결: _stateTimer += Time.deltaTime → Time.unscaledDeltaTime.
+
+(8) 플레이어 사망 후 부활 시 보스가 중복 스폰되는 현상
+- 원인: 보스 마커 카운트다운 중 플레이어가 사망하면 마커가 자체 소멸(GameOver 체크)하고 BossController.Current가 null로 남음. 부활 후 ResumeSpawning 시 SpawnBoss()가 다시 실행되어 두 번째 마커 생성.
+- 해결: EnemySpawner에 _pendingBossMarker 필드 추가. 마커 생성 시 저장, OnSpawnComplete 이벤트로 완료 시 해제. SpawnBoss() 진입부에서 _pendingBossMarker != null이면 중복 차단. StopSpawning()에서 필드 null 처리. BossSpawnMarker에 OnSpawnComplete 이벤트 추가.
+
+(9) 보스 맵(MovementBounds 없음)에서 돌진 스킬 사용 시 보스가 맵 밖으로 이탈하는 현상
+- 원인: BossChargeSkill의 경계 체크가 MovementBounds.Shared != null인 경우에만 작동. 보스 전용 배경에는 MovementBounds가 없어 경계 체크 전체가 무시됨.
+- 해결: MovementBounds가 null일 때 SpawnZone.BoundsCenter/BoundsSize로 AABB 폴백 경계 계산 후 Clamp 처리.
+
+
 5. 2026.5.11 ✅ 해결
 버그 수정 (5건)
 

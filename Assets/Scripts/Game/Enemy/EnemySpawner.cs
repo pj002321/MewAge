@@ -34,6 +34,8 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
     private int[] _shuffledSectors;
     private int   _sectorCursor;
 
+    private BossSpawnMarker _pendingBossMarker;
+
     private float currentInterval  = 3f;
     private int   currentSpawnCount = 3;
     private int   currentMaxOnMap;          // DB f_최대스폰 (0 = 무제한)
@@ -176,6 +178,12 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
             return;
         }
 
+        if (_pendingBossMarker != null)
+        {
+            Debug.Log("[EnemySpawner] 보스 마커가 이미 대기 중입니다. 중복 스폰 방지.");
+            return;
+        }
+
         var bossData = FindBossData(currentChapter, currentStage, currentWave);
         if (bossData == null || bossData.prefab == null)
         {
@@ -193,7 +201,11 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
         {
             var markerObj = Instantiate(bossSpawnMarkerPrefab, spawnPos, Quaternion.identity);
             if (markerObj.TryGetComponent<BossSpawnMarker>(out var marker))
+            {
+                _pendingBossMarker = marker;
                 marker.Init(bossData.prefab, bossData);
+                marker.OnSpawnComplete += () => _pendingBossMarker = null;
+            }
             else
                 Debug.LogWarning("[EnemySpawner] bossSpawnMarkerPrefab에 BossSpawnMarker 컴포넌트가 없습니다.");
         }
@@ -319,28 +331,25 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
         spawning = false;
         StopAllCoroutines();
         SpawnMarker.CancelAll(); // 대기 중인 마커도 즉시 취소
+        _pendingBossMarker = null;
     }
 
     public void ClearAllEnemies()
     {
-        // SpawnMarker 먼저 정리 — FadeAndSpawn 코루틴이 적 정리 후에 추가 스폰하지 못하도록
-        for (int i = SpawnMarker.All.Count - 1; i >= 0; i--)
-        {
-            var marker = SpawnMarker.All[i];
-            if (marker == null) continue;
-            marker.StopAllCoroutines();
-            Destroy(marker.gameObject);
-        }
+        // SpawnMarker 먼저 정리 — FadeAndSpawn 코루틴이 추가 스폰하지 못하도록
+        SpawnMarker.CancelAll();
 
-        // EnemyPool은 SetActive를 사용하지 않으므로 FindObjectsByType으로 접근하면
-        // 풀 대기 중인 적(-9999 위치)까지 Destroy되어 풀 큐가 깨짐 — All만 사용할 것
-        for (int i = EnemyController.All.Count - 1; i >= 0; i--)
+        // 스냅샷 순회 — Return 내부에서 All 수정(AllRemoveSwapBack)이 일어나므로 복사본 사용
+        var snapshot = new System.Collections.Generic.List<EnemyController>(EnemyController.All);
+        foreach (var enemy in snapshot)
         {
-            var enemy = EnemyController.All[i];
             if (enemy == null) continue;
             enemy.StopAllCoroutines();
-            enemy.gameObject.SetActive(false);
-            Destroy(enemy.gameObject);
+            // 풀로 반환 — Destroy 대신 Return 사용으로 풀 큐 보존
+            if (EnemyPool.Shared != null)
+                EnemyPool.Shared.Return(enemy);
+            else
+                Destroy(enemy.gameObject);
         }
     }
 

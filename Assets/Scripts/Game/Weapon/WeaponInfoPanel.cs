@@ -27,7 +27,7 @@ public class WeaponInfoPanel : MonoBehaviourSingleton<WeaponInfoPanel>
     [SerializeField] private TextMeshProUGUI gradeText;   // 예: "레어"
     [SerializeField] private TextMeshProUGUI weaponTypeText;
     [SerializeField] private TextMeshProUGUI nameText;
-
+    [SerializeField] private TextMeshProUGUI sellamountText;
     [Header("스탯 — 메인값")]
     [SerializeField] private TextMeshProUGUI attackText;
     [SerializeField] private TextMeshProUGUI speedText;   // 공격속도 (회/s)
@@ -61,6 +61,7 @@ public class WeaponInfoPanel : MonoBehaviourSingleton<WeaponInfoPanel>
     private System.Action _onSell;
     private System.Action _onUnequip;
     private System.Action _onBuy;
+    private System.Action _onClose;
 
     protected override bool DontDestroy => false;
 
@@ -78,7 +79,8 @@ public class WeaponInfoPanel : MonoBehaviourSingleton<WeaponInfoPanel>
 
     public void Show(WeaponData data,
         System.Action onEquip   = null, System.Action onSell    = null,
-        System.Action onUnequip = null, System.Action onBuy     = null)
+        System.Action onUnequip = null, System.Action onBuy     = null,
+        System.Action onClose   = null)
     {
         if (data == null) return;
 
@@ -86,11 +88,15 @@ public class WeaponInfoPanel : MonoBehaviourSingleton<WeaponInfoPanel>
         _onSell    = onSell;
         _onUnequip = onUnequip;
         _onBuy     = onBuy;
+        _onClose   = onClose;
 
         equipButton?.gameObject.SetActive(onEquip   != null);
         sellButton?.gameObject.SetActive(onSell     != null);
         unequipButton?.gameObject.SetActive(onUnequip != null);
         buyButton?.gameObject.SetActive(onBuy       != null);
+
+        if (sellamountText != null)
+            sellamountText.text = onSell != null ? $"{Mathf.Max(1, data.price)}" : string.Empty;
 
         // ── 프레임 / 등급 / 아이콘 ──────────────────────────────────────
         if (frameImage)
@@ -216,6 +222,9 @@ public class WeaponInfoPanel : MonoBehaviourSingleton<WeaponInfoPanel>
     public void Hide()
     {
         if (panelRoot) panelRoot.SetActive(false);
+        var cb = _onClose;
+        _onClose = null;
+        cb?.Invoke();
     }
 
     // ────────────────────────────────────────────────────────

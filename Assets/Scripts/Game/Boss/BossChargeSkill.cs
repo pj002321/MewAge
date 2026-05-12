@@ -74,6 +74,7 @@ public class BossChargeSkill : BossSkillBase
                 Vector2 next = pos + dir * speed * Time.fixedDeltaTime;
 
                 var mb = MovementBounds.Shared;
+                var sz = SpawnZone.Shared;
                 if (mb != null && !mb.IsInside(next))
                 {
                     Vector2 clamped = mb.ClosestPointOnBoundary(next);
@@ -82,6 +83,25 @@ public class BossChargeSkill : BossSkillBase
                     dir     = Reflect(dir, next, clamped);
                     hitWall = true;
                     break;
+                }
+                else if (mb == null && sz != null)
+                {
+                    // MovementBounds가 없는 보스 맵 — SpawnZone AABB로 대체 경계 처리
+                    Vector2 szCenter = sz.BoundsCenter;
+                    Vector2 szHalf   = sz.BoundsSize * 0.5f;
+                    Vector2 szMin    = szCenter - szHalf;
+                    Vector2 szMax    = szCenter + szHalf;
+                    if (next.x < szMin.x || next.x > szMax.x || next.y < szMin.y || next.y > szMax.y)
+                    {
+                        Vector2 clamped = new Vector2(
+                            Mathf.Clamp(next.x, szMin.x, szMax.x),
+                            Mathf.Clamp(next.y, szMin.y, szMax.y));
+                        Owner.Rb.MovePosition(clamped);
+                        pos     = clamped;
+                        dir     = Reflect(dir, next, clamped);
+                        hitWall = true;
+                        break;
+                    }
                 }
 
                 pos = next;

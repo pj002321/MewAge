@@ -161,7 +161,7 @@ public class WeaponPoint : MonoBehaviour
 
         public static readonly CombatTarget None = default;
         public bool IsNone  => Enemy == null && Boss == null;
-        public bool IsValid => (Enemy != null && Enemy.gameObject.activeInHierarchy) ||
+        public bool IsValid => (Enemy != null && !Enemy.IsPooled && Enemy.gameObject.activeInHierarchy) ||
                                (Boss  != null && Boss.gameObject.activeInHierarchy);
         public Vector3 Position
         {
@@ -443,7 +443,7 @@ public class WeaponPoint : MonoBehaviour
         if (state != State.Idle && state != State.Returning
             && state != State.SlashSequence && state != State.HammerSequence)
         {
-            _stateTimer += Time.deltaTime;
+            _stateTimer += Time.unscaledDeltaTime;
             if (_stateTimer >= MaxStateTime)
             {
                 _target   = CombatTarget.None;

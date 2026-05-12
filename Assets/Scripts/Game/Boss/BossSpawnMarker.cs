@@ -14,6 +14,9 @@ public class BossSpawnMarker : MonoBehaviour
     private GameObject _bossPrefab;
     private BossData   _bossData;
 
+    /// <summary>보스 스폰 완료(성공·실패 모두) 또는 게임오버로 취소 시 발생.</summary>
+    public event System.Action OnSpawnComplete;
+
     public void Init(GameObject bossPrefab, BossData bossData)
     {
         _bossPrefab = bossPrefab;
@@ -39,6 +42,7 @@ public class BossSpawnMarker : MonoBehaviour
 
         if (GameManager.Shared != null && GameManager.Shared.IsGameOver)
         {
+            OnSpawnComplete?.Invoke();
             Destroy(gameObject);
             yield break;
         }
@@ -50,6 +54,7 @@ public class BossSpawnMarker : MonoBehaviour
                 boss.ApplyBossData(_bossData);
         }
 
+        OnSpawnComplete?.Invoke();
         Destroy(gameObject);
     }
 

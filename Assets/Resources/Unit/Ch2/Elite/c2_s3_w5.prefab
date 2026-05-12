@@ -134,7 +134,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyController
   moveSpeed: 2
-  maxHP: 30
+  maxHP: 4000
   contactDamage: 10
   goldDrop: 5
   expDrop: 10
@@ -176,12 +176,12 @@ MonoBehaviour:
   moveDuration: 2
   idleDuration: 2
   chargeRange: 4
-  chargeColor: {r: 1, g: 0, b: 0, a: 1}
+  chargeColor: {r: 1, g: 0, b: 0, a: 0}
   chargeScale: 0.85
   ghostInterval: 0.06
   warningLineLength: 5
   warningLineWidth: 0.06
-  warningColor: {r: 1, g: 0, b: 0, a: 1}
+  warningColor: {r: 1, g: 0, b: 0, a: 0}
   warningMaterial: {fileID: 0}
   warningLineOrigin: {fileID: 0}
 --- !u!70 &2438640216706537327
@@ -275,4 +275,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HitFlash
   flashDuration: 0.1
   flashMaterial: {fileID: 2100000, guid: f6d87d58797b8b9478efae2c2271cbe7, type: 2}
+  flashColor: {r: 1, g: 1, b: 1, a: 1}
   BaseColor: {r: 1, g: 1, b: 1, a: 1}

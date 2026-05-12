@@ -66,6 +66,7 @@ public class EnemyController : MonoBehaviour, IEnemyHost
 
     private bool      isStunned;
     private bool      _isDying;
+    public  bool      IsPooled { get; private set; }
     private Vector2   _pendingMove;
     private Coroutine knockbackCoroutine;
     private Coroutine bleedCoroutine;
@@ -271,8 +272,20 @@ public class EnemyController : MonoBehaviour, IEnemyHost
     public void WakeFromPool()
     {
         StopAllCoroutines();
-        _stunCoroutine   = null;
-        _freezeCoroutine = null;
+        _stunCoroutine     = null;
+        _freezeCoroutine   = null;
+        bleedCoroutine     = null;
+        _fireCoroutine     = null;
+        _slowCoroutine     = null;
+        knockbackCoroutine = null;
+        _fireTintCoroutine = null;
+
+        // 이전 풀 사용에서 남은 상태 VFX 제거
+        if (_freezeVfxInst != null) { Destroy(_freezeVfxInst); _freezeVfxInst = null; }
+        if (_stunVfxInst   != null) { Destroy(_stunVfxInst);   _stunVfxInst   = null; }
+        if (_fireVfxInst   != null) { Destroy(_fireVfxInst);   _fireVfxInst   = null; }
+
+        IsPooled   = false;
         enabled    = true;
         damageTimer = 0f;
         isStunned  = false;
@@ -294,10 +307,10 @@ public class EnemyController : MonoBehaviour, IEnemyHost
         // 재질·색상 복구
         if (srs != null && _originalMats != null)
             for (int i = 0; i < srs.Length && i < _originalMats.Length; i++)
-                if (_originalMats[i] != null) srs[i].material = _originalMats[i];
+                if (_originalMats[i] != null && srs[i] != null) srs[i].material = _originalMats[i];
         SetTint(Color.white);
 
-        foreach (var sr in srs)  sr.enabled = true;
+        foreach (var sr in srs) if (sr != null) sr.enabled = true;
         if (_cachedColliders != null)
             foreach (var col in _cachedColliders) col.enabled = true;
 
@@ -310,6 +323,7 @@ public class EnemyController : MonoBehaviour, IEnemyHost
     /// <summary>EnemyPool이 풀로 반환하기 전 호출 — 렌더러·콜라이더 비활성화 + All 제거.</summary>
     public void SleepToPool()
     {
+        IsPooled = true;
         StopAllCoroutines();
         enabled = false;
         if (rb != null) rb.linearVelocity = Vector2.zero;
@@ -324,9 +338,9 @@ public class EnemyController : MonoBehaviour, IEnemyHost
         // 재질 복구 (사망 실루엣 해제)
         if (srs != null && _originalMats != null)
             for (int i = 0; i < srs.Length && i < _originalMats.Length; i++)
-                if (_originalMats[i] != null) srs[i].material = _originalMats[i];
+                if (_originalMats[i] != null && srs[i] != null) srs[i].material = _originalMats[i];
 
-        foreach (var sr in srs)  sr.enabled = false;
+        foreach (var sr in srs) if (sr != null) sr.enabled = false;
         if (_cachedColliders != null)
             foreach (var col in _cachedColliders) col.enabled = false;
 
@@ -683,6 +697,7 @@ public class EnemyController : MonoBehaviour, IEnemyHost
     public void ForceDie()
     {
         if (!gameObject.activeInHierarchy) return;
+        _isDying  = true;   // TakeDamage 중복 진입 차단
         _deathDir = new Vector2(Random.Range(-1f, 1f), 1f).normalized;
         StopAllCoroutines();
         StartCoroutine(DieRoutine());
@@ -704,7 +719,7 @@ public class EnemyController : MonoBehaviour, IEnemyHost
         // SpriteSilhouette 쉐이더로 재질 교체 → 흰색 실루엣
         var flashMat = GetDeathFlashMat();
         if (srs != null && flashMat != null)
-            foreach(var sr in srs) sr.material = flashMat;
+            foreach (var sr in srs) if (sr != null) sr.material = flashMat;
 
         float duration  = 0.22f;
         float elapsed   = 0f;

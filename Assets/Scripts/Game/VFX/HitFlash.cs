@@ -20,6 +20,8 @@ public class HitFlash : MonoBehaviour
     private Material         _instanceMat;   // flashMaterial의 컴포넌트별 인스턴스 (색상 독립)
     private Coroutine        _flashCoroutine;
     private bool             _isFlashing;
+    private bool             _isPersistent;
+    private Color            _persistentColor;
 
     [HideInInspector] public Color BaseColor = Color.white;
 
@@ -55,26 +57,53 @@ public class HitFlash : MonoBehaviour
         _flashCoroutine = StartCoroutine(FlashRoutine());
     }
 
+    /// <summary>실루엣 머티리얼을 지속 적용합니다 (예: 그로기 회색). Flash()는 이 상태에서도 정상 작동합니다.</summary>
+    public void EnterPersistentState(Color color)
+    {
+        if (_instanceMat == null) return;
+        if (_flashCoroutine != null) { StopCoroutine(_flashCoroutine); _flashCoroutine = null; _isFlashing = false; }
+        if (!_isPersistent) Snapshot();
+        _isPersistent    = true;
+        _persistentColor = color;
+        foreach (var sr in srs)
+            if (sr != null) { sr.sharedMaterial = _instanceMat; sr.color = Color.white; }
+    }
+
+    /// <summary>지속 상태를 해제하고 원본 머티리얼/색상을 복구합니다.</summary>
+    public void ExitPersistentState()
+    {
+        if (!_isPersistent) return;
+        if (_flashCoroutine != null) { StopCoroutine(_flashCoroutine); _flashCoroutine = null; _isFlashing = false; }
+        _isPersistent = false;
+        Restore();
+    }
+
     /// <summary>진행 중인 플래시를 즉시 중단하고 원본 머티리얼/색상을 복구합니다.</summary>
     public void StopFlash()
     {
         if (!_isFlashing) return;
         if (_flashCoroutine != null) { StopCoroutine(_flashCoroutine); _flashCoroutine = null; }
-        Restore();
+        if (_isPersistent)
+            foreach (var sr in srs) if (sr != null) sr.color = _persistentColor;
+        else
+            Restore();
         _isFlashing = false;
     }
 
     private IEnumerator FlashRoutine()
     {
-        if (!_isFlashing) Snapshot();
+        if (!_isPersistent && !_isFlashing) Snapshot();
 
         _isFlashing = true;
         foreach (var sr in srs)
-            if (sr != null) { sr.material = _instanceMat; sr.color = Color.white; }
+            if (sr != null) { sr.sharedMaterial = _instanceMat; sr.color = Color.white; }
 
-        yield return new WaitForSeconds(flashDuration);
+        yield return new WaitForSecondsRealtime(flashDuration);
 
-        Restore();
+        if (_isPersistent)
+            foreach (var sr in srs) if (sr != null) sr.color = _persistentColor;
+        else
+            Restore();
         _isFlashing = false;
         _flashCoroutine = null;
     }
@@ -87,7 +116,7 @@ public class HitFlash : MonoBehaviour
         for (int i = 0; i < srs.Length; i++)
         {
             if (srs[i] == null) continue;
-            _originalMats[i]   = srs[i].material;
+            _originalMats[i]   = srs[i].sharedMaterial;  // 인스턴스 생성 없이 공유 머티리얼 참조
             _originalColors[i] = srs[i].color;
         }
     }
@@ -98,7 +127,7 @@ public class HitFlash : MonoBehaviour
         for (int i = 0; i < srs.Length && i < _originalMats.Length; i++)
         {
             if (srs[i] == null) continue;
-            if (_originalMats[i]   != null) srs[i].material = _originalMats[i];
+            if (_originalMats[i] != null) srs[i].sharedMaterial = _originalMats[i];
             if (_originalColors != null && i < _originalColors.Length)
                 srs[i].color = _originalColors[i];
         }
@@ -106,7 +135,7 @@ public class HitFlash : MonoBehaviour
 
     private void OnDisable()
     {
-        if (_isFlashing) { Restore(); _isFlashing = false; }
+        if (_isPersistent || _isFlashing) { Restore(); _isFlashing = false; _isPersistent = false; }
         StopAllCoroutines();
     }
 

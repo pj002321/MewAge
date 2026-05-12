@@ -28,6 +28,7 @@ public class ChargeBehaviour : EnemyBehaviourBase
     [SerializeField] private Material warningMaterial;
     [Tooltip("경고 라인 시작점. 미할당 시 적 중심에서 발사")]
     [SerializeField] private Transform warningLineOrigin;
+    [SerializeField] private bool      showWarningLine = true;
 
     private enum Phase { Moving, Idle, Charging }
     private Phase   _phase;
@@ -103,7 +104,7 @@ public class ChargeBehaviour : EnemyBehaviourBase
     private void SpawnWarningLine()
     {
         if (_warnLine != null) return;
-        if (!WarningLineSettings.Enabled) return;
+        if (!showWarningLine || !WarningLineSettings.Enabled) return;
         var go = new GameObject("ChargeWarnLine");
         go.transform.rotation    = Quaternion.Euler(60f, 0f, 0f);
         _warnLine = go.AddComponent<LineRenderer>();

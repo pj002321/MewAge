@@ -18,8 +18,8 @@ public class SynergyEffectManager : MonoBehaviourSingleton<SynergyEffectManager>
     /// <summary>달성 집합이 바뀔 때마다 발행됩니다. SynergySlot이 구독합니다.</summary>
     public static event System.Action<HashSet<string>> OnAchievedChanged;
 
-    /// <summary>새 시너지가 달성됐을 때만 발행됩니다. InfoButton UIShiny 등이 구독합니다.</summary>
-    public static event System.Action OnNewSynergyAchieved;
+    /// <summary>새 시너지가 달성됐을 때만 발행됩니다. 신규 달성된 ID 목록을 전달합니다.</summary>
+    public static event System.Action<IReadOnlyList<string>> OnNewSynergyAchieved;
 
     public static HashSet<string> AchievedSynergies { get; private set; } = new();
 
@@ -31,6 +31,8 @@ public class SynergyEffectManager : MonoBehaviourSingleton<SynergyEffectManager>
     protected override void Awake()
     {
         base.Awake();
+        AchievedSynergies = new HashSet<string>();
+        _previous         = new HashSet<string>();
         WeaponSynergyFlags.Reset();
     }
 
@@ -71,12 +73,20 @@ public class SynergyEffectManager : MonoBehaviourSingleton<SynergyEffectManager>
     // ── 핵심 계산 ─────────────────────────────────────────────────────
 
     private bool _recalculating;
+    private bool _recalcPending;
 
     public void RecalculateSynergies()
     {
-        if (_recalculating) return;
+        if (_recalculating) { _recalcPending = true; return; }
         _recalculating = true;
-        try { RecalculateSynergiesInternal(); }
+        try
+        {
+            do
+            {
+                _recalcPending = false;
+                RecalculateSynergiesInternal();
+            } while (_recalcPending);
+        }
         finally { _recalculating = false; }
     }
 
@@ -115,7 +125,7 @@ public class SynergyEffectManager : MonoBehaviourSingleton<SynergyEffectManager>
         OnAchievedChanged?.Invoke(AchievedSynergies);
 
         if (newlyGained.Count > 0)
-            OnNewSynergyAchieved?.Invoke();
+            OnNewSynergyAchieved?.Invoke(new List<string>(newlyGained));
     }
 
     // ── 스탯 적용/제거 ────────────────────────────────────────────────

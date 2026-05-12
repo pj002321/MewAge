@@ -191,6 +191,9 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         WaveEnvironmentSwitcher.Shared?.SetStage(currentChapterID);
         EnemySpawner.Shared?.SetChapterStage(currentChapterID);
 
+        // 이전 테스트 세션의 정적 디버그 플래그 초기화
+        TestMonsterSpawner.ResetDebugFlags();
+
         // 이전 판 증강 수치 초기화 후 캐릭터 기초 스탯 일괄 반영
         // BeginBatch ~ EndBatch 사이 SetBase/AddPctMod는 마지막 EndBatch에서 1회만 적용됨
         var sm = PlayerStatManager.Shared;
@@ -337,6 +340,9 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     /// </summary>
     private IEnumerator ClearAllWithScaleDown(float duration)
     {
+        // 0.15s 갭 사이 SpawnMarker가 완료한 경우 대비 — 재취소
+        SpawnMarker.CancelAll();
+
         // 적 — ForceDie()로 사망 연출 시작 (DieRoutine이 pool 반환까지 처리)
         for (int i = EnemyController.All.Count - 1; i >= 0; i--)
         {
@@ -346,7 +352,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 
         yield return new WaitForSeconds(duration);
 
-        // 아직 남은 적 강제 정리
+        // DieRoutine(0.22s) 완료 후에도 남은 적 강제 풀 반환
         EnemySpawner.Shared?.ClearAllEnemies();
     }
 
@@ -578,6 +584,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         SoundManager.Shared?.PlayChapterGameBGM(currentChapterID);
         EnemySpawner.Shared?.ResumeSpawning(wave);
         WaveEnvironmentSwitcher.Shared?.SetWave(wave);
+        WaveEnvironmentSwitcher.Shared?.TriggerFormations(wave);
 
         // 5,10,15 웨이브 시작 시 돌연변이 출현 알림
         if (wave % 5 == 0 && wave > 1)

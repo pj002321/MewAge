@@ -121,7 +121,8 @@ public class PlayerStats : MonoBehaviourSingleton<PlayerStats>
         GameManager.Shared?.UpdateExpUI(exp, expToNext, level);
     }
 
-    public int Gold  => gold;
-    public int Exp   => exp;
-    public int Level => level;
+    public int Gold      => gold;
+    public int Exp       => exp;
+    public int Level     => level;
+    public int ExpToNext => expToNext;
 }
