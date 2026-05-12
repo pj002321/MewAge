@@ -20,7 +20,9 @@ using UnityEngine.UI;
 public class HomeEquipPanel : MonoBehaviour
 {
     [Header("장착 슬롯 (0~2=왼쪽, 3~5=오른쪽)")]
-    public EquipmentSlotView[] equipSlots = new EquipmentSlotView[6];
+    public EquipmentSlotView[] equipSlots          = new EquipmentSlotView[6];
+    [Tooltip("슬롯[i]가 비어있을 때 표시할 카테고리 (슬롯 순서와 1:1 매핑)")]
+    public EquipCategory[]     slotCategories      = new EquipCategory[6];
 
     [Header("정렬 전환 버튼 (누를 때마다 등급→문명→유형 순환)")]
     public Button           sortButton;
@@ -123,8 +125,10 @@ public class HomeEquipPanel : MonoBehaviour
         {
             var slot = equipSlots[i];
             if (slot == null) continue;
-            var data = inv != null && i < inv.Equipped.Count ? inv.Equipped[i] : null;
-            slot.Bind(data, OnEquipSlotClicked);
+            var cat  = i < slotCategories.Length ? slotCategories[i] : (EquipCategory)i;
+            // EquipmentInventory.equipped 배열은 (int)category 인덱스로 저장됨
+            var data = inv?.Equipped[(int)cat];
+            slot.Bind(data, OnEquipSlotClicked, cat);
         }
     }
 

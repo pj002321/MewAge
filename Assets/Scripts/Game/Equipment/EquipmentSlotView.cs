@@ -28,7 +28,8 @@ public class EquipmentSlotView : MonoBehaviour
     System.Action<EquipmentSlotView> _onClick;
     Coroutine                        _spinRoutine;
 
-    static readonly Color EmptyFrame = new Color(0.3f, 0.3f, 0.3f, 0.8f);
+    static readonly Color EmptyFrame       = new Color(0.3f, 0.3f, 0.3f, 0.8f);
+    static readonly Color EmptyCategoryIcon = new Color(1f, 1f, 1f, 0.25f);
 
     void Awake()
     {
@@ -36,7 +37,9 @@ public class EquipmentSlotView : MonoBehaviour
     }
 
     /// <summary>슬롯에 장비 데이터를 바인딩합니다.</summary>
-    public void Bind(EquipmentData data, System.Action<EquipmentSlotView> onClick)
+    /// <param name="placeholderCategory">data가 null일 때 표시할 카테고리 (빈 슬롯 구분용)</param>
+    public void Bind(EquipmentData data, System.Action<EquipmentSlotView> onClick,
+                     EquipCategory? placeholderCategory = null)
     {
         _data    = data;
         _onClick = onClick;
@@ -57,6 +60,13 @@ public class EquipmentSlotView : MonoBehaviour
                 categoryIcon.sprite  = catSprite;
                 categoryIcon.enabled = catSprite != null;
                 categoryIcon.color   = EquipmentData.GradeColor(data.grade);
+            }
+            else if (placeholderCategory.HasValue)
+            {
+                var catSprite = HomeEquipVisualConfig.Shared?.GetCategoryIcon(placeholderCategory.Value);
+                categoryIcon.sprite  = catSprite;
+                categoryIcon.enabled = catSprite != null;
+                categoryIcon.color   = EmptyCategoryIcon;
             }
             else
             {
@@ -86,10 +96,22 @@ public class EquipmentSlotView : MonoBehaviour
 
         if (gradeText)
         {
-            gradeText.text  = has ? data.GradeLabel() : string.Empty;
+            gradeText.text = has ? data.GradeLabel() : (placeholderCategory.HasValue ? CategoryLabel(placeholderCategory.Value) : string.Empty);
             if (has) gradeText.color = EquipmentData.GradeColor(data.grade);
+            else     gradeText.color = new Color(1f, 1f, 1f, 0.4f);
         }
     }
+
+    static string CategoryLabel(EquipCategory cat) => cat switch
+    {
+        EquipCategory.RING  => "반지",
+        EquipCategory.NECK  => "목걸이",
+        EquipCategory.FOOT  => "발",
+        EquipCategory.TOP   => "상의",
+        EquipCategory.CLOAK => "망토",
+        EquipCategory.HEAD  => "머리",
+        _                   => cat.ToString(),
+    };
 
     public EquipmentData Data => _data;
 
