@@ -238,7 +238,17 @@ public class ImprovManager : MonoBehaviourSingleton<ImprovManager>
 
         Time.timeScale = 1f;
 
-        GameManager.Shared?.StartNextWave();
+        // wave 0(1웨이브 시작 전)은 증강 패널만 표시 → 바로 게임 시작
+        if (pendingWave == 0)
+        {
+            GameManager.Shared?.StartNextWave();
+            return;
+        }
+
+        if (UpgradeManager.Shared != null)
+            UpgradeManager.Shared.ShowPanel(pendingWave);
+        else
+            GameManager.Shared?.StartNextWave();
     }
 }
 

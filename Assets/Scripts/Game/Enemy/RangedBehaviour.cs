@@ -276,6 +276,7 @@ public class RangedBehaviour : EnemyBehaviourBase
         lr.startColor   = warningColor;
         lr.endColor     = warningColor;
         lr.sortingOrder = 10;
+        Destroy(go, warningDuration + 0.5f);
         return lr;
     }
 }

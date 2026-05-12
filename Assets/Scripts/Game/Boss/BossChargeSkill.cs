@@ -160,6 +160,7 @@ public class BossChargeSkill : BossSkillBase
         lr.endColor          = warningColor;
         lr.sortingOrder      = 10;
         lr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        Destroy(go, warningDuration + 0.5f);
         return lr;
     }
 

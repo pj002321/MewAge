@@ -181,8 +181,7 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
         PlayerPrefs.DeleteAll();
         PlayerPrefs.Save();
         this.DLog("[Debug] PlayerPrefs 전체 초기화 완료 — 프롤로그 씬으로 이동");
-        // Application.Quit 대신 직접 프롤로그 씬 로드 → 즉시 초기화 상태 확인 가능
-        UnityEngine.SceneManagement.SceneManager.LoadScene("prologue@scene");
+        SceneLoadManager.LoadScene("prologue@scene");
     }
 
     // ── 인게임 핸들러 ─────────────────────────────────────────────────

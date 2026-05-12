@@ -120,6 +120,7 @@ public class ChargeBehaviour : EnemyBehaviourBase
         _warnLine.endColor   = warningColor;
         _warnLine.SetPosition(0, Vector3.zero);
         _warnLine.SetPosition(1, Vector3.zero);
+        Destroy(go, idleDuration + 0.5f);
     }
 
     private void UpdateWarningLine()

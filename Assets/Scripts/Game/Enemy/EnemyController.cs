@@ -314,6 +314,13 @@ public class EnemyController : MonoBehaviour, IEnemyHost
         enabled = false;
         if (rb != null) rb.linearVelocity = Vector2.zero;
 
+        // behaviour 코루틴도 중단 (EnemyController.StopAllCoroutines는 다른 MonoBehaviour에 영향 없음)
+        if (behaviour != null)
+        {
+            behaviour.StopAllCoroutines();
+            behaviour.enabled = false;
+        }
+
         // 재질 복구 (사망 실루엣 해제)
         if (srs != null && _originalMats != null)
             for (int i = 0; i < srs.Length && i < _originalMats.Length; i++)
