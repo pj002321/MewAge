@@ -4,7 +4,7 @@ using UnityEngine;
 [CreateAssetMenu(menuName = "Mewage/Reward Visual Config", fileName = "RewardVisualConfig")]
 public class RewardVisualConfig : ScriptableObject
 {
-    public enum RewardType { Gold, Exp, Ruby }
+    public enum RewardType { Gold, Exp, Ruby, CharScroll, EquipScroll, RelicScroll }
 
     [Serializable]
     public struct Entry

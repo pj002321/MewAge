@@ -38,22 +38,32 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
 
     // ── 인게임 전용 ──────────────────────────────────────────────────
     [Header("인게임 (gameContent 하위)")]
-    [SerializeField] private Button   skipWaveButton;
-    [SerializeField] private Button[] bossWaveButtons;
-    [SerializeField] private int[]    bossWaves = { 10, 20, 30 };
+    [SerializeField] private Button   waveEndButton;
     [SerializeField] private Button   invincibleButton;
     [SerializeField] private Button   levelUpButton;
 
-    [Header("웨이브 점프")]
-    [SerializeField] private Button[] jumpButtons;
-    [SerializeField] private int[]    jumpWaves = { 9, 10, 19, 20, 29, 30, 40 };
+    [Header("웨이브 점프 패널")]
+    [SerializeField] private Button    waveListToggle;  // "웨이브 이동 ▼" 토글 버튼
+    [SerializeField] private Transform waveListContent; // 버튼 목록 컨테이너
+    [SerializeField] private Button[]  waveButtons;     // 씬에 배치된 버튼 1~N (순서대로 텍스트·리스너 자동 설정)
 
-    [Header("무기 드롭다운")]
-    [SerializeField] private TMP_Dropdown weaponDropdown;
+    [Header("무기 선택 패널")]
+    [SerializeField] private Button    weaponListToggle;
+    [SerializeField] private Transform weaponListContent;
+    [SerializeField] private Button[]  weaponButtonsCommon;    // 일반 5개
+    [SerializeField] private Button[]  weaponButtonsRare;      // 고급 5개
+    [SerializeField] private Button[]  weaponButtonsEpic;      // 희귀 5개
+    [SerializeField] private Button[]  weaponButtonsLegendary; // 전설 5개
+    [SerializeField] private Button[]  weaponButtonsMythic;    // 신화 5개
 
-    private bool _menuUnlocked  = false;   // 시작 시 잠금 상태
-    private bool _invincible    = false;
-    private bool _contentOpen   = true;
+    private bool _menuUnlocked    = false;
+    private bool _invincible      = false;
+    private bool _contentOpen     = true;
+    private bool _waveListOpen    = false;
+    private bool _weaponListOpen  = false;
+
+    private Coroutine _waveStagger;
+    private Coroutine _weaponStagger;
 
     private readonly List<DB_무기> _debugWeaponList = new();
 
@@ -74,22 +84,15 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
         menuToggleButton?.onClick.AddListener(OnToggleMenuButtons);
         resetDataButton?.onClick.AddListener(OnResetData);
 
-        skipWaveButton?.onClick.AddListener(OnSkipWave);
+        waveEndButton?.onClick.AddListener(() => GameManager.Shared?.DebugEndWave());
         invincibleButton?.onClick.AddListener(OnToggleInvincible);
         levelUpButton?.onClick.AddListener(OnLevelUp);
 
-        for (int i = 0; i < bossWaveButtons.Length; i++)
-        {
-            int wave = i < bossWaves.Length ? bossWaves[i] : 10;
-            bossWaveButtons[i]?.onClick.AddListener(() => GameManager.Shared?.DebugJumpToWave(wave));
-        }
-        for (int i = 0; i < jumpButtons.Length; i++)
-        {
-            int wave = i < jumpWaves.Length ? jumpWaves[i] : (i + 1) * 10;
-            jumpButtons[i]?.onClick.AddListener(() => GameManager.Shared?.DebugJumpToWave(wave));
-        }
+        waveListToggle?.onClick.AddListener(OnToggleWaveList);
+        waveListContent?.gameObject.SetActive(false);
 
-        // onValueChanged 리스너는 PopulateWeaponDropdown 내부에서 갱신 후 등록합니다.
+        weaponListToggle?.onClick.AddListener(OnToggleWeaponList);
+        weaponListContent?.gameObject.SetActive(false);
     }
 
     protected override void OnDestroy()
@@ -103,7 +106,8 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
     private void Start()
     {
         RefreshContent();
-        PopulateWeaponDropdown();
+        BuildWaveButtons();
+        BuildWeaponButtons();
     }
 
     // ── 씬 전환 ──────────────────────────────────────────────────────
@@ -112,7 +116,11 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
     {
         if (mode == LoadSceneMode.Additive) return;
         RefreshContent(scene.name);
-        if (IsGameScene(scene.name)) PopulateWeaponDropdown();
+        if (IsGameScene(scene.name)) { BuildWaveButtons(); BuildWeaponButtons(); }
+        waveListContent?.gameObject.SetActive(false);
+        weaponListContent?.gameObject.SetActive(false);
+        _waveListOpen   = false;
+        _weaponListOpen = false;
     }
 
     private static bool IsGameScene(string sceneName = null) =>
@@ -187,8 +195,6 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
 
     // ── 인게임 핸들러 ─────────────────────────────────────────────────
 
-    public void OnSkipWave()    => GameManager.Shared?.DebugSkipWave();
-
     public void OnToggleInvincible()
     {
         _invincible = !_invincible;
@@ -199,27 +205,63 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
 
     public void OnLevelUp() => PlayerStats.Shared?.DebugLevelUp();
 
-    // ── 무기 드롭다운 ─────────────────────────────────────────────────
+    // ── 웨이브 점프 패널 ──────────────────────────────────────────────
 
-    private void OnWeaponDropdownChanged(int index)
+    private void OnToggleWaveList()
     {
-        if (index < 0 || index >= _debugWeaponList.Count) return;
-        var weapon = WeaponData.FromDB(_debugWeaponList[index]);
-        if (weapon == null) return;
-        var inv = PlayerInventory.Shared;
-        if (inv == null) return;
-        inv.QuietEquip(weapon);
+        _waveListOpen = !_waveListOpen;
+
+        if (_waveListOpen)
+        {
+            if (_waveStagger != null) StopCoroutine(_waveStagger);
+            _waveStagger = StartCoroutine(StaggerShow(waveListContent));
+        }
+        else
+        {
+            if (_waveStagger != null) { StopCoroutine(_waveStagger); _waveStagger = null; }
+            waveListContent?.gameObject.SetActive(false);
+        }
     }
 
-    private void PopulateWeaponDropdown()
+    private void BuildWaveButtons()
     {
-        if (weaponDropdown == null) return;
-        _debugWeaponList.Clear();
+        if (waveButtons == null) return;
 
-        // ClearOptions() 내부에서 value=0 이 설정되면 onValueChanged 가 발화할 수 있으므로
-        // 갱신 중에는 리스너를 제거합니다.
-        weaponDropdown.onValueChanged.RemoveListener(OnWeaponDropdownChanged);
-        weaponDropdown.ClearOptions();
+        for (int i = 0; i < waveButtons.Length; i++)
+        {
+            var btn = waveButtons[i];
+            if (btn == null) continue;
+
+            var label = btn.GetComponentInChildren<TextMeshProUGUI>();
+            if (label) label.text = (i + 1).ToString();
+
+            btn.onClick.RemoveAllListeners();
+            int wave = i + 1;
+            btn.onClick.AddListener(() => GameManager.Shared?.DebugJumpToWave(wave));
+        }
+    }
+
+    // ── 무기 선택 패널 ────────────────────────────────────────────────
+
+    private void OnToggleWeaponList()
+    {
+        _weaponListOpen = !_weaponListOpen;
+
+        if (_weaponListOpen)
+        {
+            if (_weaponStagger != null) StopCoroutine(_weaponStagger);
+            _weaponStagger = StartCoroutine(StaggerShow(weaponListContent));
+        }
+        else
+        {
+            if (_weaponStagger != null) { StopCoroutine(_weaponStagger); _weaponStagger = null; }
+            weaponListContent?.gameObject.SetActive(false);
+        }
+    }
+
+    private void BuildWeaponButtons()
+    {
+        _debugWeaponList.Clear();
 
         string chapterID = PlayerPrefs.GetString("SelectedChapterID", "C1_S1");
         int chapter = 1;
@@ -232,24 +274,61 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
             var w = WeaponData.FromDB(row);
             if (w != null && w.chapter == chapter) _debugWeaponList.Add(row);
         });
-        _debugWeaponList.Sort((a, b) => GradeOrder(a.f_등급).CompareTo(GradeOrder(b.f_등급)));
 
-        var options = new List<TMP_Dropdown.OptionData>();
-        foreach (var row in _debugWeaponList)
-            options.Add(new TMP_Dropdown.OptionData($"[{GradeLabel(row.f_등급)}] {row.f_이름}"));
-        weaponDropdown.AddOptions(options);
-        weaponDropdown.value = 0;
-        weaponDropdown.RefreshShownValue();
-        weaponDropdown.onValueChanged.AddListener(OnWeaponDropdownChanged);
+        BindGradeButtons(weaponButtonsCommon,    0);
+        BindGradeButtons(weaponButtonsRare,      1);
+        BindGradeButtons(weaponButtonsEpic,      2);
+        BindGradeButtons(weaponButtonsLegendary, 3);
+        BindGradeButtons(weaponButtonsMythic,    4);
+    }
 
-        if (weaponDropdown.template != null)
+    private void BindGradeButtons(Button[] buttons, int gradeOrder)
+    {
+        if (buttons == null) return;
+
+        var gradeWeapons = _debugWeaponList.FindAll(r => GradeOrder(r.f_등급) == gradeOrder);
+
+        for (int i = 0; i < buttons.Length; i++)
         {
-            var tog = weaponDropdown.template.GetComponentInChildren<Toggle>(true);
-            float h = tog != null ? ((RectTransform)tog.transform).rect.height : 30f;
-            if (h < 1f) h = 30f;
-            weaponDropdown.template.sizeDelta = new Vector2(
-                weaponDropdown.template.sizeDelta.x,
-                Mathf.Min(options.Count, 12) * h + 8f);
+            var btn = buttons[i];
+            if (btn == null) continue;
+
+            btn.onClick.RemoveAllListeners();
+
+            if (i < gradeWeapons.Count)
+            {
+                var row   = gradeWeapons[i];
+                var label = btn.GetComponentInChildren<TextMeshProUGUI>();
+                if (label) label.text = row.f_이름;
+
+                btn.gameObject.SetActive(true);
+                btn.onClick.AddListener(() =>
+                {
+                    var weapon = WeaponData.FromDB(row);
+                    if (weapon != null) PlayerInventory.Shared?.QuietEquip(weapon);
+                });
+            }
+            else
+            {
+                btn.gameObject.SetActive(false);
+            }
+        }
+    }
+
+    private System.Collections.IEnumerator StaggerShow(Transform content, float interval = 0.008f)
+    {
+        if (content == null) yield break;
+
+        foreach (Transform child in content)
+            child.gameObject.SetActive(false);
+
+        content.gameObject.SetActive(true);
+
+        var wait = new WaitForSecondsRealtime(interval);
+        foreach (Transform child in content)
+        {
+            child.gameObject.SetActive(true);
+            yield return wait;
         }
     }
 

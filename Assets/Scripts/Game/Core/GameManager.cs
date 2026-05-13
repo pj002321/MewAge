@@ -277,18 +277,12 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 
         yield return new WaitForSeconds(0.15f);  // 파편 연출이 잠깐 보이도록 대기
 
-        if (waveClearPanel) waveClearPanel.SetActive(true);
-
         // 적 사망 연출 + 기물 스케일다운 후 파괴 (DieRoutine 기준 0.45s)
         yield return StartCoroutine(ClearAllWithScaleDown(0.45f));
 
         FXManager.Shared?.ClearAllFX();          // 투사체·파편 즉시 제거
         WeaponPoint.RecallAll();                 // 날아가는 클론 즉시 회수
         GlobalLightDimmer.ForceReset();           // 조명 즉시 복구
-
-        yield return new WaitForSeconds(waveClearDuration);
-
-        if (waveClearPanel) waveClearPanel.SetActive(false);
 
         PlayerStats.Shared?.AddExp(10);
 
@@ -1053,6 +1047,37 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     }
 
     // ── 디버그 전용 ──────────────────────────────────────────────
+    /// <summary>웨이브를 즉시 종료하고 증강 패널을 표시합니다.</summary>
+    public void DebugEndWave()
+    {
+        if (isGameOver) return;
+
+        StopAllCoroutines();
+        Time.timeScale    = 1f;
+        _pauseTimer       = false;
+        waitingForUpgrade = false;
+
+        if (bossWaveActive)
+        {
+            bossWaveActive = false;
+            WaveEnvironmentSwitcher.Shared?.SetNormal();
+            BossHUDPanel.Shared?.Hide();
+        }
+
+        if (BossController.Current != null)
+            Destroy(BossController.Current.gameObject);
+        foreach (var clone in BossClone.All.ToArray())
+            if (clone != null) Destroy(clone.gameObject);
+
+        EnemySpawner.Shared?.StopSpawning();
+        EnemySpawner.Shared?.ClearAllEnemies();
+        FXManager.Shared?.ClearAllFX();
+        WeaponPoint.RecallAll();
+
+        waitingForUpgrade = true;
+        StartCoroutine(WaveClearRoutine());
+    }
+
     /// <summary>현재 웨이브를 즉시 종료합니다. 패널이 열려 있어도 강제 작동합니다.</summary>
     public void DebugSkipWave()
     {

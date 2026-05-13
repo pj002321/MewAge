@@ -95,6 +95,9 @@ public class PlayerController : MonoBehaviour
     private Transform      _visualSlot;
     private HitFlash       hitFlash;
     private HitShake       hitShake;
+    private Canvas         _hpBarCanvas;
+    private const float    HpBarSortMultiplier = 100f;
+    private const int      HpBarSortOffset     = 200; // 항상 캐릭터·적 위에 표시
 
     // 스킬 하이라이트 효과
     private Coroutine _skillHighlightCoroutine;
@@ -113,8 +116,7 @@ public class PlayerController : MonoBehaviour
 
         if (playerHpSlider != null)
         {
-            var canvas = playerHpSlider.GetComponentInParent<Canvas>();
-            if (canvas != null) canvas.sortingOrder = 100;
+            _hpBarCanvas = playerHpSlider.GetComponentInParent<Canvas>();
         }
     }
 
@@ -160,6 +162,12 @@ public class PlayerController : MonoBehaviour
         HandleInput();
         FlipSprite();
         UpdateAnimator();
+    }
+
+    private void LateUpdate()
+    {
+        if (_hpBarCanvas != null)
+            _hpBarCanvas.sortingOrder = -Mathf.RoundToInt(transform.position.y * HpBarSortMultiplier) + HpBarSortOffset;
     }
 
     private void UpdateAnimator()
