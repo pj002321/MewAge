@@ -21,6 +21,11 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
     [SerializeField] private GameObject bossEntryLandingVfxPrefab;
     [SerializeField] private float      bossEntryLandingVfxLifetime = 2f;
 
+    [Header("스킬 게이지 오브")]
+    [SerializeField] private GameObject skillOrbPrefab;   // null 이면 goldOrbDebrisPrefab 사용
+    [SerializeField] private float      skillOrbArcHeight = 2.5f;
+    [SerializeField] private float      skillOrbDuration  = 0.35f;
+
     [Header("Orb 파편 연출 on/off")]
     [SerializeField] private bool showGoldOrbDebris = true;
     [SerializeField] private bool showExpOrbDebris  = true;
@@ -257,6 +262,58 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
             if (m != null) Destroy(m.gameObject);
 
         this.DLog("[FXManager] ClearAllFX — 파편·투사체·경고선·마커 정리 완료");
+    }
+
+    // ── 스킬 게이지 오브 ─────────────────────────────────────────────
+
+    /// <summary>적 머리에서 포물선으로 플레이어에게 날아가는 스킬 포인트 오브.</summary>
+    public void SpawnSkillOrb(Vector3 from, System.Action onArrive)
+    {
+        var prefab = skillOrbPrefab != null ? skillOrbPrefab : goldOrbDebrisPrefab;
+        if (prefab == null) { onArrive?.Invoke(); return; }
+        StartCoroutine(SkillOrbRoutine(from, prefab, onArrive));
+    }
+
+    private IEnumerator SkillOrbRoutine(Vector3 from, GameObject prefab, System.Action onArrive)
+    {
+        var go = GetDebris(prefab, from);
+        activeDebris.Add(go);
+
+        var sr = go.GetComponent<SpriteRenderer>();
+
+        // 목적지: 시작 시 플레이어 위치 고정
+        Vector3 to      = PlayerController.Instance != null
+            ? PlayerController.Instance.transform.position
+            : from;
+        // 제어점: 두 지점 중간 + 위로 올림 (높은 아치)
+        Vector3 ctrl    = (from + to) * 0.5f + Vector3.up * skillOrbArcHeight;
+        float elapsed   = 0f;
+
+        while (elapsed < skillOrbDuration)
+        {
+            float t  = elapsed / skillOrbDuration;
+            // Quadratic Bezier
+            Vector3 p0 = Vector3.Lerp(from, ctrl, t);
+            Vector3 p1 = Vector3.Lerp(ctrl, to,   t);
+            if (go != null) go.transform.position = Vector3.Lerp(p0, p1, t);
+
+            // 착지 직전 빠르게 축소
+            if (t > 0.7f && go != null)
+            {
+                float shrink = Mathf.Lerp(1f, 0.3f, (t - 0.7f) / 0.3f);
+                go.transform.localScale = _prefabScales.TryGetValue(prefab, out var s) ? s * shrink : Vector3.one * shrink;
+            }
+
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        if (go != null)
+        {
+            activeDebris.Remove(go);
+            ReturnDebris(prefab, go);
+        }
+        onArrive?.Invoke();
     }
 
     /// <summary>파편이 위로 상승하며 페이드아웃 (흡수 시 연출)</summary>

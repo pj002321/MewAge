@@ -431,7 +431,7 @@ public class BossController : MonoBehaviour, IEnemyHost
 
         currentHP -= damage;
 
-        CharacterSkillManager.Shared?.AddPoint(1);
+        CharacterSkillManager.Shared?.TryAddPointFromHit(transform.position);
         AddSkillGauge(damage);
 
         SoundManager.Shared?.Play(SoundKey.Enemy_Hit);

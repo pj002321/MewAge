@@ -616,7 +616,6 @@ public class EnemyController : MonoBehaviour, IEnemyHost
             {
                 _deathDir = Vector2.up;
                 OnDeath?.Invoke();
-                CharacterSkillManager.Shared?.AddPoint(1);
                 StartCoroutine(DieRoutine());
                 break;
             }
@@ -647,9 +646,8 @@ public class EnemyController : MonoBehaviour, IEnemyHost
 
             if (currentHP <= 0f)
             {
-                _deathDir = Vector2.up; // 출혈 사망 시 위쪽으로
+                _deathDir = Vector2.up;
                 OnDeath?.Invoke();
-                CharacterSkillManager.Shared?.AddPoint(1);
                 StartCoroutine(DieRoutine());
             }
         }
@@ -679,12 +677,14 @@ public class EnemyController : MonoBehaviour, IEnemyHost
         if (!knockbackImmune && knockbackDir != Vector2.zero && knockbackForce > 0f)
             Knockback(knockbackDir, knockbackForce);
 
+        if (currentHP > 0f)
+            CharacterSkillManager.Shared?.TryAddPointFromHit(transform.position);
+
         if (currentHP <= 0f)
         {
             _isDying  = true;
             _deathDir = knockbackDir.sqrMagnitude > 0.001f ? knockbackDir.normalized : Vector2.up;
             OnDeath?.Invoke();
-            CharacterSkillManager.Shared?.AddPoint(1);
             if (_eliteMarker != null)
                 ItemDropManager.Shared?.SpawnBossDrops(transform.position, goldDrop, 1, expDrop, 1);
             else
