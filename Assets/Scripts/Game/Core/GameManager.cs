@@ -50,6 +50,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     private bool  isGameOver;
     private bool  waitingForUpgrade = true; // 트랜지션/초기화 기간 중 0초 달성으로 증강이 뜨는 것 방지
     private bool  _pauseTimer;              // 웨이브 시작 연출 중 타이머 일시 정지
+    private bool  _infiniteTime;
     private bool  _isCountingDown;          // 카운트다운 중 타이머 UI 업데이트 방지
     private bool  bossWaveActive;
     private string currentChapterID = "C1_S1";
@@ -244,7 +245,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     {
         if (isGameOver) return;
 
-        if (!_pauseTimer) waveTimer -= Time.deltaTime;
+        if (!_pauseTimer && !_infiniteTime) waveTimer -= Time.deltaTime;
         UpdateTimerUI();
 
         if (waveTimer <= 0f && !waitingForUpgrade)
@@ -513,9 +514,17 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         if (gameOverPanel)                   gameOverPanel.SetActive(false);
         if (gameOverResultPanel != null)     gameOverResultPanel.Hide();
         PlayerController.Instance?.Revive();
-        // 웨이브 클리어 시퀀스(업그레이드 패널 등)가 이미 진행 중이면 스폰 재개 금지
         if (!waitingForUpgrade)
+        {
+            // 웨이브 진행 중 사망 부활 — 스폰 재개
             EnemySpawner.Shared?.ResumeSpawning(wave);
+        }
+        else
+        {
+            // 웨이브 클리어 타이밍에 사망 — WaveClearRoutine이 isGameOver로 중단된 상태
+            // 다음 웨이브를 바로 시작 (적은 이미 정리됨)
+            StartNextWave();
+        }
         Debug.Log("[GameManager] Revive() 완료");
     }
 
@@ -1047,6 +1056,8 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     }
 
     // ── 디버그 전용 ──────────────────────────────────────────────
+    public void DebugSetInfiniteTime(bool infinite) => _infiniteTime = infinite;
+
     /// <summary>웨이브를 즉시 종료하고 증강 패널을 표시합니다.</summary>
     public void DebugEndWave()
     {

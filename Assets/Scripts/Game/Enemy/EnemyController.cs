@@ -157,11 +157,11 @@ public class EnemyController : MonoBehaviour, IEnemyHost
         }
 
         behaviour?.Init(this);
+        All.Add(this); // SpawnMarker.OnDestroy 타이밍 gap 없이 카운트가 정확하도록 Awake에서 등록
     }
 
     private void Start()
     {
-        All.Add(this);   // 최초 생성 시 등록 (풀 재사용은 WakeFromPool에서)
         playerTransform = PlayerController.Instance?.transform;
     }
 
@@ -317,6 +317,7 @@ public class EnemyController : MonoBehaviour, IEnemyHost
         playerTransform = PlayerController.Instance?.transform;
         GetComponent<SlimeBobAnimation>()?.ResetOrigin();
         _shield?.ResetShield();
+        All.Add(this);
     }
 
     /// <summary>EnemyPool이 풀로 반환하기 전 호출 — 렌더러·콜라이더 비활성화 + All 제거.</summary>

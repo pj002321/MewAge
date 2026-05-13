@@ -309,7 +309,7 @@ public class Projectile : MonoBehaviour
             _cachedBossCol = boss.GetComponentInChildren<Collider2D>();
         if (_cachedBossCol == null) return;
 
-        if (!_cachedBossCol.bounds.Contains(transform.position)) return;
+        if (!_cachedBossCol.OverlapPoint(transform.position)) return;
 
         _bossHitDone = true;
         SoundManager.Shared?.Play(SoundKey.Weapon_Attack);

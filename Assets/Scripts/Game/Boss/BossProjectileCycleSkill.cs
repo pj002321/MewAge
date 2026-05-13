@@ -124,6 +124,7 @@ public class BossProjectileCycleSkill : BossSkillBase
 
     [Header("추격 설정")]
     [SerializeField] private float chaseStopDistance = 1.8f;
+    [SerializeField] private float animWaitTimeout    = 2f;
 
     private readonly List<LineRenderer> _activeWarnLines = new();
 
@@ -213,6 +214,7 @@ public class BossProjectileCycleSkill : BossSkillBase
                 if (i < cfg.연사횟수 - 1)
                     yield return new WaitForSeconds(cfg.발사간격);
             }
+            yield return WaitForAttackAnimEnd();
         }
         finally { if (Boss != null) Boss.IsFiringSkill = false; }
     }
@@ -240,6 +242,7 @@ public class BossProjectileCycleSkill : BossSkillBase
                 if (r < cfg.반복횟수 - 1)
                     yield return new WaitForSeconds(cfg.반복간격);
             }
+            yield return WaitForAttackAnimEnd();
         }
         finally { if (Boss != null) Boss.IsFiringSkill = false; }
     }
@@ -467,6 +470,7 @@ public class BossProjectileCycleSkill : BossSkillBase
                 if (i < cfg.호밍횟수 - 1)
                     yield return new WaitForSeconds(cfg.호밍간격);
             }
+            yield return WaitForAttackAnimEnd();
         }
         finally { if (Boss != null) Boss.IsFiringSkill = false; }
     }
@@ -505,6 +509,31 @@ public class BossProjectileCycleSkill : BossSkillBase
     }
 
     private bool IsInvalid() => Owner == null;
+
+    private IEnumerator WaitForAttackAnimEnd()
+    {
+        var anim = Owner.EnemyAnimator;
+        if (anim == null) yield break;
+
+        int prevHash = anim.GetCurrentAnimatorStateInfo(0).fullPathHash;
+        yield return null;
+
+        // 전환이 시작되지 않았으면 TAttack 애니가 없는 것으로 간주하고 즉시 종료
+        if (!anim.IsInTransition(0) &&
+            anim.GetCurrentAnimatorStateInfo(0).fullPathHash == prevHash)
+            yield break;
+
+        float elapsed = 0f;
+        while (elapsed < animWaitTimeout)
+        {
+            if (!anim.IsInTransition(0) &&
+                anim.GetCurrentAnimatorStateInfo(0).normalizedTime >= 1f)
+                yield break;
+
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+    }
 
     // ── 에디터 기즈모 ────────────────────────────────────────────
 #if UNITY_EDITOR

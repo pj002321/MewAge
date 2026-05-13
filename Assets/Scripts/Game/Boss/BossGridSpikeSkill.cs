@@ -59,14 +59,16 @@ public class BossGridSpikeSkill : BossSkillBase
     [Tooltip("0이면 VFX를 자동으로 제거하지 않음")]
     [SerializeField] private float spawnVfxDuration = 1f;
 
-    // ── 활성 마커 추적 (OnDestroy 안전망) ────────────────────────
+    // ── 활성 마커·스파이크 추적 (OnDestroy 안전망) ───────────────
     private readonly List<GameObject> _activeMarkers = new();
+    private readonly List<GameObject> _activeSpikes  = new();
 
     private void OnDestroy()
     {
-        foreach (var m in _activeMarkers)
-            if (m != null) Destroy(m);
+        foreach (var m in _activeMarkers) if (m != null) Destroy(m);
         _activeMarkers.Clear();
+        foreach (var s in _activeSpikes)  if (s != null) Destroy(s);
+        _activeSpikes.Clear();
     }
 
     // ── BossSkillBase ────────────────────────────────────────────
@@ -74,6 +76,10 @@ public class BossGridSpikeSkill : BossSkillBase
     protected override async UniTask OnExecuteAsync(CancellationToken ct)
     {
         if (IsInvalid()) { this.DLog("[GridSpike] Owner null — skip"); return; }
+
+        // 이전 사이클 스파이크 즉시 정리
+        foreach (var s in _activeSpikes) if (s != null) Destroy(s);
+        _activeSpikes.Clear();
 
         GetMapBounds(out Vector2 bMin, out Vector2 bMax);
         Vector2 mapSize  = bMax - bMin;
@@ -92,7 +98,7 @@ public class BossGridSpikeSkill : BossSkillBase
 
         // 패턴 루프 측은 경고 + 낙하 시간만큼 대기 후 다음 사이클로 넘어갑니다.
         // 그로기로 ct가 취소돼도 drop은 독립 실행 중이므로 스파이크는 정상 낙하합니다.
-        await UniTask.Delay(System.TimeSpan.FromSeconds(warningDuration + dropDuration), cancellationToken: ct)
+        await UniTask.Delay(System.TimeSpan.FromSeconds(warningDuration + dropDuration + spikeDuration), cancellationToken: ct)
                      .SuppressCancellationThrow();
     }
 
@@ -203,9 +209,14 @@ public class BossGridSpikeSkill : BossSkillBase
             if (spawnVfxDuration > 0f) Destroy(vfx, spawnVfxDuration);
         }
 
-        if (spikeGo != null) Destroy(spikeGo, spikeDuration);
+        if (spikeGo != null)
+        {
+            _activeSpikes.Add(spikeGo);
+            Destroy(spikeGo, spikeDuration);
+        }
 
         await SpikeHitAsync(targetPos, dmg, ct);
+        _activeSpikes.Remove(spikeGo);
     }
 
     private async UniTask SpikeHitAsync(Vector2 pos, float dmg, CancellationToken ct)

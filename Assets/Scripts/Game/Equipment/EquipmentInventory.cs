@@ -15,13 +15,61 @@ public enum EquipSortMode { None, ByGrade, ByCivilization, ByCategory }
 /// </summary>
 public class EquipmentInventory : MonoBehaviourSingleton<EquipmentInventory>
 {
-    public const int MaxEquipped = 6;
+    public const int MaxEquipped       = 6;
+    public const int GoldCostPerLevel  = 100;
+    public const int MatCostPerLevel   = 10;
 
     // 인덱스 = (int)EquipCategory  (RING=0 … HEAD=5)
     private readonly EquipmentData[] equipped = new EquipmentData[MaxEquipped];
     private readonly List<EquipmentData> bag  = new();
 
     public System.Action OnChanged;
+
+    // ── HomeGold (홈 씬 전용, PlayerPrefs 저장) ───────────────────────
+    public int HomeGold
+    {
+        get => PlayerPrefs.GetInt("HomeGold", 0);
+        private set { PlayerPrefs.SetInt("HomeGold", Mathf.Max(0, value)); PlayerPrefs.Save(); }
+    }
+
+    public void AddHomeGold(int amount) => HomeGold += amount;
+
+    // ── 장비 레벨업 재료 ─────────────────────────────────────────────
+    public int GetMatCount(EquipCategory cat) => PlayerPrefs.GetInt($"EquipMat_{cat}", 0);
+
+    public void AddMat(EquipCategory cat, int amount)
+    {
+        PlayerPrefs.SetInt($"EquipMat_{cat}", Mathf.Max(0, GetMatCount(cat) + amount));
+        PlayerPrefs.Save();
+    }
+
+    public static RewardVisualConfig.RewardType CategoryToMatType(EquipCategory cat) => cat switch
+    {
+        EquipCategory.RING  => RewardVisualConfig.RewardType.EquipRingMat,
+        EquipCategory.NECK  => RewardVisualConfig.RewardType.EquipNeckMat,
+        EquipCategory.FOOT  => RewardVisualConfig.RewardType.EquipFootMat,
+        EquipCategory.TOP   => RewardVisualConfig.RewardType.EquipTopMat,
+        EquipCategory.CLOAK => RewardVisualConfig.RewardType.EquipcloakMat,
+        EquipCategory.HEAD  => RewardVisualConfig.RewardType.EquipHeadMat,
+        _                   => RewardVisualConfig.RewardType.EquipRingMat,
+    };
+
+    // ── 장비 레벨업 ─────────────────────────────────────────────────
+    public bool TryLevelUp(EquipmentData data)
+    {
+        if (data == null || data.level >= EquipmentData.MaxLevel) return false;
+        if (HomeGold < GoldCostPerLevel) return false;
+        if (GetMatCount(data.category) < MatCostPerLevel) return false;
+
+        HomeGold -= GoldCostPerLevel;
+        PlayerPrefs.SetInt($"EquipMat_{data.category}", GetMatCount(data.category) - MatCostPerLevel);
+        data.level++;
+        data.SaveLevel();
+        PlayerPrefs.Save();
+        RecalculateEquipStats();
+        OnChanged?.Invoke();
+        return true;
+    }
 
     protected override bool DontDestroy => true;
 
@@ -146,7 +194,7 @@ public class EquipmentInventory : MonoBehaviourSingleton<EquipmentInventory>
             var statType = EquipmentData.StatIdToType(e.statId);
             if (statType.HasValue)
                 sm.SetEquipFlat(statType.Value,
-                    sm.GetEquipFlat(statType.Value) + e.statValue);
+                    sm.GetEquipFlat(statType.Value) + e.EffectiveStatValue);
         }
     }
 }

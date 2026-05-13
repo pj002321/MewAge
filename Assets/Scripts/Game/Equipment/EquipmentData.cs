@@ -23,6 +23,15 @@ public class EquipmentData
     public float         statValue;
     public string        description;
 
+    public const int MaxLevel = 100;
+    public int level = 1;
+
+    // 레벨마다 기본 수치의 10%씩 증가
+    public float EffectiveStatValue => statValue * (1f + 0.1f * (level - 1));
+
+    public void SaveLevel()  => PlayerPrefs.SetInt($"EquipLevel_{equipId}", level);
+    public void LoadLevel()  => level = PlayerPrefs.GetInt($"EquipLevel_{equipId}", 1);
+
     private Sprite _icon;
     public  Sprite  Icon => _icon ??= LoadIcon(civilization, category, equipId);
 
@@ -45,6 +54,7 @@ public class EquipmentData
         if (!System.Enum.TryParse(row.f_문명, true, out e.civilization))
             e.civilization = EquipCiv.구석기;
 
+        e.LoadLevel();
         return e;
     }
 
@@ -138,6 +148,6 @@ public class EquipmentData
             "STAT_CRI_RATE"   => "치명타 확률",
             _                 => statId,
         };
-        return $"{label} +{statValue}";
+        return $"{label} +{EffectiveStatValue:F0}";
     }
 }

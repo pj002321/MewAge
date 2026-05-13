@@ -473,7 +473,12 @@ public class UpgradePanel : MonoBehaviour
                     DoSellInven(slotIndex);
                     selectedInvenIndex = -1;
                     RefreshInventoryUI();
-                })
+                }),
+                onClose: () =>
+                {
+                    selectedInvenIndex = -1;
+                    RefreshInventoryUI();
+                }
             );
         }
 

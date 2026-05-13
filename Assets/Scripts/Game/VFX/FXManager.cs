@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -24,7 +25,10 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
     [Header("스킬 게이지 오브")]
     [SerializeField] private GameObject skillOrbPrefab;   // null 이면 goldOrbDebrisPrefab 사용
     [SerializeField] private float      skillOrbArcHeight = 2.5f;
-    [SerializeField] private float      skillOrbDuration  = 0.35f;
+    [SerializeField] private float      skillOrbDuration  = 0.45f;
+    [SerializeField] private int        skillOrbCount     = 4;    // 한 번에 스폰할 오브 개수
+    private const int MaxActiveOrbs = 12;
+    private int _activeOrbCount;
 
     [Header("Orb 파편 연출 on/off")]
     [SerializeField] private bool showGoldOrbDebris = true;
@@ -44,6 +48,7 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
     private readonly Queue<GameObject>                         _hitEffectPool  = new();
     private readonly Queue<FloatingText>                       _floatingTextPool = new();
     private readonly Dictionary<GameObject, Vector3>           _prefabScales   = new();
+    private readonly Dictionary<GameObject, SpriteRenderer>   _srCache        = new();
 
     private GameObject GetDebris(GameObject prefab, Vector3 pos)
     {
@@ -59,21 +64,32 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
             return go;
         }
         var inst = Instantiate(prefab, pos, Quaternion.identity);
-        if (!_prefabScales.ContainsKey(prefab)) _prefabScales[prefab] = inst.transform.localScale;
+        if (!_prefabScales.ContainsKey(prefab)) _prefabScales[prefab] = prefab.transform.localScale;
+        _srCache[inst] = inst.GetComponent<SpriteRenderer>();
         return inst;
     }
 
     private void ReturnDebris(GameObject prefab, GameObject go)
     {
         if (go == null) return;
-        // 색상 알파 복구
-        var sr = go.GetComponent<SpriteRenderer>();
-        if (sr != null) { var c = sr.color; sr.color = new Color(c.r, c.g, c.b, 1f); }
+        if (_srCache.TryGetValue(go, out var sr) && sr != null)
+        {
+            var c = sr.color;
+            sr.color = new Color(c.r, c.g, c.b, 1f);
+        }
         go.transform.localScale = _prefabScales.TryGetValue(prefab, out var s) ? s : Vector3.one;
         go.SetActive(false);
         if (!_debrisPool.TryGetValue(prefab, out var q))
             _debrisPool[prefab] = q = new Queue<GameObject>();
         q.Enqueue(go);
+    }
+
+    private static void SwapRemove<T>(List<T> list, T item) where T : class
+    {
+        int idx = list.LastIndexOf(item);
+        if (idx < 0) return;
+        list[idx] = list[list.Count - 1];
+        list.RemoveAt(list.Count - 1);
     }
 
     public void ReturnDamageText(DamageText dt)
@@ -142,7 +158,7 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
     {
         if (go == null) return;
         go.SetActive(false);
-        _activeHitEffects.Remove(go);
+        SwapRemove(_activeHitEffects, go);
         _hitEffectPool.Enqueue(go);
     }
 
@@ -225,6 +241,7 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
         foreach (var go in activeDebris)
             if (go != null) Destroy(go);
         activeDebris.Clear();
+        _activeOrbCount = 0;
 
         // 활성 히트 이펙트 풀 반환 (static 추적 리스트 사용)
         for (int i = _activeHitEffects.Count - 1; i >= 0; i--)
@@ -266,42 +283,77 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
 
     // ── 스킬 게이지 오브 ─────────────────────────────────────────────
 
-    /// <summary>적 머리에서 포물선으로 플레이어에게 날아가는 스킬 포인트 오브.</summary>
+    /// <summary>적 머리에서 사방으로 튀었다가 플레이어 머리로 흡수되는 스킬 포인트 오브 (복수).</summary>
     public void SpawnSkillOrb(Vector3 from, System.Action onArrive)
     {
         var prefab = skillOrbPrefab != null ? skillOrbPrefab : goldOrbDebrisPrefab;
         if (prefab == null) { onArrive?.Invoke(); return; }
-        StartCoroutine(SkillOrbRoutine(from, prefab, onArrive));
+
+        // 동시 활성 오브가 상한을 초과하면 연출 생략 (순수 시각 효과이므로 게임플레이 무관)
+        if (_activeOrbCount >= MaxActiveOrbs) { onArrive?.Invoke(); return; }
+
+        int count = Mathf.Max(1, skillOrbCount);
+        for (int i = 0; i < count; i++)
+        {
+            bool isLast = i == count - 1;
+            StartCoroutine(SkillOrbRoutine(from, prefab, isLast ? onArrive : null, i, count));
+        }
     }
 
-    private IEnumerator SkillOrbRoutine(Vector3 from, GameObject prefab, System.Action onArrive)
+    private IEnumerator SkillOrbRoutine(Vector3 from, GameObject prefab, System.Action onArrive, int orbIndex = 0, int orbTotal = 1)
     {
+        // 각 오브 독립 랜덤 지연 — 파박파박 따로 꽂히는 느낌
+        float initDelay = Random.Range(0f, 0.28f);
+        if (initDelay > 0.01f) yield return new WaitForSeconds(initDelay);
+
+        _activeOrbCount++;
+
         var go = GetDebris(prefab, from);
         activeDebris.Add(go);
 
-        var sr = go.GetComponent<SpriteRenderer>();
+        _prefabScales.TryGetValue(prefab, out var baseScale);
+        if (baseScale == Vector3.zero) baseScale = Vector3.one;
 
-        // 목적지: 시작 시 플레이어 위치 고정
-        Vector3 to      = PlayerController.Instance != null
-            ? PlayerController.Instance.transform.position
-            : from;
-        // 제어점: 두 지점 중간 + 위로 올림 (높은 아치)
-        Vector3 ctrl    = (from + to) * 0.5f + Vector3.up * skillOrbArcHeight;
-        float elapsed   = 0f;
-
-        while (elapsed < skillOrbDuration)
+        Vector3 GetTarget()
         {
-            float t  = elapsed / skillOrbDuration;
-            // Quadratic Bezier
-            Vector3 p0 = Vector3.Lerp(from, ctrl, t);
-            Vector3 p1 = Vector3.Lerp(ctrl, to,   t);
-            if (go != null) go.transform.position = Vector3.Lerp(p0, p1, t);
+            var anchor = PlayerController.Instance?.FloatingTextAnchor;
+            if (anchor != null) return anchor.position;
+            if (PlayerController.Instance != null) return PlayerController.Instance.transform.position;
+            return from;
+        }
 
-            // 착지 직전 빠르게 축소
-            if (t > 0.7f && go != null)
+        float baseAngle    = (orbIndex / (float)orbTotal) * 360f * Mathf.Deg2Rad;
+        float angle        = baseAngle + Random.Range(-0.4f, 0.4f);
+        float radius       = skillOrbArcHeight * Random.Range(2.5f, 4.0f);
+        Vector3 ctrlOffset = new Vector3(Mathf.Cos(angle) * radius, Mathf.Sin(angle) * radius, 0f);
+
+        // 오브마다 다른 이동 속도 — 먼저 꽂히는 것과 늦게 꽂히는 것이 생김
+        float duration = skillOrbDuration * Random.Range(0.55f, 1.6f);
+
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            float t  = elapsed / duration;
+            float t2 = t * t;
+
+            if (go != null)
             {
-                float shrink = Mathf.Lerp(1f, 0.3f, (t - 0.7f) / 0.3f);
-                go.transform.localScale = _prefabScales.TryGetValue(prefab, out var s) ? s * shrink : Vector3.one * shrink;
+                Vector3 to   = GetTarget();
+                Vector3 ctrl = to + ctrlOffset;
+                go.transform.position = Vector3.Lerp(
+                    Vector3.Lerp(from, ctrl, t2),
+                    Vector3.Lerp(ctrl, to,   t2),
+                    t2);
+            }
+
+            // 마지막 20% — 먼저 살짝 커졌다가 꽂히며 사라짐 (파박 효과)
+            if (t > 0.8f && go != null)
+            {
+                float f = (t - 0.8f) / 0.2f;
+                float shrink = f < 0.4f
+                    ? Mathf.Lerp(1f, 1.35f, f / 0.4f)          // 순간 팽창
+                    : Mathf.Lerp(1.35f, 0f, (f - 0.4f) / 0.6f); // 빠르게 소멸
+                go.transform.localScale = baseScale * shrink;
             }
 
             elapsed += Time.deltaTime;
@@ -310,9 +362,10 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
 
         if (go != null)
         {
-            activeDebris.Remove(go);
+            SwapRemove(activeDebris, go);
             ReturnDebris(prefab, go);
         }
+        _activeOrbCount = Mathf.Max(0, _activeOrbCount - 1);
         onArrive?.Invoke();
     }
 
@@ -320,23 +373,22 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
     private IEnumerator RiseDebrisRoutine(Vector3 pos, GameObject prefab)
     {
         const int count = 8;
-        var gos     = new GameObject[count];
-        var vels    = new Vector2[count];
-        var renders = new SpriteRenderer[count];
+        var gos     = ArrayPool<GameObject>.Shared.Rent(count);
+        var vels    = ArrayPool<Vector2>.Shared.Rent(count);
+        var renders = ArrayPool<SpriteRenderer>.Shared.Rent(count);
 
         for (int i = 0; i < count; i++)
         {
             gos[i] = GetDebris(prefab, pos);
             activeDebris.Add(gos[i]);
-            renders[i] = gos[i].GetComponent<SpriteRenderer>();
+            _srCache.TryGetValue(gos[i], out renders[i]);
 
-            // 360° 전방위 터짐 + 강한 속도
-            float angle  = Random.Range(0f, 360f) * Mathf.Deg2Rad;
-            float speed  = Random.Range(7f, 13f);
+            float angle = Random.Range(0f, 360f) * Mathf.Deg2Rad;
+            float speed = Random.Range(7f, 13f);
             vels[i] = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * speed;
         }
 
-        float duration = 0.28f;   // 빠르게 사라짐
+        float duration = 0.28f;
         float elapsed  = 0f;
 
         while (elapsed < duration)
@@ -346,9 +398,8 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
             {
                 if (gos[i] == null) continue;
                 gos[i].transform.position += (Vector3)(vels[i] * Time.deltaTime);
-                vels[i] *= 1f - 8f * Time.deltaTime; // 빠른 감속
+                vels[i] *= 1f - 8f * Time.deltaTime;
 
-                // 초반부터 페이드아웃
                 if (renders[i] != null)
                 {
                     float alpha = Mathf.Lerp(1f, 0f, t);
@@ -364,19 +415,23 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
         {
             if (gos[i] != null)
             {
-                activeDebris.Remove(gos[i]);
+                SwapRemove(activeDebris, gos[i]);
                 ReturnDebris(prefab, gos[i]);
             }
         }
+
+        ArrayPool<GameObject>.Shared.Return(gos, clearArray: true);
+        ArrayPool<Vector2>.Shared.Return(vels);
+        ArrayPool<SpriteRenderer>.Shared.Return(renders, clearArray: true);
     }
 
     private IEnumerator DebrisRoutine(Vector3 pos, GameObject prefab, Vector2 deathDir = default)
     {
         const int count = 8;
-        var gos  = new GameObject[count];
-        var vels = new Vector2[count];
-        var srs  = new SpriteRenderer[count];
-        var initialScales = new Vector3[count];
+        var gos           = ArrayPool<GameObject>.Shared.Rent(count);
+        var vels          = ArrayPool<Vector2>.Shared.Rent(count);
+        var srs           = ArrayPool<SpriteRenderer>.Shared.Rent(count);
+        var initialScales = ArrayPool<Vector3>.Shared.Rent(count);
 
         bool  hasDir  = deathDir.sqrMagnitude > 0.001f;
         float baseRad = hasDir ? Mathf.Atan2(deathDir.y, deathDir.x) * Mathf.Rad2Deg : 0f;
@@ -387,7 +442,7 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
         {
             gos[i] = GetDebris(prefab, pos);
             activeDebris.Add(gos[i]);
-            srs[i] = gos[i].GetComponent<SpriteRenderer>();
+            _srCache.TryGetValue(gos[i], out srs[i]);
 
             float randomScale = Random.Range(0.7f, 1.2f);
             gos[i].transform.localScale = baseScale * randomScale;
@@ -396,8 +451,6 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
             float angleDeg, speed;
             if (hasDir)
             {
-                // 앞 절반: deathDir 방향 ±35° cone — 빠르게 쌔게
-                // 뒤 절반: ±100° 넓게 퍼지는 잔해 — 보통 속도
                 if (i < count * 0.6f)
                 {
                     angleDeg = baseRad + Random.Range(-35f, 35f);
@@ -418,7 +471,6 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
             float rad = angleDeg * Mathf.Deg2Rad;
             vels[i]   = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad)) * speed;
 
-            // deathDir 방향 전체에 추가 부스트 (모든 파편이 그 방향으로 쏠림)
             if (hasDir)
                 vels[i] += deathDir * Random.Range(2f, 4f);
         }
@@ -433,9 +485,8 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
             {
                 if (gos[i] == null) continue;
                 gos[i].transform.position += (Vector3)(vels[i] * Time.deltaTime);
-                vels[i] *= 1f - 3.5f * Time.deltaTime; // 감속
+                vels[i] *= 1f - 3.5f * Time.deltaTime;
 
-                // 후반부터 페이드아웃 및 사이즈 축소
                 if (t > 0.4f)
                 {
                     float fadeT = (t - 0.4f) / 0.6f;
@@ -445,7 +496,6 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
                         var c = srs[i].color;
                         srs[i].color = new Color(c.r, c.g, c.b, alpha);
                     }
-                    // 사이즈 축소 (0.5배까지)
                     float scale = Mathf.Lerp(1f, 0.5f, fadeT);
                     gos[i].transform.localScale = initialScales[i] * scale;
                 }
@@ -458,9 +508,14 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
         {
             if (gos[i] != null)
             {
-                activeDebris.Remove(gos[i]);
+                SwapRemove(activeDebris, gos[i]);
                 ReturnDebris(prefab, gos[i]);
             }
         }
+
+        ArrayPool<GameObject>.Shared.Return(gos, clearArray: true);
+        ArrayPool<Vector2>.Shared.Return(vels);
+        ArrayPool<SpriteRenderer>.Shared.Return(srs, clearArray: true);
+        ArrayPool<Vector3>.Shared.Return(initialScales);
     }
 }

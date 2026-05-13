@@ -298,10 +298,12 @@ public class WeaponPoint : MonoBehaviour
     {
         OnRecallAll += RecallClones;
         if (!_initialized)
+        {
             _baseCooldown = attackCooldown;
+            cooldownTimer = attackCooldown; // Init() 없이 씬에 배치된 경우에만 초기 지연 적용
+        }
         originLocalPos = transform.localPosition;
         _originalScale = transform.localScale;
-        cooldownTimer  = attackCooldown;
         if (_weaponSr == null)
             _weaponSr = GetComponentInChildren<SpriteRenderer>();
         InitTrail();
@@ -1890,6 +1892,7 @@ public class WeaponPoint : MonoBehaviour
 
         attackCooldown = data.attackCooldown;
         _baseCooldown  = data.attackCooldown;
+        cooldownTimer  = 0f; // 장착 즉시 공격 가능 (Start()에서 덮어쓰지 않음)
         attackRange    = data.attackRange;
         areaHitRadius  = data.areaHitRadius;
 

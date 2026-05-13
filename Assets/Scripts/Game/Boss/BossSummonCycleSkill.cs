@@ -74,8 +74,8 @@ public class BossSummonCycleSkill : BossSkillBase
     {
         if (minionPrefab == null || Boss == null) yield break;
 
-        // 이미 파괴된 소환체 정리
-        _activeMinions.RemoveAll(m => m == null);
+        // 파괴됐거나 풀로 반환된(비활성) 소환체 정리
+        _activeMinions.RemoveAll(m => m == null || !m.isActiveAndEnabled);
 
         // 최대 수 초과 시 건너뜀
         if (maxActiveMinions > 0 && _activeMinions.Count >= maxActiveMinions) yield break;

@@ -40,6 +40,7 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
     [Header("인게임 (gameContent 하위)")]
     [SerializeField] private Button   waveEndButton;
     [SerializeField] private Button   invincibleButton;
+    [SerializeField] private Button   infiniteTimeButton;
     [SerializeField] private Button   levelUpButton;
 
     [Header("웨이브 점프 패널")]
@@ -58,6 +59,7 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
 
     private bool _menuUnlocked    = false;
     private bool _invincible      = false;
+    private bool _infiniteTime    = false;
     private bool _contentOpen     = true;
     private bool _waveListOpen    = false;
     private bool _weaponListOpen  = false;
@@ -86,6 +88,7 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
 
         waveEndButton?.onClick.AddListener(() => GameManager.Shared?.DebugEndWave());
         invincibleButton?.onClick.AddListener(OnToggleInvincible);
+        infiniteTimeButton?.onClick.AddListener(OnToggleInfiniteTime);
         levelUpButton?.onClick.AddListener(OnLevelUp);
 
         waveListToggle?.onClick.AddListener(OnToggleWaveList);
@@ -201,6 +204,14 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
         PlayerController.Instance?.SetDebugInvincible(_invincible);
         var label = invincibleButton?.GetComponentInChildren<TextMeshProUGUI>();
         if (label) label.text = _invincible ? "무적 ON" : "무적 OFF";
+    }
+
+    public void OnToggleInfiniteTime()
+    {
+        _infiniteTime = !_infiniteTime;
+        GameManager.Shared?.DebugSetInfiniteTime(_infiniteTime);
+        var label = infiniteTimeButton?.GetComponentInChildren<TextMeshProUGUI>();
+        if (label) label.text = _infiniteTime ? "무제한 ON" : "무제한 OFF";
     }
 
     public void OnLevelUp() => PlayerStats.Shared?.DebugLevelUp();

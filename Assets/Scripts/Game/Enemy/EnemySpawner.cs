@@ -325,6 +325,7 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
 
     public bool IsSpawning => spawning;
 
+
     public void StopSpawning()
     {
         spawning = false;
@@ -346,6 +347,15 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
             Destroy(enemy.gameObject);
         }
         EnemyController.All.Clear();
+
+        // 안전망: All에 등록되지 못한 적(엘리트 포함) 씬 전체 스캔 후 제거
+        // 웨이브 클리어 시 1회만 호출되므로 성능 문제 없음
+        var remaining = Object.FindObjectsByType<EnemyController>(FindObjectsSortMode.None);
+        foreach (var enemy in remaining)
+        {
+            if (enemy == null) continue;
+            Destroy(enemy.gameObject);
+        }
     }
 
     public void ResumeSpawning(int wave)

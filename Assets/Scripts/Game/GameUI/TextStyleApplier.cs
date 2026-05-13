@@ -13,6 +13,9 @@ public class TextStyleApplier : MonoBehaviour
     [SerializeField] private bool  overrideOutlineColor;
     [SerializeField] private Color localOutlineColor = Color.black;
 
+    [SerializeField] private bool  overrideUnderlayColor;
+    [SerializeField] private Color localUnderlayColor = Color.black;
+
     [SerializeField] private bool          overrideVertexGradient;
     [SerializeField] private VertexGradient localVertexGradient = new VertexGradient(Color.white);
 
@@ -41,6 +44,9 @@ public class TextStyleApplier : MonoBehaviour
 
         if (overrideOutlineColor)
             _text.fontMaterial.SetColor(ShaderUtilities.ID_OutlineColor, localOutlineColor);
+
+        if (overrideUnderlayColor)
+            _text.fontMaterial.SetColor(ShaderUtilities.ID_UnderlayColor, localUnderlayColor);
 
         if (overrideVertexGradient)
         {

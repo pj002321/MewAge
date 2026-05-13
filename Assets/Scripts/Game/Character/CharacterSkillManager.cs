@@ -22,8 +22,7 @@ public class CharacterSkillManager : MonoBehaviourSingleton<CharacterSkillManage
     [SerializeField] private GameObject skillReadyFX; // 꽉 찼을 때 표시할 이펙트 (선택)
 
     [Header("게이지 설정")]
-    [SerializeField] private int   pointsRequired   = 100;  // 스킬 발동에 필요한 포인트
-    [SerializeField] private float hitChance        = 0.5f; // 피격 시 포인트 획득 확률
+    [SerializeField] private int   pointsRequired   = 50;
     [SerializeField] private float skillCooldown    = 5f;   // 스킬 종료 후 재발동 쿨타임(초)
 
     [Header("기본 스킬 (프리팹 없을 때)")]
@@ -105,14 +104,14 @@ public class CharacterSkillManager : MonoBehaviourSingleton<CharacterSkillManage
 
     // ── 포인트 관리 ─────────────────────────────────────────────────
 
-    /// <summary>적 피격 시 EnemyController에서 호출 — 50% 확률로 포인트 획득 오브 연출.</summary>
+    /// <summary>적 피격 시 EnemyController에서 호출 — 포인트 즉시 획득, 오브는 순수 연출.</summary>
     public void TryAddPointFromHit(Vector3 enemyPos)
     {
         if (_isActive) return;
         if (_currentPoints >= pointsRequired) return;
-        if (Random.value > hitChance) return;
 
-        FXManager.Shared?.SpawnSkillOrb(enemyPos, () => AddPoint(1));
+        AddPoint(1);
+        FXManager.Shared?.SpawnSkillOrb(enemyPos, null); // 연출만
     }
 
     private void AddPoint(int amount = 1)
@@ -198,6 +197,8 @@ public class CharacterSkillManager : MonoBehaviourSingleton<CharacterSkillManage
         yield return new WaitForSeconds(skillCooldown);
         _onCooldown = false;
         _cooldownRoutine = null;
+        if (_currentPoints >= pointsRequired)
+            OnGaugeFull();
     }
 
     private void SpawnEffect()
@@ -219,7 +220,7 @@ public class CharacterSkillManager : MonoBehaviourSingleton<CharacterSkillManage
     private void ApplyDefaultBoost(bool apply)
     {
         var wps = WeaponManager.Instance?.GetActiveWeaponPoints();
-if (wps == null || wps.Count == 0) return;
+        if (wps == null || wps.Count == 0) return;
         float mult = apply ? defaultSpeedMultiplier : 1f / defaultSpeedMultiplier;
         foreach (var wp in wps)
             wp.MultiplyAttackSpeed(mult);

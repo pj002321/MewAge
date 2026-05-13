@@ -119,6 +119,75 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!21 &4283140
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Galmuri11-Bold SDF Material (Instance)
+  m_Shader: {fileID: 4800000, guid: fe393ace9b354375a9cb14cdbbc28be4, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords:
+  - OUTLINE_ON
+  - UNDERLAY_ON
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _MainTex:
+        m_Texture: {fileID: 2570172347246729271, guid: 8c5fe09c692e11d4ca9132a851bb6129, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _ColorMask: 15
+    - _CullMode: 2
+    - _FaceDilate: 0
+    - _GradientScale: 4
+    - _MaskSoftnessX: 0
+    - _MaskSoftnessY: 0
+    - _OutlineSoftness: 0
+    - _OutlineWidth: 0.16
+    - _PerspectiveFilter: 0
+    - _ScaleRatioA: 0.75
+    - _ScaleRatioB: 0.05499999
+    - _ScaleRatioC: 0.609375
+    - _ScaleX: 1
+    - _ScaleY: 1
+    - _ShaderFlags: 0
+    - _Sharpness: 1
+    - _Stencil: 0
+    - _StencilComp: 8
+    - _StencilOp: 0
+    - _StencilReadMask: 255
+    - _StencilWriteMask: 255
+    - _TextureHeight: 4096
+    - _TextureWidth: 4096
+    - _UnderlayDilate: 1
+    - _UnderlayOffsetX: 0
+    - _UnderlayOffsetY: 0
+    - _UnderlaySoftness: 0
+    - _VertexOffsetX: 0
+    - _VertexOffsetY: 0
+    - _WeightBold: 0.75
+    - _WeightNormal: 0
+    m_Colors:
+    - _ClipRect: {r: 0, g: 0, b: 0, a: 0}
+    - _FaceColor: {r: 1.1434487, g: 1.1434487, b: 1.1434487, a: 1}
+    - _OutlineColor: {r: 0, g: 0, b: 0, a: 1}
+    - _UnderlayColor: {r: 0, g: 0, b: 0, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1
 --- !u!21 &6680455
 Material:
   serializedVersion: 8
@@ -358,6 +427,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -519,6 +590,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -680,6 +753,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -841,6 +916,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -974,9 +1051,10 @@ MonoBehaviour:
   landingVfxPrefab: {fileID: 4873479580030643389, guid: 939ba1a6a36ef9748a7525496ad78563, type: 3}
   bossEntryLandingVfxPrefab: {fileID: 187046, guid: f61254152f032fe4e96265bff2435d3e, type: 3}
   bossEntryLandingVfxLifetime: 2
-  skillOrbPrefab: {fileID: 0}
-  skillOrbArcHeight: 2.5
-  skillOrbDuration: 0.35
+  skillOrbPrefab: {fileID: 2386316232954576092, guid: 5253883c8125c014eaa2c7785c1ee63e, type: 3}
+  skillOrbArcHeight: 2
+  skillOrbDuration: 1
+  skillOrbCount: 4
   showGoldOrbDebris: 1
   showExpOrbDebris: 1
 --- !u!4 &43876947
@@ -1367,6 +1445,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -1528,6 +1608,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -1758,6 +1840,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -2132,6 +2216,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -2419,6 +2505,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -2689,7 +2777,6 @@ Material:
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
   - OUTLINE_ON
-  - UNDERLAY_ON
   m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -2709,85 +2796,16 @@ Material:
     m_Floats:
     - _ColorMask: 15
     - _CullMode: 2
-    - _FaceDilate: 0
+    - _FaceDilate: 0.15
     - _GradientScale: 4
     - _MaskSoftnessX: 0
     - _MaskSoftnessY: 0
     - _OutlineSoftness: 0
-    - _OutlineWidth: 0.16
+    - _OutlineWidth: 0
     - _PerspectiveFilter: 0
     - _ScaleRatioA: 0.75
     - _ScaleRatioB: 0.05499999
-    - _ScaleRatioC: 0.609375
-    - _ScaleX: 1
-    - _ScaleY: 1
-    - _ShaderFlags: 0
-    - _Sharpness: 1
-    - _Stencil: 0
-    - _StencilComp: 8
-    - _StencilOp: 0
-    - _StencilReadMask: 255
-    - _StencilWriteMask: 255
-    - _TextureHeight: 4096
-    - _TextureWidth: 4096
-    - _UnderlayDilate: 1
-    - _UnderlayOffsetX: 0
-    - _UnderlayOffsetY: 0
-    - _UnderlaySoftness: 0
-    - _VertexOffsetX: 0
-    - _VertexOffsetY: 0
-    - _WeightBold: 0.75
-    - _WeightNormal: 0
-    m_Colors:
-    - _ClipRect: {r: 0, g: 0, b: 0, a: 0}
-    - _FaceColor: {r: 1.1434487, g: 1.1434487, b: 1.1434487, a: 1}
-    - _OutlineColor: {r: 0, g: 0, b: 0, a: 1}
-    - _UnderlayColor: {r: 0, g: 0, b: 0, a: 1}
-  m_BuildTextureStacks: []
-  m_AllowLocking: 1
---- !u!21 &178440561
-Material:
-  serializedVersion: 8
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: Galmuri11-Bold SDF Material (Instance)
-  m_Shader: {fileID: 4800000, guid: fe393ace9b354375a9cb14cdbbc28be4, type: 3}
-  m_Parent: {fileID: 0}
-  m_ModifiedSerializedProperties: 0
-  m_ValidKeywords:
-  - OUTLINE_ON
-  - UNDERLAY_ON
-  m_InvalidKeywords: []
-  m_LightmapFlags: 4
-  m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
-  m_CustomRenderQueue: -1
-  stringTagMap: {}
-  disabledShaderPasses: []
-  m_LockedProperties: 
-  m_SavedProperties:
-    serializedVersion: 3
-    m_TexEnvs:
-    - _MainTex:
-        m_Texture: {fileID: 2570172347246729271, guid: 8c5fe09c692e11d4ca9132a851bb6129, type: 2}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    m_Ints: []
-    m_Floats:
-    - _ColorMask: 15
-    - _CullMode: 2
-    - _FaceDilate: 0
-    - _GradientScale: 4
-    - _MaskSoftnessX: 0
-    - _MaskSoftnessY: 0
-    - _OutlineSoftness: 0
-    - _OutlineWidth: 0.16
-    - _PerspectiveFilter: 0
-    - _ScaleRatioA: 0.75
-    - _ScaleRatioB: 0.05499999
-    - _ScaleRatioC: 0.451875
+    - _ScaleRatioC: 0.496875
     - _ScaleX: 1
     - _ScaleY: 1
     - _ShaderFlags: 0
@@ -3693,7 +3711,7 @@ MonoBehaviour:
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 1
+  m_fontStyle: 0
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 8192
   m_textAlignment: 65535
@@ -3752,11 +3770,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7be279fc5c8399540926613fc6b0b8db, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TextStyleApplier
-  preset: {fileID: 11400000, guid: e726866e6d2949a4ea2676e9ba402573, type: 2}
+  preset: {fileID: 11400000, guid: 4c8721c40e8e9f3459386f2997055b85, type: 2}
   overrideFaceColor: 0
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -4004,6 +4024,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -4199,7 +4221,6 @@ Material:
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
   - OUTLINE_ON
-  - UNDERLAY_ON
   m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -4219,16 +4240,16 @@ Material:
     m_Floats:
     - _ColorMask: 15
     - _CullMode: 2
-    - _FaceDilate: 0
+    - _FaceDilate: 0.15
     - _GradientScale: 4
     - _MaskSoftnessX: 0
     - _MaskSoftnessY: 0
     - _OutlineSoftness: 0
-    - _OutlineWidth: 0.16
+    - _OutlineWidth: 0
     - _PerspectiveFilter: 0
     - _ScaleRatioA: 0.75
     - _ScaleRatioB: 0.05499999
-    - _ScaleRatioC: 0.609375
+    - _ScaleRatioC: 0.496875
     - _ScaleX: 1
     - _ScaleY: 1
     - _ShaderFlags: 0
@@ -4410,6 +4431,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -4662,6 +4685,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -4757,7 +4782,6 @@ Material:
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
   - OUTLINE_ON
-  - UNDERLAY_ON
   m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -4777,16 +4801,16 @@ Material:
     m_Floats:
     - _ColorMask: 15
     - _CullMode: 2
-    - _FaceDilate: 0
+    - _FaceDilate: 0.15
     - _GradientScale: 4
     - _MaskSoftnessX: 0
     - _MaskSoftnessY: 0
     - _OutlineSoftness: 0
-    - _OutlineWidth: 0.16
+    - _OutlineWidth: 0
     - _PerspectiveFilter: 0
     - _ScaleRatioA: 0.75
     - _ScaleRatioB: 0.05499999
-    - _ScaleRatioC: 0.609375
+    - _ScaleRatioC: 0.496875
     - _ScaleX: 1
     - _ScaleY: 1
     - _ShaderFlags: 0
@@ -4918,6 +4942,75 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 88}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!21 &348677590
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Galmuri11-Bold SDF Material (Instance)
+  m_Shader: {fileID: 4800000, guid: fe393ace9b354375a9cb14cdbbc28be4, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords:
+  - OUTLINE_ON
+  - UNDERLAY_ON
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _MainTex:
+        m_Texture: {fileID: 2570172347246729271, guid: 8c5fe09c692e11d4ca9132a851bb6129, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _ColorMask: 15
+    - _CullMode: 2
+    - _FaceDilate: 0
+    - _GradientScale: 4
+    - _MaskSoftnessX: 0
+    - _MaskSoftnessY: 0
+    - _OutlineSoftness: 0
+    - _OutlineWidth: 0.16
+    - _PerspectiveFilter: 0
+    - _ScaleRatioA: 0.75
+    - _ScaleRatioB: 0.05499999
+    - _ScaleRatioC: 0.609375
+    - _ScaleX: 1
+    - _ScaleY: 1
+    - _ShaderFlags: 0
+    - _Sharpness: 1
+    - _Stencil: 0
+    - _StencilComp: 8
+    - _StencilOp: 0
+    - _StencilReadMask: 255
+    - _StencilWriteMask: 255
+    - _TextureHeight: 4096
+    - _TextureWidth: 4096
+    - _UnderlayDilate: 1
+    - _UnderlayOffsetX: 0
+    - _UnderlayOffsetY: 0
+    - _UnderlaySoftness: 0
+    - _VertexOffsetX: 0
+    - _VertexOffsetY: 0
+    - _WeightBold: 0.75
+    - _WeightNormal: 0
+    m_Colors:
+    - _ClipRect: {r: 0, g: 0, b: 0, a: 0}
+    - _FaceColor: {r: 1.1434487, g: 1.1434487, b: 1.1434487, a: 1}
+    - _OutlineColor: {r: 0, g: 0, b: 0, a: 1}
+    - _UnderlayColor: {r: 0, g: 0, b: 0, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1
 --- !u!1 &349135599
 GameObject:
   m_ObjectHideFlags: 0
@@ -5510,6 +5603,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -5782,6 +5877,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -5984,6 +6081,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -6037,8 +6136,7 @@ MonoBehaviour:
   skillButton: {fileID: 0}
   skillGaugeSlider: {fileID: 1004320562}
   skillReadyFX: {fileID: 0}
-  pointsRequired: 100
-  hitChance: 0.5
+  pointsRequired: 30
   skillCooldown: 5
   defaultSpeedMultiplier: 10
   defaultDuration: 3
@@ -6198,6 +6296,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -6396,6 +6496,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -6658,6 +6760,75 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 8142320573439122723, guid: 0d36f87c56a1e9e4cad5937d17de22dc, type: 3}
   m_PrefabInstance: {fileID: 6187485970428029916}
   m_PrefabAsset: {fileID: 0}
+--- !u!21 &465492935
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Galmuri11-Bold SDF Material (Instance)
+  m_Shader: {fileID: 4800000, guid: fe393ace9b354375a9cb14cdbbc28be4, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords:
+  - OUTLINE_ON
+  - UNDERLAY_ON
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _MainTex:
+        m_Texture: {fileID: 2570172347246729271, guid: 8c5fe09c692e11d4ca9132a851bb6129, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _ColorMask: 15
+    - _CullMode: 2
+    - _FaceDilate: 0
+    - _GradientScale: 4
+    - _MaskSoftnessX: 0
+    - _MaskSoftnessY: 0
+    - _OutlineSoftness: 0
+    - _OutlineWidth: 0.16
+    - _PerspectiveFilter: 0
+    - _ScaleRatioA: 0.75
+    - _ScaleRatioB: 0.05499999
+    - _ScaleRatioC: 0.609375
+    - _ScaleX: 1
+    - _ScaleY: 1
+    - _ShaderFlags: 0
+    - _Sharpness: 1
+    - _Stencil: 0
+    - _StencilComp: 8
+    - _StencilOp: 0
+    - _StencilReadMask: 255
+    - _StencilWriteMask: 255
+    - _TextureHeight: 4096
+    - _TextureWidth: 4096
+    - _UnderlayDilate: 1
+    - _UnderlayOffsetX: 0
+    - _UnderlayOffsetY: 0
+    - _UnderlaySoftness: 0
+    - _VertexOffsetX: 0
+    - _VertexOffsetY: 0
+    - _WeightBold: 0.75
+    - _WeightNormal: 0
+    m_Colors:
+    - _ClipRect: {r: 0, g: 0, b: 0, a: 0}
+    - _FaceColor: {r: 1.1434487, g: 1.1434487, b: 1.1434487, a: 1}
+    - _OutlineColor: {r: 0, g: 0, b: 0, a: 1}
+    - _UnderlayColor: {r: 0, g: 0, b: 0, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1
 --- !u!1 &474517405
 GameObject:
   m_ObjectHideFlags: 0
@@ -7219,75 +7390,6 @@ MonoBehaviour:
   panelRect: {fileID: 524301904}
   popDuration: 0.35
   overshootScale: 1.08
---- !u!21 &527946597
-Material:
-  serializedVersion: 8
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: Galmuri11-Bold SDF Material (Instance)
-  m_Shader: {fileID: 4800000, guid: fe393ace9b354375a9cb14cdbbc28be4, type: 3}
-  m_Parent: {fileID: 0}
-  m_ModifiedSerializedProperties: 0
-  m_ValidKeywords:
-  - OUTLINE_ON
-  - UNDERLAY_ON
-  m_InvalidKeywords: []
-  m_LightmapFlags: 4
-  m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
-  m_CustomRenderQueue: -1
-  stringTagMap: {}
-  disabledShaderPasses: []
-  m_LockedProperties: 
-  m_SavedProperties:
-    serializedVersion: 3
-    m_TexEnvs:
-    - _MainTex:
-        m_Texture: {fileID: 2570172347246729271, guid: 8c5fe09c692e11d4ca9132a851bb6129, type: 2}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    m_Ints: []
-    m_Floats:
-    - _ColorMask: 15
-    - _CullMode: 2
-    - _FaceDilate: 0
-    - _GradientScale: 4
-    - _MaskSoftnessX: 0
-    - _MaskSoftnessY: 0
-    - _OutlineSoftness: 0
-    - _OutlineWidth: 0.16
-    - _PerspectiveFilter: 0
-    - _ScaleRatioA: 0.75
-    - _ScaleRatioB: 0.05499999
-    - _ScaleRatioC: 0.451875
-    - _ScaleX: 1
-    - _ScaleY: 1
-    - _ShaderFlags: 0
-    - _Sharpness: 1
-    - _Stencil: 0
-    - _StencilComp: 8
-    - _StencilOp: 0
-    - _StencilReadMask: 255
-    - _StencilWriteMask: 255
-    - _TextureHeight: 4096
-    - _TextureWidth: 4096
-    - _UnderlayDilate: 1
-    - _UnderlayOffsetX: 0
-    - _UnderlayOffsetY: 0
-    - _UnderlaySoftness: 0
-    - _VertexOffsetX: 0
-    - _VertexOffsetY: 0
-    - _WeightBold: 0.75
-    - _WeightNormal: 0
-    m_Colors:
-    - _ClipRect: {r: 0, g: 0, b: 0, a: 0}
-    - _FaceColor: {r: 1.1434487, g: 1.1434487, b: 1.1434487, a: 1}
-    - _OutlineColor: {r: 0, g: 0, b: 0, a: 1}
-    - _UnderlayColor: {r: 0, g: 0, b: 0, a: 1}
-  m_BuildTextureStacks: []
-  m_AllowLocking: 1
 --- !u!21 &528270368
 Material:
   serializedVersion: 8
@@ -7412,6 +7514,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -7742,6 +7846,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -8122,6 +8228,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -8460,13 +8568,15 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
     topRight: {r: 1, g: 1, b: 1, a: 1}
     bottomLeft: {r: 1, g: 1, b: 1, a: 1}
     bottomRight: {r: 1, g: 1, b: 1, a: 1}
---- !u!21 &585895720
+--- !u!21 &594420200
 Material:
   serializedVersion: 8
   m_ObjectHideFlags: 0
@@ -8508,7 +8618,7 @@ Material:
     - _PerspectiveFilter: 0
     - _ScaleRatioA: 0.75
     - _ScaleRatioB: 0.05499999
-    - _ScaleRatioC: 0.451875
+    - _ScaleRatioC: 0.609375
     - _ScaleX: 1
     - _ScaleY: 1
     - _ShaderFlags: 0
@@ -8620,8 +8730,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 22.55
-  m_fontSizeBase: 22.55
+  m_fontSize: 20
+  m_fontSizeBase: 20
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -8690,6 +8800,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -9134,6 +9246,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -9411,6 +9525,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GamePausePanel
   resumeButton: {fileID: 1581843522}
   homeButton: {fileID: 747455903}
+  debugToggleButton: {fileID: 1614265388}
   improvIconPrefab: {fileID: 7097078063732321464, guid: 8013b98232bb2fd4f935cdafacf5e358, type: 3}
   improvContents: {fileID: 474517406}
 --- !u!21 &644187234
@@ -9710,6 +9825,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -10120,6 +10237,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -10773,6 +10892,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -11067,6 +11188,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -11228,6 +11351,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -11609,6 +11734,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -12070,6 +12197,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -12462,6 +12591,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -12627,6 +12758,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -12930,7 +13063,15 @@ PrefabInstance:
     - target: {fileID: 3835498537687608392, guid: bb9855cd38cbd864992e7852ae3fda53, type: 3}
       propertyPath: m_fontAsset
       value: 
-      objectReference: {fileID: 11400000, guid: 488be56d5527d5e4ba96341c497d0b65, type: 2}
+      objectReference: {fileID: 11400000, guid: 8c5fe09c692e11d4ca9132a851bb6129, type: 2}
+    - target: {fileID: 3835498537687608392, guid: bb9855cd38cbd864992e7852ae3fda53, type: 3}
+      propertyPath: m_fontMaterial
+      value: 
+      objectReference: {fileID: 594420200}
+    - target: {fileID: 3835498537687608392, guid: bb9855cd38cbd864992e7852ae3fda53, type: 3}
+      propertyPath: m_sharedMaterial
+      value: 
+      objectReference: {fileID: 594420200}
     - target: {fileID: 3936001327180969544, guid: bb9855cd38cbd864992e7852ae3fda53, type: 3}
       propertyPath: m_fontAsset
       value: 
@@ -13034,16 +13175,7 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 1423948472797177561, guid: bb9855cd38cbd864992e7852ae3fda53, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 876937061}
-    - targetCorrespondingSourceObject: {fileID: 2779688589935481749, guid: bb9855cd38cbd864992e7852ae3fda53, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 876937060}
-    - targetCorrespondingSourceObject: {fileID: 1365930409112361484, guid: bb9855cd38cbd864992e7852ae3fda53, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 876937059}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: bb9855cd38cbd864992e7852ae3fda53, type: 3}
 --- !u!224 &876937054 stripped
 RectTransform:
@@ -13061,90 +13193,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 47146ec3424e8e04696c5992d8289306, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UpgradeCard
---- !u!1 &876937056 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1365930409112361484, guid: bb9855cd38cbd864992e7852ae3fda53, type: 3}
-  m_PrefabInstance: {fileID: 876937053}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &876937057 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 2779688589935481749, guid: bb9855cd38cbd864992e7852ae3fda53, type: 3}
-  m_PrefabInstance: {fileID: 876937053}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &876937058 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1423948472797177561, guid: bb9855cd38cbd864992e7852ae3fda53, type: 3}
-  m_PrefabInstance: {fileID: 876937053}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &876937059
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 876937056}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7be279fc5c8399540926613fc6b0b8db, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TextStyleApplier
-  preset: {fileID: 11400000, guid: e726866e6d2949a4ea2676e9ba402573, type: 2}
-  overrideFaceColor: 0
-  localFaceColor: {r: 1, g: 1, b: 1, a: 1}
-  overrideOutlineColor: 0
-  localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
-  overrideVertexGradient: 0
-  localVertexGradient:
-    topLeft: {r: 1, g: 1, b: 1, a: 1}
-    topRight: {r: 1, g: 1, b: 1, a: 1}
-    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
-    bottomRight: {r: 1, g: 1, b: 1, a: 1}
---- !u!114 &876937060
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 876937057}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7be279fc5c8399540926613fc6b0b8db, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TextStyleApplier
-  preset: {fileID: 11400000, guid: e726866e6d2949a4ea2676e9ba402573, type: 2}
-  overrideFaceColor: 0
-  localFaceColor: {r: 1, g: 1, b: 1, a: 1}
-  overrideOutlineColor: 0
-  localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
-  overrideVertexGradient: 0
-  localVertexGradient:
-    topLeft: {r: 1, g: 1, b: 1, a: 1}
-    topRight: {r: 1, g: 1, b: 1, a: 1}
-    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
-    bottomRight: {r: 1, g: 1, b: 1, a: 1}
---- !u!114 &876937061
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 876937058}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7be279fc5c8399540926613fc6b0b8db, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TextStyleApplier
-  preset: {fileID: 11400000, guid: e726866e6d2949a4ea2676e9ba402573, type: 2}
-  overrideFaceColor: 0
-  localFaceColor: {r: 1, g: 1, b: 1, a: 1}
-  overrideOutlineColor: 0
-  localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
-  overrideVertexGradient: 0
-  localVertexGradient:
-    topLeft: {r: 1, g: 1, b: 1, a: 1}
-    topRight: {r: 1, g: 1, b: 1, a: 1}
-    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
-    bottomRight: {r: 1, g: 1, b: 1, a: 1}
 --- !u!21 &881580016
 Material:
   serializedVersion: 8
@@ -13373,75 +13421,6 @@ Material:
     - _ScaleRatioA: 0.75
     - _ScaleRatioB: 0.05499999
     - _ScaleRatioC: 0.609375
-    - _ScaleX: 1
-    - _ScaleY: 1
-    - _ShaderFlags: 0
-    - _Sharpness: 1
-    - _Stencil: 0
-    - _StencilComp: 8
-    - _StencilOp: 0
-    - _StencilReadMask: 255
-    - _StencilWriteMask: 255
-    - _TextureHeight: 4096
-    - _TextureWidth: 4096
-    - _UnderlayDilate: 1
-    - _UnderlayOffsetX: 0
-    - _UnderlayOffsetY: 0
-    - _UnderlaySoftness: 0
-    - _VertexOffsetX: 0
-    - _VertexOffsetY: 0
-    - _WeightBold: 0.75
-    - _WeightNormal: 0
-    m_Colors:
-    - _ClipRect: {r: 0, g: 0, b: 0, a: 0}
-    - _FaceColor: {r: 1.1434487, g: 1.1434487, b: 1.1434487, a: 1}
-    - _OutlineColor: {r: 0, g: 0, b: 0, a: 1}
-    - _UnderlayColor: {r: 0, g: 0, b: 0, a: 1}
-  m_BuildTextureStacks: []
-  m_AllowLocking: 1
---- !u!21 &902897406
-Material:
-  serializedVersion: 8
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: Galmuri11-Bold SDF Material (Instance)
-  m_Shader: {fileID: 4800000, guid: fe393ace9b354375a9cb14cdbbc28be4, type: 3}
-  m_Parent: {fileID: 0}
-  m_ModifiedSerializedProperties: 0
-  m_ValidKeywords:
-  - OUTLINE_ON
-  - UNDERLAY_ON
-  m_InvalidKeywords: []
-  m_LightmapFlags: 4
-  m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
-  m_CustomRenderQueue: -1
-  stringTagMap: {}
-  disabledShaderPasses: []
-  m_LockedProperties: 
-  m_SavedProperties:
-    serializedVersion: 3
-    m_TexEnvs:
-    - _MainTex:
-        m_Texture: {fileID: 2570172347246729271, guid: 8c5fe09c692e11d4ca9132a851bb6129, type: 2}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    m_Ints: []
-    m_Floats:
-    - _ColorMask: 15
-    - _CullMode: 2
-    - _FaceDilate: 0
-    - _GradientScale: 4
-    - _MaskSoftnessX: 0
-    - _MaskSoftnessY: 0
-    - _OutlineSoftness: 0
-    - _OutlineWidth: 0.16
-    - _PerspectiveFilter: 0
-    - _ScaleRatioA: 0.75
-    - _ScaleRatioB: 0.05499999
-    - _ScaleRatioC: 0.451875
     - _ScaleX: 1
     - _ScaleY: 1
     - _ShaderFlags: 0
@@ -14024,6 +14003,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -14278,6 +14259,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -14644,6 +14627,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -14805,6 +14790,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -15412,6 +15399,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0.9490197, g: 0.7294118, b: 0.2509804, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -15435,6 +15424,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -15832,6 +15823,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -16488,6 +16481,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -16683,6 +16678,75 @@ Material:
     - _ScaleRatioA: 0.75
     - _ScaleRatioB: 0.05499999
     - _ScaleRatioC: 0.609375
+    - _ScaleX: 1
+    - _ScaleY: 1
+    - _ShaderFlags: 0
+    - _Sharpness: 1
+    - _Stencil: 0
+    - _StencilComp: 8
+    - _StencilOp: 0
+    - _StencilReadMask: 255
+    - _StencilWriteMask: 255
+    - _TextureHeight: 4096
+    - _TextureWidth: 4096
+    - _UnderlayDilate: 1
+    - _UnderlayOffsetX: 0
+    - _UnderlayOffsetY: 0
+    - _UnderlaySoftness: 0
+    - _VertexOffsetX: 0
+    - _VertexOffsetY: 0
+    - _WeightBold: 0.75
+    - _WeightNormal: 0
+    m_Colors:
+    - _ClipRect: {r: 0, g: 0, b: 0, a: 0}
+    - _FaceColor: {r: 1.1434487, g: 1.1434487, b: 1.1434487, a: 1}
+    - _OutlineColor: {r: 0, g: 0, b: 0, a: 1}
+    - _UnderlayColor: {r: 0, g: 0, b: 0, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1
+--- !u!21 &1115459291
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Galmuri11-Bold SDF Material (Instance)
+  m_Shader: {fileID: 4800000, guid: fe393ace9b354375a9cb14cdbbc28be4, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords:
+  - OUTLINE_ON
+  - UNDERLAY_ON
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _MainTex:
+        m_Texture: {fileID: 2570172347246729271, guid: 8c5fe09c692e11d4ca9132a851bb6129, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _ColorMask: 15
+    - _CullMode: 2
+    - _FaceDilate: 0
+    - _GradientScale: 4
+    - _MaskSoftnessX: 0
+    - _MaskSoftnessY: 0
+    - _OutlineSoftness: 0
+    - _OutlineWidth: 0.16
+    - _PerspectiveFilter: 0
+    - _ScaleRatioA: 0.75
+    - _ScaleRatioB: 0.05499999
+    - _ScaleRatioC: 0.451875
     - _ScaleX: 1
     - _ScaleY: 1
     - _ShaderFlags: 0
@@ -17352,6 +17416,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -17569,6 +17635,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -18281,6 +18349,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -18442,6 +18512,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -18812,75 +18884,6 @@ Material:
     - _ScaleRatioA: 0.75
     - _ScaleRatioB: 0.05499999
     - _ScaleRatioC: 0.609375
-    - _ScaleX: 1
-    - _ScaleY: 1
-    - _ShaderFlags: 0
-    - _Sharpness: 1
-    - _Stencil: 0
-    - _StencilComp: 8
-    - _StencilOp: 0
-    - _StencilReadMask: 255
-    - _StencilWriteMask: 255
-    - _TextureHeight: 4096
-    - _TextureWidth: 4096
-    - _UnderlayDilate: 1
-    - _UnderlayOffsetX: 0
-    - _UnderlayOffsetY: 0
-    - _UnderlaySoftness: 0
-    - _VertexOffsetX: 0
-    - _VertexOffsetY: 0
-    - _WeightBold: 0.75
-    - _WeightNormal: 0
-    m_Colors:
-    - _ClipRect: {r: 0, g: 0, b: 0, a: 0}
-    - _FaceColor: {r: 1.1434487, g: 1.1434487, b: 1.1434487, a: 1}
-    - _OutlineColor: {r: 0, g: 0, b: 0, a: 1}
-    - _UnderlayColor: {r: 0, g: 0, b: 0, a: 1}
-  m_BuildTextureStacks: []
-  m_AllowLocking: 1
---- !u!21 &1234652812
-Material:
-  serializedVersion: 8
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: Galmuri11-Bold SDF Material (Instance)
-  m_Shader: {fileID: 4800000, guid: fe393ace9b354375a9cb14cdbbc28be4, type: 3}
-  m_Parent: {fileID: 0}
-  m_ModifiedSerializedProperties: 0
-  m_ValidKeywords:
-  - OUTLINE_ON
-  - UNDERLAY_ON
-  m_InvalidKeywords: []
-  m_LightmapFlags: 4
-  m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
-  m_CustomRenderQueue: -1
-  stringTagMap: {}
-  disabledShaderPasses: []
-  m_LockedProperties: 
-  m_SavedProperties:
-    serializedVersion: 3
-    m_TexEnvs:
-    - _MainTex:
-        m_Texture: {fileID: 2570172347246729271, guid: 8c5fe09c692e11d4ca9132a851bb6129, type: 2}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    m_Ints: []
-    m_Floats:
-    - _ColorMask: 15
-    - _CullMode: 2
-    - _FaceDilate: 0
-    - _GradientScale: 4
-    - _MaskSoftnessX: 0
-    - _MaskSoftnessY: 0
-    - _OutlineSoftness: 0
-    - _OutlineWidth: 0.16
-    - _PerspectiveFilter: 0
-    - _ScaleRatioA: 0.75
-    - _ScaleRatioB: 0.05499999
-    - _ScaleRatioC: 0.451875
     - _ScaleX: 1
     - _ScaleY: 1
     - _ShaderFlags: 0
@@ -19448,6 +19451,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -19668,6 +19673,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -19833,6 +19840,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -19994,6 +20003,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -20155,6 +20166,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -20998,6 +21011,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -21242,7 +21257,6 @@ Material:
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
   - OUTLINE_ON
-  - UNDERLAY_ON
   m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -21262,16 +21276,16 @@ Material:
     m_Floats:
     - _ColorMask: 15
     - _CullMode: 2
-    - _FaceDilate: 0
+    - _FaceDilate: 0.15
     - _GradientScale: 4
     - _MaskSoftnessX: 0
     - _MaskSoftnessY: 0
     - _OutlineSoftness: 0
-    - _OutlineWidth: 0.16
+    - _OutlineWidth: 0
     - _PerspectiveFilter: 0
     - _ScaleRatioA: 0.75
     - _ScaleRatioB: 0.05499999
-    - _ScaleRatioC: 0.609375
+    - _ScaleRatioC: 0.496875
     - _ScaleX: 1
     - _ScaleY: 1
     - _ShaderFlags: 0
@@ -21522,6 +21536,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -21842,6 +21858,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -22239,6 +22257,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -22708,6 +22728,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -22910,6 +22932,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -23071,6 +23095,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -23551,6 +23577,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -23835,11 +23863,19 @@ PrefabInstance:
     - target: {fileID: 3835498537687608392, guid: bb9855cd38cbd864992e7852ae3fda53, type: 3}
       propertyPath: m_fontAsset
       value: 
-      objectReference: {fileID: 11400000, guid: 488be56d5527d5e4ba96341c497d0b65, type: 2}
+      objectReference: {fileID: 11400000, guid: 8c5fe09c692e11d4ca9132a851bb6129, type: 2}
     - target: {fileID: 3835498537687608392, guid: bb9855cd38cbd864992e7852ae3fda53, type: 3}
       propertyPath: m_fontStyle
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 3835498537687608392, guid: bb9855cd38cbd864992e7852ae3fda53, type: 3}
+      propertyPath: m_fontMaterial
+      value: 
+      objectReference: {fileID: 4283140}
+    - target: {fileID: 3835498537687608392, guid: bb9855cd38cbd864992e7852ae3fda53, type: 3}
+      propertyPath: m_sharedMaterial
+      value: 
+      objectReference: {fileID: 4283140}
     - target: {fileID: 3835498537687608392, guid: bb9855cd38cbd864992e7852ae3fda53, type: 3}
       propertyPath: m_hasFontAssetChanged
       value: 1
@@ -23967,16 +24003,7 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 1423948472797177561, guid: bb9855cd38cbd864992e7852ae3fda53, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1581794966}
-    - targetCorrespondingSourceObject: {fileID: 2779688589935481749, guid: bb9855cd38cbd864992e7852ae3fda53, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1581794965}
-    - targetCorrespondingSourceObject: {fileID: 1365930409112361484, guid: bb9855cd38cbd864992e7852ae3fda53, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1581794964}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: bb9855cd38cbd864992e7852ae3fda53, type: 3}
 --- !u!224 &1581794959 stripped
 RectTransform:
@@ -23994,90 +24021,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 47146ec3424e8e04696c5992d8289306, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UpgradeCard
---- !u!1 &1581794961 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1365930409112361484, guid: bb9855cd38cbd864992e7852ae3fda53, type: 3}
-  m_PrefabInstance: {fileID: 1581794958}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &1581794962 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 2779688589935481749, guid: bb9855cd38cbd864992e7852ae3fda53, type: 3}
-  m_PrefabInstance: {fileID: 1581794958}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &1581794963 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1423948472797177561, guid: bb9855cd38cbd864992e7852ae3fda53, type: 3}
-  m_PrefabInstance: {fileID: 1581794958}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &1581794964
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1581794961}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7be279fc5c8399540926613fc6b0b8db, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TextStyleApplier
-  preset: {fileID: 11400000, guid: e726866e6d2949a4ea2676e9ba402573, type: 2}
-  overrideFaceColor: 0
-  localFaceColor: {r: 1, g: 1, b: 1, a: 1}
-  overrideOutlineColor: 0
-  localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
-  overrideVertexGradient: 0
-  localVertexGradient:
-    topLeft: {r: 1, g: 1, b: 1, a: 1}
-    topRight: {r: 1, g: 1, b: 1, a: 1}
-    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
-    bottomRight: {r: 1, g: 1, b: 1, a: 1}
---- !u!114 &1581794965
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1581794962}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7be279fc5c8399540926613fc6b0b8db, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TextStyleApplier
-  preset: {fileID: 11400000, guid: e726866e6d2949a4ea2676e9ba402573, type: 2}
-  overrideFaceColor: 0
-  localFaceColor: {r: 1, g: 1, b: 1, a: 1}
-  overrideOutlineColor: 0
-  localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
-  overrideVertexGradient: 0
-  localVertexGradient:
-    topLeft: {r: 1, g: 1, b: 1, a: 1}
-    topRight: {r: 1, g: 1, b: 1, a: 1}
-    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
-    bottomRight: {r: 1, g: 1, b: 1, a: 1}
---- !u!114 &1581794966
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1581794963}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7be279fc5c8399540926613fc6b0b8db, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TextStyleApplier
-  preset: {fileID: 11400000, guid: e726866e6d2949a4ea2676e9ba402573, type: 2}
-  overrideFaceColor: 0
-  localFaceColor: {r: 1, g: 1, b: 1, a: 1}
-  overrideOutlineColor: 0
-  localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
-  overrideVertexGradient: 0
-  localVertexGradient:
-    topLeft: {r: 1, g: 1, b: 1, a: 1}
-    topRight: {r: 1, g: 1, b: 1, a: 1}
-    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
-    bottomRight: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &1581843520
 GameObject:
   m_ObjectHideFlags: 0
@@ -24748,12 +24691,135 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
     topRight: {r: 1, g: 1, b: 1, a: 1}
     bottomLeft: {r: 1, g: 1, b: 1, a: 1}
     bottomRight: {r: 1, g: 1, b: 1, a: 1}
+--- !u!1 &1614265386
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1614265387}
+  - component: {fileID: 1614265390}
+  - component: {fileID: 1614265389}
+  - component: {fileID: 1614265388}
+  m_Layer: 0
+  m_Name: Button
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1614265387
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1614265386}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 0.7, y: 0.7, z: 0.7}
+  m_ConstrainProportionsScale: 1
+  m_Children:
+  - {fileID: 2142761099}
+  m_Father: {fileID: 1936338414}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 200, y: -398}
+  m_SizeDelta: {x: 396, y: 112}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1614265388
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1614265386}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
+  m_Navigation:
+    m_Mode: 3
+    m_WrapAround: 0
+    m_SelectOnUp: {fileID: 0}
+    m_SelectOnDown: {fileID: 0}
+    m_SelectOnLeft: {fileID: 0}
+    m_SelectOnRight: {fileID: 0}
+  m_Transition: 1
+  m_Colors:
+    m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
+    m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
+    m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
+    m_ColorMultiplier: 1
+    m_FadeDuration: 0.1
+  m_SpriteState:
+    m_HighlightedSprite: {fileID: 0}
+    m_PressedSprite: {fileID: 0}
+    m_SelectedSprite: {fileID: 0}
+    m_DisabledSprite: {fileID: 0}
+  m_AnimationTriggers:
+    m_NormalTrigger: Normal
+    m_HighlightedTrigger: Highlighted
+    m_PressedTrigger: Pressed
+    m_SelectedTrigger: Selected
+    m_DisabledTrigger: Disabled
+  m_Interactable: 1
+  m_TargetGraphic: {fileID: 1614265389}
+  m_OnClick:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!114 &1614265389
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1614265386}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 21300000, guid: fe6b3df02cb1e9f4e8435b572e86cdaa, type: 3}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &1614265390
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1614265386}
+  m_CullTransparentMesh: 1
 --- !u!21 &1614839304
 Material:
   serializedVersion: 8
@@ -25051,6 +25117,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -25814,7 +25882,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3743302631712945789, guid: f9a8c0e29c2e9bc4bb518c36b372a05d, type: 3}
       propertyPath: m_SortingLayerID
-      value: 0
+      value: 1049025713
       objectReference: {fileID: 0}
     - target: {fileID: 3768263777332437215, guid: f9a8c0e29c2e9bc4bb518c36b372a05d, type: 3}
       propertyPath: m_LocalPosition.x
@@ -26014,6 +26082,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -26335,7 +26405,7 @@ MonoBehaviour:
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 1
+  m_fontStyle: 0
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 8192
   m_textAlignment: 65535
@@ -26394,11 +26464,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7be279fc5c8399540926613fc6b0b8db, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TextStyleApplier
-  preset: {fileID: 11400000, guid: e726866e6d2949a4ea2676e9ba402573, type: 2}
+  preset: {fileID: 11400000, guid: 4c8721c40e8e9f3459386f2997055b85, type: 2}
   overrideFaceColor: 0
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -26560,6 +26632,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -26933,6 +27007,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -27978,6 +28054,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -28277,6 +28355,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -28688,6 +28768,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -28779,8 +28861,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 35
-  m_fontSizeBase: 35
+  m_fontSize: 30
+  m_fontSizeBase: 30
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -28849,6 +28931,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -29459,6 +29543,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -29733,6 +29819,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -30024,7 +30112,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1853498366}
   m_Layer: 5
-  m_Name: GameObject
+  m_Name: PopUp
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -30437,6 +30525,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -30602,6 +30692,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -30831,6 +30923,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -31174,6 +31268,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -31358,6 +31454,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -32113,6 +32211,7 @@ RectTransform:
   - {fileID: 785968974}
   - {fileID: 1889727623}
   - {fileID: 474517406}
+  - {fileID: 1614265387}
   m_Father: {fileID: 2059142793}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
@@ -32317,6 +32416,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -32478,6 +32579,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -32511,7 +32614,15 @@ PrefabInstance:
     - target: {fileID: 3835498537687608392, guid: bb9855cd38cbd864992e7852ae3fda53, type: 3}
       propertyPath: m_fontAsset
       value: 
-      objectReference: {fileID: 11400000, guid: 488be56d5527d5e4ba96341c497d0b65, type: 2}
+      objectReference: {fileID: 11400000, guid: 8c5fe09c692e11d4ca9132a851bb6129, type: 2}
+    - target: {fileID: 3835498537687608392, guid: bb9855cd38cbd864992e7852ae3fda53, type: 3}
+      propertyPath: m_fontMaterial
+      value: 
+      objectReference: {fileID: 2057818372}
+    - target: {fileID: 3835498537687608392, guid: bb9855cd38cbd864992e7852ae3fda53, type: 3}
+      propertyPath: m_sharedMaterial
+      value: 
+      objectReference: {fileID: 2057818372}
     - target: {fileID: 3936001327180969544, guid: bb9855cd38cbd864992e7852ae3fda53, type: 3}
       propertyPath: m_fontAsset
       value: 
@@ -32615,16 +32726,7 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 1423948472797177561, guid: bb9855cd38cbd864992e7852ae3fda53, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1954684907}
-    - targetCorrespondingSourceObject: {fileID: 2779688589935481749, guid: bb9855cd38cbd864992e7852ae3fda53, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1954684906}
-    - targetCorrespondingSourceObject: {fileID: 1365930409112361484, guid: bb9855cd38cbd864992e7852ae3fda53, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1954684905}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: bb9855cd38cbd864992e7852ae3fda53, type: 3}
 --- !u!224 &1954684900 stripped
 RectTransform:
@@ -32642,90 +32744,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 47146ec3424e8e04696c5992d8289306, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UpgradeCard
---- !u!1 &1954684902 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1365930409112361484, guid: bb9855cd38cbd864992e7852ae3fda53, type: 3}
-  m_PrefabInstance: {fileID: 1954684899}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &1954684903 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 2779688589935481749, guid: bb9855cd38cbd864992e7852ae3fda53, type: 3}
-  m_PrefabInstance: {fileID: 1954684899}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &1954684904 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1423948472797177561, guid: bb9855cd38cbd864992e7852ae3fda53, type: 3}
-  m_PrefabInstance: {fileID: 1954684899}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &1954684905
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1954684902}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7be279fc5c8399540926613fc6b0b8db, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TextStyleApplier
-  preset: {fileID: 11400000, guid: e726866e6d2949a4ea2676e9ba402573, type: 2}
-  overrideFaceColor: 0
-  localFaceColor: {r: 1, g: 1, b: 1, a: 1}
-  overrideOutlineColor: 0
-  localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
-  overrideVertexGradient: 0
-  localVertexGradient:
-    topLeft: {r: 1, g: 1, b: 1, a: 1}
-    topRight: {r: 1, g: 1, b: 1, a: 1}
-    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
-    bottomRight: {r: 1, g: 1, b: 1, a: 1}
---- !u!114 &1954684906
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1954684903}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7be279fc5c8399540926613fc6b0b8db, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TextStyleApplier
-  preset: {fileID: 11400000, guid: e726866e6d2949a4ea2676e9ba402573, type: 2}
-  overrideFaceColor: 0
-  localFaceColor: {r: 1, g: 1, b: 1, a: 1}
-  overrideOutlineColor: 0
-  localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
-  overrideVertexGradient: 0
-  localVertexGradient:
-    topLeft: {r: 1, g: 1, b: 1, a: 1}
-    topRight: {r: 1, g: 1, b: 1, a: 1}
-    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
-    bottomRight: {r: 1, g: 1, b: 1, a: 1}
---- !u!114 &1954684907
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1954684904}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7be279fc5c8399540926613fc6b0b8db, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TextStyleApplier
-  preset: {fileID: 11400000, guid: e726866e6d2949a4ea2676e9ba402573, type: 2}
-  overrideFaceColor: 0
-  localFaceColor: {r: 1, g: 1, b: 1, a: 1}
-  overrideOutlineColor: 0
-  localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
-  overrideVertexGradient: 0
-  localVertexGradient:
-    topLeft: {r: 1, g: 1, b: 1, a: 1}
-    topRight: {r: 1, g: 1, b: 1, a: 1}
-    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
-    bottomRight: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &1961598625
 GameObject:
   m_ObjectHideFlags: 0
@@ -32881,6 +32899,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -33042,6 +33062,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -33343,7 +33365,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 129.5, y: 201.6}
+  m_AnchoredPosition: {x: 129.5, y: 245}
   m_SizeDelta: {x: 283.5, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1974375211
@@ -33475,6 +33497,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -34074,6 +34098,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -34364,6 +34390,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -34599,6 +34627,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -35032,12 +35062,83 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
     topRight: {r: 1, g: 1, b: 1, a: 1}
     bottomLeft: {r: 1, g: 1, b: 1, a: 1}
     bottomRight: {r: 1, g: 1, b: 1, a: 1}
+--- !u!21 &2057818372
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Galmuri11-Bold SDF Material (Instance)
+  m_Shader: {fileID: 4800000, guid: fe393ace9b354375a9cb14cdbbc28be4, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords:
+  - OUTLINE_ON
+  - UNDERLAY_ON
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _MainTex:
+        m_Texture: {fileID: 2570172347246729271, guid: 8c5fe09c692e11d4ca9132a851bb6129, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _ColorMask: 15
+    - _CullMode: 2
+    - _FaceDilate: 0
+    - _GradientScale: 4
+    - _MaskSoftnessX: 0
+    - _MaskSoftnessY: 0
+    - _OutlineSoftness: 0
+    - _OutlineWidth: 0.16
+    - _PerspectiveFilter: 0
+    - _ScaleRatioA: 0.75
+    - _ScaleRatioB: 0.05499999
+    - _ScaleRatioC: 0.609375
+    - _ScaleX: 1
+    - _ScaleY: 1
+    - _ShaderFlags: 0
+    - _Sharpness: 1
+    - _Stencil: 0
+    - _StencilComp: 8
+    - _StencilOp: 0
+    - _StencilReadMask: 255
+    - _StencilWriteMask: 255
+    - _TextureHeight: 4096
+    - _TextureWidth: 4096
+    - _UnderlayDilate: 1
+    - _UnderlayOffsetX: 0
+    - _UnderlayOffsetY: 0
+    - _UnderlaySoftness: 0
+    - _VertexOffsetX: 0
+    - _VertexOffsetY: 0
+    - _WeightBold: 0.75
+    - _WeightNormal: 0
+    m_Colors:
+    - _ClipRect: {r: 0, g: 0, b: 0, a: 0}
+    - _FaceColor: {r: 1.1434487, g: 1.1434487, b: 1.1434487, a: 1}
+    - _OutlineColor: {r: 0, g: 0, b: 0, a: 1}
+    - _UnderlayColor: {r: 0, g: 0, b: 0, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1
 --- !u!1 &2058145605
 GameObject:
   m_ObjectHideFlags: 0
@@ -35384,6 +35485,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -36399,6 +36502,169 @@ CanvasRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2139947405}
+  m_CullTransparentMesh: 1
+--- !u!1 &2142761098
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2142761099}
+  - component: {fileID: 2142761102}
+  - component: {fileID: 2142761101}
+  - component: {fileID: 2142761100}
+  m_Layer: 0
+  m_Name: Text (TMP)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &2142761099
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2142761098}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1614265387}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &2142761100
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2142761098}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7be279fc5c8399540926613fc6b0b8db, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TextStyleApplier
+  preset: {fileID: 11400000, guid: e726866e6d2949a4ea2676e9ba402573, type: 2}
+  overrideFaceColor: 0
+  localFaceColor: {r: 1, g: 1, b: 1, a: 1}
+  overrideOutlineColor: 0
+  localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideVertexGradient: 0
+  localVertexGradient:
+    topLeft: {r: 1, g: 1, b: 1, a: 1}
+    topRight: {r: 1, g: 1, b: 1, a: 1}
+    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
+    bottomRight: {r: 1, g: 1, b: 1, a: 1}
+--- !u!114 &2142761101
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2142761098}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 0
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_text: "\uB514\uBC84\uADF8 On"
+  m_isRightToLeft: 0
+  m_fontAsset: {fileID: 11400000, guid: 8c5fe09c692e11d4ca9132a851bb6129, type: 2}
+  m_sharedMaterial: {fileID: 348677590}
+  m_fontSharedMaterials: []
+  m_fontMaterial: {fileID: 348677590}
+  m_fontMaterials: []
+  m_fontColor32:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+  m_enableVertexGradient: 0
+  m_colorMode: 3
+  m_fontColorGradient:
+    topLeft: {r: 1, g: 1, b: 1, a: 1}
+    topRight: {r: 1, g: 1, b: 1, a: 1}
+    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
+    bottomRight: {r: 1, g: 1, b: 1, a: 1}
+  m_fontColorGradientPreset: {fileID: 0}
+  m_spriteAsset: {fileID: 0}
+  m_tintAllSprites: 0
+  m_StyleSheet: {fileID: 0}
+  m_TextStyleHashCode: -1183493901
+  m_overrideHtmlColors: 0
+  m_faceColor:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontSize: 35
+  m_fontSizeBase: 35
+  m_fontWeight: 400
+  m_enableAutoSizing: 0
+  m_fontSizeMin: 18
+  m_fontSizeMax: 72
+  m_fontStyle: 1
+  m_HorizontalAlignment: 2
+  m_VerticalAlignment: 512
+  m_textAlignment: 65535
+  m_characterSpacing: 0
+  m_characterHorizontalScale: 1
+  m_wordSpacing: 0
+  m_lineSpacing: 0
+  m_lineSpacingMax: 0
+  m_paragraphSpacing: 0
+  m_charWidthMaxAdj: 0
+  m_TextWrappingMode: 1
+  m_wordWrappingRatios: 0.4
+  m_overflowMode: 0
+  m_linkedTextComponent: {fileID: 0}
+  parentLinkedComponent: {fileID: 0}
+  m_enableKerning: 0
+  m_ActiveFontFeatures: 6e72656b
+  m_enableExtraPadding: 0
+  checkPaddingRequired: 0
+  m_isRichText: 1
+  m_EmojiFallbackSupport: 1
+  m_parseCtrlCharacters: 1
+  m_isOrthographic: 1
+  m_isCullingEnabled: 0
+  m_horizontalMapping: 0
+  m_verticalMapping: 0
+  m_uvLineOffset: 0
+  m_geometrySortingOrder: 0
+  m_IsTextObjectScaleStatic: 0
+  m_VertexBufferAutoSizeReduction: 0
+  m_useMaxVisibleDescender: 1
+  m_pageToDisplay: 1
+  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_isUsingLegacyAnimationComponent: 0
+  m_isVolumetricText: 0
+  m_hasFontAssetChanged: 0
+  m_baseMaterial: {fileID: 0}
+  m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!222 &2142761102
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2142761098}
   m_CullTransparentMesh: 1
 --- !u!4 &17964929952933741
 Transform:
@@ -38913,6 +39179,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -38996,7 +39264,7 @@ MonoBehaviour:
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 1
+  m_fontStyle: 0
   m_HorizontalAlignment: 1
   m_VerticalAlignment: 512
   m_textAlignment: 65535
@@ -39252,7 +39520,7 @@ MonoBehaviour:
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 1
+  m_fontStyle: 0
   m_HorizontalAlignment: 1
   m_VerticalAlignment: 256
   m_textAlignment: 65535
@@ -39916,8 +40184,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 50
-  m_fontSizeBase: 50
+  m_fontSize: 40
+  m_fontSizeBase: 40
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -40250,11 +40518,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7be279fc5c8399540926613fc6b0b8db, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TextStyleApplier
-  preset: {fileID: 11400000, guid: e726866e6d2949a4ea2676e9ba402573, type: 2}
+  preset: {fileID: 11400000, guid: 4c8721c40e8e9f3459386f2997055b85, type: 2}
   overrideFaceColor: 0
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -40431,8 +40701,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 50
-  m_fontSizeBase: 50
+  m_fontSize: 40
+  m_fontSizeBase: 40
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -40830,6 +41100,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -41121,6 +41393,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -41317,6 +41591,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -41668,10 +41944,6 @@ PrefabInstance:
     m_TransformParent: {fileID: 5976226948189101566}
     m_Modifications:
     - target: {fileID: 488480759343583831, guid: bb9855cd38cbd864992e7852ae3fda53, type: 3}
-      propertyPath: m_fontAsset
-      value: 
-      objectReference: {fileID: 11400000, guid: 8c5fe09c692e11d4ca9132a851bb6129, type: 2}
-    - target: {fileID: 488480759343583831, guid: bb9855cd38cbd864992e7852ae3fda53, type: 3}
       propertyPath: m_fontMaterial
       value: 
       objectReference: {fileID: 1908353508}
@@ -41679,18 +41951,18 @@ PrefabInstance:
       propertyPath: m_sharedMaterial
       value: 
       objectReference: {fileID: 1908353508}
-    - target: {fileID: 488480759343583831, guid: bb9855cd38cbd864992e7852ae3fda53, type: 3}
-      propertyPath: m_hasFontAssetChanged
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 3835498537687608392, guid: bb9855cd38cbd864992e7852ae3fda53, type: 3}
       propertyPath: m_fontAsset
       value: 
-      objectReference: {fileID: 11400000, guid: 488be56d5527d5e4ba96341c497d0b65, type: 2}
-    - target: {fileID: 3936001327180969544, guid: bb9855cd38cbd864992e7852ae3fda53, type: 3}
-      propertyPath: m_fontAsset
-      value: 
       objectReference: {fileID: 11400000, guid: 8c5fe09c692e11d4ca9132a851bb6129, type: 2}
+    - target: {fileID: 3835498537687608392, guid: bb9855cd38cbd864992e7852ae3fda53, type: 3}
+      propertyPath: m_fontMaterial
+      value: 
+      objectReference: {fileID: 465492935}
+    - target: {fileID: 3835498537687608392, guid: bb9855cd38cbd864992e7852ae3fda53, type: 3}
+      propertyPath: m_sharedMaterial
+      value: 
+      objectReference: {fileID: 465492935}
     - target: {fileID: 3936001327180969544, guid: bb9855cd38cbd864992e7852ae3fda53, type: 3}
       propertyPath: m_fontMaterial
       value: 
@@ -41699,10 +41971,6 @@ PrefabInstance:
       propertyPath: m_sharedMaterial
       value: 
       objectReference: {fileID: 647037698}
-    - target: {fileID: 3936001327180969544, guid: bb9855cd38cbd864992e7852ae3fda53, type: 3}
-      propertyPath: m_hasFontAssetChanged
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 4574686402780011484, guid: bb9855cd38cbd864992e7852ae3fda53, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -41790,101 +42058,8 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 1423948472797177561, guid: bb9855cd38cbd864992e7852ae3fda53, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 5781040687017805147}
-    - targetCorrespondingSourceObject: {fileID: 2779688589935481749, guid: bb9855cd38cbd864992e7852ae3fda53, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 5781040687017805146}
-    - targetCorrespondingSourceObject: {fileID: 1365930409112361484, guid: bb9855cd38cbd864992e7852ae3fda53, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 5781040687017805145}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: bb9855cd38cbd864992e7852ae3fda53, type: 3}
---- !u!1 &5781040687017805142 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1365930409112361484, guid: bb9855cd38cbd864992e7852ae3fda53, type: 3}
-  m_PrefabInstance: {fileID: 5781040687017805141}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &5781040687017805143 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 2779688589935481749, guid: bb9855cd38cbd864992e7852ae3fda53, type: 3}
-  m_PrefabInstance: {fileID: 5781040687017805141}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &5781040687017805144 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1423948472797177561, guid: bb9855cd38cbd864992e7852ae3fda53, type: 3}
-  m_PrefabInstance: {fileID: 5781040687017805141}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &5781040687017805145
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5781040687017805142}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7be279fc5c8399540926613fc6b0b8db, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TextStyleApplier
-  preset: {fileID: 11400000, guid: e726866e6d2949a4ea2676e9ba402573, type: 2}
-  overrideFaceColor: 0
-  localFaceColor: {r: 1, g: 1, b: 1, a: 1}
-  overrideOutlineColor: 0
-  localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
-  overrideVertexGradient: 0
-  localVertexGradient:
-    topLeft: {r: 1, g: 1, b: 1, a: 1}
-    topRight: {r: 1, g: 1, b: 1, a: 1}
-    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
-    bottomRight: {r: 1, g: 1, b: 1, a: 1}
---- !u!114 &5781040687017805146
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5781040687017805143}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7be279fc5c8399540926613fc6b0b8db, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TextStyleApplier
-  preset: {fileID: 11400000, guid: e726866e6d2949a4ea2676e9ba402573, type: 2}
-  overrideFaceColor: 0
-  localFaceColor: {r: 1, g: 1, b: 1, a: 1}
-  overrideOutlineColor: 0
-  localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
-  overrideVertexGradient: 0
-  localVertexGradient:
-    topLeft: {r: 1, g: 1, b: 1, a: 1}
-    topRight: {r: 1, g: 1, b: 1, a: 1}
-    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
-    bottomRight: {r: 1, g: 1, b: 1, a: 1}
---- !u!114 &5781040687017805147
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5781040687017805144}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7be279fc5c8399540926613fc6b0b8db, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TextStyleApplier
-  preset: {fileID: 11400000, guid: e726866e6d2949a4ea2676e9ba402573, type: 2}
-  overrideFaceColor: 0
-  localFaceColor: {r: 1, g: 1, b: 1, a: 1}
-  overrideOutlineColor: 0
-  localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
-  overrideVertexGradient: 0
-  localVertexGradient:
-    topLeft: {r: 1, g: 1, b: 1, a: 1}
-    topRight: {r: 1, g: 1, b: 1, a: 1}
-    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
-    bottomRight: {r: 1, g: 1, b: 1, a: 1}
 --- !u!224 &5825339408298165867 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 2350034003859469789, guid: 2d775efc3f5734d4b9792f70d9c5de7b, type: 3}
@@ -42223,6 +42398,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -42512,6 +42689,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -42526,34 +42705,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1664553119}
     m_Modifications:
-    - target: {fileID: 1446040445846663853, guid: 0d36f87c56a1e9e4cad5937d17de22dc, type: 3}
-      propertyPath: m_SizeDelta.y
-      value: 50
-      objectReference: {fileID: 0}
-    - target: {fileID: 1446040445846663853, guid: 0d36f87c56a1e9e4cad5937d17de22dc, type: 3}
-      propertyPath: m_AnchoredPosition.y
-      value: 215
-      objectReference: {fileID: 0}
-    - target: {fileID: 6202264555733540310, guid: 0d36f87c56a1e9e4cad5937d17de22dc, type: 3}
-      propertyPath: m_fontAsset
-      value: 
-      objectReference: {fileID: 11400000, guid: 8c5fe09c692e11d4ca9132a851bb6129, type: 2}
-    - target: {fileID: 6202264555733540310, guid: 0d36f87c56a1e9e4cad5937d17de22dc, type: 3}
-      propertyPath: m_fontStyle
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6202264555733540310, guid: 0d36f87c56a1e9e4cad5937d17de22dc, type: 3}
-      propertyPath: m_fontColor.b
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6202264555733540310, guid: 0d36f87c56a1e9e4cad5937d17de22dc, type: 3}
-      propertyPath: m_fontColor.g
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6202264555733540310, guid: 0d36f87c56a1e9e4cad5937d17de22dc, type: 3}
-      propertyPath: m_fontColor.r
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 6202264555733540310, guid: 0d36f87c56a1e9e4cad5937d17de22dc, type: 3}
       propertyPath: m_fontMaterial
       value: 
@@ -42562,43 +42713,11 @@ PrefabInstance:
       propertyPath: m_sharedMaterial
       value: 
       objectReference: {fileID: 2118380621}
-    - target: {fileID: 6202264555733540310, guid: 0d36f87c56a1e9e4cad5937d17de22dc, type: 3}
-      propertyPath: m_fontColor32.rgba
-      value: 4294967295
-      objectReference: {fileID: 0}
-    - target: {fileID: 6202264555733540310, guid: 0d36f87c56a1e9e4cad5937d17de22dc, type: 3}
-      propertyPath: m_hasFontAssetChanged
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 6644135482188597702, guid: 0d36f87c56a1e9e4cad5937d17de22dc, type: 3}
       propertyPath: m_Name
       value: improv_card
       objectReference: {fileID: 0}
     - target: {fileID: 7893922921982989012, guid: 0d36f87c56a1e9e4cad5937d17de22dc, type: 3}
-      propertyPath: m_margin.y
-      value: -6.5315285
-      objectReference: {fileID: 0}
-    - target: {fileID: 7893922921982989012, guid: 0d36f87c56a1e9e4cad5937d17de22dc, type: 3}
-      propertyPath: m_fontAsset
-      value: 
-      objectReference: {fileID: 11400000, guid: 8c5fe09c692e11d4ca9132a851bb6129, type: 2}
-    - target: {fileID: 7893922921982989012, guid: 0d36f87c56a1e9e4cad5937d17de22dc, type: 3}
-      propertyPath: m_fontStyle
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 7893922921982989012, guid: 0d36f87c56a1e9e4cad5937d17de22dc, type: 3}
-      propertyPath: m_fontColor.b
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 7893922921982989012, guid: 0d36f87c56a1e9e4cad5937d17de22dc, type: 3}
-      propertyPath: m_fontColor.g
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 7893922921982989012, guid: 0d36f87c56a1e9e4cad5937d17de22dc, type: 3}
-      propertyPath: m_fontColor.r
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 7893922921982989012, guid: 0d36f87c56a1e9e4cad5937d17de22dc, type: 3}
       propertyPath: m_fontMaterial
       value: 
       objectReference: {fileID: 1375025187}
@@ -42606,14 +42725,6 @@ PrefabInstance:
       propertyPath: m_sharedMaterial
       value: 
       objectReference: {fileID: 1375025187}
-    - target: {fileID: 7893922921982989012, guid: 0d36f87c56a1e9e4cad5937d17de22dc, type: 3}
-      propertyPath: m_fontColor32.rgba
-      value: 4294967295
-      objectReference: {fileID: 0}
-    - target: {fileID: 7893922921982989012, guid: 0d36f87c56a1e9e4cad5937d17de22dc, type: 3}
-      propertyPath: m_hasFontAssetChanged
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 8142320573439122723, guid: 0d36f87c56a1e9e4cad5937d17de22dc, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -42697,70 +42808,8 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 1988364191190403132, guid: 0d36f87c56a1e9e4cad5937d17de22dc, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 6187485970428029920}
-    - targetCorrespondingSourceObject: {fileID: 9194092235695577127, guid: 0d36f87c56a1e9e4cad5937d17de22dc, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 6187485970428029919}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 0d36f87c56a1e9e4cad5937d17de22dc, type: 3}
---- !u!1 &6187485970428029917 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 9194092235695577127, guid: 0d36f87c56a1e9e4cad5937d17de22dc, type: 3}
-  m_PrefabInstance: {fileID: 6187485970428029916}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &6187485970428029918 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1988364191190403132, guid: 0d36f87c56a1e9e4cad5937d17de22dc, type: 3}
-  m_PrefabInstance: {fileID: 6187485970428029916}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &6187485970428029919
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6187485970428029917}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7be279fc5c8399540926613fc6b0b8db, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TextStyleApplier
-  preset: {fileID: 11400000, guid: e726866e6d2949a4ea2676e9ba402573, type: 2}
-  overrideFaceColor: 0
-  localFaceColor: {r: 1, g: 1, b: 1, a: 1}
-  overrideOutlineColor: 0
-  localOutlineColor: {r: 0.9490197, g: 0.7294118, b: 0.2509804, a: 1}
-  overrideVertexGradient: 0
-  localVertexGradient:
-    topLeft: {r: 1, g: 1, b: 1, a: 1}
-    topRight: {r: 1, g: 1, b: 1, a: 1}
-    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
-    bottomRight: {r: 1, g: 1, b: 1, a: 1}
---- !u!114 &6187485970428029920
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6187485970428029918}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7be279fc5c8399540926613fc6b0b8db, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TextStyleApplier
-  preset: {fileID: 11400000, guid: 4c8721c40e8e9f3459386f2997055b85, type: 2}
-  overrideFaceColor: 0
-  localFaceColor: {r: 1, g: 1, b: 1, a: 1}
-  overrideOutlineColor: 0
-  localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
-  overrideVertexGradient: 0
-  localVertexGradient:
-    topLeft: {r: 1, g: 1, b: 1, a: 1}
-    topRight: {r: 1, g: 1, b: 1, a: 1}
-    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
-    bottomRight: {r: 1, g: 1, b: 1, a: 1}
 --- !u!224 &6191754721821404087
 RectTransform:
   m_ObjectHideFlags: 0
@@ -42797,6 +42846,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -43114,6 +43165,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -43229,6 +43282,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -43731,6 +43786,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -43825,6 +43882,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -43911,11 +43970,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7be279fc5c8399540926613fc6b0b8db, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TextStyleApplier
-  preset: {fileID: 11400000, guid: e726866e6d2949a4ea2676e9ba402573, type: 2}
+  preset: {fileID: 11400000, guid: 4c8721c40e8e9f3459386f2997055b85, type: 2}
   overrideFaceColor: 0
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -44040,6 +44101,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -44126,6 +44189,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -44168,6 +44233,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -44218,6 +44285,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -44268,6 +44337,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -44310,7 +44381,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 3.4}
+  m_AnchoredPosition: {x: 0, y: 1.5}
   m_SizeDelta: {x: 100, y: 20}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &7667625603295878393
@@ -44330,6 +44401,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -44528,6 +44601,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -44704,6 +44779,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -45084,6 +45161,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -45204,6 +45283,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -45356,6 +45437,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}
@@ -45414,6 +45497,8 @@ MonoBehaviour:
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
   localOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  overrideUnderlayColor: 0
+  localUnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   overrideVertexGradient: 0
   localVertexGradient:
     topLeft: {r: 1, g: 1, b: 1, a: 1}

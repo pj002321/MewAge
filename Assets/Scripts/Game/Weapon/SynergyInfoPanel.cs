@@ -93,8 +93,18 @@ public class SynergyInfoPanel : MonoBehaviourSingleton<SynergyInfoPanel>
             if (row.f_출현시작챕터 <= chapter)
                 result.Add(row);
         });
-        // 등급 오름차순 정렬 (S > A > B 순으로 위에 표시)
-        result.Sort((a, b) => string.Compare(b.f_등급, a.f_등급, System.StringComparison.Ordinal));
+
+        var equipped = PlayerInventory.Shared?.Equipped;
+        var achieved = SynergyConditionChecker.CheckAll(equipped);
+
+        // 달성 여부 우선, 같으면 등급 내림차순
+        result.Sort((a, b) =>
+        {
+            bool achA = achieved.Contains(a.f_시너지ID);
+            bool achB = achieved.Contains(b.f_시너지ID);
+            if (achA != achB) return achA ? -1 : 1;
+            return string.Compare(b.f_등급, a.f_등급, System.StringComparison.Ordinal);
+        });
         return result;
     }
 

@@ -30,9 +30,12 @@ public class BossChargeSkill : BossSkillBase
 
     private LineRenderer _warnLine;
 
-    private void OnDisable()
+    private void OnDisable() => CleanupWarnLine();
+
+    public override void OnInterrupted()
     {
-        if (_warnLine != null) { Destroy(_warnLine.gameObject); _warnLine = null; }
+        base.OnInterrupted(); // StopAllCoroutines
+        CleanupWarnLine();
     }
 
     protected override IEnumerator OnExecute()

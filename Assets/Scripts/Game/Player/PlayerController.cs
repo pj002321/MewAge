@@ -263,7 +263,7 @@ public class PlayerController : MonoBehaviour
 
         if (dodge > 0f && Random.value < dodge)
         {
-            FXManager.Shared?.SpawnPlayerText("회피", new Color(1f, 0.95f, 0.4f));
+            FXManager.Shared?.SpawnPlayerText("Miss", new Color(1f, 0.95f, 0.4f));
             return;
         }
 

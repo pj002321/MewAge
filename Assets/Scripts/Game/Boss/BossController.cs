@@ -121,6 +121,7 @@ public class BossController : MonoBehaviour, IEnemyHost
     private readonly HashSet<int> _triggeredGrogy = new();
     private Coroutine  _grogyFlickerCoroutine;
     private GameObject _grogyOverheadInstance;
+    private float      _grogyReentryTimer; // 그로기 해제 후 재발동 방지 쿨다운
 
     // UniTask CancellationTokenSource
     private CancellationTokenSource _patternCts;
@@ -336,6 +337,7 @@ public class BossController : MonoBehaviour, IEnemyHost
         if (isDead || _dropping) return;
 
         damageTimer -= Time.deltaTime;
+        if (_grogyReentryTimer > 0f) _grogyReentryTimer -= Time.deltaTime;
 
         if (PlayerTransform == null)
             PlayerTransform = PlayerController.Instance?.transform;
@@ -348,7 +350,7 @@ public class BossController : MonoBehaviour, IEnemyHost
 
     public void TriggerGroggy(float duration)
     {
-        if (IsGrogy || isDead) return;
+        if (IsGrogy || isDead || _grogyReentryTimer > 0f) return;
         GrogyAsync(duration).Forget();
     }
 
@@ -586,6 +588,7 @@ public class BossController : MonoBehaviour, IEnemyHost
         ApplyGrogyAtkSpeed(1f / GrogyAtkSpeedMult);
         StopGrogyVisuals();
         IsGrogy = false;
+        _grogyReentryTimer = idleDuration + chaseDuration; // 최소 1사이클(대기+추격) 동안 재발동 방지
         OnGrogyEnd?.Invoke();
         if (!isDead) StartPatternLoop();
     }

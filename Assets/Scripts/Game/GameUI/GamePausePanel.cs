@@ -15,6 +15,7 @@ public class GamePausePanel : MonoBehaviourSingleton<GamePausePanel>
     [Header("버튼")]
     [SerializeField] private Button resumeButton;
     [SerializeField] private Button homeButton;
+    [SerializeField] private Button debugToggleButton;
 
     [Header("획득 증강 목록")]
     [SerializeField] private GameObject improvIconPrefab;
@@ -25,8 +26,9 @@ public class GamePausePanel : MonoBehaviourSingleton<GamePausePanel>
     protected override void Awake()
     {
         base.Awake();
-        resumeButton?.onClick.AddListener(Hide);
-        homeButton  ?.onClick.AddListener(OnHome);
+        resumeButton      ?.onClick.AddListener(Hide);
+        homeButton        ?.onClick.AddListener(OnHome);
+        debugToggleButton ?.onClick.AddListener(OnDebugToggle);
         gameObject.SetActive(false);
     }
 
@@ -51,6 +53,20 @@ public class GamePausePanel : MonoBehaviourSingleton<GamePausePanel>
     {
         Time.timeScale = 1f;
         GameManager.Shared?.GoHome();
+    }
+
+    private void OnDebugToggle()
+    {
+        DebugPanel.Shared?.Toggle();
+        RefreshDebugLabel();
+    }
+
+    private void RefreshDebugLabel()
+    {
+        var label = debugToggleButton?.GetComponentInChildren<TMPro.TextMeshProUGUI>();
+        if (label == null) return;
+        bool visible = DebugPanel.Shared?.IsVisible ?? false;
+        label.text = visible ? "디버그 OFF" : "디버그 ON";
     }
 
     // ── 증강 아이콘 갱신 (StatPanelUI와 동일 패턴) ──────────────────
