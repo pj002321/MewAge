@@ -59,6 +59,16 @@ public class BossGridSpikeSkill : BossSkillBase
     [Tooltip("0이면 VFX를 자동으로 제거하지 않음")]
     [SerializeField] private float spawnVfxDuration = 1f;
 
+    // ── 활성 마커 추적 (OnDestroy 안전망) ────────────────────────
+    private readonly List<GameObject> _activeMarkers = new();
+
+    private void OnDestroy()
+    {
+        foreach (var m in _activeMarkers)
+            if (m != null) Destroy(m);
+        _activeMarkers.Clear();
+    }
+
     // ── BossSkillBase ────────────────────────────────────────────
 
     protected override async UniTask OnExecuteAsync(CancellationToken ct)
@@ -277,7 +287,10 @@ public class BossGridSpikeSkill : BossSkillBase
     {
         var markers = new GameObject[cells.Count];
         for (int i = 0; i < cells.Count; i++)
+        {
             markers[i] = SpawnMarker(CellToWorld(cells[i], origin, cellSize), cellSize);
+            if (markers[i] != null) _activeMarkers.Add(markers[i]);
+        }
         return markers;
     }
 
@@ -317,10 +330,14 @@ public class BossGridSpikeSkill : BossSkillBase
         }
     }
 
-    private static void CleanupAll(GameObject[] gos)
+    private void CleanupAll(GameObject[] gos)
     {
         foreach (var go in gos)
-            if (go != null) Destroy(go);
+        {
+            if (go == null) continue;
+            _activeMarkers.Remove(go);
+            Destroy(go);
+        }
     }
 
     private static void GetMapBounds(out Vector2 min, out Vector2 max)

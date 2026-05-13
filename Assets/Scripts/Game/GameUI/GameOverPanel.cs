@@ -35,6 +35,9 @@ public class GameOverPanel : MonoBehaviour
     {
         _revived = false;
         transform.localScale = Vector3.one;
+        reviveAdButton?.gameObject.SetActive(true);
+        revivePaidButton?.gameObject.SetActive(true);
+        skipButton?.gameObject.SetActive(true);
         StartCoroutine(CountdownRoutine());
 
         this.DLog("GameOverPanel Enabled — Starting countdown.");
@@ -104,6 +107,10 @@ public class GameOverPanel : MonoBehaviour
 
     private IEnumerator ShrinkRoutine()
     {
+        reviveAdButton?.gameObject.SetActive(false);
+        revivePaidButton?.gameObject.SetActive(false);
+        skipButton?.gameObject.SetActive(false);
+
         float elapsed = 0f;
         Vector3 start = transform.localScale;
         while (elapsed < shrinkDuration)

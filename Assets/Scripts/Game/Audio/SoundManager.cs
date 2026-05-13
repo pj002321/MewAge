@@ -6,6 +6,7 @@ using UnityEngine;
 /// 게임 전체 사운드를 관리하는 싱글톤 매니저.
 /// Inspector에서 key-clip 쌍을 등록한 후 Play(key)로 재생합니다.
 /// minInterval로 같은 사운드의 중복 재생을 방지합니다.
+/// BGM은 각 씬 시작 시 명시적으로 Play*BGM()을 호출해야 합니다.
 /// </summary>
 public class SoundManager : MonoBehaviourSingleton<SoundManager>
 {
@@ -35,13 +36,12 @@ public class SoundManager : MonoBehaviourSingleton<SoundManager>
     private AudioSource bgmSource;
     private Coroutine bgmFadeCoroutine;
 
-    private string currentScene;
-    private bool isLoadingIndicatorActive;
+    private AudioClip currentBGMClip;
 
     protected override void Awake()
     {
         base.Awake();
-        
+
         sfxSource = gameObject.AddComponent<AudioSource>();
         sfxSource.playOnAwake = false;
 
@@ -62,25 +62,11 @@ public class SoundManager : MonoBehaviourSingleton<SoundManager>
         }
     }
 
-    private void OnValidate()
-    {
-        RebuildDictionary();
-    }
+    private void OnValidate() => RebuildDictionary();
 
-    private void Update()
-    {
-        // 로딩 인디케이터 감지 (SceneLoadManager의 로딩 스크린)
-        bool loading = SceneLoadManager.IsLoading;
-        
-        if (loading != isLoadingIndicatorActive)
-        {
-            isLoadingIndicatorActive = loading;
-            if (isLoadingIndicatorActive)
-                StopBGM();
-            else
-                ResumeBGM();
-        }
-    }
+    // ─────────────────────────────────────────────────
+    // SFX
+    // ─────────────────────────────────────────────────
 
     public void PlayClip(AudioClip clip, float volume = 1f)
     {
@@ -104,23 +90,24 @@ public class SoundManager : MonoBehaviourSingleton<SoundManager>
     // ─────────────────────────────────────────────────
     // BGM
     // ─────────────────────────────────────────────────
-    public void PlayHomeBGM()                          => PlayBGMWithFade(homeBGM, "home");
-    public void PlayGameBGM()                          => PlayBGMWithFade(gameBGM, "game");
-    public void PlayChapterHomeBGM(string chapterID)   => PlayBGMWithFade(homeBGM, "home");
-    public void PlayChapterGameBGM(string chapterID)   => PlayBGMWithFade(gameBGM, "game");
-    public void PlayChapterBossBGM(string chapterID = null) => PlayBGMWithFade(bossBGM, "boss");
 
-    private void PlayBGMWithFade(AudioClip clip, string sceneName)
+    public void PlayHomeBGM()                                    => PlayBGMWithFade(homeBGM);
+    public void PlayGameBGM()                                    => PlayBGMWithFade(gameBGM);
+    public void PlayChapterHomeBGM(string chapterID)             => PlayBGMWithFade(homeBGM);
+    public void PlayChapterGameBGM(string chapterID)             => PlayBGMWithFade(gameBGM);
+    public void PlayChapterBossBGM(string chapterID = null)      => PlayBGMWithFade(bossBGM);
+
+    private void PlayBGMWithFade(AudioClip clip)
     {
-        currentScene = sceneName;
-
         if (clip == null) return;
+
+        currentBGMClip = clip;
+
         if (!BGMEnabled) return;
 
         // 같은 클립이 재생 중이면 스킵
         if (bgmSource.clip == clip && bgmSource.isPlaying) return;
 
-        // 페이드인으로 재생 (로딩 중에도 즉시 전환)
         if (bgmFadeCoroutine != null) StopCoroutine(bgmFadeCoroutine);
         bgmFadeCoroutine = StartCoroutine(FadeInBGM(clip));
     }
@@ -158,60 +145,27 @@ public class SoundManager : MonoBehaviourSingleton<SoundManager>
             yield return null;
         }
         bgmSource.volume = 0f;
-        bgmSource.Pause();
-    }
-
-    private void ResumeBGM()
-    {
-        if (!BGMEnabled) return;
-        if (isLoadingIndicatorActive) return;
-        if (bgmSource.isPlaying) return;
-
-        // currentScene에 맞는 정상 클립을 찾아 재생 (씬 전환 후 잘못된 클립 재개 방지)
-        AudioClip targetClip = currentScene switch
-        {
-            "home" => homeBGM,
-            "boss" => bossBGM,
-            "game" => gameBGM,
-            _      => bgmSource.clip
-        };
-
-        if (targetClip == null) return;
-
-        if (bgmFadeCoroutine != null) StopCoroutine(bgmFadeCoroutine);
-
-        if (bgmSource.clip == targetClip)
-            bgmFadeCoroutine = StartCoroutine(FadeInFromPause());
-        else
-            bgmFadeCoroutine = StartCoroutine(FadeInBGM(targetClip));
-    }
-
-    private IEnumerator FadeInFromPause()
-    {
-        bgmSource.volume = 0f;
-        bgmSource.UnPause();
-        float elapsed = 0f;
-        while (elapsed < bgmFadeDuration)
-        {
-            elapsed += Time.unscaledDeltaTime;
-            bgmSource.volume = Mathf.Lerp(0f, 1f, elapsed / bgmFadeDuration);
-            yield return null;
-        }
-        bgmSource.volume = 1f;
+        bgmSource.Stop();
     }
 
     // ─────────────────────────────────────────────────
     // 설정 (뮤트)
     // ─────────────────────────────────────────────────
+
     public bool BGMEnabled { get; private set; } = true;
 
     public void SetBGMEnabled(bool enabled)
     {
         BGMEnabled = enabled;
         if (!enabled)
+        {
             StopBGM();
-        else
-            ResumeBGM();
+        }
+        else if (currentBGMClip != null)
+        {
+            if (bgmFadeCoroutine != null) StopCoroutine(bgmFadeCoroutine);
+            bgmFadeCoroutine = StartCoroutine(FadeInBGM(currentBGMClip));
+        }
     }
 
     public void SetSFXEnabled(bool enabled)

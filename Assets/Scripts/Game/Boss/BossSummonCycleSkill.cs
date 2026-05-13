@@ -29,6 +29,7 @@ public class BossSummonCycleSkill : BossSkillBase
     [SerializeField] private float spawnRadius         = 3f;   // 보스 주변 소환 반경
 
     private readonly List<BossSummonMinion> _activeMinions = new();
+    private GameObject[] _pendingMarkers;
 
     public override void Init(BossController boss)
     {
@@ -38,6 +39,14 @@ public class BossSummonCycleSkill : BossSkillBase
     }
 
     protected override IEnumerator OnExecute() { yield break; }
+
+    private void OnDestroy()
+    {
+        if (_pendingMarkers == null) return;
+        foreach (var m in _pendingMarkers)
+            if (m != null) Destroy(m);
+        _pendingMarkers = null;
+    }
 
     private IEnumerator SummonLoop()
     {
@@ -96,7 +105,9 @@ public class BossSummonCycleSkill : BossSkillBase
                 markerObjects[i] = obj;
                 markers[i]       = obj.GetComponent<ImpactMarker>();
             }
+            _pendingMarkers = markerObjects;
             yield return new WaitForSeconds(markerWarningTime);
+            _pendingMarkers = null;
         }
 
         // 마커 제거

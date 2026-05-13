@@ -110,6 +110,12 @@ public class PlayerController : MonoBehaviour
         hitFlash      = GetComponentInChildren<HitFlash>();
         hitShake      = GetComponent<HitShake>();
         currentHP     = maxHP;
+
+        if (playerHpSlider != null)
+        {
+            var canvas = playerHpSlider.GetComponentInParent<Canvas>();
+            if (canvas != null) canvas.sortingOrder = 100;
+        }
     }
 
     private void OnDestroy()

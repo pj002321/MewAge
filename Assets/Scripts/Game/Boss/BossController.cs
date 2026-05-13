@@ -497,6 +497,9 @@ public class BossController : MonoBehaviour, IEnemyHost
     {
         isDead = true;
         CancelPattern();
+        if (skills != null)
+            foreach (var s in skills)
+                s?.OnInterrupted();
         StopGrogyVisuals();
         OnDeath?.Invoke();
 
