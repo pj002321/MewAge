@@ -69,7 +69,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 47b83d84731d5f94ca4c43b16224c669, type: 2}
+  - {fileID: 2100000, guid: e901129e9679f8e428ec8abe92cf485f, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -201,12 +201,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyController
   moveSpeed: 2
-  maxHP: 2500
-  contactDamage: 10
-  goldDrop: 5
-  expDrop: 10
+  maxHP: 2000
+  contactDamage: 45
+  goldDrop: 50
+  expDrop: 50
   scoreValue: 10
-  damageCooldown: 1
   contactMaxDist: 0.8
   knockbackImmune: 0
   bleedDuration: 5

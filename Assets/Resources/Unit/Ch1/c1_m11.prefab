@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4092441220517724094}
   - component: {fileID: 2689750303464935565}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Square
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -100,7 +100,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5428772856677564459}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: GameObject
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -139,7 +139,7 @@ GameObject:
   - component: {fileID: 8221362606054355817}
   - component: {fileID: 4395036067561498926}
   - component: {fileID: -7610076875224964488}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: c1_m11
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -304,7 +304,6 @@ MonoBehaviour:
   goldDrop: 5
   expDrop: 10
   scoreValue: 0
-  damageCooldown: 1
   contactMaxDist: 0.8
   knockbackImmune: 0
   bleedDuration: 5
@@ -389,4 +388,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HitFlash
   flashDuration: 0.1
   flashMaterial: {fileID: 2100000, guid: f6d87d58797b8b9478efae2c2271cbe7, type: 2}
+  flashColor: {r: 1, g: 1, b: 1, a: 1}
   BaseColor: {r: 1, g: 1, b: 1, a: 1}

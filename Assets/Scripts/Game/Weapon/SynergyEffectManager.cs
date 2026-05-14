@@ -79,18 +79,20 @@ public class SynergyEffectManager : MonoBehaviourSingleton<SynergyEffectManager>
     {
         if (_recalculating) { _recalcPending = true; return; }
         _recalculating = true;
+        bool firstPass = true;
         try
         {
             do
             {
                 _recalcPending = false;
-                RecalculateSynergiesInternal();
+                RecalculateSynergiesInternal(firstPass);
+                firstPass = false;
             } while (_recalcPending);
         }
         finally { _recalculating = false; }
     }
 
-    private void RecalculateSynergiesInternal()
+    private void RecalculateSynergiesInternal(bool allowOneTimeEffects)
     {
         var equipped    = PlayerInventory.Shared?.Equipped;
         var newAchieved = SynergyConditionChecker.CheckAll(equipped);
@@ -115,9 +117,12 @@ public class SynergyEffectManager : MonoBehaviourSingleton<SynergyEffectManager>
         // 3. 패시브 스탯 적용
         ApplyPassiveStats(newAchieved);
 
-        // 4. 신규 달성 일회성 효과
-        foreach (var id in newlyGained)
-            TriggerOneTimeEffect(id);
+        // 4. 신규 달성 일회성 효과 (최초 패스에서만 — 효과로 인한 장착 변경이 새 시너지를 연쇄 발동하는 것을 막음)
+        if (allowOneTimeEffects)
+        {
+            foreach (var id in newlyGained)
+                TriggerOneTimeEffect(id);
+        }
 
         _previous       = new HashSet<string>(newAchieved);
         AchievedSynergies = newAchieved;

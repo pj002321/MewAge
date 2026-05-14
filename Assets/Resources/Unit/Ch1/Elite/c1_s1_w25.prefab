@@ -26,7 +26,7 @@ Transform:
   m_GameObject: {fileID: 1853499898610612309}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.05, y: 0.07, z: 0}
+  m_LocalPosition: {x: 0.24969283, y: 0.020076673, z: 0}
   m_LocalScale: {x: 1.49875, y: 1.49875, z: 1.49875}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -77,9 +77,9 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 1
+  m_SortingLayerID: 1049025713
+  m_SortingLayer: 1
+  m_SortingOrder: 4
   m_MaskInteraction: 0
   m_Sprite: {fileID: -6149623692400296304, guid: aae5a60f0a493f14da9a00ba91e73b06, type: 3}
   m_Color: {r: 0, g: 0, b: 0, a: 1}
@@ -158,7 +158,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 47b83d84731d5f94ca4c43b16224c669, type: 2}
+  - {fileID: 2100000, guid: e901129e9679f8e428ec8abe92cf485f, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -253,13 +253,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyController
   moveSpeed: 2.5
-  maxHP: 9000
-  contactDamage: 10
+  maxHP: 2000
+  contactDamage: 50
   goldDrop: 100
-  expDrop: 10
+  expDrop: 100
   scoreValue: 0
-  damageCooldown: 1
-  contactMaxDist: 0.8
+  contactMaxDist: 1.5
   knockbackImmune: 0
   bleedDuration: 5
   bleedInterval: 1

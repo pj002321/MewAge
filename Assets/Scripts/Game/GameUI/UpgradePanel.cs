@@ -75,8 +75,6 @@ public class UpgradePanel : MonoBehaviour
     [SerializeField] private RectTransform goldTextRect;     // 골드 텍스트 위치 (목적지)
     [SerializeField] private Canvas        rootCanvas;
 
-    [Header("초상화 연출")]
-    [SerializeField] private Animator      portraitAnimator;
 
     [Header("시너지 노티피케이션")]
     [SerializeField] private Image infoButtonRedDot;
@@ -172,7 +170,7 @@ public class UpgradePanel : MonoBehaviour
         RefreshSynergyCompleteSlots();
         RefreshExpUI();
 
-        portraitAnimator?.Play("enter_portrait");
+        InGameCharacterDisplay.Shared?.DropIn();
         _lastDisplayedAtk = -1f;
         _atkBeforeMerge   = -1f;
         RefreshAtkUI(animate: false);
@@ -747,7 +745,7 @@ public class UpgradePanel : MonoBehaviour
 
     private IEnumerator NextWaveDelayRoutine()
     {
-        portraitAnimator?.Play("exit_portrait");
+        InGameCharacterDisplay.Shared?.DropOut();
         yield return new WaitForSecondsRealtime(nextWaveDelay);
         UpgradeManager.Shared?.ClosePanel();
     }

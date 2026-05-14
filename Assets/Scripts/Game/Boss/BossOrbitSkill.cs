@@ -47,8 +47,7 @@ public class BossOrbitSkill : BossSkillBase
 
         float elapsed = 0f;
         float angle   = 0f;
-        float dmg     = (hitDamage > 0f ? hitDamage : Owner.ContactDamage)
-                        * (Boss != null && Boss.IsEnraged ? Boss.EnrageDamageMult : 1f);
+        float dmg     = hitDamage > 0f ? hitDamage : Owner.ContactDamage;
 
         while (elapsed < orbitDuration)
         {

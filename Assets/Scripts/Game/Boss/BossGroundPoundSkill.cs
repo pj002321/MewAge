@@ -81,7 +81,7 @@ public class BossGroundPoundSkill : BossSkillBase
         if (Owner.PlayerTransform == null) yield break;
         if (GameManager.Shared != null && GameManager.Shared.IsGameOver) yield break;
 
-        float speed = chargeSpeed * (Boss != null && Boss.IsEnraged ? Boss.EnrageSpeedMult : 1f);
+        float speed = chargeSpeed;
 
         // 스케일 기준값 저장 — OnInterrupted에서 복구
         _origScale = Owner.transform.localScale;

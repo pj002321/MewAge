@@ -1,3 +1,26 @@
+7. 2026.5.14 ✅ 해결
+버그 수정 (4건)
+
+(1) RangedBehaviour 몬스터가 이동하면서 투사체를 발사하는 현상
+- 원인: WarnAndShoot()에서 ShootProjectile() 호출 직후 _isWarning=false, _moveState=Retreating으로 전환. 애니메이션 이벤트 발사(OnRangedAttackFire)가 오기 전에 이동 재개돼 이동 중 발사처럼 보임.
+- 해결: ShootProjectile()에서 AnimEventFallback 코루틴 제거. WarnAndShoot() 내부에서 _pendingShot이 false가 될 때까지(또는 animEventTimeout까지) Idle 유지 후 Retreating 전환. 타임아웃 시 폴백 발사도 WarnAndShoot()에서 직접 처리.
+
+(2) BossProjectileCycleSkill 투사체 패턴이 아예 시전되지 않는 현상
+- 원인: Init()에서 StartCoroutine(CycleLoop())로 독립 루프를 시작하지만, CancelPattern() → OnInterrupted() → StopAllCoroutines()가 CycleLoop을 죽임. Init()은 1회만 호출되어 재시작 없음.
+- 해결: OnInterrupted() 오버라이드로 no-op 처리. CycleLoop는 WaitUntil(!Boss.IsGrogy)로 그로기를 자체 처리. Boss.IsDead 체크로 보스 사망 시 루프 즉시 종료. BossController에 public bool IsDead 프로퍼티 추가.
+
+(3) BossGridSpikeSkill이 cooldown 50초가 안지났는데 재스폰되는 현상
+- 원인: PatternLoopAsync에서 cooldown 필드를 사용하지 않음. 그로기로 토큰 취소 시 SuppressCancellationThrow로 조기 리턴 후 패턴 재시작 → cooldown 무시하고 GridSpike 재실행.
+- 해결: PatternLoopAsync에 _lastSkillTime[] 배열 추가. 각 스킬 실행 전 Time.time - _lastSkillTime >= cooldown 조건 검사. 쿨다운 중인 스킬은 건너뜀. cooldown 필드가 실제 동작에 반영됨.
+
+(4) BossSummonCycleSkill / BossGroundSpikeSkill 자체 루프 수명 이슈
+- 원인A: BossSummonCycleSkill이 OnInterrupted() 미오버라이드 → base.StopAllCoroutines()가 SummonLoop 중단, 이후 재시작 없음.
+- 원인B: BossGroundSpikeSkill의 OnInterrupted()가 Boss.IsDead 체크 없이 CycleLoop 재시작 → 보스 사망 후에도 루프 재생성.
+- 해결A: BossSummonCycleSkill.OnInterrupted() no-op 오버라이드. SummonLoop에 IsDead 체크 추가.
+- 해결B: BossGroundSpikeSkill.OnInterrupted()에 !Boss.IsDead 가드 추가. CycleLoop 상단에 IsDead 체크 추가.
+
+---
+
 6. 2026.5.12 ✅ 해결
 버그 수정 (9건)
 

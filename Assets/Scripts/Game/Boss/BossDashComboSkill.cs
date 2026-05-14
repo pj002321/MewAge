@@ -34,7 +34,7 @@ public class BossDashComboSkill : BossSkillBase
     {
         if (Owner.PlayerTransform == null) yield break;
 
-        float   speed   = dashSpeed * (Boss != null && Boss.IsEnraged ? Boss.EnrageSpeedMult : 1f);
+        float   speed   = dashSpeed;
         float   dmg     = hitDamage > 0f ? hitDamage : Owner.ContactDamage;
         Vector2 dir     = ((Vector2)Owner.PlayerTransform.position - Owner.Rb.position).normalized;
 
@@ -116,7 +116,7 @@ public class BossDashComboSkill : BossSkillBase
                 if (hitTimer <= 0f)
                 {
                     Owner.EnemyAnimator?.SetTrigger(EnemyAnim.TAttack);
-                    PlayerController.Instance?.TakeDamage(dmg * (Boss != null && Boss.IsEnraged ? Boss.EnrageDamageMult : 1f), sourceName: Owner.gameObject.name);
+                    PlayerController.Instance?.TakeDamage(dmg, sourceName: Owner.gameObject.name);
                     hits++;
                     hitTimer = hitInterval;
                 }
@@ -134,7 +134,7 @@ public class BossDashComboSkill : BossSkillBase
             if (dist > hitRange) break;
 
             Owner.EnemyAnimator?.SetTrigger(EnemyAnim.TAttack);
-            PlayerController.Instance?.TakeDamage(dmg * (Boss != null && Boss.IsEnraged ? Boss.EnrageDamageMult : 1f), sourceName: Owner.gameObject.name);
+            PlayerController.Instance?.TakeDamage(dmg, sourceName: Owner.gameObject.name);
             hits++;
             yield return new WaitForSeconds(hitInterval);
         }

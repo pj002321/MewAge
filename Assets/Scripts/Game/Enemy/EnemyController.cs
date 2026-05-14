@@ -20,7 +20,6 @@ public class EnemyController : MonoBehaviour, IEnemyHost
 
     [Header("전투")]
     [SerializeField] private int   scoreValue     = 10;
-    [SerializeField] private float damageCooldown = 0.5f;
     [Tooltip("OnTrigger 접촉 데미지 최대 거리 — 콜라이더가 스프라이트보다 클 때 보정.")]
     [SerializeField] private float contactMaxDist = 0.8f;
 
@@ -54,7 +53,6 @@ public class EnemyController : MonoBehaviour, IEnemyHost
 
     // ── 런타임 상태 ─────────────────────────────────────────────
     private float          currentHP;
-    private float          damageTimer;
     private Transform      playerTransform;
     private Rigidbody2D    rb;
     private SpriteRenderer[] srs;
@@ -182,13 +180,11 @@ public class EnemyController : MonoBehaviour, IEnemyHost
     /// </summary>
     private void CheckPlayerContact()
     {
-        if (damageTimer > 0f) return;
         if (playerTransform == null) return;
         if (((Vector2)transform.position - (Vector2)playerTransform.position).sqrMagnitude > contactMaxDist * contactMaxDist) return;
         var player = PlayerController.Instance;
         if (player == null) return;
         player.TakeDamage(contactDamage, isFromElite: _eliteMarker != null, sourceName: gameObject.name);
-        damageTimer = damageCooldown;
     }
 
     private void FixedUpdate()
@@ -287,7 +283,6 @@ public class EnemyController : MonoBehaviour, IEnemyHost
 
         IsPooled   = false;
         enabled    = true;
-        damageTimer = 0f;
         isStunned  = false;
         _isDying   = false;
         moveSpeed  = baseSpeed;
@@ -350,8 +345,6 @@ public class EnemyController : MonoBehaviour, IEnemyHost
 
     private void LateUpdate()
     {
-        damageTimer -= Time.deltaTime;
-
         var s = transform.localScale;
         s.x = _lastFlipX ? -Mathf.Abs(s.x) : Mathf.Abs(s.x);
         transform.localScale = s;
@@ -386,28 +379,20 @@ public class EnemyController : MonoBehaviour, IEnemyHost
     // ── 충돌 접촉 피해 ──────────────────────────────────────────
     private void OnTriggerStay2D(Collider2D other)
     {
-        if (damageTimer > 0f) return;
         var p = other.GetComponentInParent<PlayerController>();
         if (p == null) return;
-        
-        // 플레이어 본체(PlayerController가 달린 오브젝트)가 아닌 자식의 투명 트리거(자석 등) 무시
         if (other.gameObject != p.gameObject) return;
-        
         if (((Vector2)transform.position - (Vector2)p.transform.position).sqrMagnitude > contactMaxDist * contactMaxDist) return;
         p.TakeDamage(contactDamage, sourceName: gameObject.name);
-        damageTimer = damageCooldown;
     }
 
     private void OnTriggerEnter2D(Collider2D other)
     {
         var p = other.GetComponentInParent<PlayerController>();
         if (p == null) return;
-
-        // 플레이어 본체(PlayerController가 달린 오브젝트)가 아닌 자식의 투명 트리거(자석 등) 무시
         if (other.gameObject != p.gameObject) return;
         if (((Vector2)transform.position - (Vector2)p.transform.position).sqrMagnitude > contactMaxDist * contactMaxDist) return;
         p.TakeDamage(contactDamage, sourceName: gameObject.name);
-        damageTimer = damageCooldown;
     }
 
     public void SetTint(Color color)

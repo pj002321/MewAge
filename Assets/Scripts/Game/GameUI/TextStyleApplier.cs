@@ -35,7 +35,7 @@ public class TextStyleApplier : MonoBehaviour
     public void Apply()
     {
         if (_text == null) _text = GetComponent<TMP_Text>();
-        if (_text == null) return;
+        if (_text == null || _text.font == null) return;
 
         preset?.Apply(_text);
 

@@ -59,9 +59,7 @@ public class BossVolleySkill : BossSkillBase
         float   startAngle = randomizeAngle ? Random.Range(0f, 360f) : angleOffset;
         float   step       = 360f / Mathf.Max(1, pointCount);
 
-        float dmg      = hitDamage > 0f ? hitDamage : Owner.ContactDamage;
-        float dmgMult  = Boss != null && Boss.IsEnraged ? Boss.EnrageDamageMult : 1f;
-        float finalDmg = dmg * dmgMult;
+        float finalDmg = hitDamage > 0f ? hitDamage : Owner.ContactDamage;
 
         Vector2[]      positions = new Vector2[pointCount];
         ImpactMarker[] markers   = new ImpactMarker[pointCount];

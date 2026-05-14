@@ -172,9 +172,8 @@ public class BossFireCrossSkill : BossSkillBase
         col.size      = Vector2.one * cellSize * 0.9f;
 
         // 피해 컴포넌트
-        float dmgMult = Boss != null && Boss.IsEnraged ? Boss.EnrageDamageMult : 1f;
         var tile = go.GetComponent<BossFireTile>() ?? go.AddComponent<BossFireTile>();
-        tile.Init(tileDamage * dmgMult, tickInterval);
+        tile.Init(tileDamage, tickInterval);
 
         list.Add(go);
     }

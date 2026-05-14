@@ -23,14 +23,11 @@ public class BossFastChaseSkill : BossSkillBase
     [SerializeField] private float      vfxDuration = 0.3f;
 
     private bool  _pendingHit;
-    private float _dmgMult;
 
     protected override IEnumerator OnExecute()
     {
         float elapsed     = 0f;
         float attackTimer = 0f;
-        float speedMult   = Boss != null && Boss.IsEnraged ? Boss.EnrageSpeedMult : 1f;
-        _dmgMult          = Boss != null && Boss.IsEnraged ? Boss.EnrageDamageMult : 1f;
 
         while (elapsed < chaseDuration)
         {
@@ -41,7 +38,7 @@ public class BossFastChaseSkill : BossSkillBase
             if (dist > stopDistance && !(Boss != null && Boss.IsFiringSkill))
             {
                 Vector2 dir = ((Vector2)Owner.PlayerTransform.position - (Vector2)Owner.transform.position).normalized;
-                Owner.MoveInDirection(dir, chaseSpeed * speedMult);
+                Owner.MoveInDirection(dir, chaseSpeed);
             }
             else
             {
@@ -70,7 +67,7 @@ public class BossFastChaseSkill : BossSkillBase
         _pendingHit = false;
         if (Owner == null || Owner.PlayerTransform == null) return;
         if (Vector2.Distance(Owner.transform.position, Owner.PlayerTransform.position) <= stopDistance)
-            PlayerController.Instance?.TakeDamage(Boss.ContactDamage * _dmgMult, sourceName: Owner.gameObject.name);
+            PlayerController.Instance?.TakeDamage(Boss.ContactDamage, sourceName: Owner.gameObject.name);
     }
 
     private IEnumerator AnimEventFallback()
@@ -80,7 +77,7 @@ public class BossFastChaseSkill : BossSkillBase
         _pendingHit = false;
         if (Owner == null || Owner.PlayerTransform == null) yield break;
         if (Vector2.Distance(Owner.transform.position, Owner.PlayerTransform.position) <= stopDistance)
-            PlayerController.Instance?.TakeDamage(Boss.ContactDamage * _dmgMult, sourceName: Owner.gameObject.name);
+            PlayerController.Instance?.TakeDamage(Boss.ContactDamage, sourceName: Owner.gameObject.name);
     }
 
     private IEnumerator ShowVfx()

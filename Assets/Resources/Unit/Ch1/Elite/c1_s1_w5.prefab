@@ -19,6 +19,7 @@ GameObject:
   - component: {fileID: 8621657598592681965}
   - component: {fileID: 8850092068662030050}
   - component: {fileID: 6803901218711807821}
+  - component: {fileID: 5767191760449960168}
   m_Layer: 7
   m_Name: c1_s1_w5
   m_TagString: Untagged
@@ -69,7 +70,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 47b83d84731d5f94ca4c43b16224c669, type: 2}
+  - {fileID: 2100000, guid: e901129e9679f8e428ec8abe92cf485f, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -200,14 +201,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 05b90058a78bdf242ada91d00c9db68b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyController
-  moveSpeed: 4
-  maxHP: 1500
+  moveSpeed: 3
+  maxHP: 500
   contactDamage: 20
   goldDrop: 30
   expDrop: 30
   scoreValue: 10
-  damageCooldown: 1
-  contactMaxDist: 0.8
+  contactMaxDist: 1.5
   knockbackImmune: 0
   bleedDuration: 5
   bleedInterval: 1
@@ -277,9 +277,9 @@ MonoBehaviour:
   projectilePrefab: {fileID: 7916182024222986910, guid: 9a4a33602c726e2489bec5dbb7160348, type: 3}
   preferredRange: 4
   shootInterval: 2
-  rangedDamage: 50
+  rangedDamage: 20
   firePoint: {fileID: 5727613956503103848}
-  useWarningLines: 1
+  useWarningLines: 0
   warningDuration: 0.4
   warningLineLength: 8
   warningLineWidth: 0.05
@@ -319,6 +319,18 @@ MonoBehaviour:
   flashMaterial: {fileID: 0}
   flashColor: {r: 1, g: 1, b: 1, a: 1}
   BaseColor: {r: 1, g: 1, b: 1, a: 1}
+--- !u!114 &5767191760449960168
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2860284734646843584}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9c58f3ba0addd845b2803f0d001d294, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EliteMarker
 --- !u!1 &3635078499002654668
 GameObject:
   m_ObjectHideFlags: 0
@@ -427,8 +439,8 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 1049025713
+  m_SortingLayer: 1
   m_SortingOrder: 4
   m_MaskInteraction: 0
   m_Sprite: {fileID: -6149623692400296304, guid: aae5a60f0a493f14da9a00ba91e73b06, type: 3}

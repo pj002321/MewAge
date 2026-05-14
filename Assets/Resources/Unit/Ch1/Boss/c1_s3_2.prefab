@@ -322,27 +322,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bfce9f499de271b4c8ab1d03e8957395, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossController
-  damageCooldown: 0.5
   moveSpeed: 3
   _isClone: 0
-  enrageThreshold: 0.5
-  enrageSpeedMult: 1.5
-  enrageDamageMult: 1.5
-  grogyThresholds:
-  - 0.7
-  - 0.35
   grogyDuration: 2
   grogyOverheadPrefab: {fileID: 7777409954982400410, guid: f66d4f4f0fe9de24182839d83a609535, type: 3}
   grogyOverheadAnchor: {fileID: 8683737430408783739}
-  grogyOverheadYOffset: 1.5
-  onDeathFX:
-    vfxPrefab: {fileID: 0}
-    spawnOffset: {x: 0, y: 0}
-    sfxClip: {fileID: 0}
-    volume: 1
-  chaseStopDistance: 1.8
+  chaseStopDistance: 1.5
   chaseDuration: 2.5
-  idleDuration: 0.6
+  idleDuration: 1
   skills:
   - {fileID: 2318364815293332815}
   - {fileID: 3632338025058510538}
@@ -391,10 +378,10 @@ MonoBehaviour:
   chargeSpeed: 15
   chargeMaxTime: 3
   chargeWarnDuration: 0.5
-  warningLineLength: 6
+  warningLineLength: 4
   warningLineWidth: 0.5
   warningLineColor: {r: 1, g: 0, b: 0, a: 0.5882353}
-  warningMaterial: {fileID: 0}
+  warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
   ghostColor: {r: 1, g: 0.15, b: 0.15, a: 0.45}
   ghostInterval: 0.04
   ghostLifetime: 0.12

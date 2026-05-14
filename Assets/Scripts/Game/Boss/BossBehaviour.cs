@@ -30,7 +30,6 @@ public class BossBehaviour : EnemyBehaviourBase
     {
         base.Init(host);
         boss = host.SelfTransform.GetComponent<BossController>();
-        if (boss != null) boss.OnEnraged += OnBossEnraged;
     }
 
     // EnemyController 가 호출하는 이동 훅 — 코루틴에서 직접 처리
@@ -68,8 +67,7 @@ public class BossBehaviour : EnemyBehaviourBase
     // ── Chase: 플레이어 방향으로 접근 ────────────────────────────────
     private IEnumerator ChaseRoutine()
     {
-        float elapsed   = 0f;
-        float speedMult = boss != null && boss.IsEnraged ? boss.EnrageSpeedMult : 1f;
+        float elapsed = 0f;
 
         while (elapsed < chaseDuration)
         {
@@ -79,24 +77,13 @@ public class BossBehaviour : EnemyBehaviourBase
 
             float dist = Vector2.Distance(Owner.SelfTransform.position, Owner.PlayerTransform.position);
             if (dist > chaseStopDistance)
-                Owner.MoveTowardPlayer(Owner.MoveSpeed * speedMult);
+                Owner.MoveTowardPlayer(Owner.MoveSpeed);
 
             yield return new WaitForFixedUpdate();
         }
     }
 
-    private void OnDestroy()
-    {
-        if (boss != null) boss.OnEnraged -= OnBossEnraged;
-    }
-
-    // ── 이벤트 ────────────────────────────────────────────────────
-    private void OnBossEnraged()
-    {
-        idleDuration = Mathf.Max(0.2f, idleDuration * 0.5f);
-    }
-
-    private float IdleTime() => boss != null && boss.IsEnraged ? idleDuration * 0.6f : idleDuration;
+    private float IdleTime() => idleDuration;
 
     private void OnDrawGizmosSelected()
     {

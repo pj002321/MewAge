@@ -34,27 +34,17 @@ public class BossProjectileCycleSkill : BossSkillBase
         [Tooltip("투사체 발사 전 경고 라인이 표시되는 시간 (초)")]
         public float 경고시간 = 0.4f;
 
-        // ── 조준연사 전용 ─────────────────────────────────────────
-        [ShowIf("type", PatternType.조준연사)]
-        [Tooltip("플레이어 방향으로 총 몇 발 쏠지")]
-        public int   연사횟수 = 1;
+        // ── 공통 ─────────────────────────────────────────────────
+        [Tooltip("발사(반복) 횟수")]
+        public int   횟수 = 1;
 
-        [ShowIf("type", PatternType.조준연사)]
-        [Tooltip("각 발사 사이 대기 시간 (초)")]
-        public float 발사간격 = 0.5f;
+        [Tooltip("발사 사이 대기 시간 (초)")]
+        public float 간격 = 0.5f;
 
         // ── 방사형 · 부채꼴 공통 ─────────────────────────────────
         [ShowIf("@type == PatternType.방사형 || type == PatternType.부채꼴")]
         [Tooltip("동시에 발사할 방향 수. 방사형=8이면 45° 간격 8방향, 12이면 30° 간격 12방향")]
-        public int   방향수   = 8;
-
-        [ShowIf("@type == PatternType.방사형 || type == PatternType.부채꼴")]
-        [Tooltip("이 버스트 세트를 몇 번 반복할지 (1이면 한 번만)")]
-        public int   반복횟수 = 1;
-
-        [ShowIf("@type == PatternType.방사형 || type == PatternType.부채꼴")]
-        [Tooltip("버스트 반복 사이 대기 시간 (초)")]
-        public float 반복간격 = 0.6f;
+        public int   방향수 = 8;
 
         // ── 방사형 전용 ───────────────────────────────────────────
         [ShowIf("type", PatternType.방사형)]
@@ -68,14 +58,6 @@ public class BossProjectileCycleSkill : BossSkillBase
 
         // ── 호밍 전용 ─────────────────────────────────────────────
         [ShowIf("type", PatternType.호밍)]
-        [Tooltip("연속으로 발사할 호밍 투사체 수")]
-        public int   호밍횟수 = 3;
-
-        [ShowIf("type", PatternType.호밍)]
-        [Tooltip("각 투사체 발사 사이 대기 시간 (초)")]
-        public float 호밍간격 = 0.25f;
-
-        [ShowIf("type", PatternType.호밍)]
         [Tooltip("포물선 호 높이. 양수=위로 볼록, 음수=아래로 볼록")]
         public float 아크높이 = 3f;
 
@@ -83,7 +65,7 @@ public class BossProjectileCycleSkill : BossSkillBase
         [Tooltip("호밍 투사체 이동 속도")]
         public float 호밍속도 = 9f;
 
-        // ── 가속 ─────────────────────────────────────────────────
+        // ── 가속 (비호밍 전용) ────────────────────────────────────
         [HideIf("type", PatternType.호밍)]
         [Tooltip("0이면 일반 발사. 값을 넣으면 느리게 출발해 팍 꽂히는 느낌으로 가속됩니다.\n최고속도에 도달하는 시간 (초). 예: 0.4 → 0.4초 동안 가속 후 최고속도")]
         public float 가속시간 = 0f;
@@ -144,6 +126,9 @@ public class BossProjectileCycleSkill : BossSkillBase
         StartCoroutine(CycleLoop());
     }
 
+    /// <summary>CycleLoop은 그로기를 WaitUntil로 자체 처리하므로 중단하지 않습니다.</summary>
+    public override void OnInterrupted() { }
+
     protected override IEnumerator OnExecute() { yield break; }
 
     // ── 메인 루프 ────────────────────────────────────────────────
@@ -155,6 +140,7 @@ public class BossProjectileCycleSkill : BossSkillBase
 
         while (true)
         {
+            if (Boss == null || Boss.IsDead) yield break;
             if (phases == null || phases.Count == 0) { yield return new WaitForSeconds(1f); continue; }
 
             if (GameManager.Shared != null && GameManager.Shared.IsGameOver)
@@ -197,7 +183,7 @@ public class BossProjectileCycleSkill : BossSkillBase
         Boss.IsFiringSkill = true;
         try
         {
-            for (int i = 0; i < cfg.연사횟수; i++)
+            for (int i = 0; i < cfg.횟수; i++)
             {
                 if (GameManager.Shared != null && GameManager.Shared.IsGameOver) yield break;
                 if (Boss != null && Boss.IsGrogy) yield break;
@@ -211,8 +197,8 @@ public class BossProjectileCycleSkill : BossSkillBase
                 yield return WarnThenFire(spawnPos, new[] { dir }, cfg.경고시간, cfg.가속시간, cfg.초기속도비율);
                 if (IsInvalid()) yield break;
 
-                if (i < cfg.연사횟수 - 1)
-                    yield return new WaitForSeconds(cfg.발사간격);
+                if (i < cfg.횟수 - 1)
+                    yield return new WaitForSeconds(cfg.간격);
             }
             yield return WaitForAttackAnimEnd();
         }
@@ -226,7 +212,7 @@ public class BossProjectileCycleSkill : BossSkillBase
         Boss.IsFiringSkill = true;
         try
         {
-            for (int r = 0; r < cfg.반복횟수; r++)
+            for (int r = 0; r < cfg.횟수; r++)
             {
                 if (Boss != null && Boss.IsGrogy) yield break;
                 if (IsInvalid()) yield break;
@@ -239,8 +225,8 @@ public class BossProjectileCycleSkill : BossSkillBase
                 yield return WarnThenFire(spawnPos, dirs, cfg.경고시간, cfg.가속시간, cfg.초기속도비율);
                 if (IsInvalid()) yield break;
 
-                if (r < cfg.반복횟수 - 1)
-                    yield return new WaitForSeconds(cfg.반복간격);
+                if (r < cfg.횟수 - 1)
+                    yield return new WaitForSeconds(cfg.간격);
             }
             yield return WaitForAttackAnimEnd();
         }
@@ -253,8 +239,7 @@ public class BossProjectileCycleSkill : BossSkillBase
     {
         const float xAvoidDist = 2.5f;
 
-        float elapsed   = 0f;
-        float speedMult = Boss != null && Boss.IsEnraged ? Boss.EnrageSpeedMult : 1f;
+        float elapsed = 0f;
 
         // 페이즈 시작 시 어느 쪽으로 비킬지 결정 (0이면 아직 미결정)
         float xSide = 0f;
@@ -286,7 +271,7 @@ public class BossProjectileCycleSkill : BossSkillBase
 
                 Vector2 toTarget = targetPos - myPos;
                 if (toTarget.magnitude > chaseStopDistance && !(Boss != null && Boss.IsFiringSkill))
-                    Owner.MoveInDirection(toTarget.normalized, Owner.MoveSpeed * speedMult);
+                    Owner.MoveInDirection(toTarget.normalized, Owner.MoveSpeed);
 
                 Owner.FlipToward((playerPos - myPos).normalized);
             }
@@ -407,7 +392,7 @@ public class BossProjectileCycleSkill : BossSkillBase
         Boss.IsFiringSkill = true;
         try
         {
-            for (int i = 0; i < cfg.호밍횟수; i++)
+            for (int i = 0; i < cfg.횟수; i++)
             {
                 if (GameManager.Shared != null && GameManager.Shared.IsGameOver) yield break;
                 if (IsInvalid()) yield break;
@@ -467,8 +452,8 @@ public class BossProjectileCycleSkill : BossSkillBase
 
                 SpawnHomingProjectile(GetSpawnPos(), lockTarget, cfg.아크높이, cfg.호밍속도);
 
-                if (i < cfg.호밍횟수 - 1)
-                    yield return new WaitForSeconds(cfg.호밍간격);
+                if (i < cfg.횟수 - 1)
+                    yield return new WaitForSeconds(cfg.간격);
             }
             yield return WaitForAttackAnimEnd();
         }
@@ -477,8 +462,7 @@ public class BossProjectileCycleSkill : BossSkillBase
 
     private void SpawnHomingProjectile(Vector2 spawnPos, Vector3 targetPos, float arcHeight, float speed)
     {
-        float dmgMult = Boss != null && Boss.IsEnraged ? Boss.EnrageDamageMult : 1f;
-        float dmg     = Owner.ContactDamage * dmgMult;
+        float dmg = Owner.ContactDamage;
         var go = Instantiate(projectilePrefab, spawnPos, Quaternion.identity);
         if (!go.TryGetComponent<Projectile>(out var p)) return;
 
@@ -497,8 +481,7 @@ public class BossProjectileCycleSkill : BossSkillBase
 
     private void SpawnProjectile(Vector2 pos, Vector2 dir, float accel = 0f, float initialSpeedRatio = 0.1f)
     {
-        float dmgMult = Boss != null && Boss.IsEnraged ? Boss.EnrageDamageMult : 1f;
-        float dmg     = Owner.ContactDamage * dmgMult;
+        float dmg = Owner.ContactDamage;
         var go = Instantiate(projectilePrefab, pos, Quaternion.identity);
         if (go.TryGetComponent<Projectile>(out var p))
         {

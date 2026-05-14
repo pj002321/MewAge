@@ -67,7 +67,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 47b83d84731d5f94ca4c43b16224c669, type: 2}
+  - {fileID: 2100000, guid: e901129e9679f8e428ec8abe92cf485f, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -86,9 +86,9 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 100
+  m_SortingLayerID: 1049025713
+  m_SortingLayer: 1
+  m_SortingOrder: 6
   m_MaskInteraction: 0
   m_Sprite: {fileID: 2794343196738070508, guid: 9f5f3f381fcd27043949595b64cfeeac, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -198,13 +198,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 05b90058a78bdf242ada91d00c9db68b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyController
-  moveSpeed: 2
-  maxHP: 30
-  contactDamage: 10
-  goldDrop: 5
-  expDrop: 10
+  moveSpeed: 3
+  maxHP: 4000
+  contactDamage: 60
+  goldDrop: 100
+  expDrop: 100
   scoreValue: 10
-  damageCooldown: 1
   contactMaxDist: 0.8
   knockbackImmune: 0
   bleedDuration: 5
@@ -246,7 +245,7 @@ MonoBehaviour:
   attackRange: 1.66
   attackInterval: 1
   useAnimationEvent: 1
-  attackVfx: {fileID: 0}
+  attackVfx: {fileID: 4326448872545226646, guid: 9c39f451340dbc740828b2b7c4782b1a, type: 3}
   vfxDuration: 0.3
   animEventTimeout: 0.5
 --- !u!114 &-7222903672905889983

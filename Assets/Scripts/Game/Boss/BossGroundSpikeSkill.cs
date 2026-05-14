@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
@@ -53,6 +54,8 @@ public class BossGroundSpikeSkill : BossSkillBase
 
     // 코루틴 out 파라미터 대신 사용하는 실행 여부 플래그
     private bool _spikePhaseExecuted;
+    private readonly List<GameObject> _liveSpikes  = new();
+    private readonly List<GameObject> _liveMarkers = new();
 
     public override void Init(BossController boss)
     {
@@ -71,13 +74,15 @@ public class BossGroundSpikeSkill : BossSkillBase
 
         while (true)
         {
+            if (Boss == null || Boss.IsDead) yield break;
+
             if (GameManager.Shared != null && GameManager.Shared.IsGameOver)
                 yield return new WaitUntil(() => GameManager.Shared == null || !GameManager.Shared.IsGameOver);
 
             if (Boss != null && Boss.IsGrogy)
                 yield return new WaitUntil(() => Boss == null || !Boss.IsGrogy);
 
-            if (IsInvalid()) yield break;
+            if (IsInvalid() || Boss.IsDead) yield break;
 
             if (useSpikePhase)
             {
@@ -139,6 +144,7 @@ public class BossGroundSpikeSkill : BossSkillBase
                 if (spikeMarkerPrefab != null)
                 {
                     var obj = Instantiate(spikeMarkerPrefab, positions[i], Quaternion.identity);
+                    _liveMarkers.Add(obj);
                     markerObjects[i] = obj;
                     markers[i] = obj.GetComponent<ImpactMarker>();
                 }
@@ -163,20 +169,23 @@ public class BossGroundSpikeSkill : BossSkillBase
 
             // ③ 스파이크 수직 낙하 — 코루틴이 직접 이동 제어 (컴포넌트 무관)
             // spawnY는 마커 생성 시 이미 계산됨 (카메라 상단 기준)
-            float dmgMult = Boss != null && Boss.IsEnraged ? Boss.EnrageDamageMult : 1f;
-            float dmg     = (spikeDamage > 0f ? spikeDamage : Owner.ContactDamage) * dmgMult;
+            float dmg = spikeDamage > 0f ? spikeDamage : Owner.ContactDamage;
 
+            float maxFallDist = 0f;
             for (int i = 0; i < spikeCount; i++)
             {
                 if (IsInvalid()) break;
 
                 if (spikeProjectilePrefab != null)
                 {
-                    float targetY  = positions[i].y + pivotToTipOffset;
-                    // spawnY가 targetY보다 충분히 높은지 보장
+                    float targetY      = positions[i].y + pivotToTipOffset;
                     float actualSpawnY = Mathf.Max(spawnY, targetY + 2f);
-                    var   spawnPos     = new Vector3(positions[i].x, actualSpawnY, 0f);
-                    var   go           = Instantiate(spikeProjectilePrefab, spawnPos, Quaternion.identity);
+                    float fallDist     = actualSpawnY - targetY;
+                    if (fallDist > maxFallDist) maxFallDist = fallDist;
+
+                    var spawnPos = new Vector3(positions[i].x, actualSpawnY, 0f);
+                    var go       = Instantiate(spikeProjectilePrefab, spawnPos, Quaternion.identity);
+                    _liveSpikes.Add(go);
                     StartCoroutine(MoveSpikeDown(go, targetY, dmg));
                 }
 
@@ -186,13 +195,8 @@ public class BossGroundSpikeSkill : BossSkillBase
 
             _spikePhaseExecuted = true;
 
-            // ④ 마지막 스파이크가 착지 + 박힘 시간까지 대기
-            float maxTargetY  = float.MaxValue;
-            for (int i = 0; i < spikeCount; i++)
-                maxTargetY = Mathf.Min(maxTargetY, positions[i].y + pivotToTipOffset);
-            float fallHeight = spawnY - maxTargetY;
-            if (fallHeight < 0f) fallHeight = 0f;
-            yield return new WaitForSeconds(fallHeight / spikeDropSpeed + stickDuration + 0.2f);
+            // ④ 실제 낙하 거리 기준으로 최대 착지 시간 대기
+            yield return new WaitForSeconds(maxFallDist / spikeDropSpeed + stickDuration + 0.2f);
         }
         finally
         {
@@ -203,14 +207,13 @@ public class BossGroundSpikeSkill : BossSkillBase
                 else if (markerObjects[i] != null) Destroy(markerObjects[i]);
                 markers[i] = null; markerObjects[i] = null;
             }
+            _liveMarkers.Clear();
         }
     }
 
     private IEnumerator ChasePhase(float duration)
     {
-        float elapsed   = 0f;
-        float speedMult = Boss != null && Boss.IsEnraged ? Boss.EnrageSpeedMult : 1f;
-
+        float elapsed = 0f;
         while (elapsed < duration)
         {
             if (GameManager.Shared != null && GameManager.Shared.IsGameOver) yield break;
@@ -220,7 +223,7 @@ public class BossGroundSpikeSkill : BossSkillBase
             {
                 float dist = Vector2.Distance(Owner.transform.position, Owner.PlayerTransform.position);
                 if (dist > chaseStopDist)
-                    Owner.MoveTowardPlayer(Owner.MoveSpeed * speedMult);
+                    Owner.MoveTowardPlayer(Owner.MoveSpeed);
                 Owner.FlipToward(((Vector2)Owner.PlayerTransform.position - (Vector2)Owner.transform.position).normalized);
             }
 
@@ -302,7 +305,34 @@ public class BossGroundSpikeSkill : BossSkillBase
 
         // stickDuration 동안 박힌 채 유지
         yield return new WaitForSeconds(stickDuration);
-        if (spike != null) Destroy(spike);
+        if (spike != null)
+        {
+            _liveSpikes.Remove(spike);
+            Destroy(spike);
+        }
+    }
+
+    public override void OnInterrupted()
+    {
+        StopAllCoroutines();
+        CleanupAll();
+        if (Boss != null && !Boss.IsDead && Boss.gameObject.activeInHierarchy)
+            StartCoroutine(CycleLoop());
+    }
+
+    private void OnDestroy() => CleanupAll();
+
+    private void CleanupAll()
+    {
+        foreach (var go in _liveSpikes)
+            if (go != null) Destroy(go);
+        _liveSpikes.Clear();
+
+        foreach (var go in _liveMarkers)
+            if (go != null) Destroy(go);
+        _liveMarkers.Clear();
+
+        if (Boss != null) Boss.IsFiringSkill = false;
     }
 
     private bool IsInvalid() => Owner == null;

@@ -40,6 +40,9 @@ public class BossSummonCycleSkill : BossSkillBase
 
     protected override IEnumerator OnExecute() { yield break; }
 
+    /// <summary>SummonLoop은 그로기를 WaitUntil로 자체 처리하므로 중단하지 않습니다.</summary>
+    public override void OnInterrupted() { }
+
     private void OnDestroy()
     {
         if (_pendingMarkers == null) return;
@@ -54,13 +57,15 @@ public class BossSummonCycleSkill : BossSkillBase
 
         while (true)
         {
+            if (Boss == null || Boss.IsDead) yield break;
+
             if (GameManager.Shared != null && GameManager.Shared.IsGameOver)
                 yield return new WaitUntil(() => GameManager.Shared == null || !GameManager.Shared.IsGameOver);
 
             if (Boss != null && Boss.IsGrogy)
                 yield return new WaitUntil(() => Boss == null || !Boss.IsGrogy);
 
-            if (Boss == null) yield break;
+            if (Boss == null || Boss.IsDead) yield break;
 
             yield return new WaitForSeconds(summonInterval);
 
@@ -122,13 +127,12 @@ public class BossSummonCycleSkill : BossSkillBase
         // 소환체 스폰
         Owner.EnemyAnimator?.SetTrigger(EnemyAnim.TAttack);
 
-        float dmgMult = Boss.IsEnraged ? Boss.EnrageDamageMult : 1f;
         for (int i = 0; i < canSpawn; i++)
         {
             var go     = Instantiate(minionPrefab, positions[i], Quaternion.identity);
             var minion = go.GetComponent<BossSummonMinion>();
             if (minion == null) minion = go.AddComponent<BossSummonMinion>();
-            minion.Init(minionDuration, minionMoveSpeed, minionContactDamage * dmgMult);
+            minion.Init(minionDuration, minionMoveSpeed, minionContactDamage);
             _activeMinions.Add(minion);
         }
     }

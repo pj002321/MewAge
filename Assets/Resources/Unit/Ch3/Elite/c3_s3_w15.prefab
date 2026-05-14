@@ -66,7 +66,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 47b83d84731d5f94ca4c43b16224c669, type: 2}
+  - {fileID: 2100000, guid: e901129e9679f8e428ec8abe92cf485f, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -85,9 +85,9 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 100
+  m_SortingLayerID: 1049025713
+  m_SortingLayer: 1
+  m_SortingOrder: 6
   m_MaskInteraction: 0
   m_Sprite: {fileID: 1421460151559677207, guid: 795ec21ce41be8b4782f56246f02a505, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -198,12 +198,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyController
   moveSpeed: 2
-  maxHP: 30
-  contactDamage: 10
-  goldDrop: 5
-  expDrop: 10
+  maxHP: 3500
+  contactDamage: 35
+  goldDrop: 50
+  expDrop: 50
   scoreValue: 10
-  damageCooldown: 1
   contactMaxDist: 0.8
   knockbackImmune: 0
   bleedDuration: 5
@@ -224,11 +223,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RangedBehaviour
   projectilePrefab: {fileID: 7916182024222986910, guid: dc47ed9b9a8bd9342b7140917bfcec2b, type: 3}
-  preferredRange: 4
+  preferredRange: 6
   shootInterval: 2
-  rangedDamage: 30
+  rangedDamage: 55
   firePoint: {fileID: 2436184059496450301}
-  useWarningLines: 1
+  useWarningLines: 0
   warningDuration: 1
   warningLineLength: 8
   warningLineWidth: 0.8

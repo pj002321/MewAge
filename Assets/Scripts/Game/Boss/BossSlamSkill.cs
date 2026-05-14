@@ -67,11 +67,10 @@ public class BossSlamSkill : BossSkillBase
         yield return StartCoroutine(LandSquish(origScale));
 
         // 5) 범위 피해
-        float dmg = slamDamage * (Boss != null && Boss.IsEnraged ? Boss.EnrageDamageMult : 1f);
         var player = PlayerController.Instance;
         if (player != null &&
             Vector2.Distance(Owner.transform.position, player.transform.position) <= slamRadius)
-            player.TakeDamage(dmg, sourceName: Owner.gameObject.name);
+            player.TakeDamage(slamDamage, sourceName: Owner.gameObject.name);
 
         yield return new WaitForSeconds(0.3f);
     }

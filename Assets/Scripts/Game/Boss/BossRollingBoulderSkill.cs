@@ -137,9 +137,8 @@ public class BossRollingBoulderSkill : BossSkillBase
             ? (Vector2)firePoint.position
             : Owner.Rb != null ? Owner.Rb.position : (Vector2)Owner.transform.position;
 
-        Vector2 dir    = Boss.IsFacingLeft ? Vector2.left : Vector2.right;
-        float dmgMult  = Boss != null && Boss.IsEnraged ? Boss.EnrageDamageMult : 1f;
-        float dmg      = (boulderDamage > 0f ? boulderDamage : Owner.ContactDamage) * dmgMult;
+        Vector2 dir = Boss.IsFacingLeft ? Vector2.left : Vector2.right;
+        float dmg   = boulderDamage > 0f ? boulderDamage : Owner.ContactDamage;
 
         var go = Instantiate(boulderPrefab, spawnPos, Quaternion.identity);
         if (go.TryGetComponent<BossRollingProjectile>(out var boulder))

@@ -202,7 +202,9 @@ public class WeaponPoint : MonoBehaviour
     // ── 진단용 ─────────────────────────────────────────────────────────
     // 마지막 공격 이후 실제(unscaled) 경과 시간 — 공격 시에만 0으로 리셋
     private float _noAttackDiagTimer;
-    private const float DiagLogInterval = 5f; // 이 초마다 로그 1회
+    private const float DiagLogInterval  = 5f; // 이 초마다 미아 로그 1회
+    private float _idleDiagTimer;
+    private const float IdleDiagInterval = 2f; // Idle 상태 세부 로그 주기
     private float _idleNoTargetTimer; // 구버전 호환용 (내부에서만 사용)
 
     private Coroutine    _scalePulseCoroutine;
@@ -607,13 +609,41 @@ public class WeaponPoint : MonoBehaviour
 
     private void UpdateIdle()
     {
+        bool hasAnyEnemy = EnemyController.All.Count > 0 || BossController.Current != null;
+
+        // ── 주기적 세부 진단 ──────────────────────────────────────────────
+        _idleDiagTimer += Time.unscaledDeltaTime;
+        if (_idleDiagTimer >= IdleDiagInterval && hasAnyEnemy)
+        {
+            _idleDiagTimer = 0f;
+            Vector2 diagOrigin = transform.parent != null
+                ? (Vector2)transform.parent.position : (Vector2)transform.position;
+            EnemyController nearest  = FindNearestAny();
+            float           nearDist = nearest != null
+                ? Vector2.Distance(diagOrigin, nearest.transform.position) : -1f;
+            CombatTarget diagTarget  = FindBestTarget();
+            Debug.Log(
+                $"[WeaponDiag] '{gameObject.name}'\n" +
+                $"  ① 사정거리 내 적 있는가? → {(!diagTarget.IsNone ? "있음" : "없음")} " +
+                $"(가장가까운적={nearDist:F2}m / 공격범위={attackRange}m)\n" +
+                $"  ② 쿨타임 → {(cooldownTimer > 0f ? $"대기중 {cooldownTimer:F2}s" : "완료(공격 가능)")}\n" +
+                $"  ③ 발견 타겟 → {(diagTarget.IsNone ? "없음" : diagTarget.Enemy != null ? diagTarget.Enemy.gameObject.name : diagTarget.Boss?.gameObject.name)}");
+        }
+        else if (!hasAnyEnemy)
+        {
+            _idleDiagTimer = 0f;
+        }
+        // ────────────────────────────────────────────────────────────────
+
         if (cooldownTimer > 0f) return;
         if (PlayerController.Instance != null && PlayerController.Instance.InputLocked) return;
 
         CombatTarget best = FindBestTarget();
         if (best.IsNone) return;
 
+        Debug.Log($"[WeaponDiag] '{gameObject.name}' ✓ 공격 실행 → {(best.Enemy != null ? best.Enemy.gameObject.name : best.Boss?.gameObject.name)}");
         _noAttackDiagTimer = 0f;
+        _idleDiagTimer     = 0f;
 
         bool isLightning = weaponType == WeaponType.Magic && magicElement == MagicElement.Lightning;
         bool isFireMagic = weaponType == WeaponType.Magic && magicElement == MagicElement.Fire;
@@ -1795,8 +1825,12 @@ public class WeaponPoint : MonoBehaviour
         Vector2 origin = transform.parent != null ? (Vector2)transform.parent.position : (Vector2)transform.position;
         int colCount = Physics2D.OverlapCircleNonAlloc(origin, attackRange, _hitBuffer, LayerMask.GetMask("Enemy"));
 
-        CombatTarget best = CombatTarget.None;
-        float minSqDist = float.MaxValue;
+        CombatTarget bestBoss  = CombatTarget.None;
+        CombatTarget bestElite = CombatTarget.None;
+        CombatTarget bestEnemy = CombatTarget.None;
+        float minBossSq  = float.MaxValue;
+        float minEliteSq = float.MaxValue;
+        float minEnemySq = float.MaxValue;
 
         for (int i = 0; i < colCount; i++)
         {
@@ -1806,7 +1840,7 @@ public class WeaponPoint : MonoBehaviour
             if (boss != null && boss.gameObject.activeInHierarchy)
             {
                 float sq = ((Vector2)boss.transform.position - origin).sqrMagnitude;
-                if (sq < minSqDist) { minSqDist = sq; best = new CombatTarget(boss); }
+                if (sq < minBossSq) { minBossSq = sq; bestBoss = new CombatTarget(boss); }
                 continue;
             }
 
@@ -1814,7 +1848,14 @@ public class WeaponPoint : MonoBehaviour
             if (enemy != null && enemy.gameObject.activeInHierarchy)
             {
                 float sq = ((Vector2)enemy.transform.position - origin).sqrMagnitude;
-                if (sq < minSqDist) { minSqDist = sq; best = new CombatTarget(enemy); }
+                if (enemy.GetComponent<EliteMarker>() != null)
+                {
+                    if (sq < minEliteSq) { minEliteSq = sq; bestElite = new CombatTarget(enemy); }
+                }
+                else
+                {
+                    if (sq < minEnemySq) { minEnemySq = sq; bestEnemy = new CombatTarget(enemy); }
+                }
             }
         }
         // 보스가 Enemy 레이어가 아닌 경우 overlap에 안 잡힘 → 직접 거리 체크
@@ -1822,14 +1863,17 @@ public class WeaponPoint : MonoBehaviour
         if (directBoss != null && directBoss.gameObject.activeInHierarchy)
         {
             float sq = ((Vector2)directBoss.transform.position - origin).sqrMagnitude;
-            if (sq <= attackRange * attackRange && sq < minSqDist)
+            if (sq <= attackRange * attackRange && sq < minBossSq)
             {
-                minSqDist = sq;
-                best = new CombatTarget(directBoss);
+                minBossSq = sq;
+                bestBoss = new CombatTarget(directBoss);
             }
         }
 
-        return best;
+        // 우선순위: 보스 > 엘리트 > 일반 적
+        if (!bestBoss.IsNone)  return bestBoss;
+        if (!bestElite.IsNone) return bestElite;
+        return bestEnemy;
     }
 
     // 거리 제한 없이 씬 전체에서 가장 가까운 적 (회전용)

@@ -191,7 +191,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 47b83d84731d5f94ca4c43b16224c669, type: 2}
+  - {fileID: 2100000, guid: e901129e9679f8e428ec8abe92cf485f, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -286,12 +286,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyController
   moveSpeed: 4
-  maxHP: 7000
+  maxHP: 1500
   contactDamage: 40
-  goldDrop: 80
-  expDrop: 8
+  goldDrop: 50
+  expDrop: 50
   scoreValue: 0
-  damageCooldown: 1
   contactMaxDist: 1
   knockbackImmune: 0
   bleedDuration: 5
@@ -368,7 +367,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ChargeBehaviour
   chargeDistance: 6
-  chargeSpeedMultiplier: 1.25
+  chargeSpeedMultiplier: 2.5
   moveDuration: 2
   idleDuration: 2
   chargeRange: 4
@@ -380,7 +379,7 @@ MonoBehaviour:
   warningColor: {r: 1, g: 0, b: 0, a: 1}
   warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
   warningLineOrigin: {fileID: 1445574207204750692}
-  showWarningLine: 1
+  showWarningLine: 0
 --- !u!114 &-7921563463421818115
 MonoBehaviour:
   m_ObjectHideFlags: 0

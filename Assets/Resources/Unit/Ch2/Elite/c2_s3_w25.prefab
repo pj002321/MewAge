@@ -110,7 +110,7 @@ GameObject:
   - component: {fileID: -1816126433151113325}
   - component: {fileID: -7974406359685497948}
   m_Layer: 7
-  m_Name: c2_s3_w1543
+  m_Name: c2_s3_w25
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -158,7 +158,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 47b83d84731d5f94ca4c43b16224c669, type: 2}
+  - {fileID: 2100000, guid: e901129e9679f8e428ec8abe92cf485f, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -225,13 +225,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 05b90058a78bdf242ada91d00c9db68b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyController
-  moveSpeed: 2
-  maxHP: 7500
-  contactDamage: 10
-  goldDrop: 5
-  expDrop: 10
+  moveSpeed: 3
+  maxHP: 3500
+  contactDamage: 55
+  goldDrop: 100
+  expDrop: 100
   scoreValue: 10
-  damageCooldown: 1
   contactMaxDist: 0.8
   knockbackImmune: 0
   bleedDuration: 5
@@ -265,7 +264,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SlamBehaviour
   chaseSpeed: 2.5
   slamRange: 8
-  slamDamage: 15
+  slamDamage: 50
   slamRadius: 1.8
   slamCooldown: 4
   slamJumpHeight: 40

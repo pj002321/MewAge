@@ -26,7 +26,7 @@ Transform:
   m_GameObject: {fileID: 1853499898610612309}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.05, y: 0.07, z: 0}
+  m_LocalPosition: {x: 0.24969283, y: 0.020076673, z: 0}
   m_LocalScale: {x: 1.49875, y: 1.49875, z: 1.49875}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -77,9 +77,9 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 1
+  m_SortingLayerID: 1049025713
+  m_SortingLayer: 1
+  m_SortingOrder: 4
   m_MaskInteraction: 0
   m_Sprite: {fileID: -6149623692400296304, guid: aae5a60f0a493f14da9a00ba91e73b06, type: 3}
   m_Color: {r: 0, g: 0, b: 0, a: 1}
@@ -107,8 +107,8 @@ GameObject:
   - component: {fileID: 8704387436020610850}
   - component: {fileID: 6332168805933254515}
   - component: {fileID: 2873285951325266311}
-  - component: {fileID: -6106361814589349807}
-  - component: {fileID: -240433989266378695}
+  - component: {fileID: -80689007728230443}
+  - component: {fileID: -3751365601288553258}
   m_Layer: 7
   m_Name: c1_s2_w5
   m_TagString: Untagged
@@ -158,7 +158,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 47b83d84731d5f94ca4c43b16224c669, type: 2}
+  - {fileID: 2100000, guid: e901129e9679f8e428ec8abe92cf485f, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -252,14 +252,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 05b90058a78bdf242ada91d00c9db68b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyController
-  moveSpeed: 2
-  maxHP: 3500
-  contactDamage: 10
-  goldDrop: 40
-  expDrop: 40
+  moveSpeed: 2.5
+  maxHP: 700
+  contactDamage: 25
+  goldDrop: 30
+  expDrop: 30
   scoreValue: 0
-  damageCooldown: 1
-  contactMaxDist: 0.8
+  contactMaxDist: 1.5
   knockbackImmune: 0
   bleedDuration: 5
   bleedInterval: 1
@@ -278,8 +277,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ebf384ff75278374cb62dda6f31d5629, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ChargeBehaviour
-  chargeDistance: 8
-  chargeSpeedMultiplier: 3
+  chargeDistance: 6
+  chargeSpeedMultiplier: 2.5
   moveDuration: 2
   idleDuration: 2
   chargeRange: 4
@@ -291,7 +290,7 @@ MonoBehaviour:
   warningColor: {r: 1, g: 0, b: 0, a: 1}
   warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
   warningLineOrigin: {fileID: 0}
-  showWarningLine: 1
+  showWarningLine: 0
 --- !u!70 &6332168805933254515
 CapsuleCollider2D:
   m_ObjectHideFlags: 0
@@ -341,7 +340,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d9c58f3ba0addd845b2803f0d001d294, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EliteMarker
---- !u!114 &-6106361814589349807
+--- !u!114 &-80689007728230443
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -354,7 +353,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpriteYSort
   multiplier: 100
---- !u!114 &-240433989266378695
+--- !u!114 &-3751365601288553258
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

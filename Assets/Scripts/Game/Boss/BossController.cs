@@ -16,7 +16,6 @@ public class BossController : MonoBehaviour, IEnemyHost
 
     // ── 기본 스탯 (DB에서 로드, DB 없을 때 아래 기본값 사용) ────────
     [Header("기본 스탯 (DB 로드 전 폴백)")]
-    [SerializeField] private float damageCooldown = 0.5f;
     [Tooltip("이동 속도. DB에서 로드되면 덮어씌워집니다.")]
     [SerializeField] private float moveSpeed     = 3f;
     private float maxHP         = 500f;
@@ -26,21 +25,12 @@ public class BossController : MonoBehaviour, IEnemyHost
     [Tooltip("true면 HUD·GameManager 알림·드롭을 건너뜁니다. 분신 프리팹에서 체크.")]
     [SerializeField] private bool _isClone;
 
-    // ── 분노 ──────────────────────────────────────────────────────
-    [Header("분노")]
-    [SerializeField] private float enrageThreshold  = 0.5f;
-    [SerializeField] private float enrageSpeedMult  = 1.5f;
-    [SerializeField] private float enrageDamageMult = 1.5f;
-
     // ── 그로기 ─────────────────────────────────────────────────────
     [Header("그로기")]
-    [Tooltip("HP 비율 기준 그로기 진입 구간 (내림차순 권장: 0.70, 0.35)")]
-    [SerializeField] private float[] grogyThresholds  = { 0.70f, 0.35f };
+    private static readonly float[] GrogyThresholds = { 0.70f, 0.35f };
     [SerializeField] private float   grogyDuration    = 5f;
     [SerializeField] private GameObject grogyOverheadPrefab;
-    [Tooltip("할당하면 해당 Transform 위치에 스폰. 없으면 YOffset 사용.")]
     [SerializeField] private Transform  grogyOverheadAnchor;
-    [SerializeField] private float      grogyOverheadYOffset = 1.5f;
 
     private static readonly Color GrogyTint        = new(0.45f, 0.45f, 0.45f, 1f);
     private const           float GrogyAtkSpeedMult = 8f;
@@ -49,8 +39,6 @@ public class BossController : MonoBehaviour, IEnemyHost
     private HitFlash _hitFlash;
 
     // ── FX ────────────────────────────────────────────────────────
-    [Header("이펙트")]
-    [SerializeField] private EnemyEffectEntry onDeathFX = new();
 
     // ── 드롭 (DB에서 로드) ────────────────────────────────────────
     private string bossName      = "BOSS";
@@ -67,15 +55,12 @@ public class BossController : MonoBehaviour, IEnemyHost
     [SerializeField] private BossSkillBase[] skills;
 
     // ── 공개 프로퍼티 ──────────────────────────────────────────────
-    public bool   IsEnraged      { get; private set; }
     public float  HPRatio        => maxHP > 0f ? currentHP / maxHP : 0f;
     public float  MaxHPValue    => maxHP;
     public float  CurrentHPValue => currentHP;
     public string BossName       => bossName;
-    public float  EnrageSpeedMult  => enrageSpeedMult;
-    public float  EnrageDamageMult => enrageDamageMult;
-    public float  MoveSpeed        => moveSpeed * (IsEnraged ? enrageSpeedMult : 1f);
-    public float  ContactDamage    => contactDamage;
+    public float  MoveSpeed      => moveSpeed;
+    public float  ContactDamage  => contactDamage;
 
     // 스킬에서 필요한 공통 참조 (IEnemyHost 구현 포함)
     public Transform   PlayerTransform { get; private set; }
@@ -85,14 +70,9 @@ public class BossController : MonoBehaviour, IEnemyHost
     public Transform   Decal           => _decal;
     [SerializeField] private Transform _decal;
 
-    public event System.Action OnEnraged;
     public event System.Action OnDeath;
-    public event System.Action<float> OnSkillGaugeChanged;
     public event System.Action OnGrogyStart;
     public event System.Action OnGrogyEnd;
-
-    public float SkillGauge { get; private set; }
-    public float MaxSkillGauge => 100f;
 
     public bool  IsGrogy        { get; private set; }
     public bool  IsMoveBound    { get; private set; }
@@ -109,12 +89,10 @@ public class BossController : MonoBehaviour, IEnemyHost
 
     // ── 내부 상태 ──────────────────────────────────────────────────
     private float            currentHP;
-    private float            damageTimer;
     private SpriteRenderer[] srs;
     private Coroutine        knockbackCoroutine;
     private bool             isDead;
     private bool             _dropping;
-    private bool             _skillExecuting;
     private bool             _lastFlipX;
 
     // 그로기: 이미 발동된 구간 인덱스 추적
@@ -125,13 +103,15 @@ public class BossController : MonoBehaviour, IEnemyHost
 
     // UniTask CancellationTokenSource
     private CancellationTokenSource _patternCts;
-    private CancellationTokenSource _gaugeCts;
 
     /// <summary>현재 보스가 왼쪽을 바라보고 있으면 true.</summary>
     public bool IsFacingLeft => _lastFlipX;
 
     private BossSkillBase[] _patternSkills = System.Array.Empty<BossSkillBase>();
     private int             _skillIndex;
+    private float[]         _lastSkillTime = System.Array.Empty<float>();
+
+    public bool IsDead => isDead;
 
     public bool IsDropping    => _dropping;
     /// <summary>투사체 발사 페이즈 중임을 표시 — ChaseRoutine이 이동을 중단합니다.</summary>
@@ -200,6 +180,10 @@ public class BossController : MonoBehaviour, IEnemyHost
             if (s != null && s.executeInPattern) list.Add(s);
         _patternSkills = list.ToArray();
         _skillIndex    = 0;
+
+        _lastSkillTime = new float[_patternSkills.Length];
+        for (int i = 0; i < _lastSkillTime.Length; i++)
+            _lastSkillTime[i] = float.NegativeInfinity;
     }
 
     public BossSkillBase NextPatternSkill()
@@ -233,11 +217,10 @@ public class BossController : MonoBehaviour, IEnemyHost
         _patternCts?.Dispose();
         _patternCts = new CancellationTokenSource();
 
-        _gaugeCts?.Cancel();
-        _gaugeCts?.Dispose();
-        _gaugeCts = new CancellationTokenSource();
-
-        _skillExecuting = false;
+        // 스킬 내부 코루틴까지 확실히 정리 (IsFiringSkill 등 플래그 고착 방지)
+        if (skills != null)
+            foreach (var s in skills)
+                s?.OnInterrupted();
     }
 
     private void StartPatternLoop()
@@ -266,53 +249,65 @@ public class BossController : MonoBehaviour, IEnemyHost
     }
 
     // ── 패턴 루프 ──────────────────────────────────────────────────
+    // 구조: Idle → Chase → Skill → 반복
+    // 그로기 진입 시 ct 취소로 루프 전체 종료 → GrogyAsync 종료 후 StartPatternLoop()으로 재시작
 
     private async UniTaskVoid PatternLoopAsync(CancellationToken ct)
     {
+        // 오브젝트 파괴 토큰과 합성 → Destroy 시에도 확실히 종료
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(
+            ct, this.GetCancellationTokenOnDestroy());
+        var token = linked.Token;
+
         try
         {
             while (!isDead)
             {
-                await UniTask.WaitUntil(() => !IsGrogy || isDead, cancellationToken: ct);
+                // ── Idle + Chase 페이즈 ─────────────────────────────────
+                await UniTask.Delay(
+                    System.TimeSpan.FromSeconds(idleDuration), cancellationToken: token);
+                await ChaseAsync(token);
+
                 if (isDead) break;
 
-                await UniTask.Delay(System.TimeSpan.FromSeconds(IdleTime()), cancellationToken: ct);
-                if (isDead) break;
-
-                await ChaseAsync(ct);
-                if (isDead) break;
-
-                if (!_skillExecuting && _patternSkills.Length > 0)
+                // ── 스킬 실행 페이즈 ────────────────────────────────────
+                if (_patternSkills.Length > 0)
                 {
-                    var skill = _patternSkills[_skillIndex % _patternSkills.Length];
-                    _skillIndex++;
-                    _skillExecuting = true;
-                    await skill.ExecuteAsync(ct);
-                    _skillExecuting = false;
+                    // cooldown이 지난 첫 번째 스킬 선택 (순환 순서 유지)
+                    BossSkillBase chosenSkill = null;
+                    int           chosenIdx   = -1;
+                    for (int i = 0; i < _patternSkills.Length; i++)
+                    {
+                        int idx = (_skillIndex + i) % _patternSkills.Length;
+                        if (Time.time - _lastSkillTime[idx] >= _patternSkills[idx].cooldown)
+                        {
+                            chosenSkill = _patternSkills[idx];
+                            chosenIdx   = idx;
+                            break;
+                        }
+                    }
 
-                    float cd = skill.cooldown * (IsEnraged ? 0.6f : 1f);
-                    if (cd > 0f)
-                        await UniTask.Delay(System.TimeSpan.FromSeconds(cd), cancellationToken: ct);
+                    if (chosenSkill != null)
+                    {
+                        _skillIndex              = chosenIdx + 1;
+                        _lastSkillTime[chosenIdx] = Time.time;
+                        await chosenSkill.ExecuteAsync(token);
+                    }
+                    else
+                    {
+                        _skillIndex++;
+                    }
                 }
             }
         }
         catch (System.OperationCanceledException) { }
-        finally { _skillExecuting = false; }
     }
-
-    private float IdleTime() => IsEnraged ? idleDuration * 0.6f : idleDuration;
 
     private async UniTask ChaseAsync(CancellationToken ct)
     {
         float elapsed = 0f;
         while (elapsed < chaseDuration)
         {
-            if (IsGrogy)
-            {
-                EnemyAnimator?.SetBool(EnemyAnim.BMove, false);
-                return;
-            }
-
             elapsed += Time.fixedDeltaTime;
 
             if (!IsFiringSkill && PlayerTransform != null)
@@ -336,14 +331,11 @@ public class BossController : MonoBehaviour, IEnemyHost
         if (GameManager.Shared != null && GameManager.Shared.IsGameOver) return;
         if (isDead || _dropping) return;
 
-        damageTimer -= Time.deltaTime;
         if (_grogyReentryTimer > 0f) _grogyReentryTimer -= Time.deltaTime;
 
         if (PlayerTransform == null)
             PlayerTransform = PlayerController.Instance?.transform;
 
-        if (!IsEnraged && HPRatio <= enrageThreshold)
-            TriggerEnrage();
     }
 
     // ── 이동 API (스킬에서 사용) ────────────────────────────────────
@@ -434,7 +426,6 @@ public class BossController : MonoBehaviour, IEnemyHost
         currentHP -= damage;
 
         CharacterSkillManager.Shared?.TryAddPointFromHit(transform.position);
-        AddSkillGauge(damage);
 
         SoundManager.Shared?.Play(SoundKey.Enemy_Hit);
 
@@ -442,7 +433,8 @@ public class BossController : MonoBehaviour, IEnemyHost
             ? new Vector3(transform.position.x, srs[0].bounds.max.y, transform.position.z)
             : transform.position;
         FXManager.Shared?.SpawnDamageText(textPos, damage, isCritical);
-        FXManager.Shared?.SpawnHitEffect(transform.position);
+        Vector3 hitCenter = srs != null && srs.Length > 0 ? srs[0].bounds.center : transform.position;
+        FXManager.Shared?.SpawnHitEffect(hitCenter);
 
         _hitFlash?.Flash();
 
@@ -450,39 +442,7 @@ public class BossController : MonoBehaviour, IEnemyHost
         else                 CheckGrogyThresholds();
     }
 
-    private void AddSkillGauge(float damage)
-    {
-        if (isDead) return;
-        SkillGauge = Mathf.Min(SkillGauge + damage, MaxSkillGauge);
-        OnSkillGaugeChanged?.Invoke(SkillGauge);
-
-        if (SkillGauge >= MaxSkillGauge)
-        {
-            _gaugeCts?.Cancel();
-            _gaugeCts?.Dispose();
-            _gaugeCts = new CancellationTokenSource();
-            TriggerSkillFromGaugeAsync(_gaugeCts.Token).Forget();
-        }
-    }
-
-    private async UniTaskVoid TriggerSkillFromGaugeAsync(CancellationToken ct)
-    {
-        SkillGauge = 0f;
-        OnSkillGaugeChanged?.Invoke(0f);
-
-        if (isDead || _dropping || _skillExecuting || IsGrogy) return;
-
-        var skill = NextPatternSkill();
-        if (skill != null)
-        {
-            _skillExecuting = true;
-            try   { await skill.ExecuteAsync(ct); }
-            catch (System.OperationCanceledException) { }
-            finally { _skillExecuting = false; }
-        }
-    }
-
-    public void ForceDie()
+public void ForceDie()
     {
         if (!isDead) StartCoroutine(DieRoutine());
     }
@@ -498,14 +458,10 @@ public class BossController : MonoBehaviour, IEnemyHost
     private IEnumerator DieRoutine()
     {
         isDead = true;
-        CancelPattern();
-        if (skills != null)
-            foreach (var s in skills)
-                s?.OnInterrupted();
+        CancelPattern(); // OnInterrupted()까지 내부 처리
         StopGrogyVisuals();
         OnDeath?.Invoke();
 
-        PlayFX(onDeathFX);
         if (!_isClone)
         {
             foreach (var clone in BossClone.All.ToArray())
@@ -532,23 +488,15 @@ public class BossController : MonoBehaviour, IEnemyHost
         Destroy(gameObject);
     }
 
-    // ── 분노 ─────────────────────────────────────────────────────
-
-    private void TriggerEnrage()
-    {
-        IsEnraged = true;
-        OnEnraged?.Invoke();
-    }
-
     // ── 그로기 ────────────────────────────────────────────────────
 
     private void CheckGrogyThresholds()
     {
         if (IsGrogy || isDead) return;
-        for (int i = 0; i < grogyThresholds.Length; i++)
+        for (int i = 0; i < GrogyThresholds.Length; i++)
         {
             if (_triggeredGrogy.Contains(i)) continue;
-            if (HPRatio <= grogyThresholds[i])
+            if (HPRatio <= GrogyThresholds[i])
             {
                 _triggeredGrogy.Add(i);
                 GrogyAsync(grogyDuration).Forget();
@@ -559,12 +507,8 @@ public class BossController : MonoBehaviour, IEnemyHost
 
     private async UniTaskVoid GrogyAsync(float duration)
     {
+        // CancelPattern() 내부에서 OnInterrupted()까지 처리
         CancelPattern();
-
-        // 현재 실행 중인 스킬 코루틴을 중단하고 상태 복구 (orphan coroutine 방지)
-        if (skills != null)
-            foreach (var s in skills)
-                s?.OnInterrupted();
 
         IsGrogy        = true;
         GrogyRemaining = duration;
@@ -602,13 +546,11 @@ public class BossController : MonoBehaviour, IEnemyHost
         if (_grogyFlickerCoroutine != null) StopCoroutine(_grogyFlickerCoroutine);
         _grogyFlickerCoroutine = StartCoroutine(GrogyEntryHighlight());
 
-        if (grogyOverheadPrefab != null)
+        if (grogyOverheadPrefab != null && grogyOverheadAnchor != null)
         {
             if (_grogyOverheadInstance != null) Destroy(_grogyOverheadInstance);
-            Transform parent   = grogyOverheadAnchor != null ? grogyOverheadAnchor : transform;
-            Vector3   localPos = grogyOverheadAnchor != null ? Vector3.zero : Vector3.up * grogyOverheadYOffset;
-            _grogyOverheadInstance = Instantiate(grogyOverheadPrefab, parent);
-            _grogyOverheadInstance.transform.localPosition = localPos;
+            _grogyOverheadInstance = Instantiate(grogyOverheadPrefab, grogyOverheadAnchor);
+            _grogyOverheadInstance.transform.localPosition = Vector3.zero;
         }
     }
 
@@ -703,37 +645,20 @@ public class BossController : MonoBehaviour, IEnemyHost
         if (Current == this) Current = null;
         _patternCts?.Cancel();
         _patternCts?.Dispose();
-        _gaugeCts?.Cancel();
-        _gaugeCts?.Dispose();
-    }
-
-    // ── FX 유틸 ──────────────────────────────────────────────────
-
-    private void PlayFX(EnemyEffectEntry entry)
-    {
-        if (entry == null) return;
-        if (entry.vfxPrefab != null)
-            Instantiate(entry.vfxPrefab, transform.position + (Vector3)entry.spawnOffset, Quaternion.identity);
-        if (entry.sfxClip != null)
-            AudioSource.PlayClipAtPoint(entry.sfxClip, transform.position, entry.volume);
     }
 
     private void OnTriggerStay2D(Collider2D other)
     {
-        if (damageTimer > 0f) return;
         var p = other.GetComponentInParent<PlayerController>();
         if (p == null) return;
         if (other.gameObject != p.gameObject) return;
-        damageTimer = damageCooldown;
         p.TakeDamage(contactDamage, isFromBoss: true, sourceName: gameObject.name);
     }
 
     private void OnCollisionStay2D(Collision2D collision)
     {
-        if (damageTimer > 0f) return;
         var p = collision.collider.GetComponentInParent<PlayerController>();
         if (p == null) return;
-        damageTimer = damageCooldown;
         p.TakeDamage(contactDamage, sourceName: gameObject.name);
     }
 }

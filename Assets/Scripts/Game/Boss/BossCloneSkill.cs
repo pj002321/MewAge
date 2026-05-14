@@ -44,7 +44,6 @@ public class BossCloneSkill : BossSkillBase
             ? cloneSkills.Where(s => s != null).Select(s => s.GetType()).ToArray()
             : null;
 
-        float dmgMult = Boss.IsEnraged ? Boss.EnrageDamageMult : 1f;
         Vector3 bossPos = Boss.transform.position;
 
         // 최종 목표 위치 — 보스 X 기준 좌우 대칭 배치
@@ -63,7 +62,7 @@ public class BossCloneSkill : BossSkillBase
 
             var go      = Instantiate(Boss.gameObject, bossPos, Boss.transform.rotation);
             var cloneBC = go.GetComponent<BossController>();
-            cloneBC?.ApplyCloneStats(cloneHP, cloneContactDmg * dmgMult, cloneMoveSpeed);
+            cloneBC?.ApplyCloneStats(cloneHP, cloneContactDmg, cloneMoveSpeed);
 
             var clone = go.AddComponent<BossClone>();
             clone.Init(cloneLifetime, deathVfxPrefab, deathVfxLifetime);

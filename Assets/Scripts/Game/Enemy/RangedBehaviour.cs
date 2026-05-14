@@ -151,20 +151,19 @@ public class RangedBehaviour : EnemyBehaviourBase
     private IEnumerator WarnAndShoot()
     {
         _isWarning = true;
-        _moveState = MoveState.Idle;   // 경고 중 제자리
+        _moveState = MoveState.Idle;
 
         Vector2 spawnPos = GetWarningOrigin();
         Vector2 dir      = Owner.PlayerTransform != null
             ? ((Vector2)Owner.PlayerTransform.position - spawnPos).normalized
             : Vector2.right;
 
-        var lr      = SpawnWarningLine(spawnPos, dir);
+        var lr = SpawnWarningLine(spawnPos, dir);
         _activeWarnLine = lr;
         float elapsed = 0f;
         while (elapsed < warningDuration)
         {
             if (Owner == null) { if (lr != null) Destroy(lr.gameObject); _activeWarnLine = null; _isWarning = false; yield break; }
-            // 발사 지점이 이동할 수 있으므로 매 프레임 갱신
             spawnPos = GetWarningOrigin();
             elapsed += Time.deltaTime;
             float t = Mathf.Clamp01(elapsed / warningDuration);
@@ -184,8 +183,26 @@ public class RangedBehaviour : EnemyBehaviourBase
         if (Owner != null && Owner.PlayerTransform != null)
             ShootProjectile();
 
-        _isWarning  = false;
-        _moveState  = MoveState.Retreating;   // 발사 후 후퇴
+        // 애니메이션 이벤트 발사가 올 때까지 Idle 유지 (이동 중 발사 방지)
+        if (useAnimationEvent && _pendingShot)
+        {
+            float timeout = animEventTimeout > 0f ? animEventTimeout : 0.6f;
+            float t2 = 0f;
+            while (_pendingShot && t2 < timeout)
+            {
+                if (Owner == null) break;
+                t2 += Time.deltaTime;
+                yield return null;
+            }
+            if (_pendingShot)   // 타임아웃: 폴백 발사
+            {
+                _pendingShot = false;
+                if (Owner != null) FireProjectile();
+            }
+        }
+
+        _isWarning    = false;
+        _moveState    = MoveState.Retreating;
         _retreatTimer = retreatDuration;
     }
 
@@ -202,15 +219,9 @@ public class RangedBehaviour : EnemyBehaviourBase
         Owner.EnemyAnimator?.SetTrigger(EnemyAnim.TAttack);
 
         if (useAnimationEvent)
-        {
             _pendingShot = true;
-            if (animEventTimeout > 0f)
-                StartCoroutine(AnimEventFallback());
-        }
         else
-        {
             FireProjectile();
-        }
     }
 
     private IEnumerator ShowVfx()
@@ -218,15 +229,6 @@ public class RangedBehaviour : EnemyBehaviourBase
         attackVfx.SetActive(true);
         yield return new WaitForSeconds(attackVfxDuration);
         if (attackVfx != null) attackVfx.SetActive(false);
-    }
-
-    private IEnumerator AnimEventFallback()
-    {
-        yield return new WaitForSeconds(animEventTimeout);
-        if (!_pendingShot) yield break;
-        _pendingShot = false;
-        if (Owner == null) yield break;
-        FireProjectile();
     }
 
     private void FireProjectile()

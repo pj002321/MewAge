@@ -42,7 +42,6 @@ public class BossPatternBehaviour : EnemyBehaviourBase
         boss = host.SelfTransform.GetComponent<BossController>();
         if (boss != null)
         {
-            boss.OnEnraged  += OnBossEnraged;
             boss.OnGrogyStart += OnGrogyStarted;
             boss.OnGrogyEnd   += OnGrogyEnded;
         }
@@ -103,8 +102,7 @@ public class BossPatternBehaviour : EnemyBehaviourBase
 
     private IEnumerator ChaseRoutine(float duration)
     {
-        float elapsed   = 0f;
-        float speedMult = boss != null && boss.IsEnraged ? boss.EnrageSpeedMult : 1f;
+        float elapsed = 0f;
 
         while (elapsed < duration)
         {
@@ -113,7 +111,7 @@ public class BossPatternBehaviour : EnemyBehaviourBase
 
             float dist = Vector2.Distance(Owner.SelfTransform.position, Owner.PlayerTransform.position);
             if (dist > chaseStopDistance && !(boss != null && boss.IsFiringSkill))
-                Owner.MoveTowardPlayer(Owner.MoveSpeed * speedMult);
+                Owner.MoveTowardPlayer(Owner.MoveSpeed);
 
             yield return new WaitForFixedUpdate();
         }
@@ -123,17 +121,10 @@ public class BossPatternBehaviour : EnemyBehaviourBase
     {
         if (boss != null)
         {
-            boss.OnEnraged    -= OnBossEnraged;
             boss.OnGrogyStart -= OnGrogyStarted;
             boss.OnGrogyEnd   -= OnGrogyEnded;
         }
     }
 
-    private void OnBossEnraged()
-    {
-        idleDuration  = Mathf.Max(0.15f, idleDuration  * 0.5f);
-        chaseDuration = Mathf.Max(0.4f,  chaseDuration * 0.7f);
-    }
-
-    private float IdleTime() => boss != null && boss.IsEnraged ? idleDuration * 0.6f : idleDuration;
+    private float IdleTime() => idleDuration;
 }

@@ -61,8 +61,6 @@ public class BossComboSlashSkill : BossSkillBase
                 yield return new WaitForSeconds(preDelay);
 
             // 3) 근접 공격 hitCount 회
-            float damageMult = Boss != null && Boss.IsEnraged ? Boss.EnrageDamageMult : 1f;
-
             for (int i = 0; i < hitCount; i++)
             {
                 if (Owner.PlayerTransform == null) yield break;
@@ -84,7 +82,7 @@ public class BossComboSlashSkill : BossSkillBase
                 if (player != null &&
                     DistanceToPlayer((Vector2)player.transform.position) <= slashRange)
                 {
-                    player.TakeDamage(slashDamage * damageMult, sourceName: Owner.gameObject.name);
+                    player.TakeDamage(slashDamage, sourceName: Owner.gameObject.name);
                 }
 
                 if (i < hitCount - 1)

@@ -14,7 +14,6 @@ public class BossHUDPanel : MonoBehaviourSingleton<BossHUDPanel>
     [SerializeField] private GameObject      panel;
     [SerializeField] private Image           bossImage;
     [SerializeField] private Slider          hpSlider;
-    [SerializeField] private Slider          skillGaugeSlider;
     [SerializeField] private TextMeshProUGUI bossNameText;
     [SerializeField] private TextMeshProUGUI hpText;
 
@@ -83,9 +82,6 @@ public class BossHUDPanel : MonoBehaviourSingleton<BossHUDPanel>
         if (trackedBoss == null) return;
 
         if (hpSlider) hpSlider.value = trackedBoss.HPRatio;
-
-        if (skillGaugeSlider)
-            skillGaugeSlider.value = trackedBoss.SkillGauge / trackedBoss.MaxSkillGauge;
 
         if (hpText)
         {

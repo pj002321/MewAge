@@ -43,7 +43,7 @@ public class BossChargeSkill : BossSkillBase
         if (Owner.PlayerTransform == null) yield break;
         if (GameManager.Shared != null && GameManager.Shared.IsGameOver) yield break;
 
-        float speed = chargeSpeed * (Boss != null && Boss.IsEnraged ? Boss.EnrageSpeedMult : 1f);
+        float speed = chargeSpeed;
 
         Vector2 dir = ((Vector2)Owner.PlayerTransform.position -
                        (Owner.Rb != null ? Owner.Rb.position : (Vector2)Owner.transform.position)).normalized;
