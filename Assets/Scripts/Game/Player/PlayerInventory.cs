@@ -45,7 +45,7 @@ public class PlayerInventory : MonoBehaviourSingleton<PlayerInventory>
     }
 
     // ────────────────────────────────────────────────────────────────
-    // 인벤토리 → 장착 (장착 슬롯 꽉 차면 마지막 슬롯과 교체)
+    // 인벤토리 → 장착 (장착 슬롯 꽉 차면 가장 낮은 등급 슬롯과 교체)
     // ────────────────────────────────────────────────────────────────
     public void EquipFromInventory(int invenIndex)
     {
@@ -67,9 +67,10 @@ public class PlayerInventory : MonoBehaviourSingleton<PlayerInventory>
         }
         else
         {
-            // 6칸 모두 가득 찬 경우 — 마지막 슬롯과 교체
-            var displaced = equipped[equipped.Count - 1];
-            equipped[equipped.Count - 1] = weapon;
+            // 6칸 모두 가득 찬 경우 — 가장 낮은 등급 슬롯과 교체
+            int lowestIdx = FindLowestGradeSlot();
+            var displaced = equipped[lowestIdx];
+            equipped[lowestIdx] = weapon;
             inventory[invenIndex] = displaced;
         }
         OnChanged?.Invoke();
@@ -97,7 +98,8 @@ public class PlayerInventory : MonoBehaviourSingleton<PlayerInventory>
         if (equipIndex < 0 || equipIndex >= equipped.Count) return false;
         if (inventory.Count >= MaxInventory) return false;
         inventory.Add(equipped[equipIndex]);
-        equipped.RemoveAt(equipIndex);
+        equipped[equipIndex] = null;
+        TrimTrailingNullSlots();
         OnChanged?.Invoke();
         return true;
     }
@@ -109,7 +111,8 @@ public class PlayerInventory : MonoBehaviourSingleton<PlayerInventory>
     {
         if (equipIndex < 0 || equipIndex >= equipped.Count) return 0;
         int sellPrice = Mathf.Max(1, equipped[equipIndex].price);
-        equipped.RemoveAt(equipIndex);
+        equipped[equipIndex] = null;
+        TrimTrailingNullSlots();
         PlayerStats.Shared?.AddGold(sellPrice);
         OnChanged?.Invoke();
         return sellPrice;
@@ -286,6 +289,31 @@ public class PlayerInventory : MonoBehaviourSingleton<PlayerInventory>
         return true;
     }
 
+    // ────────────────────────────────────────────────────────────────
+    // 내부 헬퍼
+    // ────────────────────────────────────────────────────────────────
+
+    /// <summary>장착 슬롯에서 가장 낮은 등급의 슬롯 인덱스를 반환합니다.</summary>
+    private int FindLowestGradeSlot()
+    {
+        int idx = 0;
+        for (int i = 1; i < equipped.Count; i++)
+        {
+            if (equipped[i] == null) continue;
+            var cur    = equipped[idx]?.grade ?? WeaponGrade.Mythic;
+            var cand   = equipped[i].grade;
+            if ((int)cand < (int)cur) idx = i;
+        }
+        return idx;
+    }
+
+    /// <summary>장착 리스트 끝의 null 슬롯을 제거합니다. WeaponPoint 싱크 보존을 위해 중간 null은 유지합니다.</summary>
+    private void TrimTrailingNullSlots()
+    {
+        while (equipped.Count > 0 && equipped[equipped.Count - 1] == null)
+            equipped.RemoveAt(equipped.Count - 1);
+    }
+
     /// <summary>장착 슬롯의 무기를 교체합니다 (증강 등 외부 업그레이드용).</summary>
     public void ReplaceEquipped(int index, WeaponData data)
     {
@@ -317,7 +345,7 @@ public class PlayerInventory : MonoBehaviourSingleton<PlayerInventory>
         }
         else
         {
-            equipped[equipped.Count - 1] = data;
+            equipped[FindLowestGradeSlot()] = data;
         }
         OnChanged?.Invoke();
     }
@@ -356,7 +384,7 @@ public class PlayerInventory : MonoBehaviourSingleton<PlayerInventory>
         else if (inventory.Count < MaxInventory)
         {
             inventory.Add(weapon);
-            equipped.RemoveAt(equipIndex);
+            equipped[equipIndex] = null;
         }
         // 뒤의 null 장착 정리
         while (equipped.Count > 0 && equipped[equipped.Count - 1] == null)

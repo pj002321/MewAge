@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4092441220517724094}
   - component: {fileID: 2689750303464935565}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Square
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -100,7 +100,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5428772856677564459}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: GameObject
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -139,7 +139,7 @@ GameObject:
   - component: {fileID: -5070660432427263646}
   - component: {fileID: 1160458829131023466}
   - component: {fileID: 423717540820870210}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: c1_m12
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -326,7 +326,6 @@ MonoBehaviour:
   goldDrop: 5
   expDrop: 10
   scoreValue: 0
-  damageCooldown: 1
   contactMaxDist: 0.8
   knockbackImmune: 0
   bleedDuration: 5
@@ -359,6 +358,7 @@ MonoBehaviour:
   warningColor: {r: 1, g: 0, b: 0, a: 1}
   warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
   warningLineOrigin: {fileID: 4092441220517724094}
+  showWarningLine: 1
 --- !u!114 &1160458829131023466
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -386,4 +386,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HitFlash
   flashDuration: 0.1
   flashMaterial: {fileID: 2100000, guid: f6d87d58797b8b9478efae2c2271cbe7, type: 2}
+  flashColor: {r: 1, g: 1, b: 1, a: 1}
   BaseColor: {r: 1, g: 1, b: 1, a: 1}

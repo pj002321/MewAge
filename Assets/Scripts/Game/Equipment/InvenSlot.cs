@@ -112,7 +112,7 @@ public class InvenSlot : MonoBehaviour,
             return;
         }
         dragStarted = true;
-        panel?.NotifyDragBegin();
+        panel?.NotifyDragBegin(inv.Inventory[SlotIndex]);
         CreateGhost(eventData.position);
         Debug.Log($"[InvenSlot] OnBeginDrag OK slot={SlotIndex}");
     }

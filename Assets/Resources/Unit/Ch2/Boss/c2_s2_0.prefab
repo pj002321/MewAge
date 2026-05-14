@@ -25,7 +25,7 @@ Transform:
   m_GameObject: {fileID: 1409199458472269866}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.87, y: 0.84, z: 0}
+  m_LocalPosition: {x: 1.3333333, y: 0.84, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -70,6 +70,7 @@ Transform:
   m_Children:
   - {fileID: 3254349951551263687}
   - {fileID: 4042531504965790265}
+  - {fileID: 4473437828974837381}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &4579523819268272466
@@ -165,28 +166,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bfce9f499de271b4c8ab1d03e8957395, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossController
-  damageCooldown: 0.5
   moveSpeed: 3
   _isClone: 0
-  enrageThreshold: 0.5
-  enrageSpeedMult: 1.5
-  enrageDamageMult: 1.5
-  grogyThresholds:
-  - 0.7
-  - 0.35
   grogyDuration: 2
-  grogyOverheadPrefab: {fileID: 0}
-  grogyOverheadAnchor: {fileID: 0}
-  grogyOverheadYOffset: 1.5
-  onDeathFX:
-    vfxPrefab: {fileID: 0}
-    spawnOffset: {x: 0, y: 0}
-    sfxClip: {fileID: 0}
-    volume: 1
-  chaseStopDistance: 1.8
+  grogyOverheadPrefab: {fileID: 7777409954982400410, guid: f66d4f4f0fe9de24182839d83a609535, type: 3}
+  grogyOverheadAnchor: {fileID: 4473437828974837381}
+  chaseStopDistance: 1.5
   chaseDuration: 2.5
-  idleDuration: 0.6
-  skills: []
+  idleDuration: 1
+  skills:
+  - {fileID: 315366870377334667}
   _decal: {fileID: 0}
   entryDrop: 1
   entryScaleUpDuration: 0.35
@@ -251,7 +240,7 @@ CapsuleCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0.07, y: 0.925}
+  m_Offset: {x: 0.09, y: 0.84}
   m_Size: {x: 0.82, y: 1.85}
   m_Direction: 0
 --- !u!114 &315366870377334667
@@ -275,15 +264,11 @@ MonoBehaviour:
   - label: "\uD398\uC774\uC988"
     type: 0
     "\uACBD\uACE0\uC2DC\uAC04": 0.4
-    "\uC5F0\uC0AC\uD69F\uC218": 5
-    "\uBC1C\uC0AC\uAC04\uACA9": 0.5
+    "\uD69F\uC218": 5
+    "\uAC04\uACA9": 0.5
     "\uBC29\uD5A5\uC218": 8
-    "\uBC18\uBCF5\uD69F\uC218": 1
-    "\uBC18\uBCF5\uAC04\uACA9": 0.6
     "\uAC01\uB3C4\uC624\uD504\uC14B": 0
     "\uBD80\uCC44\uAF34\uAC01\uB3C4": 120
-    "\uD638\uBC0D\uD69F\uC218": 3
-    "\uD638\uBC0D\uAC04\uACA9": 0.25
     "\uC544\uD06C\uB192\uC774": 3
     "\uD638\uBC0D\uC18D\uB3C4": 9
     "\uAC00\uC18D\uC2DC\uAC04": 0.4
@@ -292,15 +277,11 @@ MonoBehaviour:
   - label: "\uD398\uC774\uC988"
     type: 2
     "\uACBD\uACE0\uC2DC\uAC04": 0.4
-    "\uC5F0\uC0AC\uD69F\uC218": 1
-    "\uBC1C\uC0AC\uAC04\uACA9": 0.5
+    "\uD69F\uC218": 1
+    "\uAC04\uACA9": 0.5
     "\uBC29\uD5A5\uC218": 8
-    "\uBC18\uBCF5\uD69F\uC218": 2
-    "\uBC18\uBCF5\uAC04\uACA9": 0.6
     "\uAC01\uB3C4\uC624\uD504\uC14B": 0
     "\uBD80\uCC44\uAF34\uAC01\uB3C4": 120
-    "\uD638\uBC0D\uD69F\uC218": 3
-    "\uD638\uBC0D\uAC04\uACA9": 0.25
     "\uC544\uD06C\uB192\uC774": 3
     "\uD638\uBC0D\uC18D\uB3C4": 9
     "\uAC00\uC18D\uC2DC\uAC04": 0
@@ -314,6 +295,7 @@ MonoBehaviour:
   impactVfxPrefab: {fileID: 0}
   impactVfxLifetime: 1
   chaseStopDistance: 1.8
+  animWaitTimeout: 2
 --- !u!114 &6005970421494329333
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -420,9 +402,9 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 2
+  m_SortingLayerID: 1049025713
+  m_SortingLayer: 1
+  m_SortingOrder: 4
   m_MaskInteraction: 0
   m_Sprite: {fileID: 6863293971250029137, guid: aae5a60f0a493f14da9a00ba91e73b06, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -434,3 +416,34 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!1 &7899675486828183888
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4473437828974837381}
+  m_Layer: 7
+  m_Name: tGrogy
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4473437828974837381
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7899675486828183888}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 2, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6799251363881685267}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

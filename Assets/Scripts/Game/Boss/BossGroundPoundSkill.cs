@@ -45,6 +45,7 @@ public class BossGroundPoundSkill : BossSkillBase
 
     // 현재 스킬 실행 중 원본 스케일 — OnInterrupted에서 복구
     private Vector3             _origScale;
+    private bool                _isExecuting;
     private LineRenderer        _warnLine;
     private PlayerController    _activeFloatingPlayer;
     private SlimeBobAnimation   _activeFloatingBob;

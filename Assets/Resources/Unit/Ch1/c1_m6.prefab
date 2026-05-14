@@ -183,7 +183,6 @@ MonoBehaviour:
   goldDrop: 5
   expDrop: 10
   scoreValue: 10
-  damageCooldown: 1
   contactMaxDist: 0.8
   knockbackImmune: 0
   bleedDuration: 5
@@ -421,6 +420,10 @@ PrefabInstance:
     - target: {fileID: 4326448872545226646, guid: 9c39f451340dbc740828b2b7c4782b1a, type: 3}
       propertyPath: m_Name
       value: vfx_slash
+      objectReference: {fileID: 0}
+    - target: {fileID: 4326448872545226646, guid: 9c39f451340dbc740828b2b7c4782b1a, type: 3}
+      propertyPath: m_Layer
+      value: 7
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

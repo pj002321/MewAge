@@ -257,27 +257,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bfce9f499de271b4c8ab1d03e8957395, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossController
-  damageCooldown: 0.5
   moveSpeed: 3
   _isClone: 0
-  enrageThreshold: 0.5
-  enrageSpeedMult: 1.5
-  enrageDamageMult: 1.5
-  grogyThresholds:
-  - 0.7
-  - 0.35
   grogyDuration: 2
   grogyOverheadPrefab: {fileID: 7777409954982400410, guid: f66d4f4f0fe9de24182839d83a609535, type: 3}
   grogyOverheadAnchor: {fileID: 3969145250017933543}
-  grogyOverheadYOffset: 1.5
-  onDeathFX:
-    vfxPrefab: {fileID: 0}
-    spawnOffset: {x: 0, y: 0}
-    sfxClip: {fileID: 0}
-    volume: 1
-  chaseStopDistance: 1.8
+  chaseStopDistance: 1.5
   chaseDuration: 2.5
-  idleDuration: 0.6
+  idleDuration: 1
   skills:
   - {fileID: 4382858811831378813}
   - {fileID: 3871775641527460410}

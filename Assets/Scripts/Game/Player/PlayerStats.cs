@@ -124,5 +124,6 @@ public class PlayerStats : MonoBehaviourSingleton<PlayerStats>
     public int Gold      => gold;
     public int Exp       => exp;
     public int Level     => level;
+    public int MaxLevel  => maxLevel;
     public int ExpToNext => expToNext;
 }

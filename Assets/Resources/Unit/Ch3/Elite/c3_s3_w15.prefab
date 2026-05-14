@@ -16,6 +16,7 @@ GameObject:
   - component: {fileID: 118957687783763765}
   - component: {fileID: 1926615043382288382}
   - component: {fileID: -3044924429530644451}
+  - component: {fileID: -8849316065454194598}
   m_Layer: 7
   m_Name: c3_s3_w15
   m_TagString: Untagged
@@ -250,6 +251,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d9c58f3ba0addd845b2803f0d001d294, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EliteMarker
+--- !u!114 &-8849316065454194598
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1326216360028315856}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8dbca1b53536a2b47a8964120af00539, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitFlash
+  flashDuration: 0.1
+  flashMaterial: {fileID: 2100000, guid: f6d87d58797b8b9478efae2c2271cbe7, type: 2}
+  flashColor: {r: 1, g: 1, b: 1, a: 1}
+  BaseColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &1437633771341022566
 GameObject:
   m_ObjectHideFlags: 0

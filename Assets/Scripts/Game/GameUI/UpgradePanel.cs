@@ -51,8 +51,9 @@ public class UpgradePanel : MonoBehaviour
     [SerializeField] private float nextWaveDelay = 1f;
 
     [Header("판매 드롭존")]
-    [SerializeField] private RectTransform sellImg;
-    [SerializeField] private float         sellZoneHoverScale = 1.2f;
+    [SerializeField] private RectTransform    sellImg;
+    [SerializeField] private TextMeshProUGUI  sellPriceText;
+    [SerializeField] private float            sellZoneHoverScale = 1.2f;
 
     [Header("장착 슬롯 (6개)")]
     [SerializeField] private EquipSlot[] equipSlots;
@@ -337,7 +338,7 @@ public class UpgradePanel : MonoBehaviour
         int level = ps.Level;
         int expToNext = PlayerStats.Shared?.ExpToNext ?? (20 + (level - 1) * 50);
 
-        if (levelText) levelText.text = $"LV.{level}";
+        if (levelText) levelText.text = level >= (PlayerStats.Shared?.MaxLevel ?? int.MaxValue) ? "MAX" : $"LV.{level}";
         if (expSlider) expSlider.value = (float)exp / expToNext;
         if (expText) expText.text = $"{exp}/{expToNext}";
 
@@ -558,13 +559,15 @@ public class UpgradePanel : MonoBehaviour
         return null;
     }
 
-    public void NotifyDragBegin()
+    public void NotifyDragBegin(WeaponData draggedWeapon = null)
     {
         selectedInvenIndex = -1;
         selectedEquipIndex = -1;
         WeaponInfoPanel.Shared?.Hide();
         if (nextWaveButton) nextWaveButton.interactable = false;
         if (sellImg) sellImg.gameObject.SetActive(true);
+        if (sellPriceText)
+            sellPriceText.text = draggedWeapon != null ? $"{Mathf.Max(1, draggedWeapon.price)}" : "";
         RefreshInventoryUI();
     }
 

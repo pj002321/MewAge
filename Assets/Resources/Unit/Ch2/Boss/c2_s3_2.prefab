@@ -276,24 +276,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bfce9f499de271b4c8ab1d03e8957395, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossController
-  damageCooldown: 0.5
   moveSpeed: 2
   _isClone: 0
-  enrageThreshold: 0.5
-  enrageSpeedMult: 1.5
-  enrageDamageMult: 1.5
-  grogyThresholds:
-  - 0.7
-  - 0.35
   grogyDuration: 2
   grogyOverheadPrefab: {fileID: 7777409954982400410, guid: f66d4f4f0fe9de24182839d83a609535, type: 3}
   grogyOverheadAnchor: {fileID: 9175215281644974734}
-  grogyOverheadYOffset: 1.5
-  onDeathFX:
-    vfxPrefab: {fileID: 0}
-    spawnOffset: {x: 0, y: 0}
-    sfxClip: {fileID: 0}
-    volume: 0.202
   chaseStopDistance: 2.5
   chaseDuration: 2
   idleDuration: 2
@@ -338,8 +325,8 @@ CapsuleCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 1.3}
-  m_Size: {x: 1.31, y: 1.93}
+  m_Offset: {x: 0, y: 1.22}
+  m_Size: {x: 1.31, y: 2.49}
   m_Direction: 0
 --- !u!114 &3594604641412481875
 MonoBehaviour:
@@ -362,15 +349,11 @@ MonoBehaviour:
   - label: "\uD398\uC774\uC988"
     type: 0
     "\uACBD\uACE0\uC2DC\uAC04": 0.4
-    "\uC5F0\uC0AC\uD69F\uC218": 5
-    "\uBC1C\uC0AC\uAC04\uACA9": 0.5
+    "\uD69F\uC218": 1
+    "\uAC04\uACA9": 0.5
     "\uBC29\uD5A5\uC218": 8
-    "\uBC18\uBCF5\uD69F\uC218": 1
-    "\uBC18\uBCF5\uAC04\uACA9": 0.6
     "\uAC01\uB3C4\uC624\uD504\uC14B": 0
     "\uBD80\uCC44\uAF34\uAC01\uB3C4": 120
-    "\uD638\uBC0D\uD69F\uC218": 3
-    "\uD638\uBC0D\uAC04\uACA9": 0.25
     "\uC544\uD06C\uB192\uC774": 3
     "\uD638\uBC0D\uC18D\uB3C4": 9
     "\uAC00\uC18D\uC2DC\uAC04": 0.2
@@ -379,15 +362,11 @@ MonoBehaviour:
   - label: "\uD398\uC774\uC988"
     type: 2
     "\uACBD\uACE0\uC2DC\uAC04": 0.4
-    "\uC5F0\uC0AC\uD69F\uC218": 1
-    "\uBC1C\uC0AC\uAC04\uACA9": 0.5
+    "\uD69F\uC218": 1
+    "\uAC04\uACA9": 0.5
     "\uBC29\uD5A5\uC218": 6
-    "\uBC18\uBCF5\uD69F\uC218": 1
-    "\uBC18\uBCF5\uAC04\uACA9": 0.6
     "\uAC01\uB3C4\uC624\uD504\uC14B": 0
     "\uBD80\uCC44\uAF34\uAC01\uB3C4": 120
-    "\uD638\uBC0D\uD69F\uC218": 3
-    "\uD638\uBC0D\uAC04\uACA9": 0.25
     "\uC544\uD06C\uB192\uC774": 3
     "\uD638\uBC0D\uC18D\uB3C4": 9
     "\uAC00\uC18D\uC2DC\uAC04": 0.6
@@ -396,15 +375,11 @@ MonoBehaviour:
   - label: "\uD398\uC774\uC988"
     type: 1
     "\uACBD\uACE0\uC2DC\uAC04": 0.4
-    "\uC5F0\uC0AC\uD69F\uC218": 1
-    "\uBC1C\uC0AC\uAC04\uACA9": 0.5
+    "\uD69F\uC218": 1
+    "\uAC04\uACA9": 0.5
     "\uBC29\uD5A5\uC218": 6
-    "\uBC18\uBCF5\uD69F\uC218": 2
-    "\uBC18\uBCF5\uAC04\uACA9": 1.5
     "\uAC01\uB3C4\uC624\uD504\uC14B": 120
     "\uBD80\uCC44\uAF34\uAC01\uB3C4": 120
-    "\uD638\uBC0D\uD69F\uC218": 3
-    "\uD638\uBC0D\uAC04\uACA9": 0.25
     "\uC544\uD06C\uB192\uC774": 3
     "\uD638\uBC0D\uC18D\uB3C4": 9
     "\uAC00\uC18D\uC2DC\uAC04": 0
@@ -432,7 +407,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossGridSpikeSkill
   executeInPattern: 1
-  cooldown: 2
+  cooldown: 5
   cols: 6
   rows: 5
   fillMode: 2

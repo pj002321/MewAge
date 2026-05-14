@@ -445,7 +445,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 
     public void UpdateExpUI(int exp, int expMax, int level)
     {
-        if (levelText)        levelText.text         = $"LV.{level}";
+        if (levelText)        levelText.text         = level >= (PlayerStats.Shared?.MaxLevel ?? int.MaxValue) ? "MAX" : $"LV.{level}";
         if (expSlider)        expSlider.value        = (float)exp / expMax;
     }
 

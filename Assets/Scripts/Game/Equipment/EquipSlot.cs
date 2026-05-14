@@ -205,7 +205,7 @@ public class EquipSlot : MonoBehaviour,
             return;
 
         dragStarted = true;
-        panel?.NotifyDragBegin();
+        panel?.NotifyDragBegin(inv.Equipped[SlotIndex]);
         CreateGhost(eventData.position);
         Debug.Log($"[EquipSlot] OnBeginDrag slot={SlotIndex}");
     }

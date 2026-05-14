@@ -204,7 +204,6 @@ MonoBehaviour:
   goldDrop: 5
   expDrop: 10
   scoreValue: 0
-  damageCooldown: 1
   contactMaxDist: 0.8
   knockbackImmune: 0
   bleedDuration: 5
@@ -256,6 +255,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HitFlash
   flashDuration: 0.1
   flashMaterial: {fileID: 2100000, guid: f6d87d58797b8b9478efae2c2271cbe7, type: 2}
+  flashColor: {r: 1, g: 1, b: 1, a: 1}
   BaseColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &7331466815635274731
 GameObject:
@@ -399,6 +399,10 @@ PrefabInstance:
     - target: {fileID: 9197413086399020258, guid: 4457e9ceb41218e49ace094b3fa3b6d6, type: 3}
       propertyPath: m_Name
       value: vfx_shield
+      objectReference: {fileID: 0}
+    - target: {fileID: 9197413086399020258, guid: 4457e9ceb41218e49ace094b3fa3b6d6, type: 3}
+      propertyPath: m_Layer
+      value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 9197413086399020258, guid: 4457e9ceb41218e49ace094b3fa3b6d6, type: 3}
       propertyPath: m_IsActive

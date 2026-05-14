@@ -234,15 +234,27 @@ public class BossController : MonoBehaviour, IEnemyHost
     {
         _dropping = true;
 
-        Vector3 originalScale = transform.localScale;
-        Vector3 spawnPos      = transform.position;
+        Vector3 targetScale = transform.localScale;
+        if (targetScale.sqrMagnitude < 0.001f) targetScale = Vector3.one;
+        Vector3 spawnPos = transform.position;
 
         transform.localScale = Vector3.zero;
         FXManager.Shared?.SpawnBossEntryLandingVfx(spawnPos);
 
-        yield return transform.DOScale(originalScale, entryScaleUpDuration)
+        transform.DOScale(targetScale, entryScaleUpDuration)
             .SetEase(Ease.OutBack)
-            .WaitForCompletion();
+            .SetUpdate(true);
+
+        // WaitForCompletion 대신 직접 대기 — tween 실패 시 무한 대기 방지
+        float elapsed = 0f;
+        float timeout = entryScaleUpDuration + 0.5f;
+        while (elapsed < timeout && transform.localScale != targetScale)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            yield return null;
+        }
+
+        transform.localScale = targetScale;
 
         _dropping = false;
         StartPatternLoop();
@@ -469,7 +481,6 @@ public void ForceDie()
 
             ItemDropManager.Shared?.SpawnBossDrops(transform.position, bossGoldCount, 1, bossExpCount, 1);
             BossHUDPanel.Shared?.Hide();
-            GameManager.Shared?.OnBossDefeated();
         }
 
         if (srs != null)
@@ -485,6 +496,9 @@ public void ForceDie()
             yield return null;
         }
 
+        gameObject.SetActive(false); // Destroy는 프레임 말 처리이므로 즉시 숨김
+        if (!_isClone)
+            GameManager.Shared?.OnBossDefeated();
         Destroy(gameObject);
     }
 

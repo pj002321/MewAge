@@ -4,8 +4,10 @@ using UnityEngine.UI;
 
 /// <summary>
 /// 인게임 업그레이드 패널용 캐릭터 포트레이트 렌더러.
-/// HomeCharacterDisplay와 동일한 RT 카메라 패턴.
 /// UpgradePanel이 열릴 때 DropIn(), 닫힐 때 DropOut()을 호출합니다.
+///
+/// 입장: enter_portrait 트리거 → 애니메이션 완료 → 데칼 페이드인
+/// 퇴장: 데칼 페이드아웃 → exit_portrait 트리거 → 애니메이션 완료 → 모델 비활성화
 /// </summary>
 public class InGameCharacterDisplay : MonoBehaviourSingleton<InGameCharacterDisplay>
 {
@@ -20,17 +22,15 @@ public class InGameCharacterDisplay : MonoBehaviourSingleton<InGameCharacterDisp
     [Header("모델 스폰 위치")]
     public Transform modelSpawnPoint;
 
-    [Header("입장 연출")]
-    [SerializeField] private float dropHeight      = 5f;
-    [SerializeField] private float fallDuration    = 0.5f;
-    [SerializeField] private float squashDuration  = 0.08f;
-    [SerializeField] private float stretchDuration = 0.15f;
-    [SerializeField] private float squashScaleY    = 0.65f;
-    [SerializeField] private float squashScaleX    = 1.35f;
+    [Header("포트레이트 UI 애니메이터 (RawImage 오브젝트)")]
+    [SerializeField] private Animator portraitAnimator;
 
-    [Header("퇴장 연출")]
-    [SerializeField] private float exitHeight   = 5f;
-    [SerializeField] private float exitDuration = 0.35f;
+    [Header("데칼 (RT 씬 내 바닥 스프라이트)")]
+    [SerializeField] private SpriteRenderer decalRenderer;
+    [SerializeField] private float          decalFadeDuration = 0.2f;
+
+    private static readonly int TEnterPortrait = Animator.StringToHash("enter_portrait");
+    private static readonly int BExit          = Animator.StringToHash("bExit");
 
     private GameObject _currentModel;
     private Coroutine  _animCoroutine;
@@ -40,12 +40,16 @@ public class InGameCharacterDisplay : MonoBehaviourSingleton<InGameCharacterDisp
         base.Awake();
         if (portraitCamera != null && renderTexture != null)
             portraitCamera.targetTexture = renderTexture;
+        // UpgradePanel은 timeScale=0으로 일시정지되므로 UnscaledTime 강제 설정
+        if (portraitAnimator != null)
+            portraitAnimator.updateMode = AnimatorUpdateMode.UnscaledTime;
     }
 
     private void Start()
     {
         SpawnModel();
         if (_currentModel != null) _currentModel.SetActive(false);
+        SetDecalAlpha(0f);
     }
 
     // ── 모델 로드 ─────────────────────────────────────────────────────
@@ -80,6 +84,10 @@ public class InGameCharacterDisplay : MonoBehaviourSingleton<InGameCharacterDisp
         if (_currentModel == null) return;
 
         _currentModel.SetActive(true);
+        _currentModel.transform.position   = modelSpawnPoint != null ? modelSpawnPoint.position : Vector3.zero;
+        _currentModel.transform.localScale  = Vector3.one;
+        _currentModel.GetComponentInChildren<Animator>()?.Play("happy", 0, 0f);
+
         if (_animCoroutine != null) StopCoroutine(_animCoroutine);
         _animCoroutine = StartCoroutine(DropInRoutine());
     }
@@ -99,81 +107,103 @@ public class InGameCharacterDisplay : MonoBehaviourSingleton<InGameCharacterDisp
 
     private IEnumerator DropInRoutine()
     {
-        var model = _currentModel;
-        if (model == null) yield break;
+        SetDecalAlpha(0f);
 
-        Vector3 landPos  = modelSpawnPoint != null ? modelSpawnPoint.position : model.transform.position;
-        Vector3 startPos = landPos + Vector3.up * dropHeight;
-        model.transform.position   = startPos;
-        model.transform.localScale = Vector3.one;
-
-        model.GetComponentInChildren<Animator>()?.Play("happy", 0, 0f);
-
-        // 낙하 (ease-in)
-        float elapsed = 0f;
-        while (elapsed < fallDuration)
+        if (portraitAnimator != null)
         {
-            if (model == null) yield break;
-            elapsed += Time.unscaledDeltaTime;
-            float t = Mathf.Clamp01(elapsed / fallDuration);
-            model.transform.position = Vector3.LerpUnclamped(startPos, landPos, t * t);
-            yield return null;
+            portraitAnimator.SetBool(BExit, false);
+            portraitAnimator.SetTrigger(TEnterPortrait);
         }
-        if (model == null) yield break;
-        model.transform.position = landPos;
+        yield return StartCoroutine(PlayPortraitAnim("enter_portrait"));
 
-        // 찌그러짐
-        elapsed = 0f;
-        while (elapsed < squashDuration)
-        {
-            if (model == null) yield break;
-            elapsed += Time.unscaledDeltaTime;
-            float t = Mathf.Clamp01(elapsed / squashDuration);
-            model.transform.localScale = new Vector3(
-                Mathf.Lerp(1f, squashScaleX, t),
-                Mathf.Lerp(1f, squashScaleY, t), 1f);
-            yield return null;
-        }
-
-        // 복원
-        elapsed = 0f;
-        while (elapsed < stretchDuration)
-        {
-            if (model == null) yield break;
-            elapsed += Time.unscaledDeltaTime;
-            float t = Mathf.Clamp01(elapsed / stretchDuration);
-            model.transform.localScale = new Vector3(
-                Mathf.Lerp(squashScaleX, 1f, t),
-                Mathf.Lerp(squashScaleY, 1f, t), 1f);
-            yield return null;
-        }
-        if (model == null) yield break;
-        model.transform.localScale = Vector3.one;
+        yield return StartCoroutine(FadeDecal(0f, 1f));
         _animCoroutine = null;
     }
 
     private IEnumerator DropOutRoutine(System.Action onComplete)
     {
-        var model = _currentModel;
-        if (model == null) { onComplete?.Invoke(); yield break; }
+        yield return StartCoroutine(FadeDecal(1f, 0f));
 
-        Vector3 startPos = model.transform.position;
-        Vector3 endPos   = startPos + Vector3.up * exitHeight;
+        if (portraitAnimator != null) portraitAnimator.SetBool(BExit, true);
+        yield return StartCoroutine(PlayPortraitAnim("exit_portrait"));
+        if (portraitAnimator != null) portraitAnimator.SetBool(BExit, false);
 
+        if (_currentModel != null) _currentModel.SetActive(false);
+        onComplete?.Invoke();
+        _animCoroutine = null;
+    }
+
+    /// <summary>
+    /// stateName 상태가 실제로 재생 완료될 때까지 대기합니다.
+    /// GetNextAnimatorStateInfo로 "전환 대상"을 확인하므로 이전 상태 오탐을 방지합니다.
+    /// </summary>
+    private IEnumerator PlayPortraitAnim(string stateName)
+    {
+        if (portraitAnimator == null) yield break;
+
+        yield return null; // 파라미터 처리 대기
+
+        // Phase 1: stateName 상태로의 전환이 시작될 때까지 대기 (최대 1초)
         float elapsed = 0f;
-        while (elapsed < exitDuration)
+        while (elapsed < 1f)
         {
-            if (model == null) { onComplete?.Invoke(); yield break; }
+            if (portraitAnimator == null) yield break;
+
+            if (portraitAnimator.IsInTransition(0))
+            {
+                // 전환 대상이 목표 상태면 탈출
+                if (portraitAnimator.GetNextAnimatorStateInfo(0).IsName(stateName)) break;
+            }
+            else
+            {
+                // 이미 목표 상태에 진입해 있으면 탈출
+                if (portraitAnimator.GetCurrentAnimatorStateInfo(0).IsName(stateName)) break;
+            }
+
             elapsed += Time.unscaledDeltaTime;
-            float t = Mathf.Clamp01(elapsed / exitDuration);
-            float ease = t * t; // ease-in (가속 퇴장)
-            model.transform.position = Vector3.LerpUnclamped(startPos, endPos, ease);
             yield return null;
         }
 
-        if (model != null) model.SetActive(false);
-        onComplete?.Invoke();
-        _animCoroutine = null;
+        if (portraitAnimator == null) yield break;
+
+        // Phase 2: 전환 완료 + stateName 상태 재생 완료 대기 (최대 5초)
+        elapsed = 0f;
+        while (elapsed < 5f)
+        {
+            if (portraitAnimator == null) yield break;
+
+            var info = portraitAnimator.GetCurrentAnimatorStateInfo(0);
+            if (!portraitAnimator.IsInTransition(0) &&
+                info.IsName(stateName) &&
+                info.normalizedTime >= 1f)
+                break;
+
+            elapsed += Time.unscaledDeltaTime;
+            yield return null;
+        }
+    }
+
+    // ── 데칼 헬퍼 ────────────────────────────────────────────────────
+
+    private IEnumerator FadeDecal(float from, float to)
+    {
+        if (decalRenderer == null) yield break;
+        float elapsed = 0f;
+        while (elapsed < decalFadeDuration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            SetDecalAlpha(Mathf.Lerp(from, to, Mathf.Clamp01(elapsed / decalFadeDuration)));
+            yield return null;
+        }
+        SetDecalAlpha(to);
+    }
+
+    private void SetDecalAlpha(float alpha)
+    {
+        if (decalRenderer == null) return;
+        var c = decalRenderer.color;
+        c.a = alpha;
+        decalRenderer.color = c;
     }
 
     // ────────────────────────────────────────────────────────────────

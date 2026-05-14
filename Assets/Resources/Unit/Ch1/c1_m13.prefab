@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4092441220517724094}
   - component: {fileID: 2689750303464935565}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Square
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -109,7 +109,7 @@ GameObject:
   - component: {fileID: -8544560823258797735}
   - component: {fileID: 1689204116380239597}
   - component: {fileID: 8308100528232346946}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: c1_m13
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -259,7 +259,6 @@ MonoBehaviour:
   goldDrop: 1
   expDrop: 1
   scoreValue: 0
-  damageCooldown: 1
   contactMaxDist: 1
   knockbackImmune: 0
   bleedDuration: 5
@@ -381,6 +380,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HitFlash
   flashDuration: 0.1
   flashMaterial: {fileID: 2100000, guid: f6d87d58797b8b9478efae2c2271cbe7, type: 2}
+  flashColor: {r: 1, g: 1, b: 1, a: 1}
   BaseColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1001 &8460030400336165565
 PrefabInstance:
@@ -445,6 +445,10 @@ PrefabInstance:
     - target: {fileID: 2734155779453642268, guid: 66e6618ee7949024cb7610bd6bc60058, type: 3}
       propertyPath: m_Name
       value: Muzzle_dron
+      objectReference: {fileID: 0}
+    - target: {fileID: 2734155779453642268, guid: 66e6618ee7949024cb7610bd6bc60058, type: 3}
+      propertyPath: m_Layer
+      value: 7
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
