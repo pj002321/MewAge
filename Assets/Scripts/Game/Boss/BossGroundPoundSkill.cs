@@ -58,12 +58,13 @@ public class BossGroundPoundSkill : BossSkillBase
     public override void OnInterrupted()
     {
         base.OnInterrupted(); // StopAllCoroutines
-        // DOTween이 transform 스케일을 건드리고 있을 수 있으므로 즉시 Kill
-        if (Owner != null)
+        // 스킬 실행 중일 때만 스케일 복구 — OnExecute 전에 호출되면 _origScale이 zero라 버그 발생
+        if (_isExecuting && Owner != null)
         {
             DOTween.Kill(Owner.transform, complete: false);
             Owner.transform.localScale = _origScale;
         }
+        _isExecuting = false;
         RestoreFloatingPlayer();
         CleanupWarnLine();
     }
@@ -85,7 +86,8 @@ public class BossGroundPoundSkill : BossSkillBase
         float speed = chargeSpeed;
 
         // 스케일 기준값 저장 — OnInterrupted에서 복구
-        _origScale = Owner.transform.localScale;
+        _origScale    = Owner.transform.localScale;
+        _isExecuting  = true;
 
         // ── 1. 보스 소점프 ──────────────────────────────────────
         Vector2 startPos = Owner.Rb != null ? Owner.Rb.position : (Vector2)Owner.transform.position;
@@ -140,6 +142,7 @@ public class BossGroundPoundSkill : BossSkillBase
 
         // ── 6. 보스 돌진 ───────────────────────────────────────
         yield return StartCoroutine(ChargeAtPlayer(speed, chargeDir));
+        _isExecuting = false;
     }
 
     // ── 보스 돌진 ──────────────────────────────────────────────────

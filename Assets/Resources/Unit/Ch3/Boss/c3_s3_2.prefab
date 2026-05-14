@@ -48,6 +48,7 @@ GameObject:
   - component: {fileID: 1312257813220651438}
   - component: {fileID: 3570653029507297606}
   - component: {fileID: 8013241851858456192}
+  - component: {fileID: 8632517584240729218}
   m_Layer: 7
   m_Name: c3_s3_2
   m_TagString: Untagged
@@ -120,7 +121,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 1049025713
   m_SortingLayer: 1
-  m_SortingOrder: 5
+  m_SortingOrder: 7
   m_MaskInteraction: 0
   m_Sprite: {fileID: 4731747989236855100, guid: 68e49b6888d228b479e1381d151669ac, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -230,31 +231,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bfce9f499de271b4c8ab1d03e8957395, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossController
-  damageCooldown: 0.5
   moveSpeed: 3
   _isClone: 0
-  enrageThreshold: 0.5
-  enrageSpeedMult: 1.5
-  enrageDamageMult: 1.5
-  grogyThresholds:
-  - 0.7
-  - 0.35
   grogyDuration: 2
   grogyOverheadPrefab: {fileID: 7777409954982400410, guid: f66d4f4f0fe9de24182839d83a609535, type: 3}
   grogyOverheadAnchor: {fileID: 4039304846186446666}
-  grogyOverheadYOffset: 1.5
-  grogyMaterial: {fileID: 2100000, guid: f6d87d58797b8b9478efae2c2271cbe7, type: 2}
-  onDeathFX:
-    vfxPrefab: {fileID: 0}
-    spawnOffset: {x: 0, y: 0}
-    sfxClip: {fileID: 0}
-    volume: 1
   chaseStopDistance: 1.8
   chaseDuration: 2.5
   idleDuration: 0.6
   skills:
   - {fileID: 1312257813220651438}
   - {fileID: 3570653029507297606}
+  - {fileID: 8632517584240729218}
   _decal: {fileID: 9052888758413563378}
   entryDrop: 1
   entryScaleUpDuration: 0.35
@@ -273,7 +261,7 @@ MonoBehaviour:
   executeInPattern: 1
   cooldown: 5
   minionPrefab: {fileID: 5780791762247049258, guid: a7092e06a177108429b305007a57b6c5, type: 3}
-  spawnMarkerPrefab: {fileID: 0}
+  spawnMarkerPrefab: {fileID: 5515808124668199316, guid: 4676482f183c362489d2902d70a232b3, type: 3}
   summonCount: 2
   maxActiveMinions: 4
   summonInterval: 8
@@ -295,13 +283,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossFireCrossSkill
   executeInPattern: 1
-  cooldown: 4
-  tilePrefab: {fileID: 38222733961658620, guid: 0ebbd7c7ca572c7418fb960c48b39412, type: 3}
+  cooldown: 5
+  tilePrefab: {fileID: 3325602780084608094, guid: 9809065bfa312124ba1cdccee79caa4b, type: 3}
   warningDuration: 1
   warningLineWidth: 1
   warningColor: {r: 1, g: 0.3, b: 0, a: 1}
   warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
-  spreadLength: 8
+  spreadLength: 10
   cellSize: 1
   spreadDelay: 0.05
   fireDuration: 3
@@ -323,6 +311,36 @@ MonoBehaviour:
   flashMaterial: {fileID: 2100000, guid: f6d87d58797b8b9478efae2c2271cbe7, type: 2}
   flashColor: {r: 1, g: 1, b: 1, a: 1}
   BaseColor: {r: 1, g: 1, b: 1, a: 1}
+--- !u!114 &8632517584240729218
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1326216360028315856}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 45354f0c4ea932b4eb47f11de6d6a2ef, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BossGridSpikeSkill
+  executeInPattern: 1
+  cooldown: 5
+  cols: 6
+  rows: 5
+  fillMode: 1
+  randomCount: 12
+  spikePrefab: {fileID: 8052887357750566584, guid: b165590939bdd7e44bdd602f92ecf2bd, type: 3}
+  spikeDamage: 35
+  spikeRadius: 0.45
+  spikeDuration: 1
+  warningDuration: 1.2
+  waveDelay: 0.25
+  warningMarkerPrefab: {fileID: 2990238766820676548, guid: 99380c197ef498849960f1eb41eb185d, type: 3}
+  warningColor: {r: 1, g: 1, b: 1, a: 1}
+  dropHeight: 8
+  dropDuration: 0.25
+  spawnVfxPrefab: {fileID: 7123985206164558582, guid: 6b0caaf5c2e9c4240b71d76b89158420, type: 3}
+  spawnVfxDuration: 1
 --- !u!1 &1437633771341022566
 GameObject:
   m_ObjectHideFlags: 0
@@ -400,9 +418,9 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 2
+  m_SortingLayerID: 1049025713
+  m_SortingLayer: 1
+  m_SortingOrder: 7
   m_MaskInteraction: 0
   m_Sprite: {fileID: 6863293971250029137, guid: aae5a60f0a493f14da9a00ba91e73b06, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}

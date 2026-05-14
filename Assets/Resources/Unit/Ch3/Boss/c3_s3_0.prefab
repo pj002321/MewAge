@@ -86,9 +86,9 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 5
+  m_SortingLayerID: 1049025713
+  m_SortingLayer: 1
+  m_SortingOrder: 7
   m_MaskInteraction: 0
   m_Sprite: {fileID: 3649527579473425175, guid: 2a8270362b4047c468b2bbf82cdaa070, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -183,8 +183,8 @@ CapsuleCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: -0.04, y: 0.92}
-  m_Size: {x: 0.82, y: 1.32}
+  m_Offset: {x: -0.04, y: 0.68}
+  m_Size: {x: 1.17, y: 1.32}
   m_Direction: 0
 --- !u!114 &-97185046664121143
 MonoBehaviour:
@@ -198,28 +198,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bfce9f499de271b4c8ab1d03e8957395, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossController
-  damageCooldown: 0.5
   moveSpeed: 3
   _isClone: 0
-  enrageThreshold: 0.5
-  enrageSpeedMult: 1.5
-  enrageDamageMult: 1.5
-  grogyThresholds:
-  - 0.7
-  - 0.35
   grogyDuration: 2
   grogyOverheadPrefab: {fileID: 7777409954982400410, guid: f66d4f4f0fe9de24182839d83a609535, type: 3}
   grogyOverheadAnchor: {fileID: 3490106584024288556}
-  grogyOverheadYOffset: 1.5
-  grogyMaterial: {fileID: 2100000, guid: f6d87d58797b8b9478efae2c2271cbe7, type: 2}
-  onDeathFX:
-    vfxPrefab: {fileID: 0}
-    spawnOffset: {x: 0, y: 0}
-    sfxClip: {fileID: 0}
-    volume: 1
-  chaseStopDistance: 1.8
+  chaseStopDistance: 1.5
   chaseDuration: 2.5
-  idleDuration: 0.6
+  idleDuration: 1
   skills:
   - {fileID: -8535768981006827160}
   - {fileID: 3257914936317072467}
@@ -261,11 +247,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossChargeSkill
   executeInPattern: 1
-  cooldown: 3
+  cooldown: 2
   chargeSpeed: 12
-  chargeDuration: 0.4
-  bounceCount: 0
-  bouncePause: 0.1
+  chargeDuration: 0.5
+  bounceCount: 3
+  bouncePause: 0.25
   warningDuration: 0.5
   warningLineLength: 6
   warningLineWidth: 0.5
@@ -313,7 +299,7 @@ Transform:
   m_GameObject: {fileID: 1437633771341022566}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.15, y: 0.27, z: 0}
+  m_LocalPosition: {x: -0.15, y: 0.276, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -364,8 +350,8 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 1049025713
+  m_SortingLayer: 1
   m_SortingOrder: 2
   m_MaskInteraction: 0
   m_Sprite: {fileID: -4746052441814772624, guid: aae5a60f0a493f14da9a00ba91e73b06, type: 3}

@@ -64,14 +64,17 @@ public class BossRollingBoulderSkill : BossSkillBase
         Boss.IsFiringSkill = true;
         try
         {
+            Vector2 spawnPos = firePoint != null
+                ? (Vector2)firePoint.position
+                : Owner.Rb != null ? Owner.Rb.position : (Vector2)Owner.transform.position;
+
+            // 스킬 시작 시점에 플레이어 방향을 고정
+            Vector2 dir = ((Vector2)Owner.PlayerTransform.position - spawnPos).normalized;
+            if (dir == Vector2.zero) dir = Vector2.right;
+
             // 1) 경고 라인 + 조준 딜레이
             if (preDelay > 0f)
             {
-                Vector2 spawnPos = firePoint != null
-                    ? (Vector2)firePoint.position
-                    : Owner.Rb != null ? Owner.Rb.position : (Vector2)Owner.transform.position;
-                Vector2 dir = Boss.IsFacingLeft ? Vector2.left : Vector2.right;
-
                 var lr = SpawnWarningLine(spawnPos, dir);
                 _warnLine = lr;
                 float elapsed = 0f;
@@ -96,7 +99,7 @@ public class BossRollingBoulderSkill : BossSkillBase
 
                 Owner.EnemyAnimator?.SetTrigger(EnemyAnim.TAttack);
                 this.DLog($"Rolling boulder {i + 1}/{rollCount}");
-                SpawnBoulder();
+                SpawnBoulder(dir);
 
                 if (i < rollCount - 1)
                     yield return new WaitForSeconds(rollInterval);
@@ -129,7 +132,7 @@ public class BossRollingBoulderSkill : BossSkillBase
         return lr;
     }
 
-    private void SpawnBoulder()
+    private void SpawnBoulder(Vector2 dir)
     {
         if (boulderPrefab == null || Owner.PlayerTransform == null) return;
 
@@ -137,8 +140,7 @@ public class BossRollingBoulderSkill : BossSkillBase
             ? (Vector2)firePoint.position
             : Owner.Rb != null ? Owner.Rb.position : (Vector2)Owner.transform.position;
 
-        Vector2 dir = Boss.IsFacingLeft ? Vector2.left : Vector2.right;
-        float dmg   = boulderDamage > 0f ? boulderDamage : Owner.ContactDamage;
+        float dmg = boulderDamage > 0f ? boulderDamage : Owner.ContactDamage;
 
         var go = Instantiate(boulderPrefab, spawnPos, Quaternion.identity);
         if (go.TryGetComponent<BossRollingProjectile>(out var boulder))

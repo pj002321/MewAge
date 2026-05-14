@@ -14,10 +14,9 @@ GameObject:
   - component: {fileID: 703370321471693037}
   - component: {fileID: 1310786639833578689}
   - component: {fileID: 118957687783763765}
-  - component: {fileID: 9077217671976798113}
-  - component: {fileID: 6475039520858909354}
   - component: {fileID: 1796348062969632170}
   - component: {fileID: 4348588999724247864}
+  - component: {fileID: -8179653595198669626}
   m_Layer: 7
   m_Name: c3_m3
   m_TagString: Untagged
@@ -205,7 +204,6 @@ MonoBehaviour:
   goldDrop: 5
   expDrop: 10
   scoreValue: 10
-  damageCooldown: 1
   contactMaxDist: 0.8
   knockbackImmune: 0
   bleedDuration: 5
@@ -213,53 +211,6 @@ MonoBehaviour:
   separationRadius: 1.2
   separationStrength: 8
   _decal: {fileID: 0}
---- !u!114 &9077217671976798113
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1326216360028315856}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3640172dedd67864e9d6803100a29029, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SlimeBobAnimation
-  minScaleY: 0.9
-  maxScaleY: 1.1
-  squashStretchX: 0.5
-  frequency: 1.25
-  randomPhase: 1
-  fixBottom: 0
-  halfHeightOverride: 0
---- !u!114 &6475039520858909354
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1326216360028315856}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 26ab6620137f93f4290148fd79412968, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::RangedBehaviour
-  projectilePrefab: {fileID: 7916182024222986910, guid: 2863f3d570260bb4797c0b3c21e64cf6, type: 3}
-  preferredRange: 4
-  shootInterval: 4
-  rangedDamage: 25
-  firePoint: {fileID: 2436184059496450301}
-  useWarningLines: 1
-  warningDuration: 0.8
-  warningLineLength: 8
-  warningLineWidth: 0.8
-  warningColor: {r: 1, g: 0, b: 0, a: 1}
-  warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
-  attackVfx: {fileID: 0}
-  attackVfxDuration: 0.3
-  useAnimationEvent: 1
-  animEventTimeout: 0.6
-  retreatDuration: 1.4
 --- !u!114 &1796348062969632170
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -289,6 +240,32 @@ MonoBehaviour:
   flashMaterial: {fileID: 2100000, guid: f6d87d58797b8b9478efae2c2271cbe7, type: 2}
   flashColor: {r: 1, g: 1, b: 1, a: 1}
   BaseColor: {r: 1, g: 1, b: 1, a: 1}
+--- !u!114 &-8179653595198669626
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1326216360028315856}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ebf384ff75278374cb62dda6f31d5629, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ChargeBehaviour
+  chargeDistance: 6
+  chargeSpeedMultiplier: 3
+  moveDuration: 2
+  idleDuration: 2
+  chargeRange: 4
+  chargeColor: {r: 1, g: 0, b: 0, a: 1}
+  chargeScale: 0.85
+  ghostInterval: 0.06
+  warningLineLength: 5
+  warningLineWidth: 0.06
+  warningColor: {r: 1, g: 0, b: 0, a: 1}
+  warningMaterial: {fileID: 0}
+  warningLineOrigin: {fileID: 0}
+  showWarningLine: 0
 --- !u!1 &1437633771341022566
 GameObject:
   m_ObjectHideFlags: 0
@@ -366,9 +343,9 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 2
+  m_SortingLayerID: 1049025713
+  m_SortingLayer: 1
+  m_SortingOrder: 4
   m_MaskInteraction: 0
   m_Sprite: {fileID: -4746052441814772624, guid: aae5a60f0a493f14da9a00ba91e73b06, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}

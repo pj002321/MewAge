@@ -87,9 +87,9 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 5
+  m_SortingLayerID: 1049025713
+  m_SortingLayer: 1
+  m_SortingOrder: 7
   m_MaskInteraction: 0
   m_Sprite: {fileID: 2794343196738070508, guid: 9f5f3f381fcd27043949595b64cfeeac, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -199,28 +199,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bfce9f499de271b4c8ab1d03e8957395, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossController
-  damageCooldown: 0.5
   moveSpeed: 3
   _isClone: 0
-  enrageThreshold: 0.5
-  enrageSpeedMult: 1.5
-  enrageDamageMult: 1.5
-  grogyThresholds:
-  - 0.7
-  - 0.35
   grogyDuration: 2
   grogyOverheadPrefab: {fileID: 7777409954982400410, guid: f66d4f4f0fe9de24182839d83a609535, type: 3}
   grogyOverheadAnchor: {fileID: 456550077824246435}
-  grogyOverheadYOffset: 1.5
-  grogyMaterial: {fileID: 0}
-  onDeathFX:
-    vfxPrefab: {fileID: 0}
-    spawnOffset: {x: 0, y: 0}
-    sfxClip: {fileID: 0}
-    volume: 1
-  chaseStopDistance: 1.8
+  chaseStopDistance: 1.5
   chaseDuration: 2.5
-  idleDuration: 0.6
+  idleDuration: 1
   skills:
   - {fileID: 4126812573522028947}
   - {fileID: 3637525171386536085}
@@ -241,9 +227,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BossFastChaseSkill
   executeInPattern: 1
   cooldown: 1
-  chaseSpeed: 8
+  chaseSpeed: 6
   chaseDuration: 2
-  stopDistance: 1
+  stopDistance: 1.25
   attackCooldown: 0.6
   animEventTimeout: 0.5
   attackVfx: {fileID: 4540152084939885376}
@@ -312,7 +298,7 @@ Transform:
   m_GameObject: {fileID: 1437633771341022566}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.227, y: 0.039, z: 0}
+  m_LocalPosition: {x: -0.197, y: 0.088, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -363,11 +349,11 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 1049025713
+  m_SortingLayer: 1
   m_SortingOrder: 2
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 6863293971250029137, guid: aae5a60f0a493f14da9a00ba91e73b06, type: 3}
+  m_Sprite: {fileID: -4746052441814772624, guid: aae5a60f0a493f14da9a00ba91e73b06, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -419,6 +405,10 @@ PrefabInstance:
     - target: {fileID: 4991849991642844150, guid: fe45078f6e125194f817eaad93852ff1, type: 3}
       propertyPath: m_Name
       value: vfx_slash
+      objectReference: {fileID: 0}
+    - target: {fileID: 4991849991642844150, guid: fe45078f6e125194f817eaad93852ff1, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8577226147549000802, guid: fe45078f6e125194f817eaad93852ff1, type: 3}
       propertyPath: m_LocalPosition.x
