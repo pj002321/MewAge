@@ -42,11 +42,15 @@ public class CharacterSlotView : MonoBehaviour
 
     void Awake()
     {
-        _panel = GetComponentInParent<HomeMemberPanel>(true);
         GetComponent<Button>().onClick.AddListener(OnSlotClick);
         equipButton?.onClick.AddListener(OnEquip);
         buyButton  ?.onClick.AddListener(OnBuy);
         Deselect();
+    }
+
+    public void Init(HomeMemberPanel panel)
+    {
+        _panel = panel;
     }
 
     // ── 데이터 바인딩 ────────────────────────────────────────────
@@ -59,12 +63,9 @@ public class CharacterSlotView : MonoBehaviour
         if (slotBackground)
             slotBackground.color = CharacterGradeColor.Get(row.f_등급);
 
-        // 썸네일 — f_캐릭ID를 소문자로 변환 → Resources/Character/ 에서 로드
         if (thumbnailImage)
         {
-            var spr = string.IsNullOrEmpty(row.f_캐릭ID)
-                ? null
-                : Resources.Load<Sprite>("Character/" + row.f_캐릭ID.ToLower());
+            var spr = MemberVisualConfig.Shared?.GetThumbnail(row.f_캐릭ID);
             thumbnailImage.enabled = spr != null;
             if (spr != null) thumbnailImage.sprite = spr;
         }

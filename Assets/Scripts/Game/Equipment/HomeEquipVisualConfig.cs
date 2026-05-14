@@ -49,6 +49,13 @@ public class HomeEquipVisualConfig : ScriptableObject
         public Sprite        sprite;
     }
 
+    [Serializable]
+    public struct EquipIconEntry
+    {
+        [EquipID] public string equipId;
+        public Sprite sprite;
+    }
+
     [Header("등급 테두리")]
     public GradeFrameEntry[] frameGrades;
 
@@ -63,6 +70,9 @@ public class HomeEquipVisualConfig : ScriptableObject
 
     [Header("장비 타입 아이콘 (RING/NECK/FOOT/TOP/CLOAK/HEAD)")]
     public CategoryIconEntry[] categoryIcons;
+
+    [Header("장비 아이콘 (equipId → Sprite)")]
+    public EquipIconEntry[] equipIcons;
 
     // ── 조회 헬퍼 ────────────────────────────────────────────────────────
     public Sprite GetFrame(EquipGrade grade)
@@ -97,6 +107,14 @@ public class HomeEquipVisualConfig : ScriptableObject
     {
         foreach (var e in categoryIcons)
             if (e.category == category) return e.sprite;
+        return null;
+    }
+
+    public Sprite GetIcon(string equipId)
+    {
+        if (string.IsNullOrEmpty(equipId)) return null;
+        foreach (var e in equipIcons)
+            if (e.equipId == equipId) return e.sprite;
         return null;
     }
 

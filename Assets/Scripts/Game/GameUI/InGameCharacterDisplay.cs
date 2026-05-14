@@ -61,10 +61,10 @@ public class InGameCharacterDisplay : MonoBehaviourSingleton<InGameCharacterDisp
         var charId = PlayerCharacterManager.Shared?.EquippedCharID;
         if (string.IsNullOrEmpty(charId)) return;
 
-        var prefab = Resources.Load<GameObject>($"Character/{charId.ToLower()}_model");
+        var prefab = MemberVisualConfig.Shared?.GetModelPrefab(charId);
         if (prefab == null)
         {
-            this.DLog($"모델 없음: Character/{charId.ToLower()}_model");
+            this.DLog($"모델 없음: MemberVisualConfig에 {charId} 등록 필요");
             return;
         }
 

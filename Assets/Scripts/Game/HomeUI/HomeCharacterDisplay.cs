@@ -75,10 +75,10 @@ public class HomeCharacterDisplay : MonoBehaviourSingleton<HomeCharacterDisplay>
             _currentModel = null;
         }
 
-        var prefab = Resources.Load<GameObject>($"Character/{charId.ToLower()}_model");
+        var prefab = MemberVisualConfig.Shared?.GetModelPrefab(charId);
         if (prefab == null)
         {
-            Debug.LogWarning($"[HomeCharDisplay] 모델 프리팹 없음: Character/{charId.ToLower()}_model");
+            Debug.LogWarning($"[HomeCharDisplay] 모델 프리팹 없음: MemberVisualConfig에 {charId} 등록 필요");
             return;
         }
 

@@ -8,9 +8,8 @@ public enum EquipCiv      { 구석기, 중석기, 신석기, 청동기, 철기, 
 /// <summary>
 /// DB_장비 행의 런타임 복사본.
 /// DB 필드: f_장비ID, f_이름, f_카테고리, f_등급(NORMAL/RARE/EPIC/LEGENDARY),
-///          f_스킬ID, f_수치, f_문명, f_설명
-/// 스프라이트 경로: Resources/{CivEng}/{Category}/{f_장비ID}
-///   예) 구석기 반지 EQ_P_0 → Resources/Paleo/Ring/EQ_P_0
+///          f_스탯ID, f_수치, f_문명, f_설명
+/// 아이콘: HomeEquipVisualConfig.Shared.GetIcon(equipId)
 /// </summary>
 public class EquipmentData
 {
@@ -33,7 +32,7 @@ public class EquipmentData
     public void LoadLevel()  => level = PlayerPrefs.GetInt($"EquipLevel_{equipId}", 1);
 
     private Sprite _icon;
-    public  Sprite  Icon => _icon ??= LoadIcon(civilization, category, equipId);
+    public  Sprite  Icon => _icon ??= HomeEquipVisualConfig.Shared?.GetIcon(equipId);
 
     // ── DB에서 생성 ─────────────────────────────────────────────────
     public static EquipmentData FromDB(DB_장비 row)
@@ -57,30 +56,6 @@ public class EquipmentData
         e.LoadLevel();
         return e;
     }
-
-    // Resources/{CivEng}/{CategoryCapitalized}/{equipId}
-    static Sprite LoadIcon(EquipCiv civ, EquipCategory cat, string id)
-    {
-        string civEng = CivToEng(civ);
-        string catStr = cat.ToString()[0] + cat.ToString().Substring(1).ToLower();
-        return Resources.Load<Sprite>($"Equip/{civEng}/{catStr}/{id.ToLower()}");
-    }
-
-    // ── 문명 영어 이름 ──────────────────────────────────────────────
-    public static string CivToEng(EquipCiv civ) => civ switch
-    {
-        EquipCiv.구석기 => "Paleo",
-        EquipCiv.중석기 => "Meso",
-        EquipCiv.신석기 => "Neo",
-        EquipCiv.청동기 => "Bronze",
-        EquipCiv.철기   => "Iron",
-        EquipCiv.고대   => "Ancient",
-        EquipCiv.중세   => "Medieval",
-        EquipCiv.근세   => "EarlyModern",
-        EquipCiv.근대   => "Modern",
-        EquipCiv.현대   => "Current",
-        _               => "Unknown",
-    };
 
     // ── 등급 색상 ────────────────────────────────────────────────────
     public static Color GradeColor(EquipGrade g) => g switch

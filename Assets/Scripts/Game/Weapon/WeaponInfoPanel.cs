@@ -358,23 +358,8 @@ public class WeaponInfoPanel : MonoBehaviourSingleton<WeaponInfoPanel>
             : $"{b.value:0.#}";
     }
 
-    /// <summary>statId → 한글 스탯 레이블.</summary>
-    private static string StatIdToLabel(string statId) => statId switch
-    {
-        "ATK_ADD"    => "공격력",
-        "CD_RED"     => "공격속도",
-        "RNG_ADD"    => "무기 사거리",
-        "DMG_RNG"    => "타격범위",
-        "CRIT_ADD"   => "치명타데미지",
-        "CRT_RATE"   => "치명타확률",
-        "DOT_AD"     => "지속피해량",
-        "HP_STL_ADD" => "흡혈수치량",
-        "NUK_ADD"    => "넉백지수",
-        "HEAL_ADD"   => "자가치유",
-        "SKL_CD"     => "",
-        "STAT_SKL_CD"=> "",
-        _            => statId,
-    };
+    /// <summary>statId → 한글 스탯 레이블. WeaponStatRegistry를 단일 소스로 사용.</summary>
+    private static string StatIdToLabel(string statId) => WeaponStatRegistry.GetLabel(statId);
 
     /// <summary>statId → 단위.</summary>
     private static string StatIdToUnit(string statId) => statId switch

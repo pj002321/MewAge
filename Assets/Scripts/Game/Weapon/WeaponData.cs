@@ -249,6 +249,7 @@ public class WeaponData : ScriptableObject
             "부메랑"                          => WeaponType.Boomerang,
             "돌리기"                          => WeaponType.Spin,
             "슬래시" or "베기"                => WeaponType.Slash,
+            "해머" or "망치"                  => WeaponType.Hammer,
             _                                 => WeaponType.Melee,
         };
     }

@@ -56,6 +56,27 @@ public static class WeaponStatRegistry
     public static bool IsDecimalStat(string statId) => DecimalStats.Contains(statId);
 
     // ────────────────────────────────────────────────────────
+    // 스탯 한글 레이블 (단위 없는 이름만)
+    // ────────────────────────────────────────────────────────
+
+    public static string GetLabel(string statId) => statId switch
+    {
+        "ATK_ADD"    => "공격력",
+        "CD_RED"     => "공격속도",
+        "RNG_ADD"    => "무기 사거리",
+        "DMG_RNG"    => "타격범위",
+        "CRIT_ADD"   => "치명타데미지",
+        "CRT_RATE"   => "치명타확률",
+        "DOT_AD"     => "지속피해량",
+        "HP_STL_ADD" => "흡혈수치량",
+        "NUK_ADD"    => "넉백지수",
+        "HEAL_ADD"   => "자가치유",
+        "SKL_CD"     => "",
+        "STAT_SKL_CD"=> "",
+        _            => statId,
+    };
+
+    // ────────────────────────────────────────────────────────
     // 설명 생성
     // ────────────────────────────────────────────────────────
 

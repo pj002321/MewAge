@@ -164,6 +164,7 @@ GameObject:
   - component: {fileID: 6933520656320497376}
   - component: {fileID: 5821894164580503932}
   - component: {fileID: 5837785958502022851}
+  - component: {fileID: 1420911315978213854}
   m_Layer: 5
   m_Name: highlight
   m_TagString: Untagged
@@ -218,7 +219,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -2207493897880425472, guid: 4c9943b1234f99f44b7b612c8fde129f, type: 3}
+  m_Sprite: {fileID: 6173085861801296106, guid: 7f9faf6a986eadb4c8a271fa9721d04b, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -228,6 +229,31 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &1420911315978213854
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6592898190436432620}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 223db8059bc77144c9ba478a29ed4cd5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpriteAnimation
+  frames:
+  - {fileID: 6173085861801296106, guid: 7f9faf6a986eadb4c8a271fa9721d04b, type: 3}
+  - {fileID: -837662104996745077, guid: 7f9faf6a986eadb4c8a271fa9721d04b, type: 3}
+  - {fileID: 3144518429546574231, guid: 7f9faf6a986eadb4c8a271fa9721d04b, type: 3}
+  - {fileID: -482948104340484489, guid: 7f9faf6a986eadb4c8a271fa9721d04b, type: 3}
+  - {fileID: 8227597053792346568, guid: 7f9faf6a986eadb4c8a271fa9721d04b, type: 3}
+  - {fileID: 6641857681792229012, guid: 7f9faf6a986eadb4c8a271fa9721d04b, type: 3}
+  - {fileID: 1189519528392649290, guid: 7f9faf6a986eadb4c8a271fa9721d04b, type: 3}
+  - {fileID: 8841844997069082280, guid: 7f9faf6a986eadb4c8a271fa9721d04b, type: 3}
+  - {fileID: 2898407644847333439, guid: 7f9faf6a986eadb4c8a271fa9721d04b, type: 3}
+  fps: 30
+  loop: 1
+  playOnEnable: 1
 --- !u!1 &6657267108625565554
 GameObject:
   m_ObjectHideFlags: 0
