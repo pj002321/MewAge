@@ -966,6 +966,8 @@ public class WeaponPoint : MonoBehaviour
         Vector3 startLocal    = transform.localPosition;
         Vector3 startWorldPos = transform.position;
 
+        try
+        {
         // 착지 위치: 가장 가까운 적 → 보스 → Inspector 설정값 순서
         Vector3 impactWorld;
         if (targetEnemyArg != null)
@@ -1087,12 +1089,15 @@ public class WeaponPoint : MonoBehaviour
                 transform.position, returnTargetWorld, returnSlamSpeed * Time.deltaTime);
             yield return null;
         }
-        transform.localPosition = startLocal;
-        transform.rotation      = Quaternion.identity;
-
-        cooldownTimer = attackCooldown;
-        state = State.Idle;
-        _hammerSequenceCoroutine = null;
+        } // end try
+        finally
+        {
+            transform.localPosition  = startLocal;
+            transform.rotation       = Quaternion.identity;
+            cooldownTimer            = attackCooldown;
+            state                    = State.Idle;
+            _hammerSequenceCoroutine = null;
+        }
     }
 
     /// <summary>착지 순간 반투명 고스트가 확산되며 사라지는 파문 연출</summary>
@@ -2215,8 +2220,8 @@ public class WeaponPoint : MonoBehaviour
         Vector2 dir1 = RotateVec(forward,  15f);
         Vector2 dir2 = RotateVec(forward, -15f);
 
-        // 에픽=1개, 신화=2개
-        int cloneCount    = _grade == WeaponGrade.Epic ? 1 : 2;
+        // 전설=1개, 신화=2개
+        int cloneCount    = _grade >= WeaponGrade.Mythic ? 2 : 1;
         _cloneFlying      = true;
         _cloneActiveCount = cloneCount;
 
@@ -2711,6 +2716,12 @@ public class WeaponPoint : MonoBehaviour
             ghosts[i] = go;
         }
 
+        // 고스트 피격 쿨타임 추적 (Dictionary 순회용 버퍼 사전 할당)
+        var ghostHitTimers   = new Dictionary<EnemyController, float>();
+        var ghostHitKeys     = new List<EnemyController>();
+        var ghostExpiredKeys = new List<EnemyController>();
+        const float GhostDamageMult = 0.3f;
+
         float elapsed = 0f;
         // permanent=true면 Duration 조건 무시하고 파괴될 때까지 공전
         while (permanent || elapsed < Duration)
@@ -2718,12 +2729,39 @@ public class WeaponPoint : MonoBehaviour
             if (PlayerController.Instance == null) break;
             elapsed += Time.deltaTime;
             float baseAngle = elapsed * RotSpeed;
+
+            // 피격 쿨타임 감소
+            ghostHitKeys.Clear();
+            ghostHitKeys.AddRange(ghostHitTimers.Keys);
+            for (int gi = 0; gi < ghostHitKeys.Count; gi++)
+            {
+                var k = ghostHitKeys[gi];
+                ghostHitTimers[k] -= Time.deltaTime;
+                if (ghostHitTimers[k] <= 0f) ghostExpiredKeys.Add(k);
+            }
+            for (int gi = 0; gi < ghostExpiredKeys.Count; gi++) ghostHitTimers.Remove(ghostExpiredKeys[gi]);
+            ghostExpiredKeys.Clear();
+
+            float ghostDmgBase = attackDamage * GhostDamageMult;
+
             for (int i = 0; i < GhostCount; i++)
             {
                 if (ghosts[i] == null) continue;
                 float a = (baseAngle + i * (360f / GhostCount)) * Mathf.Deg2Rad;
                 ghosts[i].transform.localPosition = new Vector3(Mathf.Cos(a) * OrbitRadius, Mathf.Sin(a) * OrbitRadius, 0f);
                 ghosts[i].transform.rotation      = Quaternion.Euler(0f, 0f, baseAngle + i * (360f / GhostCount));
+
+                // 고스트 위치 기준 적 피격 판정
+                int cnt = Physics2D.OverlapCircleNonAlloc(ghosts[i].transform.position, spinHitRadius, _hitBuffer);
+                for (int h = 0; h < cnt; h++)
+                {
+                    var enemy = _hitBuffer[h].GetComponentInParent<EnemyController>();
+                    if (enemy == null || ghostHitTimers.ContainsKey(enemy)) continue;
+                    var (dmg, crit) = RollCrit(ghostDmgBase);
+                    Vector2 kDir = ((Vector2)enemy.transform.position - (Vector2)ghosts[i].transform.position).normalized;
+                    enemy.TakeDamage(dmg, crit, kDir, spinKnockback);
+                    ghostHitTimers[enemy] = spinHitCooldown;
+                }
             }
             yield return null;
         }
