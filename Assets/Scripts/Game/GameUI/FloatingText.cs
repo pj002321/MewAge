@@ -1,3 +1,4 @@
+using System.Collections;
 using TMPro;
 using UnityEngine;
 
@@ -35,6 +36,43 @@ public class FloatingText : MonoBehaviour
         initialized = true;
 
         transform.localScale = Vector3.zero;
+    }
+
+    /// <summary>숫자가 빠르게 바뀌다가 finalValue로 안착하는 룰렛 연출 후 일반 상승 애니메이션을 시작합니다.</summary>
+    public void InitRoulette(int finalValue, Color color)
+    {
+        if (label == null) label = GetComponentInChildren<TMP_Text>();
+        if (label == null) { Destroy(gameObject); return; }
+
+        baseColor   = color;
+        label.color = color;
+        initialized = false;
+        transform.localScale = Vector3.one * displayScale;
+        label.text = $"+{finalValue}";
+
+        StopAllCoroutines();
+        StartCoroutine(RouletteRoutine(finalValue));
+    }
+
+    private IEnumerator RouletteRoutine(int finalValue)
+    {
+        float duration = 0.5f;
+        float elapsed  = 0f;
+
+        while (elapsed < duration)
+        {
+            float t        = elapsed / duration;
+            float interval = Mathf.Lerp(0.04f, 0.15f, t * t);
+            int   spread   = Mathf.RoundToInt(finalValue * (1f - t));
+            int   display  = Mathf.Max(1, finalValue + Random.Range(-spread, spread + 1));
+            label.text = $"+{display}";
+            yield return new WaitForSecondsRealtime(interval);
+            elapsed += interval;
+        }
+
+        label.text  = $"+{finalValue}";
+        timer       = lifetime;
+        initialized = true;
     }
 
     private void Update()

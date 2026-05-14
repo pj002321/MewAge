@@ -150,3 +150,31 @@ Pool을 안쓰면 SummonMinion이 안나온다해서 썼는데 그것도 말이 
 
 모든 구조는
 Coroutine구조가 소프트하고 컴팩트 해야하며, 필요하다면 UniTask로 정리 해도 좋아.
+
+
+05/14 ✅ 해결
+버그 수정 (3건)
+
+(4) DB f_최대스폰 상한을 초과하여 적이 한없이 스폰되는 현상
+- 원인: EnemyController.Awake()에서 behaviour?.Init(this)가 예외를 던지면 All.Add(this)가 실행되지 않음. RangedBehaviour의 attackVfx SerializedField가 미할당된 prefab에서 Init() 중 UnassignedReferenceException 발생 → ActiveCount가 항상 0을 반환 → SpawnLoop이 cap 도달 판단 불가 → 무한 스폰.
+- 해결: EnemyController.Awake()에서 All.Add(this)를 behaviour?.Init(this) 앞으로 이동. Init()에서 예외가 발생해도 All 등록은 보장. 추가로 SpawnFormation 루프 내 cap 체크, SpawnMarker.FadeAndSpawn()에서 실제 스폰 직전 IsOverCap() 재확인, EnemySpawner.Start()의 불필요한 ApplyRule() 제거.
+
+(5) RangedBehaviour 몬스터가 부들부들 떠는 현상
+- 원인: Approaching 상태에서 dist가 preferredRange 경계를 매 FixedUpdate마다 넘나들어 MoveInDirection 호출/미호출이 빠르게 반복됨.
+- 해결: 하이스테리시스 적용. dist > preferredRange + 0.4f일 때만 접근 재개, dist <= preferredRange일 때 정지. 경계 데드존(0.4f) 구간에서는 현재 상태를 유지.
+
+---
+버그 수정 (3건)
+
+(1) 첫 번째 증강 패널이 뜰 때 웨이브 타이머가 00:00 빨강으로 표시되는 현상
+- 원인: PlayerLandingIntroRoutine() 착지 후 timerText를 무조건 활성화. waveTimer=0인 상태라 경고색(빨강) 00:00 표시.
+- 해결: 첫 입장(wave=0)에서 증강 패널을 표시할 경우 timerText를 비활성 유지. StartNextWave() → TimerStartAnimation()에서 정상 활성화되도록 위임.
+
+(2) 다른 앱 스위칭 후 복귀 시 0초에서 모든 게 멈추는 현상
+- 원인 A: 백그라운드 진입 시 패널이 열려있어 timeScale=0이 저장됨. 복귀 후 timeScale=0으로 복원되어 게임이 멈춤.
+- 원인 B: 복귀 첫 프레임에 deltaTime 스파이크 발생 가능.
+- 해결: HandleSystemPause 복귀 시 _savedTimeScale이 0f이면 1f로 강제 복원 (열린 패널은 다음 프레임 자체적으로 timeScale 재적용). _skipNextFrame 플래그로 복귀 첫 프레임 Update 스킵.
+
+(3) skillorb가 플레이어에 가까워져도 스케일 변화 없는 현상 (개선)
+- 원인: SkillOrbRoutine의 스케일 처리가 마지막 20% 구간에만 팽창→소멸 효과 적용.
+- 해결: t=0.5 이후부터 플레이어 도달(t=1)까지 ease-in 곡선으로 스케일 0까지 축소. 접근할수록 자연스러운 흡수 연출.

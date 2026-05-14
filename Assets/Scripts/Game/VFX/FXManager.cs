@@ -133,6 +133,27 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
         _floatingTextPool.Enqueue(ft);
     }
 
+    /// <summary>실제 수치를 룰렛 연출로 표시하는 상승 텍스트를 표시합니다.</summary>
+    public void SpawnPlayerTextRoulette(int value, Color color)
+    {
+        if (floatingTextPrefab == null || PlayerController.Instance?.FloatingTextAnchor == null) return;
+        FloatingText ft;
+        if (_floatingTextPool.Count > 0)
+        {
+            ft = _floatingTextPool.Dequeue();
+            ft.transform.SetParent(PlayerController.Instance.FloatingTextAnchor, false);
+            ft.transform.localPosition = Vector3.zero;
+            ft.gameObject.SetActive(true);
+        }
+        else
+        {
+            var go = Instantiate(floatingTextPrefab, PlayerController.Instance.FloatingTextAnchor, false);
+            go.transform.localPosition = Vector3.zero;
+            ft = go.GetComponent<FloatingText>();
+        }
+        ft?.InitRoulette(value, color);
+    }
+
     /// <summary>플레이어 머리 위에 상승 텍스트를 표시합니다. (획득/회복/회피 피드백)</summary>
     public void SpawnPlayerText(string text, Color color)
     {
@@ -346,14 +367,12 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
                     t2);
             }
 
-            // 마지막 20% — 먼저 살짝 커졌다가 꽂히며 사라짐 (파박 효과)
-            if (t > 0.8f && go != null)
+            // 후반부(t>=0.5)부터 플레이어에 근접할수록 스케일 축소 → 흡수 연출
+            if (go != null)
             {
-                float f = (t - 0.8f) / 0.2f;
-                float shrink = f < 0.4f
-                    ? Mathf.Lerp(1f, 1.35f, f / 0.4f)          // 순간 팽창
-                    : Mathf.Lerp(1.35f, 0f, (f - 0.4f) / 0.6f); // 빠르게 소멸
-                go.transform.localScale = baseScale * shrink;
+                float scaleT = Mathf.Clamp01((t - 0.5f) / 0.5f);
+                float s = Mathf.Lerp(1f, 0f, scaleT * scaleT);
+                go.transform.localScale = baseScale * s;
             }
 
             elapsed += Time.deltaTime;

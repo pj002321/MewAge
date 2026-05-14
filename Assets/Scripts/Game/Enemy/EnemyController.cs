@@ -156,8 +156,8 @@ public class EnemyController : MonoBehaviour, IEnemyHost
             rb.constraints   = RigidbodyConstraints2D.FreezeRotation;
         }
 
+        All.Add(this);
         behaviour?.Init(this);
-        All.Add(this); // SpawnMarker.OnDestroy 타이밍 gap 없이 카운트가 정확하도록 Awake에서 등록
     }
 
     private void Start()
@@ -255,7 +255,7 @@ public class EnemyController : MonoBehaviour, IEnemyHost
 
     private void OnDestroy()
     {
-        AllRemoveSwapBack(this); // 진짜 파괴될 때 안전망
+        AllRemoveSwapBack(this);
     }
 
     // O(1) 리스트 제거 — 마지막 요소와 교환 후 RemoveAt

@@ -75,10 +75,7 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
         });
     }
 
-    private void Start()
-    {
-        ApplyRule(currentWave);
-    }
+    private void Start() { }
 
     // ── DB 조회 ─────────────────────────────────────────────────────
     /// <summary>챕터+스테이지+웨이브에 해당하는 DB_웨이브 행. 없으면 null.</summary>
@@ -113,9 +110,9 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
         {
             if (GameManager.Shared != null && GameManager.Shared.IsGameOver) yield break;
 
-            int cap          = currentMaxOnMap > 0 ? Mathf.Min(currentMaxOnMap, maxEnemiesOnMap) : maxEnemiesOnMap;
-            int alive        = CountActiveEnemies();
-            int spawnThisTick = Mathf.Min(currentSpawnCount, cap - alive);
+            int cap           = currentMaxOnMap > 0 ? Mathf.Min(currentMaxOnMap, maxEnemiesOnMap) : maxEnemiesOnMap;
+            int alive         = CountActiveEnemies();
+            int spawnThisTick = Mathf.Max(0, Mathf.Min(currentSpawnCount, cap - alive));
 
             for (int i = 0; i < spawnThisTick; i++)
                 SpawnEnemy();
@@ -324,6 +321,11 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
     }
 
     public bool IsSpawning => spawning;
+    public bool IsOverCap()
+    {
+        int cap = currentMaxOnMap > 0 ? Mathf.Min(currentMaxOnMap, maxEnemiesOnMap) : maxEnemiesOnMap;
+        return EnemyController.ActiveCount >= cap;
+    }
 
 
     public void StopSpawning()
@@ -494,6 +496,9 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
 
         foreach (var pos in positions)
         {
+            int cap = currentMaxOnMap > 0 ? Mathf.Min(currentMaxOnMap, maxEnemiesOnMap) : maxEnemiesOnMap;
+            if (CountActiveEnemies() >= cap) break;
+
             var data = PickUnitData();
             if (data?.prefab != null)
                 DoSpawn(data.prefab, pos, data);

@@ -87,6 +87,13 @@ public class SpawnMarker : MonoBehaviour
 
         if (spawnPrefab != null)
         {
+            // 마커 대기 중 추가 스폰으로 캡 초과 방지 — 실제 스폰 직전 재확인
+            if (EnemySpawner.Shared != null && EnemySpawner.Shared.IsOverCap())
+            {
+                Destroy(gameObject);
+                yield break;
+            }
+
             var go    = Instantiate(spawnPrefab, transform.position, Quaternion.identity);
             var enemy = go.GetComponent<EnemyController>();
 

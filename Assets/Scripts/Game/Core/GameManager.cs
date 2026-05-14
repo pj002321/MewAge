@@ -243,6 +243,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 
     private void Update()
     {
+        if (_skipNextFrame) { _skipNextFrame = false; return; }
         if (isGameOver) return;
 
         if (!_pauseTimer && !_infiniteTime) waveTimer -= Time.deltaTime;
@@ -553,7 +554,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         {
             float waveHeal = player.MaxHPValue * 0.1f;
             player.HealHP(waveHeal);
-            FXManager.Shared?.SpawnPlayerText("+10%", Color.green);
+            FXManager.Shared?.SpawnPlayerTextRoulette(Mathf.RoundToInt(waveHeal), Color.green);
         }
 
         // WaveHealHP 패시브 — 추가 축적된 회복량
@@ -720,7 +721,6 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         FXManager.Shared?.SpawnLandingVFX(player.transform.position);
 
         _isCountingDown = false;
-        if (timerText) timerText.gameObject.SetActive(true);
         if (countdownText) countdownText.gameObject.SetActive(false);
 
         player.InputLocked = false;
@@ -729,11 +729,17 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         if (isGameOver || SceneLoadManager.IsTransitioning) yield break;
 
         // 첫 입장(wave 0)에만 증강 패널 표시 → 선택 후 StartNextWave() 자동 호출
-        // 이후 웨이브는 wave clear 후 업그레이드 패널에서 진행
+        // timerText는 StartNextWave → TimerStartAnimation에서 활성화 (여기서 켜면 waveTimer=0 → 00:00 빨강)
         if (wave == 0 && ImprovManager.Shared != null)
+        {
+            if (timerText) timerText.gameObject.SetActive(false);
             ImprovManager.Shared.ShowPanel(wave);
+        }
         else
+        {
+            if (timerText) timerText.gameObject.SetActive(true);
             StartNextWave();
+        }
     }
 
     /// <summary>보스 맵으로 즉시 전환 후 플레이어를 bossEnterPoint에서 낙하시킵니다.</summary>
@@ -938,11 +944,13 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     private void OnApplicationFocus(bool hasFocus)  => HandleSystemPause(!hasFocus);
     private void OnApplicationPause(bool pauseStatus) => HandleSystemPause(pauseStatus);
 
+    private bool _skipNextFrame;
+
     private void HandleSystemPause(bool pausing)
     {
         if (pausing)
         {
-            if (_systemPaused) return;           // 이미 시스템 일시정지 상태
+            if (_systemPaused) return;
             _systemPaused   = true;
             _savedTimeScale = Time.timeScale;
             Time.timeScale  = 0f;
@@ -950,10 +958,13 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         }
         else
         {
-            if (!_systemPaused) return;          // 시스템 일시정지가 아니면 무시
-            _systemPaused  = false;
-            Time.timeScale = _savedTimeScale;    // 패널이 열려있었으면 0 복원, 게임 중이었으면 1 복원
+            if (!_systemPaused) return;
+            _systemPaused = false;
+            // 백그라운드 진입 시 패널로 인해 timeScale=0이었더라도 1f로 복원
+            // 열려있는 패널이 있다면 해당 패널이 다음 프레임 자신의 timeScale을 재적용함
+            Time.timeScale = _savedTimeScale > 0f ? _savedTimeScale : 1f;
             AudioListener.pause = false;
+            _skipNextFrame = true; // 복귀 첫 프레임 deltaTime 스파이크 방지
         }
     }
 
