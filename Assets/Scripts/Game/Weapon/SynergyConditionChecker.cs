@@ -19,23 +19,24 @@ public static class SynergyConditionChecker
 
         if (active.Count == 0) return achieved;
 
-        int n = active.Count;
+        int n       = active.Count;
+        bool allFull = n == PlayerInventory.MaxEquipped;
 
         // ── 등급 기반 ────────────────────────────────────────────────
-        // SYN_ALL2_UPGRADE3: 모든 무기 2성 달성
-        if (active.All(w => w.star >= 2))
+        // SYN_ALL2_UPGRADE3: 6슬롯 전부 2성 이상
+        if (allFull && active.All(w => w.star >= 2))
             achieved.Add("SYN_ALL2_UPGRADE3");
 
-        // SYN_ALL3_HIGHEST_EXTRA: 모든 무기 3성 달성
-        if (active.All(w => w.star >= 3))
+        // SYN_ALL3_HIGHEST_EXTRA: 6슬롯 전부 3성 이상
+        if (allFull && active.All(w => w.star >= 3))
             achieved.Add("SYN_ALL3_HIGHEST_EXTRA");
 
-        // SYN_ALL_LEGEND_PROC: 모든 무기 전설 등급 이상
-        if (active.All(w => w.grade >= WeaponGrade.Legendary))
+        // SYN_ALL_LEGEND_PROC: 6슬롯 전부 전설 등급 이상
+        if (allFull && active.All(w => w.grade >= WeaponGrade.Legendary))
             achieved.Add("SYN_ALL_LEGEND_PROC");
 
-        // SYN_ALL_MYTH_REVIVE: 모든 무기 신화 등급
-        if (active.All(w => w.grade == WeaponGrade.Mythic))
+        // SYN_ALL_MYTH_REVIVE: 6슬롯 전부 신화 등급
+        if (allFull && active.All(w => w.grade == WeaponGrade.Mythic))
             achieved.Add("SYN_ALL_MYTH_REVIVE");
 
         // SYN_RARE4_LOWGRADE_UP: 희귀(Epic) 등급 이상 4개 이상 장착
@@ -67,8 +68,8 @@ public static class SynergyConditionChecker
         if (active.Count(w => w.weaponType == WeaponType.Magic) >= 3)
             achieved.Add("SYN_MAGIC3_SLOW");
 
-        // SYN_ALLDIFF_ASPD: 장착 무기 모두 다른 형태 (2개 이상)
-        if (n >= 2 && active.Select(w => w.weaponType).Distinct().Count() == n)
+        // SYN_ALLDIFF_ASPD: 6슬롯 전부 서로 다른 타입
+        if (allFull && active.Select(w => w.weaponType).Distinct().Count() == n)
             achieved.Add("SYN_ALLDIFF_ASPD");
 
         return achieved;
