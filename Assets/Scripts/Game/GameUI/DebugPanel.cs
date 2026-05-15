@@ -43,6 +43,7 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
     [SerializeField] private Button   invincibleButton;
     [SerializeField] private Button   infiniteTimeButton;
     [SerializeField] private Button   levelUpButton;
+    [SerializeField] private Button   addGoldButton;
 
     [Header("웨이브 점프 패널")]
     [SerializeField] private Button    waveListToggle;  // "웨이브 이동 ▼" 토글 버튼
@@ -92,6 +93,7 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
         invincibleButton?.onClick.AddListener(OnToggleInvincible);
         infiniteTimeButton?.onClick.AddListener(OnToggleInfiniteTime);
         levelUpButton?.onClick.AddListener(OnLevelUp);
+        addGoldButton?.onClick.AddListener(() => PlayerStats.Shared?.AddGold(100));
 
         waveListToggle?.onClick.AddListener(OnToggleWaveList);
         waveListContent?.gameObject.SetActive(false);

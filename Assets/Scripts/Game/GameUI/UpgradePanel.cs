@@ -423,7 +423,14 @@ public class UpgradePanel : MonoBehaviour
             Destroy(synergyCompleteContetns.GetChild(i).gameObject);
 
         var achieved = SynergyEffectManager.AchievedSynergies;
-        if (achieved == null || achieved.Count == 0) return;
+        var contentsParent = synergyCompleteContetns.parent?.gameObject;
+        if (achieved == null || achieved.Count == 0)
+        {
+            contentsParent?.SetActive(false);
+            return;
+        }
+
+        contentsParent?.SetActive(true);
 
         var cfg = SynergyVisualConfig.Shared;
         foreach (var id in achieved)

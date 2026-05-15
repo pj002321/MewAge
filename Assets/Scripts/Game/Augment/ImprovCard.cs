@@ -105,6 +105,7 @@ public class ImprovCard : MonoBehaviour
     public void PlayDimAnimation()
     {
         StopAllCoroutines();
+        transform.localEulerAngles = Vector3.zero; // 스핀 도중 중단 시 Y 회전 잔류 방지
         var target = dimTarget != null ? dimTarget : transform;
         StartCoroutine(ScaleRoutine(target, dimScale, dimDuration));
     }
