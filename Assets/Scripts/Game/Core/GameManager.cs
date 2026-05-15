@@ -591,10 +591,10 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         WaveEnvironmentSwitcher.Shared?.SetWave(wave);
         WaveEnvironmentSwitcher.Shared?.TriggerFormations(wave);
 
-        // 5,10,15 웨이브 시작 시 돌연변이 출현 알림
+        // 5,15,25… 웨이브 시작 시 돌연변이 출현 알림
         if (wave % 5 == 0 && wave > 1)
         {
-            StartCoroutine(ShowNotifyRoutine("돌연변이 출현!"));
+            StartCoroutine(ShowNotifyRoutine("돌연변이 출현!", new Color(1f, 0.55f, 0f)));
         }
 
         if (IsEliteWave(wave))
@@ -854,8 +854,8 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         t.localScale = orig;
     }
 
-    /// <summary>노티 패널 페이드인 → 유지 → 페이드아웃.</summary>
-    private IEnumerator ShowNotifyRoutine(string customMsg = null)
+    /// <summary>노티 패널 페이드인 → 유지 → 페이드아웃. tintColor 지정 시 해당 색상 + 쉐이크 연출.</summary>
+    private IEnumerator ShowNotifyRoutine(string customMsg = null, Color? tintColor = null)
     {
         if (notifyLabel == null) yield break;
 
@@ -864,7 +864,8 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 
         notifyLabel.gameObject.SetActive(true);
 
-        Color c = notifyLabel.color;
+        Color originalColor = notifyLabel.color;
+        Color c = tintColor ?? originalColor;
         c.a = 0f;
         notifyLabel.color = c;
 
@@ -877,7 +878,27 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         c.a = 1f;
         notifyLabel.color = c;
 
-        yield return new WaitForSecondsRealtime(notifyHold);
+        var rt       = notifyLabel.rectTransform;
+        Vector2 origin = rt.anchoredPosition;
+
+        if (tintColor.HasValue)
+        {
+            const float shakeAmp  = 5f;
+            const float shakeFreq = 40f;
+            for (float e = 0f; e < notifyHold; e += Time.unscaledDeltaTime)
+            {
+                float mag = shakeAmp * (1f - e / notifyHold);
+                rt.anchoredPosition = origin + new Vector2(
+                    Mathf.Sin(e * shakeFreq) * mag,
+                    Mathf.Cos(e * shakeFreq * 1.3f) * mag * 0.4f);
+                yield return null;
+            }
+            rt.anchoredPosition = origin;
+        }
+        else
+        {
+            yield return new WaitForSecondsRealtime(notifyHold);
+        }
 
         for (float e = 0f; e < notifyFadeOut; e += Time.unscaledDeltaTime)
         {
@@ -886,7 +907,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
             yield return null;
         }
         c.a = 0f;
-        notifyLabel.color = c;
+        notifyLabel.color = originalColor;
         notifyLabel.gameObject.SetActive(false);
     }
 
