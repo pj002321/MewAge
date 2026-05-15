@@ -481,11 +481,6 @@ public class WeaponPoint : MonoBehaviour
             if (_returningTimer >= MaxReturnTime)
             {
                 transform.localPosition = Vector3.zero;
-                if (_pendingCooldownReset)
-                {
-                    cooldownTimer         = attackCooldown;
-                    _pendingCooldownReset = false;
-                }
                 state           = State.Idle;
                 _returningTimer = 0f;
             }
@@ -1695,8 +1690,6 @@ public class WeaponPoint : MonoBehaviour
     // ─────────────────────────────────────────
     // Returning: 원위치(부모 위치)로 복귀
     // ─────────────────────────────────────────
-    private bool _pendingCooldownReset; // Returning → Idle 전환 시 쿨타임 적용 플래그
-
     private void UpdateReturning()
     {
         transform.localPosition = Vector3.MoveTowards(transform.localPosition, Vector3.zero, returnSpeed * Time.deltaTime);
@@ -1704,11 +1697,6 @@ public class WeaponPoint : MonoBehaviour
         if (transform.localPosition.sqrMagnitude <= 0.001f)
         {
             transform.localPosition = Vector3.zero;
-            if (_pendingCooldownReset)
-            {
-                cooldownTimer           = attackCooldown;
-                _pendingCooldownReset   = false;
-            }
             state = State.Idle;
         }
     }
@@ -1717,9 +1705,10 @@ public class WeaponPoint : MonoBehaviour
     // resetCooldown=false: 타겟 소멸·이탈·타임아웃으로 인한 중단 복귀 (쿨다운 리셋 X → 즉시 재타겟)
     private void BeginReturn(bool resetCooldown = true)
     {
-        state                 = State.Returning;
-        _stateTimer           = 0f;
-        _pendingCooldownReset = resetCooldown;
+        state       = State.Returning;
+        _stateTimer = 0f;
+        if (resetCooldown)
+            cooldownTimer = attackCooldown;
         if (_trail != null && weaponType != WeaponType.Spin) _trail.emitting = false;
 
         if (resetCooldown && pullOnReturn && weaponType == WeaponType.Melee)

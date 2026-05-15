@@ -129,7 +129,9 @@ public class BossSummonCycleSkill : BossSkillBase
 
         for (int i = 0; i < canSpawn; i++)
         {
+            BossController.NextIsClone = true;
             var go     = Instantiate(minionPrefab, positions[i], Quaternion.identity);
+            BossController.NextIsClone = false; // 혹시 BossController 없는 프리팹이면 직접 리셋
             var minion = go.GetComponent<BossSummonMinion>();
             if (minion == null) minion = go.AddComponent<BossSummonMinion>();
             minion.Init(minionDuration, minionMoveSpeed, minionContactDamage);
