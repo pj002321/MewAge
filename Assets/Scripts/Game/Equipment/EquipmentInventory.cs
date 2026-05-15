@@ -74,13 +74,61 @@ public class EquipmentInventory : MonoBehaviourSingleton<EquipmentInventory>
     protected override bool DontDestroy => true;
 
     private const string StarterGivenKey = "StarterEquipGiven";
+    private const string BagSaveKey      = "EquipBag";
+    private const string SlotSaveKey     = "EquipSlot_";
 
     protected override void Awake()
     {
         base.Awake();
+        Load();
     }
 
-    // C1_S1 첫 클리어 시 GameClearPanel에서 호출 — 구석기 Common 부위별 1개씩 지급
+    // ── 저장 / 로드 ──────────────────────────────────────────────────
+    private void Save()
+    {
+        // bag
+        var bagIds = string.Join(",", bag.ConvertAll(d => d.equipId));
+        PlayerPrefs.SetString(BagSaveKey, bagIds);
+
+        // equipped slots
+        for (int i = 0; i < MaxEquipped; i++)
+            PlayerPrefs.SetString(SlotSaveKey + i, equipped[i]?.equipId ?? "");
+
+        PlayerPrefs.Save();
+    }
+
+    private void Load()
+    {
+        bag.Clear();
+        string bagStr = PlayerPrefs.GetString(BagSaveKey, "");
+        if (!string.IsNullOrEmpty(bagStr))
+        {
+            foreach (var id in bagStr.Split(','))
+            {
+                if (string.IsNullOrEmpty(id)) continue;
+                var data = EquipmentData.FromId(id);
+                if (data != null) bag.Add(data);
+            }
+        }
+
+        for (int i = 0; i < MaxEquipped; i++)
+        {
+            string id = PlayerPrefs.GetString(SlotSaveKey + i, "");
+            equipped[i] = string.IsNullOrEmpty(id) ? null : EquipmentData.FromId(id);
+        }
+
+        // 첫 시작 시 구석기 NORMAL 장비 부위별 1개씩 바로 지급
+        GiveStarterEquipmentIfNeeded();
+    }
+
+    public void ClearAll()
+    {
+        for (int i = 0; i < MaxEquipped; i++) equipped[i] = null;
+        bag.Clear();
+        Save();
+    }
+
+    // C1_S1 첫 클리어 시 GameClearPanel에서 호출 — 구석기 NORMAL 부위별 1개씩 지급
     public void GiveStarterEquipmentIfNeeded()
     {
         if (PlayerPrefs.GetInt(StarterGivenKey, 0) != 0) return;
@@ -90,10 +138,11 @@ public class EquipmentInventory : MonoBehaviourSingleton<EquipmentInventory>
         {
             if (givenCategories.Count >= 6) return;
             if (row == null || string.IsNullOrEmpty(row.f_장비ID)) return;
-            if (row.f_등급 != "NORMAL") return;
 
             var data = EquipmentData.FromDB(row);
-            if (data == null || data.civilization != EquipCiv.구석기) return;
+            if (data == null) return;
+            if (data.grade != EquipGrade.NORMAL) return;
+            if (data.civilization != EquipCiv.구석기) return;
             if (givenCategories.Contains(data.category)) return;
 
             bag.Add(data);
@@ -101,7 +150,7 @@ public class EquipmentInventory : MonoBehaviourSingleton<EquipmentInventory>
         });
 
         PlayerPrefs.SetInt(StarterGivenKey, 1);
-        PlayerPrefs.Save();
+        Save();
         OnChanged?.Invoke();
     }
 
@@ -116,6 +165,7 @@ public class EquipmentInventory : MonoBehaviourSingleton<EquipmentInventory>
     {
         if (data == null) return false;
         bag.Add(data);
+        Save();
         OnChanged?.Invoke();
         return true;
     }
@@ -140,6 +190,7 @@ public class EquipmentInventory : MonoBehaviourSingleton<EquipmentInventory>
             bag.Add(displaced);
 
         RecalculateEquipStats();
+        Save();
         OnChanged?.Invoke();
     }
 
@@ -153,6 +204,7 @@ public class EquipmentInventory : MonoBehaviourSingleton<EquipmentInventory>
         equipped[slot] = null;
 
         RecalculateEquipStats();
+        Save();
         OnChanged?.Invoke();
     }
 
@@ -160,7 +212,10 @@ public class EquipmentInventory : MonoBehaviourSingleton<EquipmentInventory>
     public void RemoveFromBag(EquipmentData data)
     {
         if (bag.Remove(data))
+        {
+            Save();
             OnChanged?.Invoke();
+        }
     }
 
     // ── 정렬된 보관함 반환 ───────────────────────────────────────────

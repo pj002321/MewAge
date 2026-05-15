@@ -134,6 +134,14 @@ public class SoundManager : MonoBehaviourSingleton<SoundManager>
         bgmFadeCoroutine = StartCoroutine(FadeOutBGM());
     }
 
+    public void StopBGMImmediate()
+    {
+        if (bgmFadeCoroutine != null) { StopCoroutine(bgmFadeCoroutine); bgmFadeCoroutine = null; }
+        bgmSource.Stop();
+        bgmSource.volume  = 0f;
+        currentBGMClip    = null;
+    }
+
     private IEnumerator FadeOutBGM()
     {
         float startVolume = bgmSource.volume;

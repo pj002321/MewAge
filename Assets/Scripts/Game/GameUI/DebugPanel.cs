@@ -195,7 +195,11 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
     {
         PlayerPrefs.DeleteAll();
         PlayerPrefs.Save();
-        SoundManager.Shared?.StopBGM();
+        _menuUnlocked = false;
+        _invincible   = false;
+        _infiniteTime = false;
+        EquipmentInventory.Shared?.ClearAll();
+        SoundManager.Shared?.StopBGMImmediate();
         this.DLog("[Debug] PlayerPrefs 전체 초기화 완료 — 인트로 씬으로 이동");
         SceneLoadManager.LoadScene("introloading@scene");
     }

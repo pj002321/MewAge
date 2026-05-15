@@ -90,8 +90,6 @@ public class GameClearPanel : MonoBehaviour
         {
             PlayerPrefs.SetInt($"ChapterCleared_{clearedChapter}", 1);
             PlayerPrefs.Save();
-            if (clearedChapter == "C1_S1")
-                EquipmentInventory.Shared?.GiveStarterEquipmentIfNeeded();
         }
 
         // ── 아웃게임 보상 계산 & 지급 ────────────────────

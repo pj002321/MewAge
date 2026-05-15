@@ -22,7 +22,6 @@ public class StageCardView : MonoBehaviour
     [Header("펀치 대상")]
     public GameObject floatTarget;
 
-    static readonly Color LockedTint = new Color(0x71 / 255f, 0x71 / 255f, 0x71 / 255f);
     bool _isLocked;
 
     // ── 데이터 바인딩 ────────────────────────────────────────────────
@@ -33,7 +32,6 @@ public class StageCardView : MonoBehaviour
         if (iconImage != null)
         {
             if (entry.icon != null) iconImage.sprite = entry.icon;
-            iconImage.color   = entry.isLocked ? LockedTint : Color.white;
             iconImage.enabled = iconImage.sprite != null;
         }
         if (overlayImage != null)
@@ -41,11 +39,14 @@ public class StageCardView : MonoBehaviour
         if (lockBackgroundImage != null)
             lockBackgroundImage.gameObject.SetActive(entry.isLocked);
 
-        Color tint = entry.isLocked ? LockedTint : Color.white;
-        ApplyImageTint(symbolObjects, tint);
         if (stageNameText != null) stageNameText.text = entry.stageName;
         if (bestWaveText  != null)
-            bestWaveText.text = entry.bestWave > 0 ? $"최고생존 : {entry.bestWave}/{entry.totalWaves}" : "";
+        {
+            if (entry.isLocked)
+                bestWaveText.text = entry.requireClearLabel;
+            else
+                bestWaveText.text = entry.bestWave > 0 ? $"최고생존 : {entry.bestWave}/{entry.totalWaves}" : "";
+        }
         if (chapterText   != null) chapterText.text = entry.chapterLabel;
     }
 
@@ -67,13 +68,6 @@ public class StageCardView : MonoBehaviour
             }
         }
         if (highlightImage != null) highlightImage.gameObject.SetActive(showFull);
-    }
-
-    void ApplyImageTint(GameObject target, Color color)
-    {
-        if (target == null) return;
-        foreach (var img in target.GetComponentsInChildren<Image>(true))
-            img.color = color;
     }
 
     // 스냅 완료 시 펀치 연출

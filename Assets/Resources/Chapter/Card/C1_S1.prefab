@@ -973,7 +973,6 @@ GameObject:
   - component: {fileID: 8868764859406021197}
   - component: {fileID: 3215300802666105817}
   - component: {fileID: 3912073366487579617}
-  - component: {fileID: 3386537242630910490}
   m_Layer: 0
   m_Name: lockhightlightimg
   m_TagString: Untagged
@@ -1038,26 +1037,6 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &3386537242630910490
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3410442413572975610}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 223db8059bc77144c9ba478a29ed4cd5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SpriteAnimation
-  frames:
-  - {fileID: 1517764441082654689, guid: 945c87e13fedb774ab0abc1fe05b629c, type: 3}
-  - {fileID: -300048171950021729, guid: 945c87e13fedb774ab0abc1fe05b629c, type: 3}
-  - {fileID: -4858073081330738322, guid: 945c87e13fedb774ab0abc1fe05b629c, type: 3}
-  - {fileID: -4632539547371942910, guid: 945c87e13fedb774ab0abc1fe05b629c, type: 3}
-  fps: 5
-  loop: 1
-  playOnEnable: 1
 --- !u!1 &4260379095210636006
 GameObject:
   m_ObjectHideFlags: 0
@@ -1508,7 +1487,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -120}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 512.5005, y: 512}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &5768696489431904786

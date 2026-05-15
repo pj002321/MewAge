@@ -34,6 +34,19 @@ public class EquipmentData
     private Sprite _icon;
     public  Sprite  Icon => _icon ??= HomeEquipVisualConfig.Shared?.GetIcon(equipId);
 
+    // ── ID로 DB에서 생성 ─────────────────────────────────────────────
+    public static EquipmentData FromId(string id)
+    {
+        if (string.IsNullOrEmpty(id)) return null;
+        EquipmentData result = null;
+        DB_장비.ForEachEntity(row =>
+        {
+            if (result == null && row?.f_장비ID == id)
+                result = FromDB(row);
+        });
+        return result;
+    }
+
     // ── DB에서 생성 ─────────────────────────────────────────────────
     public static EquipmentData FromDB(DB_장비 row)
     {

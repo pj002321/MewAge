@@ -195,8 +195,10 @@ public class WeaponPoint : MonoBehaviour
     public event System.Action<Vector3, Vector2> OnSlashVfxSpawned;
 
     // 미아 방지 — 비 Idle 상태에서 이 시간 초과 시 강제 복귀 (최후 안전망)
-    private const float MaxStateTime = 4f;
+    private const float MaxStateTime      = 4f;
+    private const float MaxReturnTime     = 3f; // Returning 상태 전용 타임아웃
     private float _stateTimer;
+    private float _returningTimer;
     private float _bonusMultiplier = 1f; // MultiplyAttackSpeed 등 일회성 보너스 누적
 
     // ── 진단용 ─────────────────────────────────────────────────────────
@@ -443,23 +445,54 @@ public class WeaponPoint : MonoBehaviour
         if (state != State.Slashing && state != State.SlashSequence && state != State.HammerSequence)
             UpdateRotation();
 
-        // 미아 방지: 코루틴 구동 상태는 타임아웃 제외
-        if (state != State.Idle && state != State.Returning
-            && state != State.SlashSequence && state != State.HammerSequence)
+        // 미아 방지 타임아웃
+        // SlashSequence/HammerSequence: StopCoroutine 시 finally 미실행 → 상태 고착 방어
+        if (state != State.Idle && state != State.Returning)
         {
             _stateTimer += Time.unscaledDeltaTime;
-            if (_stateTimer >= MaxStateTime)
+            float limit = (state == State.SlashSequence || state == State.HammerSequence)
+                ? MaxStateTime * 3f   // 시퀀스는 정상 완료에 더 많은 시간 필요
+                : MaxStateTime;
+            if (_stateTimer >= limit)
             {
                 _target   = CombatTarget.None;
                 _boomerang = CombatTarget.None;
-                BeginReturn(false); // 타임아웃 — 공격 미완료이므로 쿨다운 미리셋
-                _stateTimer = 0f;
+                if (state == State.SlashSequence)   { StopCoroutine(_slashSequenceCoroutine);  _slashSequenceCoroutine  = null; }
+                if (state == State.HammerSequence)  { StopCoroutine(_hammerSequenceCoroutine); _hammerSequenceCoroutine = null; }
+                transform.localPosition = Vector3.zero;
+                transform.rotation      = Quaternion.identity;
+                if (_weaponSr != null) { var c = _weaponSr.color; c.a = 1f; _weaponSr.color = c; }
+                cooldownTimer   = attackCooldown;
+                state           = State.Idle;
+                _stateTimer     = 0f;
+                _returningTimer = 0f;
                 return;
             }
         }
         else
         {
             _stateTimer = 0f;
+        }
+
+        // Returning 전용 타임아웃 (returnSpeed=0 등 비정상 상황 복구)
+        if (state == State.Returning)
+        {
+            _returningTimer += Time.unscaledDeltaTime;
+            if (_returningTimer >= MaxReturnTime)
+            {
+                transform.localPosition = Vector3.zero;
+                if (_pendingCooldownReset)
+                {
+                    cooldownTimer         = attackCooldown;
+                    _pendingCooldownReset = false;
+                }
+                state           = State.Idle;
+                _returningTimer = 0f;
+            }
+        }
+        else
+        {
+            _returningTimer = 0f;
         }
 
         switch (state)
@@ -648,9 +681,9 @@ public class WeaponPoint : MonoBehaviour
         bool isLightning = weaponType == WeaponType.Magic && magicElement == MagicElement.Lightning;
         bool isFireMagic = weaponType == WeaponType.Magic && magicElement == MagicElement.Fire;
 
-        if (isFireMagic)  { FireHoming(best); cooldownTimer = attackCooldown; return; }
-        if (isLightning)  { Zap(best);        cooldownTimer = attackCooldown; return; }
-        if (weaponType == WeaponType.Ranged)
+        if (isFireMagic && projectilePrefab != null)  { FireHoming(best); cooldownTimer = attackCooldown; return; }
+        if (isLightning)                               { Zap(best);        cooldownTimer = attackCooldown; return; }
+        if (weaponType == WeaponType.Ranged && projectilePrefab != null)
         {
             Shoot(best);
             cooldownTimer = attackCooldown;
@@ -1662,6 +1695,8 @@ public class WeaponPoint : MonoBehaviour
     // ─────────────────────────────────────────
     // Returning: 원위치(부모 위치)로 복귀
     // ─────────────────────────────────────────
+    private bool _pendingCooldownReset; // Returning → Idle 전환 시 쿨타임 적용 플래그
+
     private void UpdateReturning()
     {
         transform.localPosition = Vector3.MoveTowards(transform.localPosition, Vector3.zero, returnSpeed * Time.deltaTime);
@@ -1669,6 +1704,11 @@ public class WeaponPoint : MonoBehaviour
         if (transform.localPosition.sqrMagnitude <= 0.001f)
         {
             transform.localPosition = Vector3.zero;
+            if (_pendingCooldownReset)
+            {
+                cooldownTimer           = attackCooldown;
+                _pendingCooldownReset   = false;
+            }
             state = State.Idle;
         }
     }
@@ -1677,10 +1717,9 @@ public class WeaponPoint : MonoBehaviour
     // resetCooldown=false: 타겟 소멸·이탈·타임아웃으로 인한 중단 복귀 (쿨다운 리셋 X → 즉시 재타겟)
     private void BeginReturn(bool resetCooldown = true)
     {
-        state = State.Returning;
-        _stateTimer = 0f;
-        if (resetCooldown)
-            cooldownTimer = attackCooldown;
+        state                 = State.Returning;
+        _stateTimer           = 0f;
+        _pendingCooldownReset = resetCooldown;
         if (_trail != null && weaponType != WeaponType.Spin) _trail.emitting = false;
 
         if (resetCooldown && pullOnReturn && weaponType == WeaponType.Melee)

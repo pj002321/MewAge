@@ -165,7 +165,7 @@ public class WeaponData : ScriptableObject
 
         data.baseAttackDamage   = row.f_기본공격력;
         data.baseAttackCooldown = row.f_공격속도 > 0 ? row.f_공격속도 : 1f;
-        data.baseAttackRange    = row.f_탐지범위;
+        data.baseAttackRange    = row.f_탐지범위 > 0f ? row.f_탐지범위 : 5f;
         data.baseAreaHitRadius  = row.f_주변범위;
         data.baseMaxBounces     = row.f_튕김횟수;
         data.baseBounceRange    = data.weaponType == WeaponType.Boomerang ? 5f : 0f;

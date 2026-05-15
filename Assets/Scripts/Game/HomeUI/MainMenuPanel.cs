@@ -22,6 +22,7 @@ public class MainMenuPanel : MonoBehaviour
         public int    bestWave;
         public int    totalWaves;
         public bool   isLocked;
+        public string requireClearLabel; // "1-1 클리어" 형식
     }
 
     // ── UI 참조 ──────────────────────────────────────────────────────
@@ -149,11 +150,24 @@ public class MainMenuPanel : MonoBehaviour
         // 첫 스테이지는 항상 해금, 이후는 이전 스테이지 클리어 여부로 판단
         for (int i = 0; i < list.Count; i++)
         {
-            list[i].isLocked = i > 0 &&
+            bool locked = i > 0 &&
                 PlayerPrefs.GetInt($"ChapterCleared_{list[i - 1].chapterID}", 0) == 0;
+            list[i].isLocked = locked;
+            if (locked)
+                list[i].requireClearLabel = ChapterIDToDisplayLabel(list[i - 1].chapterID) + " 클리어";
         }
 
         stages = list.ToArray();
+    }
+
+    // "C1_S2" → "1-2"
+    static string ChapterIDToDisplayLabel(string chapterID)
+    {
+        string[] parts = chapterID.Split('_');
+        if (parts.Length < 2) return chapterID;
+        string c = parts[0].Length > 1 ? parts[0].Substring(1) : parts[0];
+        string s = parts[1].Length > 1 ? parts[1].Substring(1) : parts[1];
+        return $"{c}-{s}";
     }
 
     static int CalcTotalWaves(string chapterID)
