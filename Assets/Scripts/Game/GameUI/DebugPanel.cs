@@ -33,8 +33,9 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
     // ── 홈씬 전용 ────────────────────────────────────────────────────
     [Header("홈씬 (homeContent 하위)")]
     [SerializeField] private MainMenuPanel mainMenuPanel;
-    [SerializeField] private Button        menuToggleButton; // label → GetComponentInChildren
+    [SerializeField] private Button        menuToggleButton;       // label → GetComponentInChildren
     [SerializeField] private Button        resetDataButton;
+    [SerializeField] private Button        unlockAllChaptersButton;
 
     // ── 인게임 전용 ──────────────────────────────────────────────────
     [Header("인게임 (gameContent 하위)")]
@@ -85,6 +86,7 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
 
         menuToggleButton?.onClick.AddListener(OnToggleMenuButtons);
         resetDataButton?.onClick.AddListener(OnResetData);
+        unlockAllChaptersButton?.onClick.AddListener(OnUnlockAllChapters);
 
         waveEndButton?.onClick.AddListener(() => GameManager.Shared?.DebugEndWave());
         invincibleButton?.onClick.AddListener(OnToggleInvincible);
@@ -194,6 +196,18 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
         SoundManager.Shared?.StopBGM();
         this.DLog("[Debug] PlayerPrefs 전체 초기화 완료 — 인트로 씬으로 이동");
         SceneLoadManager.LoadScene("introloading@scene");
+    }
+
+    private void OnUnlockAllChapters()
+    {
+        Mewage.DB.DB_챕터.ForEachEntity(row =>
+        {
+            if (!string.IsNullOrEmpty(row.f_챕터ID))
+                PlayerPrefs.SetInt($"ChapterCleared_{row.f_챕터ID}", 1);
+        });
+        PlayerPrefs.Save();
+        mainMenuPanel?.RefreshStages();
+        this.DLog("[Debug] 전 챕터 해금 완료");
     }
 
     // ── 인게임 핸들러 ─────────────────────────────────────────────────

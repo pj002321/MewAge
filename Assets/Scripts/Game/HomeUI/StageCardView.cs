@@ -10,9 +10,10 @@ using UnityEngine.UI;
 public class StageCardView : MonoBehaviour
 {
     public Image           iconImage;
-    public Image           overlayImage;   // 잠금 오버레이
-    public Image           highlightImage; // 현재 선택 카드 강조
-    public RawImage        playerPortrait; // 플레이어 랜딩 애니메이션
+    public Image           overlayImage;         // 잠금 아이콘 오버레이 (lockImg)
+    public Image           lockBackgroundImage;  // 잠금 배경
+    public Image           highlightImage;       // 현재 선택 카드 강조
+    public RawImage        playerPortrait;       // 플레이어 랜딩 애니메이션
     public GameObject      symbolObjects;
     public TextMeshProUGUI stageNameText;
     public TextMeshProUGUI bestWaveText;
@@ -21,6 +22,7 @@ public class StageCardView : MonoBehaviour
     [Header("펀치 대상")]
     public GameObject floatTarget;
 
+    static readonly Color LockedTint = new Color(0x71 / 255f, 0x71 / 255f, 0x71 / 255f);
     bool _isLocked;
 
     // ── 데이터 바인딩 ────────────────────────────────────────────────
@@ -30,18 +32,14 @@ public class StageCardView : MonoBehaviour
 
         if (iconImage != null)
         {
-            if (entry.icon != null)
-            {
-                iconImage.sprite = entry.icon;
-                iconImage.color  = Color.white;
-            }
+            if (entry.icon != null) iconImage.sprite = entry.icon;
+            iconImage.color   = entry.isLocked ? LockedTint : Color.white;
             iconImage.enabled = iconImage.sprite != null;
         }
         if (overlayImage != null)
-        {
-            overlayImage.sprite = iconImage.sprite;
             overlayImage.gameObject.SetActive(entry.isLocked);
-        }
+        if (lockBackgroundImage != null)
+            lockBackgroundImage.gameObject.SetActive(entry.isLocked);
         if (stageNameText != null) stageNameText.text = entry.stageName;
         if (bestWaveText  != null)
             bestWaveText.text = entry.bestWave > 0 ? $"최고생존 : {entry.bestWave}/{entry.totalWaves}" : "";
@@ -65,7 +63,7 @@ public class StageCardView : MonoBehaviour
                 if (anim != null) anim.speed = 2f;
             }
         }
-        if (highlightImage != null) highlightImage.gameObject.SetActive(isCenter);
+        if (highlightImage != null) highlightImage.gameObject.SetActive(showFull);
     }
 
     // 스냅 완료 시 펀치 연출

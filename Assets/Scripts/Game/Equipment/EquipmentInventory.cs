@@ -78,28 +78,31 @@ public class EquipmentInventory : MonoBehaviourSingleton<EquipmentInventory>
     protected override void Awake()
     {
         base.Awake();
-        GiveStarterEquipmentIfNeeded();
     }
 
-    private void GiveStarterEquipmentIfNeeded()
+    // C1_S1 첫 클리어 시 GameClearPanel에서 호출 — 구석기 Common 부위별 1개씩 지급
+    public void GiveStarterEquipmentIfNeeded()
     {
         if (PlayerPrefs.GetInt(StarterGivenKey, 0) != 0) return;
 
-        int given = 0;
+        var givenCategories = new System.Collections.Generic.HashSet<EquipCategory>();
         DB_장비.ForEachEntity(row =>
         {
-            if (given >= 3) return;
+            if (givenCategories.Count >= 6) return;
             if (row == null || string.IsNullOrEmpty(row.f_장비ID)) return;
             if (row.f_등급 != "NORMAL") return;
 
             var data = EquipmentData.FromDB(row);
-            if (data == null) return;
+            if (data == null || data.civilization != EquipCiv.구석기) return;
+            if (givenCategories.Contains(data.category)) return;
+
             bag.Add(data);
-            given++;
+            givenCategories.Add(data.category);
         });
 
         PlayerPrefs.SetInt(StarterGivenKey, 1);
         PlayerPrefs.Save();
+        OnChanged?.Invoke();
     }
 
     public IReadOnlyList<EquipmentData> Equipped => equipped;

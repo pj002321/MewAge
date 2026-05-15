@@ -84,6 +84,16 @@ public class GameClearPanel : MonoBehaviour
         if (expGainedText  != null) expGainedText.text  = $"+{expGained}";
         if (goldGainedText != null) goldGainedText.text = $"+{goldGained}";
 
+        // ── 챕터 클리어 저장 ─────────────────────────────
+        string clearedChapter = PlayerPrefs.GetString("SelectedChapterID", "");
+        if (!string.IsNullOrEmpty(clearedChapter))
+        {
+            PlayerPrefs.SetInt($"ChapterCleared_{clearedChapter}", 1);
+            PlayerPrefs.Save();
+            if (clearedChapter == "C1_S1")
+                EquipmentInventory.Shared?.GiveStarterEquipmentIfNeeded();
+        }
+
         // ── 아웃게임 보상 계산 & 지급 ────────────────────
         var reward = RunRewardCalculator.Calculate(goldGained, finalWave);
         RewardManager.Shared?.GiveReward(reward);

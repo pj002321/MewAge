@@ -37,6 +37,7 @@ public class MainMenuPanel : MonoBehaviour
     public Button achievementButton;
     public Button breakthroughRewardButton;
 
+    public PopupBaseNoti   baseNoti;
     public PopUpAttendance attendancePopup;
     public PopUpDailyMission dailyMissionPopup;
     public PopUpStorage storagePopup;
@@ -144,6 +145,14 @@ public class MainMenuPanel : MonoBehaviour
             list.Add(new StageEntry { chapterID = "C1_S2", stageName = "2.어둠의 숲"  });
             list.Add(new StageEntry { chapterID = "C1_S3", stageName = "3.폐허 도시"  });
         }
+
+        // 첫 스테이지는 항상 해금, 이후는 이전 스테이지 클리어 여부로 판단
+        for (int i = 0; i < list.Count; i++)
+        {
+            list[i].isLocked = i > 0 &&
+                PlayerPrefs.GetInt($"ChapterCleared_{list[i - 1].chapterID}", 0) == 0;
+        }
+
         stages = list.ToArray();
     }
 
@@ -654,11 +663,26 @@ public class MainMenuPanel : MonoBehaviour
     public void OnStartClicked()
     {
         if (currentIndex < 0 || currentIndex >= stages.Length) return;
-        if (stages[currentIndex].isLocked) return;
+        if (stages[currentIndex].isLocked)
+        {
+            baseNoti?.Show("이전 스테이지 클리어 후 해금");
+            return;
+        }
         if (SceneLoadManager.IsTransitioning) return;
         PlayerPrefs.SetString("SelectedChapterID", stages[currentIndex].chapterID);
         PlayerPrefs.Save();
         SceneLoadManager.LoadScene("stage@scene");
+    }
+
+    // ── 스테이지 갱신 (외부 호출용) ──────────────────────────────────
+    public void RefreshStages()
+    {
+        LoadStagesFromDB();
+        currentIndex = FindSavedStageIndex();
+        if (stages == null || cardViews == null) return;
+        for (int i = 0; i < Mathf.Min(stages.Length, cardViews.Length); i++)
+            cardViews[i]?.Bind(stages[i]);
+        ApplyCardScales(currentIndex, suppressAnimation: false);
     }
 
     // ── 챕터 레이블 ─────────────────────────────────────────────────

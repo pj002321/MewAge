@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5374686351836354880}
   - component: {fileID: 2442180650331241265}
+  - component: {fileID: 1203335802207937507}
   m_Layer: 0
   m_Name: ch1_m_4_skill
   m_TagString: Untagged
@@ -29,8 +30,7 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 2, y: 2, z: 2}
   m_ConstrainProportionsScale: 1
-  m_Children:
-  - {fileID: 7868706988200963130}
+  m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &2442180650331241265
@@ -59,7 +59,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: e901129e9679f8e428ec8abe92cf485f, type: 2}
+  - {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -82,75 +82,33 @@ SpriteRenderer:
   m_SortingLayer: 1
   m_SortingOrder: 101
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 8132988422669004512, guid: 4c48c0a8b16e9c84f86330b0a4a156bd, type: 3}
-  m_Color: {r: 0.92903656, g: 1, b: 0.13679248, a: 0.42745098}
+  m_Sprite: {fileID: 6032972246876082220, guid: a29a15b176a2a67489ea2700cc27bb16, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
-  m_FlipY: 1
+  m_FlipY: 0
   m_DrawMode: 0
   m_Size: {x: 1.0666667, y: 1.7}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
---- !u!1001 &7802543813451624222
-PrefabInstance:
+--- !u!114 &1203335802207937507
+MonoBehaviour:
   m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 5374686351836354880}
-    m_Modifications:
-    - target: {fileID: 106809939400229668, guid: b165590939bdd7e44bdd602f92ecf2bd, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 106809939400229668, guid: b165590939bdd7e44bdd602f92ecf2bd, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 1.25
-      objectReference: {fileID: 0}
-    - target: {fileID: 106809939400229668, guid: b165590939bdd7e44bdd602f92ecf2bd, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 106809939400229668, guid: b165590939bdd7e44bdd602f92ecf2bd, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 106809939400229668, guid: b165590939bdd7e44bdd602f92ecf2bd, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 106809939400229668, guid: b165590939bdd7e44bdd602f92ecf2bd, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 106809939400229668, guid: b165590939bdd7e44bdd602f92ecf2bd, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 106809939400229668, guid: b165590939bdd7e44bdd602f92ecf2bd, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 106809939400229668, guid: b165590939bdd7e44bdd602f92ecf2bd, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 106809939400229668, guid: b165590939bdd7e44bdd602f92ecf2bd, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8052887357750566584, guid: b165590939bdd7e44bdd602f92ecf2bd, type: 3}
-      propertyPath: m_Name
-      value: Thunder
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: b165590939bdd7e44bdd602f92ecf2bd, type: 3}
---- !u!4 &7868706988200963130 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 106809939400229668, guid: b165590939bdd7e44bdd602f92ecf2bd, type: 3}
-  m_PrefabInstance: {fileID: 7802543813451624222}
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5416354146166037338}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 223db8059bc77144c9ba478a29ed4cd5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpriteAnimation
+  frames:
+  - {fileID: -7974334314510058712, guid: a29a15b176a2a67489ea2700cc27bb16, type: 3}
+  - {fileID: -7419469082364510714, guid: a29a15b176a2a67489ea2700cc27bb16, type: 3}
+  - {fileID: 4171446366699529209, guid: a29a15b176a2a67489ea2700cc27bb16, type: 3}
+  - {fileID: -8640275030725934787, guid: a29a15b176a2a67489ea2700cc27bb16, type: 3}
+  fps: 12
+  loop: 0
+  playOnEnable: 1
