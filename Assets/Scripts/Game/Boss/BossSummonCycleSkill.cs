@@ -35,6 +35,8 @@ public class BossSummonCycleSkill : BossSkillBase
     {
         base.Init(boss);
         executeInPattern = false;
+        // 메인 보스가 아닌 클론에서 초기화된 경우 소환 루프 시작 안 함 (재귀 소환 방지)
+        if (BossController.Current != null && BossController.Current != boss) return;
         StartCoroutine(SummonLoop());
     }
 
@@ -136,6 +138,13 @@ public class BossSummonCycleSkill : BossSkillBase
             if (minion == null) minion = go.AddComponent<BossSummonMinion>();
             minion.Init(minionDuration, minionMoveSpeed, minionContactDamage);
             _activeMinions.Add(minion);
+
+            // 보스 프리팹 소환체: BossClone으로 등록해 실보스 사망 시 함께 제거 + 수명 관리
+            if (go.GetComponent<BossController>() != null)
+            {
+                var clone = go.AddComponent<BossClone>();
+                clone.Init(minionDuration, null);
+            }
         }
     }
 }

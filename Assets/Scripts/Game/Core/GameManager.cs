@@ -1020,7 +1020,6 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         WaveEnvironmentSwitcher.Shared?.SetNormal();
         SoundManager.Shared?.PlayChapterGameBGM(currentChapterID);
         EnemySpawner.Shared?.StopSpawning(); // 보스 죽음 즉시 스폰 중지
-        if (waitingForUpgrade) return;
         waitingForUpgrade = true;
 
         int nextBoss = GetNextBossWave(wave);
