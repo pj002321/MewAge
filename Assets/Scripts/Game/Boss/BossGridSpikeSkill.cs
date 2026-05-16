@@ -5,19 +5,13 @@ using UnityEngine;
 
 /// <summary>
 /// 보스 스킬: 그리드 스파이크.
-///
 /// 맵을 cols × rows 그리드로 분할하고, FillMode에 따라
 /// 선택된 셀에 경고 표시 후 스파이크를 떨어뜨립니다.
 ///
 /// FillMode:
-///   All         — 전체 셀
-///   Checkerboard — 체커보드 (흑/백 교차)
-///   Random      — randomCount개 무작위
-///   Ring        — 테두리만
-///   Cross       — 가운데 십자
-///   WaveRow     — 행 순서로 순차 낙하
-///   WaveCol     — 열 순서로 순차 낙하
+///   All, Checkerboard, Random, Ring, Cross, WaveRow, WaveCol
 /// </summary>
+[System.Serializable]
 public class BossGridSpikeSkill : BossSkillBase
 {
     public enum FillMode { All, Checkerboard, Random, Ring, Cross, WaveRow, WaveCol }
@@ -43,73 +37,54 @@ public class BossGridSpikeSkill : BossSkillBase
     [SerializeField] private float waveDelay       = 0.25f;
 
     [Header("경고 표시")]
-    [Tooltip("그리드 셀에 스폰할 경고 마커 프리팹. null이면 흰 사각형 자동 생성")]
+    [Tooltip("null이면 흰 사각형 자동 생성")]
     [SerializeField] private GameObject warningMarkerPrefab;
-    [SerializeField] private Color warningColor = new Color(1f, 0.45f, 0f, 0.45f);
+    [SerializeField] private Color      warningColor = new Color(1f, 0.45f, 0f, 0.45f);
 
     [Header("낙하 연출")]
-    [Tooltip("경고 위치 위 몇 유닛 높이에서 낙하를 시작할지")]
     [SerializeField] private float dropHeight   = 8f;
-    [Tooltip("낙하 완료까지 걸리는 시간 (초). 짧을수록 빠르게 꽂힘")]
     [SerializeField] private float dropDuration = 0.25f;
 
     [Header("착지 VFX")]
-    [Tooltip("착지 순간 스폰할 VFX 프리팹. 스파이크 Collider2D bounds.min.y 위치에 스폰됩니다.")]
     [SerializeField] private GameObject spawnVfxPrefab;
-    [Tooltip("0이면 VFX를 자동으로 제거하지 않음")]
-    [SerializeField] private float spawnVfxDuration = 1f;
-
-    // ── 활성 마커·스파이크 추적 (OnDestroy 안전망) ───────────────
-    private readonly List<GameObject> _activeMarkers = new();
-    private readonly List<GameObject> _activeSpikes  = new();
-
-    private void OnDestroy()
-    {
-        foreach (var m in _activeMarkers) if (m != null) Destroy(m);
-        _activeMarkers.Clear();
-        foreach (var s in _activeSpikes)  if (s != null) Destroy(s);
-        _activeSpikes.Clear();
-    }
-
-    // ── BossSkillBase ────────────────────────────────────────────
+    [Tooltip("0이면 자동 제거 안 함")]
+    [SerializeField] private float      spawnVfxDuration = 1f;
 
     protected override async UniTask OnExecuteAsync(CancellationToken ct)
     {
-        if (IsInvalid()) { this.DLog("[GridSpike] Owner null — skip"); return; }
-
-        // 이전 사이클 스파이크 즉시 정리
-        foreach (var s in _activeSpikes) if (s != null) Destroy(s);
-        _activeSpikes.Clear();
+        if (Boss == null) { this.DLog("[GridSpike] Owner null — skip"); return; }
 
         GetMapBounds(out Vector2 bMin, out Vector2 bMax);
         Vector2 mapSize  = bMax - bMin;
-        Vector2 cellSize = new Vector2(mapSize.x / cols, mapSize.y / rows);
+        Vector2 cellSize = new(mapSize.x / cols, mapSize.y / rows);
         Vector2 origin   = bMin + cellSize * 0.5f;
 
         List<Vector2Int> cells = SelectCells();
 
-        // 경고→낙하 체인을 this 컴포넌트의 수명에만 묶고 패턴 루프 취소(그로기)와는 독립시킵니다.
-        var destroyCt = this.GetCancellationTokenOnDestroy();
+        // 낙하 태스크는 boss 파괴 토큰과 연결 — 패턴 그로기 취소(ct)와는 독립
+        var destroyCt = Boss.GetCancellationTokenOnDestroy();
 
         if (fillMode == FillMode.WaveRow || fillMode == FillMode.WaveCol)
             WaveDropAsync(cells, origin, cellSize, destroyCt).Forget();
         else
             SimultaneousDropAsync(cells, origin, cellSize, destroyCt).Forget();
 
-        // 패턴 루프 측은 경고 + 낙하 시간만큼 대기 후 다음 사이클로 넘어갑니다.
-        // 그로기로 ct가 취소돼도 drop은 독립 실행 중이므로 스파이크는 정상 낙하합니다.
-        await UniTask.Delay(System.TimeSpan.FromSeconds(warningDuration + dropDuration + spikeDuration), cancellationToken: ct)
-                     .SuppressCancellationThrow();
+        // 패턴 루프 측은 경고+낙하+지속 시간 대기 후 다음 스킬로 진행
+        await UniTask.Delay(
+            System.TimeSpan.FromSeconds(warningDuration + dropDuration + spikeDuration),
+            cancellationToken: ct)
+            .SuppressCancellationThrow();
     }
 
     // ── 동시 낙하 ────────────────────────────────────────────────
 
-    private async UniTaskVoid SimultaneousDropAsync(List<Vector2Int> cells, Vector2 origin, Vector2 cellSize, CancellationToken ct)
+    private async UniTaskVoid SimultaneousDropAsync(
+        List<Vector2Int> cells, Vector2 origin, Vector2 cellSize, CancellationToken ct)
     {
         var markers = SpawnMarkers(cells, origin, cellSize);
         await WarnAnimationAsync(markers, ct);
         CleanupAll(markers);
-        if (IsInvalid() || ct.IsCancellationRequested) return;
+        if (Boss == null || ct.IsCancellationRequested) return;
 
         foreach (var cell in cells)
             SpikeFallAsync(CellToWorld(cell, origin, cellSize), ct).Forget();
@@ -117,7 +92,8 @@ public class BossGridSpikeSkill : BossSkillBase
 
     // ── 순차 낙하 (행/열) ────────────────────────────────────────
 
-    private async UniTaskVoid WaveDropAsync(List<Vector2Int> cells, Vector2 origin, Vector2 cellSize, CancellationToken ct)
+    private async UniTaskVoid WaveDropAsync(
+        List<Vector2Int> cells, Vector2 origin, Vector2 cellSize, CancellationToken ct)
     {
         bool byRow = fillMode == FillMode.WaveRow;
 
@@ -134,14 +110,14 @@ public class BossGridSpikeSkill : BossSkillBase
 
         foreach (int key in keys)
         {
-            if (IsInvalid() || ct.IsCancellationRequested) return;
+            if (Boss == null || ct.IsCancellationRequested) return;
 
             var group   = groups[key];
             var markers = SpawnMarkers(group, origin, cellSize);
 
             await WarnAnimationAsync(markers, ct);
             CleanupAll(markers);
-            if (IsInvalid() || ct.IsCancellationRequested) return;
+            if (Boss == null || ct.IsCancellationRequested) return;
 
             foreach (var cell in group)
                 SpikeFallAsync(CellToWorld(cell, origin, cellSize), ct).Forget();
@@ -159,7 +135,7 @@ public class BossGridSpikeSkill : BossSkillBase
         float elapsed = 0f;
         while (elapsed < warningDuration)
         {
-            if (IsInvalid()) return;
+            if (Boss == null) return;
             elapsed += Time.deltaTime;
             bool cancelled = await UniTask.Yield(ct).SuppressCancellationThrow();
             if (cancelled) return;
@@ -170,27 +146,28 @@ public class BossGridSpikeSkill : BossSkillBase
 
     private async UniTaskVoid SpikeFallAsync(Vector2 targetPos, CancellationToken ct)
     {
-        float dmg = spikeDamage > 0f ? spikeDamage : (Owner != null ? Owner.ContactDamage : 0f);
+        float dmg = spikeDamage > 0f ? spikeDamage : (Boss != null ? Boss.ContactDamage : 0f);
 
         Vector2    startPos = targetPos + Vector2.up * dropHeight;
         GameObject spikeGo  = null;
 
         if (spikePrefab != null)
-            spikeGo = Instantiate(spikePrefab, new Vector3(startPos.x, startPos.y, 0f), Quaternion.identity);
+            spikeGo = Object.Instantiate(spikePrefab,
+                new Vector3(startPos.x, startPos.y, 0f), Quaternion.identity);
 
         // 낙하 (ease-in quad)
         float elapsed = 0f;
         while (elapsed < dropDuration)
         {
             elapsed += Time.deltaTime;
-            float t     = Mathf.Clamp01(elapsed / dropDuration);
-            float eased = t * t;
-            Vector2 cur = Vector2.LerpUnclamped(startPos, targetPos, eased);
+            float   t     = Mathf.Clamp01(elapsed / dropDuration);
+            float   eased = t * t;
+            Vector2 cur   = Vector2.LerpUnclamped(startPos, targetPos, eased);
             if (spikeGo != null)
                 spikeGo.transform.position = new Vector3(cur.x, cur.y, 0f);
 
             bool cancelled = await UniTask.Yield(ct).SuppressCancellationThrow();
-            if (cancelled) { if (spikeGo != null) Destroy(spikeGo); return; }
+            if (cancelled) { if (spikeGo != null) Object.Destroy(spikeGo); return; }
         }
 
         if (spikeGo != null)
@@ -202,21 +179,18 @@ public class BossGridSpikeSkill : BossSkillBase
             float vfxY = targetPos.y;
             if (spikeGo != null)
             {
-                var col = spikeGo.GetComponent<Collider2D>() ?? spikeGo.GetComponentInChildren<Collider2D>();
+                var col = spikeGo.GetComponent<Collider2D>()
+                       ?? spikeGo.GetComponentInChildren<Collider2D>();
                 if (col != null) vfxY = col.bounds.min.y;
             }
-            var vfx = Instantiate(spawnVfxPrefab, new Vector3(targetPos.x, vfxY, 0f), Quaternion.identity);
-            if (spawnVfxDuration > 0f) Destroy(vfx, spawnVfxDuration);
+            var vfx = Object.Instantiate(spawnVfxPrefab,
+                new Vector3(targetPos.x, vfxY, 0f), Quaternion.identity);
+            if (spawnVfxDuration > 0f) Object.Destroy(vfx, spawnVfxDuration);
         }
 
-        if (spikeGo != null)
-        {
-            _activeSpikes.Add(spikeGo);
-            Destroy(spikeGo, spikeDuration);
-        }
+        if (spikeGo != null) Object.Destroy(spikeGo, spikeDuration);
 
         await SpikeHitAsync(targetPos, dmg, ct);
-        _activeSpikes.Remove(spikeGo);
     }
 
     private async UniTask SpikeHitAsync(Vector2 pos, float dmg, CancellationToken ct)
@@ -232,7 +206,7 @@ public class BossGridSpikeSkill : BossSkillBase
             if (hitCooldown <= 0f && player != null &&
                 Vector2.Distance(pos, player.transform.position) < spikeRadius)
             {
-                player.TakeDamage(dmg, sourceName: Owner.gameObject.name);
+                player.TakeDamage(dmg, sourceName: Boss?.gameObject.name);
                 hitCooldown = 0.5f;
             }
 
@@ -260,8 +234,7 @@ public class BossGridSpikeSkill : BossSkillBase
             case FillMode.Checkerboard:
                 for (int y = 0; y < rows; y++)
                     for (int x = 0; x < cols; x++)
-                        if ((x + y) % 2 == 0)
-                            result.Add(new Vector2Int(x, y));
+                        if ((x + y) % 2 == 0) result.Add(new Vector2Int(x, y));
                 break;
 
             case FillMode.Random:
@@ -284,11 +257,9 @@ public class BossGridSpikeSkill : BossSkillBase
                 int midX = cols / 2, midY = rows / 2;
                 for (int y = 0; y < rows; y++)
                     for (int x = 0; x < cols; x++)
-                        if (x == midX || y == midY)
-                            result.Add(new Vector2Int(x, y));
+                        if (x == midX || y == midY) result.Add(new Vector2Int(x, y));
                 break;
         }
-
         return result;
     }
 
@@ -298,10 +269,7 @@ public class BossGridSpikeSkill : BossSkillBase
     {
         var markers = new GameObject[cells.Count];
         for (int i = 0; i < cells.Count; i++)
-        {
             markers[i] = SpawnMarker(CellToWorld(cells[i], origin, cellSize), cellSize);
-            if (markers[i] != null) _activeMarkers.Add(markers[i]);
-        }
         return markers;
     }
 
@@ -309,21 +277,16 @@ public class BossGridSpikeSkill : BossSkillBase
     {
         if (!WarningLineSettings.Enabled) return null;
 
-        GameObject go;
         if (warningMarkerPrefab != null)
-        {
-            go = Instantiate(warningMarkerPrefab, new Vector3(pos.x, pos.y, 0f), Quaternion.identity);
-        }
-        else
-        {
-            go = new GameObject("SpikeWarn");
-            go.transform.position   = new Vector3(pos.x, pos.y, 0f);
-            go.transform.localScale = new Vector3(cellSize.x * 0.88f, cellSize.y * 0.88f, 1f);
-            var sr = go.AddComponent<SpriteRenderer>();
-            sr.sprite       = GetWhiteSprite();
-            sr.color        = warningColor;
-            sr.sortingOrder = 5;
-        }
+            return Object.Instantiate(warningMarkerPrefab, new Vector3(pos.x, pos.y, 0f), Quaternion.identity);
+
+        var go = new GameObject("SpikeWarn");
+        go.transform.position   = new Vector3(pos.x, pos.y, 0f);
+        go.transform.localScale = new Vector3(cellSize.x * 0.88f, cellSize.y * 0.88f, 1f);
+        var sr       = go.AddComponent<SpriteRenderer>();
+        sr.sprite       = GetWhiteSprite();
+        sr.color        = warningColor;
+        sr.sortingOrder = 5;
         return go;
     }
 
@@ -344,11 +307,7 @@ public class BossGridSpikeSkill : BossSkillBase
     private void CleanupAll(GameObject[] gos)
     {
         foreach (var go in gos)
-        {
-            if (go == null) continue;
-            _activeMarkers.Remove(go);
-            Destroy(go);
-        }
+            if (go != null) Object.Destroy(go);
     }
 
     private static void GetMapBounds(out Vector2 min, out Vector2 max)
@@ -391,38 +350,4 @@ public class BossGridSpikeSkill : BossSkillBase
         _whiteSprite = Sprite.Create(tex, new Rect(0, 0, 4, 4), new Vector2(0.5f, 0.5f), 4f);
         return _whiteSprite;
     }
-
-    private bool IsInvalid() => Owner == null;
-
-    // ── 에디터 기즈모 ────────────────────────────────────────────
-#if UNITY_EDITOR
-    private void OnDrawGizmosSelected()
-    {
-        GetMapBounds(out Vector2 bMin, out Vector2 bMax);
-        Vector2 mapSize  = bMax - bMin;
-        Vector2 cellSize = new Vector2(mapSize.x / cols, mapSize.y / rows);
-        Vector2 origin   = bMin + cellSize * 0.5f;
-
-        var cells = SelectCells();
-        Gizmos.color = new Color(1f, 0.4f, 0f, 0.25f);
-        foreach (var cell in cells)
-        {
-            Vector2 pos = CellToWorld(cell, origin, cellSize);
-            Gizmos.DrawCube(new Vector3(pos.x, pos.y, 0f),
-                            new Vector3(cellSize.x * 0.85f, cellSize.y * 0.85f, 0.01f));
-        }
-
-        Gizmos.color = new Color(1f, 1f, 0f, 0.4f);
-        for (int x = 0; x <= cols; x++)
-        {
-            float wx = bMin.x + x * cellSize.x;
-            Gizmos.DrawLine(new Vector3(wx, bMin.y, 0f), new Vector3(wx, bMax.y, 0f));
-        }
-        for (int y = 0; y <= rows; y++)
-        {
-            float wy = bMin.y + y * cellSize.y;
-            Gizmos.DrawLine(new Vector3(bMin.x, wy, 0f), new Vector3(bMax.x, wy, 0f));
-        }
-    }
-#endif
 }

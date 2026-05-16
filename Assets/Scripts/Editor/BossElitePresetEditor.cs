@@ -413,20 +413,13 @@ public class BossElitePresetEditor : EditorWindow
 
     private void DrawBossSkills(GameObject prefab)
     {
-        var skills = prefab.GetComponentsInChildren<BossSkillBase>(true);
-        if (skills.Length == 0)
-        {
-            EditorGUILayout.HelpBox("BossSkillBase 컴포넌트 없음", MessageType.Info);
-            return;
-        }
+        // 스킬은 BossController의 [SerializeReference] Skills 리스트에 통합됐습니다.
+        var bc = prefab.GetComponentInChildren<BossController>(true);
+        if (bc == null) { EditorGUILayout.HelpBox("BossController 없음", MessageType.Warning); return; }
 
-        foreach (var skill in skills)
-        {
-            if (skill == null) continue;
-            EditorGUILayout.Space(4);
-            SectionHeader(skill.GetType().Name);
-            GetOrCreateEditor(skill).OnInspectorGUI();
-        }
+        EditorGUILayout.HelpBox("스킬은 BossController 인스펙터의 Skills 리스트에서 편집합니다.", MessageType.Info);
+        EditorGUILayout.Space(4);
+        GetOrCreateEditor(bc).OnInspectorGUI();
     }
 
     // ══════════════════════════════════════════════════════════════════

@@ -224,6 +224,12 @@ public class MainMenuPanel : MonoBehaviour
         go.transform.SetSiblingIndex(background.transform.GetSiblingIndex() + 1);
     }
 
+    void OnEnable()
+    {
+        if (cardViews == null) return; // Start() 이전이면 건너뜀
+        RefreshStages();
+    }
+
     void Start()
     {
         LoadStagesFromDB();

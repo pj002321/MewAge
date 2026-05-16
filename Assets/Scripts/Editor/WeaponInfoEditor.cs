@@ -1,314 +1,406 @@
 #if UNITY_EDITOR
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using Mewage.DB;
 using UnityEditor;
 using UnityEngine;
 
+[CanEditMultipleObjects]
 [CustomEditor(typeof(WeaponPoint), true)]
 public class WeaponInfoEditor : Editor
 {
-    SerializedProperty p_weaponType;
-    SerializedProperty p_magicElement;
-    SerializedProperty p_projectilePrefab;
-    SerializedProperty p_projectileSpeed;
-    SerializedProperty p_useParabolicShot;
-    SerializedProperty p_parabolicArcHeight;
-    SerializedProperty p_parabolicSpawnLocalPos;
-    SerializedProperty p_areaHitDamageRatio;
+    private SerializedProperty _behaviour;
 
-    // 스핀 전용
-    SerializedProperty p_orbitRadius;
-    SerializedProperty p_orbitSpeed;
-    SerializedProperty p_spinHitRadius;
-    SerializedProperty p_spinHitCooldown;
+    private SerializedProperty _hammerImpactWorldPos;
+    private SerializedProperty _hammerImpactRadius;
+    private SerializedProperty _hammerRiseHeight;
+    private SerializedProperty _useParabolicShot;
+    private SerializedProperty _parabolicSpawnLocalPos;
 
-    // 번개 뮤즐 전용
-    SerializedProperty p_muzzlePoint;
-    SerializedProperty p_muzzleVfxPrefab;
-    SerializedProperty p_zapBoltVfxPrefab;
+    private DB_무기[] _dbRows;
 
-    // Melee 당기기
-    SerializedProperty p_pullOnReturn;
-    SerializedProperty p_pullRadius;
-    SerializedProperty p_pullStrength;
-    SerializedProperty p_pullDuration;
-
-    // Hammer 전용
-    SerializedProperty p_hammerRiseHeight;
-    SerializedProperty p_hammerRiseTime;
-    SerializedProperty p_hammerSpinSpeed;
-    SerializedProperty p_hammerSlamSpeed;
-    SerializedProperty p_hammerImpactWorldPos;
-    SerializedProperty p_hammerImpactRadius;
-    SerializedProperty p_hammerImpactVfxPrefab;
-    SerializedProperty p_hammerHighlightScale;
-    SerializedProperty p_hammerHighlightDur;
-
-    // 슬래시 전용
-    SerializedProperty p_slashRadius;
-    SerializedProperty p_slashArcDegrees;
-    SerializedProperty p_slashSweepSpeed;
-    SerializedProperty p_slashHitRadius;
-    SerializedProperty p_slashVfxPrefab;
-    SerializedProperty p_slashVfxDuration;
-    SerializedProperty p_slashTeleportMaxDist;
-    SerializedProperty p_slashFadeTime;
-
-    // VFX 미리보기
-    private GameObject _vfxPreview;
-    private bool       _isPreviewing;
+    private static readonly FieldInfo BehaviourField =
+        typeof(WeaponPoint).GetField("_behaviour",
+            BindingFlags.Instance | BindingFlags.NonPublic);
 
     private void OnEnable()
     {
-        p_weaponType             = serializedObject.FindProperty("weaponType");
-        p_magicElement           = serializedObject.FindProperty("magicElement");
-        p_projectilePrefab              = serializedObject.FindProperty("projectilePrefab");
-        p_projectileSpeed               = serializedObject.FindProperty("projectileSpeed");
-        p_useParabolicShot              = serializedObject.FindProperty("useParabolicShot");
-        p_parabolicArcHeight     = serializedObject.FindProperty("parabolicArcHeight");
-        p_parabolicSpawnLocalPos = serializedObject.FindProperty("parabolicSpawnLocalPos");
-        p_areaHitDamageRatio     = serializedObject.FindProperty("areaHitDamageRatio");
-        p_orbitRadius            = serializedObject.FindProperty("orbitRadius");
-        p_orbitSpeed             = serializedObject.FindProperty("orbitSpeed");
-        p_spinHitRadius          = serializedObject.FindProperty("spinHitRadius");
-        p_spinHitCooldown        = serializedObject.FindProperty("spinHitCooldown");
-        p_muzzlePoint            = serializedObject.FindProperty("muzzlePoint");
-        p_muzzleVfxPrefab        = serializedObject.FindProperty("muzzleVfxPrefab");
-        p_zapBoltVfxPrefab       = serializedObject.FindProperty("zapBoltVfxPrefab");
-        p_pullOnReturn           = serializedObject.FindProperty("pullOnReturn");
-        p_pullRadius             = serializedObject.FindProperty("pullRadius");
-        p_pullStrength           = serializedObject.FindProperty("pullStrength");
-        p_pullDuration           = serializedObject.FindProperty("pullDuration");
-        p_hammerRiseHeight       = serializedObject.FindProperty("hammerRiseHeight");
-        p_hammerRiseTime         = serializedObject.FindProperty("hammerRiseTime");
-        p_hammerSpinSpeed        = serializedObject.FindProperty("hammerSpinSpeed");
-        p_hammerSlamSpeed        = serializedObject.FindProperty("hammerSlamSpeed");
-        p_hammerImpactWorldPos   = serializedObject.FindProperty("hammerImpactWorldPos");
-        p_hammerImpactRadius     = serializedObject.FindProperty("hammerImpactRadius");
-        p_hammerImpactVfxPrefab  = serializedObject.FindProperty("hammerImpactVfxPrefab");
-        p_hammerHighlightScale   = serializedObject.FindProperty("hammerHighlightScale");
-        p_hammerHighlightDur     = serializedObject.FindProperty("hammerHighlightDur");
-        p_slashRadius            = serializedObject.FindProperty("slashRadius");
-        p_slashArcDegrees        = serializedObject.FindProperty("slashArcDegrees");
-        p_slashSweepSpeed        = serializedObject.FindProperty("slashSweepSpeed");
-        p_slashHitRadius         = serializedObject.FindProperty("slashHitRadius");
-        p_slashVfxPrefab         = serializedObject.FindProperty("slashVfxPrefab");
-        p_slashVfxDuration       = serializedObject.FindProperty("slashVfxDuration");
-        p_slashTeleportMaxDist   = serializedObject.FindProperty("slashTeleportMaxDist");
-        p_slashFadeTime          = serializedObject.FindProperty("slashFadeTime");
+        _behaviour = serializedObject.FindProperty("_behaviour");
+
+        _dbRows = targets.Select(FindDbRowFor).ToArray();
+        SyncBehavioursFromDb();
+        RefreshNestedProps();
     }
 
-    private void OnDisable() => StopPreview();
-
-    private void StopPreview()
+    private void OnDisable()
     {
         if (_vfxPreview != null) { DestroyImmediate(_vfxPreview); _vfxPreview = null; }
-        _isPreviewing = false;
+    }
+
+    private static DB_무기 FindDbRowFor(UnityEngine.Object obj)
+    {
+        var go = ((Component)obj).gameObject;
+
+        var stage = UnityEditor.SceneManagement.PrefabStageUtility.GetPrefabStage(go);
+        string assetPath = stage?.assetPath;
+        if (string.IsNullOrEmpty(assetPath))
+            assetPath = PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(obj);
+        if (string.IsNullOrEmpty(assetPath))
+            assetPath = AssetDatabase.GetAssetPath(go.transform.root.gameObject);
+        if (string.IsNullOrEmpty(assetPath)) return null;
+
+        string filename = Path.GetFileNameWithoutExtension(assetPath).ToLower();
+        DB_무기 found = null;
+        DB_무기.ForEachEntity(row =>
+        {
+            if (found != null) return;
+            if (!string.IsNullOrEmpty(row.f_무기ID) && row.f_무기ID.ToLower() == filename)
+                found = row;
+        });
+        return found;
+    }
+
+    // ── SceneGUI ─────────────────────────────────────────────────────
+
+    private GameObject _vfxPreview;
+
+    private void RefreshNestedProps()
+    {
+        if (_behaviour == null) return;
+        _hammerImpactWorldPos   = _behaviour.FindPropertyRelative("hammerImpactWorldPos");
+        _hammerImpactRadius     = _behaviour.FindPropertyRelative("hammerImpactRadius");
+        _hammerRiseHeight       = _behaviour.FindPropertyRelative("hammerRiseHeight");
+        _useParabolicShot       = _behaviour.FindPropertyRelative("useParabolicShot");
+        _parabolicSpawnLocalPos = _behaviour.FindPropertyRelative("parabolicSpawnLocalPos");
     }
 
     private void OnSceneGUI()
     {
+        if (targets.Length > 1) return;
         var weapon = (WeaponPoint)target;
-        WeaponType type = (WeaponType)p_weaponType.enumValueIndex;
 
-        // ── Hammer 착지 위치 핸들 (세계 좌표) ───────────────────────
-        if (type == WeaponType.Hammer)
+        if (_hammerImpactWorldPos != null && _hammerImpactRadius != null)
         {
-            Vector2 impact   = p_hammerImpactWorldPos.vector2Value;
+            Vector2 impact   = _hammerImpactWorldPos.vector2Value;
             Vector3 worldPos = new Vector3(impact.x, impact.y, 0f);
-            float   radius   = p_hammerImpactRadius.floatValue;
-            float   peakH    = p_hammerRiseHeight.floatValue;
+            float   radius   = _hammerImpactRadius.floatValue;
+            float   peakH    = _hammerRiseHeight != null ? _hammerRiseHeight.floatValue : 4f;
 
-            // 충격 범위 디스크
             Handles.color = new Color(1f, 0.4f, 0f, 0.18f);
             Handles.DrawSolidDisc(worldPos, Vector3.forward, radius);
             Handles.color = new Color(1f, 0.4f, 0f, 1f);
             Handles.DrawWireDisc(worldPos, Vector3.forward, radius);
 
-            // 정점(상공) 표시
             Vector3 peakPos = worldPos + Vector3.up * peakH;
             Handles.color = new Color(0.4f, 0.8f, 1f, 0.5f);
             Handles.DrawDottedLine(worldPos, peakPos, 4f);
             Handles.DrawWireDisc(peakPos, Vector3.forward, 0.15f);
 
-            // 드래그 가능한 점
             EditorGUI.BeginChangeCheck();
             Vector3 moved = Handles.FreeMoveHandle(worldPos, 0.12f, Vector3.zero, Handles.DotHandleCap);
             if (EditorGUI.EndChangeCheck())
             {
                 Undo.RecordObject(target, "Hammer Impact World Pos");
-                p_hammerImpactWorldPos.vector2Value = new Vector2(moved.x, moved.y);
+                _hammerImpactWorldPos.vector2Value = new Vector2(moved.x, moved.y);
                 serializedObject.ApplyModifiedProperties();
             }
 
             Handles.Label(worldPos + Vector3.up * (radius + 0.15f), "착지");
-            Handles.Label(peakPos + Vector3.up * 0.2f, "정점");
+            Handles.Label(peakPos  + Vector3.up * 0.2f,             "정점");
         }
 
-        // ── Ranged 포물선 발사 위치 (기존) ────────────────────────────
-        if (type == WeaponType.Ranged && p_useParabolicShot != null && p_useParabolicShot.boolValue)
+        if (_useParabolicShot != null && _useParabolicShot.boolValue && _parabolicSpawnLocalPos != null)
         {
-            Vector3 spawnWorld = weapon.transform.TransformPoint(p_parabolicSpawnLocalPos.vector3Value);
+            Vector3 spawnWorld = weapon.transform.TransformPoint(_parabolicSpawnLocalPos.vector3Value);
             Handles.color = Color.green;
             Handles.SphereHandleCap(0, spawnWorld, Quaternion.identity, 0.1f, EventType.Repaint);
         }
     }
 
+    // ── 도트 텍스처 ──────────────────────────────────────────────────
+
+    private static readonly Color DbDotColor = new Color(0.35f, 0.65f, 1f,  1f);
+    private static readonly Color WpDotColor = new Color(1f,    0.82f, 0.2f, 1f);
+
+    private static Texture2D _dbDotTex;
+    private static Texture2D _wpDotTex;
+
+    private static Texture2D DbDot => _dbDotTex != null ? _dbDotTex : (_dbDotTex = MakeDotTex(DbDotColor));
+    private static Texture2D WpDot => _wpDotTex != null ? _wpDotTex : (_wpDotTex = MakeDotTex(WpDotColor));
+
+    private static Texture2D MakeDotTex(Color col)
+    {
+        const int S = 12;
+        var tex = new Texture2D(S, S, TextureFormat.RGBA32, false);
+        tex.filterMode = FilterMode.Bilinear;
+        float r = S * 0.5f;
+        for (int y = 0; y < S; y++)
+            for (int x = 0; x < S; x++)
+            {
+                float dx = x - r + 0.5f, dy = y - r + 0.5f;
+                float a  = Mathf.Clamp01(r - Mathf.Sqrt(dx * dx + dy * dy) + 0.5f);
+                tex.SetPixel(x, y, new Color(col.r, col.g, col.b, a));
+            }
+        tex.Apply();
+        return tex;
+    }
+
+    // ── 헤더 / 도트 행 ───────────────────────────────────────────────
+
+    private static readonly Color DbBg = new Color(0.3f, 0.5f, 1f,  0.35f);
+    private static readonly Color WpBg = new Color(1f,   0.8f, 0.2f, 0.35f);
+
+    private static void DrawColoredHeader(string label, Color bg)
+    {
+        var rect = EditorGUILayout.GetControlRect(false, EditorGUIUtility.singleLineHeight + 6f);
+        EditorGUI.DrawRect(rect, bg);
+        rect.xMin += 4f;
+        EditorGUI.LabelField(rect, label, EditorStyles.boldLabel);
+    }
+
+    private const float DotSize = 8f;
+    private const float DotPad  = 4f;
+
+    private static void DrawDotLabel(string label, Texture2D dot, string value)
+    {
+        var rect    = EditorGUILayout.GetControlRect(false, EditorGUIUtility.singleLineHeight);
+        var dotRect = new Rect(rect.x, rect.y + (rect.height - DotSize) * 0.5f, DotSize, DotSize);
+        GUI.DrawTexture(dotRect, dot);
+        rect.xMin += DotSize + DotPad;
+        using (new EditorGUI.DisabledScope(true))
+            EditorGUI.LabelField(rect, label, value);
+    }
+
+    private static void DrawPropWithDot(SerializedProperty prop, Texture2D dot)
+    {
+        float h     = EditorGUI.GetPropertyHeight(prop, true);
+        var rect    = EditorGUILayout.GetControlRect(true, h);
+        var dotRect = new Rect(rect.x, rect.y + (EditorGUIUtility.singleLineHeight - DotSize) * 0.5f, DotSize, DotSize);
+        GUI.DrawTexture(dotRect, dot);
+        rect.xMin += DotSize + DotPad;
+        EditorGUI.PropertyField(rect, prop, true);
+    }
+
+    // ── 유틸 ─────────────────────────────────────────────────────────
+
+    private static string F(float v) => v == 0f ? "-" : v.ToString("0.##");
+
+    // ── 챕터 파싱 ─────────────────────────────────────────────────────
+
+    private static int ChapterFromId(string weaponId, int fallback)
+    {
+        if (!string.IsNullOrEmpty(weaponId))
+        {
+            var p0 = weaponId.ToLower().Split('_')[0];
+            if (p0.StartsWith("ch") && int.TryParse(p0.Substring(2), out int n))
+                return n;
+        }
+        return fallback;
+    }
+
+    // ── Proj 프리팹 캐시 ──────────────────────────────────────────────
+
+    private static readonly Dictionary<int, (GameObject[] prefabs, string[] names)> ProjCache = new();
+
+    [UnityEditor.Callbacks.DidReloadScripts]
+    private static void ClearProjCache() => ProjCache.Clear();
+
+    private static (GameObject[] prefabs, string[] names) GetProjPrefabs(int chapter)
+    {
+        if (ProjCache.TryGetValue(chapter, out var cached)) return cached;
+
+        string folder = $"Assets/Resources/Weapons/Ch{chapter}/Proj";
+        var guids  = AssetDatabase.FindAssets("t:Prefab", new[] { folder });
+        var prefabs = guids
+            .Select(AssetDatabase.GUIDToAssetPath)
+            .Select(p => AssetDatabase.LoadAssetAtPath<GameObject>(p))
+            .Where(g => g != null)
+            .OrderBy(g => g.name)
+            .ToArray();
+        var names = prefabs.Select(g => g.name).Prepend("(선택)").ToArray();
+        var result = (prefabs, names);
+        ProjCache[chapter] = result;
+        return result;
+    }
+
+    // ── Projectile Prefab 피커 ────────────────────────────────────────
+
+    private void DrawProjectilePicker(SerializedProperty prop, int chapter)
+    {
+        var (prefabs, names) = GetProjPrefabs(chapter);
+
+        float h    = EditorGUIUtility.singleLineHeight;
+        var   rect = EditorGUILayout.GetControlRect(true, h);
+
+        // 도트
+        var dotRect = new Rect(rect.x, rect.y + (h - DotSize) * 0.5f, DotSize, DotSize);
+        GUI.DrawTexture(dotRect, WpDot);
+        rect.xMin += DotSize + DotPad;
+
+        // 라벨
+        float lw      = EditorGUIUtility.labelWidth - DotSize - DotPad;
+        var   lblRect = new Rect(rect.x, rect.y, lw, h);
+        EditorGUI.LabelField(lblRect, prop.displayName);
+
+        float valueX = rect.x + lw + 2f;
+        float valueW = rect.width - lw - 2f;
+
+        if (prefabs.Length > 0)
+        {
+            // 왼쪽 절반: Proj 폴더 드롭다운
+            float dropW = valueW * 0.5f - 2f;
+            var   dropRect = new Rect(valueX, rect.y, dropW, h);
+            var   objRect  = new Rect(valueX + dropW + 2f, rect.y, valueW - dropW - 2f, h);
+
+            var current = prop.objectReferenceValue as GameObject;
+            int curIdx  = current != null ? Array.IndexOf(prefabs, current) + 1 : 0;
+            int picked  = EditorGUI.Popup(dropRect, curIdx, names);
+            if (picked > 0 && picked - 1 < prefabs.Length)
+                prop.objectReferenceValue = prefabs[picked - 1];
+
+            // 오른쪽 절반: ObjectField (드래그 앤 드롭 / 직접 할당)
+            prop.objectReferenceValue =
+                EditorGUI.ObjectField(objRect, prop.objectReferenceValue, typeof(GameObject), false);
+        }
+        else
+        {
+            // Proj 폴더가 비어있으면 ObjectField만
+            var objRect = new Rect(valueX, rect.y, valueW, h);
+            prop.objectReferenceValue =
+                EditorGUI.ObjectField(objRect, prop.objectReferenceValue, typeof(GameObject), false);
+        }
+    }
+
+    // 여러 DB 행에서 동일 필드 값 추출 — 모두 같으면 그 값, 다르면 "—"
+    private string DbStr(Func<DB_무기, string> sel)
+    {
+        if (_dbRows == null || _dbRows.Length == 0) return "-";
+        var vals = _dbRows.Select(r => r != null ? sel(r) : null).ToArray();
+        return vals.All(v => v == vals[0]) ? (vals[0] ?? "-") : "—";
+    }
+
+    private static Type GetTypeFromDbTag(string dbType)
+    {
+        if (string.IsNullOrEmpty(dbType)) return null;
+        return TypeCache.GetTypesDerivedFrom<WeaponBehaviourBase>()
+            .FirstOrDefault(t => !t.IsAbstract &&
+                t.Name.IndexOf(dbType, StringComparison.OrdinalIgnoreCase) >= 0);
+    }
+
+    // DB 기준으로 모든 target의 _behaviour 자동 동기화
+    private void SyncBehavioursFromDb()
+    {
+        bool changed = false;
+        for (int i = 0; i < targets.Length; i++)
+        {
+            var db = i < _dbRows.Length ? _dbRows[i] : null;
+            if (db == null) continue;
+
+            var expectedType = GetTypeFromDbTag(db.f_타입);
+            if (expectedType == null) continue;
+
+            var current = BehaviourField?.GetValue(targets[i])?.GetType();
+            if (current == expectedType) continue;
+
+            BehaviourField?.SetValue(targets[i], Activator.CreateInstance(expectedType));
+            EditorUtility.SetDirty((UnityEngine.Object)targets[i]);
+            changed = true;
+        }
+        if (changed)
+        {
+            serializedObject.Update();
+            AssetDatabase.SaveAssets();
+        }
+    }
+
+    // 각 target의 _behaviour 타입 (reflection)
+    private Type[] GetAllBehaviourTypes() =>
+        targets.Select(t => BehaviourField?.GetValue(t)?.GetType()).ToArray();
+
+    // ── Inspector ────────────────────────────────────────────────────
+
     public override void OnInspectorGUI()
     {
         serializedObject.Update();
 
-        EditorGUILayout.PropertyField(p_weaponType, new GUIContent("무기 타입"));
+        // ── DB 자동 주입 섹션 ────────────────────────────────────────
+        DrawColoredHeader("DB_무기 자동 주입 (Init)  —  인스펙터 설정 불필요", DbBg);
+        EditorGUI.indentLevel++;
 
-        WeaponType type = (WeaponType)p_weaponType.enumValueIndex;
+        bool anyDbMissing = _dbRows.Any(r => r == null);
+        if (anyDbMissing)
+            EditorGUILayout.HelpBox("일부 무기의 DB 엔트리를 찾지 못했습니다.", MessageType.Warning);
 
-        // ── MAGIC ─────────────────────────────────────────────────────
-        if (type == WeaponType.Magic)
-        {
-            EditorGUILayout.PropertyField(p_magicElement, new GUIContent("마법 속성"));
-
-            var element = (MagicElement)p_magicElement.enumValueIndex;
-            if (element == MagicElement.Fire)
-            {
-                EditorGUILayout.Space(4);
-                EditorGUILayout.LabelField("불꽃 호밍 투사체", EditorStyles.boldLabel);
-                EditorGUILayout.PropertyField(p_projectilePrefab, new GUIContent("호밍 투사체 프리팹"));
-                EditorGUILayout.PropertyField(p_projectileSpeed,  new GUIContent("투사체 속도"));
-                EditorGUILayout.HelpBox("FireHomingProjectile 컴포넌트가 있는 프리팹을 연결하세요.\n적을 자동 추적하며, 공격력·출혈·흡혈이 자동 적용됩니다.", MessageType.None);
-            }
-
-            if (element == MagicElement.Lightning)
-            {
-                EditorGUILayout.Space(4);
-                EditorGUILayout.LabelField("번개 Muzzle", EditorStyles.boldLabel);
-                if (p_muzzlePoint      != null) EditorGUILayout.PropertyField(p_muzzlePoint,      new GUIContent("뮤즐 Transform"));
-                if (p_muzzleVfxPrefab  != null) EditorGUILayout.PropertyField(p_muzzleVfxPrefab,  new GUIContent("뮤즐 VFX 프리팹"));
-                if (p_zapBoltVfxPrefab != null) EditorGUILayout.PropertyField(p_zapBoltVfxPrefab, new GUIContent("번개 볼트 VFX 프리팹"));
-                else EditorGUILayout.HelpBox("WeaponPoint에 muzzlePoint / muzzleVfxPrefab / zapBoltVfxPrefab 필드가 없습니다.", MessageType.Warning);
-                EditorGUILayout.HelpBox("뮤즐 Transform: 무기 프리팹 자식 오브젝트로 배치 후 연결\n뮤즐 VFX: 발사 시 1초 후 자동 파괴됩니다.\n번개 볼트 VFX: 뮤즐→타겟 방향으로 스폰됩니다.", MessageType.None);
-            }
-        }
-
-        EditorGUILayout.HelpBox(
-            "공격력 · 탐지범위 · 공격속도 · 주변범위 · 튕김횟수\n넉백 · 치명타 · 출혈 · 흡혈  →  DB_무기에서 자동 로드",
-            MessageType.Info);
+        DrawDotLabel("무기 타입", DbDot, DbStr(r => r.f_타입));
+        DrawDotLabel("공격력",   DbDot, DbStr(r => F(r.f_기본공격력)));
+        DrawDotLabel("탐지범위", DbDot, DbStr(r => F(r.f_탐지범위)));
+        DrawDotLabel("쿨타임",   DbDot, DbStr(r => $"{r.f_공격속도:0.##}s"));
+        DrawDotLabel("주변범위", DbDot, DbStr(r => F(r.f_주변범위)));
+        DrawDotLabel("넉백",     DbDot, DbStr(r => F(r.f_넉백)));
+        DrawDotLabel("치명타",   DbDot, DbStr(r => $"{r.f_치명타:0.#}%"));
+        DrawDotLabel("출혈",     DbDot, DbStr(r => F(r.f_출혈)));
+        DrawDotLabel("흡혈",     DbDot, DbStr(r => F(r.f_흡혈)));
+        EditorGUI.indentLevel--;
 
         EditorGUILayout.Space(6);
 
-        // ── 투사체 공통 (Magic은 속성별 섹션에서 별도 처리) ──────────
-        if (type != WeaponType.Melee && type != WeaponType.Spin &&
-            type != WeaponType.Slash && type != WeaponType.Magic)
+        // ── 인스펙터 설정값 섹션 ─────────────────────────────────────
+        DrawColoredHeader("인스펙터 설정값", WpBg);
+        DrawBehaviourSelector();
+        EditorGUILayout.Space(4);
+
+        var prop = serializedObject.GetIterator();
+        prop.NextVisible(true);
+        while (prop.NextVisible(false))
         {
-            EditorGUILayout.PropertyField(p_projectilePrefab, new GUIContent("투사체 프리팹"));
-            EditorGUILayout.PropertyField(p_projectileSpeed,  new GUIContent("투사체 속도"));
-        }
-
-        if (type != WeaponType.Slash)
-            EditorGUILayout.PropertyField(p_areaHitDamageRatio, new GUIContent("주변 데미지 배율 (0~1)"));
-
-        // ── MELEE 당기기 ─────────────────────────────────────────────
-        if (type == WeaponType.Melee)
-        {
-            EditorGUILayout.Space(6);
-            EditorGUILayout.LabelField("복귀 시 당기기", EditorStyles.boldLabel);
-            EditorGUILayout.PropertyField(p_pullOnReturn, new GUIContent("당기기 활성화"));
-            if (p_pullOnReturn != null && p_pullOnReturn.boolValue)
-            {
-                EditorGUILayout.PropertyField(p_pullRadius,   new GUIContent("당기기 범위"));
-                EditorGUILayout.PropertyField(p_pullStrength, new GUIContent("당기기 힘"));
-                EditorGUILayout.PropertyField(p_pullDuration, new GUIContent("당기기 지속시간 (초)"));
-            }
-        }
-
-        // ── HAMMER 전용 ──────────────────────────────────────────────
-        if (type == WeaponType.Hammer)
-        {
-            EditorGUILayout.Space(6);
-            EditorGUILayout.LabelField("해머 전용 — 상승 내려치기", EditorStyles.boldLabel);
-            EditorGUILayout.PropertyField(p_hammerImpactVfxPrefab,    new GUIContent("착지 VFX 프리팹"));
-            EditorGUILayout.PropertyField(p_hammerRiseHeight,         new GUIContent("상승 높이"));
-            EditorGUILayout.PropertyField(p_hammerRiseTime,           new GUIContent("상승 시간 (초)"));
-            EditorGUILayout.PropertyField(p_hammerSpinSpeed,          new GUIContent("자전 속도 (deg/s)"));
-            EditorGUILayout.PropertyField(p_hammerSlamSpeed,          new GUIContent("하강 속도"));
-            EditorGUILayout.PropertyField(p_hammerImpactWorldPos,     new GUIContent("착지 세계 좌표 (맵 정중앙)"));
-            EditorGUILayout.PropertyField(p_hammerImpactRadius,       new GUIContent("충격 범위"));
-            EditorGUILayout.PropertyField(p_hammerHighlightScale,  new GUIContent("충격 스케일 배율"));
-            EditorGUILayout.PropertyField(p_hammerHighlightDur,    new GUIContent("하이라이트 지속시간 (초)"));
-        }
-
-        // ── RANGED 포물선 옵션 ────────────────────────────────────────
-        if (type == WeaponType.Ranged)
-        {
-            EditorGUILayout.Space(6);
-            EditorGUILayout.LabelField("포물선 설정", EditorStyles.boldLabel);
-            EditorGUILayout.PropertyField(p_useParabolicShot, new GUIContent("포물선 발사"));
-            if (p_useParabolicShot.boolValue)
-            {
-                EditorGUILayout.PropertyField(p_parabolicArcHeight,     new GUIContent("호 높이"));
-                EditorGUILayout.PropertyField(p_parabolicSpawnLocalPos, new GUIContent("발사 위치 (로컬)"));
-                EditorGUILayout.HelpBox("씬 뷰에서 녹색 구체로 발사 위치를 확인할 수 있습니다.", MessageType.None);
-            }
-        }
-
-        // ── SPIN 전용 ────────────────────────────────────────────────
-        if (type == WeaponType.Spin)
-        {
-            EditorGUILayout.Space(6);
-            EditorGUILayout.LabelField("스핀 전용", EditorStyles.boldLabel);
-            EditorGUILayout.PropertyField(p_orbitRadius,     new GUIContent("공전 반경"));
-            EditorGUILayout.PropertyField(p_orbitSpeed,      new GUIContent("공전 속도 (deg/s)"));
-            EditorGUILayout.PropertyField(p_spinHitRadius,   new GUIContent("타격 판정 반경"));
-            EditorGUILayout.PropertyField(p_spinHitCooldown, new GUIContent("재타격 쿨타임"));
-        }
-
-        // ── SLASH 전용 ───────────────────────────────────────────────
-        if (type == WeaponType.Slash)
-        {
-            EditorGUILayout.Space(6);
-            EditorGUILayout.LabelField("슬래시 전용 — 반원 베기", EditorStyles.boldLabel);
-            EditorGUILayout.PropertyField(p_slashVfxPrefab,         new GUIContent("슬래시 VFX 프리팹"));
-            EditorGUILayout.PropertyField(p_slashVfxDuration,       new GUIContent("VFX 지속 시간 (초)"));
-            EditorGUILayout.PropertyField(p_slashRadius,            new GUIContent("최소 베기 반경 (폴백)"));
-            EditorGUILayout.PropertyField(p_slashArcDegrees,        new GUIContent("호 각도 (기본 180)"));
-            EditorGUILayout.PropertyField(p_slashSweepSpeed,        new GUIContent("휩쓸기 속도 (deg/s)"));
-            EditorGUILayout.PropertyField(p_slashHitRadius,         new GUIContent("타격 판정 반경"));
-            EditorGUILayout.Space(4);
-            EditorGUILayout.LabelField("텔레포트 설정", EditorStyles.boldLabel);
-            EditorGUILayout.PropertyField(p_slashTeleportMaxDist,   new GUIContent("최대 이동 거리"));
-            EditorGUILayout.PropertyField(p_slashFadeTime,          new GUIContent("페이드 시간 (초)"));
-
-            // VFX 미리보기 (아크 중간지점에 스폰)
-            var prefabObj = p_slashVfxPrefab.objectReferenceValue as GameObject;
-            if (prefabObj != null)
-            {
-                EditorGUILayout.Space(4);
-                if (!_isPreviewing)
-                {
-                    if (GUILayout.Button("VFX 미리보기"))
-                    {
-                        var weapon = (WeaponPoint)target;
-                        Vector3 center    = weapon.transform.parent != null ? weapon.transform.parent.position : weapon.transform.position;
-                        Vector2 weaponDir = (weapon.transform.position - center).sqrMagnitude > 0.001f
-                            ? ((Vector2)(weapon.transform.position - center)).normalized : Vector2.up;
-                        float radius      = Mathf.Max(p_slashRadius.floatValue, (weapon.transform.position - center).magnitude);
-                        Vector3 spawnPos  = center + (Vector3)(weaponDir * radius);
-                        float angle       = Mathf.Atan2(weaponDir.y, weaponDir.x) * Mathf.Rad2Deg - 90f;
-
-                        _vfxPreview = (GameObject)PrefabUtility.InstantiatePrefab(prefabObj);
-                        _vfxPreview.transform.position  = spawnPos;
-                        _vfxPreview.transform.rotation  = Quaternion.Euler(0f, 0f, angle);
-                        _vfxPreview.transform.localScale = Vector3.one;
-                        _vfxPreview.hideFlags            = HideFlags.DontSaveInBuild;
-                        _isPreviewing = true;
-                    }
-                }
-                else
-                {
-                    if (GUILayout.Button("미리보기 종료"))
-                        StopPreview();
-                }
-            }
+            if (prop.name == "_behaviour") continue;
+            DrawPropWithDot(prop.Copy(), WpDot);
         }
 
         serializedObject.ApplyModifiedProperties();
+    }
+
+    private void DrawBehaviourSelector()
+    {
+        var allBehTypes = GetAllBehaviourTypes();
+        bool sameType   = allBehTypes.All(t => t == allBehTypes[0]);
+        Type currentType = sameType ? allBehTypes[0] : null;
+
+        // Behaviour 타입 — DB가 결정, 읽기 전용
+        var row     = EditorGUILayout.GetControlRect(true, EditorGUIUtility.singleLineHeight);
+        var dotRect = new Rect(row.x, row.y + (row.height - DotSize) * 0.5f, DotSize, DotSize);
+        GUI.DrawTexture(dotRect, DbDot);
+        row.xMin += DotSize + DotPad;
+        using (new EditorGUI.DisabledScope(true))
+            EditorGUI.LabelField(row, "Behaviour", currentType?.Name ?? "—");
+
+        if (currentType == null || _behaviour.managedReferenceValue == null) return;
+
+        // 서브필드 — 타입이 모두 동일할 때만 표시
+        if (!sameType) return;
+
+        int chapter = ChapterFromId(_dbRows.FirstOrDefault()?.f_무기ID,
+                                    _dbRows.FirstOrDefault()?.f_챕터 ?? 1);
+
+        EditorGUI.indentLevel++;
+        var it  = _behaviour.Copy();
+        var end = _behaviour.GetEndProperty();
+        if (it.NextVisible(true))
+        {
+            while (!SerializedProperty.EqualContents(it, end))
+            {
+                if (it.name == "projectilePrefab")
+                    DrawProjectilePicker(it.Copy(), chapter);
+                else
+                    DrawPropWithDot(it.Copy(), WpDot);
+
+                if (!it.NextVisible(false)) break;
+            }
+        }
+        EditorGUI.indentLevel--;
     }
 }
 #endif

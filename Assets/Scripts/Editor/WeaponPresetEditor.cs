@@ -111,23 +111,24 @@ public class WeaponPresetEditor : EditorWindow
         var wp = go.GetComponentInChildren<WeaponPoint>();
         if (wp == null) return;
 
-        var so = new SerializedObject(wp);
-        var sprite = go.GetComponent<SpriteRenderer>()?.sprite
-                  ?? go.GetComponentInChildren<SpriteRenderer>()?.sprite;
+        var so      = new SerializedObject(wp);
+        var beh     = so.FindProperty("_behaviour");   // [SerializeReference]
+        var sprite  = go.GetComponent<SpriteRenderer>()?.sprite
+                   ?? go.GetComponentInChildren<SpriteRenderer>()?.sprite;
 
         _prefabs[id] = new PrefabEntry
         {
             go                   = go,
             so                   = so,
-            speedProp            = so.FindProperty("projectileSpeed"),
+            speedProp            = beh?.FindPropertyRelative("projectileSpeed"),
             ratioProp            = so.FindProperty("areaHitDamageRatio"),
-            magicElementProp     = so.FindProperty("magicElement"),
-            zapBoltVfxPrefabProp = so.FindProperty("zapBoltVfxPrefab"),
-            pullbackProp         = so.FindProperty("pullbackDist"),
-            strikeProp           = so.FindProperty("strikeSpeed"),
-            returnProp           = so.FindProperty("returnSpeed"),
-            overshootDistProp    = so.FindProperty("overshootDistance"),
-            overshootSpeedProp   = so.FindProperty("overshootSpeed"),
+            magicElementProp     = beh?.FindPropertyRelative("magicElement"),
+            zapBoltVfxPrefabProp = beh?.FindPropertyRelative("zapBoltVfxPrefab"),
+            pullbackProp         = beh?.FindPropertyRelative("pullbackDist"),
+            strikeProp           = beh?.FindPropertyRelative("strikeSpeed"),
+            returnProp           = beh?.FindPropertyRelative("returnSpeed"),
+            overshootDistProp    = beh?.FindPropertyRelative("overshootDistance"),
+            overshootSpeedProp   = beh?.FindPropertyRelative("overshootSpeed"),
             icon                 = sprite,
         };
     }
@@ -204,6 +205,11 @@ public class WeaponPresetEditor : EditorWindow
         EditorGUILayout.EndHorizontal();
     }
 
+    // 0~13: DB 읽기전용, 14~: 인스펙터 설정값
+    private const int InspectorColStart = 14;
+    private static readonly Color DbHeaderBg  = new Color(0.4f, 0.6f, 1f,  0.25f);
+    private static readonly Color WpHeaderBg  = new Color(1f,   0.85f, 0.2f, 0.22f);
+
     private void DrawColumnHeader()
     {
         var h = new GUIStyle(EditorStyles.miniLabel)
@@ -211,9 +217,15 @@ public class WeaponPresetEditor : EditorWindow
             fontStyle = FontStyle.Bold,
             alignment = TextAnchor.MiddleCenter,
         };
-        EditorGUILayout.BeginHorizontal(GUI.skin.box);
+
+        EditorGUILayout.BeginHorizontal();
         for (int i = 0; i < ColHeaders.Length; i++)
+        {
+            var prev = GUI.backgroundColor;
+            GUI.backgroundColor = i < InspectorColStart ? DbHeaderBg : WpHeaderBg;
             GUILayout.Label(ColHeaders[i], h, GUILayout.Width(ColW[i]));
+            GUI.backgroundColor = prev;
+        }
         EditorGUILayout.EndHorizontal();
     }
 
@@ -225,9 +237,9 @@ public class WeaponPresetEditor : EditorWindow
         EditorGUILayout.BeginHorizontal(GUI.skin.box);
         GUI.backgroundColor = prevBg;
 
-        var lbl  = new GUIStyle(EditorStyles.miniLabel) { alignment = TextAnchor.MiddleCenter };
-        var gray = new GUIStyle(lbl) { normal = { textColor = Color.gray } };
-        var star = new GUIStyle(lbl) { normal = { textColor = new Color(0.9f, 0.8f, 0.2f) } };
+        var lbl  = new GUIStyle(EditorStyles.miniLabel) { alignment = TextAnchor.MiddleCenter, normal = { textColor = new Color(0.7f, 0.85f, 1f) } };
+        var gray = new GUIStyle(EditorStyles.miniLabel) { alignment = TextAnchor.MiddleCenter, normal = { textColor = new Color(0.5f, 0.6f, 0.75f) } };
+        var star = new GUIStyle(EditorStyles.miniLabel) { alignment = TextAnchor.MiddleCenter, normal = { textColor = new Color(1f, 0.9f, 0.3f) } };
 
         // ── 아이콘 열 ────────────────────────────────────────────────
         string id0 = row.f_무기ID ?? "";

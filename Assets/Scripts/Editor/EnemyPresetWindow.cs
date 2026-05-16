@@ -431,7 +431,6 @@ public class EnemyPresetWindow : EditorWindow
         go.AddComponent<Rigidbody2D>().bodyType = RigidbodyType2D.Kinematic;
         go.AddComponent<CircleCollider2D>().isTrigger = true;
         go.AddComponent<EnemyController>();
-        go.AddComponent<BossBehaviour>();
         go.AddComponent<BossController>();
         go.AddComponent<EnemyFXConfig>();
 
@@ -1122,7 +1121,7 @@ public class EnemyPresetWindow : EditorWindow
             3 => typeof(HordeBehaviour),
             4 => typeof(TankBehaviour),
             5 => typeof(ChargeBehaviour),
-            6 => typeof(BossBehaviour),
+            6 => null,
             7 => typeof(MagicBehaviour),
             8 => typeof(HealerBehaviour),
             _ => null
@@ -1140,8 +1139,6 @@ public class EnemyPresetWindow : EditorWindow
             foreach (var b in root.GetComponents<EnemyBehaviourBase>())
                 Object.DestroyImmediate(b);
             root.AddComponent(t);
-            if (t == typeof(BossBehaviour) && root.GetComponent<BossController>() == null)
-                root.AddComponent<BossController>();
         }
         AssetDatabase.SaveAssets();
     }

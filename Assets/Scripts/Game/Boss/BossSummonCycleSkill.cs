@@ -1,97 +1,49 @@
-using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 /// <summary>
-/// 보스 스킬: 주기적 소환 사이클.
-/// BossProjectileCycleSkill과 동일하게 executeInPattern=false로 독립 루프 실행.
-///
-/// summonInterval초마다 보스 주변에 summonCount개의 소환체를 스폰합니다.
-/// 현재 살아있는 소환체가 maxActiveMinions 이상이면 소환을 건너뜁니다.
-/// 소환체(BossSummonMinion)는 minionDuration초 동안 플레이어를 추격하다 소멸합니다.
+/// 보스 스킬: 소환체 스폰.
+/// executeInPattern = true 로 PatternLoop에서 다른 스킬과 번갈아 실행됩니다.
+/// maxActiveMinions 이상 생존 중이면 소환을 건너뜁니다.
 /// </summary>
-public class BossSummonCycleSkill : BossSkillBase
+[System.Serializable]
+public class BossSummonSkill : BossSkillBase
 {
-    [Header("소환 프리팹")]
-    [Tooltip("BossSummonMinion 컴포넌트가 없으면 자동으로 추가합니다.")]
+    [Header("소환 설정")]
+    [SerializeField] private int   summonCount      = 2;
+    [Tooltip("동시 최대 생존 수. 0이면 제한 없음")]
+    [SerializeField] private int   maxActiveMinions = 4;
+    [SerializeField] private float minionDuration   = 10f;
+    [SerializeField] private float minionMoveSpeed  = 2.5f;
+    [SerializeField] private float minionContactDmg = 5f;
+    [SerializeField] private float spawnRadius      = 3f;
+    [SerializeField] private float markerWarningTime = 0.8f;
+
+    [Header("프리팹")]
+    [Tooltip("BossSummonMinion 컴포넌트가 없으면 자동 추가")]
     [SerializeField] private GameObject minionPrefab;
-    [Tooltip("ImpactMarker 컴포넌트가 붙은 스폰 마커 프리팹. null이면 마커 없이 즉시 소환.")]
+    [Tooltip("ImpactMarker 컴포넌트가 붙은 스폰 마커 프리팹. null이면 마커 없이 즉시 소환")]
     [SerializeField] private GameObject spawnMarkerPrefab;
 
-    [Header("소환 설정")]
-    [SerializeField] private int   summonCount         = 2;    // 1회 소환 수
-    [SerializeField] private int   maxActiveMinions    = 4;    // 동시 최대 생존 수 (0 = 제한 없음)
-    [SerializeField] private float summonInterval      = 8f;   // 소환 주기 (초)
-    [SerializeField] private float markerWarningTime   = 0.8f; // 마커 표시 시간 (초)
-    [SerializeField] private float minionDuration      = 10f;  // 소환체 생존 시간 (초)
-    [SerializeField] private float minionMoveSpeed     = 2.5f; // 소환체 이동 속도
-    [SerializeField] private float minionContactDamage = 5f;   // 소환체 접촉 피해
-    [SerializeField] private float spawnRadius         = 3f;   // 보스 주변 소환 반경
-
     private readonly List<BossSummonMinion> _activeMinions = new();
-    private GameObject[] _pendingMarkers;
 
-    public override void Init(BossController boss)
+    protected override async UniTask OnExecuteAsync(CancellationToken ct)
     {
-        base.Init(boss);
-        executeInPattern = false;
-        // 메인 보스가 아닌 클론에서 초기화된 경우 소환 루프 시작 안 함 (재귀 소환 방지)
-        if (BossController.Current != null && BossController.Current != boss) return;
-        StartCoroutine(SummonLoop());
-    }
+        if (minionPrefab == null || Boss == null) return;
 
-    protected override IEnumerator OnExecute() { yield break; }
-
-    /// <summary>SummonLoop은 그로기를 WaitUntil로 자체 처리하므로 중단하지 않습니다.</summary>
-    public override void OnInterrupted() { }
-
-    private void OnDestroy()
-    {
-        if (_pendingMarkers == null) return;
-        foreach (var m in _pendingMarkers)
-            if (m != null) Destroy(m);
-        _pendingMarkers = null;
-    }
-
-    private IEnumerator SummonLoop()
-    {
-        yield return new WaitUntil(() => Boss == null || !Boss.IsDropping);
-
-        while (true)
-        {
-            if (Boss == null || Boss.IsDead) yield break;
-
-            if (GameManager.Shared != null && GameManager.Shared.IsGameOver)
-                yield return new WaitUntil(() => GameManager.Shared == null || !GameManager.Shared.IsGameOver);
-
-            if (Boss != null && Boss.IsGrogy)
-                yield return new WaitUntil(() => Boss == null || !Boss.IsGrogy);
-
-            if (Boss == null || Boss.IsDead) yield break;
-
-            yield return new WaitForSeconds(summonInterval);
-
-            if (Boss == null) yield break;
-
-            yield return StartCoroutine(SpawnMinions());
-        }
-    }
-
-    private IEnumerator SpawnMinions()
-    {
-        if (minionPrefab == null || Boss == null) yield break;
-
-        // 파괴됐거나 풀로 반환된(비활성) 소환체 정리
+        // 파괴됐거나 비활성화된 소환체 정리
         _activeMinions.RemoveAll(m => m == null || !m.isActiveAndEnabled);
 
         // 최대 수 초과 시 건너뜀
-        if (maxActiveMinions > 0 && _activeMinions.Count >= maxActiveMinions) yield break;
+        if (maxActiveMinions > 0 && _activeMinions.Count >= maxActiveMinions) return;
 
         int canSpawn = maxActiveMinions > 0
             ? Mathf.Min(summonCount, maxActiveMinions - _activeMinions.Count)
             : summonCount;
 
-        // 스폰 위치 미리 결정
+        // 스폰 위치 결정
         var positions = new Vector3[canSpawn];
         for (int i = 0; i < canSpawn; i++)
         {
@@ -102,44 +54,43 @@ public class BossSummonCycleSkill : BossSkillBase
         }
 
         // 마커 표시
-        var markers      = new ImpactMarker[canSpawn];
+        var markers       = new ImpactMarker[canSpawn];
         var markerObjects = new GameObject[canSpawn];
         if (spawnMarkerPrefab != null)
         {
             for (int i = 0; i < canSpawn; i++)
             {
-                var obj = Instantiate(spawnMarkerPrefab, positions[i], Quaternion.identity);
+                var obj = Object.Instantiate(spawnMarkerPrefab, positions[i], Quaternion.identity);
                 markerObjects[i] = obj;
                 markers[i]       = obj.GetComponent<ImpactMarker>();
             }
-            _pendingMarkers = markerObjects;
-            yield return new WaitForSeconds(markerWarningTime);
-            _pendingMarkers = null;
+            await UniTask.Delay(System.TimeSpan.FromSeconds(markerWarningTime), cancellationToken: ct);
         }
 
         // 마커 제거
         for (int i = 0; i < canSpawn; i++)
         {
             if (markers[i] != null) markers[i].Dismiss();
-            else if (markerObjects[i] != null) Destroy(markerObjects[i]);
+            else if (markerObjects[i] != null) Object.Destroy(markerObjects[i]);
         }
 
-        if (Boss == null) yield break;
+        if (Boss == null || ct.IsCancellationRequested) return;
 
-        // 소환체 스폰
-        Owner.EnemyAnimator?.SetTrigger(EnemyAnim.TAttack);
+        // 소환
+        Boss.EnemyAnimator?.SetTrigger(EnemyAnim.TAttack);
 
         for (int i = 0; i < canSpawn; i++)
         {
             BossController.NextIsClone = true;
-            var go     = Instantiate(minionPrefab, positions[i], Quaternion.identity);
-            BossController.NextIsClone = false; // 혹시 BossController 없는 프리팹이면 직접 리셋
+            var go     = Object.Instantiate(minionPrefab, positions[i], Quaternion.identity);
+            BossController.NextIsClone = false;
+
             var minion = go.GetComponent<BossSummonMinion>();
             if (minion == null) minion = go.AddComponent<BossSummonMinion>();
-            minion.Init(minionDuration, minionMoveSpeed, minionContactDamage);
+            minion.Init(minionDuration, minionMoveSpeed, minionContactDmg);
             _activeMinions.Add(minion);
 
-            // 보스 프리팹 소환체: BossClone으로 등록해 실보스 사망 시 함께 제거 + 수명 관리
+            // 보스 프리팹 소환체: BossClone으로 등록해 실보스 사망 시 함께 제거
             if (go.GetComponent<BossController>() != null)
             {
                 var clone = go.AddComponent<BossClone>();

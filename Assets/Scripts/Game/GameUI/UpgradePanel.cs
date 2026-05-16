@@ -167,6 +167,9 @@ public class UpgradePanel : MonoBehaviour
 
         PlayerInventory.OnBeforeMerge += OnBeforeMerge;
 
+        GameEvents.OnGoldChanged += HandleGoldChanged;
+        GameEvents.OnExpChanged  += HandleExpChanged;
+
         RefreshInventoryUI();
         RefreshSynergyCompleteSlots();
         RefreshExpUI();
@@ -189,6 +192,9 @@ public class UpgradePanel : MonoBehaviour
             PlayerInventory.Shared.OnChanged -= RefreshInventoryUI;
 
         PlayerInventory.OnBeforeMerge -= OnBeforeMerge;
+
+        GameEvents.OnGoldChanged -= HandleGoldChanged;
+        GameEvents.OnExpChanged  -= HandleExpChanged;
     }
 
     // ────────────────────────────────────────────────────────────────
@@ -243,6 +249,9 @@ public class UpgradePanel : MonoBehaviour
         if (playerGoldText && PlayerStats.Shared != null)
             playerGoldText.text = $"{PlayerStats.Shared.Gold}";
     }
+
+    private void HandleGoldChanged(int _) => RefreshGold();
+    private void HandleExpChanged(int _, int __, int ___) => RefreshExpUI();
 
     public void RefreshAtkUI(bool animate = true)
     {

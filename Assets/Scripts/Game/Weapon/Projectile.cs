@@ -61,6 +61,11 @@ public class Projectile : MonoBehaviour
     private float _accelDuration;
     private float _accelTimer;
 
+    // 벽 반사 전용 (보스 바위 굴리기 등)
+    private bool  _bounce;
+    private int   _bounceRemaining;
+    private float _bounceRotateSpeed;
+
     // 유도 전용
     private bool  _isHoming;
     private float _homingTurnSpeed;   // deg/s
@@ -135,6 +140,14 @@ public class Projectile : MonoBehaviour
         _homingTurnSpeed    = turnSpeed;
         _homingTargetPlayer = true;
         _homingTimeLeft     = homingDuration;
+    }
+
+    /// <summary>벽 반사(바운스) 모드를 활성화합니다. Init() 호출 직후 사용하세요.</summary>
+    public void SetBounce(int maxBounces, float rotateSpeed = 270f)
+    {
+        _bounce            = true;
+        _bounceRemaining   = maxBounces;
+        _bounceRotateSpeed = rotateSpeed;
     }
 
     /// <summary>관통/반사 플래그를 설정합니다. Init() 호출 직후 사용하세요.</summary>
@@ -256,7 +269,36 @@ public class Projectile : MonoBehaviour
             _curSpeed = Mathf.Lerp(_accelStartSpeed, speed, t * t * t);
         }
         transform.Translate(direction * _curSpeed * Time.deltaTime, Space.World);
+
+        if (_bounce) UpdateBounce();
+
         CheckBossProximity();
+    }
+
+    private void UpdateBounce()
+    {
+        // Z축 회전
+        transform.Rotate(0f, 0f, _bounceRotateSpeed * Time.deltaTime, Space.Self);
+
+        var mb = MovementBounds.Shared;
+        if (mb == null || mb.IsInside(transform.position)) return;
+
+        if (_bounceRemaining <= 0) { Destroy(gameObject); return; }
+
+        Vector2 clamped = mb.ClosestPointOnBoundary(transform.position);
+        transform.position = clamped;
+
+        // 경계 법선 계산: 경계 바깥 방향의 반대가 법선
+        Vector2 diff = (Vector2)transform.position - clamped;
+        Vector2 normal = diff.sqrMagnitude > 0.0001f
+            ? diff.normalized
+            : Vector2.up;
+
+        direction = Vector2.Reflect(direction, normal).normalized;
+        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg - ForwardAngle;
+        transform.rotation = Quaternion.Euler(0f, 0f, angle);
+
+        _bounceRemaining--;
     }
 
     private void UpdateHoming()

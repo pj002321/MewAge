@@ -51,8 +51,8 @@ public class BossController : MonoBehaviour, IEnemyHost
     [SerializeField] private float idleDuration      = 0.6f;
 
     [Header("스킬 목록")]
-    [Tooltip("비워두면 시작 시 컴포넌트를 자동 탐색합니다.")]
-    [SerializeField] private BossSkillBase[] skills;
+    [SerializeReference, HideInInspector]
+    private System.Collections.Generic.List<BossSkillBase> _skills = new();
 
     // ── 공개 프로퍼티 ──────────────────────────────────────────────
     public float  HPRatio        => maxHP > 0f ? currentHP / maxHP : 0f;
@@ -73,6 +73,8 @@ public class BossController : MonoBehaviour, IEnemyHost
     public event System.Action OnDeath;
     public event System.Action OnGrogyStart;
     public event System.Action OnGrogyEnd;
+    /// <summary>HP가 변경될 때마다 발행됩니다. (current, max)</summary>
+    public event System.Action<float, float> OnHPChanged;
 
     public bool  IsGrogy        { get; private set; }
     public bool  IsMoveBound    { get; private set; }
@@ -108,6 +110,7 @@ public class BossController : MonoBehaviour, IEnemyHost
     public bool IsFacingLeft => _lastFlipX;
 
     private BossSkillBase[] _patternSkills = System.Array.Empty<BossSkillBase>();
+    public System.Collections.Generic.IReadOnlyList<BossSkillBase> Skills => _skills;
     private int             _skillIndex;
     private float[]         _lastSkillTime = System.Array.Empty<float>();
 
@@ -133,27 +136,16 @@ public class BossController : MonoBehaviour, IEnemyHost
         if (!_isClone) Current = this;
         Rb            = GetComponent<Rigidbody2D>();
         EnemyAnimator = GetComponentInChildren<Animator>();
-        srs      = GetComponentsInChildren<SpriteRenderer>(true);
-        _hitFlash = GetComponentInChildren<HitFlash>(true);
-
-        if (skills == null || skills.Length == 0)
-            skills = GetComponents<BossSkillBase>();
+        srs           = GetComponentsInChildren<SpriteRenderer>(true);
+        _hitFlash     = GetComponentInChildren<HitFlash>(true);
 
         if (_isClone)
         {
-            var allowed  = cloneSkillTypes != null
-                ? new HashSet<System.Type>(cloneSkillTypes)
+            var allowed = cloneSkillTypes != null
+                ? new System.Collections.Generic.HashSet<System.Type>(cloneSkillTypes)
                 : null;
-            var filtered = new List<BossSkillBase>();
-            foreach (var s in skills)
-            {
-                if (s == null) continue;
-                bool isCloneSkill = s is BossCloneSkill;
-                bool notAllowed   = allowed != null && !allowed.Contains(s.GetType());
-                if (isCloneSkill || notAllowed) DestroyImmediate(s);
-                else                            filtered.Add(s);
-            }
-            skills = filtered.ToArray();
+            _skills.RemoveAll(s => s == null || s is BossCloneSkill
+                               || (allowed != null && !allowed.Contains(s.GetType())));
         }
 
         if (_isClone && srs != null)
@@ -169,14 +161,14 @@ public class BossController : MonoBehaviour, IEnemyHost
 
         currentHP = maxHP;
 
-        foreach (var s in skills) s.Init(this);
+        foreach (var s in _skills) s?.Init(this);
         RebuildPatternSkills();
     }
 
     private void RebuildPatternSkills()
     {
         var list = new List<BossSkillBase>();
-        foreach (var s in skills)
+        foreach (var s in _skills)
             if (s != null && s.executeInPattern) list.Add(s);
         _patternSkills = list.ToArray();
         _skillIndex    = 0;
@@ -217,9 +209,9 @@ public class BossController : MonoBehaviour, IEnemyHost
         _patternCts?.Dispose();
         _patternCts = new CancellationTokenSource();
 
-        // 스킬 내부 코루틴까지 확실히 정리 (IsFiringSkill 등 플래그 고착 방지)
-        if (skills != null)
-            foreach (var s in skills)
+        // 스킬 내부 상태 정리 (IsFiringSkill 등 플래그 고착 방지)
+        if (_skills != null)
+            foreach (var s in _skills)
                 s?.OnInterrupted();
     }
 
@@ -278,7 +270,7 @@ public class BossController : MonoBehaviour, IEnemyHost
                 // ── Idle + Chase 페이즈 ─────────────────────────────────
                 await UniTask.Delay(
                     System.TimeSpan.FromSeconds(idleDuration), cancellationToken: token);
-                await ChaseAsync(token);
+                await ChaseForAsync(chaseDuration, chaseStopDistance, token);
 
                 if (isDead) break;
 
@@ -315,18 +307,19 @@ public class BossController : MonoBehaviour, IEnemyHost
         catch (System.OperationCanceledException) { }
     }
 
-    private async UniTask ChaseAsync(CancellationToken ct)
+    /// <summary>duration 동안 플레이어를 추격합니다. 스킬에서 직접 호출할 수 있습니다.</summary>
+    public async UniTask ChaseForAsync(float duration, float stopDistance, CancellationToken ct)
     {
         float elapsed = 0f;
-        while (elapsed < chaseDuration)
+        while (elapsed < duration)
         {
             elapsed += Time.fixedDeltaTime;
 
             if (!IsFiringSkill && PlayerTransform != null)
             {
                 float dist = Vector2.Distance(transform.position, PlayerTransform.position);
-                if (dist > chaseStopDistance) MoveTowardPlayer(MoveSpeed);
-                else                          EnemyAnimator?.SetBool(EnemyAnim.BMove, false);
+                if (dist > stopDistance) MoveTowardPlayer(MoveSpeed);
+                else                    EnemyAnimator?.SetBool(EnemyAnim.BMove, false);
             }
             else
             {
@@ -449,6 +442,8 @@ public class BossController : MonoBehaviour, IEnemyHost
         FXManager.Shared?.SpawnHitEffect(hitCenter);
 
         _hitFlash?.Flash();
+
+        OnHPChanged?.Invoke(Mathf.Max(0f, currentHP), maxHP);
 
         if (currentHP <= 0f) StartCoroutine(DieRoutine());
         else                 CheckGrogyThresholds();
@@ -659,6 +654,22 @@ public void ForceDie()
         if (Current == this) Current = null;
         _patternCts?.Cancel();
         _patternCts?.Dispose();
+    }
+
+    // ── 애니메이션 이벤트 포워딩 (순수 C# 스킬은 직접 수신 불가) ────────────
+
+    /// <summary>텔레포트 애니메이션 클립 마지막 프레임에서 호출됩니다.</summary>
+    public void OnTeleportAnimEnd(string clipName)
+    {
+        foreach (var s in _skills)
+            if (s is BossTeleportSkill ts) { ts.NotifyTeleportAnimEnd(clipName); return; }
+    }
+
+    /// <summary>고속추격 공격 히트 프레임에서 호출됩니다.</summary>
+    public void OnFastChaseHit()
+    {
+        foreach (var s in _skills)
+            if (s is BossMeleeSkill ms) { ms.NotifyFastChaseHit(); return; }
     }
 
     private void OnTriggerStay2D(Collider2D other)

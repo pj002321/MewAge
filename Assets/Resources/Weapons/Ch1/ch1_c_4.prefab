@@ -105,69 +105,28 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 80572d92ca6952f478c256b7ffc65d80, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponPoint
-  weaponType: 0
-  pullbackDist: 1
-  anticipationTime: 0.1
-  strikeSpeed: 120
-  returnSpeed: 70
-  hitDistance: 0.25
-  areaHitDamageRatio: 0.25
-  overshootDistance: 4
-  overshootSpeed: 60
-  pullOnReturn: 0
-  pullRadius: 2
-  pullStrength: 8
-  pullDuration: 0.25
-  projectilePrefab: {fileID: 0}
-  projectileSpeed: 0
-  useParabolicShot: 0
-  parabolicArcHeight: 1.5
-  parabolicSpawnLocalPos: {x: 0, y: 0, z: 0}
-  shootScalePulse: 1
-  scalePulseMax: 1.3
-  scalePulseDuration: 0.12
-  shootRecoil: 1
-  recoilDist: 0.15
-  recoilBackDur: 0.06
-  recoilReturnDur: 0.14
+  _behaviour:
+    rid: 2864143502748942437
   useTrail: 1
   trailTime: 0.1
   trailStartWidth: 0.28
   trailColor: {r: 1, g: 1, b: 1, a: 0.55}
-  boomerangMaxBounces: 3
-  boomerangBounceRange: 5
-  orbitRadius: 2
-  orbitSpeed: 300
-  spinHitRadius: 0.5
-  spinHitCooldown: 0.5
-  spinKnockback: 7
-  slashRadius: 1.2
-  slashArcDegrees: 180
-  slashSweepSpeed: 480
-  slashHitRadius: 0.35
-  slashVfxPrefab: {fileID: 0}
-  slashVfxDuration: 1
-  slashTeleportMaxDist: 3
-  slashFadeTime: 0.12
-  chargeDuration: 1
-  hammerRiseHeight: 4
-  hammerRiseTime: 0.55
-  hammerSpinSpeed: 900
-  hammerSlamSpeed: 28
-  hammerImpactWorldPos: {x: 0, y: 0}
-  hammerImpactRadius: 1.8
-  hammerImpactVfxPrefab: {fileID: 0}
-  hammerHighlightScale: 2.2
-  hammerHighlightDur: 0.35
-  magicElement: 0
-  muzzlePoint: {fileID: 0}
-  zapBoltVfxPrefab: {fileID: 0}
-  lightningBurstCount: 3
-  lightningBurstInterval: 0.07
-  zapLineHitRadius: 0.25
-  weaponAnimator: {fileID: 0}
-  attackClip: {fileID: 0}
-  attackClipSlotName: Attack
+  shootScalePulse: 1
+  scalePulseMax: 1.3
+  scalePulseDuration: 0.12
+  references:
+    version: 2
+    RefIds:
+    - rid: 2864143502748942437
+      type: {class: WeaponMeleeBehaviour, ns: , asm: Assembly-CSharp}
+      data:
+        pullbackDist: 0.5
+        anticipationTime: 0.08
+        strikeSpeed: 80
+        returnSpeed: 70
+        hitDistance: 0.4
+        overshootDistance: 0.5
+        overshootSpeed: 60
 --- !u!114 &-5671417132089896420
 MonoBehaviour:
   m_ObjectHideFlags: 0

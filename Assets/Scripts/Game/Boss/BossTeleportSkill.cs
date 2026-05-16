@@ -1,17 +1,16 @@
-using System.Collections;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 /// <summary>
-/// 보스 스킬: 순간이동 (EnemyCombatRoutines.TeleportSequence 공유).
+/// 보스 스킬: 순간이동.
 ///
-/// 흐름:
-///   정지 → PreDig 딜레이 → 숨기 애니 → FadeOut
-///   → 목적지 결정 + 마커 → 순간이동 → 스폰 애니 + FadeIn → 종료
+/// 흐름: 정지 → PreDig 딜레이 → 숨기 애니 + FadeOut
+///        → 목적지 결정 + 마커 → 순간이동 → 스폰 애니 + FadeIn → 종료
 ///
-/// 애니메이션 이벤트:
-///   숨기 클립 마지막 프레임 : OnTeleportAnimEnd("dig")
-///   스폰  클립 마지막 프레임 : OnTeleportAnimEnd("spawn")
+/// 애니메이션 이벤트는 BossController.OnTeleportAnimEnd() 로 수신됩니다.
 /// </summary>
+[System.Serializable]
 public class BossTeleportSkill : BossSkillBase
 {
     [Header("딜레이")]
@@ -32,29 +31,23 @@ public class BossTeleportSkill : BossSkillBase
     [Header("안전 타임아웃 (애니메이션 이벤트 누락 대비)")]
     [SerializeField] private float animEventTimeout = 3f;
 
-    // ── 상태 ─────────────────────────────────────────────────
-    private bool _digAnimEnded;
-    private bool _spawnAnimEnded;
-
+    private bool             _digAnimEnded;
+    private bool             _spawnAnimEnded;
     private SpriteRenderer[] _renderers;
 
-    // ── 초기화 ───────────────────────────────────────────────
     public override void Init(BossController boss)
     {
         base.Init(boss);
-        _renderers = GetComponentsInChildren<SpriteRenderer>(true);
+        _renderers = boss.GetComponentsInChildren<SpriteRenderer>(true);
     }
 
-    // ── 스킬 실행 ─────────────────────────────────────────────
-    protected override IEnumerator OnExecute()
+    protected override async UniTask OnExecuteAsync(CancellationToken ct)
     {
-        if (Owner.PlayerTransform == null) yield break;
-
-        Boss.IsFiringSkill = true;
-        Owner.EnemyAnimator?.SetBool(EnemyAnim.BMove, false);
+        if (PlayerT == null) return;
 
         _digAnimEnded   = false;
         _spawnAnimEnded = false;
+        Boss.EnemyAnimator?.SetBool(EnemyAnim.BMove, false);
 
         var cfg = new EnemyCombatRoutines.TeleportConfig
         {
@@ -70,22 +63,31 @@ public class BossTeleportSkill : BossSkillBase
 
         try
         {
-            yield return StartCoroutine(EnemyCombatRoutines.TeleportSequence(
-                Owner, _renderers, cfg,
-                () => _digAnimEnded, () => _spawnAnimEnded));
+            await EnemyCombatRoutines.TeleportSequence(
+                Boss, _renderers, cfg,
+                () => _digAnimEnded, () => _spawnAnimEnded)
+                .ToUniTask(cancellationToken: ct);
         }
         finally
         {
-            Owner.EnemyAnimator?.SetBool(EnemyAnim.BDigging, false);
-            EnemyFX.SetAlpha(_renderers, 1f);
-            if (Boss != null) Boss.IsFiringSkill = false;
+            Boss?.EnemyAnimator?.SetBool(EnemyAnim.BDigging, false);
+            if (_renderers != null) EnemyFX.SetAlpha(_renderers, 1f);
         }
     }
 
-    // ── 애니메이션 이벤트 수신 ────────────────────────────────
-    public void OnTeleportAnimEnd(string clipName)
+    // BossController.OnTeleportAnimEnd() 에서 전달받습니다.
+    internal void NotifyTeleportAnimEnd(string clipName)
     {
         if (clipName == "dig")   _digAnimEnded   = true;
         if (clipName == "spawn") _spawnAnimEnded = true;
+    }
+
+    public override void OnInterrupted()
+    {
+        // 애니메이션 이벤트 대기를 즉시 해제해 코루틴이 완료될 수 있게 합니다.
+        _digAnimEnded   = true;
+        _spawnAnimEnded = true;
+        if (_renderers != null) EnemyFX.SetAlpha(_renderers, 1f);
+        Boss?.EnemyAnimator?.SetBool(EnemyAnim.BDigging, false);
     }
 }

@@ -117,8 +117,8 @@ public class PlayerStats : MonoBehaviourSingleton<PlayerStats>
 
     private void SyncUI()
     {
-        GameManager.Shared?.UpdateGoldUI(gold);
-        GameManager.Shared?.UpdateExpUI(exp, expToNext, level);
+        GameEvents.GoldChanged(gold);
+        GameEvents.ExpChanged(exp, expToNext, level);
     }
 
     public int Gold      => gold;

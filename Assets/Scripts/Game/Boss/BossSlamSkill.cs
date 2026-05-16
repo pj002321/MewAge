@@ -1,124 +1,171 @@
-using System.Collections;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 /// <summary>
-/// 보스 스킬: 내려찍기 (AreaSlam).
-/// 마커 표시 → 포물선 점프 → 착지 충격파 판정.
+/// 보스 스킬: 내려찍기 2종.
+///
+///   BasicSlam   — 마커 표시 → 포물선 점프 → 착지 충격파 (기존 BossSlamSkill)
+///   GroundPound — 소점프 쿵 착지 → 플레이어 부유 → 보스 돌진 (BossGroundPoundSkill 흡수)
 /// </summary>
+[System.Serializable]
 public class BossSlamSkill : BossSkillBase
 {
-    [Header("내려찍기")]
-    [SerializeField] private float slamDamage  = 30f;
-    [SerializeField] private float slamRadius  = 2.5f;
-    [SerializeField] private float jumpHeight  = 6f;
-    [SerializeField] private float jumpDuration = 0.7f;
+    public enum SlamType { BasicSlam, GroundPound }
 
-    [Header("마커 경고")]
-    [Tooltip("점프 전 마커를 보여주는 시간 (초)")]
+    [SerializeField] private SlamType slamType = SlamType.BasicSlam;
+
+    // ── BasicSlam ─────────────────────────────────────────────────
+    [Header("BasicSlam")]
+    [SerializeField] private float slamDamage        = 30f;
+    [SerializeField] private float slamRadius        = 2.5f;
+    [SerializeField] private float jumpHeight        = 6f;
+    [SerializeField] private float jumpDuration      = 0.7f;
     [SerializeField] private float markerWarningTime = 0.8f;
-
-    [Header("VFX")]
     [SerializeField] private GameObject slamMarkerPrefab;
     [SerializeField] private GameObject landingVfxPrefab;
     [SerializeField] private float      vfxLifetime = 1f;
 
-    private Animator _anim;
+    // ── GroundPound ───────────────────────────────────────────────
+    [Header("GroundPound")]
+    [SerializeField] private float hopHeight      = 2.0f;
+    [SerializeField] private float hopRiseTime    = 0.25f;
+    [SerializeField] private float hopFallTime    = 0.18f;
+    [SerializeField] private float shakeDuration  = 0.45f;
+    [SerializeField] private float shakeMagnitude = 0.35f;
+    [SerializeField] private GameObject landingVfxPound;
+    [SerializeField] private float      landingVfxPoundLifetime = 1f;
+    [SerializeField] private float floatHeight      = 2.8f;
+    [SerializeField] private float floatRiseTime    = 0.35f;
+    [SerializeField] private float floatHangTime    = 0.25f;
+    [SerializeField] private float floatFallTime    = 0.55f;
+    [SerializeField] private float preChargeDelay   = 0.3f;
+    [SerializeField] private float poundChargeSpeed = 20f;
+    [SerializeField] private float chargeWarnDuration   = 0.5f;
+    [SerializeField] private float chargeWarningLength  = 12f;
+    [SerializeField] private float chargeWarningWidth   = 0.08f;
+    [SerializeField] private Color chargeWarningColor   = Color.red;
+    [SerializeField] private Material chargeWarningMat;
+    [SerializeField] private Color ghostColor       = new Color(1f, 0.15f, 0.15f, 0.45f);
+    [SerializeField] private float ghostInterval    = 0.04f;
+    [SerializeField] private float ghostLifetime    = 0.12f;
 
-    public override void Init(BossController boss)
+    // ── 런타임 상태 (GroundPound) ─────────────────────────────────
+    private Vector3           _origScale;
+    private bool              _isExecuting;
+    private LineRenderer      _warnLine;
+    private PlayerController  _floatingPlayer;
+    private SlimeBobAnimation _floatingBob;
+
+    protected override UniTask OnExecuteAsync(CancellationToken ct) => slamType switch
     {
-        base.Init(boss);
-        _anim = boss.EnemyAnimator;
+        SlamType.BasicSlam   => BasicSlamAsync(ct),
+        SlamType.GroundPound => GroundPoundAsync(ct),
+        _                    => UniTask.CompletedTask
+    };
+
+    public override void OnInterrupted()
+    {
+        if (_isExecuting && Boss != null)
+        {
+            DG.Tweening.DOTween.Kill(Boss.transform, complete: false);
+            Boss.transform.localScale = _origScale;
+        }
+        _isExecuting = false;
+        RestoreFloatingPlayer();
+        CleanupWarnLine();
     }
 
-    protected override IEnumerator OnExecute()
+    // ── BasicSlam ─────────────────────────────────────────────────
+
+    private async UniTask BasicSlamAsync(CancellationToken ct)
     {
-        if (Owner.PlayerTransform == null) yield break;
+        if (PlayerT == null) return;
 
-        Vector3 startPos  = Owner.transform.position;
-        Vector3 slamTarget = Owner.PlayerTransform.position;
-        Vector3 origScale = Owner.transform.localScale;
+        Vector3 startPos   = Boss.transform.position;
+        Vector3 slamTarget = PlayerT.position;
+        Vector3 origScale  = Boss.transform.localScale;
 
-        // 1) 마커 표시 + 경고 대기
-        GameObject marker = slamMarkerPrefab != null
-            ? Instantiate(slamMarkerPrefab, slamTarget, Quaternion.identity)
-            : null;
+        // 1) 마커 + 경고 대기
+        var marker = slamMarkerPrefab != null
+            ? Object.Instantiate(slamMarkerPrefab, slamTarget, Quaternion.identity) : null;
 
-        yield return new WaitForSeconds(markerWarningTime);
+        await UniTask.Delay(System.TimeSpan.FromSeconds(markerWarningTime), cancellationToken: ct);
 
-        // 2) 점프 전 찌부 예비 동작
-        yield return StartCoroutine(AnticipationSquish(origScale));
+        // 2) 예비 찌부
+        await SquishAsync(origScale, 0.18f, 1.35f, 0.5f, ct);
 
         // 3) 포물선 점프
-        yield return StartCoroutine(ParabolicJump(startPos, slamTarget, origScale));
+        await ParabolicJumpAsync(startPos, slamTarget, origScale, ct);
 
         // 4) 착지
-        Owner.transform.position   = slamTarget;
-        Owner.transform.localScale = origScale;
-        if (marker != null) Destroy(marker);
+        Boss.transform.position   = slamTarget;
+        Boss.transform.localScale = origScale;
+        if (marker != null) Object.Destroy(marker);
 
-        _anim?.SetTrigger(EnemyAnim.TAttack);
+        Boss.EnemyAnimator?.SetTrigger(EnemyAnim.TAttack);
 
         if (landingVfxPrefab != null)
         {
-            Vector3 vfxPos = Owner.Decal != null ? Owner.Decal.position : slamTarget;
-            Destroy(Instantiate(landingVfxPrefab, vfxPos, Quaternion.identity), vfxLifetime);
+            Vector3 vfxPos = Boss.Decal != null ? Boss.Decal.position : slamTarget;
+            Object.Destroy(Object.Instantiate(landingVfxPrefab, vfxPos, Quaternion.identity), vfxLifetime);
         }
 
-        yield return StartCoroutine(LandSquish(origScale));
+        await LandSquishAsync(origScale, ct);
 
         // 5) 범위 피해
         var player = PlayerController.Instance;
         if (player != null &&
-            Vector2.Distance(Owner.transform.position, player.transform.position) <= slamRadius)
-            player.TakeDamage(slamDamage, sourceName: Owner.gameObject.name);
+            Vector2.Distance(Boss.transform.position, player.transform.position) <= slamRadius)
+            player.TakeDamage(slamDamage, sourceName: Boss.gameObject.name);
 
-        yield return new WaitForSeconds(0.3f);
+        await UniTask.Delay(System.TimeSpan.FromSeconds(0.3f), cancellationToken: ct);
     }
 
-    // 점프 전 찌부→복귀
-    private IEnumerator AnticipationSquish(Vector3 origScale)
+    private async UniTask SquishAsync(Vector3 orig, float dur, float squishX, float squishY, CancellationToken ct)
     {
-        const float dur = 0.18f;
-        Vector3 squish = new(origScale.x * 1.35f, origScale.y * 0.5f, origScale.z);
+        Vector3 squished = new(orig.x * squishX, orig.y * squishY, orig.z);
+        float half = dur * 0.5f;
         float t = 0f;
-        while (t < dur)
+
+        while (t < half)
         {
             t += Time.deltaTime;
-            float pct = Mathf.Clamp01(t / dur);
-            float s   = pct < 0.5f ? pct * 2f : (1f - pct) * 2f;
-            Owner.transform.localScale = Vector3.Lerp(origScale, squish, s);
-            yield return null;
+            Boss.transform.localScale = Vector3.Lerp(orig, squished, Mathf.Clamp01(t / half));
+            await UniTask.Yield(ct);
         }
-        Owner.transform.localScale = origScale;
+        t = 0f;
+        while (t < half)
+        {
+            t += Time.deltaTime;
+            Boss.transform.localScale = Vector3.Lerp(squished, orig, Mathf.Clamp01(t / half));
+            await UniTask.Yield(ct);
+        }
+        Boss.transform.localScale = orig;
     }
 
-    // 포물선 이동: X는 선형, Y는 sin 포물선
-    private IEnumerator ParabolicJump(Vector3 from, Vector3 to, Vector3 origScale)
+    private async UniTask ParabolicJumpAsync(Vector3 from, Vector3 to, Vector3 origScale, CancellationToken ct)
     {
         float elapsed = 0f;
         while (elapsed < jumpDuration)
         {
             elapsed += Time.deltaTime;
             float t = Mathf.Clamp01(elapsed / jumpDuration);
-
             Vector3 pos = Vector3.Lerp(from, to, t);
-            pos.y += jumpHeight * Mathf.Sin(Mathf.PI * t); // 포물선
+            pos.y += jumpHeight * Mathf.Sin(Mathf.PI * t);
+            Boss.transform.position = pos;
 
-            Owner.transform.position = pos;
-
-            // 상승 중엔 Y 스트레치, 하강 중엔 복귀
             float stretchT = t < 0.5f ? t * 2f : (1f - t) * 2f;
-            Owner.transform.localScale = new Vector3(
+            Boss.transform.localScale = new Vector3(
                 origScale.x * Mathf.Lerp(1f, 0.7f, stretchT),
                 origScale.y * Mathf.Lerp(1f, 1.4f, stretchT),
                 origScale.z);
 
-            yield return null;
+            await UniTask.Yield(ct);
         }
     }
 
-    // 착지 스쿼시
-    private IEnumerator LandSquish(Vector3 origScale)
+    private async UniTask LandSquishAsync(Vector3 origScale, CancellationToken ct)
     {
         const float squishDur  = 0.08f;
         const float restoreDur = 0.18f;
@@ -128,22 +175,292 @@ public class BossSlamSkill : BossSkillBase
         while (t < squishDur)
         {
             t += Time.deltaTime;
-            Owner.transform.localScale = Vector3.Lerp(origScale, squish, Mathf.Clamp01(t / squishDur));
-            yield return null;
+            Boss.transform.localScale = Vector3.Lerp(origScale, squish, Mathf.Clamp01(t / squishDur));
+            await UniTask.Yield(ct);
         }
         t = 0f;
         while (t < restoreDur)
         {
             t += Time.deltaTime;
-            Owner.transform.localScale = Vector3.Lerp(squish, origScale, Mathf.Clamp01(t / restoreDur));
-            yield return null;
+            Boss.transform.localScale = Vector3.Lerp(squish, origScale, Mathf.Clamp01(t / restoreDur));
+            await UniTask.Yield(ct);
         }
-        Owner.transform.localScale = origScale;
+        Boss.transform.localScale = origScale;
     }
 
-    private void OnDrawGizmosSelected()
+    // ── GroundPound ───────────────────────────────────────────────
+
+    private async UniTask GroundPoundAsync(CancellationToken ct)
     {
-        Gizmos.color = new Color(1f, 0.3f, 0.3f, 0.4f);
-        Gizmos.DrawWireSphere(transform.position, slamRadius);
+        if (PlayerT == null) return;
+        if (GameManager.Shared != null && GameManager.Shared.IsGameOver) return;
+
+        _origScale   = Boss.transform.localScale;
+        _isExecuting = true;
+
+        try
+        {
+            Vector2 startPos = Boss.Rb != null ? Boss.Rb.position : (Vector2)Boss.transform.position;
+            Vector2 apexPos  = startPos + Vector2.up * hopHeight;
+
+            // 1) 소점프
+            await SquishAsync(_origScale, 0.14f, 1.3f, 0.55f, ct);
+            await LerpPosAsync(startPos, apexPos, hopRiseTime, _origScale, 0.75f, 1.35f, ct);
+            await LerpPosAsync(apexPos, startPos, hopFallTime, _origScale, 1.35f, 0.6f, ct);
+
+            if (Boss.Rb != null) Boss.Rb.position = startPos;
+            Boss.transform.position   = startPos;
+            Boss.transform.localScale = _origScale;
+
+            // 2) 착지 충격
+            await SquishAsync(_origScale, 0.07f, 1.5f, 0.4f, ct);
+
+            CameraFollow.Shared?.Shake(shakeDuration, shakeMagnitude);
+            Boss.EnemyAnimator?.SetTrigger(EnemyAnim.TAttack);
+
+            if (landingVfxPound != null)
+            {
+                Vector3 vfxPos = Boss.Decal != null ? Boss.Decal.position : (Vector3)startPos;
+                Object.Destroy(Object.Instantiate(landingVfxPound, vfxPos, Quaternion.identity),
+                               landingVfxPoundLifetime);
+            }
+
+            // 3) 플레이어 부유
+            var player = PlayerController.Instance;
+            await FloatPlayerAsync(player, ct);
+
+            // 4) 돌진 준비
+            if (preChargeDelay > 0f)
+                await UniTask.Delay(System.TimeSpan.FromSeconds(preChargeDelay), cancellationToken: ct);
+
+            Vector2 chargeOrigin = Boss.Rb != null ? Boss.Rb.position : (Vector2)Boss.transform.position;
+            Vector2 chargeDir    = player != null
+                ? ((Vector2)player.transform.position - chargeOrigin).normalized
+                : Vector2.right;
+            if (chargeDir == Vector2.zero) chargeDir = Vector2.right;
+
+            // 5) 경고 라인
+            await WarnPhaseAsync(chargeDir, ct);
+            if (Boss == null || ct.IsCancellationRequested) return;
+
+            // 6) 돌진
+            await ChargeAtPlayerAsync(poundChargeSpeed, chargeDir, ct);
+        }
+        finally
+        {
+            _isExecuting = false;
+        }
+    }
+
+    private async UniTask LerpPosAsync(Vector2 from, Vector2 to, float dur,
+        Vector3 origScale, float stretchX, float stretchY, CancellationToken ct)
+    {
+        Vector3 stretchedScale = new(origScale.x * stretchX, origScale.y * stretchY, origScale.z);
+        float t = 0f;
+        while (t < dur)
+        {
+            t += Time.fixedDeltaTime;
+            float pct = Mathf.Clamp01(t / dur);
+            Vector2 pos = Vector2.Lerp(from, to, pct);
+            if (Boss.Rb != null) Boss.Rb.MovePosition(pos);
+            else Boss.transform.position = pos;
+            Boss.transform.localScale = Vector3.Lerp(origScale, stretchedScale, pct);
+            await UniTask.WaitForFixedUpdate(ct);
+        }
+        if (Boss.Rb != null) Boss.Rb.MovePosition(to);
+        else Boss.transform.position = to;
+    }
+
+    private async UniTask FloatPlayerAsync(PlayerController player, CancellationToken ct)
+    {
+        if (player == null) return;
+
+        var playerRb = player.GetComponent<Rigidbody2D>();
+        var bob      = player.GetComponentInChildren<SlimeBobAnimation>();
+        _floatingPlayer = player;
+        _floatingBob    = bob;
+        player.InputLocked = true;
+        if (bob != null) bob.enabled = false;
+
+        Vector2 originWorld = playerRb != null ? playerRb.position : (Vector2)player.transform.position;
+        var visualSlot = player.VisualSlot;
+        Vector3 lockedScale = visualSlot != null ? visualSlot.localScale : Vector3.one;
+
+        try
+        {
+            // 상승
+            float t = 0f;
+            while (t < floatRiseTime)
+            {
+                t += Time.fixedDeltaTime;
+                float ease = 1f - (1f - Mathf.Clamp01(t / floatRiseTime)) *
+                                  (1f - Mathf.Clamp01(t / floatRiseTime));
+                Vector2 target = originWorld + Vector2.up * (floatHeight * ease);
+                if (playerRb != null) playerRb.MovePosition(target);
+                else player.transform.position = target;
+                await UniTask.WaitForFixedUpdate(ct);
+            }
+
+            Vector2 apex = originWorld + Vector2.up * floatHeight;
+            if (playerRb != null) playerRb.MovePosition(apex);
+            else player.transform.position = apex;
+
+            // 체공
+            await UniTask.Delay(System.TimeSpan.FromSeconds(floatHangTime), cancellationToken: ct);
+
+            // 하강
+            t = 0f;
+            while (t < floatFallTime)
+            {
+                t += Time.fixedDeltaTime;
+                float pct  = Mathf.Clamp01(t / floatFallTime);
+                float ease = pct * pct;
+                Vector2 target = originWorld + Vector2.up * (floatHeight * (1f - ease));
+                if (playerRb != null) playerRb.MovePosition(target);
+                else player.transform.position = target;
+                await UniTask.WaitForFixedUpdate(ct);
+            }
+        }
+        finally
+        {
+            if (playerRb != null) playerRb.MovePosition(originWorld);
+            else if (player != null) player.transform.position = originWorld;
+            if (visualSlot != null) visualSlot.localScale = lockedScale;
+            if (bob != null) { bob.ResetOrigin(); bob.enabled = true; }
+            if (player != null) player.InputLocked = false;
+            _floatingPlayer = null;
+            _floatingBob    = null;
+        }
+    }
+
+    private async UniTask WarnPhaseAsync(Vector2 dir, CancellationToken ct)
+    {
+        Vector2 origin = Boss.Rb != null ? Boss.Rb.position : (Vector2)Boss.transform.position;
+        Boss.FlipToward(dir);
+        _warnLine = SpawnWarnLine(origin);
+
+        float elapsed = 0f;
+        while (elapsed < chargeWarnDuration)
+        {
+            if (Boss == null || ct.IsCancellationRequested) { CleanupWarnLine(); return; }
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / chargeWarnDuration);
+
+            if (_warnLine != null)
+            {
+                Vector2 cur = Boss.Rb != null ? Boss.Rb.position : (Vector2)Boss.transform.position;
+                _warnLine.transform.position = new Vector3(cur.x, cur.y, 0f);
+                _warnLine.SetPosition(0, Vector3.zero);
+                Vector3 worldEnd = new(cur.x + dir.x * chargeWarningLength * t,
+                                       cur.y + dir.y * chargeWarningLength * t, 0f);
+                _warnLine.SetPosition(1, _warnLine.transform.InverseTransformPoint(worldEnd));
+            }
+            await UniTask.Yield(ct);
+        }
+        CleanupWarnLine();
+    }
+
+    private async UniTask ChargeAtPlayerAsync(float speed, Vector2 dir, CancellationToken ct)
+    {
+        Boss.FlipToward(dir);
+        Boss.EnemyAnimator?.SetTrigger(EnemyAnim.TCharge);
+
+        var   sr         = Boss.GetComponentInChildren<SpriteRenderer>();
+        float ghostTimer = 0f;
+        float elapsed    = 0f;
+        float maxTime    = 3f;
+        Vector2 pos = Boss.Rb != null ? Boss.Rb.position : (Vector2)Boss.transform.position;
+
+        while (elapsed < maxTime)
+        {
+            if (GameManager.Shared != null && GameManager.Shared.IsGameOver) return;
+            if (Boss == null || ct.IsCancellationRequested) return;
+
+            ghostTimer -= Time.fixedDeltaTime;
+            if (ghostTimer <= 0f) { SpawnChargeGhost(sr); ghostTimer = ghostInterval; }
+
+            Vector2 next = pos + dir * speed * Time.fixedDeltaTime;
+
+            var mb = MovementBounds.Shared;
+            if (mb != null && !mb.IsInside(next))
+            {
+                Boss.Rb.MovePosition(mb.ClosestPointOnBoundary(next));
+                return;
+            }
+
+            if (mb == null && SpawnZone.Shared != null)
+            {
+                Vector2 c = SpawnZone.Shared.BoundsCenter;
+                Vector2 s = SpawnZone.Shared.BoundsSize * 0.5f;
+                if (next.x < c.x - s.x || next.x > c.x + s.x ||
+                    next.y < c.y - s.y || next.y > c.y + s.y)
+                {
+                    next.x = Mathf.Clamp(next.x, c.x - s.x, c.x + s.x);
+                    next.y = Mathf.Clamp(next.y, c.y - s.y, c.y + s.y);
+                    Boss.Rb.MovePosition(next);
+                    return;
+                }
+            }
+
+            pos = next;
+            Boss.Rb.MovePosition(next);
+            Boss.FlipToward(dir);
+            elapsed += Time.fixedDeltaTime;
+            await UniTask.WaitForFixedUpdate(ct);
+        }
+    }
+
+    // ── 헬퍼 ──────────────────────────────────────────────────────
+
+    private void RestoreFloatingPlayer()
+    {
+        if (_floatingPlayer == null) return;
+        _floatingPlayer.InputLocked = false;
+        if (_floatingBob != null) { _floatingBob.ResetOrigin(); _floatingBob.enabled = true; }
+        _floatingPlayer = null;
+        _floatingBob    = null;
+    }
+
+    private void CleanupWarnLine()
+    {
+        if (_warnLine == null) return;
+        Object.Destroy(_warnLine.gameObject);
+        _warnLine = null;
+    }
+
+    private LineRenderer SpawnWarnLine(Vector2 start)
+    {
+        if (!WarningLineSettings.Enabled) return null;
+        var go = new GameObject("WarnLine");
+        go.transform.position = new Vector3(start.x, start.y, 0f);
+        var lr = go.AddComponent<LineRenderer>();
+        lr.useWorldSpace     = false;
+        lr.positionCount     = 2;
+        lr.SetPosition(0, Vector3.zero);
+        lr.SetPosition(1, Vector3.zero);
+        lr.startWidth        = chargeWarningWidth;
+        lr.endWidth          = chargeWarningWidth;
+        lr.material          = chargeWarningMat != null
+            ? chargeWarningMat
+            : new Material(Shader.Find("Sprites/Default"));
+        lr.startColor        = chargeWarningColor;
+        lr.endColor          = chargeWarningColor;
+        lr.sortingOrder      = 10;
+        lr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        return lr;
+    }
+
+    private void SpawnChargeGhost(SpriteRenderer sr)
+    {
+        if (sr == null || sr.sprite == null) return;
+        var go   = new GameObject("ChargeGhost");
+        go.transform.SetPositionAndRotation(sr.transform.position, sr.transform.rotation);
+        go.transform.localScale = sr.transform.lossyScale;
+        var ghost              = go.AddComponent<SpriteRenderer>();
+        ghost.sprite           = sr.sprite;
+        ghost.color            = ghostColor;
+        ghost.sortingLayerID   = sr.sortingLayerID;
+        ghost.sortingOrder     = sr.sortingOrder - 1;
+        Object.Destroy(go, ghostLifetime);
     }
 }

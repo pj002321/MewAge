@@ -1,13 +1,14 @@
-using System.Collections;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 /// <summary>
 /// 보스 스킬: 돌진 (Charge).
 ///
-/// bounceCount = 0 : 기존처럼 한 번 돌진 후 벽에 닿으면 정지.
-/// bounceCount > 0 : 벽에 닿을 때마다 방향을 반사(리플렉트)해서
-///                   최대 N번 연속으로 벽을 튕기며 돌진합니다.
+/// bounceCount = 0 : 한 번 돌진 후 벽에 닿으면 정지.
+/// bounceCount > 0 : 벽에 튕길 때마다 방향을 반사해 최대 N번 연속 돌진.
 /// </summary>
+[System.Serializable]
 public class BossChargeSkill : BossSkillBase
 {
     [Header("돌진")]
@@ -15,7 +16,7 @@ public class BossChargeSkill : BossSkillBase
     [SerializeField] private float chargeDuration = 0.4f;
 
     [Header("연속 벽 튕기기")]
-    [Tooltip("0이면 기존처럼 한 번만 돌진. N이면 벽에 튕긴 뒤 N번 더 돌진합니다.")]
+    [Tooltip("0이면 한 번만 돌진. N이면 벽에 튕긴 뒤 N번 더 돌진")]
     [SerializeField] private int   bounceCount = 0;
     [Tooltip("튕긴 뒤 다음 돌진까지 잠깐 멈추는 시간 (0이면 즉시)")]
     [SerializeField] private float bouncePause = 0.1f;
@@ -25,152 +26,127 @@ public class BossChargeSkill : BossSkillBase
     [SerializeField] private float    warningLineLength = 12f;
     [SerializeField] private float    warningLineWidth  = 0.08f;
     [SerializeField] private Color    warningColor      = Color.red;
-    [Tooltip("Sprites/Default 또는 URP Unlit 머티리얼 할당. null이면 자동 생성")]
+    [Tooltip("null이면 Sprites/Default 자동 생성")]
     [SerializeField] private Material warningMaterial;
 
     private LineRenderer _warnLine;
 
-    private void OnDisable() => CleanupWarnLine();
+    public override void OnInterrupted() => CleanupWarnLine();
 
-    public override void OnInterrupted()
+    protected override async UniTask OnExecuteAsync(CancellationToken ct)
     {
-        base.OnInterrupted(); // StopAllCoroutines
-        CleanupWarnLine();
-    }
+        if (PlayerT == null) return;
+        if (GameManager.Shared != null && GameManager.Shared.IsGameOver) return;
 
-    protected override IEnumerator OnExecute()
-    {
-        if (Owner.PlayerTransform == null) yield break;
-        if (GameManager.Shared != null && GameManager.Shared.IsGameOver) yield break;
+        Vector2 pos = Boss.Rb != null ? Boss.Rb.position : (Vector2)Boss.transform.position;
+        Vector2 dir = ((Vector2)PlayerT.position - pos).normalized;
+        if (dir == Vector2.zero) dir = Vector2.right;
 
-        float speed = chargeSpeed;
-
-        Vector2 dir = ((Vector2)Owner.PlayerTransform.position -
-                       (Owner.Rb != null ? Owner.Rb.position : (Vector2)Owner.transform.position)).normalized;
-
-        // 첫 돌진 + 반사 반복
         int totalCharges = 1 + bounceCount;
         for (int charge = 0; charge < totalCharges; charge++)
         {
-            if (IsInvalid()) yield break;
+            if (Boss == null || ct.IsCancellationRequested) return;
 
-            // 경고 라인: 첫 번째 돌진에만 표시
+            // 첫 번째 돌진에만 경고 라인 표시
             if (charge == 0)
-            {
-                yield return WarnPhase(dir, speed);
-                if (IsInvalid()) yield break;
-            }
+                await WarnPhaseAsync(dir, ct);
 
-            Owner.EnemyAnimator?.SetTrigger(EnemyAnim.TCharge);
+            if (Boss == null || ct.IsCancellationRequested) return;
 
-            // 현재 위치를 로컬 변수로 추적 — Rb.MovePosition은 물리 스텝 후 반영되므로
-            // Rb.position에 의존하지 않고 직접 계산합니다.
-            Vector2 pos     = Owner.Rb != null ? Owner.Rb.position : (Vector2)Owner.transform.position;
-            bool    hitWall = false;
-            float   elapsed = 0f;
+            Boss.EnemyAnimator?.SetTrigger(EnemyAnim.TCharge);
+
+            pos = Boss.Rb != null ? Boss.Rb.position : (Vector2)Boss.transform.position;
+            bool  hitWall = false;
+            float elapsed = 0f;
 
             while (elapsed < chargeDuration)
             {
-                if (GameManager.Shared != null && GameManager.Shared.IsGameOver) yield break;
-                if (IsInvalid()) yield break;
+                if (GameManager.Shared != null && GameManager.Shared.IsGameOver) return;
+                if (Boss == null || ct.IsCancellationRequested) return;
 
-                Vector2 next = pos + dir * speed * Time.fixedDeltaTime;
+                Vector2 next = pos + dir * chargeSpeed * Time.fixedDeltaTime;
 
                 var mb = MovementBounds.Shared;
                 var sz = SpawnZone.Shared;
                 if (mb != null && !mb.IsInside(next))
                 {
                     Vector2 clamped = mb.ClosestPointOnBoundary(next);
-                    Owner.Rb.MovePosition(clamped);
+                    Boss.Rb.MovePosition(clamped);
                     pos     = clamped;
-                    dir     = Reflect(dir, next, clamped);
+                    dir     = ReflectDir(dir, next, clamped);
                     hitWall = true;
                     break;
                 }
                 else if (mb == null && sz != null)
                 {
-                    // MovementBounds가 없는 보스 맵 — SpawnZone AABB로 대체 경계 처리
-                    Vector2 szCenter = sz.BoundsCenter;
-                    Vector2 szHalf   = sz.BoundsSize * 0.5f;
-                    Vector2 szMin    = szCenter - szHalf;
-                    Vector2 szMax    = szCenter + szHalf;
-                    if (next.x < szMin.x || next.x > szMax.x || next.y < szMin.y || next.y > szMax.y)
+                    Vector2 c    = sz.BoundsCenter;
+                    Vector2 half = sz.BoundsSize * 0.5f;
+                    if (next.x < c.x - half.x || next.x > c.x + half.x ||
+                        next.y < c.y - half.y || next.y > c.y + half.y)
                     {
-                        Vector2 clamped = new Vector2(
-                            Mathf.Clamp(next.x, szMin.x, szMax.x),
-                            Mathf.Clamp(next.y, szMin.y, szMax.y));
-                        Owner.Rb.MovePosition(clamped);
+                        Vector2 clamped = new(Mathf.Clamp(next.x, c.x - half.x, c.x + half.x),
+                                              Mathf.Clamp(next.y, c.y - half.y, c.y + half.y));
+                        Boss.Rb.MovePosition(clamped);
                         pos     = clamped;
-                        dir     = Reflect(dir, next, clamped);
+                        dir     = ReflectDir(dir, next, clamped);
                         hitWall = true;
                         break;
                     }
                 }
 
                 pos = next;
-                Owner.Rb.MovePosition(next);
-                Owner.FlipToward(dir);
+                Boss.Rb.MovePosition(next);
+                Boss.FlipToward(dir);
                 elapsed += Time.fixedDeltaTime;
-                yield return new WaitForFixedUpdate();
+                await UniTask.WaitForFixedUpdate(ct);
             }
 
-            // 마지막 돌진이거나 벽에 안 닿았으면 종료
-            if (!hitWall || charge == totalCharges - 1) yield break;
+            if (!hitWall || charge == totalCharges - 1) return;
 
-            Owner.FlipToward(dir);
-
-            // 반사 후 잠깐 대기
+            Boss.FlipToward(dir);
             if (bouncePause > 0f)
-                yield return new WaitForSeconds(bouncePause);
+                await UniTask.Delay(System.TimeSpan.FromSeconds(bouncePause), cancellationToken: ct);
         }
     }
 
-    // ── 경고 라인 ──────────────────────────────────────────────
-
-    private IEnumerator WarnPhase(Vector2 dir, float speed)
+    private async UniTask WarnPhaseAsync(Vector2 dir, CancellationToken ct)
     {
-        Vector2 origin = Owner.Rb != null ? Owner.Rb.position : (Vector2)Owner.transform.position;
-
-        var lr = SpawnWarningLine(origin);
-        _warnLine = lr;
+        Vector2 origin = Boss.Rb != null ? Boss.Rb.position : (Vector2)Boss.transform.position;
+        _warnLine = SpawnWarnLine(origin);
 
         float elapsed = 0f;
         while (elapsed < warningDuration)
         {
-            if (IsInvalid()) { CleanupWarnLine(); yield break; }
+            if (Boss == null || ct.IsCancellationRequested) { CleanupWarnLine(); return; }
             elapsed += Time.deltaTime;
             float t = Mathf.Clamp01(elapsed / warningDuration);
 
-            if (lr != null)
+            if (_warnLine != null)
             {
-                Vector2 cur = Owner.Rb != null ? Owner.Rb.position : (Vector2)Owner.transform.position;
-                var tf = lr.transform;
-                tf.position = new Vector3(cur.x, cur.y, 0f);
-                lr.SetPosition(0, Vector3.zero);
-                Vector3 worldEnd = new Vector3(
-                    cur.x + dir.x * warningLineLength * t,
-                    cur.y + dir.y * warningLineLength * t, 0f);
-                lr.SetPosition(1, tf.InverseTransformPoint(worldEnd));
+                Vector2 cur = Boss.Rb != null ? Boss.Rb.position : (Vector2)Boss.transform.position;
+                _warnLine.transform.position = new Vector3(cur.x, cur.y, 0f);
+                _warnLine.SetPosition(0, Vector3.zero);
+                Vector3 worldEnd = new(cur.x + dir.x * warningLineLength * t,
+                                       cur.y + dir.y * warningLineLength * t, 0f);
+                _warnLine.SetPosition(1, _warnLine.transform.InverseTransformPoint(worldEnd));
             }
-            yield return null;
+            await UniTask.Yield(ct);
         }
-
         CleanupWarnLine();
     }
 
     private void CleanupWarnLine()
     {
         if (_warnLine == null) return;
-        Destroy(_warnLine.gameObject);
+        Object.Destroy(_warnLine.gameObject);
         _warnLine = null;
     }
 
-    private LineRenderer SpawnWarningLine(Vector2 start)
+    private LineRenderer SpawnWarnLine(Vector2 start)
     {
         if (!WarningLineSettings.Enabled) return null;
         var go = new GameObject("WarnLine");
         go.transform.position = new Vector3(start.x, start.y, 0f);
-        go.transform.rotation = Quaternion.Euler(60f, 0f, 0f);
         var lr = go.AddComponent<LineRenderer>();
         lr.useWorldSpace     = false;
         lr.positionCount     = 2;
@@ -185,27 +161,16 @@ public class BossChargeSkill : BossSkillBase
         lr.endColor          = warningColor;
         lr.sortingOrder      = 10;
         lr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-        Destroy(go, warningDuration + 0.5f);
+        Object.Destroy(go, warningDuration + 0.5f);
         return lr;
     }
 
-    // ── 벽 반사 방향 계산 ──────────────────────────────────────
-
-    /// <summary>
-    /// 벽을 초과한 위치(overshot)와 클램프된 위치(clamped)의 차이로
-    /// 어느 축이 벽에 닿았는지 판별해 방향 벡터를 반사합니다.
-    /// </summary>
-    private static Vector2 Reflect(Vector2 dir, Vector2 overshot, Vector2 clamped)
+    /// <summary>초과 위치와 클램프 위치의 차이로 부딪힌 벽 축을 판단해 방향을 반사합니다.</summary>
+    private static Vector2 ReflectDir(Vector2 dir, Vector2 overshot, Vector2 clamped)
     {
         Vector2 diff = overshot - clamped;
-        // 더 많이 초과된 축이 실제로 부딪힌 벽
-        if (Mathf.Abs(diff.x) >= Mathf.Abs(diff.y))
-            dir.x = -dir.x;
-        else
-            dir.y = -dir.y;
+        if (Mathf.Abs(diff.x) >= Mathf.Abs(diff.y)) dir.x = -dir.x;
+        else                                          dir.y = -dir.y;
         return dir.normalized;
     }
-
-    private bool IsInvalid()
-        => Owner == null || Owner.PlayerTransform == null;
 }

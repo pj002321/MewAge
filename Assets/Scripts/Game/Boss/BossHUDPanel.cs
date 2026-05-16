@@ -20,8 +20,6 @@ public class BossHUDPanel : MonoBehaviourSingleton<BossHUDPanel>
     [Header("그로기 UI")]
     [Tooltip("그로기 중에만 표시할 루트 오브젝트")]
     [SerializeField] private GameObject grogyPanel;
-    [Tooltip("그로기 잔여 시간 슬라이더 (1→0 감소)")]
-    [SerializeField] private Slider     grogySlider;
 
     private BossController trackedBoss;
 
@@ -55,6 +53,7 @@ public class BossHUDPanel : MonoBehaviourSingleton<BossHUDPanel>
 
         if (boss != null)
         {
+            boss.OnHPChanged  += HandleHPChanged;
             boss.OnGrogyStart += HandleGrogyStart;
             boss.OnGrogyEnd   += HandleGrogyEnd;
         }
@@ -65,6 +64,7 @@ public class BossHUDPanel : MonoBehaviourSingleton<BossHUDPanel>
     {
         if (trackedBoss != null)
         {
+            trackedBoss.OnHPChanged  -= HandleHPChanged;
             trackedBoss.OnGrogyStart -= HandleGrogyStart;
             trackedBoss.OnGrogyEnd   -= HandleGrogyEnd;
         }
@@ -73,24 +73,17 @@ public class BossHUDPanel : MonoBehaviourSingleton<BossHUDPanel>
         if (panel) panel.SetActive(false);
     }
 
-    private void HandleGrogyStart() { if (grogyPanel) grogyPanel.SetActive(true); }
-    private void HandleGrogyEnd()   { if (grogyPanel) grogyPanel.SetActive(false); }
-
-    // ── 매 프레임 HP / 그로기 동기화 ────────────────────────────
-    private void Update()
+    private void HandleHPChanged(float current, float max)
     {
-        if (trackedBoss == null) return;
-
-        if (hpSlider) hpSlider.value = trackedBoss.HPRatio;
+        if (hpSlider) hpSlider.value = max > 0f ? current / max : 0f;
 
         if (hpText)
         {
-            int cur = Mathf.CeilToInt(trackedBoss.CurrentHPValue);
-            int max = Mathf.CeilToInt(trackedBoss.MaxHPValue);
-            hpText.text = $"{cur}/{max}";
+            hpText.text = $"{Mathf.CeilToInt(current)}/{Mathf.CeilToInt(max)}";
         }
-
-        if (grogySlider && trackedBoss.IsGrogy)
-            grogySlider.value = trackedBoss.GrogyRemaining / trackedBoss.GrogyDuration;
     }
+
+    private void HandleGrogyStart() { if (grogyPanel) grogyPanel.SetActive(true); }
+    private void HandleGrogyEnd()   { if (grogyPanel) grogyPanel.SetActive(false); }
+
 }

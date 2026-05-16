@@ -70,9 +70,16 @@ public class RunResultPanel : MonoBehaviour
         if (wave > prevBest) { PlayerPrefs.SetInt(prefKey, wave); PlayerPrefs.Save(); prevBest = wave; }
         if (bestWaveText) bestWaveText.text = $"최고웨이브 : {prevBest}";
 
-        // 보상 계산 & 지급
-        var reward = RunRewardCalculator.Calculate(sessionGold, wave);
-        RewardManager.Shared?.GiveReward(reward);
+// 보상 계산 & 지급
+         var reward = RunRewardCalculator.Calculate(sessionGold, wave);
+         RewardManager.Shared?.GiveReward(reward);
+
+         // 챕터 클리어 저장
+         if (isClear)
+         {
+             PlayerPrefs.SetInt($"ChapterCleared_{chapterId}", 1);
+             PlayerPrefs.Save();
+         }
 
         // 보상 슬롯 생성
         SpawnRewardSlots(reward);

@@ -77,11 +77,8 @@ public class WeaponDebugInspector : MonoBehaviour
             return;
         }
 
-        // 장착: 인벤 경유 후 즉시 EquipFromInventory
-        if (!pi.TryAddToInventory(data))
-            pi.ForceAddToInventory(data);
-
-        pi.EquipFromInventory(pi.Inventory.Count - 1);
+        // 장착: 인벤 경유 없이 직접 장착 (OnChanged 1회만 발행)
+        pi.QuietEquip(data);
         Debug.Log($"[WeaponDebug] {row.f_이름} {star}★ → 장착됨");
     }
 

@@ -296,7 +296,7 @@ public class PlayerController : MonoBehaviour
 
     private void SyncHPUI()
     {
-        GameManager.Shared?.UpdateHP(currentHP, maxHP);
+        GameEvents.HPChanged(currentHP, maxHP);
         if (playerHpSlider)
         {
             playerHpSlider.minValue = 0f;

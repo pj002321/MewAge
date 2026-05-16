@@ -65,8 +65,21 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 
     protected override bool DontDestroy => false;
 
-    void OnEnable()  => EliteMarker.OnEliteDied += OnEliteKilled;
-    void OnDisable() => EliteMarker.OnEliteDied -= OnEliteKilled;
+    void OnEnable()
+    {
+        EliteMarker.OnEliteDied  += OnEliteKilled;
+        GameEvents.OnGoldChanged += UpdateGoldUI;
+        GameEvents.OnExpChanged  += UpdateExpUI;
+        GameEvents.OnHPChanged   += UpdateHP;
+    }
+
+    void OnDisable()
+    {
+        EliteMarker.OnEliteDied  -= OnEliteKilled;
+        GameEvents.OnGoldChanged -= UpdateGoldUI;
+        GameEvents.OnExpChanged  -= UpdateExpUI;
+        GameEvents.OnHPChanged   -= UpdateHP;
+    }
 
     private void OnEliteKilled()
     {
@@ -210,7 +223,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 
         // GameManager.Shared가 준비된 시점에 HP UI 강제 동기화
         if (PlayerController.Instance != null)
-            UpdateHP(PlayerController.Instance.CurrentHP, PlayerController.Instance.MaxHPValue);
+            GameEvents.HPChanged(PlayerController.Instance.CurrentHP, PlayerController.Instance.MaxHPValue);
 
         // 4. 모든 인게임 초기화가 끝났으므로 로딩 씬에게 내려가도 좋다고 신호를 보냅니다.
         SceneLoadManager.NotifyStageReady();
@@ -397,6 +410,8 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
                 waveIconImg.color = IsEliteWave(wave) ? Color.red : normalWaveColor;
             }
         }
+
+        GameEvents.WaveChanged(wave, isBossWave);
     }
 
     private IEnumerator WaveTextBumpAnim()
@@ -427,7 +442,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         _waveTextAnim = null;
     }
 
-    public void UpdateHP(float current, float max)
+    private void UpdateHP(float current, float max)
     {
         if (hpSlider)
         {
@@ -438,15 +453,15 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         if (hpText) hpText.text = $"{Mathf.CeilToInt(current)}";
     }
 
-    public void UpdateGoldUI(int gold)
+    private void UpdateGoldUI(int gold)
     {
         if (goldText) goldText.text = $"{gold}";
     }
 
-    public void UpdateExpUI(int exp, int expMax, int level)
+    private void UpdateExpUI(int exp, int expMax, int level)
     {
-        if (levelText)        levelText.text         = level >= (PlayerStats.Shared?.MaxLevel ?? int.MaxValue) ? "MAX" : $"LV.{level}";
-        if (expSlider)        expSlider.value        = (float)exp / expMax;
+        if (levelText) levelText.text = level >= (PlayerStats.Shared?.MaxLevel ?? int.MaxValue) ? "MAX" : $"LV.{level}";
+        if (expSlider) expSlider.value = (float)exp / expMax;
     }
 
     public void TriggerGameOver(bool skipRevival = false)
