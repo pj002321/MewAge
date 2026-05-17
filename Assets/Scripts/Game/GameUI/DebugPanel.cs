@@ -122,6 +122,7 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         if (mode == LoadSceneMode.Additive) return;
+        if (!IsGameScene(scene.name)) mainMenuPanel = FindObjectOfType<MainMenuPanel>(); // RefreshContent 전에 갱신
         RefreshContent(scene.name);
         if (IsGameScene(scene.name)) { BuildWaveButtons(); BuildWeaponButtons(); }
         waveListContent?.gameObject.SetActive(false);
@@ -212,7 +213,10 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
                 PlayerPrefs.SetInt($"ChapterCleared_{row.f_챕터ID}", 1);
         });
         PlayerPrefs.Save();
-        mainMenuPanel?.RefreshStages();
+
+        // mainMenuPanel이 stale(씬 리로드 후 destroyed)할 경우 동적으로 탐색
+        var panel = mainMenuPanel != null ? mainMenuPanel : FindObjectOfType<MainMenuPanel>();
+        panel?.RefreshStages();
         this.DLog("[Debug] 전 챕터 해금 완료");
     }
 

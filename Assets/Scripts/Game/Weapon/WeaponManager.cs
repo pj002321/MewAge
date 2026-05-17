@@ -56,12 +56,20 @@ public class WeaponManager : MonoBehaviour
             if (anchor == null) continue;
 
             // 1. 기존 장착된 무기(자식)들 전부 제거
-            foreach (Transform child in anchor)
+            // SetParent(null)로 즉시 anchor에서 분리 → ApplyStatSheet의 GetComponentsInChildren이
+            // 삭제 대기 중인 구 무기를 탐색하지 않도록 방지
+            for (int j = anchor.childCount - 1; j >= 0; j--)
             {
+                var child = anchor.GetChild(j);
+                child.SetParent(null);  // 즉시 계층에서 제거 (Destroy는 프레임 끝에 실행)
                 Destroy(child.gameObject);
             }
 
             // 2. 장착 슬롯에 무기가 있다면 새로 생성
+            if (i < equipped.Count && equipped[i] != null && equipped[i].prefab == null)
+            {
+                this.DError($"[WeaponManager] 슬롯 [{i}]: '{equipped[i].weaponName}' prefab 없음 → 무기 생성 스킵. Resources/Weapons/Ch{equipped[i].chapter}/{equipped[i].id?.ToLower()} 확인 필요.");
+            }
             if (i < equipped.Count && equipped[i] != null && equipped[i].prefab != null)
             {
                 GameObject weaponGO = Instantiate(equipped[i].prefab, anchor);

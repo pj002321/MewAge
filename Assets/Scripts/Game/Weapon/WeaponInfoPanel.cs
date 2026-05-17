@@ -140,6 +140,9 @@ public class WeaponInfoPanel : MonoBehaviourSingleton<WeaponInfoPanel>
                 WeaponType.Magic     => "마법",
                 WeaponType.Boomerang => "부메랑",
                 WeaponType.Spin      => "회전",
+                WeaponType.Slash     => "슬래시",
+                WeaponType.Charge    => "차징",
+                WeaponType.Hammer    => "해머",
                 _                    => data.weaponType.ToString(),
             };
         }

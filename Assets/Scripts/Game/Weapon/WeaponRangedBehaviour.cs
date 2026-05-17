@@ -72,7 +72,7 @@ public class WeaponRangedBehaviour : WeaponBehaviourBase
         Host.ApplyShootSpecialEffect(proj, spawnPos, aimDir);
         Host.TriggerAttackAnimation();
         TriggerRecoil(aimDir);
-        if (Host.Grade >= WeaponGrade.Legendary) Host.LegendarySkill?.OnShoot(spawnPos, aimDir);
+        if (Host.Grade >= WeaponGrade.Legendary) Host.HighGradeSkill?.OnShoot(spawnPos, aimDir);
     }
 
     private Vector3 GetParabolicSpawnPos()

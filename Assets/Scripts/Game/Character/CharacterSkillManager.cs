@@ -135,7 +135,7 @@ public class CharacterSkillManager : MonoBehaviourSingleton<CharacterSkillManage
         if (_onCooldown) return;
         if (_currentPoints < pointsRequired) return;
 
-        FXManager.Shared?.SpawnPlayerText("FEVER!", new Color(0.12f, 0.73f, 1f));
+        FXManager.Shared?.SpawnPlayerText("FEVER", new Color(0.12f, 0.73f, 1f));
 
         _isActive      = true;
         _currentPoints = 0;

@@ -432,7 +432,13 @@ public class EnemyController : MonoBehaviour, IEnemyHost
 
         if (_stunVfxInst != null) Destroy(_stunVfxInst);
         var pfb = StatusEffectConfig.Shared?.GetStun(weaponChapter);
-        if (pfb != null) { _stunVfxInst = Instantiate(pfb, transform); _stunVfxInst.transform.localPosition = Vector3.zero; }
+        if (pfb != null)
+        {
+            _stunVfxInst = Instantiate(pfb, transform);
+            var sr = GetComponentInChildren<SpriteRenderer>();
+            float yOff = sr != null ? sr.bounds.min.y - transform.position.y : 0f;
+            _stunVfxInst.transform.localPosition = new Vector3(0f, yOff, 0f);
+        }
 
         yield return new WaitForSeconds(seconds);
 

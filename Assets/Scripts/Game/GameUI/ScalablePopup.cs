@@ -43,12 +43,14 @@ public class ScalablePopup : MonoBehaviour
 
     public void Hide()
     {
+        if (GetComponent<RewardCollectEffect>()?.IsPlaying == true) return;
         if (_animationCoroutine != null) StopCoroutine(_animationCoroutine);
         _animationCoroutine = StartCoroutine(Animate(false));
     }
 
     public void HideImmediate()
     {
+        if (GetComponent<RewardCollectEffect>()?.IsPlaying == true) return;
         if (_animationCoroutine != null) StopCoroutine(_animationCoroutine);
         _animationCoroutine = null;
         _rectTransform.localScale   = Vector3.zero;

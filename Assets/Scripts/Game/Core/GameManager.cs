@@ -996,9 +996,9 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         {
             if (!_systemPaused) return;
             _systemPaused = false;
-            // 백그라운드 진입 시 패널로 인해 timeScale=0이었더라도 1f로 복원
-            // 열려있는 패널이 있다면 해당 패널이 다음 프레임 자신의 timeScale을 재적용함
-            Time.timeScale = _savedTimeScale > 0f ? _savedTimeScale : 1f;
+            // 게임 일시정지 패널이 열려있으면 timeScale=0 유지
+            bool gameIsPaused = GamePausePanel.Shared?.gameObject.activeSelf ?? false;
+            Time.timeScale = gameIsPaused ? 0f : (_savedTimeScale > 0f ? _savedTimeScale : 1f);
             AudioListener.pause = false;
             _skipNextFrame = true; // 복귀 첫 프레임 deltaTime 스파이크 방지
         }
@@ -1032,7 +1032,6 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     public void OnBossDefeated()
     {
         bossWaveActive = false;
-        WaveEnvironmentSwitcher.Shared?.SetNormal();
         SoundManager.Shared?.PlayChapterGameBGM(currentChapterID);
         EnemySpawner.Shared?.StopSpawning(); // 보스 죽음 즉시 스폰 중지
         waitingForUpgrade = true;
@@ -1040,7 +1039,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         int nextBoss = GetNextBossWave(wave);
         this.DLog($"[GameManager] OnBossDefeated wave={wave} nextBoss={nextBoss}");
 
-        // Orb 수집 대기 카운트다운 후 분기
+        // Orb 수집 대기 카운트다운 후 분기 (맵 복구는 BossOrbCollectRoutine에서 처리)
         StartCoroutine(BossOrbCollectRoutine(nextBoss));
     }
 
@@ -1050,20 +1049,22 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     /// </summary>
     private IEnumerator BossOrbCollectRoutine(int nextBoss)
     {
-        // 마지막 보스: 카운트다운 없이 즉시 게임 클리어
+        // 마지막 보스: 즉시 맵 복구 후 게임 클리어
         if (nextBoss <= 0)
         {
+            WaveEnvironmentSwitcher.Shared?.SetNormal();
             ShowGameClear();
             yield break;
         }
 
-        // 중간 보스: 타이머를 수집 대기 시간으로 덮어써 Update가 카운트다운 UI를 그리게 함
+        // 중간 보스: 보스 아레나를 유지하면서 orb 수집 대기
         waveTimer = orbCollectWait;
-
         this.DLog($"[GameManager] Orb 수집 대기 {orbCollectWait}s 시작");
         yield return new WaitForSeconds(orbCollectWait);
 
-        StartCoroutine(WaveClearRoutine());   // 중간 보스 → 업그레이드 패널
+        // 상점(업그레이드 패널) 직전에 맵 복구
+        WaveEnvironmentSwitcher.Shared?.SetNormal();
+        StartCoroutine(WaveClearRoutine());
     }
 
     private void ShowGameClear()

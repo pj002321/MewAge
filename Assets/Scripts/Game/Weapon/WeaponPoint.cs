@@ -27,15 +27,17 @@ public class WeaponPoint : MonoBehaviour
 
     // ── 읽기 전용 프로퍼티 (WeaponInfoPanel용) ───────────────────────
     public float AttackDamage   => attackDamage;
-    public float AttackCooldown => attackCooldown;
-    public float AttackRange    => attackRange;
-    public float CriticalRate   => criticalRate;
-    public float CriticalDamage => criticalMultiplier;
-    public float BleedDamage    => dotDamage;
-    public float LifeSteal      => lifeSteal;
-    public float KnockbackPower => knockbackPower;
-    public float ProjectileSpeed { get; private set; }
-    public float AreaDamageRatio => areaHitDamageRatio;
+    public float  AttackCooldown => attackCooldown;
+    public float  AttackRange    => attackRange;
+    public float  CriticalRate   => criticalRate;
+    public float  CriticalDamage => criticalMultiplier;
+    public float  BleedDamage    => dotDamage;
+    public float  LifeSteal      => lifeSteal;
+    public float  KnockbackPower => knockbackPower;
+    public float  ProjectileSpeed { get; private set; }
+    public float  AreaDamageRatio => areaHitDamageRatio;
+    public string WeaponId       => _weaponId;
+    public int    WeaponChapter  => _weaponChapter;
 
     // ── 잔상 ─────────────────────────────────────────────────────────
     [SerializeField] private bool  useTrail        = true;
@@ -51,8 +53,7 @@ public class WeaponPoint : MonoBehaviour
     // ── 런타임 ───────────────────────────────────────────────────────
     private bool              _initialized;
     internal WeaponGrade      _grade = WeaponGrade.Common;
-    internal WeaponLegendarySkill _legendarySkill;
-    internal WeaponMythicSkill    _mythicSkill;
+    internal WeaponHighGradeSkill _highGradeSkill;
     private SpriteRenderer    _weaponSr;
     private TrailRenderer     _trail;
     private Vector3           _originalScale;
@@ -64,8 +65,7 @@ public class WeaponPoint : MonoBehaviour
     // ── 내부 접근자 (behaviour 전용) ──────────────────────────────────
     internal SpriteRenderer       WeaponSr       => _weaponSr;
     internal WeaponGrade          Grade          => _grade;
-    internal WeaponLegendarySkill LegendarySkill => _legendarySkill;
-    internal WeaponMythicSkill    MythicSkill    => _mythicSkill;
+    internal WeaponHighGradeSkill HighGradeSkill => _highGradeSkill;
 
     // ── 공유 NonAlloc 버퍼 ────────────────────────────────────────────
     public static readonly Collider2D[] SharedHitBuffer = new Collider2D[32];
@@ -158,10 +158,8 @@ public class WeaponPoint : MonoBehaviour
         if (!_initialized)
         {
             _behaviour?.Init(this);
-            _legendarySkill?.Initialize(this);
-            _legendarySkill?.OnEquip();
-            _mythicSkill?.Initialize(this);
-            _mythicSkill?.OnEquip();
+            _highGradeSkill?.Initialize(this);
+            _highGradeSkill?.OnEquip();
         }
         _behaviour?.OnStart();
     }
@@ -189,16 +187,23 @@ public class WeaponPoint : MonoBehaviour
             if (_noAttackDiagTimer >= DiagLogInterval)
             {
                 _noAttackDiagTimer = 0f;
+                var any = FindNearestAny();
+                Vector2 org = transform.parent != null
+                    ? (Vector2)transform.parent.position : (Vector2)transform.position;
+                float d = any != null ? Vector2.Distance(org, any.transform.position) : -1f;
                 if (cooldownTimer <= 0f)
                 {
-                    var any = FindNearestAny();
-                    Vector2 org = transform.parent != null
-                        ? (Vector2)transform.parent.position : (Vector2)transform.position;
-                    float d = any != null ? Vector2.Distance(org, any.transform.position) : -1f;
                     Debug.LogWarning(
-                        $"[WeaponPoint] 미아 '{gameObject.name}'\n" +
-                        $"  behaviour={_behaviour?.GetType().Name}  cooldown={cooldownTimer:F2}  " +
-                        $"attackRange={attackRange}  nearestEnemy={d:F2}");
+                        $"[WeaponPoint] 쿨타임 준비됐으나 공격 안함 '{gameObject.name}'\n" +
+                        $"  behaviour={_behaviour?.GetType().Name}  attackRange={attackRange}  " +
+                        $"nearestEnemy={d:F2}  InputLocked={PlayerController.Instance?.InputLocked}");
+                }
+                else
+                {
+                    Debug.LogWarning(
+                        $"[WeaponPoint] 쿨타임 지속 중 '{gameObject.name}'\n" +
+                        $"  behaviour={_behaviour?.GetType().Name}  cooldownTimer={cooldownTimer:F2}  " +
+                        $"attackCooldown={attackCooldown:F2}  baseCooldown={_baseCooldown:F2}  nearestEnemy={d:F2}");
                 }
             }
         }
@@ -222,8 +227,7 @@ public class WeaponPoint : MonoBehaviour
     public void Init(WeaponData data)
     {
         _initialized    = true;
-        _legendarySkill = GetComponent<WeaponLegendarySkill>();
-        _mythicSkill    = GetComponent<WeaponMythicSkill>();
+        _highGradeSkill = GetComponent<WeaponHighGradeSkill>();
         _weaponSr       = GetComponentInChildren<SpriteRenderer>();
 
         criticalRate       = data.criticalRate;
@@ -284,10 +288,8 @@ public class WeaponPoint : MonoBehaviour
         }
 
         _grade = data.grade;
-        _legendarySkill?.Initialize(this);
-        _legendarySkill?.OnEquip();
-        _mythicSkill?.Initialize(this);
-        _mythicSkill?.OnEquip();
+        _highGradeSkill?.Initialize(this);
+        _highGradeSkill?.OnEquip();
 
         var outline = GetComponentInChildren<SpriteOutline>();
         outline?.SetStar(data.star);
@@ -325,7 +327,7 @@ public class WeaponPoint : MonoBehaviour
         attackCooldown = Mathf.Max(0.1f, reduced / _bonusMultiplier);
     }
 
-    /// <summary>LegendarySpinSkill에서 호출 — 공전 반경·속도 배율 적용.</summary>
+    /// <summary>WeaponHighGradeSkill(Spin 타입) OnEquip에서 호출 — 공전 반경·속도 배율 적용.</summary>
     public void ApplySpinBoost(float radiusMult, float speedMult)
         => (_behaviour as WeaponSpinBehaviour)?.ApplyOrbitMultiplier(radiusMult, speedMult);
 
@@ -571,21 +573,21 @@ public class WeaponPoint : MonoBehaviour
             StartCoroutine(EpicSecondHitRoutine(hitPos));
 
         if (_grade >= WeaponGrade.Legendary)
-            _legendarySkill?.OnHit(hitDir, SharedHitBuffer, colCount);
+            _highGradeSkill?.OnHit(hitDir, SharedHitBuffer, colCount);
 
         if (_grade >= WeaponGrade.Mythic)
         {
             if (hitBoss != null)
             {
-                _mythicSkill?.OnBossHit(hitBoss, hitDir);
+                _highGradeSkill?.OnBossHit(hitBoss, hitDir);
             }
-            else if (_mythicSkill != null)
+            else if (_highGradeSkill != null)
             {
                 for (int i = 0; i < colCount; i++)
                 {
                     var e = _sharedHitList[i].GetComponentInParent<EnemyController>();
                     if (e != null && e.gameObject.activeInHierarchy)
-                        _mythicSkill.OnEnemyHit(e, hitDir);
+                        _highGradeSkill.OnEnemyHit(e, hitDir);
                 }
             }
         }

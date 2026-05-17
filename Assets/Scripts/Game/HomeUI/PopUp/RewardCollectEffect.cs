@@ -5,10 +5,12 @@ using UnityEngine.UI;
 /// rewardContent 직접 자식 아이템들을 중앙으로 모은 뒤 사방으로 퍼트리는 연출 컴포넌트.
 public class RewardCollectEffect : MonoBehaviour
 {
-    const float GatherTime  = 0.35f;
-    const float BurstTime   = 0.45f;
+    const float GatherTime  = 0.18f;
+    const float BurstTime   = 0.22f;
     const float BurstRadius = 200f;
-    const float StaggerStep = 0.045f;
+    const float StaggerStep = 0.02f;
+
+    public bool IsPlaying { get; private set; }
 
     public void Play(RectTransform rewardContent, RectTransform center)
     {
@@ -18,13 +20,15 @@ public class RewardCollectEffect : MonoBehaviour
 
     IEnumerator PlayRoutine(RectTransform rewardContent, RectTransform center)
     {
+        IsPlaying = true;
+
         Canvas rootCanvas = null;
         for (var t = transform; t != null; t = t.parent)
         {
             var c = t.GetComponent<Canvas>();
             if (c != null && c.isRootCanvas) { rootCanvas = c; break; }
         }
-        if (rootCanvas == null) yield break;
+        if (rootCanvas == null) { IsPlaying = false; yield break; }
 
         int     count     = rewardContent.childCount;
         var     items     = new RectTransform[count];
@@ -46,16 +50,14 @@ public class RewardCollectEffect : MonoBehaviour
             foreach (var g in ghostGO.GetComponentsInChildren<Graphic>())
                 g.raycastTarget = false;
             ghosts[i]   = ghost;
-            // 생성 시점에 CanvasGroup 미리 추가해 BurstOne에서 안전하게 접근
             ghostCGs[i] = ghostGO.AddComponent<CanvasGroup>();
 
-            // 원본 CanvasGroup
             var cg = items[i].GetComponent<CanvasGroup>();
             if (!cg) cg = items[i].gameObject.AddComponent<CanvasGroup>();
             itemCGs[i] = cg;
         }
 
-        // Phase 1: 중앙으로 모으기 (ease-in quad)
+        // Phase 1: 중앙으로 모으기
         float elapsed = 0f;
         while (elapsed < GatherTime)
         {
@@ -77,9 +79,9 @@ public class RewardCollectEffect : MonoBehaviour
         }
 
         float pause = 0f;
-        while (pause < 0.08f) { pause += Time.unscaledDeltaTime; yield return null; }
+        while (pause < 0.05f) { pause += Time.unscaledDeltaTime; yield return null; }
 
-        // Phase 2: 사방으로 퍼지기 (ease-out quad + fade)
+        // Phase 2: 사방으로 퍼지기
         var burstTargets = new Vector3[count];
         for (int i = 0; i < count; i++)
         {
@@ -98,8 +100,9 @@ public class RewardCollectEffect : MonoBehaviour
         float waitElapsed = 0f;
         while (waitElapsed < waitEnd) { waitElapsed += Time.unscaledDeltaTime; yield return null; }
 
-        // 원본 복구
         foreach (var cg in itemCGs) if (cg) cg.alpha = 1f;
+
+        IsPlaying = false;
     }
 
     IEnumerator BurstOne(RectTransform ghost, CanvasGroup cg, Vector3 from, Vector3 to, float duration, float delay)
