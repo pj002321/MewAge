@@ -5,7 +5,7 @@ using UnityEngine;
 [System.Serializable]
 public class WeaponRangedBehaviour : WeaponBehaviourBase
 {
-    [ProjectileID]
+    [ProjectileID("Weapons")]
     [SerializeField] private string     projectileID;
     [System.NonSerialized] private GameObject _projectilePrefab;
     [SerializeField] private float      projectileSpeed     = 8f;

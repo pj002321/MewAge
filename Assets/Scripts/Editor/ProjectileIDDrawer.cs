@@ -3,14 +3,14 @@ using UnityEditor;
 using UnityEngine;
 
 /// <summary>
-/// [ProjectileID] 속성이 붙은 string 필드를 Resources/Unit/Ch*/proj/ 드롭다운으로 표시합니다.
+/// [ProjectileID] 속성이 붙은 string 필드를 proj/ 폴더 드롭다운으로 표시합니다.
+/// rootFolder가 "Unit"이면 Resources/Unit, "Weapons"이면 Resources/Weapons 탐색.
 /// 프로젝트 에셋이 변경되면 캐시가 자동으로 초기화됩니다.
 /// </summary>
 [CustomPropertyDrawer(typeof(ProjectileIDAttribute))]
 public class ProjectileIDDrawer : PropertyDrawer
 {
-    private static string[] _paths;
-    private static string[] _labels;
+    private static readonly Dictionary<string, (string[] paths, string[] labels)> _cache = new();
 
     [InitializeOnLoadMethod]
     private static void RegisterAutoRefresh()
@@ -19,23 +19,20 @@ public class ProjectileIDDrawer : PropertyDrawer
         EditorApplication.projectChanged += ClearCache;
     }
 
-    private static void ClearCache() => _paths = _labels = null;
+    private static void ClearCache() => _cache.Clear();
 
-    private static void EnsureCache()
+    private static (string[] paths, string[] labels) EnsureCache(string rootFolder)
     {
-        if (_paths != null) return;
+        if (_cache.TryGetValue(rootFolder, out var cached)) return cached;
 
-        var paths  = new List<string>();
-        var labels = new List<string>();
+        var paths  = new List<string> { "" };
+        var labels = new List<string> { "(없음)" };
 
-        paths.Add("");
-        labels.Add("(없음)");
-
-        string[] guids = AssetDatabase.FindAssets("t:Prefab", new[] { "Assets/Resources/Unit" });
+        string[] guids = AssetDatabase.FindAssets("t:Prefab",
+            new[] { $"Assets/Resources/{rootFolder}" });
         foreach (string guid in guids)
         {
             string assetPath = AssetDatabase.GUIDToAssetPath(guid);
-
             if (assetPath.IndexOf("/proj/", System.StringComparison.OrdinalIgnoreCase) < 0)
                 continue;
 
@@ -54,16 +51,16 @@ public class ProjectileIDDrawer : PropertyDrawer
             labels.Add($"[{chapter}]  {fileName}");
         }
 
-        _paths  = paths.ToArray();
-        _labels = labels.ToArray();
+        var result = (paths.ToArray(), labels.ToArray());
+        _cache[rootFolder] = result;
+        return result;
     }
 
     [MenuItem("Tools/Mewage/Refresh ProjectileID Cache")]
     private static void RefreshCache()
     {
         ClearCache();
-        EnsureCache();
-        Debug.Log($"[ProjectileIDDrawer] 캐시 갱신 완료 — {_paths.Length - 1}개 투사체 프리팹");
+        Debug.Log("[ProjectileIDDrawer] 캐시 초기화 완료");
     }
 
     public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
@@ -74,29 +71,30 @@ public class ProjectileIDDrawer : PropertyDrawer
             return;
         }
 
-        EnsureCache();
+        string rootFolder = (attribute as ProjectileIDAttribute)?.RootFolder ?? "Unit";
+        var (paths, labels) = EnsureCache(rootFolder);
 
         EditorGUI.BeginProperty(position, label, property);
 
         string current    = property.stringValue;
         int    currentIdx = 0;
-        for (int i = 1; i < _paths.Length; i++)
+        for (int i = 1; i < paths.Length; i++)
         {
-            if (_paths[i] == current) { currentIdx = i; break; }
+            if (paths[i] == current) { currentIdx = i; break; }
         }
 
         const float BtnW = 24f;
         var dropRect = new Rect(position.x, position.y, position.width - BtnW - 2f, position.height);
         var btnRect  = new Rect(position.xMax - BtnW, position.y, BtnW, position.height);
 
-        int selected = EditorGUI.Popup(dropRect, label.text, currentIdx, _labels);
+        int selected = EditorGUI.Popup(dropRect, label.text, currentIdx, labels);
         if (selected != currentIdx)
-            property.stringValue = selected == 0 ? "" : _paths[selected];
+            property.stringValue = selected == 0 ? "" : paths[selected];
 
         if (GUI.Button(btnRect, "↻"))
         {
             ClearCache();
-            EnsureCache();
+            EnsureCache(rootFolder);
         }
 
         EditorGUI.EndProperty();

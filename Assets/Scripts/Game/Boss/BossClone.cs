@@ -5,21 +5,24 @@ using UnityEngine;
 /// <summary>
 /// 보스 분신 태그 컴포넌트.
 /// BossCloneSkill 이 Boss.gameObject 를 Instantiate 한 뒤 추가합니다.
-/// BossController 가 이동·스킬을 담당하며, 이 컴포넌트는 수명·사망 VFX·목록 관리만 합니다.
+/// 사망 시 검정 실루엣으로 전환 후 알파 페이드아웃으로 소멸합니다.
 /// </summary>
 public class BossClone : MonoBehaviour
 {
     public static readonly List<BossClone> All = new();
 
-    private BossController _bc;
-    private GameObject     _deathVfxPrefab;
-    private float          _vfxLifetime;
+    [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStatics() => All.Clear();
 
-    public void Init(float lifetime, GameObject deathVfxPrefab, float vfxLifetime = 1f)
+    private const float FadeDuration = 0.6f;
+
+    private BossController   _bc;
+    private SpriteRenderer[] _srs;
+
+    public void Init(float lifetime)
     {
-        _bc             = GetComponent<BossController>();
-        _deathVfxPrefab = deathVfxPrefab;
-        _vfxLifetime    = vfxLifetime;
+        _bc  = GetComponent<BossController>();
+        _srs = GetComponentsInChildren<SpriteRenderer>(true);
 
         if (_bc != null) _bc.OnDeath += OnCloneDeath;
         All.Add(this);
@@ -28,9 +31,8 @@ public class BossClone : MonoBehaviour
 
     private void OnCloneDeath()
     {
-        if (_deathVfxPrefab == null) return;
-        var vfx = Instantiate(_deathVfxPrefab, transform.position, Quaternion.identity);
-        Destroy(vfx, _vfxLifetime);
+        StopAllCoroutines();
+        StartCoroutine(SilhouetteFadeRoutine());
     }
 
     private void OnDestroy()
@@ -43,5 +45,33 @@ public class BossClone : MonoBehaviour
     {
         yield return new WaitForSeconds(duration);
         _bc?.ForceDie();
+    }
+
+    private IEnumerator SilhouetteFadeRoutine()
+    {
+        // 모든 SpriteRenderer를 검정 실루엣으로 전환
+        var silhouetteMat = new Material(Shader.Find("Sprites/Default"));
+        foreach (var sr in _srs)
+        {
+            if (sr == null) continue;
+            sr.material = silhouetteMat;
+            sr.color    = Color.black;
+        }
+
+        // 알파 페이드아웃
+        for (float t = 0f; t < FadeDuration; t += Time.deltaTime)
+        {
+            float alpha = Mathf.Lerp(1f, 0f, t / FadeDuration);
+            foreach (var sr in _srs)
+            {
+                if (sr == null) continue;
+                var c = sr.color;
+                c.a      = alpha;
+                sr.color = c;
+            }
+            yield return null;
+        }
+
+        Destroy(gameObject);
     }
 }

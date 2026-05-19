@@ -1,6 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 /// <summary>플레이어 주위를 공전하며 닿는 적을 타격하는 돌리기 행동.</summary>
 [System.Serializable]
@@ -174,6 +177,19 @@ public class WeaponSpinBehaviour : WeaponBehaviourBase
     {
         StartCoroutine(SpinGhostRoutine());
     }
+
+#if UNITY_EDITOR
+    public override void DrawGizmos(Vector3 playerCenter, Vector3 weaponPos)
+    {
+        // 공전 궤도 (플레이어 기준)
+        Handles.color = new Color(0.4f, 0.9f, 1f, 0.6f);
+        Handles.DrawWireDisc(playerCenter, Vector3.forward, orbitRadius);
+
+        // 타격 판정 반경 (무기 정중앙)
+        Gizmos.color = new Color(1f, 0.5f, 0.2f, 0.7f);
+        Gizmos.DrawWireSphere(weaponPos, spinHitRadius);
+    }
+#endif
 
     private IEnumerator SpinGhostRoutine()
     {

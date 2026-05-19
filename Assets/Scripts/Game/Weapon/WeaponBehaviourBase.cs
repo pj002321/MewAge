@@ -123,4 +123,9 @@ public abstract class WeaponBehaviourBase
     // ── 코루틴 헬퍼 (Host.StartCoroutine 위임) ──────────────────────────
     protected Coroutine StartCoroutine(IEnumerator routine) => Host.StartCoroutine(routine);
     protected void StopCoroutine(Coroutine co) { if (co != null) Host.StopCoroutine(co); }
+
+#if UNITY_EDITOR
+    /// <summary>WeaponPoint.OnDrawGizmosSelected()에서 호출됩니다. 타입별 기즈모를 추가로 그립니다.</summary>
+    public virtual void DrawGizmos(Vector3 playerCenter, Vector3 weaponPos) { }
+#endif
 }

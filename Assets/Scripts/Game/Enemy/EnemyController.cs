@@ -221,6 +221,9 @@ public class EnemyController : MonoBehaviour, IEnemyHost
     public static readonly List<EnemyController> All = new List<EnemyController>();
     public static int ActiveCount => All.Count;
 
+    [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStatics() => All.Clear();
+
     private void ApplySeparation()
     {
         if (separationRadius <= 0f || rb == null) return;

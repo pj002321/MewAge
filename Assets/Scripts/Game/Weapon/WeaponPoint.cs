@@ -46,19 +46,12 @@ public class WeaponPoint : MonoBehaviour
     [SerializeField] private float trailStartWidth = 0.28f;
     [SerializeField] private Color trailColor      = new Color(1f, 1f, 1f, 0.55f);
 
-    // ── 스케일 펄스 ──────────────────────────────────────────────────
-    [SerializeField] private bool  shootScalePulse    = true;
-    [SerializeField] private float scalePulseMax      = 1.3f;
-    [SerializeField] private float scalePulseDuration = 0.12f;
-
     // ── 런타임 ───────────────────────────────────────────────────────
     private bool              _initialized;
     internal WeaponGrade      _grade = WeaponGrade.Common;
     internal WeaponHighGradeSkill _highGradeSkill;
     private SpriteRenderer    _weaponSr;
     private TrailRenderer     _trail;
-    private Vector3           _originalScale;
-    private Coroutine         _scalePulseCoroutine;
     private float             _baseCooldown;
     private float             _statMultiplier   = 1f;
     private float             _grogySpeedMult   = 1f;  // BossController 그로기
@@ -101,7 +94,7 @@ public class WeaponPoint : MonoBehaviour
     // ── 특수효과 ─────────────────────────────────────────────────────
     private string            _specialEffectId;
     private int               _weaponChapter = 1;
-    [SerializeField] private string _weaponId;
+    [SerializeField, HideInInspector] private string _weaponId;
     private bool              _cloneFlying;
     private int               _cloneActiveCount;
     private readonly List<GameObject> _activeClones = new();
@@ -172,7 +165,6 @@ public class WeaponPoint : MonoBehaviour
             cooldownTimer = attackCooldown;
         }
         originLocalPos = transform.localPosition;
-        _originalScale = transform.localScale;
         if (_weaponSr == null) _weaponSr = GetComponentInChildren<SpriteRenderer>();
         InitTrail();
         if (!_initialized)
@@ -411,13 +403,6 @@ public class WeaponPoint : MonoBehaviour
     }
 
     internal void TriggerAttackAnimation() { }
-
-    internal void TriggerScalePulse()
-    {
-        if (!shootScalePulse) return;
-        if (_scalePulseCoroutine != null) StopCoroutine(_scalePulseCoroutine);
-        _scalePulseCoroutine = StartCoroutine(ScalePulseRoutine());
-    }
 
     internal void StartTrail()
     {
@@ -878,24 +863,6 @@ public class WeaponPoint : MonoBehaviour
         if (sr != null) { _trail.sortingLayerID = sr.sortingLayerID; _trail.sortingOrder = sr.sortingOrder - 1; }
         _trail.material = new Material(Shader.Find("Sprites/Default"));
         _trail.emitting = false;
-    }
-
-    private IEnumerator ScalePulseRoutine()
-    {
-        Vector3 peak = _originalScale * scalePulseMax;
-        float   half = scalePulseDuration * 0.5f;
-        for (float t = 0f; t < half; t += Time.deltaTime)
-        {
-            transform.localScale = Vector3.Lerp(_originalScale, peak, t / half);
-            yield return null;
-        }
-        for (float t = 0f; t < half; t += Time.deltaTime)
-        {
-            transform.localScale = Vector3.Lerp(peak, _originalScale, t / half);
-            yield return null;
-        }
-        transform.localScale  = _originalScale;
-        _scalePulseCoroutine  = null;
     }
 
     private IEnumerator EpicSecondHitRoutine(Vector3 hitPos)
@@ -1446,5 +1413,6 @@ public class WeaponPoint : MonoBehaviour
         Vector3 center = transform.parent != null ? transform.parent.position : transform.position;
         Gizmos.color = new Color(1f, 0.8f, 0f, 0.4f);
         Gizmos.DrawWireSphere(center, attackRange);
+        _behaviour?.DrawGizmos(center, transform.position);
     }
 }

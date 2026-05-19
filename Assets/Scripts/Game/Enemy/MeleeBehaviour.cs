@@ -18,9 +18,10 @@ public class MeleeBehaviour : EnemyBehaviourBase
     [Tooltip("useAnimationEvent=true일 때, 이 시간 후에도 이벤트가 없으면 직접 피해 적용 (0이면 폴백 없음)")]
     [SerializeField] private float      animEventTimeout = 0.5f;
 
-    private float     attackTimer;
-    private bool      _pendingHit;
-    private Coroutine _vfxCoroutine;
+    private float                attackTimer;
+    private bool                 _pendingHit;
+    private Coroutine            _vfxCoroutine;
+    private MeleeAnimEventRelay  _relay;
 
     public override void Init(IEnemyHost host)
     {
@@ -29,12 +30,20 @@ public class MeleeBehaviour : EnemyBehaviourBase
         _pendingHit   = false;
         _vfxCoroutine = null;
 
+        _relay = GetComponentInParent<MeleeAnimEventRelay>();
+        if (_relay != null) _relay.OnMeleeHit += OnMeleeAttackHit;
+
         // Inspector 미할당 시 "AttackVFX" 이름의 자식 오브젝트 자동 탐색
         if (attackVfx == null)
             attackVfx = transform.root.Find("AttackVFX")?.gameObject
                      ?? FindVfxInChildren(transform.root);
 
         attackVfx?.SetActive(false);
+    }
+
+    private void OnDisable()
+    {
+        if (_relay != null) _relay.OnMeleeHit -= OnMeleeAttackHit;
     }
 
     private static GameObject FindVfxInChildren(Transform root)
@@ -64,7 +73,7 @@ public class MeleeBehaviour : EnemyBehaviourBase
                 _vfxCoroutine = StartCoroutine(ShowVfx());
             }
 
-            if (useAnimationEvent)
+            if (useAnimationEvent || _relay != null)
             {
                 Owner.EnemyAnimator?.SetTrigger(EnemyAnim.TAttack);
                 if (animEventTimeout > 0f)

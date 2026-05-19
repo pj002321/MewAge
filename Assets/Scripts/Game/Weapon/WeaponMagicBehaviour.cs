@@ -25,7 +25,7 @@ public class WeaponMagicBehaviour : WeaponMeleeBaseBehaviour
     private GameObject _activeBolt;
 
     // ── Fire ─────────────────────────────────────────────────────────
-    [ProjectileID]
+    [ProjectileID("Weapons")]
     [SerializeField] private string     projectileID;
     [System.NonSerialized] private GameObject _projectilePrefab;
     [SerializeField] private float      projectileSpeed = 8f;
@@ -107,8 +107,6 @@ public class WeaponMagicBehaviour : WeaponMeleeBaseBehaviour
             SpawnZapBolt(muzzle, targetTf);
             ZapLineDamage(muzzle.position, targetTf.position, enemy, boss);
             SoundManager.Shared?.Play(SoundKey.Structure_Thunder);
-            if (i == 0) Host.TriggerScalePulse();
-
             if (i < lightningBurstCount - 1)
                 yield return new WaitForSeconds(lightningBurstInterval);
         }
@@ -187,7 +185,6 @@ public class WeaponMagicBehaviour : WeaponMeleeBaseBehaviour
                 critRate: Host.criticalRate, critMult: Host.criticalMultiplier);
 
         TriggerFireSpriteColor();
-        Host.TriggerScalePulse();
     }
 
     private void TriggerFireSpriteColor()

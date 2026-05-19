@@ -17,9 +17,15 @@ using UnityEngine;
 [System.Serializable]
 public class BossCloneSkill : BossSkillBase
 {
+    [System.Serializable]
+    public class SkillTypeEntry
+    {
+        public string typeName;
+    }
+
     [Header("분신 스킬 선택")]
-    [Tooltip("분신이 실행할 스킬 클래스 이름. 비워두면 보스의 모든 스킬 사용.\n예: BossProjectileSkill")]
-    [SerializeField] private string[] cloneSkillTypeNames = new string[0];
+    [Tooltip("비워두면 보스의 모든 스킬 사용")]
+    [SerializeField] private SkillTypeEntry[] cloneSkillTypes = new SkillTypeEntry[0];
 
     [Header("분신 설정")]
     [SerializeField] private int   cloneCount      = 2;
@@ -34,20 +40,24 @@ public class BossCloneSkill : BossSkillBase
     [Tooltip("보스 위치 → 최종 위치 이동 시간")]
     [SerializeField] private float spreadDuration = 0.35f;
 
-    [Header("분신 사망 VFX")]
-    [SerializeField] private GameObject deathVfxPrefab;
-    [SerializeField] private float      deathVfxLifetime = 1f;
+    private readonly List<BossClone> _activeClones = new();
 
     protected override async UniTask OnExecuteAsync(CancellationToken ct)
     {
         if (Boss == null) return;
 
+        // 살아있는 분신 정리
+        _activeClones.RemoveAll(c => c == null);
+
+        // 분신이 아직 살아있으면 소환 건너뜀
+        if (_activeClones.Count > 0) return;
+
         Boss.EnemyAnimator?.SetTrigger(EnemyAnim.TAttack);
 
         // 분신이 실행할 스킬 타입 목록 (null = 제한 없음)
-        System.Type[] allowedTypes = cloneSkillTypeNames.Length > 0
-            ? cloneSkillTypeNames
-                .Select(n => System.Type.GetType(n))
+        System.Type[] allowedTypes = cloneSkillTypes.Length > 0
+            ? cloneSkillTypes
+                .Select(e => System.Type.GetType(e.typeName))
                 .Where(t => t != null)
                 .ToArray()
             : null;
@@ -61,7 +71,6 @@ public class BossCloneSkill : BossSkillBase
 
         // 분신 소환 (모두 보스 위치에서 시작)
         var cloneTransforms = new Transform[cloneCount];
-        var clones          = new List<BossClone>(cloneCount);
 
         for (int i = 0; i < cloneCount; i++)
         {
@@ -73,20 +82,15 @@ public class BossCloneSkill : BossSkillBase
             cloneBC?.ApplyCloneStats(cloneHP, cloneContactDmg, cloneMoveSpeed);
 
             var clone = go.AddComponent<BossClone>();
-            clone.Init(cloneLifetime, deathVfxPrefab, deathVfxLifetime);
+            clone.Init(cloneLifetime);
 
             cloneTransforms[i] = go.transform;
-            clones.Add(clone);
+            _activeClones.Add(clone);
         }
 
-        // 보스 위치 → 목표 위치로 부드럽게 펼치기
+        // 보스 위치 → 목표 위치로 부드럽게 펼치기 후 즉시 반환
+        // (본체는 계속 패턴을 돌고, 분신은 독립적으로 동작)
         await SpreadAsync(cloneTransforms, targets, spreadDuration, ct);
-
-        // 모든 분신이 사망할 때까지 대기 (다 죽어야 다음 소환 가능)
-        await UniTask.WaitUntil(
-            () => Boss == null || clones.TrueForAll(c => c == null),
-            cancellationToken: ct)
-            .SuppressCancellationThrow();
     }
 
     private async UniTask SpreadAsync(

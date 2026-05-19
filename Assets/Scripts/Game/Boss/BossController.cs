@@ -136,6 +136,14 @@ public class BossController : MonoBehaviour, IEnemyHost
     public static bool             NextIsClone;
     public static System.Type[]    NextCloneSkillTypes;
 
+    [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStatics()
+    {
+        Current             = null;
+        NextIsClone         = false;
+        NextCloneSkillTypes = null;
+    }
+
     // ── Unity 생명주기 ─────────────────────────────────────────────
 
     private void Awake()
@@ -150,6 +158,9 @@ public class BossController : MonoBehaviour, IEnemyHost
         EnemyAnimator = GetComponentInChildren<Animator>();
         srs           = GetComponentsInChildren<SpriteRenderer>(true);
         _hitFlash     = GetComponentInChildren<HitFlash>(true);
+
+        var relay = GetComponentInChildren<MeleeAnimEventRelay>();
+        if (relay != null) relay.OnMeleeHit += OnBossMeleeHit;
 
         if (_isClone)
         {
@@ -359,7 +370,7 @@ public class BossController : MonoBehaviour, IEnemyHost
 
     public void TriggerGroggy(float duration)
     {
-        if (IsGrogy || isDead || _grogyReentryTimer > 0f) return;
+        if (_isClone || IsGrogy || isDead || _grogyReentryTimer > 0f) return;
         GrogyAsync(duration).Forget();
     }
 
@@ -684,8 +695,7 @@ public void ForceDie()
             if (s is BossTeleportSkill ts) { ts.NotifyTeleportAnimEnd(clipName); return; }
     }
 
-    /// <summary>고속추격 공격 히트 프레임에서 호출됩니다.</summary>
-    public void OnFastChaseHit()
+    private void OnBossMeleeHit()
     {
         foreach (var s in _skills)
             if (s is BossMeleeSkill ms) { ms.NotifyFastChaseHit(); return; }

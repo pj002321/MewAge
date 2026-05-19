@@ -82,8 +82,9 @@ public class BossSummonSkill : BossSkillBase
         for (int i = 0; i < canSpawn; i++)
         {
             BossController.NextIsClone = true;
-            var go     = Object.Instantiate(minionPrefab, positions[i], Quaternion.identity);
-            BossController.NextIsClone = false;
+            GameObject go;
+            try   { go = Object.Instantiate(minionPrefab, positions[i], Quaternion.identity); }
+            finally { BossController.NextIsClone = false; }
 
             var minion = go.GetComponent<BossSummonMinion>();
             if (minion == null) minion = go.AddComponent<BossSummonMinion>();
@@ -94,7 +95,7 @@ public class BossSummonSkill : BossSkillBase
             if (go.GetComponent<BossController>() != null)
             {
                 var clone = go.AddComponent<BossClone>();
-                clone.Init(minionDuration, null);
+                clone.Init(minionDuration);
             }
         }
     }

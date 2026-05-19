@@ -1,6 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 /// <summary>슬래시(호 베기) 행동. 텔레포트 → 반원 호 베기 → 귀환 코루틴.</summary>
 [System.Serializable]
@@ -187,6 +190,31 @@ public class WeaponSlashBehaviour : WeaponBehaviourBase
         Object.Destroy(vfx, slashVfxDuration);
         if (Host.Grade >= WeaponGrade.Legendary) OnSlashVfxSpawned?.Invoke(vfxWorldPos, midDir);
     }
+
+#if UNITY_EDITOR
+    public override void DrawGizmos(Vector3 playerCenter, Vector3 weaponPos)
+    {
+        // 슬래시 궤도 반경
+        Handles.color = new Color(0.4f, 0.9f, 1f, 0.6f);
+        Handles.DrawWireDisc(playerCenter, Vector3.forward, slashRadius);
+
+        // 최대 텔레포트 거리
+        Handles.color = new Color(0.4f, 0.9f, 1f, 0.2f);
+        Handles.DrawWireDisc(playerCenter, Vector3.forward, slashTeleportMaxDist);
+
+        // 타격 판정 반경 (궤도 위 대표 지점: 위쪽)
+        Vector3 samplePos = playerCenter + Vector3.up * slashRadius;
+        Gizmos.color = new Color(1f, 0.5f, 0.2f, 0.7f);
+        Gizmos.DrawWireSphere(samplePos, slashHitRadius);
+
+        // VFX 스폰 지점 (대표 방향: 위쪽, slashRadius 거리)
+        Gizmos.color = new Color(1f, 0.3f, 1f, 0.8f);
+        Gizmos.DrawWireSphere(samplePos, 0.12f);
+        Handles.color = new Color(1f, 0.3f, 1f, 0.5f);
+        Handles.DrawDottedLine(playerCenter, samplePos, 4f);
+        Handles.Label(samplePos + Vector3.up * 0.2f, "VFX");
+    }
+#endif
 
     private IEnumerator FadeWeapon(float from, float to, float duration)
     {
