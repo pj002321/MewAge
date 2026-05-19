@@ -14,8 +14,6 @@ GameObject:
   - component: {fileID: 4436910961165905048}
   - component: {fileID: 8829713175602211872}
   - component: {fileID: -3704317132031060373}
-  - component: {fileID: -3298224257173087319}
-  - component: {fileID: 8380234923682906872}
   - component: {fileID: 8233072276021628811}
   - component: {fileID: -6944777592135432652}
   m_Layer: 7
@@ -143,12 +141,62 @@ MonoBehaviour:
   chaseStopDistance: 2.5
   chaseDuration: 2.5
   idleDuration: 2
-  skills:
-  - {fileID: -3298224257173087319}
-  - {fileID: 8380234923682906872}
   _decal: {fileID: 8661759970146083267}
+  _skills:
+  - rid: 2864143559287111824
+  - rid: 2864143559287111826
   entryDrop: 1
   entryScaleUpDuration: 0.35
+  references:
+    version: 2
+    RefIds:
+    - rid: 2864143559287111824
+      type: {class: BossSlamSkill, ns: , asm: Assembly-CSharp}
+      data:
+        cooldown: 2
+        executeInPattern: 1
+        slamType: 0
+        slamDamage: 35
+        slamRadius: 3
+        jumpHeight: 6
+        jumpDuration: 0.7
+        markerWarningTime: 0.5
+        slamMarkerPrefab: {fileID: 7905823675861574758, guid: e965097e70b2e9d47807ebf0614a30a6, type: 3}
+        landingVfxPrefab: {fileID: 1372210804763385033, guid: dda2013ffd130984693cbc12d550b536, type: 3}
+        vfxLifetime: 1
+        hopHeight: 2
+        hopRiseTime: 0.25
+        hopFallTime: 0.18
+        shakeDuration: 0.45
+        shakeMagnitude: 0.35
+        floatHeight: 2.8
+        floatRiseTime: 0.35
+        floatHangTime: 0.25
+        floatFallTime: 0.55
+        preChargeDelay: 0.3
+        poundChargeSpeed: 20
+        chargeWarnDuration: 0.5
+        chargeWarningLength: 12
+        chargeWarningWidth: 0.08
+        chargeWarningColor: {r: 1, g: 0, b: 0, a: 1}
+        chargeWarningMat: {fileID: 0}
+        ghostColor: {r: 1, g: 0.15, b: 0.15, a: 0.45}
+        ghostInterval: 0.04
+        ghostLifetime: 0.12
+    - rid: 2864143559287111826
+      type: {class: BossChargeSkill, ns: , asm: Assembly-CSharp}
+      data:
+        cooldown: 2
+        executeInPattern: 1
+        chargeSpeed: 12
+        chargeDuration: 0.5
+        bounceCount: 0
+        bouncePause: 0.1
+        warningDuration: 0.5
+        warningLineLength: 5
+        warningLineWidth: 0.5
+        warningColor: {r: 1, g: 0, b: 0, a: 1}
+        warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
 --- !u!50 &8829713175602211872
 Rigidbody2D:
   serializedVersion: 5
@@ -213,53 +261,6 @@ CapsuleCollider2D:
   m_Offset: {x: 0.32, y: 0.73}
   m_Size: {x: 0.63, y: 1.48}
   m_Direction: 0
---- !u!114 &-3298224257173087319
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2217421304044356619}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4f59276fb7dc5c04c8aeaf3aafa5f594, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BossChargeSkill
-  executeInPattern: 1
-  cooldown: 2
-  chargeSpeed: 12
-  chargeDuration: 0.4
-  bounceCount: 0
-  bouncePause: 0.1
-  warningDuration: 0.5
-  warningLineLength: 6
-  warningLineWidth: 0.08
-  warningColor: {r: 1, g: 0, b: 0, a: 1}
-  warningMaterial: {fileID: 0}
---- !u!114 &8380234923682906872
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2217421304044356619}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 421dc27616e41804c9fcb163146852ec, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BossSummonCycleSkill
-  executeInPattern: 1
-  cooldown: 2
-  minionPrefab: {fileID: 5780791762247049258, guid: 061632170c91fe04db151c7ff974af64, type: 3}
-  spawnMarkerPrefab: {fileID: 5515808124668199316, guid: 4676482f183c362489d2902d70a232b3, type: 3}
-  summonCount: 5
-  maxActiveMinions: 5
-  summonInterval: 1
-  markerWarningTime: 0.8
-  minionDuration: 15
-  minionMoveSpeed: 4
-  minionContactDamage: 20
-  spawnRadius: 4
 --- !u!114 &8233072276021628811
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -105,8 +105,6 @@ GameObject:
   - component: {fileID: -285142243041137724}
   - component: {fileID: 5297367921795593197}
   - component: {fileID: -1516203895122136579}
-  - component: {fileID: 2493143103034262532}
-  - component: {fileID: 5171375789277945818}
   - component: {fileID: 7095818865235369741}
   - component: {fileID: -5992033717783905148}
   m_Layer: 7
@@ -235,12 +233,91 @@ MonoBehaviour:
   chaseStopDistance: 1.5
   chaseDuration: 2.5
   idleDuration: 1
-  skills:
-  - {fileID: 2493143103034262532}
-  - {fileID: 5171375789277945818}
   _decal: {fileID: 1078143633512093590}
+  _skills:
+  - rid: 2864143559287111819
+  - rid: 2864143559287111820
   entryDrop: 1
   entryScaleUpDuration: 0.35
+  references:
+    version: 2
+    RefIds:
+    - rid: 2864143559287111819
+      type: {class: BossProjectileSkill, ns: , asm: Assembly-CSharp}
+      data:
+        cooldown: 2
+        executeInPattern: 1
+        projectileID: Unit/Ch2/Proj/proj_banana
+        projectileSpeed: 7
+        firePoint: {fileID: 6392908186972708575}
+        warningLineLength: 5
+        warningLineWidth: 0.5
+        warningColor: {r: 1, g: 0, b: 0, a: 1}
+        warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
+        impactVfxPrefab: {fileID: 0}
+        impactVfxLifetime: 1
+        phases:
+        - type: 0
+          warningTime: 0.5
+          count: 5
+          interval: 0.5
+          dirCount: 0
+          radialAngleOffset: 0
+          fanAngle: 0
+          arcHeight: 0
+          homingSpeed: 0
+          accelTime: 0
+          initialSpeedRatio: 0
+          volleyPointCount: 0
+          volleySpreadRadius: 0
+          volleyHangTime: 0
+          volleyBurstInterval: 0
+          volleyHitRadius: 0
+          volleyHitDamage: 0
+          volleyShellArcHeight: 0
+          volleyShakeDuration: 0
+          volleyShakeMagnitude: 0
+          volleyMarkerPrefab: {fileID: 0}
+          volleyShellPrefab: {fileID: 0}
+          volleyImpactVfx: {fileID: 0}
+          boulderSpeed: 0
+          boulderLifetime: 0
+          boulderMaxBounces: 0
+          boulderRotateSpeed: 0
+          boulderRollInterval: 0
+    - rid: 2864143559287111820
+      type: {class: BossSlamSkill, ns: , asm: Assembly-CSharp}
+      data:
+        cooldown: 2
+        executeInPattern: 1
+        slamType: 0
+        slamDamage: 30
+        slamRadius: 2.5
+        jumpHeight: 6
+        jumpDuration: 0.7
+        markerWarningTime: 0.8
+        slamMarkerPrefab: {fileID: 7905823675861574758, guid: e965097e70b2e9d47807ebf0614a30a6, type: 3}
+        landingVfxPrefab: {fileID: 1372210804763385033, guid: dda2013ffd130984693cbc12d550b536, type: 3}
+        vfxLifetime: 1
+        hopHeight: 2
+        hopRiseTime: 0.25
+        hopFallTime: 0.18
+        shakeDuration: 0.45
+        shakeMagnitude: 0.35
+        floatHeight: 2.8
+        floatRiseTime: 0.35
+        floatHangTime: 0.25
+        floatFallTime: 0.55
+        preChargeDelay: 0.3
+        poundChargeSpeed: 20
+        chargeWarnDuration: 0.5
+        chargeWarningLength: 12
+        chargeWarningWidth: 0.08
+        chargeWarningColor: {r: 1, g: 0, b: 0, a: 1}
+        chargeWarningMat: {fileID: 0}
+        ghostColor: {r: 1, g: 0.15, b: 0.15, a: 0.45}
+        ghostInterval: 0.04
+        ghostLifetime: 0.12
 --- !u!50 &5297367921795593197
 Rigidbody2D:
   serializedVersion: 5
@@ -305,69 +382,6 @@ CapsuleCollider2D:
   m_Offset: {x: 0, y: 0.74}
   m_Size: {x: 1.37, y: 1.4}
   m_Direction: 0
---- !u!114 &2493143103034262532
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5780791762247049258}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4f59276fb7dc5c04c8aeaf3aafa5f594, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BossChargeSkill
-  executeInPattern: 1
-  cooldown: 2
-  chargeSpeed: 12
-  chargeDuration: 1
-  bounceCount: 0
-  bouncePause: 0.1
-  warningDuration: 0.5
-  warningLineLength: 12
-  warningLineWidth: 0.8
-  warningColor: {r: 1, g: 0, b: 0, a: 1}
-  warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
---- !u!114 &5171375789277945818
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5780791762247049258}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 71ecc31d375a1534384e5b1844037cf7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BossProjectileCycleSkill
-  executeInPattern: 1
-  cooldown: 2
-  projectilePrefab: {fileID: 7916182024222986910, guid: 6fdaa66d16c2778419b4b59caeb166ea, type: 3}
-  projectileSpeed: 7
-  firePoint: {fileID: 6392908186972708575}
-  phases:
-  - label: "\uD398\uC774\uC988"
-    type: 0
-    "\uACBD\uACE0\uC2DC\uAC04": 0.4
-    "\uD69F\uC218": 5
-    "\uAC04\uACA9": 0.5
-    "\uBC29\uD5A5\uC218": 8
-    "\uAC01\uB3C4\uC624\uD504\uC14B": 0
-    "\uBD80\uCC44\uAF34\uAC01\uB3C4": 120
-    "\uC544\uD06C\uB192\uC774": 3
-    "\uD638\uBC0D\uC18D\uB3C4": 9
-    "\uAC00\uC18D\uC2DC\uAC04": 0.4
-    "\uCD08\uAE30\uC18D\uB3C4\uBE44\uC728": 0.05
-    "\uCD94\uACA9\uC2DC\uAC04": 2
-  useWarningLines: 0
-  warningLineLength: 4
-  warningLineWidth: 0.8
-  warningColor: {r: 1, g: 0, b: 0, a: 1}
-  warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
-  impactVfxPrefab: {fileID: 0}
-  impactVfxLifetime: 1
-  chaseStopDistance: 2.5
-  animWaitTimeout: 2
 --- !u!114 &7095818865235369741
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -27,7 +27,7 @@ Transform:
   m_GameObject: {fileID: 7880470054483752245}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 2.03, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -100,6 +100,24 @@ LineRenderer:
         weightedMode: 0
         inWeight: 0.33333334
         outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.4744248
+        value: 0.37948617
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 0.99767435
+        value: 0.29230097
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
@@ -158,6 +176,6 @@ MonoBehaviour:
   sprites:
   - {fileID: -7419469082364510714, guid: a29a15b176a2a67489ea2700cc27bb16, type: 3}
   segments: 10
-  jitterAmount: 0.2
+  jitterAmount: 0.05
   flickerInterval: 0.05
   lifetime: 0.15

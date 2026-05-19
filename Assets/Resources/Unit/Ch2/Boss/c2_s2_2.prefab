@@ -46,11 +46,7 @@ GameObject:
   - component: {fileID: -4594220880711392196}
   - component: {fileID: 3412486521471030563}
   - component: {fileID: 3908215976127633476}
-  - component: {fileID: 5414302027381489287}
-  - component: {fileID: 9141822140614450109}
-  - component: {fileID: 3647568436334686103}
   - component: {fileID: -8301155164155974897}
-  - component: {fileID: -6851176947634508946}
   m_Layer: 7
   m_Name: c2_s2_2
   m_TagString: Untagged
@@ -177,13 +173,94 @@ MonoBehaviour:
   chaseStopDistance: 2
   chaseDuration: 2.5
   idleDuration: 1
-  skills:
-  - {fileID: 9141822140614450109}
-  - {fileID: 5414302027381489287}
-  - {fileID: 3647568436334686103}
   _decal: {fileID: 1013010393879870141}
+  _skills:
+  - rid: 2864143559287111827
+  - rid: 2864143559287111828
+  - rid: 2864143559287111829
   entryDrop: 1
   entryScaleUpDuration: 0.35
+  references:
+    version: 2
+    RefIds:
+    - rid: 2864143559287111827
+      type: {class: BossCloneSkill, ns: , asm: Assembly-CSharp}
+      data:
+        cooldown: 2
+        executeInPattern: 1
+        cloneSkillTypes:
+        - typeName: BossProjectileSkill
+        cloneCount: 2
+        cloneHP: 1000
+        cloneContactDmg: 35
+        cloneMoveSpeed: 3
+        cloneLifetime: 15
+        spreadSpacing: 2.5
+        spreadDuration: 0.35
+    - rid: 2864143559287111828
+      type: {class: BossGridSpikeSkill, ns: , asm: Assembly-CSharp}
+      data:
+        cooldown: 2
+        executeInPattern: 1
+        cols: 7
+        rows: 7
+        fillMode: 4
+        randomCount: 12
+        spikePrefab: {fileID: 4482906470431603876, guid: 3f9f4e51da353fa42b9ed297da123825, type: 3}
+        spikeDamage: 50
+        spikeRadius: 0.5
+        spikeDuration: 1.5
+        warningDuration: 1
+        waveDelay: 0.25
+        warningMarkerPrefab: {fileID: 7905823675861574758, guid: e965097e70b2e9d47807ebf0614a30a6, type: 3}
+        warningColor: {r: 1, g: 1, b: 1, a: 1}
+        dropHeight: 8
+        dropDuration: 0.25
+        spawnVfxPrefab: {fileID: 2242000200254754010, guid: 4f6a94928439cc041aa55ce780141b13, type: 3}
+        spawnVfxDuration: 1
+    - rid: 2864143559287111829
+      type: {class: BossProjectileSkill, ns: , asm: Assembly-CSharp}
+      data:
+        cooldown: 2
+        executeInPattern: 1
+        projectileID: Unit/Ch2/proj/c1_m14_p
+        projectileSpeed: 4
+        firePoint: {fileID: 3428022332661224929}
+        warningLineLength: 5
+        warningLineWidth: 0.5
+        warningColor: {r: 1, g: 0, b: 0, a: 1}
+        warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
+        impactVfxPrefab: {fileID: 0}
+        impactVfxLifetime: 1
+        phases:
+        - type: 0
+          warningTime: 0.5
+          count: 3
+          interval: 0.5
+          dirCount: 0
+          radialAngleOffset: 0
+          fanAngle: 0
+          arcHeight: 0
+          homingSpeed: 0
+          accelTime: 0.4
+          initialSpeedRatio: 0.2
+          volleyPointCount: 0
+          volleySpreadRadius: 0
+          volleyHangTime: 0
+          volleyBurstInterval: 0
+          volleyHitRadius: 0
+          volleyHitDamage: 0
+          volleyShellArcHeight: 0
+          volleyShakeDuration: 0
+          volleyShakeMagnitude: 0
+          volleyMarkerPrefab: {fileID: 0}
+          volleyShellPrefab: {fileID: 0}
+          volleyImpactVfx: {fileID: 0}
+          boulderSpeed: 0
+          boulderLifetime: 0
+          boulderMaxBounces: 0
+          boulderRotateSpeed: 0
+          boulderRollInterval: 0
 --- !u!50 &-4594220880711392196
 Rigidbody2D:
   serializedVersion: 5
@@ -261,101 +338,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpriteYSort
   multiplier: 100
---- !u!114 &5414302027381489287
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5298016620640385389}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 45354f0c4ea932b4eb47f11de6d6a2ef, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BossGridSpikeSkill
-  executeInPattern: 1
-  cooldown: 2
-  cols: 5
-  rows: 10
-  fillMode: 4
-  randomCount: 12
-  spikePrefab: {fileID: 6743989927076389928, guid: 2e9062b0bf56cd5439405fa3f191143f, type: 3}
-  spikeDamage: 35
-  spikeRadius: 1
-  spikeDuration: 1.5
-  warningDuration: 1.2
-  waveDelay: 0.25
-  warningMarkerPrefab: {fileID: 358296028456733525, guid: 07846a3ce4ea4d74d98af88b68199228, type: 3}
-  warningColor: {r: 1, g: 1, b: 1, a: 1}
-  dropHeight: 4
-  dropDuration: 0.25
-  spawnVfxPrefab: {fileID: 2242000200254754010, guid: 4f6a94928439cc041aa55ce780141b13, type: 3}
-  spawnVfxDuration: 1
---- !u!114 &9141822140614450109
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5298016620640385389}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 68407384a130487479114f8a85d0da71, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BossCloneSkill
-  executeInPattern: 1
-  cooldown: 2
-  cloneSkills:
-  - {fileID: 3647568436334686103}
-  cloneCount: 2
-  cloneHP: 80
-  cloneContactDmg: 10
-  cloneMoveSpeed: 3
-  cloneLifetime: 15
-  spreadSpacing: 2.5
-  spreadDuration: 0.35
-  deathVfxPrefab: {fileID: 6409674488405722314, guid: 897e96c9446189c4682db2477ed93015, type: 3}
-  deathVfxLifetime: 1
---- !u!114 &3647568436334686103
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5298016620640385389}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 71ecc31d375a1534384e5b1844037cf7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BossProjectileCycleSkill
-  executeInPattern: 1
-  cooldown: 2
-  projectilePrefab: {fileID: 7916182024222986910, guid: ac6de4b3b52ae944284db65056ca064a, type: 3}
-  projectileSpeed: 7
-  firePoint: {fileID: 3428022332661224929}
-  phases:
-  - label: "\uD398\uC774\uC988"
-    type: 0
-    "\uACBD\uACE0\uC2DC\uAC04": 0.4
-    "\uD69F\uC218": 4
-    "\uAC04\uACA9": 0.5
-    "\uBC29\uD5A5\uC218": 8
-    "\uAC01\uB3C4\uC624\uD504\uC14B": 0
-    "\uBD80\uCC44\uAF34\uAC01\uB3C4": 120
-    "\uC544\uD06C\uB192\uC774": 3
-    "\uD638\uBC0D\uC18D\uB3C4": 9
-    "\uAC00\uC18D\uC2DC\uAC04": 0.3
-    "\uCD08\uAE30\uC18D\uB3C4\uBE44\uC728": 0.05
-    "\uCD94\uACA9\uC2DC\uAC04": 3
-  useWarningLines: 1
-  warningLineLength: 10
-  warningLineWidth: 0.06
-  warningColor: {r: 1, g: 0, b: 0, a: 1}
-  warningMaterial: {fileID: 0}
-  impactVfxPrefab: {fileID: 0}
-  impactVfxLifetime: 1
-  chaseStopDistance: 4
-  animWaitTimeout: 2
 --- !u!114 &-8301155164155974897
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -372,19 +354,6 @@ MonoBehaviour:
   flashMaterial: {fileID: 2100000, guid: f6d87d58797b8b9478efae2c2271cbe7, type: 2}
   flashColor: {r: 1, g: 1, b: 1, a: 1}
   BaseColor: {r: 1, g: 1, b: 1, a: 1}
---- !u!114 &-6851176947634508946
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5298016620640385389}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 25cc23087012616429ecb7c10c6cb557, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SpriteYSort
-  multiplier: 100
 --- !u!1 &6243017964121496611
 GameObject:
   m_ObjectHideFlags: 0

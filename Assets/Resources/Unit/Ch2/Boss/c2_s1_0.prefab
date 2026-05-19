@@ -14,8 +14,6 @@ GameObject:
   - component: {fileID: -7932176894074708882}
   - component: {fileID: -4710413047643074451}
   - component: {fileID: -7336705989044592897}
-  - component: {fileID: -2298048180237470415}
-  - component: {fileID: 5373153972275024946}
   - component: {fileID: 1087019096054123856}
   - component: {fileID: 6848499975529979262}
   m_Layer: 7
@@ -139,17 +137,33 @@ MonoBehaviour:
   moveSpeed: 3
   _isClone: 0
   grogyDuration: 2
-  grogyOverheadPrefab: {fileID: 5515808124668199316, guid: 4676482f183c362489d2902d70a232b3, type: 3}
+  grogyOverheadPrefab: {fileID: 7777409954982400410, guid: f66d4f4f0fe9de24182839d83a609535, type: 3}
   grogyOverheadAnchor: {fileID: 1435864111662921224}
   chaseStopDistance: 2
   chaseDuration: 2.5
   idleDuration: 1
-  skills:
-  - {fileID: 5373153972275024946}
-  - {fileID: -2298048180237470415}
   _decal: {fileID: 1003761722093112731}
+  _skills:
+  - rid: 2864143559287111791
   entryDrop: 1
   entryScaleUpDuration: 0.35
+  references:
+    version: 2
+    RefIds:
+    - rid: 2864143559287111791
+      type: {class: BossSummonSkill, ns: , asm: Assembly-CSharp}
+      data:
+        cooldown: 2
+        executeInPattern: 1
+        summonCount: 8
+        maxActiveMinions: 8
+        minionDuration: 15
+        minionMoveSpeed: 4.5
+        minionContactDmg: 15
+        spawnRadius: 4
+        markerWarningTime: 0.5
+        minionPrefab: {fileID: 1326216360028315856, guid: b71d17893617b9b4da707bd526180777, type: 3}
+        spawnMarkerPrefab: {fileID: 7905823675861574758, guid: e965097e70b2e9d47807ebf0614a30a6, type: 3}
 --- !u!50 &-4710413047643074451
 Rigidbody2D:
   serializedVersion: 5
@@ -214,51 +228,6 @@ CapsuleCollider2D:
   m_Offset: {x: 0, y: 0.84}
   m_Size: {x: 1.41, y: 1.68}
   m_Direction: 0
---- !u!114 &-2298048180237470415
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1326216360028315856}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 41b513309ac63c040b1c0ced00cf17f4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BossFastChaseSkill
-  executeInPattern: 1
-  cooldown: 2
-  chaseSpeed: 3
-  chaseDuration: 3
-  stopDistance: 1
-  attackCooldown: 0.6
-  animEventTimeout: 0.5
-  attackVfx: {fileID: 7089603892366371000}
-  vfxDuration: 0.3
---- !u!114 &5373153972275024946
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1326216360028315856}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 421dc27616e41804c9fcb163146852ec, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BossSummonCycleSkill
-  executeInPattern: 1
-  cooldown: 2
-  minionPrefab: {fileID: 1326216360028315856, guid: b71d17893617b9b4da707bd526180777, type: 3}
-  spawnMarkerPrefab: {fileID: 5515808124668199316, guid: 4676482f183c362489d2902d70a232b3, type: 3}
-  summonCount: 3
-  maxActiveMinions: 12
-  summonInterval: 0.5
-  markerWarningTime: 0.8
-  minionDuration: 30
-  minionMoveSpeed: 4
-  minionContactDamage: 15
-  spawnRadius: 6
 --- !u!114 &1087019096054123856
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -462,6 +431,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: vfx_slash
       objectReference: {fileID: 0}
+    - target: {fileID: 4326448872545226646, guid: 9c39f451340dbc740828b2b7c4782b1a, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -470,10 +443,5 @@ PrefabInstance:
 --- !u!4 &5777455933328742188 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1028037812601204738, guid: 9c39f451340dbc740828b2b7c4782b1a, type: 3}
-  m_PrefabInstance: {fileID: 6803240833602283310}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &7089603892366371000 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 4326448872545226646, guid: 9c39f451340dbc740828b2b7c4782b1a, type: 3}
   m_PrefabInstance: {fileID: 6803240833602283310}
   m_PrefabAsset: {fileID: 0}

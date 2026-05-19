@@ -112,9 +112,6 @@ MonoBehaviour:
   trailTime: 0.1
   trailStartWidth: 0.28
   trailColor: {r: 0.9528302, g: 0.33708617, b: 0.33708617, a: 1}
-  shootScalePulse: 1
-  scalePulseMax: 1.3
-  scalePulseDuration: 0.12
   _weaponId: CH1_M_0
   references:
     version: 2
@@ -123,7 +120,7 @@ MonoBehaviour:
       type: {class: WeaponMeleeBehaviour, ns: , asm: Assembly-CSharp}
       data:
         pullbackDist: 0.5
-        pullbackSpeed: 25
+        pullbackSpeed: 30
         strikeSpeed: 80
         returnSpeed: 70
         hitDistance: 0.4
@@ -141,12 +138,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d880b36e09b826b4aa4d33b07b710c84, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpriteOutline
-  starColors:
-  - {r: 1, g: 1, b: 1, a: 0}
-  - {r: 0.504717, g: 0.9414869, b: 1, a: 1}
-  - {r: 0.39999998, g: 1, b: 0.6414886, a: 1}
-  - {r: 0.8, g: 0.4, b: 1, a: 1}
-  - {r: 1, g: 0.35, b: 0.35, a: 1}
 --- !u!114 &978152429255420751
 MonoBehaviour:
   m_ObjectHideFlags: 0

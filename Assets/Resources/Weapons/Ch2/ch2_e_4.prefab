@@ -110,10 +110,7 @@ MonoBehaviour:
   useTrail: 1
   trailTime: 0.1
   trailStartWidth: 0.28
-  trailColor: {r: 1, g: 1, b: 1, a: 0.55}
-  shootScalePulse: 1
-  scalePulseMax: 1.3
-  scalePulseDuration: 0.12
+  trailColor: {r: 0.7647059, g: 0.2509804, b: 1, a: 1}
   _weaponId: CH2_E_4
   references:
     version: 2
@@ -121,8 +118,8 @@ MonoBehaviour:
     - rid: 2864143526218694760
       type: {class: WeaponRangedBehaviour, ns: , asm: Assembly-CSharp}
       data:
-        projectilePrefab: {fileID: 0}
-        projectileSpeed: 8
+        projectileID: Weapons/Ch2/Proj/ch2_e_4_proj
+        projectileSpeed: 20
         useParabolicShot: 0
         parabolicArcHeight: 1.5
         parabolicSpawnLocalPos: {x: 0, y: 0, z: 0}

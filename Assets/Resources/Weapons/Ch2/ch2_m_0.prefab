@@ -107,25 +107,25 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponPoint
   _behaviour:
-    rid: 2864143526218694766
+    rid: 2864143502748942431
   useTrail: 1
   trailTime: 0.1
   trailStartWidth: 0.28
-  trailColor: {r: 1, g: 1, b: 1, a: 0.55}
+  trailColor: {r: 1, g: 1, b: 1, a: 1}
   shootScalePulse: 1
   scalePulseMax: 1.3
   scalePulseDuration: 0.12
-  _weaponId: CH2_M_0
+  _weaponId: CH2_C_0
   references:
     version: 2
     RefIds:
-    - rid: 2864143526218694766
+    - rid: 2864143502748942431
       type: {class: WeaponMeleeBehaviour, ns: , asm: Assembly-CSharp}
       data:
         pullbackDist: 0.5
-        anticipationTime: 0.08
+        pullbackSpeed: 25
         strikeSpeed: 80
-        returnSpeed: 25
+        returnSpeed: 70
         hitDistance: 0.4
         overshootDistance: 0.5
         overshootSpeed: 60

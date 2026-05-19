@@ -136,8 +136,6 @@ GameObject:
   - component: {fileID: -4785007125764904899}
   - component: {fileID: -4472806890882306662}
   - component: {fileID: -3998777981678266923}
-  - component: {fileID: 4382858811831378813}
-  - component: {fileID: 3871775641527460410}
   - component: {fileID: 1687801677029909339}
   - component: {fileID: -2470312056100256346}
   m_Layer: 7
@@ -265,12 +263,81 @@ MonoBehaviour:
   chaseStopDistance: 1.5
   chaseDuration: 2.5
   idleDuration: 1
-  skills:
-  - {fileID: 4382858811831378813}
-  - {fileID: 3871775641527460410}
   _decal: {fileID: 3248781302469269118}
+  _skills:
+  - rid: 2864143559287111830
+  - rid: 2864143559287111831
   entryDrop: 1
   entryScaleUpDuration: 0.35
+  references:
+    version: 2
+    RefIds:
+    - rid: 2864143559287111830
+      type: {class: BossSlamSkill, ns: , asm: Assembly-CSharp}
+      data:
+        cooldown: 2
+        executeInPattern: 1
+        slamType: 0
+        slamDamage: 40
+        slamRadius: 2.5
+        jumpHeight: 6
+        jumpDuration: 0.7
+        markerWarningTime: 0.8
+        slamMarkerPrefab: {fileID: 7905823675861574758, guid: e965097e70b2e9d47807ebf0614a30a6, type: 3}
+        landingVfxPrefab: {fileID: 851543317570617582, guid: 5ee5e8c374903034ba44e80b8498353a, type: 3}
+        vfxLifetime: 1
+        hopHeight: 2
+        hopRiseTime: 0.25
+        hopFallTime: 0.18
+        shakeDuration: 0.45
+        shakeMagnitude: 0.35
+        floatHeight: 2.8
+        floatRiseTime: 0.35
+        floatHangTime: 0.25
+        floatFallTime: 0.55
+        preChargeDelay: 0.3
+        poundChargeSpeed: 20
+        chargeWarnDuration: 0.5
+        chargeWarningLength: 12
+        chargeWarningWidth: 0.08
+        chargeWarningColor: {r: 1, g: 0, b: 0, a: 1}
+        chargeWarningMat: {fileID: 0}
+        ghostColor: {r: 1, g: 0.15, b: 0.15, a: 0.45}
+        ghostInterval: 0.04
+        ghostLifetime: 0.12
+    - rid: 2864143559287111831
+      type: {class: BossSlamSkill, ns: , asm: Assembly-CSharp}
+      data:
+        cooldown: 2
+        executeInPattern: 1
+        slamType: 1
+        slamDamage: 30
+        slamRadius: 2.5
+        jumpHeight: 6
+        jumpDuration: 0.7
+        markerWarningTime: 0.8
+        slamMarkerPrefab: {fileID: 0}
+        landingVfxPrefab: {fileID: 851543317570617582, guid: 5ee5e8c374903034ba44e80b8498353a, type: 3}
+        vfxLifetime: 1
+        hopHeight: 2
+        hopRiseTime: 0.25
+        hopFallTime: 0.18
+        shakeDuration: 0.45
+        shakeMagnitude: 0.35
+        floatHeight: 2.8
+        floatRiseTime: 0.35
+        floatHangTime: 0.25
+        floatFallTime: 0.55
+        preChargeDelay: 0.3
+        poundChargeSpeed: 20
+        chargeWarnDuration: 0.5
+        chargeWarningLength: 5
+        chargeWarningWidth: 0.5
+        chargeWarningColor: {r: 1, g: 0, b: 0, a: 1}
+        chargeWarningMat: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
+        ghostColor: {r: 1, g: 0.15, b: 0.15, a: 0.45}
+        ghostInterval: 0.04
+        ghostLifetime: 0.12
 --- !u!50 &-4472806890882306662
 Rigidbody2D:
   serializedVersion: 5
@@ -335,64 +402,6 @@ CapsuleCollider2D:
   m_Offset: {x: 0.21, y: 0.91}
   m_Size: {x: 1.11, y: 1.82}
   m_Direction: 0
---- !u!114 &4382858811831378813
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3312402149363571138}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0fce8968cf717a2438582076ab21189b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BossSlamSkill
-  executeInPattern: 1
-  cooldown: 2
-  slamDamage: 30
-  slamRadius: 2.5
-  jumpHeight: 6
-  jumpDuration: 0.7
-  markerWarningTime: 0.8
-  slamMarkerPrefab: {fileID: 7905823675861574758, guid: 2c45f609030a63849b36336032979582, type: 3}
-  landingVfxPrefab: {fileID: 1645737383650597069, guid: d13e811c376306146ac829de7af32967, type: 3}
-  vfxLifetime: 1
---- !u!114 &3871775641527460410
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3312402149363571138}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 14d160f41ad8ad445897e06fd775ae2b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BossGroundPoundSkill
-  executeInPattern: 1
-  cooldown: 2
-  hopHeight: 2
-  hopRiseTime: 0.25
-  hopFallTime: 0.18
-  shakeDuration: 0.45
-  shakeMagnitude: 0.35
-  landingVfxPrefab: {fileID: 1645737383650597069, guid: d13e811c376306146ac829de7af32967, type: 3}
-  vfxLifetime: 1
-  floatHeight: 2.8
-  floatRiseTime: 0.35
-  floatHangTime: 0.25
-  floatFallTime: 0.55
-  preChargeDelay: 0.3
-  chargeSpeed: 20
-  chargeMaxTime: 3
-  chargeWarnDuration: 0.5
-  warningLineLength: 6
-  warningLineWidth: 0.5
-  warningLineColor: {r: 1, g: 0, b: 0, a: 0.5882353}
-  warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
-  ghostColor: {r: 1, g: 0.15, b: 0.15, a: 0.45}
-  ghostInterval: 0.04
-  ghostLifetime: 0.12
 --- !u!114 &1687801677029909339
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -136,8 +136,6 @@ GameObject:
   - component: {fileID: -1048319758215673343}
   - component: {fileID: 7493410442888071280}
   - component: {fileID: 5167321638479751745}
-  - component: {fileID: 7814227132338200892}
-  - component: {fileID: -2910853678917502903}
   - component: {fileID: 3055724933652126078}
   - component: {fileID: -7921499662353678546}
   m_Layer: 7
@@ -266,10 +264,58 @@ MonoBehaviour:
   chaseStopDistance: 2
   chaseDuration: 2.5
   idleDuration: 1
-  skills: []
   _decal: {fileID: 3990743755011902507}
+  _skills:
+  - rid: 2864143559287111821
+  - rid: 2864143559287111822
   entryDrop: 1
   entryScaleUpDuration: 0.35
+  references:
+    version: 2
+    RefIds:
+    - rid: 2864143559287111821
+      type: {class: BossSummonSkill, ns: , asm: Assembly-CSharp}
+      data:
+        cooldown: 2
+        executeInPattern: 1
+        summonCount: 10
+        maxActiveMinions: 10
+        minionDuration: 20
+        minionMoveSpeed: 4.5
+        minionContactDmg: 20
+        spawnRadius: 3
+        markerWarningTime: 0.5
+        minionPrefab: {fileID: 1651568199920207753, guid: ed695a0ba88ed5e428ae807f17c13c05, type: 3}
+        spawnMarkerPrefab: {fileID: 7905823675861574758, guid: e965097e70b2e9d47807ebf0614a30a6, type: 3}
+    - rid: 2864143559287111822
+      type: {class: BossMeleeSkill, ns: , asm: Assembly-CSharp}
+      data:
+        cooldown: 2
+        executeInPattern: 1
+        meleeType: 2
+        chaseTimeout: 3
+        hitCount: 2
+        slashDamage: 12
+        slashRange: 0.3
+        preDelay: 0.2
+        hitDelay: 0.3
+        betweenDelay: 0.45
+        slashVfxPrefab: {fileID: 0}
+        dashSpeed: 10
+        dashDuration: 0.6
+        dashHitCount: 3
+        dashHitInterval: 0.18
+        dashHitRange: 1.6
+        dashHitDamage: 0
+        preDashDuration: 0.3
+        dashGhostInterval: 0.06
+        chaseSpeed: 4
+        chaseDuration: 2
+        stopDistance: 1
+        attackCooldown: 0.6
+        animEventTimeout: 0.5
+        attackVfx: {fileID: 59948572621415853}
+        attackVfxDuration: 0.3
 --- !u!50 &7493410442888071280
 Rigidbody2D:
   serializedVersion: 5
@@ -334,51 +380,6 @@ CapsuleCollider2D:
   m_Offset: {x: 0, y: 0.89}
   m_Size: {x: 1.53, y: 1.78}
   m_Direction: 0
---- !u!114 &7814227132338200892
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4938729276166116355}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 41b513309ac63c040b1c0ced00cf17f4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BossFastChaseSkill
-  executeInPattern: 1
-  cooldown: 2
-  chaseSpeed: 4
-  chaseDuration: 2
-  stopDistance: 2
-  attackCooldown: 0.6
-  animEventTimeout: 0.5
-  attackVfx: {fileID: 59948572621415853}
-  vfxDuration: 0.3
---- !u!114 &-2910853678917502903
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4938729276166116355}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 421dc27616e41804c9fcb163146852ec, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BossSummonCycleSkill
-  executeInPattern: 1
-  cooldown: 2
-  minionPrefab: {fileID: 1651568199920207753, guid: ed695a0ba88ed5e428ae807f17c13c05, type: 3}
-  spawnMarkerPrefab: {fileID: 5515808124668199316, guid: 4676482f183c362489d2902d70a232b3, type: 3}
-  summonCount: 2
-  maxActiveMinions: 22
-  summonInterval: 0.5
-  markerWarningTime: 1
-  minionDuration: 15
-  minionMoveSpeed: 4
-  minionContactDamage: 20
-  spawnRadius: 8
 --- !u!114 &3055724933652126078
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -105,8 +105,6 @@ GameObject:
   - component: {fileID: -2341872349816179910}
   - component: {fileID: 5042877305626594040}
   - component: {fileID: 1152758948829658581}
-  - component: {fileID: 5748485615324327219}
-  - component: {fileID: 2659909728820033594}
   - component: {fileID: 3842676389981806584}
   - component: {fileID: 3497892719121979973}
   m_Layer: 7
@@ -235,12 +233,58 @@ MonoBehaviour:
   chaseStopDistance: 1.5
   chaseDuration: 2.5
   idleDuration: 1
-  skills:
-  - {fileID: 5748485615324327219}
-  - {fileID: 2659909728820033594}
   _decal: {fileID: 7777657727707555905}
+  _skills:
+  - rid: 2864143559287111832
+  - rid: 2864143559287111833
   entryDrop: 1
   entryScaleUpDuration: 0.35
+  references:
+    version: 2
+    RefIds:
+    - rid: 2864143559287111832
+      type: {class: BossMeleeSkill, ns: , asm: Assembly-CSharp}
+      data:
+        cooldown: 2
+        executeInPattern: 1
+        meleeType: 0
+        chaseTimeout: 3
+        hitCount: 2
+        slashDamage: 12
+        slashRange: 0.3
+        preDelay: 0.2
+        hitDelay: 0.3
+        betweenDelay: 0.45
+        slashVfxPrefab: {fileID: 2176841549142558680}
+        dashSpeed: 10
+        dashDuration: 0.6
+        dashHitCount: 3
+        dashHitInterval: 0.18
+        dashHitRange: 1.6
+        dashHitDamage: 0
+        preDashDuration: 0.3
+        dashGhostInterval: 0.06
+        chaseSpeed: 16
+        chaseDuration: 2
+        stopDistance: 1
+        attackCooldown: 0.6
+        animEventTimeout: 0.5
+        attackVfx: {fileID: 0}
+        attackVfxDuration: 0.3
+    - rid: 2864143559287111833
+      type: {class: BossChargeSkill, ns: , asm: Assembly-CSharp}
+      data:
+        cooldown: 2
+        executeInPattern: 1
+        chargeSpeed: 12
+        chargeDuration: 0.5
+        bounceCount: 0
+        bouncePause: 0.1
+        warningDuration: 0.5
+        warningLineLength: 5
+        warningLineWidth: 0.5
+        warningColor: {r: 1, g: 0, b: 0, a: 1}
+        warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
 --- !u!50 &5042877305626594040
 Rigidbody2D:
   serializedVersion: 5
@@ -305,50 +349,6 @@ CapsuleCollider2D:
   m_Offset: {x: 0, y: 0.44}
   m_Size: {x: 1.75, y: 0.87}
   m_Direction: 1
---- !u!114 &5748485615324327219
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4275708511977964849}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4f59276fb7dc5c04c8aeaf3aafa5f594, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BossChargeSkill
-  executeInPattern: 1
-  cooldown: 2
-  chargeSpeed: 12
-  chargeDuration: 0.5
-  bounceCount: 0
-  bouncePause: 0.1
-  warningDuration: 0.5
-  warningLineLength: 12
-  warningLineWidth: 0.08
-  warningColor: {r: 1, g: 0, b: 0, a: 1}
-  warningMaterial: {fileID: 0}
---- !u!114 &2659909728820033594
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4275708511977964849}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 41b513309ac63c040b1c0ced00cf17f4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BossFastChaseSkill
-  executeInPattern: 1
-  cooldown: 2
-  chaseSpeed: 6
-  chaseDuration: 2
-  stopDistance: 1
-  attackCooldown: 0.6
-  animEventTimeout: 0.5
-  attackVfx: {fileID: 2176841549142558680}
-  vfxDuration: 0.3
 --- !u!114 &3842676389981806584
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -80,8 +80,8 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 1049025713
+  m_SortingLayer: 1
   m_SortingOrder: 101
   m_MaskInteraction: 0
   m_Sprite: {fileID: -4455095005165879224, guid: a7de18fbb2ff8f842942737450b671f2, type: 3}
@@ -109,6 +109,11 @@ MonoBehaviour:
   targetLayer:
     serializedVersion: 2
     m_Bits: 128
+  spriteForward: 0
+  ghostTrail: 0
+  ghostColor: {r: 1, g: 0.15, b: 0.15, a: 0.45}
+  ghostInterval: 0.04
+  ghostLifetime: 0.12
 --- !u!50 &-7749155376693249818
 Rigidbody2D:
   serializedVersion: 5

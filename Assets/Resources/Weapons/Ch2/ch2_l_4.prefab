@@ -111,10 +111,7 @@ MonoBehaviour:
   useTrail: 1
   trailTime: 0.1
   trailStartWidth: 0.28
-  trailColor: {r: 1, g: 1, b: 1, a: 0.55}
-  shootScalePulse: 1
-  scalePulseMax: 1.3
-  scalePulseDuration: 0.12
+  trailColor: {r: 0.94509804, g: 0.9098039, b: 0.23529412, a: 1}
   _weaponId: CH2_L_4
   references:
     version: 2
@@ -122,15 +119,15 @@ MonoBehaviour:
     - rid: 2864143526218694757
       type: {class: WeaponSlashBehaviour, ns: , asm: Assembly-CSharp}
       data:
-        slashRadius: 1.2
+        slashRadius: 0.98
         slashArcDegrees: 180
         slashSweepSpeed: 480
-        slashHitRadius: 0.35
-        slashVfxPrefab: {fileID: 0}
+        slashHitRadius: 0.7
+        slashVfxPrefab: {fileID: 1592017925284355225, guid: 9d088268a2605d049a6d425af87f43f4, type: 3}
         slashVfxDuration: 1
         slashTeleportMaxDist: 3
         slashFadeTime: 0.12
-        projectilePrefab: {fileID: 0}
+        projectilePrefab: {fileID: 1592017925284355225, guid: 9d088268a2605d049a6d425af87f43f4, type: 3}
 --- !u!114 &-3097853947098103379
 MonoBehaviour:
   m_ObjectHideFlags: 0

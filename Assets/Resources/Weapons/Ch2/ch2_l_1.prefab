@@ -111,10 +111,7 @@ MonoBehaviour:
   useTrail: 1
   trailTime: 0.1
   trailStartWidth: 0.28
-  trailColor: {r: 1, g: 1, b: 1, a: 0.55}
-  shootScalePulse: 1
-  scalePulseMax: 1.3
-  scalePulseDuration: 0.12
+  trailColor: {r: 0.94509804, g: 0.9098039, b: 0.23529412, a: 1}
   _weaponId: CH2_L_1
   references:
     version: 2
@@ -123,7 +120,7 @@ MonoBehaviour:
       type: {class: WeaponBoomerangBehaviour, ns: , asm: Assembly-CSharp}
       data:
         pullbackDist: 0.5
-        anticipationTime: 0.08
+        pullbackSpeed: 30
         strikeSpeed: 80
         returnSpeed: 25
         hitDistance: 0.4
