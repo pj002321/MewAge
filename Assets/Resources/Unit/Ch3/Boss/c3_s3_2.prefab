@@ -45,10 +45,7 @@ GameObject:
   - component: {fileID: 703370321471693037}
   - component: {fileID: 1310786639833578689}
   - component: {fileID: -6983293918771508383}
-  - component: {fileID: 1312257813220651438}
-  - component: {fileID: 3570653029507297606}
   - component: {fileID: 8013241851858456192}
-  - component: {fileID: 8632517584240729218}
   m_Layer: 7
   m_Name: c3_s3_2
   m_TagString: Untagged
@@ -239,62 +236,13 @@ MonoBehaviour:
   chaseStopDistance: 1.8
   chaseDuration: 2.5
   idleDuration: 0.6
-  skills:
-  - {fileID: 1312257813220651438}
-  - {fileID: 3570653029507297606}
-  - {fileID: 8632517584240729218}
   _decal: {fileID: 9052888758413563378}
+  _skills: []
   entryDrop: 1
   entryScaleUpDuration: 0.35
---- !u!114 &1312257813220651438
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1326216360028315856}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 421dc27616e41804c9fcb163146852ec, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BossSummonCycleSkill
-  executeInPattern: 1
-  cooldown: 5
-  minionPrefab: {fileID: 5780791762247049258, guid: a7092e06a177108429b305007a57b6c5, type: 3}
-  spawnMarkerPrefab: {fileID: 5515808124668199316, guid: 4676482f183c362489d2902d70a232b3, type: 3}
-  summonCount: 2
-  maxActiveMinions: 4
-  summonInterval: 8
-  markerWarningTime: 0.8
-  minionDuration: 10
-  minionMoveSpeed: 2.5
-  minionContactDamage: 5
-  spawnRadius: 3
---- !u!114 &3570653029507297606
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1326216360028315856}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0f8495f4ccac6f34a9faaaa2e8921428, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BossFireCrossSkill
-  executeInPattern: 1
-  cooldown: 5
-  tilePrefab: {fileID: 3325602780084608094, guid: 9809065bfa312124ba1cdccee79caa4b, type: 3}
-  warningDuration: 1
-  warningLineWidth: 1
-  warningColor: {r: 1, g: 0.3, b: 0, a: 1}
-  warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
-  spreadLength: 10
-  cellSize: 1
-  spreadDelay: 0.05
-  fireDuration: 3
-  tileDamage: 35
-  tickInterval: 0.5
+  references:
+    version: 2
+    RefIds: []
 --- !u!114 &8013241851858456192
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -311,36 +259,6 @@ MonoBehaviour:
   flashMaterial: {fileID: 2100000, guid: f6d87d58797b8b9478efae2c2271cbe7, type: 2}
   flashColor: {r: 1, g: 1, b: 1, a: 1}
   BaseColor: {r: 1, g: 1, b: 1, a: 1}
---- !u!114 &8632517584240729218
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1326216360028315856}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 45354f0c4ea932b4eb47f11de6d6a2ef, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BossGridSpikeSkill
-  executeInPattern: 1
-  cooldown: 5
-  cols: 6
-  rows: 5
-  fillMode: 1
-  randomCount: 12
-  spikePrefab: {fileID: 8052887357750566584, guid: b165590939bdd7e44bdd602f92ecf2bd, type: 3}
-  spikeDamage: 35
-  spikeRadius: 0.45
-  spikeDuration: 1
-  warningDuration: 1.2
-  waveDelay: 0.25
-  warningMarkerPrefab: {fileID: 2990238766820676548, guid: 99380c197ef498849960f1eb41eb185d, type: 3}
-  warningColor: {r: 1, g: 1, b: 1, a: 1}
-  dropHeight: 8
-  dropDuration: 0.25
-  spawnVfxPrefab: {fileID: 7123985206164558582, guid: 6b0caaf5c2e9c4240b71d76b89158420, type: 3}
-  spawnVfxDuration: 1
 --- !u!1 &1437633771341022566
 GameObject:
   m_ObjectHideFlags: 0

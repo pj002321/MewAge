@@ -14,8 +14,6 @@ GameObject:
   - component: {fileID: 703370321471693037}
   - component: {fileID: 1310786639833578689}
   - component: {fileID: 9189877949620743694}
-  - component: {fileID: 8601145948347601226}
-  - component: {fileID: 4444013725548554132}
   - component: {fileID: -7335607511727229818}
   m_Layer: 7
   m_Name: c3_s1_2
@@ -206,56 +204,13 @@ MonoBehaviour:
   chaseStopDistance: 1.5
   chaseDuration: 2.5
   idleDuration: 1
-  skills:
-  - {fileID: 8601145948347601226}
-  - {fileID: 4444013725548554132}
   _decal: {fileID: 9052888758413563378}
+  _skills: []
   entryDrop: 1
   entryScaleUpDuration: 0.35
---- !u!114 &8601145948347601226
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1326216360028315856}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 41b513309ac63c040b1c0ced00cf17f4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BossFastChaseSkill
-  executeInPattern: 1
-  cooldown: 5
-  chaseSpeed: 3
-  chaseDuration: 2
-  stopDistance: 1
-  attackCooldown: 0.6
-  animEventTimeout: 0.5
-  attackVfx: {fileID: 0}
-  vfxDuration: 0.3
---- !u!114 &4444013725548554132
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1326216360028315856}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4f59276fb7dc5c04c8aeaf3aafa5f594, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BossChargeSkill
-  executeInPattern: 1
-  cooldown: 5
-  chargeSpeed: 10
-  chargeDuration: 0.4
-  bounceCount: 0
-  bouncePause: 0.1
-  warningDuration: 1
-  warningLineLength: 10
-  warningLineWidth: 1
-  warningColor: {r: 1, g: 0, b: 0, a: 1}
-  warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
+  references:
+    version: 2
+    RefIds: []
 --- !u!114 &-7335607511727229818
 MonoBehaviour:
   m_ObjectHideFlags: 0

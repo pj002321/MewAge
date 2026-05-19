@@ -14,8 +14,6 @@ GameObject:
   - component: {fileID: 703370321471693037}
   - component: {fileID: 1310786639833578689}
   - component: {fileID: 3569426705421469791}
-  - component: {fileID: 4126812573522028947}
-  - component: {fileID: 3637525171386536085}
   - component: {fileID: 1280419675763866588}
   m_Layer: 7
   m_Name: c3_s2_1
@@ -207,55 +205,13 @@ MonoBehaviour:
   chaseStopDistance: 1.5
   chaseDuration: 2.5
   idleDuration: 1
-  skills:
-  - {fileID: 4126812573522028947}
-  - {fileID: 3637525171386536085}
   _decal: {fileID: 9052888758413563378}
+  _skills: []
   entryDrop: 1
   entryScaleUpDuration: 0.35
---- !u!114 &4126812573522028947
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1326216360028315856}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 41b513309ac63c040b1c0ced00cf17f4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BossFastChaseSkill
-  executeInPattern: 1
-  cooldown: 1
-  chaseSpeed: 6
-  chaseDuration: 2
-  stopDistance: 1.25
-  attackCooldown: 0.6
-  animEventTimeout: 0.5
-  attackVfx: {fileID: 4540152084939885376}
-  vfxDuration: 0.3
---- !u!114 &3637525171386536085
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1326216360028315856}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0fce8968cf717a2438582076ab21189b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BossSlamSkill
-  executeInPattern: 1
-  cooldown: 1
-  slamDamage: 30
-  slamRadius: 2.5
-  jumpHeight: 6
-  jumpDuration: 0.7
-  markerWarningTime: 0.8
-  slamMarkerPrefab: {fileID: 7905823675861574758, guid: eb504c3569ed60a46b3b3ac595323378, type: 3}
-  landingVfxPrefab: {fileID: 851543317570617582, guid: 5ee5e8c374903034ba44e80b8498353a, type: 3}
-  vfxLifetime: 1
+  references:
+    version: 2
+    RefIds: []
 --- !u!114 &1280419675763866588
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -458,10 +414,5 @@ PrefabInstance:
 --- !u!4 &959034612412478676 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8577226147549000802, guid: fe45078f6e125194f817eaad93852ff1, type: 3}
-  m_PrefabInstance: {fileID: 8811083053645414582}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &4540152084939885376 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 4991849991642844150, guid: fe45078f6e125194f817eaad93852ff1, type: 3}
   m_PrefabInstance: {fileID: 8811083053645414582}
   m_PrefabAsset: {fileID: 0}

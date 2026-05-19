@@ -15,7 +15,6 @@ GameObject:
   - component: {fileID: 1310786639833578689}
   - component: {fileID: 4629372107703159518}
   - component: {fileID: -5747700691309269725}
-  - component: {fileID: 1049900116843278628}
   m_Layer: 7
   m_Name: c3_s3_1
   m_TagString: Untagged
@@ -206,11 +205,13 @@ MonoBehaviour:
   chaseStopDistance: 1.5
   chaseDuration: 2.5
   idleDuration: 1
-  skills:
-  - {fileID: 0}
   _decal: {fileID: 9052888758413563378}
+  _skills: []
   entryDrop: 1
   entryScaleUpDuration: 0.35
+  references:
+    version: 2
+    RefIds: []
 --- !u!114 &-5747700691309269725
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -227,27 +228,6 @@ MonoBehaviour:
   flashMaterial: {fileID: 2100000, guid: f6d87d58797b8b9478efae2c2271cbe7, type: 2}
   flashColor: {r: 1, g: 1, b: 1, a: 1}
   BaseColor: {r: 1, g: 1, b: 1, a: 1}
---- !u!114 &1049900116843278628
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1326216360028315856}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 41b513309ac63c040b1c0ced00cf17f4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BossFastChaseSkill
-  executeInPattern: 1
-  cooldown: 2
-  chaseSpeed: 12
-  chaseDuration: 2
-  stopDistance: 1
-  attackCooldown: 0.6
-  animEventTimeout: 0.5
-  attackVfx: {fileID: 0}
-  vfxDuration: 0.3
 --- !u!1 &1437633771341022566
 GameObject:
   m_ObjectHideFlags: 0

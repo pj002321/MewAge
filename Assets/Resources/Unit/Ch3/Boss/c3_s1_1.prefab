@@ -15,8 +15,6 @@ GameObject:
   - component: {fileID: 6397333588183594770}
   - component: {fileID: 6012793344544136166}
   - component: {fileID: 5821915655939214708}
-  - component: {fileID: 6776094281009757095}
-  - component: {fileID: 1037645356348669543}
   m_Layer: 7
   m_Name: c3_s1_1
   m_TagString: Untagged
@@ -186,12 +184,13 @@ MonoBehaviour:
   chaseStopDistance: 1.5
   chaseDuration: 2
   idleDuration: 1
-  skills:
-  - {fileID: 6776094281009757095}
-  - {fileID: 1037645356348669543}
   _decal: {fileID: 4088361612343034944}
+  _skills: []
   entryDrop: 1
   entryScaleUpDuration: 0.35
+  references:
+    version: 2
+    RefIds: []
 --- !u!70 &5821915655939214708
 CapsuleCollider2D:
   m_ObjectHideFlags: 0
@@ -229,59 +228,6 @@ CapsuleCollider2D:
   m_Offset: {x: 0, y: 1.28}
   m_Size: {x: 1.2, y: 2.56}
   m_Direction: 0
---- !u!114 &6776094281009757095
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4510239993999273466}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 147182f963a62a94d9c382a6e5dad514, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BossRollingBoulderSkill
-  executeInPattern: 1
-  cooldown: 3
-  boulderPrefab: {fileID: 3040590599161552287, guid: d9879b83c23bb0f458bd7c1a2b03eb98, type: 3}
-  boulderData: {fileID: 0}
-  boulderSpeed: 6
-  boulderLifetime: 6
-  rotateSpeed: 270
-  boulderDamage: 0
-  maxBounces: 3
-  rotate: 1
-  firePoint: {fileID: 1096746335866290046}
-  preDelay: 0.6
-  rollCount: 2
-  rollInterval: 0.8
-  warningLineLength: 12
-  warningLineWidth: 0.12
-  warningColor: {r: 1, g: 0, b: 0, a: 1}
-  warningMaterial: {fileID: 0}
---- !u!114 &1037645356348669543
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4510239993999273466}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4f59276fb7dc5c04c8aeaf3aafa5f594, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BossChargeSkill
-  executeInPattern: 1
-  cooldown: 5
-  chargeSpeed: 10
-  chargeDuration: 1
-  bounceCount: 0
-  bouncePause: 0.1
-  warningDuration: 1.5
-  warningLineLength: 5
-  warningLineWidth: 1
-  warningColor: {r: 1, g: 1, b: 1, a: 1}
-  warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
 --- !u!1 &5233518724168949262
 GameObject:
   m_ObjectHideFlags: 0

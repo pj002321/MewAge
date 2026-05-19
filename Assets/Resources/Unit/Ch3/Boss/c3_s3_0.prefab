@@ -14,8 +14,6 @@ GameObject:
   - component: {fileID: 703370321471693037}
   - component: {fileID: 1310786639833578689}
   - component: {fileID: -97185046664121143}
-  - component: {fileID: -8535768981006827160}
-  - component: {fileID: 3257914936317072467}
   - component: {fileID: 1388131379868125723}
   m_Layer: 7
   m_Name: c3_s3_0
@@ -206,57 +204,13 @@ MonoBehaviour:
   chaseStopDistance: 1.5
   chaseDuration: 2.5
   idleDuration: 1
-  skills:
-  - {fileID: -8535768981006827160}
-  - {fileID: 3257914936317072467}
   _decal: {fileID: 9052888758413563378}
+  _skills: []
   entryDrop: 1
   entryScaleUpDuration: 0.35
---- !u!114 &-8535768981006827160
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1326216360028315856}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 43af2b846c08b2348b84b9b3941acd33, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BossTeleportSkill
-  executeInPattern: 1
-  cooldown: 2
-  preDigDelay: 0.5
-  fadeOutDuration: 0.35
-  fadeInDuration: 0.35
-  spawnRadiusMin: 2
-  spawnRadiusMax: 4
-  spawnMarkerPrefab: {fileID: 7905823675861574758, guid: eb504c3569ed60a46b3b3ac595323378, type: 3}
-  markerDuration: 1
-  animEventTimeout: 0.3
---- !u!114 &3257914936317072467
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1326216360028315856}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4f59276fb7dc5c04c8aeaf3aafa5f594, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BossChargeSkill
-  executeInPattern: 1
-  cooldown: 2
-  chargeSpeed: 12
-  chargeDuration: 0.5
-  bounceCount: 3
-  bouncePause: 0.25
-  warningDuration: 0.5
-  warningLineLength: 6
-  warningLineWidth: 0.5
-  warningColor: {r: 1, g: 0, b: 0, a: 1}
-  warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
+  references:
+    version: 2
+    RefIds: []
 --- !u!114 &1388131379868125723
 MonoBehaviour:
   m_ObjectHideFlags: 0
