@@ -111,10 +111,11 @@ MonoBehaviour:
   useTrail: 1
   trailTime: 0.1
   trailStartWidth: 0.28
-  trailColor: {r: 1, g: 1, b: 1, a: 0.55}
+  trailColor: {r: 0.9528302, g: 0.33708617, b: 0.33708617, a: 1}
   shootScalePulse: 1
   scalePulseMax: 1.3
   scalePulseDuration: 0.12
+  _weaponId: CH1_M_2
   references:
     version: 2
     RefIds:
@@ -122,7 +123,6 @@ MonoBehaviour:
       type: {class: WeaponBoomerangBehaviour, ns: , asm: Assembly-CSharp}
       data:
         pullbackDist: 0.5
-        anticipationTime: 0.08
         strikeSpeed: 80
         returnSpeed: 25
         hitDistance: 0.4
@@ -160,21 +160,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8ea46d1eb812da343bf72f80fda1feb8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponHighGradeSkill
-  grade: 0
-  legendaryType: 0
-  mythicType: 0
-  meleeStatus: 0
   meleChance: 0.25
   meleeDuration: 1.5
   freezeDamageOnThaw: 0
   freezeColor: {r: 0.5, g: 0.85, b: 1, a: 1}
   boomerangChance: 0.3
-  cloneProjectilePrefab: {fileID: 0}
   cloneSpeed: 10
   cloneLifetime: 1.8
   cloneScale: 2
-  cloneAlpha: 0.45
-  subProjectilePrefab: {fileID: 0}
+  cloneAlpha: 1
   spreadAngle: 18
   rangedDmgRatio: 0.6
   rangedSpeedRatio: 0.9
@@ -186,7 +180,6 @@ MonoBehaviour:
   shockwaveRadius: 4.5
   shockwaveDmgRatio: 0.4
   spikeChance: 0.2
-  spikePrefab: {fileID: 0}
   tickDamage: 5
   tickInterval: 0.5
   spikeDuration: 5

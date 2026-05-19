@@ -103,8 +103,7 @@ public class HomeMemberPanel : MonoBehaviour
     {
         if (characterNameText) characterNameText.text = d.f_이름;
 
-        if (d.f_보유여부)
-            HomeCharacterDisplay.Shared?.ChangeCharacter(d.f_캐릭ID);
+        HomeCharacterDisplay.Shared?.ChangeCharacter(d.f_캐릭ID);
 
         // 스킬 아이콘
         if (skillIconImg)

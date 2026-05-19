@@ -25,7 +25,9 @@ public class WeaponMagicBehaviour : WeaponMeleeBaseBehaviour
     private GameObject _activeBolt;
 
     // ── Fire ─────────────────────────────────────────────────────────
-    [SerializeField] private GameObject projectilePrefab;
+    [ProjectileID]
+    [SerializeField] private string     projectileID;
+    [System.NonSerialized] private GameObject _projectilePrefab;
     [SerializeField] private float      projectileSpeed = 8f;
 
     // ── Visual ────────────────────────────────────────────────────────
@@ -37,13 +39,16 @@ public class WeaponMagicBehaviour : WeaponMeleeBaseBehaviour
 
     public override float      GetPlayerAttackBonus(PlayerController player) => 0f;
     public override float      GetRelicBonusPct(RelicManager relic)         => relic.MagicAtkBonusPct;
-    public override GameObject GetProjectilePrefab()                         => projectilePrefab;
+    public override GameObject GetProjectilePrefab()                         => _projectilePrefab;
     public override float      GetProjectileSpeed()                          => projectileSpeed;
 
     public override void OnStart()
     {
+        base.OnStart();
         _weaponSr = Host.WeaponSr;
         if (muzzlePoint != null) muzzlePoint.gameObject.SetActive(false);
+        if (!string.IsNullOrEmpty(projectileID))
+            _projectilePrefab = Resources.Load<GameObject>(projectileID);
     }
 
     // ── Lightning / Fire: Idle에서 직접 발동 후 쿨타임 처리 ──────────
@@ -62,7 +67,7 @@ public class WeaponMagicBehaviour : WeaponMeleeBaseBehaviour
                 Host.cooldownTimer = Host.attackCooldown;
                 return;
             case MagicElement.Fire:
-                if (projectilePrefab != null)
+                if (_projectilePrefab != null)
                 {
                     FireHoming(best);
                     Host.cooldownTimer = Host.attackCooldown;
@@ -166,7 +171,7 @@ public class WeaponMagicBehaviour : WeaponMeleeBaseBehaviour
     private void FireHoming(WeaponPoint.CombatTarget tgt)
     {
         var (finalDmg, isCrit) = Host.RollCrit(Host.attackDamage);
-        var go     = Object.Instantiate(projectilePrefab, Host.transform.position, Quaternion.identity);
+        var go     = Object.Instantiate(_projectilePrefab, Host.transform.position, Quaternion.identity);
         var homing = go.GetComponent<FireHomingProjectile>();
         if (homing == null) homing = go.AddComponent<FireHomingProjectile>();
 

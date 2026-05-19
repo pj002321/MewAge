@@ -49,10 +49,10 @@ public class CharacterSkillManager : MonoBehaviourSingleton<CharacterSkillManage
     /// <summary>캐릭터 장착 시 호출 — 스킬 프리팹을 로드하고 준비합니다.</summary>
     public void Initialize(string skillId)
     {
-        // 이전 스킬 정리
+        // 이전 스킬 정리 (default boost 활성 상태도 포함)
+        if (_isActive) StopSkill();
         if (_skill != null)
         {
-            StopSkill();
             Destroy(_skill.gameObject);
             _skill = null;
         }
@@ -221,9 +221,9 @@ public class CharacterSkillManager : MonoBehaviourSingleton<CharacterSkillManage
     {
         var wps = WeaponManager.Instance?.GetActiveWeaponPoints();
         if (wps == null || wps.Count == 0) return;
-        float mult = apply ? defaultSpeedMultiplier : 1f / defaultSpeedMultiplier;
+        float mult = apply ? defaultSpeedMultiplier : 1f;
         foreach (var wp in wps)
-            wp.MultiplyAttackSpeed(mult);
+            wp.SetSkillSpeedMult(mult);
         _defaultBoostActive = apply;
     }
 

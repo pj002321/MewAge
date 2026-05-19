@@ -322,41 +322,68 @@ MonoBehaviour:
   chaseStopDistance: 2.5
   chaseDuration: 3.5
   idleDuration: 1.5
-  _skills:
-  - rid: 2864143483015266399
   _decal: {fileID: 687603576478220352}
+  _skills:
+  - rid: 2864143559287111771
   entryDrop: 1
   entryScaleUpDuration: 0.35
   references:
     version: 2
     RefIds:
-    - rid: 2864143483015266399
+    - rid: 2864143559287111771
       type: {class: BossProjectileSkill, ns: , asm: Assembly-CSharp}
       data:
         cooldown: 2
         executeInPattern: 1
-        projectilePrefab: {fileID: 0}
+        projectileID: "Unit/Ch1/Proj/c_\uD22C\uC0AC\uCCB4_\uBE68\uAC15\uC6D0"
         projectileSpeed: 7
-        firePoint: {fileID: 0}
-        warningLineLength: 10
-        warningLineWidth: 0.06
+        firePoint: {fileID: 4475026578306635568}
+        warningLineLength: 5
+        warningLineWidth: 0.5
         warningColor: {r: 1, g: 0, b: 0, a: 1}
-        warningMaterial: {fileID: 0}
+        warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
         impactVfxPrefab: {fileID: 0}
         impactVfxLifetime: 1
         phases:
-        - label: 
-          type: 0
-          warningTime: 0
-          count: 0
-          interval: 0
+        - type: 0
+          warningTime: 0.5
+          count: 5
+          interval: 0.5
           dirCount: 0
           radialAngleOffset: 0
           fanAngle: 0
           arcHeight: 0
           homingSpeed: 0
-          accelTime: 0
-          initialSpeedRatio: 0
+          accelTime: 0.4
+          initialSpeedRatio: 0.05
+          volleyPointCount: 0
+          volleySpreadRadius: 0
+          volleyHangTime: 0
+          volleyBurstInterval: 0
+          volleyHitRadius: 0
+          volleyHitDamage: 0
+          volleyShellArcHeight: 0
+          volleyShakeDuration: 0
+          volleyShakeMagnitude: 0
+          volleyMarkerPrefab: {fileID: 0}
+          volleyShellPrefab: {fileID: 0}
+          volleyImpactVfx: {fileID: 0}
+          boulderSpeed: 0
+          boulderLifetime: 0
+          boulderMaxBounces: 0
+          boulderRotateSpeed: 0
+          boulderRollInterval: 0
+        - type: 1
+          warningTime: 0.5
+          count: 1
+          interval: 0.5
+          dirCount: 8
+          radialAngleOffset: 120
+          fanAngle: 0
+          arcHeight: 0
+          homingSpeed: 0
+          accelTime: 0.4
+          initialSpeedRatio: 0.05
           volleyPointCount: 0
           volleySpreadRadius: 0
           volleyHangTime: 0

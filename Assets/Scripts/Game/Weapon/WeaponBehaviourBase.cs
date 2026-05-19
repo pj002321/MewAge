@@ -10,6 +10,10 @@ public abstract class WeaponBehaviourBase
 {
     protected WeaponPoint Host { get; private set; }
 
+    // ── 웨이브 인트로 (공통) ──────────────────────────────────────────────
+    protected bool      _inWaveIntro;
+    private   Coroutine _introCo;
+
     /// <summary>WeaponPoint.Init(data) 호출 시 주입됩니다.</summary>
     public virtual void Init(WeaponPoint host) => Host = host;
 
@@ -17,13 +21,19 @@ public abstract class WeaponBehaviourBase
     public virtual void OnInitData(WeaponData data) { }
 
     /// <summary>WeaponPoint.Start() 에서 호출됩니다.</summary>
-    public virtual void OnStart() { }
+    public virtual void OnStart()
+    {
+        WeaponPoint.OnWaveStarted += OnWaveStart;
+    }
 
     /// <summary>WeaponPoint.Update() 에서 호출됩니다.</summary>
     public abstract void OnUpdate();
 
     /// <summary>WeaponPoint.OnDestroy() 에서 호출됩니다.</summary>
-    public virtual void OnDestroy() { }
+    public virtual void OnDestroy()
+    {
+        WeaponPoint.OnWaveStarted -= OnWaveStart;
+    }
 
     /// <summary>true면 WeaponPoint의 UpdateRotation()을 이번 프레임 스킵합니다.</summary>
     public virtual bool OverridesRotation => false;
@@ -45,6 +55,70 @@ public abstract class WeaponBehaviourBase
 
     /// <summary>투사체 속도. 투사체가 없는 타입은 0 반환.</summary>
     public virtual float GetProjectileSpeed() => 0f;
+
+    /// <summary>웨이브 시작 시 입장 연출. 서브클래스에서 조건 추가 후 base 호출.</summary>
+    public virtual void OnWaveStart()
+    {
+        if (_introCo != null) StopCoroutine(_introCo);
+        _introCo = StartCoroutine(WaveIntroRoutine());
+    }
+
+    // ── 인트로 헬퍼 (서브클래스 공용) ────────────────────────────────────
+
+    protected Vector2 AnchorDir()
+    {
+        Vector3 lp = Host.transform.parent.localPosition;
+        return lp.sqrMagnitude > 0.001f ? ((Vector2)lp).normalized : Vector2.up;
+    }
+
+    protected void CancelIntro()
+    {
+        if (_introCo != null) { StopCoroutine(_introCo); _introCo = null; }
+        _inWaveIntro = false;
+        Host.transform.localPosition = Vector3.zero;
+    }
+
+    // 앵커 방향 기반 snap 순서: 우상단→우하단→좌상단→좌하단→우→좌
+    private float GetSnapDelay()
+    {
+        const float step = 0.04f;
+        Vector2 d = AnchorDir();
+        if (d.x >  0.2f && d.y >  0.2f) return 0 * step;
+        if (d.x >  0.2f && d.y < -0.2f) return 1 * step;
+        if (d.x < -0.2f && d.y >  0.2f) return 2 * step;
+        if (d.x < -0.2f && d.y < -0.2f) return 3 * step;
+        if (d.x >  0.2f)                return 4 * step;
+        return                                  5 * step;
+    }
+
+    private IEnumerator WaveIntroRoutine()
+    {
+        _inWaveIntro = true;
+
+        Vector3 outLocalPos  = (Vector3)AnchorDir() * 1.2f;
+        const float outTime  = 0.45f;
+        const float holdTime = 0.08f;
+        const float snapTime = 0.06f;
+
+        for (float t = 0f; t < outTime; t += Time.deltaTime)
+        {
+            Host.transform.localPosition = Vector3.Lerp(Vector3.zero, outLocalPos,
+                Mathf.SmoothStep(0f, 1f, t / outTime));
+            yield return null;
+        }
+        Host.transform.localPosition = outLocalPos;
+
+        yield return new WaitForSeconds(holdTime + GetSnapDelay());
+
+        for (float t = 0f; t < snapTime; t += Time.deltaTime)
+        {
+            Host.transform.localPosition = Vector3.Lerp(outLocalPos, Vector3.zero, t / snapTime);
+            yield return null;
+        }
+        Host.transform.localPosition = Vector3.zero;
+        _inWaveIntro = false;
+        _introCo     = null;
+    }
 
     // ── 코루틴 헬퍼 (Host.StartCoroutine 위임) ──────────────────────────
     protected Coroutine StartCoroutine(IEnumerator routine) => Host.StartCoroutine(routine);

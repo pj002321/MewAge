@@ -96,7 +96,7 @@ public class BossControllerEditor : OdinEditor
             if (refVal != null)
             {
                 EditorGUI.indentLevel++;
-                DrawFields(elem, refVal.GetType());
+                DrawFields(elem, refVal.GetType(), refVal);
                 EditorGUI.indentLevel--;
             }
 
@@ -109,10 +109,10 @@ public class BossControllerEditor : OdinEditor
 
     /// <summary>
     /// 타입 계층(base → concrete)을 따라 [SerializeField] 필드를 순서대로 그립니다.
+    /// [ShowIf("@field == Type.Value")] 표현식을 직접 평가해 숨깁니다.
     /// </summary>
-    private static void DrawFields(SerializedProperty elem, Type concreteType)
+    private static void DrawFields(SerializedProperty elem, Type concreteType, object instance)
     {
-        // base → concrete 순으로 타입 체인 구성
         var chain = new List<Type>();
         for (var t = concreteType; t != null && t != typeof(object); t = t.BaseType)
             chain.Insert(0, t);
@@ -126,6 +126,7 @@ public class BossControllerEditor : OdinEditor
                          BindingFlags.DeclaredOnly))
             {
                 if (!IsSerializedField(field)) continue;
+                if (!EvaluateShowIf(field, instance)) continue;
 
                 var prop = elem.FindPropertyRelative(field.Name);
                 if (prop != null)
@@ -139,6 +140,73 @@ public class BossControllerEditor : OdinEditor
         if (f.GetCustomAttribute<HideInInspector>() != null) return false;
         if (f.GetCustomAttribute<SerializeField>()  != null) return true;
         return f.IsPublic && f.GetCustomAttribute<NonSerializedAttribute>() == null;
+    }
+
+    /// <summary>
+    /// [ShowIf("@lhsField == TypeName.EnumValue")] 형식의 Odin 표현식을 평가합니다.
+    /// 해석 불가한 형식이면 true(항상 표시)를 반환합니다.
+    /// </summary>
+    private static bool EvaluateShowIf(FieldInfo field, object instance)
+    {
+        if (instance == null) return true;
+
+        var attr = field.GetCustomAttribute<Sirenix.OdinInspector.ShowIfAttribute>();
+        if (attr == null) return true;
+
+        string expr = attr.MemberName;
+        if (!expr.StartsWith("@")) return true;
+
+        // "@lhsField == TypeName.EnumValue" 파싱
+        var parts = expr.Substring(1).Split(new[] { "==" }, StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length != 2) return true;
+
+        string lhsFieldName = parts[0].Trim();
+        string rhsToken     = parts[1].Trim(); // e.g. "MeleeType.ChaseAndSlash"
+
+        var instanceType = instance.GetType();
+        var lhsField = instanceType.GetField(lhsFieldName,
+            BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+        if (lhsField == null) return true;
+
+        object currentValue = lhsField.GetValue(instance);
+
+        int dotIdx = rhsToken.LastIndexOf('.');
+        if (dotIdx < 0) return true;
+
+        string enumTypeName   = rhsToken.Substring(0, dotIdx);
+        string enumMemberName = rhsToken.Substring(dotIdx + 1);
+
+        Type enumType = FindTypeByName(instanceType, enumTypeName);
+        if (enumType == null) return true;
+
+        try
+        {
+            object expected = Enum.Parse(enumType, enumMemberName);
+            return currentValue.Equals(expected);
+        }
+        catch { return true; }
+    }
+
+    private static Type FindTypeByName(Type searchRoot, string typeName)
+    {
+        // 중첩 타입 우선 탐색
+        for (var t = searchRoot; t != null && t != typeof(object); t = t.BaseType)
+        {
+            var nested = t.GetNestedType(typeName,
+                BindingFlags.Public | BindingFlags.NonPublic);
+            if (nested != null) return nested;
+        }
+        // 어셈블리 전체에서 이름 일치 타입 탐색
+        foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
+        {
+            try
+            {
+                var found = asm.GetTypes().FirstOrDefault(t => t.Name == typeName);
+                if (found != null) return found;
+            }
+            catch { }
+        }
+        return null;
     }
 
     // ── 타입 드롭다운 ─────────────────────────────────────────────

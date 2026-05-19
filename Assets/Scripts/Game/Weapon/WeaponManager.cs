@@ -8,12 +8,25 @@ public class WeaponManager : MonoBehaviour
 {
     public static WeaponManager Instance { get; private set; }
 
-    [Header("무기 장착 위치 (최대 6개)")]
-    [SerializeField] private Transform[] weaponAnchors;
+    [Header("무기 앵커 (순서: 우상단·우하단·좌상단·좌하단·우·좌)")]
+    [SerializeField] private Transform anchorTopRight;
+    [SerializeField] private Transform anchorBottomRight;
+    [SerializeField] private Transform anchorTopLeft;
+    [SerializeField] private Transform anchorBottomLeft;
+    [SerializeField] private Transform anchorRight;
+    [SerializeField] private Transform anchorLeft;
+
+    private Transform[] _anchors;
 
     private void Awake()
     {
         Instance = this;
+        _anchors = new[]
+        {
+            anchorTopRight, anchorBottomRight,
+            anchorTopLeft,  anchorBottomLeft,
+            anchorRight,    anchorLeft,
+        };
     }
 
     private void Start()
@@ -38,21 +51,21 @@ public class WeaponManager : MonoBehaviour
         }
     }
 
-    /// <summary>장착 슬롯과 weaponAnchors(Transform) 위치 동기화</summary>
+    /// <summary>장착 슬롯과 _anchors(Transform) 위치 동기화</summary>
     public void SyncWeapons()
     {
         if (PlayerInventory.Shared == null) return;
-        if (weaponAnchors == null || weaponAnchors.Length == 0)
+        if (_anchors == null || _anchors.Length == 0)
         {
-            this.DError("[WeaponManager] SyncWeapons - weaponAnchors 배열이 비어있습니다. 인스펙터에서 6개의 Transform을 연결해주세요!");
+            this.DError("[WeaponManager] SyncWeapons - 앵커가 모두 null입니다. 인스펙터에서 방향별 Transform을 연결해주세요!");
             return;
         }
 
         var equipped = PlayerInventory.Shared.Equipped;
 
-        for (int i = 0; i < weaponAnchors.Length; i++)
+        for (int i = 0; i < _anchors.Length; i++)
         {
-            Transform anchor = weaponAnchors[i];
+            Transform anchor = _anchors[i];
             if (anchor == null) continue;
 
             // 1. 기존 장착된 무기(자식)들 전부 제거
@@ -97,9 +110,9 @@ public class WeaponManager : MonoBehaviour
     public List<WeaponPoint> GetActiveWeaponPoints()
     {
         var result = new List<WeaponPoint>();
-        if (weaponAnchors == null) return result;
+        if (_anchors == null) return result;
         var temp = new List<WeaponPoint>();
-        foreach (var anchor in weaponAnchors)
+        foreach (var anchor in _anchors)
         {
             if (anchor == null) continue;
             anchor.GetComponentsInChildren<WeaponPoint>(temp);

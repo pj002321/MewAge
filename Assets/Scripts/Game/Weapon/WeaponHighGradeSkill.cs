@@ -1,145 +1,157 @@
+using Mewage.DB;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
 /// <summary>
 /// 전설/신화 등급 무기 특수 스킬 통합 컴포넌트.
-/// 무기 프리팹에 이 컴포넌트 1개만 추가하고 인스펙터에서 등급·효과를 선택합니다.
+/// f_특성(SpecialEffectId)에 따라 효과가 자동 분기됩니다.
 /// </summary>
 public class WeaponHighGradeSkill : MonoBehaviour
 {
-    public enum Grade         { Legendary, Mythic }
-    public enum LegendaryType { Melee, Boomerang, Ranged, Slash, Spin, Hammer }
-    public enum MythicType    { Spike, Bind, Groggy, DamageReduction }
-    public enum StatusType    { Stun, Freeze, Burn }
+    private enum StatusType { Stun, Freeze, Burn }
 
-    // ── 등급 & 타입 ─────────────────────────────────────────────────────
-    [BoxGroup("등급 & 스킬"), LabelText("등급")]
-    [SerializeField] private Grade grade = Grade.Legendary;
+    // ── 무기 특성 (DB 자동) ──────────────────────────────────────────────
+    [BoxGroup("무기 특성"), ShowInInspector, ReadOnly, LabelText("특성 (DB)")]
+    private string DbTraitId
+    {
+        get
+        {
+            var wid = GetComponent<WeaponPoint>()?.WeaponId;
+            if (string.IsNullOrEmpty(wid)) return "(weaponId 없음)";
+            string trait = "";
+            DB_무기.ForEachEntity(row => { if (row.f_무기ID == wid) trait = row.f_특성 ?? ""; });
+            return trait.Length > 0 ? trait : "(특성 없음)";
+        }
+    }
 
-    [BoxGroup("등급 & 스킬"), LabelText("전설 스킬"), ShowIf(nameof(IsLegendary))]
-    [SerializeField] private LegendaryType legendaryType = LegendaryType.Melee;
+    // ── ShowIf 조건 ──────────────────────────────────────────────────────
+    private string _traitId => WP?.SpecialEffectId is { Length: > 0 } s ? s : DbTraitId;
+    private bool IsMelee    => _traitId is "HIT_STUN" or "HIT_ICE" or "HIT_FIRE";
+    private bool IsClone    => _traitId.StartsWith("HIT_CLONE");
+    private bool IsRanged   => _traitId == "SHOOT_SUB";
+    private bool IsSlash    => _traitId == "HIT_SLASH";
+    private bool IsSpin     => _traitId == "HIT_SPIN";
+    private bool IsHammer   => _traitId == "HIT_SHOCK";
+    private bool IsSpike    => _traitId is "BOSS_SPIKE" or "HIT_SPIKE";
+    private bool IsBind     => _traitId == "BOSS_BIND";
+    private bool IsGroggy   => _traitId == "BOSS_GROGY";
+    private bool IsReduction => _traitId == "(신화 피해감소)";
 
-    [BoxGroup("등급 & 스킬"), LabelText("신화 스킬"), ShowIf(nameof(IsMythic))]
-    [SerializeField] private MythicType mythicType = MythicType.Spike;
-
-    // ── [전설] 근접 ─────────────────────────────────────────────────────
-    [BoxGroup("[전설] 근접"), ShowIf(nameof(IsLegendaryMelee))]
+    // ── [HIT_STUN · HIT_ICE · HIT_FIRE] 근접 상태이상 ──────────────────
+    [BoxGroup("[HIT_STUN·ICE·FIRE] 근접"), ShowIf(nameof(IsMelee))]
     [InfoBox("스턴/빙결/화상 VFX 프리팹은 MuAge/Weapon Special Effect Config Editor → 챕터별 VFX 섹션에서 설정하세요.", InfoMessageType.Info)]
-    [BoxGroup("[전설] 근접"), ShowIf(nameof(IsLegendaryMelee)), LabelText("상태이상")]
-    [SerializeField] private StatusType meleeStatus = StatusType.Stun;
-
-    [BoxGroup("[전설] 근접"), ShowIf(nameof(IsLegendaryMelee)), LabelText("발동 확률")]
+    [BoxGroup("[HIT_STUN·ICE·FIRE] 근접"), ShowIf(nameof(IsMelee)), LabelText("발동 확률")]
     [SerializeField, Range(0f, 1f)] private float meleChance = 0.25f;
 
-    [BoxGroup("[전설] 근접"), ShowIf(nameof(IsLegendaryMelee)), LabelText("지속 시간")]
+    [BoxGroup("[HIT_STUN·ICE·FIRE] 근접"), ShowIf(nameof(IsMelee)), LabelText("지속 시간")]
     [SerializeField] private float meleeDuration = 1.5f;
 
-    [BoxGroup("[전설] 근접"), ShowIf(nameof(IsMeleeFreeze)), LabelText("해빙 데미지")]
+    [BoxGroup("[HIT_STUN·ICE·FIRE] 근접"), ShowIf(nameof(IsMelee)), LabelText("해빙 데미지 (HIT_ICE)")]
     [SerializeField] private float freezeDamageOnThaw = 0f;
 
-    [BoxGroup("[전설] 근접"), ShowIf(nameof(IsMeleeFreeze)), LabelText("빙결 색상")]
+    [BoxGroup("[HIT_STUN·ICE·FIRE] 근접"), ShowIf(nameof(IsMelee)), LabelText("빙결 색상 (HIT_ICE)")]
     [SerializeField] private Color freezeColor = new Color(0.5f, 0.85f, 1f, 1f);
 
-    // ── [전설] 부메랑 ────────────────────────────────────────────────────
-    [BoxGroup("[전설] 부메랑"), ShowIf(nameof(IsLegendaryBoomerang))]
+    // ── [HIT_CLONE_*] 클론 ───────────────────────────────────────────────
+    [BoxGroup("[HIT_CLONE_*] 클론"), ShowIf(nameof(IsClone))]
     [InfoBox("복제 투사체 프리팹은 MuAge/Weapon Special Effect Config Editor에서 weaponId별로 설정하세요.", InfoMessageType.Info)]
-    [BoxGroup("[전설] 부메랑"), ShowIf(nameof(IsLegendaryBoomerang)), ShowInInspector, ReadOnly, LabelText("복제 투사체 (Config)")]
-    private GameObject ReadonlyClonePrefab => StatusEffectConfig.Shared?.GetClonePrefab(WP?.WeaponId);
+    [BoxGroup("[HIT_CLONE_*] 클론"), ShowIf(nameof(IsClone)), ShowInInspector, ReadOnly, LabelText("복제 투사체 (Config)")]
+    private GameObject ReadonlyClonePrefab => StatusEffectConfig.Shared?.GetClonePrefab(GetComponent<WeaponPoint>()?.WeaponId);
 
-    [BoxGroup("[전설] 부메랑"), ShowIf(nameof(IsLegendaryBoomerang)), LabelText("발동 확률")]
+    [BoxGroup("[HIT_CLONE_*] 클론"), ShowIf(nameof(IsClone)), LabelText("발동 확률")]
     [SerializeField, Range(0f, 1f)] private float boomerangChance = 0.3f;
 
-    [BoxGroup("[전설] 부메랑"), ShowIf(nameof(IsLegendaryBoomerang)), LabelText("복제 속도")]
+    [BoxGroup("[HIT_CLONE_*] 클론"), ShowIf(nameof(IsClone)), LabelText("복제 속도")]
     [SerializeField] private float cloneSpeed = 10f;
 
-    [BoxGroup("[전설] 부메랑"), ShowIf(nameof(IsLegendaryBoomerang)), LabelText("생존 시간")]
+    [BoxGroup("[HIT_CLONE_*] 클론"), ShowIf(nameof(IsClone)), LabelText("생존 시간")]
     [SerializeField] private float cloneLifetime = 1.8f;
 
-    [BoxGroup("[전설] 부메랑"), ShowIf(nameof(IsLegendaryBoomerang)), LabelText("크기 배율")]
+    [BoxGroup("[HIT_CLONE_*] 클론"), ShowIf(nameof(IsClone)), LabelText("크기 배율")]
     [SerializeField] private float cloneScale = 2f;
 
-    [BoxGroup("[전설] 부메랑"), ShowIf(nameof(IsLegendaryBoomerang)), LabelText("투명도")]
+    [BoxGroup("[HIT_CLONE_*] 클론"), ShowIf(nameof(IsClone)), LabelText("투명도")]
     [SerializeField, Range(0f, 1f)] private float cloneAlpha = 0.45f;
 
-    // ── [전설] 원거리 ────────────────────────────────────────────────────
-    [BoxGroup("[전설] 원거리"), ShowIf(nameof(IsLegendaryRanged))]
+    // ── [SHOOT_SUB] 원거리 ───────────────────────────────────────────────
+    [BoxGroup("[SHOOT_SUB] 원거리"), ShowIf(nameof(IsRanged))]
     [InfoBox("서브 투사체 프리팹은 MuAge/Weapon Special Effect Config Editor에서 weaponId별로 설정하세요.", InfoMessageType.Info)]
-    [BoxGroup("[전설] 원거리"), ShowIf(nameof(IsLegendaryRanged)), ShowInInspector, ReadOnly, LabelText("서브 투사체 (Config)")]
-    private GameObject ReadonlySubPrefab => StatusEffectConfig.Shared?.GetSubProjectilePrefab(WP?.WeaponId);
+    [BoxGroup("[SHOOT_SUB] 원거리"), ShowIf(nameof(IsRanged)), ShowInInspector, ReadOnly, LabelText("서브 투사체 (Config)")]
+    private GameObject ReadonlySubPrefab => StatusEffectConfig.Shared?.GetSubProjectilePrefab(GetComponent<WeaponPoint>()?.WeaponId);
 
-    [BoxGroup("[전설] 원거리"), ShowIf(nameof(IsLegendaryRanged)), LabelText("각도 오프셋")]
+    [BoxGroup("[SHOOT_SUB] 원거리"), ShowIf(nameof(IsRanged)), LabelText("각도 오프셋")]
     [SerializeField] private float spreadAngle = 18f;
 
-    [BoxGroup("[전설] 원거리"), ShowIf(nameof(IsLegendaryRanged)), LabelText("데미지 비율")]
+    [BoxGroup("[SHOOT_SUB] 원거리"), ShowIf(nameof(IsRanged)), LabelText("데미지 비율")]
     [SerializeField] private float rangedDmgRatio = 0.6f;
 
-    [BoxGroup("[전설] 원거리"), ShowIf(nameof(IsLegendaryRanged)), LabelText("속도 비율")]
+    [BoxGroup("[SHOOT_SUB] 원거리"), ShowIf(nameof(IsRanged)), LabelText("속도 비율")]
     [SerializeField] private float rangedSpeedRatio = 0.9f;
 
-    // ── [전설] 슬래시 ────────────────────────────────────────────────────
-    [BoxGroup("[전설] 슬래시"), ShowIf(nameof(IsLegendarySlash)), LabelText("발사 투사체")]
+    // ── [HIT_SLASH] 슬래시 투사체 ──────────────────────────────────────
+    [BoxGroup("[HIT_SLASH] 슬래시"), ShowIf(nameof(IsSlash)), LabelText("발사 투사체")]
     [SerializeField] private GameObject slashProjectilePrefab;
 
-    [BoxGroup("[전설] 슬래시"), ShowIf(nameof(IsLegendarySlash)), LabelText("데미지 비율")]
+    [BoxGroup("[HIT_SLASH] 슬래시"), ShowIf(nameof(IsSlash)), LabelText("데미지 비율")]
     [SerializeField] private float slashDmgRatio = 0.5f;
 
-    [BoxGroup("[전설] 슬래시"), ShowIf(nameof(IsLegendarySlash)), LabelText("투사체 속도")]
+    [BoxGroup("[HIT_SLASH] 슬래시"), ShowIf(nameof(IsSlash)), LabelText("투사체 속도")]
     [SerializeField] private float slashProjSpeed = 9f;
 
-    // ── [전설] 스핀 ──────────────────────────────────────────────────────
-    [BoxGroup("[전설] 스핀"), ShowIf(nameof(IsLegendarySpin)), LabelText("반경 배율")]
+    // ── [HIT_SPIN] 스핀 ─────────────────────────────────────────────────
+    [BoxGroup("[HIT_SPIN] 스핀"), ShowIf(nameof(IsSpin)), LabelText("반경 배율")]
     [SerializeField] private float radiusMultiplier = 1.4f;
 
-    [BoxGroup("[전설] 스핀"), ShowIf(nameof(IsLegendarySpin)), LabelText("속도 배율")]
+    [BoxGroup("[HIT_SPIN] 스핀"), ShowIf(nameof(IsSpin)), LabelText("속도 배율")]
     [SerializeField] private float spinSpeedMultiplier = 1.35f;
 
-    // ── [전설] 해머 ──────────────────────────────────────────────────────
-    [BoxGroup("[전설] 해머"), ShowIf(nameof(IsLegendaryHammer)), LabelText("충격파 반경")]
+    // ── [HIT_SHOCK] 해머 충격파 ─────────────────────────────────────────
+    [BoxGroup("[HIT_SHOCK] 해머"), ShowIf(nameof(IsHammer)), LabelText("충격파 반경")]
     [SerializeField] private float shockwaveRadius = 4.5f;
 
-    [BoxGroup("[전설] 해머"), ShowIf(nameof(IsLegendaryHammer)), LabelText("충격파 데미지 비율")]
+    [BoxGroup("[HIT_SHOCK] 해머"), ShowIf(nameof(IsHammer)), LabelText("충격파 데미지 비율")]
     [SerializeField] private float shockwaveDmgRatio = 0.4f;
 
-    // ── [신화] 스파이크 ──────────────────────────────────────────────────
-    [BoxGroup("[신화] 스파이크"), ShowIf(nameof(IsMythicSpike))]
+    // ── [BOSS_SPIKE · HIT_SPIKE] 스파이크 ──────────────────────────────
+    [BoxGroup("[BOSS_SPIKE·HIT_SPIKE] 스파이크"), ShowIf(nameof(IsSpike))]
     [InfoBox("스파이크 프리팹은 MuAge/Weapon Special Effect Config Editor에서 weaponId별로 설정하세요.", InfoMessageType.Info)]
-    [BoxGroup("[신화] 스파이크"), ShowIf(nameof(IsMythicSpike)), ShowInInspector, ReadOnly, LabelText("스파이크 프리팹 (Config)")]
-    private GameObject ReadonlySpikePrefab => StatusEffectConfig.Shared?.GetSpikePrefab(WP?.WeaponId);
+    [BoxGroup("[BOSS_SPIKE·HIT_SPIKE] 스파이크"), ShowIf(nameof(IsSpike)), ShowInInspector, ReadOnly, LabelText("스파이크 프리팹 (Config)")]
+    private GameObject ReadonlySpikePrefab => StatusEffectConfig.Shared?.GetSpikePrefab(GetComponent<WeaponPoint>()?.WeaponId);
 
-    [BoxGroup("[신화] 스파이크"), ShowIf(nameof(IsMythicSpike)), LabelText("발동 확률")]
+    [BoxGroup("[BOSS_SPIKE·HIT_SPIKE] 스파이크"), ShowIf(nameof(IsSpike)), LabelText("발동 확률")]
     [SerializeField, Range(0f, 1f)] private float spikeChance = 0.2f;
 
-    [BoxGroup("[신화] 스파이크"), ShowIf(nameof(IsMythicSpike)), LabelText("틱 데미지")]
+    [BoxGroup("[BOSS_SPIKE·HIT_SPIKE] 스파이크"), ShowIf(nameof(IsSpike)), LabelText("틱 데미지")]
     [SerializeField] private float tickDamage = 5f;
 
-    [BoxGroup("[신화] 스파이크"), ShowIf(nameof(IsMythicSpike)), LabelText("틱 간격")]
+    [BoxGroup("[BOSS_SPIKE·HIT_SPIKE] 스파이크"), ShowIf(nameof(IsSpike)), LabelText("틱 간격")]
     [SerializeField] private float tickInterval = 0.5f;
 
-    [BoxGroup("[신화] 스파이크"), ShowIf(nameof(IsMythicSpike)), LabelText("지속 시간")]
+    [BoxGroup("[BOSS_SPIKE·HIT_SPIKE] 스파이크"), ShowIf(nameof(IsSpike)), LabelText("지속 시간")]
     [SerializeField] private float spikeDuration = 5f;
 
-    [BoxGroup("[신화] 스파이크"), ShowIf(nameof(IsMythicSpike)), LabelText("사망 폭발 반경")]
+    [BoxGroup("[BOSS_SPIKE·HIT_SPIKE] 스파이크"), ShowIf(nameof(IsSpike)), LabelText("사망 폭발 반경")]
     [SerializeField] private float deathAoeRadius = 2.5f;
 
-    [BoxGroup("[신화] 스파이크"), ShowIf(nameof(IsMythicSpike)), LabelText("사망 폭발 데미지")]
+    [BoxGroup("[BOSS_SPIKE·HIT_SPIKE] 스파이크"), ShowIf(nameof(IsSpike)), LabelText("사망 폭발 데미지")]
     [SerializeField] private float deathAoeDamage = 20f;
 
-    // ── [신화] 구속 ──────────────────────────────────────────────────────
-    [BoxGroup("[신화] 구속"), ShowIf(nameof(IsMythicBind)), LabelText("발동 확률")]
+    // ── [BOSS_BIND] 구속 ────────────────────────────────────────────────
+    [BoxGroup("[BOSS_BIND] 구속"), ShowIf(nameof(IsBind)), LabelText("발동 확률")]
     [SerializeField, Range(0f, 1f)] private float bindChance = 0.2f;
 
-    [BoxGroup("[신화] 구속"), ShowIf(nameof(IsMythicBind)), LabelText("구속 시간")]
+    [BoxGroup("[BOSS_BIND] 구속"), ShowIf(nameof(IsBind)), LabelText("구속 시간")]
     [SerializeField] private float bindDuration = 2f;
 
-    // ── [신화] 그로기 ────────────────────────────────────────────────────
-    [BoxGroup("[신화] 그로기"), ShowIf(nameof(IsMythicGroggy)), LabelText("발동 확률")]
+    // ── [BOSS_GROGY] 그로기 ─────────────────────────────────────────────
+    [BoxGroup("[BOSS_GROGY] 그로기"), ShowIf(nameof(IsGroggy)), LabelText("발동 확률")]
     [SerializeField, Range(0f, 1f)] private float groggyChance = 0.15f;
 
-    [BoxGroup("[신화] 그로기"), ShowIf(nameof(IsMythicGroggy)), LabelText("그로기 시간")]
+    [BoxGroup("[BOSS_GROGY] 그로기"), ShowIf(nameof(IsGroggy)), LabelText("그로기 시간")]
     [SerializeField] private float groggySeconds = 2f;
 
-    // ── [신화] 피해 감소 (패시브) ────────────────────────────────────────
-    [BoxGroup("[신화] 피해 감소"), ShowIf(nameof(IsMythicReduction)), LabelText("보스 피해 감소율")]
+    // ── [신화] 피해 감소 (패시브) ───────────────────────────────────────
+    [BoxGroup("[신화] 피해 감소"), ShowIf(nameof(IsReduction)), LabelText("보스 피해 감소율")]
     [SerializeField, Range(0f, 1f)] private float reductionPct = 0.2f;
 
     /// <summary>장착 중인 신화 피해 감소율 (PlayerController에서 참조).</summary>
@@ -148,20 +160,7 @@ public class WeaponHighGradeSkill : MonoBehaviour
     // ── 런타임 ───────────────────────────────────────────────────────────
     protected WeaponPoint WP { get; private set; }
 
-    // ── ShowIf 조건 ──────────────────────────────────────────────────────
-    private bool IsLegendary         => grade == Grade.Legendary;
-    private bool IsMythic            => grade == Grade.Mythic;
-    private bool IsLegendaryMelee    => IsLegendary && legendaryType == LegendaryType.Melee;
-    private bool IsLegendaryBoomerang=> IsLegendary && legendaryType == LegendaryType.Boomerang;
-    private bool IsLegendaryRanged   => IsLegendary && legendaryType == LegendaryType.Ranged;
-    private bool IsLegendarySlash    => IsLegendary && legendaryType == LegendaryType.Slash;
-    private bool IsLegendarySpin     => IsLegendary && legendaryType == LegendaryType.Spin;
-    private bool IsLegendaryHammer   => IsLegendary && legendaryType == LegendaryType.Hammer;
-    private bool IsMythicSpike       => IsMythic && mythicType == MythicType.Spike;
-    private bool IsMythicBind        => IsMythic && mythicType == MythicType.Bind;
-    private bool IsMythicGroggy      => IsMythic && mythicType == MythicType.Groggy;
-    private bool IsMythicReduction   => IsMythic && mythicType == MythicType.DamageReduction;
-    private bool IsMeleeFreeze       => IsLegendaryMelee && meleeStatus == StatusType.Freeze;
+    private string TraitId => _traitId;
 
     // ── 초기화 ───────────────────────────────────────────────────────────
 
@@ -169,76 +168,75 @@ public class WeaponHighGradeSkill : MonoBehaviour
 
     public void OnEquip()
     {
-        if (IsLegendarySpin)  WP?.ApplySpinBoost(radiusMultiplier, spinSpeedMultiplier);
-        if (IsLegendarySlash && WP != null) WP.OnSlashVfxSpawned += HandleSlashVfx;
-        if (IsMythicReduction) ActiveDamageReduction = reductionPct;
+        if (TraitId == "HIT_SPIN") WP?.ApplySpinBoost(radiusMultiplier, spinSpeedMultiplier);
+        if (WP != null) WP.OnSlashVfxSpawned += HandleSlashVfx;
+        if (IsReduction) ActiveDamageReduction = reductionPct;
     }
 
     private void OnDestroy()
     {
-        if (IsLegendarySlash && WP != null) WP.OnSlashVfxSpawned -= HandleSlashVfx;
-        if (IsMythicReduction) ActiveDamageReduction = 0f;
+        if (WP != null) WP.OnSlashVfxSpawned -= HandleSlashVfx;
+        if (IsReduction) ActiveDamageReduction = 0f;
     }
 
-    // ── 전설 콜백 ────────────────────────────────────────────────────────
+    // ── 콜백 ─────────────────────────────────────────────────────────────
 
     public void OnHit(Vector2 hitDir, Collider2D[] hitBuffer, int colCount)
     {
-        if (!IsLegendary) return;
-        switch (legendaryType)
+        switch (TraitId)
         {
-            case LegendaryType.Melee:     DoMeleeHit(hitBuffer, colCount);  break;
-            case LegendaryType.Boomerang: DoBoomerangHit();                 break;
-            case LegendaryType.Hammer:    DoHammerHit(hitBuffer, colCount); break;
+            case "HIT_STUN":
+            case "HIT_ICE":
+            case "HIT_FIRE":  DoMeleeHit(hitBuffer, colCount); break;
+            case "HIT_SHOCK": DoHammerHit(hitBuffer, colCount); break;
+            default:
+                if (TraitId.StartsWith("HIT_CLONE")) DoBoomerangHit();
+                break;
         }
     }
 
     public void OnShoot(Vector3 firePos, Vector2 fireDir)
     {
-        if (!IsLegendaryRanged) return;
-        DoRangedShoot(firePos, fireDir);
+        if (TraitId == "SHOOT_SUB") DoRangedShoot(firePos, fireDir);
     }
-
-    // ── 신화 콜백 ────────────────────────────────────────────────────────
 
     public void OnBossHit(BossController boss, Vector2 hitDir)
     {
-        if (!IsMythic) return;
-        switch (mythicType)
+        switch (TraitId)
         {
-            case MythicType.Spike:  DoSpikeHit(boss, null); break;
-            case MythicType.Bind:   DoBindBoss(boss);        break;
-            case MythicType.Groggy: DoGroggyBoss(boss);      break;
+            case "BOSS_SPIKE":
+            case "HIT_SPIKE":  DoSpikeHit(boss, null); break;
+            case "BOSS_BIND":  DoBindBoss(boss);        break;
+            case "BOSS_GROGY": DoGroggyBoss(boss);      break;
         }
     }
 
     public void OnEnemyHit(EnemyController enemy, Vector2 hitDir)
     {
-        if (IsMythicSpike) DoSpikeHit(null, enemy);
+        if (TraitId is "BOSS_SPIKE" or "HIT_SPIKE") DoSpikeHit(null, enemy);
     }
 
-    // ── [전설] 근접 구현 ─────────────────────────────────────────────────
+    // ── 근접 상태이상 구현 ───────────────────────────────────────────────
 
     private void DoMeleeHit(Collider2D[] hitBuffer, int colCount)
     {
         if (Random.value > meleChance) return;
+        var status = TraitId switch
+        {
+            "HIT_ICE"  => StatusType.Freeze,
+            "HIT_FIRE" => StatusType.Burn,
+            _          => StatusType.Stun,
+        };
         for (int i = 0; i < colCount; i++)
         {
             if (hitBuffer[i] == null) continue;
             if (!hitBuffer[i].TryGetComponent<EnemyController>(out var e)) continue;
             if (!e.gameObject.activeInHierarchy) continue;
-            switch (meleeStatus)
+            switch (status)
             {
-                case StatusType.Stun:
-                    e.Stun(meleeDuration);
-                    break;
-                case StatusType.Freeze:
-                    e.Freeze(meleeDuration, freezeDamageOnThaw, freezeColor);
-                    break;
-                case StatusType.Burn:
-                    e.ApplyBleed(WP != null ? WP.BleedDamage + 1f : 5f);
-                    e.ApplySlow(meleeDuration, 0.5f);
-                    break;
+                case StatusType.Stun:   e.Stun(meleeDuration); break;
+                case StatusType.Freeze: e.Freeze(meleeDuration, freezeDamageOnThaw, freezeColor); break;
+                case StatusType.Burn:   e.ApplyBleed(WP != null ? WP.BleedDamage + 1f : 5f); e.ApplySlow(meleeDuration, 0.5f); break;
             }
         }
     }

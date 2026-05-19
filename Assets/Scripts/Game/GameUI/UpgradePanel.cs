@@ -55,8 +55,15 @@ public class UpgradePanel : MonoBehaviour
     [SerializeField] private TextMeshProUGUI  sellPriceText;
     [SerializeField] private float            sellZoneHoverScale = 1.2f;
 
-    [Header("장착 슬롯 (6개)")]
-    [SerializeField] private EquipSlot[] equipSlots;
+    [Header("장착 슬롯 (WeaponManager 앵커 순서와 동일: 우상단·우하단·좌상단·좌하단·우·좌)")]
+    [SerializeField] private EquipSlot equipSlotTopRight;
+    [SerializeField] private EquipSlot equipSlotBottomRight;
+    [SerializeField] private EquipSlot equipSlotTopLeft;
+    [SerializeField] private EquipSlot equipSlotBottomLeft;
+    [SerializeField] private EquipSlot equipSlotRight;
+    [SerializeField] private EquipSlot equipSlotLeft;
+
+    private EquipSlot[] equipSlots;
 
     [Header("인벤토리 슬롯 (10개)")]
     [SerializeField] private InvenSlot[] invenSlots;
@@ -101,6 +108,13 @@ public class UpgradePanel : MonoBehaviour
     // ────────────────────────────────────────────────────────────────
     private void Awake()
     {
+        equipSlots = new[]
+        {
+            equipSlotTopRight, equipSlotBottomRight,
+            equipSlotTopLeft,  equipSlotBottomLeft,
+            equipSlotRight,    equipSlotLeft,
+        };
+
         rerollButton? .onClick.AddListener(OnRerollClicked);
         nextWaveButton?.onClick.AddListener(OnNextWaveClicked);
         infoButton?   .onClick.AddListener(OnInfoClicked);

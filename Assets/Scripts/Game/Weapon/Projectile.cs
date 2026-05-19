@@ -285,14 +285,13 @@ public class Projectile : MonoBehaviour
 
         if (_bounceRemaining <= 0) { Destroy(gameObject); return; }
 
-        Vector2 clamped = mb.ClosestPointOnBoundary(transform.position);
+        // clamp 전 위치로 법선 계산 → transform.position 변경 전에 diff 구해야 정확
+        Vector2 curPos  = transform.position;
+        Vector2 clamped = mb.ClosestPointOnBoundary(curPos);
         transform.position = clamped;
 
-        // 경계 법선 계산: 경계 바깥 방향의 반대가 법선
-        Vector2 diff = (Vector2)transform.position - clamped;
-        Vector2 normal = diff.sqrMagnitude > 0.0001f
-            ? diff.normalized
-            : Vector2.up;
+        Vector2 diff   = curPos - clamped;
+        Vector2 normal = diff.sqrMagnitude > 0.0001f ? diff.normalized : -direction;
 
         direction = Vector2.Reflect(direction, normal).normalized;
         float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg - ForwardAngle;

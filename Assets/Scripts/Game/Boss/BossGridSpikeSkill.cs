@@ -69,62 +69,79 @@ public class BossGridSpikeSkill : BossSkillBase
         else
             SimultaneousDropAsync(cells, origin, cellSize, destroyCt).Forget();
 
-        // 패턴 루프 측은 경고+낙하+지속 시간 대기 후 다음 스킬로 진행
+        // 경고+낙하 완료까지만 대기. 스파이크 지속(spikeDuration)은 destroyCt로 독립 실행되므로
+        // 보스는 스파이크가 맵에 남아있는 동안 다른 스킬을 사용할 수 있습니다.
         await UniTask.Delay(
-            System.TimeSpan.FromSeconds(warningDuration + dropDuration + spikeDuration),
+            System.TimeSpan.FromSeconds(warningDuration + dropDuration),
             cancellationToken: ct)
             .SuppressCancellationThrow();
     }
 
     // ── 동시 낙하 ────────────────────────────────────────────────
 
-    private async UniTaskVoid SimultaneousDropAsync(
+    private async UniTask SimultaneousDropAsync(
         List<Vector2Int> cells, Vector2 origin, Vector2 cellSize, CancellationToken ct)
     {
-        var markers = SpawnMarkers(cells, origin, cellSize);
-        await WarnAnimationAsync(markers, ct);
-        CleanupAll(markers);
-        if (Boss == null || ct.IsCancellationRequested) return;
-
-        foreach (var cell in cells)
-            SpikeFallAsync(CellToWorld(cell, origin, cellSize), ct).Forget();
-    }
-
-    // ── 순차 낙하 (행/열) ────────────────────────────────────────
-
-    private async UniTaskVoid WaveDropAsync(
-        List<Vector2Int> cells, Vector2 origin, Vector2 cellSize, CancellationToken ct)
-    {
-        bool byRow = fillMode == FillMode.WaveRow;
-
-        var groups = new Dictionary<int, List<Vector2Int>>();
-        foreach (var cell in cells)
+        try
         {
-            int key = byRow ? cell.y : cell.x;
-            if (!groups.TryGetValue(key, out var list)) { list = new List<Vector2Int>(); groups[key] = list; }
-            list.Add(cell);
-        }
-
-        var keys = new List<int>(groups.Keys);
-        keys.Sort();
-
-        foreach (int key in keys)
-        {
-            if (Boss == null || ct.IsCancellationRequested) return;
-
-            var group   = groups[key];
-            var markers = SpawnMarkers(group, origin, cellSize);
-
+            var markers = SpawnMarkers(cells, origin, cellSize);
             await WarnAnimationAsync(markers, ct);
             CleanupAll(markers);
             if (Boss == null || ct.IsCancellationRequested) return;
 
-            foreach (var cell in group)
+            foreach (var cell in cells)
                 SpikeFallAsync(CellToWorld(cell, origin, cellSize), ct).Forget();
+        }
+        catch (System.OperationCanceledException) { }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"[GridSpike] SimultaneousDropAsync 오류: {e}");
+        }
+    }
 
-            if (waveDelay > 0f)
-                await UniTask.Delay(System.TimeSpan.FromSeconds(waveDelay), cancellationToken: ct)
-                             .SuppressCancellationThrow();
+    // ── 순차 낙하 (행/열) ────────────────────────────────────────
+
+    private async UniTask WaveDropAsync(
+        List<Vector2Int> cells, Vector2 origin, Vector2 cellSize, CancellationToken ct)
+    {
+        try
+        {
+            bool byRow = fillMode == FillMode.WaveRow;
+
+            var groups = new Dictionary<int, List<Vector2Int>>();
+            foreach (var cell in cells)
+            {
+                int key = byRow ? cell.y : cell.x;
+                if (!groups.TryGetValue(key, out var list)) { list = new List<Vector2Int>(); groups[key] = list; }
+                list.Add(cell);
+            }
+
+            var keys = new List<int>(groups.Keys);
+            keys.Sort();
+
+            foreach (int key in keys)
+            {
+                if (Boss == null || ct.IsCancellationRequested) return;
+
+                var group   = groups[key];
+                var markers = SpawnMarkers(group, origin, cellSize);
+
+                await WarnAnimationAsync(markers, ct);
+                CleanupAll(markers);
+                if (Boss == null || ct.IsCancellationRequested) return;
+
+                foreach (var cell in group)
+                    SpikeFallAsync(CellToWorld(cell, origin, cellSize), ct).Forget();
+
+                if (waveDelay > 0f)
+                    await UniTask.Delay(System.TimeSpan.FromSeconds(waveDelay), cancellationToken: ct)
+                                 .SuppressCancellationThrow();
+            }
+        }
+        catch (System.OperationCanceledException) { }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"[GridSpike] WaveDropAsync 오류: {e}");
         }
     }
 
@@ -146,51 +163,59 @@ public class BossGridSpikeSkill : BossSkillBase
 
     private async UniTaskVoid SpikeFallAsync(Vector2 targetPos, CancellationToken ct)
     {
-        float dmg = spikeDamage > 0f ? spikeDamage : (Boss != null ? Boss.ContactDamage : 0f);
-
-        Vector2    startPos = targetPos + Vector2.up * dropHeight;
-        GameObject spikeGo  = null;
-
-        if (spikePrefab != null)
-            spikeGo = Object.Instantiate(spikePrefab,
-                new Vector3(startPos.x, startPos.y, 0f), Quaternion.identity);
-
-        // 낙하 (ease-in quad)
-        float elapsed = 0f;
-        while (elapsed < dropDuration)
+        try
         {
-            elapsed += Time.deltaTime;
-            float   t     = Mathf.Clamp01(elapsed / dropDuration);
-            float   eased = t * t;
-            Vector2 cur   = Vector2.LerpUnclamped(startPos, targetPos, eased);
-            if (spikeGo != null)
-                spikeGo.transform.position = new Vector3(cur.x, cur.y, 0f);
+            float dmg = spikeDamage > 0f ? spikeDamage : (Boss != null ? Boss.ContactDamage : 0f);
 
-            bool cancelled = await UniTask.Yield(ct).SuppressCancellationThrow();
-            if (cancelled) { if (spikeGo != null) Object.Destroy(spikeGo); return; }
-        }
+            Vector2    startPos = targetPos + Vector2.up * dropHeight;
+            GameObject spikeGo  = null;
 
-        if (spikeGo != null)
-            spikeGo.transform.position = new Vector3(targetPos.x, targetPos.y, 0f);
+            if (spikePrefab != null)
+                spikeGo = Object.Instantiate(spikePrefab,
+                    new Vector3(startPos.x, startPos.y, 0f), Quaternion.identity);
 
-        // 착지 VFX
-        if (spawnVfxPrefab != null)
-        {
-            float vfxY = targetPos.y;
-            if (spikeGo != null)
+            // 낙하 (ease-in quad)
+            float elapsed = 0f;
+            while (elapsed < dropDuration)
             {
-                var col = spikeGo.GetComponent<Collider2D>()
-                       ?? spikeGo.GetComponentInChildren<Collider2D>();
-                if (col != null) vfxY = col.bounds.min.y;
+                elapsed += Time.deltaTime;
+                float   t     = Mathf.Clamp01(elapsed / dropDuration);
+                float   eased = t * t;
+                Vector2 cur   = Vector2.LerpUnclamped(startPos, targetPos, eased);
+                if (spikeGo != null)
+                    spikeGo.transform.position = new Vector3(cur.x, cur.y, 0f);
+
+                bool cancelled = await UniTask.Yield(ct).SuppressCancellationThrow();
+                if (cancelled) { if (spikeGo != null) Object.Destroy(spikeGo); return; }
             }
-            var vfx = Object.Instantiate(spawnVfxPrefab,
-                new Vector3(targetPos.x, vfxY, 0f), Quaternion.identity);
-            if (spawnVfxDuration > 0f) Object.Destroy(vfx, spawnVfxDuration);
+
+            if (spikeGo != null)
+                spikeGo.transform.position = new Vector3(targetPos.x, targetPos.y, 0f);
+
+            // 착지 VFX
+            if (spawnVfxPrefab != null)
+            {
+                float vfxY = targetPos.y;
+                if (spikeGo != null)
+                {
+                    var col = spikeGo.GetComponent<Collider2D>()
+                           ?? spikeGo.GetComponentInChildren<Collider2D>();
+                    if (col != null) vfxY = col.bounds.min.y;
+                }
+                var vfx = Object.Instantiate(spawnVfxPrefab,
+                    new Vector3(targetPos.x, vfxY, 0f), Quaternion.identity);
+                if (spawnVfxDuration > 0f) Object.Destroy(vfx, spawnVfxDuration);
+            }
+
+            if (spikeGo != null) Object.Destroy(spikeGo, spikeDuration);
+
+            await SpikeHitAsync(targetPos, dmg, ct);
         }
-
-        if (spikeGo != null) Object.Destroy(spikeGo, spikeDuration);
-
-        await SpikeHitAsync(targetPos, dmg, ct);
+        catch (System.OperationCanceledException) { }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"[GridSpike] SpikeFallAsync 오류: {e}");
+        }
     }
 
     private async UniTask SpikeHitAsync(Vector2 pos, float dmg, CancellationToken ct)

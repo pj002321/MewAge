@@ -46,7 +46,6 @@ GameObject:
   - component: {fileID: 2680313880173163580}
   - component: {fileID: -5697194250984512121}
   - component: {fileID: 5409725399836126126}
-  - component: {fileID: 3026818979781317}
   - component: {fileID: 7179401028117034228}
   m_Layer: 7
   m_Name: c1_s2_01
@@ -238,11 +237,13 @@ MonoBehaviour:
   chaseStopDistance: 1.8
   chaseDuration: 2.5
   idleDuration: 0.6
-  skills:
-  - {fileID: 3026818979781317}
   _decal: {fileID: 8349038575320225097}
+  _skills: []
   entryDrop: 1
   entryScaleUpDuration: 0.35
+  references:
+    version: 2
+    RefIds: []
 --- !u!114 &5409725399836126126
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -256,27 +257,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpriteYSort
   multiplier: 100
---- !u!114 &3026818979781317
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1651568199920207753}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 41b513309ac63c040b1c0ced00cf17f4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BossFastChaseSkill
-  executeInPattern: 1
-  cooldown: 2
-  chaseSpeed: 2
-  chaseDuration: 3
-  stopDistance: 1
-  attackCooldown: 0.6
-  animEventTimeout: 0.5
-  attackVfx: {fileID: 2689922499097666112}
-  vfxDuration: 0.3
 --- !u!114 &7179401028117034228
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -441,11 +421,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 504d90c8c1191044ca464c201c3f92e3, type: 3}
---- !u!1 &2689922499097666112 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 6979230596295396944, guid: 504d90c8c1191044ca464c201c3f92e3, type: 3}
-  m_PrefabInstance: {fileID: 5012422260438707216}
-  m_PrefabAsset: {fileID: 0}
 --- !u!4 &5923844144609034812 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1709691791194107436, guid: 504d90c8c1191044ca464c201c3f92e3, type: 3}

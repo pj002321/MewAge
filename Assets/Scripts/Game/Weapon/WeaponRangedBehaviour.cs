@@ -5,7 +5,9 @@ using UnityEngine;
 [System.Serializable]
 public class WeaponRangedBehaviour : WeaponBehaviourBase
 {
-    [SerializeField] private GameObject projectilePrefab;
+    [ProjectileID]
+    [SerializeField] private string     projectileID;
+    [System.NonSerialized] private GameObject _projectilePrefab;
     [SerializeField] private float      projectileSpeed     = 8f;
     [SerializeField] private bool       useParabolicShot    = false;
     [SerializeField] private float      parabolicArcHeight  = 1.5f;
@@ -20,16 +22,23 @@ public class WeaponRangedBehaviour : WeaponBehaviourBase
 
     public override float      GetPlayerAttackBonus(PlayerController player) => player.RangedAttackBonus;
     public override float      GetRelicBonusPct(RelicManager relic)         => relic.RangedAtkBonusPct;
-    public override GameObject GetProjectilePrefab()                         => projectilePrefab;
+    public override GameObject GetProjectilePrefab()                         => _projectilePrefab;
     public override float      GetProjectileSpeed()                          => projectileSpeed;
 
     public override bool OverridesRotation => useParabolicShot;
+
+    public override void OnStart()
+    {
+        base.OnStart();
+        if (!string.IsNullOrEmpty(projectileID))
+            _projectilePrefab = Resources.Load<GameObject>(projectileID);
+    }
 
     public override void OnUpdate()
     {
         if (Host.cooldownTimer > 0f) return;
         if (PlayerController.Instance != null && PlayerController.Instance.InputLocked) return;
-        if (projectilePrefab == null) return;
+        if (_projectilePrefab == null) return;
 
         var best = Host.FindBestTarget();
         if (best.IsNone) return;
@@ -47,7 +56,7 @@ public class WeaponRangedBehaviour : WeaponBehaviourBase
         var (finalDmg, isCrit) = Host.RollCrit(Host.attackDamage);
 
         Vector3 spawnPos = useParabolicShot ? GetParabolicSpawnPos() : Host.transform.position;
-        var go   = Object.Instantiate(projectilePrefab, spawnPos, Quaternion.identity);
+        var go   = Object.Instantiate(_projectilePrefab, spawnPos, Quaternion.identity);
         var proj = go.GetComponent<Projectile>();
         if (proj == null) { Object.Destroy(go); return; }
 

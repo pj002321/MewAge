@@ -1,5 +1,6 @@
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using Sirenix.OdinInspector;
 using UnityEngine;
 
 /// <summary>
@@ -16,38 +17,59 @@ public class BossSlamSkill : BossSkillBase
     [SerializeField] private SlamType slamType = SlamType.BasicSlam;
 
     // ── BasicSlam ─────────────────────────────────────────────────
-    [Header("BasicSlam")]
+    [ShowIf("@slamType == SlamType.BasicSlam")]
     [SerializeField] private float slamDamage        = 30f;
+    [ShowIf("@slamType == SlamType.BasicSlam")]
     [SerializeField] private float slamRadius        = 2.5f;
+    [ShowIf("@slamType == SlamType.BasicSlam")]
     [SerializeField] private float jumpHeight        = 6f;
+    [ShowIf("@slamType == SlamType.BasicSlam")]
     [SerializeField] private float jumpDuration      = 0.7f;
+    [ShowIf("@slamType == SlamType.BasicSlam")]
     [SerializeField] private float markerWarningTime = 0.8f;
+    [ShowIf("@slamType == SlamType.BasicSlam")]
     [SerializeField] private GameObject slamMarkerPrefab;
     [SerializeField] private GameObject landingVfxPrefab;
     [SerializeField] private float      vfxLifetime = 1f;
 
     // ── GroundPound ───────────────────────────────────────────────
-    [Header("GroundPound")]
+    [ShowIf("@slamType == SlamType.GroundPound")]
     [SerializeField] private float hopHeight      = 2.0f;
+    [ShowIf("@slamType == SlamType.GroundPound")]
     [SerializeField] private float hopRiseTime    = 0.25f;
+    [ShowIf("@slamType == SlamType.GroundPound")]
     [SerializeField] private float hopFallTime    = 0.18f;
+    [ShowIf("@slamType == SlamType.GroundPound")]
     [SerializeField] private float shakeDuration  = 0.45f;
+    [ShowIf("@slamType == SlamType.GroundPound")]
     [SerializeField] private float shakeMagnitude = 0.35f;
-    [SerializeField] private GameObject landingVfxPound;
-    [SerializeField] private float      landingVfxPoundLifetime = 1f;
+    [ShowIf("@slamType == SlamType.GroundPound")]
     [SerializeField] private float floatHeight      = 2.8f;
+    [ShowIf("@slamType == SlamType.GroundPound")]
     [SerializeField] private float floatRiseTime    = 0.35f;
+    [ShowIf("@slamType == SlamType.GroundPound")]
     [SerializeField] private float floatHangTime    = 0.25f;
+    [ShowIf("@slamType == SlamType.GroundPound")]
     [SerializeField] private float floatFallTime    = 0.55f;
+    [ShowIf("@slamType == SlamType.GroundPound")]
     [SerializeField] private float preChargeDelay   = 0.3f;
+    [ShowIf("@slamType == SlamType.GroundPound")]
     [SerializeField] private float poundChargeSpeed = 20f;
+    [ShowIf("@slamType == SlamType.GroundPound")]
     [SerializeField] private float chargeWarnDuration   = 0.5f;
+    [ShowIf("@slamType == SlamType.GroundPound")]
     [SerializeField] private float chargeWarningLength  = 12f;
+    [ShowIf("@slamType == SlamType.GroundPound")]
     [SerializeField] private float chargeWarningWidth   = 0.08f;
+    [ShowIf("@slamType == SlamType.GroundPound")]
     [SerializeField] private Color chargeWarningColor   = Color.red;
+    [ShowIf("@slamType == SlamType.GroundPound")]
     [SerializeField] private Material chargeWarningMat;
+    [ShowIf("@slamType == SlamType.GroundPound")]
     [SerializeField] private Color ghostColor       = new Color(1f, 0.15f, 0.15f, 0.45f);
+    [ShowIf("@slamType == SlamType.GroundPound")]
     [SerializeField] private float ghostInterval    = 0.04f;
+    [ShowIf("@slamType == SlamType.GroundPound")]
     [SerializeField] private float ghostLifetime    = 0.12f;
 
     // ── 런타임 상태 (GroundPound) ─────────────────────────────────
@@ -218,11 +240,10 @@ public class BossSlamSkill : BossSkillBase
             CameraFollow.Shared?.Shake(shakeDuration, shakeMagnitude);
             Boss.EnemyAnimator?.SetTrigger(EnemyAnim.TAttack);
 
-            if (landingVfxPound != null)
+            if (landingVfxPrefab != null)
             {
                 Vector3 vfxPos = Boss.Decal != null ? Boss.Decal.position : (Vector3)startPos;
-                Object.Destroy(Object.Instantiate(landingVfxPound, vfxPos, Quaternion.identity),
-                               landingVfxPoundLifetime);
+                Object.Destroy(Object.Instantiate(landingVfxPrefab, vfxPos, Quaternion.identity), vfxLifetime);
             }
 
             // 3) 플레이어 부유

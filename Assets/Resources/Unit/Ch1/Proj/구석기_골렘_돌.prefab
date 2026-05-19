@@ -13,8 +13,8 @@ GameObject:
   - component: {fileID: 2098459907864157759}
   - component: {fileID: 4191757891340204224}
   - component: {fileID: 6617722678722838961}
-  - component: {fileID: 3988562143122650962}
   - component: {fileID: 3713078325777575677}
+  - component: {fileID: 2101360088365034297}
   m_Layer: 0
   m_Name: "\uAD6C\uC11D\uAE30_\uACE8\uB818_\uB3CC"
   m_TagString: Untagged
@@ -181,19 +181,6 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
---- !u!114 &3988562143122650962
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3040590599161552287}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8d9935d33149b634d977182734804333, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BossRollingProjectile
-  flipOnBounce: 1
 --- !u!114 &3713078325777575677
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -207,3 +194,23 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpriteYSort
   multiplier: 100
+--- !u!114 &2101360088365034297
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3040590599161552287}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bcd28d2215110a84fa537520f5149113, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Projectile
+  targetLayer:
+    serializedVersion: 2
+    m_Bits: 64
+  spriteForward: 0
+  ghostTrail: 0
+  ghostColor: {r: 1, g: 0.15, b: 0.15, a: 0.45}
+  ghostInterval: 0.04
+  ghostLifetime: 0.12

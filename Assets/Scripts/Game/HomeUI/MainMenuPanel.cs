@@ -58,6 +58,8 @@ public class MainMenuPanel : MonoBehaviour
     public Button startButton;
 
     [Header("카드")]
+    [SerializeField] StageCardView      cardBasePrefab;
+    [SerializeField] StageVisualConfig  stageVisuals;
     public float cardWidth     = 800f;
     public float cardHeight    = 260f;
     public float cardSpacing   = 4f;
@@ -125,7 +127,7 @@ public class MainMenuPanel : MonoBehaviour
         {
             var (chapterNum, _, row) = raw[i];
             string chapterID = row.f_챕터ID;
-            Sprite icon    = Resources.Load<Sprite>($"Chapter/Icon/{chapterID}");
+            Sprite icon    = stageVisuals?.Get(i)?.icon;
             int bestWave   = PlayerPrefs.GetInt($"BestWave_{chapterID}", 0);
             int totalWaves = CalcTotalWaves(chapterID);
             list.Add(new StageEntry
@@ -288,7 +290,7 @@ public class MainMenuPanel : MonoBehaviour
         scrollRect.vertical     = false;
         scrollRect.horizontal   = false;
         scrollRect.inertia      = false;
-        scrollRect.movementType = ScrollRect.MovementType.Unrestricted;
+        scrollRect.movementType = ScrollRect.MovementType.Clamped;
 
         var trigger = scrollRect.gameObject.GetComponent<EventTrigger>()
                    ?? scrollRect.gameObject.AddComponent<EventTrigger>();
@@ -418,17 +420,16 @@ public class MainMenuPanel : MonoBehaviour
         for (int i = stages.Length - 1; i >= 0; i--)
         {
             StageCardView cv;
-            string prefabPath         = $"Chapter/Card/{stages[i].chapterID}";
-            StageCardView loadedPrefab = Resources.Load<StageCardView>(prefabPath);
 
-            if (loadedPrefab != null)
+            if (cardBasePrefab != null)
             {
-                cv = Instantiate(loadedPrefab, content);
+                cv = Instantiate(cardBasePrefab, content);
                 if (cv == null) continue;
                 var le            = cv.GetComponent<LayoutElement>() ?? cv.gameObject.AddComponent<LayoutElement>();
                 le.preferredHeight = cardHeight; le.minHeight = cardHeight;
                 le.preferredWidth  = cardWidth;  le.minWidth  = cardWidth;
                 cv.Bind(stages[i]);
+                cv.BindSymbol(stageVisuals?.Get(i)?.symbolPrefab);
             }
             else
             {
@@ -591,7 +592,6 @@ public class MainMenuPanel : MonoBehaviour
 
             if (!suppressAnimation && i < currentIndex)
             {
-                // 스냅 완료 상태에서만 이전 카드 숨김
                 cg.alpha = 0f; cg.blocksRaycasts = false;
             }
             else if (dist < 0.5f)

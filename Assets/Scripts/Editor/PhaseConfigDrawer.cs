@@ -19,7 +19,7 @@ public class PhaseConfigDrawer : PropertyDrawer
     private static int LineCount(SerializedProperty prop)
     {
         var pType = GetType(prop);
-        int n     = 5; // label, type, warningTime, count, interval
+        int n     = 4; // type, warningTime, count, interval(Fan 제외)
 
         switch (pType)
         {
@@ -32,6 +32,7 @@ public class PhaseConfigDrawer : PropertyDrawer
                 if (prop.FindPropertyRelative("accelTime").floatValue > 0f) n++;
                 break;
             case BossProjectileSkill.ProjectileType.Fan:
+                n--; // interval 미표시
                 n += 3; // dirCount, fanAngle, accelTime
                 if (prop.FindPropertyRelative("accelTime").floatValue > 0f) n++;
                 break;
@@ -65,11 +66,11 @@ public class PhaseConfigDrawer : PropertyDrawer
         }
 
         // ── 공통 ──────────────────────────────────────────────────
-        Draw("label",       "라벨");
         Draw("type",        "타입");
         Draw("warningTime", "경고 시간 (초)");
         Draw("count",       "발사 횟수");
-        Draw("interval",    "발사 간격 (초)");
+        if (pType != BossProjectileSkill.ProjectileType.Fan)
+            Draw("interval", "발사 간격 (초)");
 
         // ── 방사형 · 부채꼴 공통 ──────────────────────────────────
         if (pType == BossProjectileSkill.ProjectileType.Radial ||

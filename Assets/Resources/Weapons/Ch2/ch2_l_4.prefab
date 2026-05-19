@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 3948020582310150610}
   - component: {fileID: -1639422693577393888}
   - component: {fileID: -3097853947098103379}
+  - component: {fileID: -5138839860816892558}
   m_Layer: 0
   m_Name: ch2_l_4
   m_TagString: Untagged
@@ -105,69 +106,31 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 80572d92ca6952f478c256b7ffc65d80, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponPoint
-  weaponType: 5
-  pullbackDist: 0.5
-  anticipationTime: 0.1
-  strikeSpeed: 70
-  returnSpeed: 60
-  hitDistance: 0.25
-  areaHitDamageRatio: 0.5
-  overshootDistance: 5
-  overshootSpeed: 80
-  pullOnReturn: 0
-  pullRadius: 2
-  pullStrength: 8
-  pullDuration: 0.25
-  projectilePrefab: {fileID: 8315657212143604512, guid: ce8a57961c41a534da8dff9cb2e2bf63, type: 3}
-  projectileSpeed: 5
-  useParabolicShot: 0
-  parabolicArcHeight: 1.5
-  parabolicSpawnLocalPos: {x: 0, y: 0, z: 0}
-  shootScalePulse: 1
-  scalePulseMax: 1.3
-  scalePulseDuration: 0.12
-  shootRecoil: 1
-  recoilDist: 0.15
-  recoilBackDur: 0.06
-  recoilReturnDur: 0.14
+  _behaviour:
+    rid: 2864143526218694757
   useTrail: 1
   trailTime: 0.1
   trailStartWidth: 0.28
   trailColor: {r: 1, g: 1, b: 1, a: 0.55}
-  boomerangMaxBounces: 3
-  boomerangBounceRange: 5
-  orbitRadius: 1.2
-  orbitSpeed: 200
-  spinHitRadius: 0.35
-  spinHitCooldown: 0.5
-  spinKnockback: 7
-  slashRadius: 3
-  slashArcDegrees: 120
-  slashSweepSpeed: 720
-  slashHitRadius: 0.5
-  slashVfxPrefab: {fileID: 1592017925284355225, guid: 9d088268a2605d049a6d425af87f43f4, type: 3}
-  slashVfxDuration: 0.4
-  slashTeleportMaxDist: 3
-  slashFadeTime: 0.12
-  chargeDuration: 1
-  hammerRiseHeight: 4
-  hammerRiseTime: 0.55
-  hammerSpinSpeed: 900
-  hammerSlamSpeed: 28
-  hammerImpactWorldPos: {x: 0, y: 0}
-  hammerImpactRadius: 1.8
-  hammerImpactVfxPrefab: {fileID: 0}
-  hammerHighlightScale: 2.2
-  hammerHighlightDur: 0.35
-  magicElement: 0
-  muzzlePoint: {fileID: 0}
-  zapBoltVfxPrefab: {fileID: 0}
-  lightningBurstCount: 3
-  lightningBurstInterval: 0.07
-  zapLineHitRadius: 0.25
-  weaponAnimator: {fileID: 0}
-  attackClip: {fileID: 0}
-  attackClipSlotName: Attack
+  shootScalePulse: 1
+  scalePulseMax: 1.3
+  scalePulseDuration: 0.12
+  _weaponId: CH2_L_4
+  references:
+    version: 2
+    RefIds:
+    - rid: 2864143526218694757
+      type: {class: WeaponSlashBehaviour, ns: , asm: Assembly-CSharp}
+      data:
+        slashRadius: 1.2
+        slashArcDegrees: 180
+        slashSweepSpeed: 480
+        slashHitRadius: 0.35
+        slashVfxPrefab: {fileID: 0}
+        slashVfxDuration: 1
+        slashTeleportMaxDist: 3
+        slashFadeTime: 0.12
+        projectilePrefab: {fileID: 0}
 --- !u!114 &-3097853947098103379
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -186,3 +149,45 @@ MonoBehaviour:
   - {r: 0.39999998, g: 1, b: 0.6414886, a: 1}
   - {r: 0.8, g: 0.4, b: 1, a: 1}
   - {r: 1, g: 0.35, b: 0.35, a: 1}
+--- !u!114 &-5138839860816892558
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7736371004280348099}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8ea46d1eb812da343bf72f80fda1feb8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WeaponHighGradeSkill
+  meleChance: 0.25
+  meleeDuration: 1.5
+  freezeDamageOnThaw: 0
+  freezeColor: {r: 0.5, g: 0.85, b: 1, a: 1}
+  boomerangChance: 0.3
+  cloneSpeed: 10
+  cloneLifetime: 1.8
+  cloneScale: 2
+  cloneAlpha: 0.45
+  spreadAngle: 18
+  rangedDmgRatio: 0.6
+  rangedSpeedRatio: 0.9
+  slashProjectilePrefab: {fileID: 0}
+  slashDmgRatio: 0.5
+  slashProjSpeed: 9
+  radiusMultiplier: 1.4
+  spinSpeedMultiplier: 1.35
+  shockwaveRadius: 4.5
+  shockwaveDmgRatio: 0.4
+  spikeChance: 0.2
+  tickDamage: 5
+  tickInterval: 0.5
+  spikeDuration: 5
+  deathAoeRadius: 2.5
+  deathAoeDamage: 20
+  bindChance: 0.2
+  bindDuration: 2
+  groggyChance: 0.15
+  groggySeconds: 2
+  reductionPct: 0.2

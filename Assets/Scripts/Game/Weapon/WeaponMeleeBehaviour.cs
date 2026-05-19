@@ -10,8 +10,14 @@ public class WeaponMeleeBehaviour : WeaponMeleeBaseBehaviour
     protected override void BeginAttack(WeaponPoint.CombatTarget best)
     {
         _target = best;
-        Vector2 toTarget = ((Vector2)best.Position - (Vector2)Host.transform.parent.position).normalized;
-        StartPullback(best, -(Vector3)toTarget * pullbackDist);
+
+        var col = PlayerController.Instance != null
+            ? PlayerController.Instance.GetComponent<Collider2D>()
+            : null;
+        Vector3 centerWorld = col != null ? col.bounds.center : Host.transform.parent.position;
+        Vector3 pullbackLocal = Host.transform.parent.InverseTransformPoint(centerWorld);
+
+        StartPullback(best, pullbackLocal);
     }
 
     protected override void OnStrikeHit(WeaponPoint.CombatTarget target, Vector2 hitDir)

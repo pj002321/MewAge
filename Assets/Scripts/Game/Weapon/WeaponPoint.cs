@@ -36,8 +36,9 @@ public class WeaponPoint : MonoBehaviour
     public float  KnockbackPower => knockbackPower;
     public float  ProjectileSpeed { get; private set; }
     public float  AreaDamageRatio => areaHitDamageRatio;
-    public string WeaponId       => _weaponId;
-    public int    WeaponChapter  => _weaponChapter;
+    public string WeaponId        => _weaponId;
+    public int    WeaponChapter   => _weaponChapter;
+    public string SpecialEffectId => _specialEffectId;
 
     // ── 잔상 ─────────────────────────────────────────────────────────
     [SerializeField] private bool  useTrail        = true;
@@ -59,8 +60,12 @@ public class WeaponPoint : MonoBehaviour
     private Vector3           _originalScale;
     private Coroutine         _scalePulseCoroutine;
     private float             _baseCooldown;
-    private float             _statMultiplier  = 1f;
-    private float             _bonusMultiplier = 1f;
+    private float             _statMultiplier   = 1f;
+    private float             _grogySpeedMult   = 1f;  // BossController 그로기
+    private float             _skillSpeedMult   = 1f;  // 캐릭터 스킬 (SkillNormal / defaultBoost)
+    private float             _permanentSpeedMult = 1f; // PlayerController.IncreaseAttackSpeed (영구)
+
+    private float BonusMult => _grogySpeedMult * _skillSpeedMult * _permanentSpeedMult;
 
     // ── 내부 접근자 (behaviour 전용) ──────────────────────────────────
     internal SpriteRenderer       WeaponSr       => _weaponSr;
@@ -96,7 +101,7 @@ public class WeaponPoint : MonoBehaviour
     // ── 특수효과 ─────────────────────────────────────────────────────
     private string            _specialEffectId;
     private int               _weaponChapter = 1;
-    private string            _weaponId;
+    [SerializeField] private string _weaponId;
     private bool              _cloneFlying;
     private int               _cloneActiveCount;
     private readonly List<GameObject> _activeClones = new();
@@ -111,6 +116,9 @@ public class WeaponPoint : MonoBehaviour
     public event System.Action<Vector3, Vector2> OnSlashVfxSpawned;
     public static event System.Action OnRecallAll;
     public static void RecallAll() => OnRecallAll?.Invoke();
+
+    public static event System.Action OnWaveStarted;
+    public static void NotifyWaveStarted() => OnWaveStarted?.Invoke();
 
     // ─────────────────────────────────────────────────────────────────
     // CombatTarget
@@ -142,6 +150,18 @@ public class WeaponPoint : MonoBehaviour
     // ═════════════════════════════════════════════════════════════════
     // Unity 생명주기
     // ═════════════════════════════════════════════════════════════════
+
+#if UNITY_EDITOR
+    private void OnValidate()
+    {
+        if (!string.IsNullOrEmpty(_weaponId)) return;
+        var goName = gameObject.name.ToLower();
+        Mewage.DB.DB_무기.ForEachEntity(row =>
+        {
+            if (row.f_무기ID?.ToLower() == goName) _weaponId = row.f_무기ID;
+        });
+    }
+#endif
 
     private void Start()
     {
@@ -260,9 +280,12 @@ public class WeaponPoint : MonoBehaviour
             }
         }
 
-        attackCooldown = data.attackCooldown;
-        _baseCooldown  = data.attackCooldown;
-        cooldownTimer  = 0f;
+        attackCooldown      = data.attackCooldown;
+        _baseCooldown       = data.attackCooldown;
+        cooldownTimer       = 0f;
+        _grogySpeedMult     = 1f;
+        _skillSpeedMult     = 1f;
+        _permanentSpeedMult = 1f;
         attackRange    = data.attackRange;
         areaHitRadius  = data.areaHitRadius;
 
@@ -315,17 +338,41 @@ public class WeaponPoint : MonoBehaviour
         RecalcCooldown();
     }
 
+    /// <summary>그로기 배속 배율을 직접 설정합니다. 그로기 해제 시 1f를 전달하세요.</summary>
+    public void SetGrogySpeedMult(float mult)   { _grogySpeedMult   = mult; RecalcCooldown(); }
+
+    /// <summary>캐릭터 스킬 배속 배율을 직접 설정합니다. 스킬 종료 시 1f를 전달하세요.</summary>
+    public void SetSkillSpeedMult(float mult)   { _skillSpeedMult   = mult; RecalcCooldown(); }
+
+    /// <summary>영구 증강 배속(누적). PlayerController.IncreaseAttackSpeed 전용.</summary>
     public void MultiplyAttackSpeed(float multiplier)
     {
-        _bonusMultiplier *= multiplier;
+        _permanentSpeedMult *= multiplier;
         RecalcCooldown();
     }
 
     private void RecalcCooldown()
     {
         float reduced  = _baseCooldown - _statMultiplier;
-        attackCooldown = Mathf.Max(0.1f, reduced / _bonusMultiplier);
+        attackCooldown = Mathf.Max(0.1f, reduced / BonusMult);
+
+        // 무기는 baseCooldown보다 느려질 수 없음 — 이상 감지 시 로그 + 자동복구
+        if (attackCooldown > _baseCooldown + 0.01f && _baseCooldown > 0f)
+        {
+            Debug.LogWarning(
+                $"[WeaponPoint] '{name}' 공속 이상 자동복구: cooldown={attackCooldown:F3} base={_baseCooldown:F3} " +
+                $"| statMult={_statMultiplier:F3} grogyMult={_grogySpeedMult:F3} " +
+                $"skillMult={_skillSpeedMult:F3} permMult={_permanentSpeedMult:F3}");
+            _grogySpeedMult     = 1f;
+            _skillSpeedMult     = 1f;
+            _permanentSpeedMult = 1f;
+            if (_statMultiplier < 0f) _statMultiplier = 0f;
+            attackCooldown = Mathf.Max(0.1f, _baseCooldown - _statMultiplier);
+        }
     }
+
+    /// <summary>웨이브 시작 시 호출 — 쿨타임 타이머를 즉시 만료시켜 첫 공격을 지연 없이 수행합니다.</summary>
+    public void ReadyForWave() { if (cooldownTimer > 0f) cooldownTimer = 0f; }
 
     /// <summary>WeaponHighGradeSkill(Spin 타입) OnEquip에서 호출 — 공전 반경·속도 배율 적용.</summary>
     public void ApplySpinBoost(float radiusMult, float speedMult)

@@ -2,7 +2,7 @@ using System.Collections;
 using UnityEngine;
 
 /// <summary>
-/// Pullback → Anticipation → Striking → Overshooting → Returning 상태머신을 공유하는
+/// Pullback → Striking → Overshooting → Returning 상태머신을 공유하는
 /// Melee / Boomerang / Charge / Magic(None) 의 공통 추상 기반.
 /// </summary>
 [System.Serializable]
@@ -10,7 +10,7 @@ public abstract class WeaponMeleeBaseBehaviour : WeaponBehaviourBase
 {
     // ── 상태머신 Inspector 설정 ──────────────────────────────────────────
     [SerializeField] protected float pullbackDist     = 0.5f;
-    [SerializeField] protected float anticipationTime = 0.08f;
+    [SerializeField] protected float pullbackSpeed    = 8f;
     [SerializeField] protected float strikeSpeed      = 80f;
     [SerializeField] protected float returnSpeed      = 25f;
     [SerializeField] protected float hitDistance      = 0.4f;
@@ -18,13 +18,12 @@ public abstract class WeaponMeleeBaseBehaviour : WeaponBehaviourBase
     [SerializeField] protected float overshootSpeed    = 60f;
 
     // ── 런타임 상태 ──────────────────────────────────────────────────────
-    protected enum State { Idle, Pullback, Anticipation, Striking, Overshooting, Returning }
+    protected enum State { Idle, Pullback, Striking, Overshooting, Returning }
     protected State _state = State.Idle;
 
     protected WeaponPoint.CombatTarget _target;
     protected Vector3 _pullbackLocalPos;
     protected Vector3 _overshootTarget;
-    protected float   _anticipationTimer;
 
     private float _stateTimer;
     private float _returningTimer;
@@ -37,10 +36,14 @@ public abstract class WeaponMeleeBaseBehaviour : WeaponBehaviourBase
 
     public override Vector2? GetAttackLookDir()
     {
+        // 인트로 또는 풀백 중에는 앵커 방향(바깥쪽)을 바라봄
+        if (_inWaveIntro || _state == State.Pullback)
+            return AnchorDir();
+
         if (_state == State.Idle) return null;
 
-        // Pullback / Striking 구간에서 타겟 방향 갱신
-        if (_state == State.Pullback || _state == State.Striking)
+        // Striking 구간에서 타겟 방향으로 전환
+        if (_state == State.Striking)
         {
             var active = GetActiveTarget();
             if (active.IsValid)
@@ -58,12 +61,11 @@ public abstract class WeaponMeleeBaseBehaviour : WeaponBehaviourBase
 
         switch (_state)
         {
-            case State.Idle:         OnUpdateIdle();         break;
-            case State.Pullback:     UpdatePullback();       break;
-            case State.Anticipation: UpdateAnticipation();   break;
-            case State.Striking:     UpdateStriking();       break;
-            case State.Overshooting: UpdateOvershooting();   break;
-            case State.Returning:    UpdateReturning();      break;
+            case State.Idle:         OnUpdateIdle();       break;
+            case State.Pullback:     UpdatePullback();     break;
+            case State.Striking:     UpdateStriking();     break;
+            case State.Overshooting: UpdateOvershooting(); break;
+            case State.Returning:    UpdateReturning();    break;
         }
     }
 
@@ -98,11 +100,19 @@ public abstract class WeaponMeleeBaseBehaviour : WeaponBehaviourBase
 
     // ── 상태머신 공통 ────────────────────────────────────────────────────
 
+    public override void OnWaveStart()
+    {
+        if (_state != State.Idle) return;
+        base.OnWaveStart();
+    }
+
     protected void StartPullback(WeaponPoint.CombatTarget target, Vector3 pullbackLocalPos)
     {
-        _target         = target;
+        CancelIntro();
+
+        _target           = target;
         _pullbackLocalPos = pullbackLocalPos;
-        _state          = State.Pullback;
+        _state            = State.Pullback;
     }
 
     protected void BeginStrike()
@@ -134,26 +144,13 @@ public abstract class WeaponMeleeBaseBehaviour : WeaponBehaviourBase
             return;
         }
         Host.transform.localPosition = Vector3.MoveTowards(
-            Host.transform.localPosition, _pullbackLocalPos, returnSpeed * Time.deltaTime);
+            Host.transform.localPosition, _pullbackLocalPos, pullbackSpeed * Time.deltaTime);
 
         if ((Host.transform.localPosition - _pullbackLocalPos).sqrMagnitude <= 0.001f)
         {
             Host.transform.localPosition = _pullbackLocalPos;
-            _anticipationTimer = anticipationTime;
-            _state = State.Anticipation;
+            BeginStrike();
         }
-    }
-
-    private void UpdateAnticipation()
-    {
-        if (!GetActiveTarget().IsValid)
-        {
-            _target = WeaponPoint.CombatTarget.None;
-            BeginReturn(false);
-            return;
-        }
-        _anticipationTimer -= Time.deltaTime;
-        if (_anticipationTimer <= 0f) BeginStrike();
     }
 
     protected virtual void UpdateStriking()

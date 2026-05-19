@@ -137,7 +137,6 @@ GameObject:
   - component: {fileID: 6332168805933254515}
   - component: {fileID: -3791927773555311642}
   - component: {fileID: -6257905385269776549}
-  - component: {fileID: -4014336057969135498}
   - component: {fileID: -5855296883502241144}
   m_Layer: 7
   m_Name: c1_s1_1
@@ -328,11 +327,28 @@ MonoBehaviour:
   chaseStopDistance: 1.5
   chaseDuration: 2.5
   idleDuration: 1
-  skills:
-  - {fileID: -4014336057969135498}
   _decal: {fileID: 5751587148715433291}
+  _skills:
+  - rid: 2864143559287111772
   entryDrop: 1
   entryScaleUpDuration: 0.35
+  references:
+    version: 2
+    RefIds:
+    - rid: 2864143559287111772
+      type: {class: BossChargeSkill, ns: , asm: Assembly-CSharp}
+      data:
+        cooldown: 3
+        executeInPattern: 1
+        chargeSpeed: 15
+        chargeDuration: 0.4
+        bounceCount: 3
+        bouncePause: 0.1
+        warningDuration: 0.5
+        warningLineLength: 5
+        warningLineWidth: 0.5
+        warningColor: {r: 1, g: 0, b: 0, a: 1}
+        warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
 --- !u!114 &-6257905385269776549
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -346,29 +362,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpriteYSort
   multiplier: 100
---- !u!114 &-4014336057969135498
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5595907520033269590}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4f59276fb7dc5c04c8aeaf3aafa5f594, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BossChargeSkill
-  executeInPattern: 1
-  cooldown: 3
-  chargeSpeed: 8
-  chargeDuration: 1
-  bounceCount: 3
-  bouncePause: 0.1
-  warningDuration: 0.5
-  warningLineLength: 4
-  warningLineWidth: 0.8
-  warningColor: {r: 1, g: 0, b: 0, a: 1}
-  warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
 --- !u!114 &-5855296883502241144
 MonoBehaviour:
   m_ObjectHideFlags: 0

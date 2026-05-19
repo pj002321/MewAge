@@ -26,8 +26,7 @@ public class BossProjectileSkill : BossSkillBase
     [System.Serializable]
     public class PhaseConfig
     {
-        public string        label = "페이즈";
-        public ProjectileType type  = ProjectileType.Aimed;
+        public ProjectileType type = ProjectileType.Aimed;
 
         [Tooltip("경고 라인/마커가 표시되는 시간 (초)")]
         public float warningTime = 0.4f;
@@ -35,7 +34,8 @@ public class BossProjectileSkill : BossSkillBase
         // ── 공통 (조준/방사형/부채꼴/호밍/바위) ─────────────────────
         [Tooltip("발사 횟수")]
         public int   count    = 1;
-        [Tooltip("발사 사이 간격 (초)")]
+        [HideIf("type", ProjectileType.Fan)]
+        [Tooltip("발사 사이 간격 (초). Fan은 동시 발사이므로 미사용")]
         public float interval = 0.5f;
 
         // ── 방사형·부채꼴 공통 ────────────────────────────────────
@@ -108,8 +108,10 @@ public class BossProjectileSkill : BossSkillBase
     }
 
     [Header("투사체")]
-    [SerializeField] private GameObject projectilePrefab;
-    [SerializeField] private float      projectileSpeed = 7f;
+    [ProjectileID]
+    [SerializeField] private string      projectileID;
+    [System.NonSerialized] private GameObject _projectilePrefab;
+    [SerializeField] private float       projectileSpeed = 7f;
     [Tooltip("null이면 보스 중심에서 발사")]
     [SerializeField] private Transform  firePoint;
 
@@ -128,6 +130,13 @@ public class BossProjectileSkill : BossSkillBase
     [SerializeField] private List<PhaseConfig> phases = new();
 
     private readonly List<LineRenderer> _activeWarnLines = new();
+
+    public override void Init(BossController boss)
+    {
+        base.Init(boss);
+        if (!string.IsNullOrEmpty(projectileID))
+            _projectilePrefab = Resources.Load<GameObject>(projectileID);
+    }
 
     protected override async UniTask OnExecuteAsync(CancellationToken ct)
     {
@@ -234,7 +243,7 @@ public class BossProjectileSkill : BossSkillBase
                 Boss.FlipToward(fireDir);
                 Boss.EnemyAnimator?.SetTrigger(EnemyAnim.TAttack);
 
-                var go = Object.Instantiate(projectilePrefab, GetSpawnPos(), Quaternion.identity);
+                var go = Object.Instantiate(_projectilePrefab, GetSpawnPos(), Quaternion.identity);
                 if (go.TryGetComponent<Projectile>(out var p))
                 {
                     p.InitParabolic(Boss.ContactDamage, lockTarget, cfg.homingSpeed, cfg.arcHeight);
@@ -321,13 +330,17 @@ public class BossProjectileSkill : BossSkillBase
 
     private async UniTask BoulderPhaseAsync(PhaseConfig cfg, CancellationToken ct)
     {
-        if (PlayerT == null || projectilePrefab == null) return;
+        if (PlayerT == null || _projectilePrefab == null) return;
 
         Boss.IsFiringSkill = true;
         try
         {
             Vector2 spawnPos = GetSpawnPos();
-            Vector2 dir      = GetAimedDir(spawnPos);
+            // 보스가 이동 폴리곤 밖에 있으면 경계 안쪽으로 클램프
+            var mb = MovementBounds.Shared;
+            if (mb != null && !mb.IsInside(spawnPos))
+                spawnPos = mb.ClosestPointOnBoundary(spawnPos);
+            Vector2 dir = GetAimedDir(spawnPos);
 
             // 경고 라인
             if (cfg.warningTime > 0f)
@@ -367,7 +380,7 @@ public class BossProjectileSkill : BossSkillBase
                 if (ct.IsCancellationRequested) return;
 
                 Boss.EnemyAnimator?.SetTrigger(EnemyAnim.TAttack);
-                SpawnBoulder(cfg, dir);
+                SpawnBoulder(cfg, dir, spawnPos);
 
                 if (i < cfg.count - 1)
                     await UniTask.Delay(System.TimeSpan.FromSeconds(cfg.boulderRollInterval), cancellationToken: ct);
@@ -378,9 +391,9 @@ public class BossProjectileSkill : BossSkillBase
         finally { if (Boss != null) Boss.IsFiringSkill = false; }
     }
 
-    private void SpawnBoulder(PhaseConfig cfg, Vector2 dir)
+    private void SpawnBoulder(PhaseConfig cfg, Vector2 dir, Vector2 spawnPos)
     {
-        var go = Object.Instantiate(projectilePrefab, GetSpawnPos(), Quaternion.identity);
+        var go = Object.Instantiate(_projectilePrefab, spawnPos, Quaternion.identity);
         if (!go.TryGetComponent<Projectile>(out var p)) return;
 
         p.Init(Boss.ContactDamage, dir, cfg.boulderSpeed, cfg.boulderLifetime);
@@ -482,7 +495,7 @@ public class BossProjectileSkill : BossSkillBase
 
     private void SpawnProjectile(Vector2 pos, Vector2 dir, float accel = 0f, float initialRatio = 0.1f)
     {
-        var go = Object.Instantiate(projectilePrefab, pos, Quaternion.identity);
+        var go = Object.Instantiate(_projectilePrefab, pos, Quaternion.identity);
         if (!go.TryGetComponent<Projectile>(out var p)) return;
         p.Init(Boss.ContactDamage, dir, projectileSpeed, 5f,
                acceleration: accel, initialSpeedRatio: initialRatio);

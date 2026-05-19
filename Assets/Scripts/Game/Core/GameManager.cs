@@ -601,6 +601,13 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         // 일반 웨이브 시작 시 플레이어를 맵 중앙으로 이동
         TeleportPlayerToMapCenter();
 
+        WeaponPoint.NotifyWaveStarted();
+
+        // 웨이브 시작 시 쿨타임 즉시 만료 — 이전 웨이브의 잔여 쿨타임이 이월되지 않도록 보장
+        if (WeaponManager.Instance != null)
+            foreach (var wp in WeaponManager.Instance.GetActiveWeaponPoints())
+                wp.ReadyForWave();
+
         SoundManager.Shared?.PlayChapterGameBGM(currentChapterID);
         EnemySpawner.Shared?.ResumeSpawning(wave);
         WaveEnvironmentSwitcher.Shared?.SetWave(wave);
@@ -831,6 +838,10 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         if (player != null) player.InputLocked = false;
         waveTimer   = BossWaveTimeLimit;
         _pauseTimer = false;
+        WeaponPoint.NotifyWaveStarted();
+        if (WeaponManager.Instance != null)
+            foreach (var wp in WeaponManager.Instance.GetActiveWeaponPoints())
+                wp.ReadyForWave();
         EnemySpawner.Shared?.ResumeSpawning(wave);
         if (BossIntroSequence.Shared != null)
             yield return StartCoroutine(BossIntroSequence.Shared.PlayBossNoti());

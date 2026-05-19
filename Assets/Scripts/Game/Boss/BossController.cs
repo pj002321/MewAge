@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
+using Sirenix.OdinInspector;
 using UnityEngine;
 
 /// <summary>
@@ -15,21 +16,26 @@ public class BossController : MonoBehaviour, IEnemyHost
     public static BossController Current { get; private set; }
 
     // ── 기본 스탯 (DB에서 로드, DB 없을 때 아래 기본값 사용) ────────
-    [Header("기본 스탯 (DB 로드 전 폴백)")]
+    [BoxGroup("기본 스탯")]
     [Tooltip("이동 속도. DB에서 로드되면 덮어씌워집니다.")]
     [SerializeField] private float moveSpeed     = 3f;
     private float maxHP         = 500f;
     private float contactDamage = 10f;
 
-    [Header("분신 설정")]
+    [BoxGroup("분신 설정")]
     [Tooltip("true면 HUD·GameManager 알림·드롭을 건너뜁니다. 분신 프리팹에서 체크.")]
     [SerializeField] private bool _isClone;
 
     // ── 그로기 ─────────────────────────────────────────────────────
-    [Header("그로기")]
     private static readonly float[] GrogyThresholds = { 0.70f, 0.35f };
+    [BoxGroup("그로기")]
+    [Tooltip("그로기 지속 시간 (초)")]
     [SerializeField] private float   grogyDuration    = 5f;
+    [BoxGroup("그로기")]
+    [Tooltip("그로기 진입 시 보스 머리 위에 스폰할 UI 프리팹")]
     [SerializeField] private GameObject grogyOverheadPrefab;
+    [BoxGroup("그로기")]
+    [Tooltip("grogyOverheadPrefab의 부모 Transform")]
     [SerializeField] private Transform  grogyOverheadAnchor;
 
     private static readonly Color GrogyTint        = new(0.45f, 0.45f, 0.45f, 1f);
@@ -38,19 +44,24 @@ public class BossController : MonoBehaviour, IEnemyHost
     // ── HitFlash ──────────────────────────────────────────────────
     private HitFlash _hitFlash;
 
-    // ── FX ────────────────────────────────────────────────────────
-
     // ── 드롭 (DB에서 로드) ────────────────────────────────────────
     private string bossName      = "BOSS";
     private int    bossGoldCount = 20;
     private int    bossExpCount  = 20;
 
-    [Header("행동 (Chase)")]
+    [BoxGroup("행동")]
+    [Tooltip("플레이어와 이 거리 이내면 추격을 멈춥니다")]
     [SerializeField] private float chaseStopDistance = 1.8f;
+    [BoxGroup("행동")]
+    [Tooltip("한 사이클당 추격 지속 시간 (초)")]
     [SerializeField] private float chaseDuration     = 2.5f;
+    [BoxGroup("행동")]
+    [Tooltip("추격 전 대기 시간 (초)")]
     [SerializeField] private float idleDuration      = 0.6f;
+    [BoxGroup("행동")]
+    [Tooltip("데칼 Transform (그림자 등 바닥 이펙트)")]
+    [SerializeField] private Transform _decal;
 
-    [Header("스킬 목록")]
     [SerializeReference, HideInInspector]
     private System.Collections.Generic.List<BossSkillBase> _skills = new();
 
@@ -68,7 +79,6 @@ public class BossController : MonoBehaviour, IEnemyHost
     public Animator    EnemyAnimator   { get; private set; }
     public Transform   SelfTransform   => transform;   // IEnemyHost
     public Transform   Decal           => _decal;
-    [SerializeField] private Transform _decal;
 
     public event System.Action OnDeath;
     public event System.Action OnGrogyStart;
@@ -84,8 +94,10 @@ public class BossController : MonoBehaviour, IEnemyHost
     public void ApplyBleed(float damage) { }
 
     // ── 입장 연출 ─────────────────────────────────────────────────────
-    [Header("입장 연출")]
+    [BoxGroup("입장 연출")]
+    [Tooltip("true면 스케일 팝인 연출 후 패턴을 시작합니다")]
     [SerializeField] private bool  entryDrop            = true;
+    [BoxGroup("입장 연출")]
     [Tooltip("팝인 완료 시간 (초). OutBack 커브로 오버슈트 바운스")]
     [SerializeField] private float entryScaleUpDuration = 0.35f;
 
@@ -535,7 +547,14 @@ public void ForceDie()
                 await UniTask.Yield(ct);
             }
         }
-        catch (System.OperationCanceledException) { return; }
+        catch (System.OperationCanceledException)
+        {
+            // 보스 파괴 시에도 플레이어 공격속도 반드시 복구
+            ApplyGrogyAtkSpeed(1f);
+            StopGrogyVisuals();
+            IsGrogy = false;
+            return;
+        }
 
         GrogyRemaining = 0f;
         ApplyGrogyAtkSpeed(1f / GrogyAtkSpeedMult);
@@ -633,7 +652,7 @@ public void ForceDie()
         var player = PlayerController.Instance;
         if (player == null) return;
         foreach (var wp in player.GetComponentsInChildren<WeaponPoint>())
-            wp.MultiplyAttackSpeed(mult);
+            wp.SetGrogySpeedMult(mult);
     }
 
     // ── DB 데이터 적용 ────────────────────────────────────────────

@@ -122,6 +122,37 @@ Transform:
   m_Children: []
   m_Father: {fileID: 2799849513256322318}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &5876509527686146119
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4813260468475972152}
+  m_Layer: 7
+  m_Name: tPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4813260468475972152
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5876509527686146119}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.081, y: 1.442, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2799849513256322318}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &7313528007987417252
 GameObject:
   m_ObjectHideFlags: 0
@@ -137,8 +168,6 @@ GameObject:
   - component: {fileID: 6321899902040148537}
   - component: {fileID: -1566222971921231191}
   - component: {fileID: -1537220520014159406}
-  - component: {fileID: -4861455100317653660}
-  - component: {fileID: 3329482227692561882}
   - component: {fileID: -1424525549254422075}
   m_Layer: 7
   m_Name: c1_s3_0
@@ -163,6 +192,7 @@ Transform:
   - {fileID: 3883397052985769762}
   - {fileID: 4092441220517724094}
   - {fileID: 7827403483437117397}
+  - {fileID: 4813260468475972152}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &6749509527068973254
@@ -330,12 +360,87 @@ MonoBehaviour:
   chaseStopDistance: 1.5
   chaseDuration: 2.5
   idleDuration: 1
-  skills:
-  - {fileID: -4861455100317653660}
-  - {fileID: 3329482227692561882}
   _decal: {fileID: 4092441220517724094}
+  _skills:
+  - rid: 2864143559287111782
+  - rid: 2864143559287111783
   entryDrop: 1
   entryScaleUpDuration: 0.35
+  references:
+    version: 2
+    RefIds:
+    - rid: 2864143559287111782
+      type: {class: BossProjectileSkill, ns: , asm: Assembly-CSharp}
+      data:
+        cooldown: 2
+        executeInPattern: 1
+        projectileID: Unit/Ch1/Proj/fire_proj
+        projectileSpeed: 8
+        firePoint: {fileID: 4813260468475972152}
+        warningLineLength: 5
+        warningLineWidth: 0.5
+        warningColor: {r: 1, g: 0, b: 0, a: 1}
+        warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
+        impactVfxPrefab: {fileID: 0}
+        impactVfxLifetime: 1
+        phases:
+        - type: 0
+          warningTime: 0.25
+          count: 10
+          interval: 0.35
+          dirCount: 0
+          radialAngleOffset: 0
+          fanAngle: 0
+          arcHeight: 0
+          homingSpeed: 0
+          accelTime: 0
+          initialSpeedRatio: 0
+          volleyPointCount: 0
+          volleySpreadRadius: 0
+          volleyHangTime: 0
+          volleyBurstInterval: 0
+          volleyHitRadius: 0
+          volleyHitDamage: 0
+          volleyShellArcHeight: 0
+          volleyShakeDuration: 0
+          volleyShakeMagnitude: 0
+          volleyMarkerPrefab: {fileID: 0}
+          volleyShellPrefab: {fileID: 0}
+          volleyImpactVfx: {fileID: 0}
+          boulderSpeed: 0
+          boulderLifetime: 0
+          boulderMaxBounces: 0
+          boulderRotateSpeed: 0
+          boulderRollInterval: 0
+    - rid: 2864143559287111783
+      type: {class: BossMeleeSkill, ns: , asm: Assembly-CSharp}
+      data:
+        cooldown: 2
+        executeInPattern: 1
+        meleeType: 2
+        chaseTimeout: 3
+        hitCount: 2
+        slashDamage: 12
+        slashRange: 0.3
+        preDelay: 0.2
+        hitDelay: 0.3
+        betweenDelay: 0.45
+        slashVfxPrefab: {fileID: 5807880875666349217}
+        dashSpeed: 10
+        dashDuration: 0.6
+        dashHitCount: 3
+        dashHitInterval: 0.18
+        dashHitRange: 1.6
+        dashHitDamage: 0
+        preDashDuration: 0.3
+        dashGhostInterval: 0.06
+        chaseSpeed: 6
+        chaseDuration: 2
+        stopDistance: 1
+        attackCooldown: 0.6
+        animEventTimeout: 0.5
+        attackVfx: {fileID: 5807880875666349217}
+        attackVfxDuration: 0.3
 --- !u!114 &-1537220520014159406
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -349,80 +454,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpriteYSort
   multiplier: 100
---- !u!114 &-4861455100317653660
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7313528007987417252}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 41b513309ac63c040b1c0ced00cf17f4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BossFastChaseSkill
-  executeInPattern: 1
-  cooldown: 2
-  chaseSpeed: 2
-  chaseDuration: 2
-  stopDistance: 1.5
-  attackCooldown: 0.6
-  animEventTimeout: 0.5
-  attackVfx: {fileID: 0}
-  vfxDuration: 0.3
---- !u!114 &3329482227692561882
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7313528007987417252}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 71ecc31d375a1534384e5b1844037cf7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BossProjectileCycleSkill
-  executeInPattern: 1
-  cooldown: 2
-  projectilePrefab: {fileID: 7916182024222986910, guid: c4927e75acce7be4cb6e4563dac42fff, type: 3}
-  projectileSpeed: 7
-  firePoint: {fileID: 7827403483437117397}
-  phases:
-  - label: "\uD398\uC774\uC988"
-    type: 0
-    "\uACBD\uACE0\uC2DC\uAC04": 1
-    "\uD69F\uC218": 5
-    "\uAC04\uACA9": 0.5
-    "\uBC29\uD5A5\uC218": 8
-    "\uAC01\uB3C4\uC624\uD504\uC14B": 0
-    "\uBD80\uCC44\uAF34\uAC01\uB3C4": 120
-    "\uC544\uD06C\uB192\uC774": 3
-    "\uD638\uBC0D\uC18D\uB3C4": 9
-    "\uAC00\uC18D\uC2DC\uAC04": 0
-    "\uCD08\uAE30\uC18D\uB3C4\uBE44\uC728": 0.05
-    "\uCD94\uACA9\uC2DC\uAC04": 2
-  - label: "\uD398\uC774\uC988"
-    type: 1
-    "\uACBD\uACE0\uC2DC\uAC04": 0.4
-    "\uD69F\uC218": 1
-    "\uAC04\uACA9": 0.5
-    "\uBC29\uD5A5\uC218": 8
-    "\uAC01\uB3C4\uC624\uD504\uC14B": 120
-    "\uBD80\uCC44\uAF34\uAC01\uB3C4": 120
-    "\uC544\uD06C\uB192\uC774": 3
-    "\uD638\uBC0D\uC18D\uB3C4": 9
-    "\uAC00\uC18D\uC2DC\uAC04": 0
-    "\uCD08\uAE30\uC18D\uB3C4\uBE44\uC728": 0.05
-    "\uCD94\uACA9\uC2DC\uAC04": 3
-  useWarningLines: 0
-  warningLineLength: 4
-  warningLineWidth: 0.5
-  warningColor: {r: 1, g: 0, b: 0, a: 1}
-  warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
-  impactVfxPrefab: {fileID: 0}
-  impactVfxLifetime: 1
-  chaseStopDistance: 3
-  animWaitTimeout: 2
 --- !u!114 &-1424525549254422075
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -516,6 +547,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 66e6618ee7949024cb7610bd6bc60058, type: 3}
+--- !u!1 &5807880875666349217 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 2734155779453642268, guid: 66e6618ee7949024cb7610bd6bc60058, type: 3}
+  m_PrefabInstance: {fileID: 8460030400336165565}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &7827403483437117397 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1857898864093582696, guid: 66e6618ee7949024cb7610bd6bc60058, type: 3}

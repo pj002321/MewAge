@@ -110,18 +110,19 @@ MonoBehaviour:
   useTrail: 1
   trailTime: 0.1
   trailStartWidth: 0.28
-  trailColor: {r: 1, g: 1, b: 1, a: 0.55}
+  trailColor: {r: 0.7627461, g: 0.25, b: 1, a: 1}
   shootScalePulse: 1
   scalePulseMax: 1.3
   scalePulseDuration: 0.12
+  _weaponId: CH1_E_1
   references:
     version: 2
     RefIds:
     - rid: 2864143502748942445
       type: {class: WeaponSpinBehaviour, ns: , asm: Assembly-CSharp}
       data:
-        orbitRadius: 1.2
-        orbitSpeed: 200
+        orbitRadius: 2.5
+        orbitSpeed: 360
         spinHitRadius: 0.35
         spinHitCooldown: 0.5
         spinKnockback: 7

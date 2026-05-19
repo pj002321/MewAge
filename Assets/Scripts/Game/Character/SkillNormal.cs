@@ -12,14 +12,13 @@ public class SkillNormal : CharacterSkillBase
     public override void Activate()
     {
         foreach (var wp in GetWeaponPoints())
-            wp.MultiplyAttackSpeed(SpeedMultiplier);
+            wp.SetSkillSpeedMult(SpeedMultiplier);
     }
 
     public override void Deactivate()
     {
-        // 활성화 때 곱한 배율을 역수로 나눠서 원복
         foreach (var wp in GetWeaponPoints())
-            wp.MultiplyAttackSpeed(1f / SpeedMultiplier);
+            wp.SetSkillSpeedMult(1f);
     }
 
     private static System.Collections.Generic.List<WeaponPoint> GetWeaponPoints()

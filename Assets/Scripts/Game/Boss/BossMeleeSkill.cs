@@ -1,5 +1,6 @@
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using Sirenix.OdinInspector;
 using UnityEngine;
 
 /// <summary>
@@ -18,37 +19,55 @@ public class BossMeleeSkill : BossSkillBase
     [SerializeField] private MeleeType meleeType = MeleeType.ChaseAndSlash;
 
     // ── ChaseAndSlash ──────────────────────────────────────────────
-    [Header("ChaseAndSlash")]
-    [Tooltip("슬래시 범위 안에 들어올 때까지 추격하는 최대 시간 (초)")]
+    [ShowIf("@meleeType == MeleeType.ChaseAndSlash"), Tooltip("슬래시 범위 안에 들어올 때까지 추격하는 최대 시간 (초)")]
     [SerializeField] private float chaseTimeout  = 3f;
+    [ShowIf("@meleeType == MeleeType.ChaseAndSlash")]
     [SerializeField] private int   hitCount      = 2;
+    [ShowIf("@meleeType == MeleeType.ChaseAndSlash")]
     [SerializeField] private float slashDamage   = 12f;
-    [Tooltip("보스 콜라이더 표면으로부터 추가 판정 거리")]
+    [ShowIf("@meleeType == MeleeType.ChaseAndSlash"), Tooltip("보스 콜라이더 표면으로부터 추가 판정 거리")]
     [SerializeField] private float slashRange    = 0.3f;
+    [ShowIf("@meleeType == MeleeType.ChaseAndSlash")]
     [SerializeField] private float preDelay      = 0.2f;
+    [ShowIf("@meleeType == MeleeType.ChaseAndSlash")]
     [SerializeField] private float hitDelay      = 0.3f;
+    [ShowIf("@meleeType == MeleeType.ChaseAndSlash")]
     [SerializeField] private float betweenDelay  = 0.45f;
+    [ShowIf("@meleeType == MeleeType.ChaseAndSlash")]
     [SerializeField] private GameObject slashVfxPrefab;
 
     // ── DashCombo ─────────────────────────────────────────────────
-    [Header("DashCombo")]
+    [ShowIf("@meleeType == MeleeType.DashCombo")]
     [SerializeField] private float dashSpeed       = 10f;
+    [ShowIf("@meleeType == MeleeType.DashCombo")]
     [SerializeField] private float dashDuration    = 0.6f;
+    [ShowIf("@meleeType == MeleeType.DashCombo")]
     [SerializeField] private int   dashHitCount    = 3;
+    [ShowIf("@meleeType == MeleeType.DashCombo")]
     [SerializeField] private float dashHitInterval = 0.18f;
+    [ShowIf("@meleeType == MeleeType.DashCombo")]
     [SerializeField] private float dashHitRange    = 1.6f;
-    [SerializeField] private float dashHitDamage   = 0f;   // 0 = ContactDamage
+    [ShowIf("@meleeType == MeleeType.DashCombo")]
+    [SerializeField] private float dashHitDamage   = 0f;
+    [ShowIf("@meleeType == MeleeType.DashCombo")]
     [SerializeField] private float preDashDuration = 0.3f;
+    [ShowIf("@meleeType == MeleeType.DashCombo")]
     [SerializeField] private float dashGhostInterval = 0.06f;
 
     // ── FastChase ─────────────────────────────────────────────────
-    [Header("FastChase")]
+    [ShowIf("@meleeType == MeleeType.FastChase")]
     [SerializeField] private float chaseSpeed       = 16f;
+    [ShowIf("@meleeType == MeleeType.FastChase")]
     [SerializeField] private float chaseDuration    = 2.0f;
+    [ShowIf("@meleeType == MeleeType.FastChase")]
     [SerializeField] private float stopDistance     = 1.0f;
+    [ShowIf("@meleeType == MeleeType.FastChase")]
     [SerializeField] private float attackCooldown   = 0.6f;
+    [ShowIf("@meleeType == MeleeType.FastChase")]
     [SerializeField] private float animEventTimeout = 0.5f;
+    [ShowIf("@meleeType == MeleeType.FastChase")]
     [SerializeField] private GameObject attackVfx;
+    [ShowIf("@meleeType == MeleeType.FastChase")]
     [SerializeField] private float      attackVfxDuration = 0.3f;
 
     // ── 런타임 상태 ────────────────────────────────────────────────

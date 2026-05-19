@@ -56,10 +56,13 @@ public class BossChargeSkill : BossSkillBase
             Boss.EnemyAnimator?.SetTrigger(EnemyAnim.TCharge);
 
             pos = Boss.Rb != null ? Boss.Rb.position : (Vector2)Boss.transform.position;
-            bool  hitWall = false;
-            float elapsed = 0f;
+            bool  hitWall      = false;
+            float elapsed      = 0f;
+            bool  isFinalCharge = charge == totalCharges - 1;
 
-            while (elapsed < chargeDuration)
+            // 마지막 돌진은 chargeDuration으로 시간 제한.
+            // 튕기기 전 돌진은 벽에 닿을 때까지 계속 진행 (ct가 안전장치).
+            while (isFinalCharge ? elapsed < chargeDuration : !hitWall)
             {
                 if (GameManager.Shared != null && GameManager.Shared.IsGameOver) return;
                 if (Boss == null || ct.IsCancellationRequested) return;
@@ -101,7 +104,7 @@ public class BossChargeSkill : BossSkillBase
                 await UniTask.WaitForFixedUpdate(ct);
             }
 
-            if (!hitWall || charge == totalCharges - 1) return;
+            if (isFinalCharge) return;
 
             Boss.FlipToward(dir);
             if (bouncePause > 0f)

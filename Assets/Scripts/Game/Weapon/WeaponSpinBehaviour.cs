@@ -43,17 +43,21 @@ public class WeaponSpinBehaviour : WeaponBehaviourBase
 
     public override void OnStart()
     {
+        base.OnStart();
         _hasCollider = Host.GetComponent<Collider2D>() != null;
     }
 
     public override void OnDestroy()
     {
+        base.OnDestroy();
         foreach (var g in _ghosts) if (g != null) Object.Destroy(g);
         _ghosts.Clear();
     }
 
     public override void OnUpdate()
     {
+        if (_inWaveIntro) return;
+
         // 부스트 타이머
         if (_boostTimer > 0f)
         {

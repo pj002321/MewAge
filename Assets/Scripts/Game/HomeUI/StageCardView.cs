@@ -14,7 +14,7 @@ public class StageCardView : MonoBehaviour
     public Image           lockBackgroundImage;  // 잠금 배경
     public Image           highlightImage;       // 현재 선택 카드 강조
     public RawImage        playerPortrait;       // 플레이어 랜딩 애니메이션
-    public GameObject      symbolObjects;
+    public Transform       symbolParent;         // 심볼 프리팹이 주입될 빈 컨테이너
     public TextMeshProUGUI stageNameText;
     public TextMeshProUGUI bestWaveText;
     public TextMeshProUGUI chapterText;    // "챕터\n1-1" 형식
@@ -22,18 +22,16 @@ public class StageCardView : MonoBehaviour
     [Header("펀치 대상")]
     public GameObject floatTarget;
 
-    bool _isLocked;
+    bool      _isLocked;
+    GameObject _symbolInstance;
 
     // ── 데이터 바인딩 ────────────────────────────────────────────────
     public void Bind(MainMenuPanel.StageEntry entry)
     {
         _isLocked = entry.isLocked;
 
-        if (iconImage != null)
-        {
-            if (entry.icon != null) iconImage.sprite = entry.icon;
-            iconImage.enabled = iconImage.sprite != null;
-        }
+        if (iconImage != null && entry.icon != null)
+            iconImage.sprite = entry.icon;
         if (overlayImage != null)
             overlayImage.gameObject.SetActive(entry.isLocked);
         if (lockBackgroundImage != null)
@@ -57,7 +55,7 @@ public class StageCardView : MonoBehaviour
         if (stageNameText  != null) stageNameText.gameObject.SetActive(isCenter);
         if (bestWaveText   != null) bestWaveText.gameObject.SetActive(isCenter);
         if (chapterText    != null) chapterText.gameObject.SetActive(isCenter);
-        if (symbolObjects  != null) symbolObjects.SetActive(isCenter);
+        if (_symbolInstance != null) _symbolInstance.SetActive(isCenter);
         if (playerPortrait != null)
         {
             playerPortrait.gameObject.SetActive(showFull);
@@ -68,6 +66,16 @@ public class StageCardView : MonoBehaviour
             }
         }
         if (highlightImage != null) highlightImage.gameObject.SetActive(showFull);
+    }
+
+    // 스테이지 심볼 프리팹을 symbolParent 하위에 주입
+    public void BindSymbol(GameObject prefab)
+    {
+        if (symbolParent == null) return;
+        if (_symbolInstance != null) Destroy(_symbolInstance);
+        if (prefab == null) return;
+
+        _symbolInstance = Instantiate(prefab, symbolParent);
     }
 
     // 스냅 완료 시 펀치 연출
@@ -110,5 +118,9 @@ public class StageCardView : MonoBehaviour
             playerPortrait.GetComponent<Animator>()?.Play("enter_portrait");
     }
 
-    void OnDestroy() => StopAllCoroutines();
+    void OnDestroy()
+    {
+        StopAllCoroutines();
+        if (_symbolInstance != null) Destroy(_symbolInstance);
+    }
 }

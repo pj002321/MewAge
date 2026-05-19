@@ -116,7 +116,7 @@ Transform:
   m_GameObject: {fileID: 2894830409148634506}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.223, y: 0.186, z: 0}
+  m_LocalPosition: {x: 2.17, y: 1.96, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -137,8 +137,6 @@ GameObject:
   - component: {fileID: 8551942015714341839}
   - component: {fileID: 2426648659520439872}
   - component: {fileID: -192365107048031896}
-  - component: {fileID: 2318364815293332815}
-  - component: {fileID: 3632338025058510538}
   - component: {fileID: 812228708011650019}
   m_Layer: 7
   m_Name: c1_s3_2
@@ -330,12 +328,113 @@ MonoBehaviour:
   chaseStopDistance: 1.5
   chaseDuration: 2.5
   idleDuration: 1
-  skills:
-  - {fileID: 2318364815293332815}
-  - {fileID: 3632338025058510538}
   _decal: {fileID: 2984221781699599838}
+  _skills:
+  - rid: 2864143559287111785
+  - rid: 2864143559287111786
+  - rid: 2864143559287111787
   entryDrop: 1
   entryScaleUpDuration: 0.35
+  references:
+    version: 2
+    RefIds:
+    - rid: 2864143559287111785
+      type: {class: BossGridSpikeSkill, ns: , asm: Assembly-CSharp}
+      data:
+        cooldown: 5
+        executeInPattern: 1
+        cols: 6
+        rows: 6
+        fillMode: 2
+        randomCount: 18
+        spikePrefab: {fileID: 3040590599161552287, guid: d9879b83c23bb0f458bd7c1a2b03eb98, type: 3}
+        spikeDamage: 30
+        spikeRadius: 0.5
+        spikeDuration: 1
+        warningDuration: 1.2
+        waveDelay: 0.25
+        warningMarkerPrefab: {fileID: 7905823675861574758, guid: e965097e70b2e9d47807ebf0614a30a6, type: 3}
+        warningColor: {r: 1, g: 1, b: 1, a: 1}
+        dropHeight: 8
+        dropDuration: 0.25
+        spawnVfxPrefab: {fileID: 851543317570617582, guid: 5ee5e8c374903034ba44e80b8498353a, type: 3}
+        spawnVfxDuration: 1
+    - rid: 2864143559287111786
+      type: {class: BossSlamSkill, ns: , asm: Assembly-CSharp}
+      data:
+        cooldown: 2
+        executeInPattern: 1
+        slamType: 1
+        slamDamage: 30
+        slamRadius: 2.5
+        jumpHeight: 6
+        jumpDuration: 0.7
+        markerWarningTime: 0.8
+        slamMarkerPrefab: {fileID: 0}
+        landingVfxPrefab: {fileID: 851543317570617582, guid: 5ee5e8c374903034ba44e80b8498353a, type: 3}
+        vfxLifetime: 1
+        hopHeight: 2
+        hopRiseTime: 0.25
+        hopFallTime: 0.18
+        shakeDuration: 0.45
+        shakeMagnitude: 0.35
+        floatHeight: 2.8
+        floatRiseTime: 0.35
+        floatHangTime: 0.25
+        floatFallTime: 0.55
+        preChargeDelay: 0.3
+        poundChargeSpeed: 20
+        chargeWarnDuration: 0.5
+        chargeWarningLength: 5
+        chargeWarningWidth: 0.5
+        chargeWarningColor: {r: 1, g: 0, b: 0, a: 1}
+        chargeWarningMat: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
+        ghostColor: {r: 1, g: 0.15, b: 0.15, a: 0.45}
+        ghostInterval: 0.04
+        ghostLifetime: 0.12
+    - rid: 2864143559287111787
+      type: {class: BossProjectileSkill, ns: , asm: Assembly-CSharp}
+      data:
+        cooldown: 2
+        executeInPattern: 1
+        projectileID: "Unit/Ch1/Proj/\uAD6C\uC11D\uAE30_\uACE8\uB818_\uB3CC"
+        projectileSpeed: 3
+        firePoint: {fileID: 1445574207204750692}
+        warningLineLength: 5
+        warningLineWidth: 0.5
+        warningColor: {r: 1, g: 0, b: 0, a: 1}
+        warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
+        impactVfxPrefab: {fileID: 0}
+        impactVfxLifetime: 1
+        phases:
+        - type: 5
+          warningTime: 0.5
+          count: 5
+          interval: 1
+          dirCount: 0
+          radialAngleOffset: 0
+          fanAngle: 0
+          arcHeight: 0
+          homingSpeed: 0
+          accelTime: 0
+          initialSpeedRatio: 0
+          volleyPointCount: 0
+          volleySpreadRadius: 0
+          volleyHangTime: 0
+          volleyBurstInterval: 0
+          volleyHitRadius: 0
+          volleyHitDamage: 0
+          volleyShellArcHeight: 0
+          volleyShakeDuration: 0
+          volleyShakeMagnitude: 0
+          volleyMarkerPrefab: {fileID: 0}
+          volleyShellPrefab: {fileID: 0}
+          volleyImpactVfx: {fileID: 0}
+          boulderSpeed: 15
+          boulderLifetime: 3
+          boulderMaxBounces: 1
+          boulderRotateSpeed: 0
+          boulderRollInterval: 1
 --- !u!114 &-192365107048031896
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -349,72 +448,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpriteYSort
   multiplier: 100
---- !u!114 &2318364815293332815
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5246812530321141943}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 14d160f41ad8ad445897e06fd775ae2b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BossGroundPoundSkill
-  executeInPattern: 1
-  cooldown: 2
-  hopHeight: 2
-  hopRiseTime: 0.25
-  hopFallTime: 0.18
-  shakeDuration: 0.45
-  shakeMagnitude: 0.35
-  landingVfxPrefab: {fileID: 1645737383650597069, guid: d13e811c376306146ac829de7af32967, type: 3}
-  vfxLifetime: 1
-  floatHeight: 2.8
-  floatRiseTime: 0.35
-  floatHangTime: 0.25
-  floatFallTime: 0.55
-  preChargeDelay: 0.3
-  chargeSpeed: 15
-  chargeMaxTime: 3
-  chargeWarnDuration: 0.5
-  warningLineLength: 4
-  warningLineWidth: 0.5
-  warningLineColor: {r: 1, g: 0, b: 0, a: 0.5882353}
-  warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
-  ghostColor: {r: 1, g: 0.15, b: 0.15, a: 0.45}
-  ghostInterval: 0.04
-  ghostLifetime: 0.12
---- !u!114 &3632338025058510538
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5246812530321141943}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 45354f0c4ea932b4eb47f11de6d6a2ef, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BossGridSpikeSkill
-  executeInPattern: 1
-  cooldown: 5
-  cols: 7
-  rows: 7
-  fillMode: 1
-  randomCount: 12
-  spikePrefab: {fileID: 3040590599161552287, guid: d9879b83c23bb0f458bd7c1a2b03eb98, type: 3}
-  spikeDamage: 25
-  spikeRadius: 0.45
-  spikeDuration: 5
-  warningDuration: 1.2
-  waveDelay: 0.25
-  warningMarkerPrefab: {fileID: 5515808124668199316, guid: 4676482f183c362489d2902d70a232b3, type: 3}
-  warningColor: {r: 1, g: 0.45, b: 0, a: 0.45}
-  dropHeight: 8
-  dropDuration: 0.25
-  spawnVfxPrefab: {fileID: 851543317570617582, guid: 5ee5e8c374903034ba44e80b8498353a, type: 3}
-  spawnVfxDuration: 1
 --- !u!114 &812228708011650019
 MonoBehaviour:
   m_ObjectHideFlags: 0
