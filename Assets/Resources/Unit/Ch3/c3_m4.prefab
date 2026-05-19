@@ -15,10 +15,8 @@ GameObject:
   - component: {fileID: 1310786639833578689}
   - component: {fileID: 118957687783763765}
   - component: {fileID: 9077217671976798113}
-  - component: {fileID: 2893873691657769378}
-  - component: {fileID: 3074230842741288782}
-  - component: {fileID: -4759251989209069777}
   - component: {fileID: -480230003300727895}
+  - component: {fileID: 8438852390651367034}
   m_Layer: 7
   m_Name: c3_m4
   m_TagString: Untagged
@@ -231,53 +229,6 @@ MonoBehaviour:
   randomPhase: 1
   fixBottom: 0
   halfHeightOverride: 0
---- !u!114 &2893873691657769378
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1326216360028315856}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 287a445e29fc7094190cd8b6c44671ab, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TankBehaviour
-  attackRange: 1.5
-  attackInterval: 2
-  damageMultiplier: 1.5
-  shieldVfx: {fileID: 0}
-  shieldVfxDuration: 0.2
---- !u!114 &3074230842741288782
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1326216360028315856}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 32b1c058b2105124c9b8a592935e2f74, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TankShield
-  shieldRoot: {fileID: 0}
-  shieldMaxHP: 100
-  rechargeDelay: 4
-  rechargeRate: 20
-  breakFlashDuration: 0.25
---- !u!114 &-4759251989209069777
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1326216360028315856}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 25cc23087012616429ecb7c10c6cb557, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SpriteYSort
-  multiplier: 100
 --- !u!114 &-480230003300727895
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -294,6 +245,24 @@ MonoBehaviour:
   flashMaterial: {fileID: 2100000, guid: f6d87d58797b8b9478efae2c2271cbe7, type: 2}
   flashColor: {r: 1, g: 1, b: 1, a: 1}
   BaseColor: {r: 1, g: 1, b: 1, a: 1}
+--- !u!114 &8438852390651367034
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1326216360028315856}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0ef9839f1a3088e4cad5cf9d4fc2f5ca, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MeleeBehaviour
+  attackRange: 1.2
+  attackInterval: 1
+  useAnimationEvent: 1
+  attackVfx: {fileID: 0}
+  vfxDuration: 0.3
+  animEventTimeout: 0.5
 --- !u!1 &1437633771341022566
 GameObject:
   m_ObjectHideFlags: 0
