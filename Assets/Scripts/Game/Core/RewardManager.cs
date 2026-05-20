@@ -56,6 +56,36 @@ public class RewardManager : MonoBehaviourSingleton<RewardManager>
         OnChanged?.Invoke();
     }
 
+    public void GiveReward(RewardItem item)
+    {
+        switch (item.type)
+        {
+            case RewardType.Gold: _gold += item.amount; break;
+            case RewardType.Exp:  _exp  += item.amount; break;
+            case RewardType.Ruby: _ruby += item.amount; break;
+            case RewardType.EquipFrag:
+                EquipmentInventory.Shared?.AddMat(EquipCategory.RING, 0); // 범용 조각 — 인벤 연동 시 확장
+                PlayerPrefs.SetInt("EquipFrag", PlayerPrefs.GetInt("EquipFrag", 0) + item.amount);
+                break;
+            case RewardType.WareFrag:
+                PlayerPrefs.SetInt("WareFrag", PlayerPrefs.GetInt("WareFrag", 0) + item.amount);
+                break;
+            default:
+                // 뽑기권류: TicketManager 위임
+                TicketManager.Shared?.Add(item.type, item.amount);
+                return;
+        }
+        CheckLevelUp();
+        Save();
+        OnChanged?.Invoke();
+    }
+
+    public void GiveRewards(RewardItem[] items)
+    {
+        if (items == null) return;
+        foreach (var item in items) GiveReward(item);
+    }
+
     public bool SpendGold(int amount)
     {
         if (_gold < amount) return false;

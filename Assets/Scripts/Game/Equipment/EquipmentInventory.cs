@@ -43,15 +43,15 @@ public class EquipmentInventory : MonoBehaviourSingleton<EquipmentInventory>
         PlayerPrefs.Save();
     }
 
-    public static RewardVisualConfig.RewardType CategoryToMatType(EquipCategory cat) => cat switch
+    public static RewardType CategoryToMatType(EquipCategory cat) => cat switch
     {
-        EquipCategory.RING  => RewardVisualConfig.RewardType.EquipRingMat,
-        EquipCategory.NECK  => RewardVisualConfig.RewardType.EquipNeckMat,
-        EquipCategory.FOOT  => RewardVisualConfig.RewardType.EquipFootMat,
-        EquipCategory.TOP   => RewardVisualConfig.RewardType.EquipTopMat,
-        EquipCategory.CLOAK => RewardVisualConfig.RewardType.EquipcloakMat,
-        EquipCategory.HEAD  => RewardVisualConfig.RewardType.EquipHeadMat,
-        _                   => RewardVisualConfig.RewardType.EquipRingMat,
+        EquipCategory.RING  => RewardType.EquipRingMat,
+        EquipCategory.NECK  => RewardType.EquipNeckMat,
+        EquipCategory.FOOT  => RewardType.EquipFootMat,
+        EquipCategory.TOP   => RewardType.EquipTopMat,
+        EquipCategory.CLOAK => RewardType.EquipcloakMat,
+        EquipCategory.HEAD  => RewardType.EquipHeadMat,
+        _                   => RewardType.EquipRingMat,
     };
 
     // ── 장비 레벨업 ─────────────────────────────────────────────────
