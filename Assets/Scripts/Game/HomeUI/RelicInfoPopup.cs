@@ -47,11 +47,16 @@ public class RelicInfoPopup : MonoBehaviour
     [SerializeField] private Button breakthroughButton;
 
     [Header("애니메이션")]
-    [SerializeField] private float animDuration = 0.18f;
+    [SerializeField] private float    animDuration    = 0.18f;
+    [SerializeField] private Animator upgradeAnimator;
 
     private static readonly Color LockedTint = new Color(0.4f, 0.4f, 0.4f, 1f);
+    private const string HexGreen = "#00C800";
+    private const string HexRed   = "#FF3232";
+
     private Coroutine _anim;
     private RelicData _currentData;
+    private bool      _isAnimating;
 
     // ── 라이프사이클 ──────────────────────────────────────────────────────
     private void Awake()
@@ -130,12 +135,27 @@ public class RelicInfoPopup : MonoBehaviour
         // 설명
         if (descriptionText) descriptionText.text = data.description;
 
-        // 조각 수
+        // 조각 수 (frags/nextT, 달성 여부에 따라 색상)
         if (fragmentText)
         {
-            fragmentText.text = nextT > 0
-                ? $"조각  {frags} / {nextT}"
-                : $"조각  {frags}  (최대 등급)";
+            if (nextT > 0)
+            {
+                string c = frags >= nextT ? HexGreen : HexRed;
+                fragmentText.text = $"<color={c}>{frags}</color>/{nextT}";
+            }
+            else
+            {
+                fragmentText.text = $"{frags} (최대 등급)";
+            }
+        }
+
+        // 유물강화권 개수 (보유/비용, 달성 여부에 따라 색상)
+        if (enhanceMaterialText)
+        {
+            int mats = RelicInventory.Shared?.GetEnhanceMaterial() ?? 0;
+            int cost = RelicInventory.BreakThroughMatCost;
+            string mc = mats >= cost ? HexGreen : HexRed;
+            enhanceMaterialText.text = $"<color={mc}>{mats}</color>/{cost}";
         }
 
         // 유물 조각 아이콘 / 조각 개수
@@ -144,8 +164,13 @@ public class RelicInfoPopup : MonoBehaviour
             relicpieceIcon.sprite = cfg?.GetRelicIcon(data.relicId);
             relicpieceIcon.color  = locked ? LockedTint : Color.white;
         }
+        // 유물 조각 개수 (돌파 비용 기준, 달성 여부에 따라 색상)
         if (relicpieceCountText)
-            relicpieceCountText.text = frags.ToString();
+        {
+            int fragCost = inv?.GetBreakThroughFragCost(data.relicId) ?? RelicInventory.BreakThroughFragCosts[0];
+            string fc = frags >= fragCost ? HexGreen : HexRed;
+            relicpieceCountText.text = $"<color={fc}>{frags}</color>/{fragCost}";
+        }
 
         // 등급 태그 이미지 (f_등급 기반)
         if (tagGradeImg)
@@ -166,13 +191,14 @@ public class RelicInfoPopup : MonoBehaviour
             }
         }
 
-        // 성급 돌파 버튼
+        // 성급 돌파 버튼 — 4성 미만이면 항상 클릭 가능 (조건 불충족 시 떨림으로 피드백)
         if (breakthroughButton)
-            breakthroughButton.interactable = !locked && (inv?.CanBreakThrough(data.relicId) ?? false);
+            breakthroughButton.interactable = !locked && (inv?.GetStarLevel(data.relicId) ?? RelicInventory.MaxStar) < RelicInventory.MaxStar;
     }
 
     public void Hide()
     {
+        if (_isAnimating) return;
         if (_anim != null) StopCoroutine(_anim);
         _anim = StartCoroutine(ScaleTo(transform.localScale, Vector3.zero, deactivateOnDone: true));
     }
@@ -180,9 +206,74 @@ public class RelicInfoPopup : MonoBehaviour
     // ── 성급 돌파 ─────────────────────────────────────────────────────────
     private void OnBreakthroughClicked()
     {
-        if (_currentData == null) return;
+        if (_currentData == null || _isAnimating) return;
+
+        var inv = RelicInventory.Shared;
+        if (inv == null || !inv.CanBreakThrough(_currentData.relicId))
+        {
+            int frags    = inv?.GetFragments(_currentData.relicId) ?? 0;
+            int fragCost = inv?.GetBreakThroughFragCost(_currentData.relicId) ?? 0;
+            int mats     = inv?.GetEnhanceMaterial() ?? 0;
+
+            if (frags < fragCost && relicpieceCountText != null)
+                StartCoroutine(ShakeText(relicpieceCountText.rectTransform));
+            if (mats < RelicInventory.BreakThroughMatCost && enhanceMaterialText != null)
+                StartCoroutine(ShakeText(enhanceMaterialText.rectTransform));
+            return;
+        }
+
+        StartCoroutine(BreakThroughCoroutine());
+    }
+
+    private System.Collections.IEnumerator BreakThroughCoroutine()
+    {
+        _isAnimating = true;
+        SetCloseInteractable(false);
+        if (breakthroughButton) breakthroughButton.interactable = false;
+
+        if (upgradeAnimator != null)
+        {
+            upgradeAnimator.Play("relic_star_upgrade");
+            yield return null;
+            yield return null;
+            float timer = 0f;
+            while (timer < 10f)
+            {
+                var info = upgradeAnimator.GetCurrentAnimatorStateInfo(0);
+                if (info.normalizedTime >= 1f && !upgradeAnimator.IsInTransition(0)) break;
+                timer += Time.unscaledDeltaTime;
+                yield return null;
+            }
+        }
+
         RelicInventory.Shared?.TryBreakThrough(_currentData.relicId);
         RefreshUI(_currentData);
+
+        _isAnimating = false;
+        SetCloseInteractable(true);
+    }
+
+    private void SetCloseInteractable(bool value)
+    {
+        if (closeButton)  closeButton.interactable  = value;
+        if (closeButton2) closeButton2.interactable = value;
+    }
+
+    private System.Collections.IEnumerator ShakeText(RectTransform rt)
+    {
+        Vector3 origin  = rt.localPosition;
+        float   elapsed = 0f;
+        const float duration  = 0.4f;
+        const float frequency = 50f;
+        const float magnitude = 8f;
+        while (elapsed < duration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float x = Mathf.Sin(elapsed * frequency) * magnitude * (1f - elapsed / duration);
+            rt.localPosition = new Vector3(origin.x + x, origin.y, origin.z);
+            yield return null;
+        }
+        rt.localPosition = origin;
     }
 
     // ── 애니메이션 ────────────────────────────────────────────────────────

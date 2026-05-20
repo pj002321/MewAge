@@ -41,8 +41,13 @@ public class RelicInventory : MonoBehaviourSingleton<RelicInventory>
         new Color(1.00f, 0.30f, 0.20f), new Color(1.00f, 0.30f, 0.20f), // 신화
     };
 
-    private const string FragKeyPrefix = "RelicFrag_";
-    private const string StarKeyPrefix = "RelicStar_";
+    // 성급별 조각 비용 (1→2성, 2→3성, 3→4성)
+    public static readonly int[] BreakThroughFragCosts = { 50, 100, 200 };
+    public  const int    BreakThroughMatCost = 1;
+
+    private const string FragKeyPrefix    = "RelicFrag_";
+    private const string StarKeyPrefix    = "RelicStar_";
+    private const string EnhanceMatKey    = "RelicEnhanceMat";
 
     private readonly Dictionary<string, int> _fragments  = new();
     private readonly Dictionary<string, int> _starLevels = new();
@@ -135,6 +140,17 @@ public class RelicInventory : MonoBehaviourSingleton<RelicInventory>
 
     public bool CanUpgrade(string id) => GetLevel(id) < MaxLevel;
 
+    // ── 유물강화권 ────────────────────────────────────────────────────────
+    public int  GetEnhanceMaterial() => PlayerPrefs.GetInt(EnhanceMatKey, 0);
+
+    public void AddEnhanceMaterial(int count)
+    {
+        if (count <= 0) return;
+        PlayerPrefs.SetInt(EnhanceMatKey, GetEnhanceMaterial() + count);
+        PlayerPrefs.Save();
+        OnChanged?.Invoke();
+    }
+
     // ── 성급 ──────────────────────────────────────────────────────────────
     public const int MaxStar = 4;
 
@@ -142,8 +158,18 @@ public class RelicInventory : MonoBehaviourSingleton<RelicInventory>
     public int GetStarLevel(string id) =>
         _starLevels.TryGetValue(id, out var v) ? v : 1;
 
-    /// <summary>성급 돌파 가능 여부 (4성 미만).</summary>
-    public bool CanBreakThrough(string id) => GetStarLevel(id) < MaxStar;
+    /// <summary>현재 성급 기준 돌파에 필요한 조각 수.</summary>
+    public int GetBreakThroughFragCost(string id)
+    {
+        int idx = Mathf.Clamp(GetStarLevel(id) - 1, 0, BreakThroughFragCosts.Length - 1);
+        return BreakThroughFragCosts[idx];
+    }
+
+    /// <summary>성급 돌파 가능 여부 (4성 미만 + 조각 + 강화권).</summary>
+    public bool CanBreakThrough(string id) =>
+        GetStarLevel(id) < MaxStar &&
+        GetFragments(id) >= GetBreakThroughFragCost(id) &&
+        GetEnhanceMaterial() >= BreakThroughMatCost;
 
     // ── 조각 추가 ─────────────────────────────────────────────────────────
     public void AddFragments(string id, int count)
@@ -155,11 +181,17 @@ public class RelicInventory : MonoBehaviourSingleton<RelicInventory>
         OnChanged?.Invoke();
     }
 
-    /// <summary>성급 돌파: 성급을 1 올립니다 (최대 4성).</summary>
+    /// <summary>성급 돌파: 조각·강화권 소모 후 성급을 1 올립니다 (최대 4성).</summary>
     public bool TryBreakThrough(string id)
     {
         if (!CanBreakThrough(id)) return false;
         if (!_starLevels.ContainsKey(id)) return false;
+
+        int fragCost = GetBreakThroughFragCost(id);
+        _fragments[id] -= fragCost;
+        PlayerPrefs.SetInt(FragKeyPrefix + id, _fragments[id]);
+        PlayerPrefs.SetInt(EnhanceMatKey, GetEnhanceMaterial() - BreakThroughMatCost);
+
         _starLevels[id]++;
         PlayerPrefs.SetInt(StarKeyPrefix + id, _starLevels[id]);
         PlayerPrefs.Save();

@@ -22,6 +22,7 @@ public class PopUpAutoHunt : PopUpRewardBase
     private const float  MaxHours     = 8f;      // 최대 누적 시간
 
     private RewardItem[] _pendingRewards;
+    private Coroutine    _tickCoroutine;
 
     protected override void Awake()
     {
@@ -33,22 +34,29 @@ public class PopUpAutoHunt : PopUpRewardBase
         _pendingRewards = CalculateRewards();
         RefreshUI();
         base.Show();
-        StartCoroutine(TickTimer());
+
+        if (_tickCoroutine != null) StopCoroutine(_tickCoroutine);
+        _tickCoroutine = StartCoroutine(TickTimer());
     }
 
     private System.Collections.IEnumerator TickTimer()
     {
         while (gameObject.activeInHierarchy)
         {
-            if (elapsedTimeText != null)
-            {
-                float h       = Mathf.Clamp(GetElapsedHours(), 0f, MaxHours);
-                int   hours   = (int)h;
-                int   minutes = (int)((h - hours) * 60f);
-                elapsedTimeText.text = $"{hours:D2}:{minutes:D2} 째 탐색 중 . . .";
-            }
+            RefreshElapsedText();
             yield return new WaitForSecondsRealtime(1f);
         }
+        _tickCoroutine = null;
+    }
+
+    private void RefreshElapsedText()
+    {
+        if (elapsedTimeText == null) return;
+        float totalSec = Mathf.Clamp(GetElapsedHours(), 0f, MaxHours) * 3600f;
+        int   h        = (int)(totalSec / 3600f);
+        int   m        = (int)((totalSec % 3600f) / 60f);
+        int   s        = (int)(totalSec % 60f);
+        elapsedTimeText.text = $"{h:D2}:{m:D2}:{s:D2} 째 탐색 중 . . .";
     }
 
     private RewardItem[] CalculateRewards()
@@ -87,6 +95,9 @@ public class PopUpAutoHunt : PopUpRewardBase
             RewardManager.Shared?.GiveRewards(_pendingRewards);
 
         SaveNow();
+        if (elapsedTimeText != null)
+            elapsedTimeText.text = "00:00:00 째 탐색 중 . . .";
+
         ClearRewardContents();
         _pendingRewards = null;
     }

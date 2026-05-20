@@ -175,6 +175,7 @@ GameObject:
   - component: {fileID: 1051491924548852220}
   - component: {fileID: 5415010648979478542}
   - component: {fileID: 3732477951173261151}
+  - component: {fileID: 1686876958545951212}
   m_Layer: 0
   m_Name: Image
   m_TagString: Untagged
@@ -288,6 +289,19 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &1686876958545951212
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2527722701267887143}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8269bbfef6a15fb43bc930ad193a012c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIButtonSound
+  clickKey: 0
 --- !u!1 &2559064623965478400
 GameObject:
   m_ObjectHideFlags: 0
@@ -600,6 +614,7 @@ GameObject:
   - component: {fileID: 6330714802683275720}
   - component: {fileID: 5003296332814661406}
   - component: {fileID: 9168797256892431480}
+  - component: {fileID: 4095603501510603139}
   m_Layer: 0
   m_Name: DailyItem_2
   m_TagString: Untagged
@@ -650,6 +665,22 @@ MonoBehaviour:
   iconImg: {fileID: 3182702440232009894}
   amountText: {fileID: 6283866416645514556}
   button: {fileID: 3732477951173261151}
+--- !u!114 &4095603501510603139
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2802918684083043073}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 66868a5fa5620cb4e8ef2423aa760999, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIButtonPressAutoAttach
+  pressScale: 0.958
+  bounceScale: 1.06
+  pressDuration: 0.07
+  releaseDuration: 0.18
 --- !u!1 &4292961284229614012
 GameObject:
   m_ObjectHideFlags: 0
