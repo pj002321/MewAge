@@ -75,7 +75,9 @@ public class MainMenuPanel : MonoBehaviour
 
     [Header("배경")]
     public Image    background;
-    public Sprite[] chapterBackgrounds; // 인덱스 0 = C1, 1 = C2 …
+    public Sprite[] chapterBackgrounds;  // 인덱스 0 = C1, 1 = C2 …
+    public Image    background2;
+    public Sprite[] chapterBackgrounds2; // 인덱스 0 = C1, 1 = C2 …
     
     // ── 런타임 ───────────────────────────────────────────────────────
     StageCardView[] cardViews;
@@ -98,6 +100,7 @@ public class MainMenuPanel : MonoBehaviour
 
     // 배경 크로스페이드
     Image     _bgOverlay;
+    Image     _bgOverlay2;
     Coroutine _bgFadeCoroutine;
     string    _currentBgChapter;
     const float BG_FADE_DURATION = 0.35f;
@@ -217,19 +220,26 @@ public class MainMenuPanel : MonoBehaviour
 
     void SetupBackgroundOverlay()
     {
-        if (background == null) return;
-        var go = new GameObject("BackgroundOverlay");
-        go.transform.SetParent(background.transform.parent, false);
-        var bgRT = background.GetComponent<RectTransform>();
+        _bgOverlay  = CreateOverlayFor(background,  "BackgroundOverlay");
+        _bgOverlay2 = CreateOverlayFor(background2, "BackgroundOverlay2");
+    }
+
+    Image CreateOverlayFor(Image src, string goName)
+    {
+        if (src == null) return null;
+        var go = new GameObject(goName);
+        go.transform.SetParent(src.transform.parent, false);
+        var srcRT     = src.GetComponent<RectTransform>();
         var overlayRT = go.AddComponent<RectTransform>();
-        overlayRT.anchorMin = bgRT.anchorMin;
-        overlayRT.anchorMax = bgRT.anchorMax;
-        overlayRT.pivot     = bgRT.pivot;
-        overlayRT.offsetMin = bgRT.offsetMin;
-        overlayRT.offsetMax = bgRT.offsetMax;
-        _bgOverlay       = go.AddComponent<Image>();
-        _bgOverlay.color = new Color(1f, 1f, 1f, 0f);
-        go.transform.SetSiblingIndex(background.transform.GetSiblingIndex() + 1);
+        overlayRT.anchorMin = srcRT.anchorMin;
+        overlayRT.anchorMax = srcRT.anchorMax;
+        overlayRT.pivot     = srcRT.pivot;
+        overlayRT.offsetMin = srcRT.offsetMin;
+        overlayRT.offsetMax = srcRT.offsetMax;
+        var img   = go.AddComponent<Image>();
+        img.color = new Color(1f, 1f, 1f, 0f);
+        go.transform.SetSiblingIndex(src.transform.GetSiblingIndex() + 1);
+        return img;
     }
 
     void OnEnable()
@@ -415,6 +425,11 @@ public class MainMenuPanel : MonoBehaviour
                 background.sprite = ChapterSprite(initChapter);
                 background.SetNativeSize();
             }
+            if (background2 != null)
+            {
+                background2.sprite = ChapterSprite2(initChapter);
+                background2.SetNativeSize();
+            }
         }
 
         if (_contentCG != null) _contentCG.alpha = 1f;
@@ -532,9 +547,9 @@ public class MainMenuPanel : MonoBehaviour
         if (newChapter != _currentBgChapter)
         {
             _currentBgChapter = newChapter;
-            Sprite bgSprite = ChapterSprite(newChapter);
             if (_bgFadeCoroutine != null) StopCoroutine(_bgFadeCoroutine);
-            _bgFadeCoroutine = StartCoroutine(CrossfadeBackground(bgSprite));
+            _bgFadeCoroutine = StartCoroutine(CrossfadeBackground(
+                ChapterSprite(newChapter), ChapterSprite2(newChapter)));
         }
 
         if (_snapCoroutine != null) { StopCoroutine(_snapCoroutine); isSnapping = false; }
@@ -545,23 +560,25 @@ public class MainMenuPanel : MonoBehaviour
             SnapImmediate(currentIndex);
     }
 
-    IEnumerator CrossfadeBackground(Sprite next)
+    IEnumerator CrossfadeBackground(Sprite next, Sprite next2)
     {
-        if (_bgOverlay == null) yield break;
-
-        _bgOverlay.sprite = next;
-        _bgOverlay.color  = new Color(1f, 1f, 1f, 0f);
+        if (_bgOverlay != null)  { _bgOverlay.sprite  = next;  _bgOverlay.color  = new Color(1f, 1f, 1f, 0f); }
+        if (_bgOverlay2 != null) { _bgOverlay2.sprite = next2; _bgOverlay2.color = new Color(1f, 1f, 1f, 0f); }
 
         float elapsed = 0f;
         while (elapsed < BG_FADE_DURATION)
         {
             elapsed += Time.unscaledDeltaTime;
-            _bgOverlay.color = new Color(1f, 1f, 1f, Mathf.Clamp01(elapsed / BG_FADE_DURATION));
+            float a = Mathf.Clamp01(elapsed / BG_FADE_DURATION);
+            if (_bgOverlay  != null) _bgOverlay.color  = new Color(1f, 1f, 1f, a);
+            if (_bgOverlay2 != null) _bgOverlay2.color = new Color(1f, 1f, 1f, a);
             yield return null;
         }
 
-        if (background != null) { background.sprite = next; background.SetNativeSize(); }
-        _bgOverlay.color = new Color(1f, 1f, 1f, 0f);
+        if (background  != null) { background.sprite  = next;  background.SetNativeSize();  }
+        if (background2 != null) { background2.sprite = next2; background2.SetNativeSize(); }
+        if (_bgOverlay  != null) _bgOverlay.color  = new Color(1f, 1f, 1f, 0f);
+        if (_bgOverlay2 != null) _bgOverlay2.color = new Color(1f, 1f, 1f, 0f);
         _bgFadeCoroutine = null;
     }
 
@@ -573,17 +590,21 @@ public class MainMenuPanel : MonoBehaviour
     }
 
     Sprite ChapterSprite(string chapterPrefix)
+        => ChapterSpriteFrom(chapterPrefix, chapterBackgrounds);
+
+    Sprite ChapterSprite2(string chapterPrefix)
+        => ChapterSpriteFrom(chapterPrefix, chapterBackgrounds2);
+
+    static Sprite ChapterSpriteFrom(string chapterPrefix, Sprite[] arr)
     {
-        // chapterPrefix 형식: "C1", "C2", … → 배열 인덱스 0, 1, …
-        if (chapterBackgrounds == null || chapterBackgrounds.Length == 0) return null;
+        if (arr == null || arr.Length == 0) return null;
         if (chapterPrefix.Length >= 2 && chapterPrefix[0] == 'C' &&
             int.TryParse(chapterPrefix.Substring(1), out int num))
         {
             int idx = num - 1;
-            if (idx >= 0 && idx < chapterBackgrounds.Length)
-                return chapterBackgrounds[idx];
+            if (idx >= 0 && idx < arr.Length) return arr[idx];
         }
-        return chapterBackgrounds[0];
+        return arr[0];
     }
 
     // ── 스케일/알파 ──────────────────────────────────────────────────

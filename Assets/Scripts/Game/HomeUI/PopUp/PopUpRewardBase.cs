@@ -24,7 +24,11 @@ public abstract class PopUpRewardBase : MonoBehaviour
         claimButton?.onClick.AddListener(OnClaimInternal);
     }
 
-    public void Show() => Popup.Show();
+    public void Show()
+    {
+        if (claimButton != null) claimButton.interactable = true;
+        Popup.Show();
+    }
 
     public void Hide()
     {
@@ -51,7 +55,8 @@ public abstract class PopUpRewardBase : MonoBehaviour
         for (int i = rewardContent.childCount - 1; i >= 0; i--)
         {
             var child = rewardContent.GetChild(i);
-            child.gameObject.SetActive(false);
+            child.gameObject.SetActive(false); // 자신의 activeSelf=false → 분리 후에도 안 보임
+            child.SetParent(null);
             Destroy(child.gameObject);
         }
     }

@@ -71,6 +71,8 @@ public class PopUpBreakthroughReward : PopUpRewardBase
         RewardManager.Shared?.GiveReward(item);
         MarkClaimed(ClaimKey(entry));
 
+        ClearRewardContents();
+
         _currentIndex++;
         if (_currentIndex < _claimable.Count)
         {
@@ -79,7 +81,6 @@ public class PopUpBreakthroughReward : PopUpRewardBase
         }
         else
         {
-            ClearRewardContents();
             StartCoroutine(HideAfterEffect());
         }
     }
