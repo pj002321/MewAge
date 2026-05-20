@@ -42,9 +42,9 @@ public class RelicInfoPopup : MonoBehaviour
     [SerializeField] private Image starImg;
 
     [Header("버튼")]
-    [SerializeField] private Button closeButton;
-    [SerializeField] private Button closeButton2;
-    [SerializeField] private Button breakthroughButton;
+    [SerializeField] private Button        closeButton;
+    [SerializeField] private Button        closeButton2;
+    [SerializeField] private Button        breakthroughButton;
 
     [Header("애니메이션")]
     [SerializeField] private float    animDuration    = 0.18f;
@@ -215,10 +215,11 @@ public class RelicInfoPopup : MonoBehaviour
             int fragCost = inv?.GetBreakThroughFragCost(_currentData.relicId) ?? 0;
             int mats     = inv?.GetEnhanceMaterial() ?? 0;
 
-            if (frags < fragCost && relicpieceCountText != null)
+                if (frags < fragCost && relicpieceCountText != null)
                 StartCoroutine(ShakeText(relicpieceCountText.rectTransform));
             if (mats < RelicInventory.BreakThroughMatCost && enhanceMaterialText != null)
                 StartCoroutine(ShakeText(enhanceMaterialText.rectTransform));
+            PopupBaseNoti.Shared?.Show("성급 돌파 재료 부족");
             return;
         }
 

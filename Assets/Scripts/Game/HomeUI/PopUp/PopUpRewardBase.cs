@@ -53,12 +53,7 @@ public abstract class PopUpRewardBase : MonoBehaviour
     {
         if (rewardContent == null) return;
         for (int i = rewardContent.childCount - 1; i >= 0; i--)
-        {
-            var child = rewardContent.GetChild(i);
-            child.gameObject.SetActive(false); // 자신의 activeSelf=false → 분리 후에도 안 보임
-            child.SetParent(null);
-            Destroy(child.gameObject);
-        }
+            Destroy(rewardContent.GetChild(i).gameObject);
     }
 
     /// <summary>PlayerPrefs에 수령 여부를 기록합니다.</summary>

@@ -6,8 +6,10 @@ using UnityEngine;
 /// Show(message)만 호출하면 되며 중복 호출 시 이전 연출을 즉시 교체.
 /// CanvasGroup 필수 — Inspector에서 Alpha=0, Blocks Raycasts=false 로 설정해둘 것.
 [RequireComponent(typeof(CanvasGroup))]
-public class PopupBaseNoti : MonoBehaviour
+public class PopupBaseNoti : MonoBehaviourSingleton<PopupBaseNoti>
 {
+    protected override bool DontDestroy => false;
+
     [SerializeField] TextMeshProUGUI messageText;
 
     const float FadeIn  = 0.2f;
@@ -17,8 +19,9 @@ public class PopupBaseNoti : MonoBehaviour
     CanvasGroup _cg;
     Coroutine   _routine;
 
-    void Awake()
+    protected override void Awake()
     {
+        base.Awake();
         _cg                = GetComponent<CanvasGroup>();
         _cg.alpha          = 0f;
         _cg.blocksRaycasts = false;

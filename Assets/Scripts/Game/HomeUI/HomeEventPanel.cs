@@ -3,11 +3,10 @@ using UnityEngine.UI;
 
 public class HomeEventPanel : MonoBehaviour
 {
-    [SerializeField] Button          comingSoonButton;
-    [SerializeField] PopupBaseNoti   baseNoti;
+    [SerializeField] Button comingSoonButton;
 
     void Awake()
     {
-        comingSoonButton?.onClick.AddListener(() => baseNoti?.Show("업데이트 예정입니다"));
+        comingSoonButton?.onClick.AddListener(() => PopupBaseNoti.Shared?.Show("업데이트 예정입니다"));
     }
 }

@@ -38,7 +38,6 @@ public class MainMenuPanel : MonoBehaviour
     public Button achievementButton;
     public Button breakthroughRewardButton;
 
-    public PopupBaseNoti   baseNoti;
     public PopUpAttendance attendancePopup;
     public PopUpDailyMission dailyMissionPopup;
     public PopUpStorage storagePopup;
@@ -723,7 +722,7 @@ public class MainMenuPanel : MonoBehaviour
             string[] p = stages[currentIndex].chapterID.Split('_');
             bool comingSoon = p.Length >= 1 && p[0].Length >= 2 &&
                               int.TryParse(p[0].Substring(1), out int cn) && cn >= 4;
-            baseNoti?.Show(comingSoon ? "업데이트 예정입니다." : "이전 스테이지 클리어 후 해금");
+            PopupBaseNoti.Shared?.Show(comingSoon ? "업데이트 예정입니다." : "이전 스테이지 클리어 후 해금");
             return;
         }
         if (SceneLoadManager.IsTransitioning) return;

@@ -100,8 +100,6 @@ public class RewardCollectEffect : MonoBehaviour
         float waitElapsed = 0f;
         while (waitElapsed < waitEnd) { waitElapsed += Time.unscaledDeltaTime; yield return null; }
 
-        foreach (var cg in itemCGs) if (cg) cg.alpha = 1f;
-
         IsPlaying = false;
     }
 
