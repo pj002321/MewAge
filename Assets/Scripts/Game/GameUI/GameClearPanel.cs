@@ -84,6 +84,10 @@ public class GameClearPanel : MonoBehaviour
         if (expGainedText  != null) expGainedText.text  = $"+{expGained}";
         if (goldGainedText != null) goldGainedText.text = $"+{goldGained}";
 
+        var cfg = RewardVisualConfig.Shared;
+        if (expGainedIcon  != null) expGainedIcon.sprite  = cfg?.GetIcon(RewardType.Exp);
+        if (goldGainedIcon != null) goldGainedIcon.sprite = cfg?.GetIcon(RewardType.Gold);
+
         // ── 챕터 클리어 저장 ─────────────────────────────
         string clearedChapter = PlayerPrefs.GetString("SelectedChapterID", "");
         if (!string.IsNullOrEmpty(clearedChapter))

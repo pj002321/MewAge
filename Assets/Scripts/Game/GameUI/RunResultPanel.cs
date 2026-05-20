@@ -100,22 +100,27 @@ public class RunResultPanel : MonoBehaviour
     // ── 보상 슬롯 ─────────────────────────────────────────────────────────
     private void SpawnRewardSlots(RunReward reward)
     {
-        if (rewardContents == null || slotPrefab == null) return;
+        if (rewardContents == null || slotPrefab == null)
+        {
+            this.DLog("[RunResult] rewardContents 또는 slotPrefab 미연결");
+            return;
+        }
 
         foreach (Transform child in rewardContents)
             Destroy(child.gameObject);
 
         var cfg = RewardVisualConfig.Shared;
-        SpawnSlot(cfg, RewardVisualConfig.RewardType.Gold, reward.gold.ToString());
-        SpawnSlot(cfg, RewardVisualConfig.RewardType.Exp,  reward.exp.ToString());
+        SpawnSlot(cfg, RewardType.Gold, reward.gold.ToString());
+        SpawnSlot(cfg, RewardType.Exp,  reward.exp.ToString());
         if (reward.ruby > 0)
-            SpawnSlot(cfg, RewardVisualConfig.RewardType.Ruby, reward.ruby.ToString());
+            SpawnSlot(cfg, RewardType.Ruby, reward.ruby.ToString());
     }
 
-    private void SpawnSlot(RewardVisualConfig cfg, RewardVisualConfig.RewardType type, string amount)
+    private void SpawnSlot(RewardVisualConfig cfg, RewardType type, string amount)
     {
+        var id   = RewardVisualConfig.TypeToId(type);
         var slot = Instantiate(slotPrefab, rewardContents);
-        slot.Setup(cfg?.GetIcon(type), amount);
+        slot.Setup(cfg?.GetIcon(type), amount, null, id);
     }
 
     // ── 계정 레벨 바 ──────────────────────────────────────────────────────

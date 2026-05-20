@@ -1,19 +1,23 @@
+using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// 보상 슬롯 프리팹에 붙이는 컴포넌트.
-/// Inspector 연결: iconImg, amountText
-/// </summary>
 public class RewardSlot : MonoBehaviour
 {
     [SerializeField] private Image           iconImg;
     [SerializeField] private TextMeshProUGUI amountText;
+    [SerializeField] private Button          button;
 
-    public void Setup(Sprite icon, string amount)
+    public void Setup(Sprite icon, string amount, Action onClick = null, string rewardId = "")
     {
-        if (iconImg)    iconImg.sprite = icon;
+        if (iconImg)    { iconImg.sprite = icon; iconImg.color = Color.white; }
         if (amountText) amountText.text = amount;
+
+        if (button != null)
+        {
+            button.onClick.RemoveAllListeners();
+            if (onClick != null) button.onClick.AddListener(() => onClick());
+        }
     }
 }
