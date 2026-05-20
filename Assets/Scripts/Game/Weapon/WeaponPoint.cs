@@ -1407,7 +1407,7 @@ public class WeaponPoint : MonoBehaviour
     // ═════════════════════════════════════════════════════════════════
     // 기즈모
     // ═════════════════════════════════════════════════════════════════
-
+#if UNITY_EDITOR
     private void OnDrawGizmosSelected()
     {
         Vector3 center = transform.parent != null ? transform.parent.position : transform.position;
@@ -1415,4 +1415,5 @@ public class WeaponPoint : MonoBehaviour
         Gizmos.DrawWireSphere(center, attackRange);
         _behaviour?.DrawGizmos(center, transform.position);
     }
+#endif
 }

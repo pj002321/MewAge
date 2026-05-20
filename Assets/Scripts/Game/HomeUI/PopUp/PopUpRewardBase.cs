@@ -48,8 +48,12 @@ public abstract class PopUpRewardBase : MonoBehaviour
     protected void ClearRewardContents()
     {
         if (rewardContent == null) return;
-        foreach (Transform child in rewardContent)
+        for (int i = rewardContent.childCount - 1; i >= 0; i--)
+        {
+            var child = rewardContent.GetChild(i);
+            child.gameObject.SetActive(false);
             Destroy(child.gameObject);
+        }
     }
 
     /// <summary>PlayerPrefs에 수령 여부를 기록합니다.</summary>
