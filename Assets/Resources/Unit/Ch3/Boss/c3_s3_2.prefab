@@ -237,12 +237,115 @@ MonoBehaviour:
   chaseDuration: 2.5
   idleDuration: 0.6
   _decal: {fileID: 9052888758413563378}
-  _skills: []
+  _skills:
+  - rid: 2864143585095975026
+  - rid: 2864143585095975027
+  - rid: 2864143585095975028
+  - rid: 2864143585095975029
   entryDrop: 1
   entryScaleUpDuration: 0.35
   references:
     version: 2
-    RefIds: []
+    RefIds:
+    - rid: 2864143585095975026
+      type: {class: BossSummonSkill, ns: , asm: Assembly-CSharp}
+      data:
+        cooldown: 2
+        executeInPattern: 1
+        summonCount: 2
+        maxActiveMinions: 4
+        minionDuration: 10
+        minionMoveSpeed: 2.5
+        minionContactDmg: 5
+        spawnRadius: 3
+        markerWarningTime: 0.8
+        minionPrefab: {fileID: 5780791762247049258, guid: a7092e06a177108429b305007a57b6c5, type: 3}
+        spawnMarkerPrefab: {fileID: 7905823675861574758, guid: e965097e70b2e9d47807ebf0614a30a6, type: 3}
+    - rid: 2864143585095975027
+      type: {class: BossGridSpikeSkill, ns: , asm: Assembly-CSharp}
+      data:
+        cooldown: 5
+        executeInPattern: 1
+        cols: 7
+        rows: 7
+        fillMode: 2
+        randomCount: 16
+        spikePrefab: {fileID: 4482906470431603876, guid: eb8adf6d8e91de94b91c00b0645cf3bc, type: 3}
+        spikeDamage: 60
+        spikeRadius: 0.5
+        spikeDuration: 1.5
+        warningDuration: 1
+        waveDelay: 0.25
+        warningMarkerPrefab: {fileID: 7905823675861574758, guid: e965097e70b2e9d47807ebf0614a30a6, type: 3}
+        warningColor: {r: 1, g: 1, b: 1, a: 1}
+        dropHeight: 8
+        dropDuration: 0.25
+        spawnVfxPrefab: {fileID: 0}
+        spawnVfxDuration: 1
+    - rid: 2864143585095975028
+      type: {class: BossGridSpikeSkill, ns: , asm: Assembly-CSharp}
+      data:
+        cooldown: 5
+        executeInPattern: 1
+        cols: 7
+        rows: 7
+        fillMode: 4
+        randomCount: 15
+        spikePrefab: {fileID: 5416354146166037338, guid: 070d8c1338ef6da4e8a48c192dda75ee, type: 3}
+        spikeDamage: 60
+        spikeRadius: 0.5
+        spikeDuration: 1.5
+        warningDuration: 1
+        waveDelay: 0.25
+        warningMarkerPrefab: {fileID: 7905823675861574758, guid: e965097e70b2e9d47807ebf0614a30a6, type: 3}
+        warningColor: {r: 1, g: 1, b: 1, a: 1}
+        dropHeight: 8
+        dropDuration: 0.05
+        spawnVfxPrefab: {fileID: 0}
+        spawnVfxDuration: 1
+    - rid: 2864143585095975029
+      type: {class: BossProjectileSkill, ns: , asm: Assembly-CSharp}
+      data:
+        cooldown: 2
+        executeInPattern: 1
+        projectileID: "Unit/Ch1/Proj/\uAD6C\uC11D\uAE30_\uACE8\uB818_\uB3CC"
+        projectileSpeed: 7
+        firePoint: {fileID: 2436184059496450301}
+        warningLineLength: 3
+        warningLineWidth: 0.5
+        warningColor: {r: 1, g: 0, b: 0, a: 1}
+        warningMaterial: {fileID: 0}
+        impactVfxPrefab: {fileID: 0}
+        impactVfxLifetime: 1
+        phases:
+        - type: 5
+          warningTime: 0.5
+          count: 3
+          interval: 0.5
+          dirCount: 0
+          radialAngleOffset: 0
+          fanAngle: 0
+          arcHeight: 0
+          homingSpeed: 0
+          accelTime: 0
+          initialSpeedRatio: 0
+          volleyPointCount: 0
+          volleySpreadRadius: 0
+          volleyHangTime: 0
+          volleyBurstInterval: 0
+          volleyHitRadius: 0
+          volleyHitDamage: 0
+          volleyShellArcHeight: 0
+          volleyShakeDuration: 0
+          volleyShakeMagnitude: 0
+          volleyMarkerPrefab: {fileID: 0}
+          volleyShellPrefab: {fileID: 0}
+          volleyImpactVfx: {fileID: 0}
+          boulderSpeed: 15
+          boulderLifetime: 15
+          boulderMaxBounces: 3
+          boulderRotateSpeed: 0
+          boulderRollInterval: 0.5
 --- !u!114 &8013241851858456192
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -206,12 +206,74 @@ MonoBehaviour:
   chaseDuration: 2.5
   idleDuration: 1
   _decal: {fileID: 9052888758413563378}
-  _skills: []
+  _skills:
+  - rid: 2864143585095975015
+  - rid: 2864143585095975016
   entryDrop: 1
   entryScaleUpDuration: 0.35
   references:
     version: 2
-    RefIds: []
+    RefIds:
+    - rid: 2864143585095975015
+      type: {class: BossMeleeSkill, ns: , asm: Assembly-CSharp}
+      data:
+        cooldown: 2
+        executeInPattern: 1
+        meleeType: 1
+        chaseTimeout: 3
+        hitCount: 2
+        slashDamage: 12
+        slashRange: 0.3
+        preDelay: 0.2
+        hitDelay: 0.3
+        betweenDelay: 0.45
+        slashVfxPrefab: {fileID: 0}
+        dashSpeed: 10
+        dashDuration: 0.6
+        dashHitCount: 3
+        dashHitInterval: 0.18
+        dashHitRange: 1.6
+        dashHitDamage: 0
+        preDashDuration: 0.3
+        dashGhostInterval: 0.06
+        chaseSpeed: 16
+        chaseDuration: 2
+        stopDistance: 1
+        attackCooldown: 0.6
+        animEventTimeout: 0.5
+        attackVfx: {fileID: 0}
+        attackVfxDuration: 0.3
+        knockbackForce: 10
+    - rid: 2864143585095975016
+      type: {class: BossMeleeSkill, ns: , asm: Assembly-CSharp}
+      data:
+        cooldown: 2
+        executeInPattern: 1
+        meleeType: 0
+        chaseTimeout: 3
+        hitCount: 2
+        slashDamage: 12
+        slashRange: 0.3
+        preDelay: 0.2
+        hitDelay: 0.3
+        betweenDelay: 0.45
+        slashVfxPrefab: {fileID: 4540152084939885376}
+        dashSpeed: 10
+        dashDuration: 0.6
+        dashHitCount: 3
+        dashHitInterval: 0.18
+        dashHitRange: 1.6
+        dashHitDamage: 0
+        preDashDuration: 0.3
+        dashGhostInterval: 0.06
+        chaseSpeed: 16
+        chaseDuration: 2
+        stopDistance: 1
+        attackCooldown: 0.6
+        animEventTimeout: 0.5
+        attackVfx: {fileID: 0}
+        attackVfxDuration: 0.3
+        knockbackForce: 10
 --- !u!114 &1280419675763866588
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -414,5 +476,10 @@ PrefabInstance:
 --- !u!4 &959034612412478676 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8577226147549000802, guid: fe45078f6e125194f817eaad93852ff1, type: 3}
+  m_PrefabInstance: {fileID: 8811083053645414582}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &4540152084939885376 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4991849991642844150, guid: fe45078f6e125194f817eaad93852ff1, type: 3}
   m_PrefabInstance: {fileID: 8811083053645414582}
   m_PrefabAsset: {fileID: 0}

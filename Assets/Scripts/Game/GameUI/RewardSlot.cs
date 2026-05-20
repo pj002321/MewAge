@@ -16,11 +16,15 @@ public class RewardSlot : MonoBehaviour
 
         if (button != null)
         {
-            if (button.GetComponent<UIButtonSound>() == null)
-                button.gameObject.AddComponent<UIButtonSound>();
-
             button.onClick.RemoveAllListeners();
+            button.onClick.AddListener(() => SoundManager.Shared?.Play(SoundKey.UI_Click));
             if (onClick != null) button.onClick.AddListener(() => onClick());
         }
+    }
+
+    public void SetDimmed(bool dimmed)
+    {
+        if (iconImg) iconImg.color = dimmed ? new Color(0.35f, 0.35f, 0.35f, 1f) : Color.white;
+        if (button)  button.interactable = !dimmed;
     }
 }

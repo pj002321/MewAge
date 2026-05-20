@@ -125,8 +125,6 @@ public class BossSlamSkill : BossSkillBase
         Boss.transform.localScale = origScale;
         if (marker != null) Object.Destroy(marker);
 
-        Boss.EnemyAnimator?.SetTrigger(EnemyAnim.TAttack);
-
         if (landingVfxPrefab != null)
         {
             Vector3 vfxPos = Boss.Decal != null ? Boss.Decal.position : slamTarget;
@@ -168,7 +166,8 @@ public class BossSlamSkill : BossSkillBase
 
     private async UniTask ParabolicJumpAsync(Vector3 from, Vector3 to, Vector3 origScale, CancellationToken ct)
     {
-        float elapsed = 0f;
+        float elapsed         = 0f;
+        bool  midpointFired   = false;
         while (elapsed < jumpDuration)
         {
             elapsed += Time.deltaTime;
@@ -182,6 +181,12 @@ public class BossSlamSkill : BossSkillBase
                 origScale.x * Mathf.Lerp(1f, 0.7f, stretchT),
                 origScale.y * Mathf.Lerp(1f, 1.4f, stretchT),
                 origScale.z);
+
+            if (!midpointFired && t >= 0.5f)
+            {
+                midpointFired = true;
+                Boss.EnemyAnimator?.SetTrigger(EnemyAnim.TAttack);
+            }
 
             await UniTask.Yield(ct);
         }

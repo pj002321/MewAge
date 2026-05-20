@@ -206,12 +206,140 @@ MonoBehaviour:
   chaseDuration: 2.5
   idleDuration: 1
   _decal: {fileID: 9052888758413563378}
-  _skills: []
+  _skills:
+  - rid: 2864143585095975014
   entryDrop: 1
   entryScaleUpDuration: 0.35
   references:
     version: 2
-    RefIds: []
+    RefIds:
+    - rid: 2864143585095975014
+      type: {class: BossProjectileSkill, ns: , asm: Assembly-CSharp}
+      data:
+        cooldown: 2
+        executeInPattern: 1
+        projectileID: Unit/Ch3/Proj/ch3_proj_1
+        projectileSpeed: 6
+        firePoint: {fileID: 2436184059496450301}
+        warningLineLength: 3
+        warningLineWidth: 1
+        warningColor: {r: 1, g: 0, b: 0, a: 1}
+        warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
+        impactVfxPrefab: {fileID: 0}
+        impactVfxLifetime: 1
+        phases:
+        - type: 0
+          warningTime: 0
+          count: 5
+          interval: 0.25
+          dirCount: 0
+          radialAngleOffset: 0
+          fanAngle: 0
+          arcHeight: 0
+          homingSpeed: 0
+          accelTime: 0
+          initialSpeedRatio: 0
+          volleyPointCount: 0
+          volleySpreadRadius: 0
+          volleyHangTime: 0
+          volleyBurstInterval: 0
+          volleyHitRadius: 0
+          volleyHitDamage: 0
+          volleyShellArcHeight: 0
+          volleyShakeDuration: 0
+          volleyShakeMagnitude: 0
+          volleyMarkerPrefab: {fileID: 0}
+          volleyShellPrefab: {fileID: 0}
+          volleyImpactVfx: {fileID: 0}
+          boulderSpeed: 0
+          boulderLifetime: 0
+          boulderMaxBounces: 0
+          boulderRotateSpeed: 0
+          boulderRollInterval: 0
+        - type: 2
+          warningTime: 0.5
+          count: 2
+          interval: 0.25
+          dirCount: 6
+          radialAngleOffset: 0
+          fanAngle: 120
+          arcHeight: 0
+          homingSpeed: 0
+          accelTime: 0.4
+          initialSpeedRatio: 0.25
+          volleyPointCount: 0
+          volleySpreadRadius: 0
+          volleyHangTime: 0
+          volleyBurstInterval: 0
+          volleyHitRadius: 0
+          volleyHitDamage: 0
+          volleyShellArcHeight: 0
+          volleyShakeDuration: 0
+          volleyShakeMagnitude: 0
+          volleyMarkerPrefab: {fileID: 0}
+          volleyShellPrefab: {fileID: 0}
+          volleyImpactVfx: {fileID: 0}
+          boulderSpeed: 0
+          boulderLifetime: 0
+          boulderMaxBounces: 0
+          boulderRotateSpeed: 0
+          boulderRollInterval: 0
+        - type: 3
+          warningTime: 0.5
+          count: 5
+          interval: 0.5
+          dirCount: 6
+          radialAngleOffset: 0
+          fanAngle: 120
+          arcHeight: 9
+          homingSpeed: 6
+          accelTime: 0.4
+          initialSpeedRatio: 0.25
+          volleyPointCount: 0
+          volleySpreadRadius: 0
+          volleyHangTime: 0
+          volleyBurstInterval: 0
+          volleyHitRadius: 0
+          volleyHitDamage: 0
+          volleyShellArcHeight: 0
+          volleyShakeDuration: 0
+          volleyShakeMagnitude: 0
+          volleyMarkerPrefab: {fileID: 0}
+          volleyShellPrefab: {fileID: 0}
+          volleyImpactVfx: {fileID: 0}
+          boulderSpeed: 0
+          boulderLifetime: 0
+          boulderMaxBounces: 0
+          boulderRotateSpeed: 0
+          boulderRollInterval: 0
+        - type: 5
+          warningTime: 0.5
+          count: 3
+          interval: 0.5
+          dirCount: 6
+          radialAngleOffset: 0
+          fanAngle: 120
+          arcHeight: 9
+          homingSpeed: 6
+          accelTime: 0.4
+          initialSpeedRatio: 0.25
+          volleyPointCount: 0
+          volleySpreadRadius: 0
+          volleyHangTime: 0
+          volleyBurstInterval: 0
+          volleyHitRadius: 0
+          volleyHitDamage: 0
+          volleyShellArcHeight: 0
+          volleyShakeDuration: 0
+          volleyShakeMagnitude: 0
+          volleyMarkerPrefab: {fileID: 0}
+          volleyShellPrefab: {fileID: 0}
+          volleyImpactVfx: {fileID: 0}
+          boulderSpeed: 20
+          boulderLifetime: 10
+          boulderMaxBounces: 2
+          boulderRotateSpeed: 0
+          boulderRollInterval: 0.5
 --- !u!114 &-8926633417071526097
 MonoBehaviour:
   m_ObjectHideFlags: 0

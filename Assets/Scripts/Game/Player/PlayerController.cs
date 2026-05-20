@@ -253,7 +253,8 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    public void TakeDamage(float damage, bool isFromBoss = false, bool isFromElite = false, string sourceName = null)
+    public void TakeDamage(float damage, bool isFromBoss = false, bool isFromElite = false,
+                            string sourceName = null, Vector2 knockbackDir = default, float knockbackForce = 0f)
     {
         this.DLog($"[피해] {damage:0.#}  ← {sourceName ?? "unknown"}");
 
@@ -290,8 +291,31 @@ public class PlayerController : MonoBehaviour
         if (hitInvincibleDuration > 0f)
             RestartHitInvincible();
 
+        if (knockbackForce > 0f && knockbackDir != Vector2.zero)
+        {
+            if (knockbackRoutine != null) StopCoroutine(knockbackRoutine);
+            knockbackRoutine = StartCoroutine(PlayerKnockbackRoutine(knockbackDir.normalized, knockbackForce));
+        }
+
         if (currentHP <= 0f)
             GameManager.Shared?.TriggerGameOver();
+    }
+
+    private IEnumerator PlayerKnockbackRoutine(Vector2 dir, float force)
+    {
+        InputLocked = true;
+        float duration = 0.25f;
+        float elapsed  = 0f;
+        while (elapsed < duration)
+        {
+            elapsed += Time.fixedDeltaTime;
+            if (rb != null)
+                rb.linearVelocity = Vector2.Lerp(dir * force, Vector2.zero, elapsed / duration);
+            yield return new WaitForFixedUpdate();
+        }
+        if (rb != null) rb.linearVelocity = Vector2.zero;
+        InputLocked = false;
+        knockbackRoutine = null;
     }
 
     private void SyncHPUI()
@@ -404,8 +428,12 @@ public class PlayerController : MonoBehaviour
     /// <summary>몸집을 scaleMultiplier배 키우고 최대 체력 hpBonus만큼 증가.</summary>
     public void IncreaseSizeHP(float scaleMultiplier, float hpBonus)
     {
-        float newScale = Mathf.Min(transform.localScale.x * scaleMultiplier, maxScale);
-        transform.localScale = Vector3.one * newScale;
+        if (_visualSlot != null)
+        {
+            Vector3 s      = _visualSlot.localScale;
+            float   newMag = Mathf.Min(Mathf.Abs(s.x) * scaleMultiplier, maxScale);
+            _visualSlot.localScale = new Vector3(Mathf.Sign(s.x) * newMag, newMag, newMag);
+        }
         maxHP     += hpBonus;
         currentHP  = Mathf.Min(currentHP + hpBonus, maxHP);
         SyncHPUI();
@@ -414,10 +442,12 @@ public class PlayerController : MonoBehaviour
     /// <summary>몸집을 scaleMultiplier배 줄이고 최대 체력 hpPenalty만큼 감소.</summary>
     public void DecreaseSizeHP(float scaleMultiplier, float hpPenalty)
     {
-        float newScale = Mathf.Max(transform.localScale.x / scaleMultiplier, minScale);
-        transform.localScale = Vector3.one * newScale;
-        // 한 번 적용 시 maxHP가 현재의 50% 미만으로 떨어지지 않도록 하한선 적용
-        // (예: maxHP=50, penalty=50 → 기존 로직이면 maxHP=1 → currentHP=1 버그 발생)
+        if (_visualSlot != null)
+        {
+            Vector3 s      = _visualSlot.localScale;
+            float   newMag = Mathf.Max(Mathf.Abs(s.x) / scaleMultiplier, minScale);
+            _visualSlot.localScale = new Vector3(Mathf.Sign(s.x) * newMag, newMag, newMag);
+        }
         float newMaxHP = Mathf.Max(maxHP * 0.5f, maxHP - hpPenalty);
         maxHP     = Mathf.Max(10f, newMaxHP);
         currentHP = Mathf.Min(currentHP, maxHP);

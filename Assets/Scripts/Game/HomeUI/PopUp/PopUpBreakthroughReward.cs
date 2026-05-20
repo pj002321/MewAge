@@ -79,8 +79,16 @@ public class PopUpBreakthroughReward : PopUpRewardBase
         }
         else
         {
-            Hide();
+            ClearRewardContents();
+            StartCoroutine(HideAfterEffect());
         }
+    }
+
+    private System.Collections.IEnumerator HideAfterEffect()
+    {
+        while (Effect.IsPlaying)
+            yield return null;
+        Hide();
     }
 
     // ── 내부 ────────────────────────────────────────────────────────────

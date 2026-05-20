@@ -12,7 +12,6 @@ GameObject:
   - component: {fileID: 3195705286543801482}
   - component: {fileID: 5811717259447075230}
   - component: {fileID: 2814720968601693705}
-  - component: {fileID: 8725922358913660577}
   - component: {fileID: 6397333588183594770}
   - component: {fileID: 6012793344544136166}
   - component: {fileID: 5821915655939214708}
@@ -149,38 +148,6 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
---- !u!114 &8725922358913660577
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4510239993999273466}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bce05cdbf4c6c0d4b8e3a23bbeb3fb43, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::EnemyFXConfig
-  onAttack:
-    vfxPrefab: {fileID: 0}
-    spawnOffset: {x: 0, y: 0}
-    sfxClip: {fileID: 0}
-    volume: 1
-  onHit:
-    vfxPrefab: {fileID: 0}
-    spawnOffset: {x: 0, y: 0}
-    sfxClip: {fileID: 0}
-    volume: 1
-  onDeath:
-    vfxPrefab: {fileID: 0}
-    spawnOffset: {x: 0, y: 0}
-    sfxClip: {fileID: 0}
-    volume: 1
-  onSpawn:
-    vfxPrefab: {fileID: 0}
-    spawnOffset: {x: 0, y: 0}
-    sfxClip: {fileID: 0}
-    volume: 1
 --- !u!114 &6397333588183594770
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -218,12 +185,27 @@ MonoBehaviour:
   chaseDuration: 2
   idleDuration: 1
   _decal: {fileID: 4088361612343034944}
-  _skills: []
+  _skills:
+  - rid: 2864143585095974987
   entryDrop: 1
   entryScaleUpDuration: 0.35
   references:
     version: 2
-    RefIds: []
+    RefIds:
+    - rid: 2864143585095974987
+      type: {class: BossChargeSkill, ns: , asm: Assembly-CSharp}
+      data:
+        cooldown: 2
+        executeInPattern: 1
+        chargeSpeed: 12
+        chargeDuration: 1
+        bounceCount: 4
+        bouncePause: 0.1
+        warningDuration: 0.5
+        warningLineLength: 3
+        warningLineWidth: 1
+        warningColor: {r: 1, g: 0, b: 0, a: 1}
+        warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
 --- !u!70 &5821915655939214708
 CapsuleCollider2D:
   m_ObjectHideFlags: 0

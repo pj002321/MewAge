@@ -206,12 +206,87 @@ MonoBehaviour:
   chaseDuration: 2.5
   idleDuration: 1
   _decal: {fileID: 9052888758413563378}
-  _skills: []
+  _skills:
+  - rid: 2864143585095975023
+  - rid: 2864143585095975024
   entryDrop: 1
   entryScaleUpDuration: 0.35
   references:
     version: 2
-    RefIds: []
+    RefIds:
+    - rid: 2864143585095975023
+      type: {class: BossMeleeSkill, ns: , asm: Assembly-CSharp}
+      data:
+        cooldown: 2
+        executeInPattern: 1
+        meleeType: 0
+        chaseTimeout: 5
+        hitCount: 2
+        slashDamage: 60
+        slashRange: 0.5
+        preDelay: 0.2
+        hitDelay: 0.3
+        betweenDelay: 0.45
+        slashVfxPrefab: {fileID: 0}
+        dashSpeed: 10
+        dashDuration: 0.6
+        dashHitCount: 3
+        dashHitInterval: 0.18
+        dashHitRange: 1.6
+        dashHitDamage: 0
+        preDashDuration: 0.3
+        dashGhostInterval: 0.06
+        chaseSpeed: 16
+        chaseDuration: 2
+        stopDistance: 1
+        attackCooldown: 0.6
+        animEventTimeout: 0.5
+        attackVfx: {fileID: 0}
+        attackVfxDuration: 0.3
+        knockbackForce: 10
+    - rid: 2864143585095975024
+      type: {class: BossProjectileSkill, ns: , asm: Assembly-CSharp}
+      data:
+        cooldown: 2
+        executeInPattern: 1
+        projectileID: Unit/Ch3/Proj/c3_s3_1_proj
+        projectileSpeed: 4
+        firePoint: {fileID: 2436184059496450301}
+        warningLineLength: 0.5
+        warningLineWidth: 3
+        warningColor: {r: 1, g: 0, b: 0, a: 1}
+        warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
+        impactVfxPrefab: {fileID: 0}
+        impactVfxLifetime: 1
+        phases:
+        - type: 0
+          warningTime: 0.3
+          count: 4
+          interval: 0.3
+          dirCount: 0
+          radialAngleOffset: 0
+          fanAngle: 0
+          arcHeight: 0
+          homingSpeed: 0
+          accelTime: 0
+          initialSpeedRatio: 0
+          volleyPointCount: 0
+          volleySpreadRadius: 0
+          volleyHangTime: 0
+          volleyBurstInterval: 0
+          volleyHitRadius: 0
+          volleyHitDamage: 0
+          volleyShellArcHeight: 0
+          volleyShakeDuration: 0
+          volleyShakeMagnitude: 0
+          volleyMarkerPrefab: {fileID: 0}
+          volleyShellPrefab: {fileID: 0}
+          volleyImpactVfx: {fileID: 0}
+          boulderSpeed: 0
+          boulderLifetime: 0
+          boulderMaxBounces: 0
+          boulderRotateSpeed: 0
+          boulderRollInterval: 0
 --- !u!114 &-5747700691309269725
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -344,7 +419,7 @@ Transform:
   m_GameObject: {fileID: 5643284796631675162}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.108, y: 0.138, z: 0}
+  m_LocalPosition: {x: 1.045, y: 0.869, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

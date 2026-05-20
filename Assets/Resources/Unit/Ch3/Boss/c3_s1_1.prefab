@@ -185,12 +185,46 @@ MonoBehaviour:
   chaseDuration: 2
   idleDuration: 1
   _decal: {fileID: 4088361612343034944}
-  _skills: []
+  _skills:
+  - rid: 2864143585095975003
   entryDrop: 1
   entryScaleUpDuration: 0.35
   references:
     version: 2
-    RefIds: []
+    RefIds:
+    - rid: 2864143585095975003
+      type: {class: BossSlamSkill, ns: , asm: Assembly-CSharp}
+      data:
+        cooldown: 1
+        executeInPattern: 1
+        slamType: 0
+        slamDamage: 50
+        slamRadius: 2.5
+        jumpHeight: 6
+        jumpDuration: 0.7
+        markerWarningTime: 0.8
+        slamMarkerPrefab: {fileID: 7905823675861574758, guid: e965097e70b2e9d47807ebf0614a30a6, type: 3}
+        landingVfxPrefab: {fileID: 851543317570617582, guid: 5ee5e8c374903034ba44e80b8498353a, type: 3}
+        vfxLifetime: 1
+        hopHeight: 2
+        hopRiseTime: 0.25
+        hopFallTime: 0.18
+        shakeDuration: 0.45
+        shakeMagnitude: 0.35
+        floatHeight: 2.8
+        floatRiseTime: 0.35
+        floatHangTime: 0.25
+        floatFallTime: 0.55
+        preChargeDelay: 0.3
+        poundChargeSpeed: 20
+        chargeWarnDuration: 0.5
+        chargeWarningLength: 12
+        chargeWarningWidth: 0.08
+        chargeWarningColor: {r: 1, g: 0, b: 0, a: 1}
+        chargeWarningMat: {fileID: 0}
+        ghostColor: {r: 1, g: 0.15, b: 0.15, a: 0.45}
+        ghostInterval: 0.04
+        ghostLifetime: 0.12
 --- !u!70 &5821915655939214708
 CapsuleCollider2D:
   m_ObjectHideFlags: 0

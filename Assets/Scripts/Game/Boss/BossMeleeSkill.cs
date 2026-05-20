@@ -70,6 +70,8 @@ public class BossMeleeSkill : BossSkillBase
     [ShowIf("@meleeType == MeleeType.FastChase")]
     [SerializeField] private float      attackVfxDuration = 0.3f;
 
+    [SerializeField] private float knockbackForce = 10f;
+
     // ── 런타임 상태 ────────────────────────────────────────────────
     private Collider2D _col;
     private bool       _pendingHit;
@@ -119,7 +121,11 @@ public class BossMeleeSkill : BossSkillBase
 
                 var player = PlayerController.Instance;
                 if (player != null && SurfaceDistance((Vector2)player.transform.position) <= slashRange)
-                    player.TakeDamage(slashDamage, sourceName: Boss.gameObject.name);
+                {
+                    Vector2 kDir = ((Vector2)player.transform.position - (Vector2)Boss.transform.position).normalized;
+                    player.TakeDamage(slashDamage, sourceName: Boss.gameObject.name,
+                                      knockbackDir: kDir, knockbackForce: knockbackForce);
+                }
 
                 if (i < hitCount - 1)
                     await UniTask.Delay(System.TimeSpan.FromSeconds(betweenDelay), cancellationToken: ct);
@@ -227,7 +233,13 @@ public class BossMeleeSkill : BossSkillBase
                 if (hitTimer <= 0f)
                 {
                     Boss.EnemyAnimator?.SetTrigger(EnemyAnim.TAttack);
-                    PlayerController.Instance?.TakeDamage(dmg, sourceName: Boss.gameObject.name);
+                    var p2 = PlayerController.Instance;
+                    if (p2 != null)
+                    {
+                        Vector2 kDir = ((Vector2)p2.transform.position - Boss.Rb.position).normalized;
+                        p2.TakeDamage(dmg, sourceName: Boss.gameObject.name,
+                                      knockbackDir: kDir, knockbackForce: knockbackForce);
+                    }
                     hits++;
                     hitTimer = dashHitInterval;
                 }
@@ -244,7 +256,13 @@ public class BossMeleeSkill : BossSkillBase
             if (Vector2.Distance(Boss.Rb.position, PlayerT.position) > dashHitRange) break;
 
             Boss.EnemyAnimator?.SetTrigger(EnemyAnim.TAttack);
-            PlayerController.Instance?.TakeDamage(dmg, sourceName: Boss.gameObject.name);
+            var p3 = PlayerController.Instance;
+            if (p3 != null)
+            {
+                Vector2 kDir = ((Vector2)p3.transform.position - Boss.Rb.position).normalized;
+                p3.TakeDamage(dmg, sourceName: Boss.gameObject.name,
+                              knockbackDir: kDir, knockbackForce: knockbackForce);
+            }
             hits++;
 
             await UniTask.Delay(System.TimeSpan.FromSeconds(dashHitInterval), cancellationToken: ct);
@@ -315,8 +333,13 @@ public class BossMeleeSkill : BossSkillBase
     {
         if (!_pendingHit || Boss == null || PlayerT == null) return;
         _pendingHit = false;
-        if (Vector2.Distance(Boss.transform.position, PlayerT.position) <= stopDistance)
-            PlayerController.Instance?.TakeDamage(Boss.ContactDamage, sourceName: Boss.gameObject.name);
+        var p = PlayerController.Instance;
+        if (p != null && Vector2.Distance(Boss.transform.position, PlayerT.position) <= stopDistance)
+        {
+            Vector2 kDir = ((Vector2)p.transform.position - (Vector2)Boss.transform.position).normalized;
+            p.TakeDamage(Boss.ContactDamage, sourceName: Boss.gameObject.name,
+                         knockbackDir: kDir, knockbackForce: knockbackForce);
+        }
     }
 
     private async UniTaskVoid FastChaseHitFallbackAsync(CancellationToken ct)
@@ -325,8 +348,13 @@ public class BossMeleeSkill : BossSkillBase
                      .SuppressCancellationThrow();
         if (!_pendingHit || Boss == null || PlayerT == null) return;
         _pendingHit = false;
-        if (Vector2.Distance(Boss.transform.position, PlayerT.position) <= stopDistance)
-            PlayerController.Instance?.TakeDamage(Boss.ContactDamage, sourceName: Boss.gameObject.name);
+        var p = PlayerController.Instance;
+        if (p != null && Vector2.Distance(Boss.transform.position, PlayerT.position) <= stopDistance)
+        {
+            Vector2 kDir = ((Vector2)p.transform.position - (Vector2)Boss.transform.position).normalized;
+            p.TakeDamage(Boss.ContactDamage, sourceName: Boss.gameObject.name,
+                         knockbackDir: kDir, knockbackForce: knockbackForce);
+        }
     }
 
     private async UniTaskVoid ShowAttackVfxAsync()

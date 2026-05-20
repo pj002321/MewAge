@@ -21,8 +21,8 @@ public class HomeShopPanel : MonoBehaviour
     [SerializeField] private RectTransform goldSection;
 
     [Header("일일상점")]
-    [SerializeField] private Transform  dailySlotContainer;
-    [SerializeField] private RewardSlot dailySlotPrefab;
+    [SerializeField] private Transform   dailySlotContainer;
+    [SerializeField] private RewardSlot  dailySlotPrefab;
     private const int DailySlotCount = 6;
 
     bool         _resultShown;
@@ -54,9 +54,16 @@ public class HomeShopPanel : MonoBehaviour
         };
         foreach (var s in slots)
         {
-            var item = new RewardItem(s.id, s.amount);
-            Instantiate(dailySlotPrefab, dailySlotContainer)
-                .Setup(cfg?.GetIcon(s.id), $"×{s.amount}", () => RewardManager.Shared?.GiveReward(item), s.id);
+            var item   = new RewardItem(s.id, s.amount);
+            var icon   = cfg?.GetIcon(s.id);
+            var slot   = Instantiate(dailySlotPrefab, dailySlotContainer);
+            slot.Setup(icon, $"×{s.amount}", () =>
+            {
+                if (RewardManager.Shared == null)
+                    MonoBehaviourSingleton<RewardManager>.Create("RewardManager");
+                RewardManager.Shared?.Dispatch(item, icon);
+                slot.SetDimmed(true);
+            }, s.id);
         }
     }
 

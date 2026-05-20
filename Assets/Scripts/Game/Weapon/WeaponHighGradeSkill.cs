@@ -105,6 +105,27 @@ public class WeaponHighGradeSkill : MonoBehaviour
     [BoxGroup("[HIT_SPIN] 스핀"), ShowIf(nameof(IsSpin)), LabelText("속도 배율")]
     [SerializeField] private float spinSpeedMultiplier = 1.35f;
 
+    [BoxGroup("[HIT_SPIN] 스핀"), ShowIf(nameof(IsSpin)), LabelText("클론 발동 확률")]
+    [SerializeField, Range(0f, 1f)] private float spinCloneChance = 0.3f;
+
+    [BoxGroup("[HIT_SPIN] 스핀"), ShowIf(nameof(IsSpin)), LabelText("클론 공전 반경")]
+    [SerializeField] private float spinCloneRadius = 1.5f;
+
+    [BoxGroup("[HIT_SPIN] 스핀"), ShowIf(nameof(IsSpin)), LabelText("클론 공전 속도")]
+    [SerializeField] private float spinCloneSpeed = 220f;
+
+    [BoxGroup("[HIT_SPIN] 스핀"), ShowIf(nameof(IsSpin)), LabelText("클론 지속 시간")]
+    [SerializeField] private float spinCloneDuration = 3f;
+
+    [BoxGroup("[HIT_SPIN] 스핀"), ShowIf(nameof(IsSpin)), LabelText("클론 타격 반경")]
+    [SerializeField] private float spinCloneHitRadius = 0.4f;
+
+    [BoxGroup("[HIT_SPIN] 스핀"), ShowIf(nameof(IsSpin)), LabelText("클론 투명도")]
+    [SerializeField, Range(0f, 1f)] private float spinCloneAlpha = 0.5f;
+
+    [BoxGroup("[HIT_SPIN] 스핀"), ShowIf(nameof(IsSpin)), LabelText("최대 동시 클론")]
+    [SerializeField] private int spinCloneMaxCount = 3;
+
     // ── [HIT_SHOCK] 해머 충격파 ─────────────────────────────────────────
     [BoxGroup("[HIT_SHOCK] 해머"), ShowIf(nameof(IsHammer)), LabelText("충격파 반경")]
     [SerializeField] private float shockwaveRadius = 4.5f;
@@ -159,6 +180,7 @@ public class WeaponHighGradeSkill : MonoBehaviour
 
     // ── 런타임 ───────────────────────────────────────────────────────────
     protected WeaponPoint WP { get; private set; }
+    private int _activeSpinClones;
 
     private string TraitId => _traitId;
 
@@ -187,8 +209,10 @@ public class WeaponHighGradeSkill : MonoBehaviour
         {
             case "HIT_STUN":
             case "HIT_ICE":
-            case "HIT_FIRE":  DoMeleeHit(hitBuffer, colCount); break;
-            case "HIT_SHOCK": DoHammerHit(hitBuffer, colCount); break;
+            case "HIT_FIRE":       DoMeleeHit(hitBuffer, colCount); break;
+            case "HIT_SHOCK":      DoHammerHit(hitBuffer, colCount); break;
+            case "HIT_SPIN":       DoSpinClone(); break;
+            case "HIT_CLONE_SPREAD": DoCloneSpread(); break;
             default:
                 if (TraitId.StartsWith("HIT_CLONE")) DoBoomerangHit();
                 break;
@@ -241,9 +265,41 @@ public class WeaponHighGradeSkill : MonoBehaviour
         }
     }
 
+    // ── [전설] HIT_SPIN 공전 클론 ────────────────────────────────────────
+
+    private void DoSpinClone()
+    {
+        if (Random.value > spinCloneChance || _activeSpinClones >= spinCloneMaxCount) return;
+        var player = PlayerController.Instance;
+        if (player == null) return;
+
+        var sr = GetComponentInChildren<SpriteRenderer>();
+        if (sr == null || sr.sprite == null) return;
+
+        var go     = new GameObject("SpinOrbitClone");
+        var cloneSr = go.AddComponent<SpriteRenderer>();
+        cloneSr.sprite         = sr.sprite;
+        cloneSr.sortingLayerID = sr.sortingLayerID;
+        cloneSr.sortingOrder   = sr.sortingOrder;
+        cloneSr.color          = new Color(1f, 1f, 1f, spinCloneAlpha);
+        go.transform.localScale = transform.lossyScale;
+
+        float dmg = WP != null ? WP.AttackDamage : 1f;
+        _activeSpinClones++;
+        go.AddComponent<SpinOrbitClone>().Init(
+            player.transform, spinCloneRadius, spinCloneSpeed,
+            spinCloneDuration, spinCloneHitRadius, dmg,
+            () => _activeSpinClones--);
+    }
+
     // ── [전설] 부메랑 구현 ───────────────────────────────────────────────
 
     private static readonly Vector2[] CardinalDirs = { Vector2.up, Vector2.right, Vector2.down, Vector2.left };
+    private static readonly Vector2[] EightDirs    =
+    {
+        Vector2.up,   new Vector2( 0.707f,  0.707f), Vector2.right, new Vector2( 0.707f, -0.707f),
+        Vector2.down, new Vector2(-0.707f, -0.707f), Vector2.left,  new Vector2(-0.707f,  0.707f),
+    };
 
     private void DoBoomerangHit()
     {
@@ -251,6 +307,15 @@ public class WeaponHighGradeSkill : MonoBehaviour
         Vector3 origin = transform.position;
         var sr = GetComponentInChildren<SpriteRenderer>();
         foreach (var dir in CardinalDirs)
+            SpawnBoomerangClone(origin, dir, sr);
+    }
+
+    private void DoCloneSpread()
+    {
+        if (Random.value > boomerangChance) return;
+        Vector3 origin = transform.position;
+        var sr = GetComponentInChildren<SpriteRenderer>();
+        foreach (var dir in EightDirs)
             SpawnBoomerangClone(origin, dir, sr);
     }
 
@@ -487,6 +552,78 @@ public class SpikeTicker : MonoBehaviour
             if (e != null && e.gameObject.activeInHierarchy) e.TakeDamage(_aoeDmg, false);
         }
     }
+}
+
+/// <summary>HIT_SPIN 고급 특성 — 플레이어 주위를 공전하며 적에게 피해를 주는 복제본.</summary>
+public class SpinOrbitClone : MonoBehaviour
+{
+    private Transform       _center;
+    private float           _radius;
+    private float           _speed;
+    private float           _hitRadius;
+    private float           _damage;
+    private float           _angle;
+    private System.Action   _onRemove;
+    private float           _bossTimer;
+
+    private static readonly Collider2D[] _buf = new Collider2D[16];
+    private readonly System.Collections.Generic.Dictionary<EnemyController, float> _hitCd = new();
+    private readonly System.Collections.Generic.List<EnemyController>              _expired = new();
+
+    public void Init(Transform center, float radius, float speed, float duration,
+                     float hitRadius, float damage, System.Action onRemove)
+    {
+        _center    = center;
+        _radius    = radius;
+        _speed     = speed;
+        _hitRadius = hitRadius;
+        _damage    = damage;
+        _onRemove  = onRemove;
+        _angle     = Random.Range(0f, 360f);
+        Destroy(gameObject, duration);
+    }
+
+    private void Update()
+    {
+        if (_center == null) { Destroy(gameObject); return; }
+
+        _angle += _speed * Time.deltaTime;
+        float rad = _angle * Mathf.Deg2Rad;
+        transform.position = _center.position + new Vector3(Mathf.Cos(rad), Mathf.Sin(rad)) * _radius;
+        transform.rotation = Quaternion.Euler(0f, 0f, _angle - 90f);
+
+        // 쿨타임 감소
+        _expired.Clear();
+        foreach (var k in _hitCd.Keys)
+        {
+            _hitCd[k] -= Time.deltaTime;
+            if (_hitCd[k] <= 0f) _expired.Add(k);
+        }
+        foreach (var k in _expired) _hitCd.Remove(k);
+
+        _bossTimer -= Time.deltaTime;
+
+        int count = Physics2D.OverlapCircleNonAlloc(transform.position, _hitRadius, _buf);
+        for (int i = 0; i < count; i++)
+        {
+            if (_buf[i] == null) continue;
+            var boss = _buf[i].GetComponentInParent<BossController>();
+            if (boss != null && _bossTimer <= 0f)
+            {
+                boss.TakeDamage(_damage, false);
+                _bossTimer = 0.5f;
+                continue;
+            }
+            var enemy = _buf[i].GetComponentInParent<EnemyController>();
+            if (enemy != null && !_hitCd.ContainsKey(enemy))
+            {
+                enemy.TakeDamage(_damage, false);
+                _hitCd[enemy] = 0.5f;
+            }
+        }
+    }
+
+    private void OnDestroy() => _onRemove?.Invoke();
 }
 
 /// <summary>부메랑 복제본 직선 이동 후 자동 소멸.</summary>

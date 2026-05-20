@@ -209,8 +209,13 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
     {
         Mewage.DB.DB_챕터.ForEachEntity(row =>
         {
-            if (!string.IsNullOrEmpty(row.f_챕터ID))
-                PlayerPrefs.SetInt($"ChapterCleared_{row.f_챕터ID}", 1);
+            if (string.IsNullOrEmpty(row.f_챕터ID)) return;
+            // C4 이상은 강제 잠금 — 디버그 전체 해금에서도 제외
+            string[] parts = row.f_챕터ID.Split('_');
+            if (parts.Length >= 1 && parts[0].Length >= 2 &&
+                int.TryParse(parts[0].Substring(1), out int chapterNum) &&
+                chapterNum >= 4) return;
+            PlayerPrefs.SetInt($"ChapterCleared_{row.f_챕터ID}", 1);
         });
         PlayerPrefs.Save();
 

@@ -205,12 +205,41 @@ MonoBehaviour:
   chaseDuration: 2.5
   idleDuration: 1
   _decal: {fileID: 9052888758413563378}
-  _skills: []
+  _skills:
+  - rid: 2864143585095975021
+  - rid: 2864143585095975022
   entryDrop: 1
   entryScaleUpDuration: 0.35
   references:
     version: 2
-    RefIds: []
+    RefIds:
+    - rid: 2864143585095975021
+      type: {class: BossTeleportSkill, ns: , asm: Assembly-CSharp}
+      data:
+        cooldown: 2
+        executeInPattern: 1
+        preDigDelay: 0.3
+        fadeOutDuration: 0.35
+        fadeInDuration: 0.35
+        spawnRadiusMin: 2
+        spawnRadiusMax: 4
+        spawnMarkerPrefab: {fileID: 7905823675861574758, guid: e965097e70b2e9d47807ebf0614a30a6, type: 3}
+        markerDuration: 1.2
+        animEventTimeout: 3
+    - rid: 2864143585095975022
+      type: {class: BossChargeSkill, ns: , asm: Assembly-CSharp}
+      data:
+        cooldown: 1
+        executeInPattern: 1
+        chargeSpeed: 12
+        chargeDuration: 0.5
+        bounceCount: 3
+        bouncePause: 0.1
+        warningDuration: 0.5
+        warningLineLength: 3
+        warningLineWidth: 1
+        warningColor: {r: 1, g: 0, b: 0, a: 1}
+        warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
 --- !u!114 &1388131379868125723
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -89,7 +89,7 @@ SpriteRenderer:
   m_SortingLayer: 1
   m_SortingOrder: 7
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -3195648837092477483, guid: 003dfe1e676cc984ab05d538486fe52a, type: 3}
+  m_Sprite: {fileID: -8474560766913858153, guid: 72a0461de1d79c147b846ed58cf170e3, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -109,7 +109,7 @@ Animator:
   m_GameObject: {fileID: 1326216360028315856}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 22100000, guid: a70c46c1789dc344aad4ee88f478aa0d, type: 2}
+  m_Controller: {fileID: 22100000, guid: 035494f1123475348bef726f04b1dce1, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -206,12 +206,71 @@ MonoBehaviour:
   chaseDuration: 2.5
   idleDuration: 1
   _decal: {fileID: 9052888758413563378}
-  _skills: []
+  _skills:
+  - rid: 2864143585095975019
+  - rid: 2864143585095975020
   entryDrop: 1
   entryScaleUpDuration: 0.35
   references:
     version: 2
-    RefIds: []
+    RefIds:
+    - rid: 2864143585095975019
+      type: {class: BossProjectileSkill, ns: , asm: Assembly-CSharp}
+      data:
+        cooldown: 5
+        executeInPattern: 1
+        projectileID: Unit/Ch3/Proj/ch3_s2_proj
+        projectileSpeed: 5
+        firePoint: {fileID: 2436184059496450301}
+        warningLineLength: 3
+        warningLineWidth: 1
+        warningColor: {r: 1, g: 0, b: 0, a: 1}
+        warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
+        impactVfxPrefab: {fileID: 0}
+        impactVfxLifetime: 1
+        phases:
+        - type: 5
+          warningTime: 0.5
+          count: 5
+          interval: 0.5
+          dirCount: 0
+          radialAngleOffset: 0
+          fanAngle: 0
+          arcHeight: 0
+          homingSpeed: 0
+          accelTime: 0
+          initialSpeedRatio: 0
+          volleyPointCount: 0
+          volleySpreadRadius: 0
+          volleyHangTime: 0
+          volleyBurstInterval: 0
+          volleyHitRadius: 0
+          volleyHitDamage: 0
+          volleyShellArcHeight: 0
+          volleyShakeDuration: 0
+          volleyShakeMagnitude: 0
+          volleyMarkerPrefab: {fileID: 0}
+          volleyShellPrefab: {fileID: 0}
+          volleyImpactVfx: {fileID: 0}
+          boulderSpeed: 10
+          boulderLifetime: 15
+          boulderMaxBounces: 3
+          boulderRotateSpeed: 0
+          boulderRollInterval: 0.5
+    - rid: 2864143585095975020
+      type: {class: BossSummonSkill, ns: , asm: Assembly-CSharp}
+      data:
+        cooldown: 7
+        executeInPattern: 1
+        summonCount: 6
+        maxActiveMinions: 6
+        minionDuration: 20
+        minionMoveSpeed: 3.5
+        minionContactDmg: 40
+        spawnRadius: 3
+        markerWarningTime: 0.5
+        minionPrefab: {fileID: 1326216360028315856, guid: f324275fc7090224e84da24b751bdcdc, type: 3}
+        spawnMarkerPrefab: {fileID: 7905823675861574758, guid: e965097e70b2e9d47807ebf0614a30a6, type: 3}
 --- !u!114 &-6780662379983719405
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -254,7 +313,7 @@ Transform:
   m_GameObject: {fileID: 1437633771341022566}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.142, y: 0.028, z: 0}
+  m_LocalPosition: {x: 0.036, y: 0.02, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

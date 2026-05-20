@@ -149,14 +149,20 @@ public class MainMenuPanel : MonoBehaviour
             list.Add(new StageEntry { chapterID = "C1_S3", stageName = "3.폐허 도시"  });
         }
 
-        // 첫 스테이지는 항상 해금, 이후는 이전 스테이지 클리어 여부로 판단
+        // 첫 스테이지는 항상 해금, C4 이상은 강제 잠금, 이후는 이전 스테이지 클리어 여부로 판단
         for (int i = 0; i < list.Count; i++)
         {
-            bool locked = i > 0 &&
-                PlayerPrefs.GetInt($"ChapterCleared_{list[i - 1].chapterID}", 0) == 0;
+            string[] p = list[i].chapterID.Split('_');
+            int chNum = (p.Length >= 1 && p[0].Length >= 2 &&
+                         int.TryParse(p[0].Substring(1), out int n)) ? n : 1;
+
+            bool locked = chNum >= 4 ||
+                          (i > 0 && PlayerPrefs.GetInt($"ChapterCleared_{list[i - 1].chapterID}", 0) == 0);
             list[i].isLocked = locked;
             if (locked)
-                list[i].requireClearLabel = ChapterIDToDisplayLabel(list[i - 1].chapterID) + " 클리어";
+                list[i].requireClearLabel = chNum >= 4
+                    ? "준비 중"
+                    : ChapterIDToDisplayLabel(list[i - 1].chapterID) + " 클리어";
         }
 
         stages = list.ToArray();
@@ -230,6 +236,14 @@ public class MainMenuPanel : MonoBehaviour
     {
         if (cardViews == null) return; // Start() 이전이면 건너뜀
         RefreshStages();
+        StartCoroutine(ReSnapOnEnable());
+    }
+
+    IEnumerator ReSnapOnEnable()
+    {
+        yield return null;
+        Canvas.ForceUpdateCanvases();
+        SnapImmediate(currentIndex);
     }
 
     void Start()
@@ -685,7 +699,10 @@ public class MainMenuPanel : MonoBehaviour
         if (currentIndex < 0 || currentIndex >= stages.Length) return;
         if (stages[currentIndex].isLocked)
         {
-            baseNoti?.Show("이전 스테이지 클리어 후 해금");
+            string[] p = stages[currentIndex].chapterID.Split('_');
+            bool comingSoon = p.Length >= 1 && p[0].Length >= 2 &&
+                              int.TryParse(p[0].Substring(1), out int cn) && cn >= 4;
+            baseNoti?.Show(comingSoon ? "입장할 수 없는 차원입니다." : "이전 스테이지 클리어 후 해금");
             return;
         }
         if (SceneLoadManager.IsTransitioning) return;
@@ -708,16 +725,18 @@ public class MainMenuPanel : MonoBehaviour
     // ── 챕터 레이블 ─────────────────────────────────────────────────
     static string BuildChapterLabel(int chapterNum) => chapterNum switch
     {
-        1 => "원시시대",
-        2 => "신석기시대",
-        3 => "청동시대",
-        4 => "고대문명",
-        5 => "중세시대",
-        6 => "르네상스",
-        7 => "도시시대",
-        8 => "궤도시대",
-        9 => "우주시대",
-        _ => $"{chapterNum}챕터"
+        1  => "원시시대",
+        2  => "신석기시대",
+        3  => "청동시대",
+        4  => "고대문명",
+        5  => "중세시대",
+        6  => "르네상스",
+        7  => "산업시대",
+        8  => "현대시대",
+        9  => "도시시대",
+        10 => "궤도시대",
+        11 => "우주시대",
+        _  => $"{chapterNum}챕터"
     };
 
     // ── 헬퍼 ────────────────────────────────────────────────────────

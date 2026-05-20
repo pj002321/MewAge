@@ -374,6 +374,7 @@ public class WeaponInfoPanel : MonoBehaviourSingleton<WeaponInfoPanel>
         "CRIT_ADD"   => "%",
         "CRT_RATE"   => "%",
         "DOT_AD"     => "%",
+        "DOT_ADD"    => "%",
         "HP_STL_ADD" => "%",
         "NUK_ADD"    => "%",
         "HEAL_ADD"   => "%",

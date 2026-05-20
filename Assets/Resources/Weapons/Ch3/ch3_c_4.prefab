@@ -119,9 +119,9 @@ MonoBehaviour:
     - rid: 2864143559287111809
       type: {class: WeaponSpinBehaviour, ns: , asm: Assembly-CSharp}
       data:
-        orbitRadius: 1.2
-        orbitSpeed: 200
-        spinHitRadius: 0.79
+        orbitRadius: 3.33
+        orbitSpeed: 270
+        spinHitRadius: 1.03
         spinHitCooldown: 0.5
         spinKnockback: 7
 --- !u!114 &-3097853947098103379
@@ -136,12 +136,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d880b36e09b826b4aa4d33b07b710c84, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpriteOutline
-  starColors:
-  - {r: 1, g: 1, b: 1, a: 0}
-  - {r: 0.504717, g: 0.9414869, b: 1, a: 1}
-  - {r: 0.39999998, g: 1, b: 0.6414886, a: 1}
-  - {r: 0.8, g: 0.4, b: 1, a: 1}
-  - {r: 1, g: 0.35, b: 0.35, a: 1}
 --- !u!1001 &7637080931474065490
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -194,7 +188,8 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 5784246070425075319, guid: 50a3259f991f6b54f93e4b02acc23ea7, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []

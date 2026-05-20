@@ -24,6 +24,8 @@ public class RewardManager : MonoBehaviourSingleton<RewardManager>
     private int _level;
 
     public static event System.Action OnChanged;
+    // 재화 직접 지급 시 발생 — (타입, 수량, 스크린 시작 위치)
+    public static event System.Action<RewardType, int, Vector2> OnCurrencyFlying;
 
     public int Gold  => _gold;
     public int Exp   => _exp;
@@ -85,6 +87,33 @@ public class RewardManager : MonoBehaviourSingleton<RewardManager>
         if (items == null) return;
         foreach (var item in items) GiveReward(item);
     }
+
+    // ── 통합 보상 분배 ────────────────────────────────────────────────────
+    /// <summary>
+    /// 모든 아이템을 즉시 지급. 비-재화 아이템은 PopUpInventory에 수령 목록 표시.
+    /// 아웃게임·인게임 공통 보상 수령 진입점.
+    /// </summary>
+    public void Dispatch(RewardItem item, Sprite icon = null, Vector2 screenFrom = default)
+    {
+        GiveReward(item);
+        if (IsDirectType(item.type))
+            OnCurrencyFlying?.Invoke(item.type, item.amount, screenFrom);
+        else
+            PopUpInventory.Shared?.AddReward(item, icon);
+    }
+
+    public void DispatchAll(RewardItem[] items, Sprite[] icons = null)
+    {
+        if (items == null) return;
+        for (int i = 0; i < items.Length; i++)
+        {
+            var icon = (icons != null && i < icons.Length) ? icons[i] : null;
+            Dispatch(items[i], icon);
+        }
+    }
+
+    private static bool IsDirectType(RewardType t) =>
+        t == RewardType.Gold || t == RewardType.Exp || t == RewardType.Ruby;
 
     public bool SpendGold(int amount)
     {

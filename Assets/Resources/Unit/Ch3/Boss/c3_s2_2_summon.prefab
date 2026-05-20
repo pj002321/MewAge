@@ -15,9 +15,10 @@ GameObject:
   - component: {fileID: 1310786639833578689}
   - component: {fileID: 118957687783763765}
   - component: {fileID: 9077217671976798113}
-  - component: {fileID: -2660997517696984413}
-  - component: {fileID: 6942949540760629351}
-  - component: {fileID: 2368404944936599325}
+  - component: {fileID: 1926615043382288382}
+  - component: {fileID: 5383463193663799302}
+  - component: {fileID: -4592281453065292243}
+  - component: {fileID: -1370013521459383150}
   m_Layer: 7
   m_Name: c3_s2_2_summon
   m_TagString: Untagged
@@ -35,8 +36,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.75, y: 0.75, z: 0.75}
-  m_ConstrainProportionsScale: 1
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 9052888758413563378}
   - {fileID: 2436184059496450301}
@@ -89,9 +90,9 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 1049025713
   m_SortingLayer: 1
-  m_SortingOrder: 7
+  m_SortingOrder: 5
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -8474560766913858153, guid: 72a0461de1d79c147b846ed58cf170e3, type: 3}
+  m_Sprite: {fileID: -3195648837092477483, guid: 003dfe1e676cc984ab05d538486fe52a, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -111,7 +112,7 @@ Animator:
   m_GameObject: {fileID: 1326216360028315856}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 22100000, guid: 035494f1123475348bef726f04b1dce1, type: 2}
+  m_Controller: {fileID: 22100000, guid: a70c46c1789dc344aad4ee88f478aa0d, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -231,7 +232,7 @@ MonoBehaviour:
   randomPhase: 1
   fixBottom: 0
   halfHeightOverride: 0
---- !u!114 &-2660997517696984413
+--- !u!114 &1926615043382288382
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -240,37 +241,39 @@ MonoBehaviour:
   m_GameObject: {fileID: 1326216360028315856}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a8bd0d3c7e514be45b883e855ff414e8, type: 3}
+  m_Script: {fileID: 11500000, guid: 26ab6620137f93f4290148fd79412968, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BossSummonMinion
-  maxHP: 60
---- !u!114 &6942949540760629351
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1326216360028315856}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ebf384ff75278374cb62dda6f31d5629, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ChargeBehaviour
-  chargeDistance: 6
-  chargeSpeedMultiplier: 2
-  moveDuration: 2
-  idleDuration: 2
-  chargeRange: 4
-  chargeColor: {r: 1, g: 0, b: 0, a: 1}
-  chargeScale: 0.85
-  ghostInterval: 0.06
-  warningLineLength: 5
-  warningLineWidth: 0.06
+  m_EditorClassIdentifier: Assembly-CSharp::RangedBehaviour
+  projectilePrefab: {fileID: 7916182024222986910, guid: 7d9fb020686cee640bba6cb64446a0a3, type: 3}
+  preferredRange: 4
+  shootInterval: 2
+  rangedDamage: 30
+  firePoint: {fileID: 2436184059496450301}
+  useWarningLines: 1
+  warningDuration: 0.5
+  warningLineLength: 3
+  warningLineWidth: 1
   warningColor: {r: 1, g: 0, b: 0, a: 1}
-  warningMaterial: {fileID: 0}
-  warningLineOrigin: {fileID: 0}
-  showWarningLine: 1
---- !u!114 &2368404944936599325
+  warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
+  attackVfx: {fileID: 0}
+  attackVfxDuration: 0.3
+  useAnimationEvent: 1
+  animEventTimeout: 0.6
+  retreatDuration: 1.4
+--- !u!114 &5383463193663799302
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1326216360028315856}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 25cc23087012616429ecb7c10c6cb557, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpriteYSort
+  multiplier: 100
+--- !u!114 &-4592281453065292243
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -286,6 +289,19 @@ MonoBehaviour:
   flashMaterial: {fileID: 2100000, guid: f6d87d58797b8b9478efae2c2271cbe7, type: 2}
   flashColor: {r: 1, g: 1, b: 1, a: 1}
   BaseColor: {r: 1, g: 1, b: 1, a: 1}
+--- !u!114 &-1370013521459383150
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1326216360028315856}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a8bd0d3c7e514be45b883e855ff414e8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BossSummonMinion
+  maxHP: 1500
 --- !u!1 &1437633771341022566
 GameObject:
   m_ObjectHideFlags: 0
@@ -312,7 +328,7 @@ Transform:
   m_GameObject: {fileID: 1437633771341022566}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.05, y: 0.074, z: 0}
+  m_LocalPosition: {x: 0.142, y: 0.028, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -365,7 +381,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 1049025713
   m_SortingLayer: 1
-  m_SortingOrder: 2
+  m_SortingOrder: 4
   m_MaskInteraction: 0
   m_Sprite: {fileID: 6863293971250029137, guid: aae5a60f0a493f14da9a00ba91e73b06, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -402,7 +418,7 @@ Transform:
   m_GameObject: {fileID: 5643284796631675162}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0.84, y: 0.84, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

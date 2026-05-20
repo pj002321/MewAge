@@ -23,7 +23,7 @@ public static class WeaponStatRegistry
     // 소수점 표기 속성 ID 목록
     private static readonly HashSet<string> DecimalStats = new()
     {
-        "DOT_AD", "CRT_RATE", "HP_STL_ADD", "HEAL_ADD"
+        "DOT_AD", "DOT_ADD", "CRT_RATE", "HP_STL_ADD", "HEAL_ADD"
     };
 
     // id → 설명 템플릿 (예: "ATK_ADD" → "공격력 +{0}%")
@@ -67,7 +67,8 @@ public static class WeaponStatRegistry
         "DMG_RNG"    => "타격범위",
         "CRIT_ADD"   => "치명타데미지",
         "CRT_RATE"   => "치명타확률",
-        "DOT_AD"     => "지속피해량",
+        "DOT_AD"     => "출혈지수",
+        "DOT_ADD"    => "출혈지수",
         "HP_STL_ADD" => "흡혈수치량",
         "NUK_ADD"    => "넉백지수",
         "HEAL_ADD"   => "자가치유",
@@ -107,6 +108,7 @@ public static class WeaponStatRegistry
             "CRIT_ADD"   => "치명타",
             "CRT_RATE"   => "치명타확률",
             "DOT_AD"     => "출혈",
+            "DOT_ADD"    => "출혈",
             "HP_STL_ADD" => "흡혈",
             "NUK_ADD"    => "넉백",
             "HEAL_ADD"   => "자가치유",
@@ -152,6 +154,7 @@ public static class WeaponStatRegistry
                 data.criticalRate   += bonus.value / 100f;
                 break;
             case "DOT_AD":
+            case "DOT_ADD":
                 data.bleedDamage    += bonus.value;
                 break;
             case "CRT_RATE":
