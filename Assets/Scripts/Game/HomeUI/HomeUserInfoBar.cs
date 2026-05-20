@@ -46,14 +46,14 @@ public class HomeUserInfoBar : MonoBehaviour
 
     private void OnEnable()
     {
-        RewardManager.OnChanged        += Refresh;
+        UIDataBus.OnCurrencyChanged    += Refresh;
         RewardManager.OnCurrencyFlying += OnCurrencyFlying;
         Refresh();
     }
 
     private void OnDisable()
     {
-        RewardManager.OnChanged        -= Refresh;
+        UIDataBus.OnCurrencyChanged    -= Refresh;
         RewardManager.OnCurrencyFlying -= OnCurrencyFlying;
     }
 

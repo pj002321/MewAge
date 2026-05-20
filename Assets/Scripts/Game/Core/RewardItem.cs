@@ -6,7 +6,7 @@ using UnityEngine;
 /// </summary>
 public enum RewardType
 {
-    Gold, Exp, Ruby, CharMat,
+    Gold, Exp, Ruby, Stamina, CharMat,
     EquipTopMat, EquipcloakMat, EquipRingMat, EquipNeckMat, EquipFootMat, EquipHeadMat,
     RelicScroll,
     EquipFrag, WareFrag,
@@ -44,6 +44,7 @@ public struct RewardItem
     {
         "COIN"            => RewardType.Gold,
         "RUBY"            => RewardType.Ruby,
+        "STEMINA"         => RewardType.Stamina,
         "EXP"             => RewardType.Exp,
         "MAT_HERO"        => RewardType.CharMat,
         "MAT_RELIC"       => RewardType.RelicScroll,
@@ -76,7 +77,7 @@ public struct RewardItem
         else if (min > 0)
             amount = min;
         else
-            amount = row.f_수량;
+            amount = row.f_V1;
         return new RewardItem(row.f_보상ID, Mathf.Max(1, amount));
     }
 }

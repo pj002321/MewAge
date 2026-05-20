@@ -13,15 +13,17 @@ public class RewardManager : MonoBehaviourSingleton<RewardManager>
 
     public const int MaxLevel = 50;
 
-    private const string K_Gold  = "RW_Gold";
-    private const string K_Exp   = "RW_Exp";
-    private const string K_Ruby  = "RW_Ruby";
-    private const string K_Level = "RW_Level";
+    private const string K_Gold    = "RW_Gold";
+    private const string K_Exp     = "RW_Exp";
+    private const string K_Ruby    = "RW_Ruby";
+    private const string K_Level   = "RW_Level";
+    private const string K_Stamina = "RW_Stamina";
 
     private int _gold;
     private int _exp;
     private int _ruby;
     private int _level;
+    private int _stamina;
 
     public static event System.Action OnChanged;
     // 재화 직접 지급 시 발생 — (타입, 수량, 스크린 시작 위치)
@@ -41,10 +43,11 @@ public class RewardManager : MonoBehaviourSingleton<RewardManager>
 
     private void Load()
     {
-        _gold  = PlayerPrefs.GetInt(K_Gold,  0);
-        _exp   = PlayerPrefs.GetInt(K_Exp,   0);
-        _ruby  = PlayerPrefs.GetInt(K_Ruby,  0);
-        _level = Mathf.Max(1, PlayerPrefs.GetInt(K_Level, 1));
+        _gold    = PlayerPrefs.GetInt(K_Gold,    0);
+        _exp     = PlayerPrefs.GetInt(K_Exp,     0);
+        _ruby    = PlayerPrefs.GetInt(K_Ruby,    0);
+        _level   = Mathf.Max(1, PlayerPrefs.GetInt(K_Level, 1));
+        _stamina = PlayerPrefs.GetInt(K_Stamina, 0);
     }
 
     // ── 보상 지급 ─────────────────────────────────────────────────────────
@@ -62,19 +65,25 @@ public class RewardManager : MonoBehaviourSingleton<RewardManager>
     {
         switch (item.type)
         {
-            case RewardType.Gold: _gold += item.amount; break;
-            case RewardType.Exp:  _exp  += item.amount; break;
-            case RewardType.Ruby: _ruby += item.amount; break;
+            case RewardType.Gold:    _gold    += item.amount; break;
+            case RewardType.Exp:     _exp     += item.amount; break;
+            case RewardType.Ruby:    _ruby    += item.amount; break;
+            case RewardType.Stamina: _stamina += item.amount; break;
             case RewardType.EquipFrag:
-                EquipmentInventory.Shared?.AddMat(EquipCategory.RING, 0); // 범용 조각 — 인벤 연동 시 확장
                 PlayerPrefs.SetInt("EquipFrag", PlayerPrefs.GetInt("EquipFrag", 0) + item.amount);
                 break;
             case RewardType.WareFrag:
                 PlayerPrefs.SetInt("WareFrag", PlayerPrefs.GetInt("WareFrag", 0) + item.amount);
                 break;
+            case RewardType.EquipTopMat:   EquipmentInventory.Shared?.AddMat(EquipCategory.TOP,   item.amount); break;
+            case RewardType.EquipcloakMat: EquipmentInventory.Shared?.AddMat(EquipCategory.CLOAK, item.amount); break;
+            case RewardType.EquipRingMat:  EquipmentInventory.Shared?.AddMat(EquipCategory.RING,  item.amount); break;
+            case RewardType.EquipNeckMat:  EquipmentInventory.Shared?.AddMat(EquipCategory.NECK,  item.amount); break;
+            case RewardType.EquipFootMat:  EquipmentInventory.Shared?.AddMat(EquipCategory.FOOT,  item.amount); break;
+            case RewardType.EquipHeadMat:  EquipmentInventory.Shared?.AddMat(EquipCategory.HEAD,  item.amount); break;
             default:
                 // 뽑기권류: TicketManager 위임
-                TicketManager.Shared?.Add(item.type, item.amount);
+                TicketManager.Add(item.type, item.amount);
                 return;
         }
         CheckLevelUp();
@@ -113,7 +122,7 @@ public class RewardManager : MonoBehaviourSingleton<RewardManager>
     }
 
     private static bool IsDirectType(RewardType t) =>
-        t == RewardType.Gold || t == RewardType.Exp || t == RewardType.Ruby;
+        t == RewardType.Gold || t == RewardType.Exp || t == RewardType.Ruby || t == RewardType.Stamina;
 
     public bool SpendGold(int amount)
     {
@@ -151,10 +160,12 @@ public class RewardManager : MonoBehaviourSingleton<RewardManager>
     // ── 저장 ──────────────────────────────────────────────────────────────
     private void Save()
     {
-        PlayerPrefs.SetInt(K_Gold,  _gold);
-        PlayerPrefs.SetInt(K_Exp,   _exp);
-        PlayerPrefs.SetInt(K_Ruby,  _ruby);
-        PlayerPrefs.SetInt(K_Level, _level);
+        PlayerPrefs.SetInt(K_Gold,    _gold);
+        PlayerPrefs.SetInt(K_Exp,     _exp);
+        PlayerPrefs.SetInt(K_Ruby,    _ruby);
+        PlayerPrefs.SetInt(K_Level,   _level);
+        PlayerPrefs.SetInt(K_Stamina, _stamina);
         PlayerPrefs.Save();
+        UIDataBus.BroadcastCurrencyChanged();
     }
 }

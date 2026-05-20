@@ -50,10 +50,23 @@ public class EquipmentDetailPopup : MonoBehaviour
         gameObject.SetActive(false);
     }
 
+    void OnEnable()
+    {
+        UIDataBus.OnCurrencyChanged += RefreshLevelUI;
+        RefreshLevelUI();
+    }
+
+    void OnDisable()
+    {
+        UIDataBus.OnCurrencyChanged -= RefreshLevelUI;
+    }
+
     /// <summary>보관함 슬롯 클릭 — 장착(교체) 버튼만 표시.</summary>
     public void ShowForBagItem(EquipmentData data)
     {
         _current = data;
+        gameObject.SetActive(true);  // TMP material 초기화 후 텍스트 설정
+
         Populate(data, isEquipped: false);
 
         var equipped = EquipmentInventory.Shared?.Equipped;
@@ -63,21 +76,22 @@ public class EquipmentDetailPopup : MonoBehaviour
         unequipButton?.gameObject.SetActive(false);
         levelUpButton?.gameObject.SetActive(false);
 
-        gameObject.SetActive(true);
+        RefreshLevelUI();
     }
 
     /// <summary>장착 슬롯 클릭 — 해제 + 레벨업 버튼 표시.</summary>
     public void ShowForEquippedItem(EquipmentData data)
     {
         _current = data;
+        gameObject.SetActive(true);  // TMP material 초기화 후 텍스트 설정
+
         Populate(data, isEquipped: true);
 
         equipButton?.gameObject.SetActive(false);
         unequipButton?.gameObject.SetActive(true);
         levelUpButton?.gameObject.SetActive(true);
-        RefreshLevelUI();
 
-        gameObject.SetActive(true);
+        RefreshLevelUI();
     }
 
     void Populate(EquipmentData e, bool isEquipped)
@@ -151,11 +165,15 @@ public class EquipmentDetailPopup : MonoBehaviour
     {
         var inv = EquipmentInventory.Shared;
         if (inv == null || _current == null) return;
-        if (!inv.TryLevelUp(_current)) return;
+        if (!inv.TryLevelUp(_current))
+        {
+            PopupBaseNoti.Shared?.Show("장비 강화 재료가 부족합니다");
+            return;
+        }
 
         if (statText) statText.text = _current.StatDescription();
-        RefreshLevelUI();
         _animator?.SetTrigger("tLevelUp");
+        // RefreshLevelUI는 TryLevelUp → UIDataBus.BroadcastCurrencyChanged → OnCurrencyChanged 이벤트로 자동 호출됨
     }
 
     void RefreshLevelUI()
@@ -172,19 +190,24 @@ public class EquipmentDetailPopup : MonoBehaviour
             matIcon.enabled = s != null;
         }
 
-        int ownGold = inv?.HomeGold ?? 0;
+        int ownGold = RewardManager.Shared?.Gold ?? 0;
         int ownMat  = inv?.GetMatCount(_current.category) ?? 0;
-        if (goldCostText) goldCostText.text = $"{ownGold}/{EquipmentInventory.GoldCostPerLevel}";
-        if (matCostText)  matCostText.text  = $"{ownMat}/{EquipmentInventory.MatCostPerLevel}";
 
-        if (levelUpButton)
-            levelUpButton.interactable = inv != null
-                && _current.level < EquipmentData.MaxLevel
-                && ownGold >= EquipmentInventory.GoldCostPerLevel
-                && ownMat  >= EquipmentInventory.MatCostPerLevel;
+        string goldColor = ownGold >= EquipmentInventory.GoldCostPerLevel ? "#00C853" : "#FF3D00";
+        string matColor  = ownMat  >= EquipmentInventory.MatCostPerLevel  ? "#00C853" : "#FF3D00";
+        if (goldCostText) goldCostText.text = $"<color={goldColor}>{FormatNumber(ownGold)}</color>/{FormatNumber(EquipmentInventory.GoldCostPerLevel)}";
+        if (matCostText)  matCostText.text  = $"<color={matColor}>{ownMat}</color>/{EquipmentInventory.MatCostPerLevel}";
+
     }
 
     public void Close() => gameObject.SetActive(false);
+
+    static string FormatNumber(int v)
+    {
+        if (v >= 1_000_000) return (v / 1_000_000f).ToString("0.#") + "M";
+        if (v >= 1_000)     return (v / 1_000f).ToString("0.#") + "K";
+        return v.ToString();
+    }
 
     static void SetLabel(Button btn, string text)
     {

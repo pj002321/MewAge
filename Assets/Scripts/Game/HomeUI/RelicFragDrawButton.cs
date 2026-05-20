@@ -31,7 +31,7 @@ public class RelicFragDrawButton : MonoBehaviour
 
     void OnClick()
     {
-        if (resultPopup != null && resultPopup.gameObject.activeSelf) return;
+        if (resultPopup != null && resultPopup.gameObject.activeInHierarchy) return;
 
         if (drawCount <= 1)
         {

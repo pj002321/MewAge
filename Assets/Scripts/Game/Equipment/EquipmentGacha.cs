@@ -174,8 +174,8 @@ public static class EquipmentGacha
     static string BoxTypeToDbKey(EquipBoxType boxType) => boxType switch
     {
         EquipBoxType.Normal => "EQ_NORMAL",
-        EquipBoxType.Rare   => "EQ_RARE",
-        EquipBoxType.Epic   => "EQ_EPIC",
+        EquipBoxType.Rare   => "EQ_EPIC",
+        EquipBoxType.Epic   => "EQ_SPECIAL",
         _                   => "EQ_NORMAL",
     };
 

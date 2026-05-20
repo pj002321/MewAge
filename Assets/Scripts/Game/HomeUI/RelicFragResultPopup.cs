@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -49,6 +48,8 @@ public class RelicFragResultPopup : MonoBehaviour
 
     void Setup(List<Entry> results, bool single)
     {
+        gameObject.SetActive(true);
+
         ClearSlots();
         singleAnchor?.SetActive(single);
         multiContent?.SetActive(!single);
@@ -56,14 +57,20 @@ public class RelicFragResultPopup : MonoBehaviour
         if (titleText)
             titleText.text = results.Count == 1 ? "유물 조각 획득!" : $"유물 조각 {results.Count}개 획득!";
 
-        Transform container = single
-            ? singleAnchor?.transform
-            : multiContent?.transform;
+        Transform container = single ? singleAnchor?.transform : multiContent?.transform;
+        if (container == null || slotPrefab == null) return;
 
-        gameObject.SetActive(true);
+        for (int i = 0; i < results.Count; i++)
+        {
+            var entry = results[i];
+            if (entry.data == null) continue;
 
-        if (container != null && slotPrefab != null)
-            StartCoroutine(SpawnSlots(results, container));
+            var slot = Instantiate(slotPrefab, container);
+            slot.gameObject.SetActive(true);
+            slot.Bind(entry.data, entry.count);
+            slot.PlayScaleUp(delay: i * 0.1f);
+            _spawnedSlots.Add(slot);
+        }
     }
 
     void ClearSlots()
@@ -79,19 +86,4 @@ public class RelicFragResultPopup : MonoBehaviour
         gameObject.SetActive(false);
     }
 
-    IEnumerator SpawnSlots(List<Entry> results, Transform container)
-    {
-        for (int i = 0; i < results.Count; i++)
-        {
-            var entry = results[i];
-            if (entry.data == null) continue;
-
-            var slot = Instantiate(slotPrefab, container);
-            slot.gameObject.SetActive(true);
-            slot.Bind(entry.data, entry.count);
-            _spawnedSlots.Add(slot);
-            yield return null;
-            slot.PlayScaleUp(delay: i * 0.1f);
-        }
-    }
 }

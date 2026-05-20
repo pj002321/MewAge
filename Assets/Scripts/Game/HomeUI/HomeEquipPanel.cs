@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -48,6 +49,9 @@ public class HomeEquipPanel : MonoBehaviour
     private bool _showStatChange;
     private Dictionary<StatType, float> _prevStats;
     private Coroutine _statChangeCoroutine;
+
+    // 슬롯 풀 — Destroy/Instantiate 없이 재사용
+    private readonly List<EquipmentSlotView> _bagSlotPool = new();
 
     void Awake()
     {
@@ -136,16 +140,39 @@ public class HomeEquipPanel : MonoBehaviour
     {
         if (inventoryContent == null || slotPrefab == null) return;
 
-        foreach (Transform child in inventoryContent)
-            Destroy(child.gameObject);
+        var inv   = EquipmentInventory.Shared;
+        var items = inv != null ? inv.GetSortedBag(_sortMode) : new List<EquipmentData>();
 
-        var inv = EquipmentInventory.Shared;
-        if (inv == null) return;
+        // 풀 확장이 필요하면 비동기로 처리
+        int needed = items.Count - _bagSlotPool.Count;
+        if (needed > 0)
+        {
+            GrowPoolAsync(items, needed).Forget();
+            return;
+        }
 
-        foreach (var data in inv.GetSortedBag(_sortMode))
+        BindBagSlots(items);
+    }
+
+    async UniTaskVoid GrowPoolAsync(List<EquipmentData> items, int needed)
+    {
+        for (int i = 0; i < needed; i++)
         {
             var slot = Instantiate(slotPrefab, inventoryContent);
-            slot.Bind(data, OnBagSlotClicked);
+            _bagSlotPool.Add(slot);
+            await UniTask.Yield(PlayerLoopTiming.Update);
+        }
+        BindBagSlots(items);
+    }
+
+    void BindBagSlots(List<EquipmentData> items)
+    {
+        for (int i = 0; i < _bagSlotPool.Count; i++)
+        {
+            bool active = i < items.Count;
+            _bagSlotPool[i].gameObject.SetActive(active);
+            if (active)
+                _bagSlotPool[i].Bind(items[i], OnBagSlotClicked);
         }
     }
 

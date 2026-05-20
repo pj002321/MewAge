@@ -103,7 +103,7 @@ public class PopUpBreakthroughReward : PopUpRewardBase
 
         DB_상점.ForEachEntity(row =>
         {
-            if (row.f_상점타입 != "BREAKTHROUGH") return;
+            if (string.IsNullOrEmpty(row.f_C상품ID) || !row.f_C상품ID.StartsWith("BT_")) return;
             if (row.f_V4 != chapter) return;
             if (row.f_V3 > bestWave) return;
             if (IsClaimed(ClaimKey(row))) return;

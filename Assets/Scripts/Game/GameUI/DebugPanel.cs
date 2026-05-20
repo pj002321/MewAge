@@ -196,13 +196,19 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
     {
         PlayerPrefs.DeleteAll();
         PlayerPrefs.Save();
-        _menuUnlocked = false;
-        _invincible   = false;
-        _infiniteTime = false;
-        EquipmentInventory.Shared?.ClearAll();
-        SoundManager.Shared?.StopBGMImmediate();
-        this.DLog("[Debug] PlayerPrefs 전체 초기화 완료 — 인트로 씬으로 이동");
-        SceneLoadManager.LoadScene("introloading@scene");
+        this.DLog("[Debug] PlayerPrefs 전체 초기화 완료 — 앱 종료");
+        PopupBaseNoti.Shared?.Show("원점으로 되돌아갑니다.");
+        StartCoroutine(QuitAfterDelay(1.8f));
+    }
+
+    private System.Collections.IEnumerator QuitAfterDelay(float delay)
+    {
+        yield return new WaitForSecondsRealtime(delay);
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+        Application.Quit();
+#endif
     }
 
     private void OnUnlockAllChapters()

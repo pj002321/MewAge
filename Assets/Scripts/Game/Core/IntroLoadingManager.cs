@@ -22,6 +22,12 @@ public class IntroLoadingManager : MonoBehaviour
     [SerializeField] private Image loadingFillImage;
     [SerializeField] private TMP_Text loadingText;
 
+    private void Awake()
+    {
+        Application.targetFrameRate = 60;
+        QualitySettings.vSyncCount  = 0;  // 모바일에서 vSync 대신 targetFrameRate가 동작하려면 0이어야 함
+    }
+
     private void Start()
     {
         // 씬 진입 시 로딩 코루틴 자동 시작

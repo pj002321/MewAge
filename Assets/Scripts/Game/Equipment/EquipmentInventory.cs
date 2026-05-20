@@ -41,6 +41,8 @@ public class EquipmentInventory : MonoBehaviourSingleton<EquipmentInventory>
     {
         PlayerPrefs.SetInt($"EquipMat_{cat}", Mathf.Max(0, GetMatCount(cat) + amount));
         PlayerPrefs.Save();
+        UIDataBus.BroadcastCurrencyChanged();
+        OnChanged?.Invoke();
     }
 
     public static RewardType CategoryToMatType(EquipCategory cat) => cat switch
@@ -58,14 +60,16 @@ public class EquipmentInventory : MonoBehaviourSingleton<EquipmentInventory>
     public bool TryLevelUp(EquipmentData data)
     {
         if (data == null || data.level >= EquipmentData.MaxLevel) return false;
-        if (HomeGold < GoldCostPerLevel) return false;
+        var rm = RewardManager.Shared;
+        if (rm == null || rm.Gold < GoldCostPerLevel) return false;
         if (GetMatCount(data.category) < MatCostPerLevel) return false;
 
-        HomeGold -= GoldCostPerLevel;
+        rm.SpendGold(GoldCostPerLevel);
         PlayerPrefs.SetInt($"EquipMat_{data.category}", GetMatCount(data.category) - MatCostPerLevel);
+        PlayerPrefs.Save();
         data.level++;
         data.SaveLevel();
-        PlayerPrefs.Save();
+        UIDataBus.BroadcastCurrencyChanged();
         RecalculateEquipStats();
         OnChanged?.Invoke();
         return true;

@@ -1,14 +1,16 @@
 using System.Collections;
+using System.Collections.Generic;
+using Mewage.DB;
 using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
 /// 홈 상점 패널.
-/// 단일 세로 스크롤: 패키지 → 일일상점 → 장비뽑기 → 골드 → 보석
 ///
-/// 일일상점: DB_상점 f_상점타입="DAILY" 행 전체를 풀로 사용,
-///   날짜 기반 시드로 매일 6개를 랜덤 추출해 노출합니다.
-///   DB 필드 매핑: f_T1=통화(GOLD/RUBY) f_V1=수량최소 f_V2=수량최대 f_S가격=일일한도
+/// 일일상점 : f_D상점ID 풀에서 날짜 seed(year*1000+dayOfYear) 가중치 랜덤 DailySlotCount개 선택.
+/// 골드상점 : f_G상점ID 행 순서대로 f_G행수개 슬롯 생성. 루비 결제 → 골드 지급.
+/// 루비상점 : f_R상점ID 행 순서대로 f_R행수개 슬롯 생성. 골드 결제 → 루비 지급.
+/// 챕터상점 : f_C상품ID "C_*" 행 순서대로 f_C행수개 슬롯 생성. 루비 결제 → 4가지 아이템 지급.
 /// </summary>
 public class HomeShopPanel : MonoBehaviour
 {
@@ -16,58 +18,150 @@ public class HomeShopPanel : MonoBehaviour
     public GachaResultPopup gachaPopup;
 
     [Header("섹션 스크롤")]
-    [SerializeField] private ScrollRect    scrollRect;
-    [SerializeField] private RectTransform gemSection;
-    [SerializeField] private RectTransform goldSection;
+    [SerializeField] ScrollRect    scrollRect;
+    [SerializeField] RectTransform gemSection;
+    [SerializeField] RectTransform goldSection;
 
     [Header("일일상점")]
-    [SerializeField] private Transform   dailySlotContainer;
-    [SerializeField] private RewardSlot  dailySlotPrefab;
-    private const int DailySlotCount = 6;
+    [SerializeField] Transform     dailySlotContainer;
+    [SerializeField] DailyShopSlot dailySlotPrefab;
+
+    [Header("골드상점")]
+    [SerializeField] Transform        goldRow1;
+    [SerializeField] Transform        goldRow2;
+    [SerializeField] CurrencyShopSlot goldSlotPrefab;
+
+    [Header("루비상점")]
+    [SerializeField] Transform        rubyRow1;
+    [SerializeField] Transform        rubyRow2;
+    [SerializeField] CurrencyShopSlot rubySlotPrefab;
+
+    [Header("챕터상점")]
+    [SerializeField] Transform        chapterSlotContainer;
+    [SerializeField] ChapterShopSlot  chapterSlotPrefab;
+
+    const int DailySlotCount = 6;
 
     bool         _resultShown;
     EquipBoxType _pendingBox;
     int          _pendingCount = 1;
 
-    // ── 라이프사이클 ────────────────────────────────────────────────────
+    // ── 라이프사이클 ───────────────────────────────────────────────────────
 
-    private void Start() => BuildDailyShop();
-
-    // ── 일일상점 ────────────────────────────────────────────────────────
-
-    private void BuildDailyShop()
+    void Start()
     {
-        if (dailySlotContainer == null || dailySlotPrefab == null) return;
+        BuildDailyShop();
+        BuildGoldShop();
+        BuildRubyShop();
+        BuildChapterShop();
+    }
 
-        foreach (Transform child in dailySlotContainer)
-            Destroy(child.gameObject);
+    // ── 일일상점 ──────────────────────────────────────────────────────────
 
-        var cfg = RewardVisualConfig.Shared;
-        var slots = new (string id, int amount)[]
+    void BuildDailyShop()
+    {
+        if (!dailySlotContainer || !dailySlotPrefab) return;
+        ClearChildren(dailySlotContainer);
+
+        var pool = LoadRows(r => !string.IsNullOrEmpty(r.f_D상점ID), r => r.f_D행수,
+            (a, b) => string.Compare(a.f_D상점ID, b.f_D상점ID, System.StringComparison.Ordinal));
+        if (pool.Count == 0) return;
+
+        int seed    = System.DateTime.Today.Year * 1000 + System.DateTime.Today.DayOfYear;
+        string date = System.DateTime.Today.ToString("yyyyMMdd");
+
+        foreach (var row in WeightedSelect(pool, DailySlotCount, seed, r => Mathf.Max(1, r.f_확률)))
         {
-            ("COIN",            5000),
-            ("RUBY",              10),
-            ("KEY_NORMAL",         1),
-            ("KEY_RELIC_NORMAL",   1),
-            ("MAT_HERO",           3),
-            ("EXP",              500),
-        };
-        foreach (var s in slots)
-        {
-            var item   = new RewardItem(s.id, s.amount);
-            var icon   = cfg?.GetIcon(s.id);
-            var slot   = Instantiate(dailySlotPrefab, dailySlotContainer);
-            slot.Setup(icon, $"×{s.amount}", () =>
-            {
-                if (RewardManager.Shared == null)
-                    MonoBehaviourSingleton<RewardManager>.Create("RewardManager");
-                RewardManager.Shared?.Dispatch(item, icon);
-                slot.SetDimmed(true);
-            }, s.id);
+            var slot = Instantiate(dailySlotPrefab, dailySlotContainer);
+            slot.Setup(row, $"DailyBuy_{row.f_D상점ID}_{date}", OnDailyBuy);
         }
     }
 
-    // ── 뽑기 흐름 ───────────────────────────────────────────────────────
+    void OnDailyBuy(DB_상점 row, DailyShopSlot slot)
+    {
+        string key    = $"DailyBuy_{row.f_D상점ID}_{System.DateTime.Today:yyyyMMdd}";
+        int    bought = PlayerPrefs.GetInt(key, 0);
+        if (row.f_한도 > 0 && bought >= row.f_한도) { PopupBaseNoti.Shared?.Show("구매 한도를 초과했습니다"); return; }
+
+        if (RewardManager.Shared == null) { Debug.LogError("[DailyBuy] RewardManager.Shared is null"); return; }
+        var icon = RewardVisualConfig.Shared?.GetIcon(row.f_D보상);
+        RewardManager.Shared.Dispatch(new RewardItem(row.f_D보상, 1), icon);
+        PlayerPrefs.SetInt(key, bought + 1);
+        slot.RefreshLimit();
+    }
+
+    // ── 골드상점 ──────────────────────────────────────────────────────────
+
+    void BuildGoldShop()
+    {
+        if (!goldSlotPrefab) return;
+        ClearChildren(goldRow1); ClearChildren(goldRow2);
+        var rows = LoadRows(r => !string.IsNullOrEmpty(r.f_G상점ID), r => r.f_G행수,
+            (a, b) => string.Compare(a.f_G상점ID, b.f_G상점ID, System.StringComparison.Ordinal));
+        var rubyIcon = RewardVisualConfig.Shared?.GetIcon(RewardType.Ruby);
+        for (int i = 0; i < rows.Count; i++)
+        {
+            var r = rows[i];
+            Instantiate(goldSlotPrefab, i < 3 ? goldRow1 : goldRow2).Setup(rubyIcon, r.f_G수량, r.f_G가격, false, () =>
+            {
+                var rm = RewardManager.Shared;
+                if (rm == null) return;
+                if (rm.Ruby < r.f_G가격) { PopupBaseNoti.Shared?.Show("루비가 부족합니다"); return; }
+                rm.SpendRuby(r.f_G가격);
+                rm.GiveReward(new RewardItem(RewardType.Gold, r.f_G수량));
+            });
+        }
+    }
+
+    // ── 루비상점 ──────────────────────────────────────────────────────────
+
+    void BuildRubyShop()
+    {
+        if (!rubySlotPrefab) return;
+        ClearChildren(rubyRow1); ClearChildren(rubyRow2);
+        var rows = LoadRows(r => !string.IsNullOrEmpty(r.f_R상점ID), r => r.f_R행수,
+            (a, b) => string.Compare(a.f_R상점ID, b.f_R상점ID, System.StringComparison.Ordinal));
+        for (int i = 0; i < rows.Count; i++)
+        {
+            var r = rows[i];
+            Instantiate(rubySlotPrefab, i < 3 ? rubyRow1 : rubyRow2).Setup(null, r.f_R수량, r.f_R가격, true, () =>
+            {
+                RewardManager.Shared?.GiveReward(new RewardItem(RewardType.Ruby, r.f_R수량));
+            });
+        }
+    }
+
+    // ── 챕터상점 ──────────────────────────────────────────────────────────
+
+    void BuildChapterShop()
+    {
+        if (!chapterSlotContainer || !chapterSlotPrefab) return;
+        ClearChildren(chapterSlotContainer);
+
+        foreach (var row in LoadRows(
+            r => !string.IsNullOrEmpty(r.f_C상품ID) && r.f_C상품ID.StartsWith("C_"),
+            r => r.f_C행수,
+            (a, b) => string.Compare(a.f_C상품ID, b.f_C상품ID, System.StringComparison.Ordinal)))
+        {
+            int  chNum  = ChapterNum(row.f_C상품ID);
+            bool locked = chNum > 1 && PlayerPrefs.GetInt($"ChapterCleared_C{chNum - 1}_S1", 0) == 0;
+            var  r      = row;
+            Instantiate(chapterSlotPrefab, chapterSlotContainer).Setup(r, locked, () => BuyChapter(r));
+        }
+    }
+
+    void BuyChapter(DB_상점 row)
+    {
+        if (RewardManager.Shared == null) return;
+        var ids  = new[] { row.f_T1, row.f_T2, row.f_T3, row.f_T4 };
+        var vals = new[] { row.f_V1, row.f_V2, row.f_V3, row.f_V4 };
+        var cfg  = RewardVisualConfig.Shared;
+        for (int i = 0; i < ids.Length; i++)
+            if (!string.IsNullOrEmpty(ids[i]) && vals[i] > 0)
+                RewardManager.Shared.Dispatch(new RewardItem(ids[i], vals[i]), cfg?.GetIcon(ids[i]));
+    }
+
+    // ── 뽑기 흐름 ─────────────────────────────────────────────────────────
 
     public void TryDraw(int gemCost, EquipBoxType boxType = EquipBoxType.Normal)
         => TryDrawMulti(gemCost, 1, boxType);
@@ -89,7 +183,6 @@ public class HomeShopPanel : MonoBehaviour
     void OnGachaDrawPressed()
     {
         _resultShown = true;
-
         if (EquipmentInventory.Shared == null)
             MonoBehaviourSingleton<EquipmentInventory>.Create("EquipmentInventory");
 
@@ -102,11 +195,7 @@ public class HomeShopPanel : MonoBehaviour
         else
         {
             var results = EquipmentGacha.DrawMulti(_pendingCount, _pendingBox);
-            foreach (var equip in results)
-            {
-                if (equip == null) continue;
-                EquipmentInventory.Shared?.TryAdd(equip);
-            }
+            foreach (var e in results) { if (e != null) EquipmentInventory.Shared?.TryAdd(e); }
             gachaPopup.ShowMultiResult(results);
         }
     }
@@ -118,27 +207,71 @@ public class HomeShopPanel : MonoBehaviour
         _                 => GachaBoxType.EquipNormal,
     };
 
-    // ── 섹션 이동 ───────────────────────────────────────────────────────
+    // ── 섹션 스크롤 ───────────────────────────────────────────────────────
 
     public void ScrollToGem()  => StartCoroutine(ScrollToSection(gemSection));
     public void ScrollToGold() => StartCoroutine(ScrollToSection(goldSection));
 
-    private IEnumerator ScrollToSection(RectTransform section)
+    IEnumerator ScrollToSection(RectTransform section)
     {
-        if (scrollRect == null || section == null) yield break;
+        if (!scrollRect || !section) yield break;
         yield return null;
-
         Canvas.ForceUpdateCanvases();
-        var content  = scrollRect.content;
-        var viewport = scrollRect.viewport != null ? scrollRect.viewport : scrollRect.GetComponent<RectTransform>();
-        Vector2 sectionLocal = (Vector2)content.InverseTransformPoint(section.position);
-        float   contentH     = content.rect.height;
-        float   viewportH    = viewport.rect.height;
-        float   targetY      = Mathf.Clamp01((-sectionLocal.y) / (contentH - viewportH));
+        var content   = scrollRect.content;
+        var viewport  = scrollRect.viewport != null ? scrollRect.viewport : scrollRect.GetComponent<RectTransform>();
+        float targetY = Mathf.Clamp01((-((Vector2)content.InverseTransformPoint(section.position)).y)
+                        / (content.rect.height - viewport.rect.height));
         scrollRect.verticalNormalizedPosition = 1f - targetY;
     }
 
-    // ── IAP / 재화 구매 ─────────────────────────────────────────────────
+    // ── 공용 유틸 ─────────────────────────────────────────────────────────
+
+    static void ClearChildren(Transform t)
+    {
+        if (!t) return;
+        for (int i = t.childCount - 1; i >= 0; i--) Destroy(t.GetChild(i).gameObject);
+    }
+
+    static List<DB_상점> LoadRows(System.Func<DB_상점, bool> filter,
+        System.Func<DB_상점, int> countFn, System.Comparison<DB_상점> compare)
+    {
+        var list  = new List<DB_상점>();
+        int count = 0;
+        DB_상점.ForEachEntity(row =>
+        {
+            if (!filter(row)) return;
+            list.Add(row);
+            if (count == 0 && countFn(row) > 0) count = countFn(row);
+        });
+        list.Sort(compare);
+        if (count > 0 && list.Count > count) list.RemoveRange(count, list.Count - count);
+        return list;
+    }
+
+    static List<T> WeightedSelect<T>(List<T> pool, int count, int seed, System.Func<T, int> weightFn)
+    {
+        var result = new List<T>();
+        var rem    = new List<T>(pool);
+        var rng    = new System.Random(seed);
+        for (int i = 0; i < Mathf.Min(count, rem.Count); i++)
+        {
+            int total = 0;
+            foreach (var x in rem) total += weightFn(x);
+            if (total <= 0) break;
+            int roll = rng.Next(total), acc = 0;
+            for (int j = 0; j < rem.Count; j++)
+            {
+                acc += weightFn(rem[j]);
+                if (roll < acc) { result.Add(rem[j]); rem.RemoveAt(j); break; }
+            }
+        }
+        return result;
+    }
+
+    static int ChapterNum(string cId) =>
+        cId.Split('_') is { Length: >= 2 } p && int.TryParse(p[1], out int n) ? n : 0;
+
+    // ── IAP ───────────────────────────────────────────────────────────────
 
     public void PurchaseGems(string productId) => Debug.Log($"[Shop] 보석 구매: {productId}");
     public void PurchaseGold(int goldAmount)   => Debug.Log($"[Shop] 골드 구매: {goldAmount}");

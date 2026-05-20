@@ -2,32 +2,32 @@ using UnityEngine;
 
 /// <summary>
 /// 뽑기권(티켓) 보유 수량 관리. PlayerPrefs 기반 영구 저장.
-/// 키 형식: "Ticket_{RewardType}_Count"
+/// 씬 인스턴스 불필요 — 모든 메서드가 static.
 /// </summary>
-public class TicketManager : MonoBehaviourSingleton<TicketManager>
+public static class TicketManager
 {
-    protected override bool DontDestroy => false;
+    public static event System.Action OnChanged;
 
     private static string Key(RewardType type) => $"Ticket_{type}_Count";
 
-    public int GetCount(RewardType type) =>
+    public static int GetCount(RewardType type) =>
         PlayerPrefs.GetInt(Key(type), 0);
 
-    public void Add(RewardType type, int count)
+    public static void Add(RewardType type, int count)
     {
         if (count <= 0) return;
-        int cur = GetCount(type);
-        PlayerPrefs.SetInt(Key(type), cur + count);
+        PlayerPrefs.SetInt(Key(type), GetCount(type) + count);
         PlayerPrefs.Save();
+        OnChanged?.Invoke();
     }
 
-    /// <summary>티켓 1장 소모. 보유 중이면 true, 없으면 false.</summary>
-    public bool TrySpend(RewardType type)
+    public static bool TrySpend(RewardType type)
     {
         int cur = GetCount(type);
         if (cur <= 0) return false;
         PlayerPrefs.SetInt(Key(type), cur - 1);
         PlayerPrefs.Save();
+        OnChanged?.Invoke();
         return true;
     }
 }
