@@ -110,13 +110,15 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
         var inv = PlayerInventory.Shared;
         if (inv == null) return;
 
+        // 기본 무기는 항상 슬롯 0(우상단), 슬롯 2(좌상단)에 고정 배치
+        int[] starterSlots = { 0, 2 };
         for (int i = 0; i < 2; i++)
         {
             var starter = normals[Random.Range(0, normals.Count)];
             if (inv.TryAddToInventory(starter))
             {
-                inv.EquipFromInventory(0); // 인벤 0번 슬롯 → 장착 슬롯으로
-                Debug.Log($"[UpgradeManager] 시작 무기 지급 {i + 1}: {starter.weaponName}");
+                inv.MoveInvenToEquip(0, starterSlots[i]);
+                Debug.Log($"[UpgradeManager] 시작 무기 지급 {i + 1}: {starter.weaponName} → 슬롯 {starterSlots[i]}");
             }
         }
     }

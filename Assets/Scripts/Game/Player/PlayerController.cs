@@ -664,7 +664,7 @@ public class PlayerController : MonoBehaviour
             if (sdk >= 26)
             {
                 using var veClass = new AndroidJavaClass("android.os.VibrationEffect");
-                using var effect  = veClass.CallStatic<AndroidJavaObject>("createOneShot", 40L, 180);
+                using var effect  = veClass.CallStatic<AndroidJavaObject>("createOneShot", 25L, 120);
                 vibrator.Call("vibrate", effect);
             }
             else

@@ -54,6 +54,21 @@ public static class EnemyFX
         return seq;
     }
 
+    // ── 착지 반동 ─────────────────────────────────────────────────
+
+    /// <summary>
+    /// 착지 순간 이미 찌부된 스케일에서 반동·안착하는 시퀀스.
+    /// BounceIn 코루틴이 착지 직전 스케일을 설정한 뒤 호출합니다.
+    /// </summary>
+    public static Sequence LandingSquish(Transform t, Vector3 spawnScale, TweenCallback onComplete = null)
+    {
+        var seq = DOTween.Sequence().SetLink(t.gameObject);
+        seq.Append(t.DOScale(new Vector3(spawnScale.x * 0.85f, spawnScale.y * 1.22f, spawnScale.z), 0.09f));
+        seq.Append(t.DOScale(spawnScale, 0.09f).SetEase(Ease.OutSine));
+        if (onComplete != null) seq.OnComplete(onComplete);
+        return seq;
+    }
+
     // ── 스케일 Y (보스 입장 squash/stretch) ──────────────────────
 
     /// <summary>
