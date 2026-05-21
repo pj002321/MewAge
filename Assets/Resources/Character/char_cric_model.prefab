@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 54421883043995122}
   - component: {fileID: 1979059738611152619}
   - component: {fileID: 3420254453560308468}
+  - component: {fileID: -3179533718556255951}
   m_Layer: 6
   m_Name: char_cric_model
   m_TagString: Untagged
@@ -128,3 +129,26 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpriteYSort
   multiplier: 100
+--- !u!114 &-3179533718556255951
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6482918335171765871}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c49d6022c1b5400680ca51ef66e24d5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SkillCric
+  duration: 3
+  pointsRequired: 50
+  sweepPrefab: {fileID: 917885316504536691, guid: 4872d68f93071445cab1d2e2af876c2f, type: 3}
+  sweepSpeed: 15
+  sweepKnockbackForce: 15
+  dashWavePrefab: {fileID: 171188, guid: a6b66c55641a7704da9de37735da9b04, type: 3}
+  dashDistance: 3
+  dashStepTime: 0.15
+  knockbackForce: 30
+  knockbackRadius: 3
+  clusterRadius: 3

@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 54421883043995122}
   - component: {fileID: 1979059738611152619}
   - component: {fileID: 3420254453560308468}
+  - component: {fileID: -8767083809980276514}
   m_Layer: 6
   m_Name: char_normal_model
   m_TagString: Untagged
@@ -128,3 +129,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpriteYSort
   multiplier: 100
+--- !u!114 &-8767083809980276514
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6482918335171765871}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dd06d8de0fbaefd43b607ebc05f4b88b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SkillNormal
+  duration: 3
+  pointsRequired: 50
