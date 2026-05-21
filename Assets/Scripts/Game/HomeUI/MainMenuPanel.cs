@@ -276,7 +276,33 @@ public class MainMenuPanel : MonoBehaviour
         startButton?.onClick.AddListener(OnStartClicked);
         SetupScrollEvents();
 
+        ApplyMenuUnlockState();
         StartCoroutine(InitAfterLayout());
+    }
+
+    // ── 메뉴 잠금/해금 ───────────────────────────────────────────────
+    public bool IsMenuUnlocked { get; private set; }
+
+    public void ApplyMenuUnlockState()
+    {
+        IsMenuUnlocked = PlayerPrefs.GetInt("BattleCompleted", 0) == 1;
+        SetMenuButtonsActive(IsMenuUnlocked);
+    }
+
+    public void DebugToggleMenu()
+    {
+        IsMenuUnlocked = !IsMenuUnlocked;
+        SetMenuButtonsActive(IsMenuUnlocked);
+    }
+
+    void SetMenuButtonsActive(bool active)
+    {
+        foreach (var btn in new[]
+        {
+            storageButton, specialGiftButton, dailymissionButton,
+            achievementButton, attendanceButton, rankingButton, inventoryButton,
+        })
+            if (btn) btn.gameObject.SetActive(active);
     }
 
     void EnsureVerticalLayout()
@@ -740,6 +766,7 @@ public class MainMenuPanel : MonoBehaviour
         for (int i = 0; i < Mathf.Min(stages.Length, cardViews.Length); i++)
             cardViews[i]?.Bind(stages[i]);
         ApplyCardScales(currentIndex, suppressAnimation: false);
+        StartCoroutine(ReSnapOnEnable());
     }
 
     // ── 챕터 레이블 ─────────────────────────────────────────────────

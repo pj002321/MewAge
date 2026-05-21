@@ -80,8 +80,8 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 1049025713
+  m_SortingLayer: 1
   m_SortingOrder: 101
   m_MaskInteraction: 0
   m_Sprite: {fileID: 1066025848242959972, guid: 78d61fd33e0f98e479b493b4683771cf, type: 3}
@@ -169,6 +169,13 @@ MonoBehaviour:
   slashProjSpeed: 9
   radiusMultiplier: 1.4
   spinSpeedMultiplier: 1.35
+  spinCloneChance: 0.3
+  spinCloneRadius: 1.5
+  spinCloneSpeed: 220
+  spinCloneDuration: 3
+  spinCloneHitRadius: 0.4
+  spinCloneAlpha: 0.5
+  spinCloneMaxCount: 3
   shockwaveRadius: 4.5
   shockwaveDmgRatio: 0.4
   spikeChance: 0.2

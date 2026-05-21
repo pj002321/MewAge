@@ -38,9 +38,17 @@ public class RangedBehaviour : EnemyBehaviourBase
     [Header("이동 상태")]
     [SerializeField] private float retreatDuration = 1.4f;
 
+    [Header("측면 포지셔닝")]
+    [SerializeField] private float flankSpeedMult  = 1.4f;       // 포지셔닝 중 이동 속도 배율
+    [SerializeField][Range(10f, 60f)] private float flankArcHalf = 30f; // 60° 호각의 절반
+
     private enum MoveState { Approaching, Idle, Retreating }
     private MoveState _moveState = MoveState.Approaching;
     private float     _retreatTimer;
+    private float     _flankAngle; // player 기준 목표 방향 (world-space degrees)
+
+    // 전역 카운터로 좌/우 교대 배분 (홀수 = 왼쪽, 짝수 = 오른쪽)
+    private static int _flankSideCounter;
 
     private float        _projSpeed;
     private float        _projBonusDamage;
@@ -97,7 +105,15 @@ public class RangedBehaviour : EnemyBehaviourBase
                 break;
 
             case MoveState.Approaching:
-                if (dist > preferredRange)
+                if (!IsInFlankPosition())
+                {
+                    // 측면 포지션 미도달: 목표 측면 위치로 빠르게 이동, 시선은 플레이어 유지
+                    Vector2 toTarget = (GetFlankTarget() - Owner.Rb.position).normalized;
+                    Owner.MoveInDirection(toTarget, Owner.MoveSpeed * flankSpeedMult);
+                    Owner.FlipToward(toPlayer);
+                    SetWalk(true);
+                }
+                else if (dist > preferredRange)
                 {
                     Owner.MoveInDirection(toPlayer, Owner.MoveSpeed);
                     SetWalk(true);
@@ -128,6 +144,40 @@ public class RangedBehaviour : EnemyBehaviourBase
             Destroy(_activeWarnLine.gameObject);
             _activeWarnLine = null;
         }
+
+        // 교대 카운터로 좌/우 균등 배분 + ±15° 분산
+        Transform playerTr = host.PlayerTransform ?? PlayerController.Instance?.transform;
+        if (playerTr != null)
+        {
+            Vector2 fromPlayer = (Vector2)host.SelfTransform.position - (Vector2)playerTr.position;
+            float spawnAngle = Mathf.Atan2(fromPlayer.y, fromPlayer.x) * Mathf.Rad2Deg;
+            float side       = (_flankSideCounter++ % 2 == 0) ? 1f : -1f;
+            float spread     = Random.Range(-15f, 15f);
+            _flankAngle = spawnAngle + side * 90f + spread;
+        }
+        else
+        {
+            _flankAngle = Random.Range(0f, 360f);
+        }
+    }
+
+    /// <summary>현재 위치가 player 기준 측면 호각 내에 있는지 확인합니다.</summary>
+    private bool IsInFlankPosition()
+    {
+        var player = Owner.PlayerTransform;
+        if (player == null) return true;
+        Vector2 fromPlayer = (Vector2)Owner.Rb.position - (Vector2)player.position;
+        if (fromPlayer.sqrMagnitude < 0.01f) return false;
+        float cur = Mathf.Atan2(fromPlayer.y, fromPlayer.x) * Mathf.Rad2Deg;
+        return Mathf.Abs(Mathf.DeltaAngle(cur, _flankAngle)) <= flankArcHalf;
+    }
+
+    /// <summary>측면 목표 위치 (player로부터 flankAngle 방향, preferredRange 거리)를 반환합니다.</summary>
+    private Vector2 GetFlankTarget()
+    {
+        float rad = _flankAngle * Mathf.Deg2Rad;
+        return (Vector2)Owner.PlayerTransform.position
+               + new Vector2(Mathf.Cos(rad), Mathf.Sin(rad)) * preferredRange;
     }
 
     /// <summary>DB_유닛 투사체 데이터를 적용합니다.</summary>

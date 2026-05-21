@@ -67,6 +67,21 @@ public class RelicInfoPopup : MonoBehaviour
         gameObject.SetActive(false);
     }
 
+    private void OnEnable()
+    {
+        RelicInventory.OnChanged += OnInventoryChanged;
+    }
+
+    private void OnDisable()
+    {
+        RelicInventory.OnChanged -= OnInventoryChanged;
+    }
+
+    private void OnInventoryChanged()
+    {
+        if (_currentData != null) RefreshUI(_currentData);
+    }
+
     // ── 공개 API ──────────────────────────────────────────────────────────
     public void Show(RelicData data)
     {
@@ -130,7 +145,9 @@ public class RelicInfoPopup : MonoBehaviour
 
         // 특수속성
         if (specialAttrText)
-            specialAttrText.text = BuildAttrLine(data.secondaryEffect, data.GetSecondaryValue(level), locked);
+            specialAttrText.text = data.secondaryEffect == RelicEffectType.NONE
+                ? "특수한 기운은 느껴지지 않습니다"
+                : BuildAttrLine(data.secondaryEffect, data.GetSecondaryValue(level), locked);
 
         // 설명
         if (descriptionText) descriptionText.text = data.description;

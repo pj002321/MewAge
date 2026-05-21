@@ -33,6 +33,7 @@ public class CharacterSkillManager : MonoBehaviourSingleton<CharacterSkillManage
     protected override bool DontDestroy => false;
 
     private CharacterSkillBase _skill;
+    private bool       _skillIsOwned;     // true면 Resources에서 생성 → Destroy 대상
     private int        _currentPoints;
     private bool       _isActive;
     private bool       _onCooldown;
@@ -46,35 +47,53 @@ public class CharacterSkillManager : MonoBehaviourSingleton<CharacterSkillManage
 
     // ── 초기화 ─────────────────────────────────────────────────────
 
-    /// <summary>캐릭터 장착 시 호출 — 스킬 프리팹을 로드하고 준비합니다.</summary>
+    /// <summary>캐릭터 장착 시 호출 — 스킬을 찾아 준비합니다.</summary>
     public void Initialize(string skillId)
     {
-        // 이전 스킬 정리 (default boost 활성 상태도 포함)
+        // 이전 스킬 정리 — Resources에서 생성한 것만 Destroy, 모델에 붙은 건 참조만 해제
         if (_isActive) StopSkill();
         if (_skill != null)
         {
-            Destroy(_skill.gameObject);
+            if (_skillIsOwned) Destroy(_skill.gameObject);
             _skill = null;
         }
 
         _currentPoints = 0;
         _isActive      = false;
         _onCooldown    = false;
-        _skill         = null;
+        _skillIsOwned  = false;
 
         if (_cooldownRoutine != null) { StopCoroutine(_cooldownRoutine); _cooldownRoutine = null; }
 
         if (!string.IsNullOrEmpty(skillId))
         {
-            var prefab = Resources.Load<GameObject>($"Skills/{skillId.ToLower()}");
-            if (prefab != null)
+            // 1순위: 플레이어 자식 계층에서 SkillId가 일치하는 컴포넌트 탐색 (모델에 부착된 경우)
+            var player = PlayerController.Instance;
+            if (player != null)
             {
-                var parent = PlayerController.Instance != null
-                    ? PlayerController.Instance.transform
-                    : transform;
-                var go = Instantiate(prefab, parent);
-                go.transform.localPosition = Vector3.zero;
-                _skill = go.GetComponent<CharacterSkillBase>();
+                foreach (var candidate in player.GetComponentsInChildren<CharacterSkillBase>(true))
+                {
+                    if (candidate.SkillId == skillId)
+                    {
+                        _skill        = candidate;
+                        _skillIsOwned = false;
+                        break;
+                    }
+                }
+            }
+
+            // 2순위: Resources/Skills/{skillId.ToLower()}.prefab 로드
+            if (_skill == null)
+            {
+                var prefab = Resources.Load<GameObject>($"Skills/{skillId.ToLower()}");
+                if (prefab != null)
+                {
+                    var parent = player != null ? player.transform : transform;
+                    var go = Instantiate(prefab, parent);
+                    go.transform.localPosition = Vector3.zero;
+                    _skill        = go.GetComponent<CharacterSkillBase>();
+                    _skillIsOwned = true;
+                }
             }
         }
 

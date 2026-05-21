@@ -103,6 +103,7 @@ public class PlayerController : MonoBehaviour
     private Coroutine _skillHighlightCoroutine;
     private Coroutine _hitInvincibleCoroutine;
     private bool           isInvincible;
+    private bool           _skillInvincible;
 
     private void Awake()
     {
@@ -259,7 +260,7 @@ public class PlayerController : MonoBehaviour
         this.DLog($"[피해] {damage:0.#}  ← {sourceName ?? "unknown"}");
 
         if (_debugInvincible) return;
-        if (isInvincible)
+        if (isInvincible || _skillInvincible)
             return;
 
         if (dodge > 0f && Random.value < dodge)
@@ -577,6 +578,9 @@ public class PlayerController : MonoBehaviour
     /// <summary>디버그 전용 — 무적 영구 토글. isInvincible과 완전히 독립적으로 동작합니다.</summary>
     public void SetDebugInvincible(bool on) => _debugInvincible = on;
 
+    /// <summary>스킬 등 외부에서 무적 on/off. HitInvincible과 독립적으로 동작합니다.</summary>
+    public void SetSkillInvincible(bool on) => _skillInvincible = on;
+
     /// <summary>GameManager.Revive()에서 호출 — HP를 가득 채우고 3초 무적 부여</summary>
     public void Revive()
     {
@@ -664,7 +668,7 @@ public class PlayerController : MonoBehaviour
             if (sdk >= 26)
             {
                 using var veClass = new AndroidJavaClass("android.os.VibrationEffect");
-                using var effect  = veClass.CallStatic<AndroidJavaObject>("createOneShot", 40L, 180);
+                using var effect  = veClass.CallStatic<AndroidJavaObject>("createOneShot", 25L, 120);
                 vibrator.Call("vibrate", effect);
             }
             else

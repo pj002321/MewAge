@@ -2834,6 +2834,7 @@ Material:
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
   - OUTLINE_ON
+  - UNDERLAY_ON
   m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -2853,12 +2854,12 @@ Material:
     m_Floats:
     - _ColorMask: 15
     - _CullMode: 2
-    - _FaceDilate: 0.15
+    - _FaceDilate: 0
     - _GradientScale: 4
     - _MaskSoftnessX: 0
     - _MaskSoftnessY: 0
     - _OutlineSoftness: 0
-    - _OutlineWidth: 0
+    - _OutlineWidth: 0.16
     - _PerspectiveFilter: 0
     - _ScaleRatioA: 0.75
     - _ScaleRatioB: 0.05499999
@@ -6348,6 +6349,7 @@ Material:
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
   - OUTLINE_ON
+  - UNDERLAY_ON
   m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -6367,12 +6369,12 @@ Material:
     m_Floats:
     - _ColorMask: 15
     - _CullMode: 2
-    - _FaceDilate: 0.15
+    - _FaceDilate: 0
     - _GradientScale: 4
     - _MaskSoftnessX: 0
     - _MaskSoftnessY: 0
     - _OutlineSoftness: 0
-    - _OutlineWidth: 0
+    - _OutlineWidth: 0.16
     - _PerspectiveFilter: 0
     - _ScaleRatioA: 0.75
     - _ScaleRatioB: 0.05499999
@@ -7140,7 +7142,7 @@ Material:
     - _PerspectiveFilter: 0
     - _ScaleRatioA: 0.75
     - _ScaleRatioB: 0.05499999
-    - _ScaleRatioC: 0.609375
+    - _ScaleRatioC: 0.496875
     - _ScaleX: 1
     - _ScaleY: 1
     - _ShaderFlags: 0
@@ -9397,47 +9399,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 216007534}
   m_CullTransparentMesh: 1
---- !u!21 &216161304
-Material:
-  serializedVersion: 8
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: UI/RoundedCorners/RoundedCorners
-  m_Shader: {fileID: 4800000, guid: 0bd2ec5d73751e34a814274a454bec41, type: 3}
-  m_Parent: {fileID: 0}
-  m_ModifiedSerializedProperties: 0
-  m_ValidKeywords: []
-  m_InvalidKeywords: []
-  m_LightmapFlags: 4
-  m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
-  m_CustomRenderQueue: -1
-  stringTagMap: {}
-  disabledShaderPasses: []
-  m_LockedProperties: 
-  m_SavedProperties:
-    serializedVersion: 3
-    m_TexEnvs:
-    - _MainTex:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    m_Ints: []
-    m_Floats:
-    - _ColorMask: 15
-    - _Stencil: 0
-    - _StencilComp: 8
-    - _StencilOp: 0
-    - _StencilReadMask: 255
-    - _StencilWriteMask: 255
-    - _UseUIAlphaClip: 0
-    m_Colors:
-    - _OuterUV: {r: 0, g: 0, b: 1, a: 1}
-    - _WidthHeightRadius: {r: 104, g: 104, b: 3.6, a: 0}
-  m_BuildTextureStacks: []
-  m_AllowLocking: 1
 --- !u!21 &220718624
 Material:
   serializedVersion: 8
@@ -21253,6 +21214,7 @@ Material:
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
   - OUTLINE_ON
+  - UNDERLAY_ON
   m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -21272,12 +21234,12 @@ Material:
     m_Floats:
     - _ColorMask: 15
     - _CullMode: 2
-    - _FaceDilate: 0.15
+    - _FaceDilate: 0
     - _GradientScale: 4
     - _MaskSoftnessX: 0
     - _MaskSoftnessY: 0
     - _OutlineSoftness: 0
-    - _OutlineWidth: 0
+    - _OutlineWidth: 0.16
     - _PerspectiveFilter: 0
     - _ScaleRatioA: 0.75
     - _ScaleRatioB: 0.05499999
@@ -24507,7 +24469,7 @@ Material:
     - _PerspectiveFilter: 0
     - _ScaleRatioA: 0.75
     - _ScaleRatioB: 0.05499999
-    - _ScaleRatioC: 0.496875
+    - _ScaleRatioC: 0.609375
     - _ScaleX: 1
     - _ScaleY: 1
     - _ShaderFlags: 0
@@ -28808,6 +28770,7 @@ Material:
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
   - OUTLINE_ON
+  - UNDERLAY_ON
   m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -28827,12 +28790,12 @@ Material:
     m_Floats:
     - _ColorMask: 15
     - _CullMode: 2
-    - _FaceDilate: 0.15
+    - _FaceDilate: 0
     - _GradientScale: 4
     - _MaskSoftnessX: 0
     - _MaskSoftnessY: 0
     - _OutlineSoftness: 0
-    - _OutlineWidth: 0
+    - _OutlineWidth: 0.16
     - _PerspectiveFilter: 0
     - _ScaleRatioA: 0.75
     - _ScaleRatioB: 0.05499999
@@ -32448,6 +32411,7 @@ Material:
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
   - OUTLINE_ON
+  - UNDERLAY_ON
   m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -32467,12 +32431,12 @@ Material:
     m_Floats:
     - _ColorMask: 15
     - _CullMode: 2
-    - _FaceDilate: 0.15
+    - _FaceDilate: 0
     - _GradientScale: 4
     - _MaskSoftnessX: 0
     - _MaskSoftnessY: 0
     - _OutlineSoftness: 0
-    - _OutlineWidth: 0
+    - _OutlineWidth: 0.16
     - _PerspectiveFilter: 0
     - _ScaleRatioA: 0.75
     - _ScaleRatioB: 0.05499999
@@ -35998,6 +35962,7 @@ Material:
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
   - OUTLINE_ON
+  - UNDERLAY_ON
   m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -36017,12 +35982,12 @@ Material:
     m_Floats:
     - _ColorMask: 15
     - _CullMode: 2
-    - _FaceDilate: 0.15
+    - _FaceDilate: 0
     - _GradientScale: 4
     - _MaskSoftnessX: 0
     - _MaskSoftnessY: 0
     - _OutlineSoftness: 0
-    - _OutlineWidth: 0
+    - _OutlineWidth: 0.16
     - _PerspectiveFilter: 0
     - _ScaleRatioA: 0.75
     - _ScaleRatioB: 0.05499999
@@ -37165,7 +37130,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: 216161304}
+  m_Material: {fileID: 1209464748}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
@@ -38346,6 +38311,7 @@ Material:
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
   - OUTLINE_ON
+  - UNDERLAY_ON
   m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -38365,12 +38331,12 @@ Material:
     m_Floats:
     - _ColorMask: 15
     - _CullMode: 2
-    - _FaceDilate: 0.15
+    - _FaceDilate: 0
     - _GradientScale: 4
     - _MaskSoftnessX: 0
     - _MaskSoftnessY: 0
     - _OutlineSoftness: 0
-    - _OutlineWidth: 0
+    - _OutlineWidth: 0.16
     - _PerspectiveFilter: 0
     - _ScaleRatioA: 0.75
     - _ScaleRatioB: 0.05499999
@@ -39066,7 +39032,8 @@ MonoBehaviour:
   boxType: 0
   drawCount: 10
   resultPopup: {fileID: 1675888716}
-  costText: {fileID: 260419473}
+  icon: {fileID: 755245585}
+  label: {fileID: 260419473}
 --- !u!21 &992494591
 Material:
   serializedVersion: 8
@@ -41465,6 +41432,7 @@ Material:
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
   - OUTLINE_ON
+  - UNDERLAY_ON
   m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -41484,12 +41452,12 @@ Material:
     m_Floats:
     - _ColorMask: 15
     - _CullMode: 2
-    - _FaceDilate: 0.15
+    - _FaceDilate: 0
     - _GradientScale: 4
     - _MaskSoftnessX: 0
     - _MaskSoftnessY: 0
     - _OutlineSoftness: 0
-    - _OutlineWidth: 0
+    - _OutlineWidth: 0.16
     - _PerspectiveFilter: 0
     - _ScaleRatioA: 0.75
     - _ScaleRatioB: 0.05499999
@@ -44812,6 +44780,7 @@ Material:
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
   - OUTLINE_ON
+  - UNDERLAY_ON
   m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -44831,12 +44800,12 @@ Material:
     m_Floats:
     - _ColorMask: 15
     - _CullMode: 2
-    - _FaceDilate: 0.15
+    - _FaceDilate: 0
     - _GradientScale: 4
     - _MaskSoftnessX: 0
     - _MaskSoftnessY: 0
     - _OutlineSoftness: 0
-    - _OutlineWidth: 0
+    - _OutlineWidth: 0.16
     - _PerspectiveFilter: 0
     - _ScaleRatioA: 0.75
     - _ScaleRatioB: 0.05499999
@@ -47208,6 +47177,47 @@ Material:
     - _FaceColor: {r: 1.1434487, g: 1.1434487, b: 1.1434487, a: 1}
     - _OutlineColor: {r: 0, g: 0, b: 0, a: 1}
     - _UnderlayColor: {r: 0, g: 0, b: 0, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1
+--- !u!21 &1209464748
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: UI/RoundedCorners/RoundedCorners
+  m_Shader: {fileID: 4800000, guid: 0bd2ec5d73751e34a814274a454bec41, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _MainTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _ColorMask: 15
+    - _Stencil: 0
+    - _StencilComp: 8
+    - _StencilOp: 0
+    - _StencilReadMask: 255
+    - _StencilWriteMask: 255
+    - _UseUIAlphaClip: 0
+    m_Colors:
+    - _OuterUV: {r: 0, g: 0, b: 1, a: 1}
+    - _WidthHeightRadius: {r: 104, g: 104, b: 3.6, a: 0}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
 --- !u!1 &1209505787
@@ -54233,6 +54243,7 @@ Material:
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
   - OUTLINE_ON
+  - UNDERLAY_ON
   m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -54252,16 +54263,16 @@ Material:
     m_Floats:
     - _ColorMask: 15
     - _CullMode: 2
-    - _FaceDilate: 0.15
+    - _FaceDilate: 0
     - _GradientScale: 4
     - _MaskSoftnessX: 0
     - _MaskSoftnessY: 0
     - _OutlineSoftness: 0
-    - _OutlineWidth: 0
+    - _OutlineWidth: 0.16
     - _PerspectiveFilter: 0
     - _ScaleRatioA: 0.75
     - _ScaleRatioB: 0.05499999
-    - _ScaleRatioC: 0.496875
+    - _ScaleRatioC: 0.609375
     - _ScaleX: 1
     - _ScaleY: 1
     - _ShaderFlags: 0
@@ -62815,7 +62826,8 @@ MonoBehaviour:
   boxType: 1
   drawCount: 1
   resultPopup: {fileID: 1675888716}
-  costText: {fileID: 849539457}
+  icon: {fileID: 1314566807}
+  label: {fileID: 849539457}
 --- !u!114 &1658110495 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 9071841029450310449, guid: d7859d06247e3b049aadfd7bc79ee4ba, type: 3}
@@ -64147,7 +64159,7 @@ Material:
     - _PerspectiveFilter: 0
     - _ScaleRatioA: 0.75
     - _ScaleRatioB: 0.05499999
-    - _ScaleRatioC: 0.609375
+    - _ScaleRatioC: 0.496875
     - _ScaleX: 1
     - _ScaleY: 1
     - _ShaderFlags: 0
@@ -67576,6 +67588,7 @@ Material:
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
   - OUTLINE_ON
+  - UNDERLAY_ON
   m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -67595,12 +67608,12 @@ Material:
     m_Floats:
     - _ColorMask: 15
     - _CullMode: 2
-    - _FaceDilate: 0.15
+    - _FaceDilate: 0
     - _GradientScale: 4
     - _MaskSoftnessX: 0
     - _MaskSoftnessY: 0
     - _OutlineSoftness: 0
-    - _OutlineWidth: 0
+    - _OutlineWidth: 0.16
     - _PerspectiveFilter: 0
     - _ScaleRatioA: 0.75
     - _ScaleRatioB: 0.05499999
@@ -68509,7 +68522,8 @@ MonoBehaviour:
   boxType: 0
   drawCount: 1
   resultPopup: {fileID: 1675888716}
-  costText: {fileID: 523446139}
+  icon: {fileID: 1065439034}
+  label: {fileID: 523446139}
 --- !u!1 &1813041429
 GameObject:
   m_ObjectHideFlags: 0
@@ -77963,6 +77977,7 @@ Material:
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
   - OUTLINE_ON
+  - UNDERLAY_ON
   m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -77982,12 +77997,12 @@ Material:
     m_Floats:
     - _ColorMask: 15
     - _CullMode: 2
-    - _FaceDilate: 0.15
+    - _FaceDilate: 0
     - _GradientScale: 4
     - _MaskSoftnessX: 0
     - _MaskSoftnessY: 0
     - _OutlineSoftness: 0
-    - _OutlineWidth: 0
+    - _OutlineWidth: 0.16
     - _PerspectiveFilter: 0
     - _ScaleRatioA: 0.75
     - _ScaleRatioB: 0.05499999
@@ -79667,7 +79682,8 @@ MonoBehaviour:
   boxType: 1
   drawCount: 10
   resultPopup: {fileID: 1675888716}
-  costText: {fileID: 696586973}
+  icon: {fileID: 846785918}
+  label: {fileID: 696586973}
 --- !u!1 &2074857531
 GameObject:
   m_ObjectHideFlags: 0
@@ -80524,6 +80540,7 @@ Material:
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
   - OUTLINE_ON
+  - UNDERLAY_ON
   m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -80543,12 +80560,12 @@ Material:
     m_Floats:
     - _ColorMask: 15
     - _CullMode: 2
-    - _FaceDilate: 0.15
+    - _FaceDilate: 0
     - _GradientScale: 4
     - _MaskSoftnessX: 0
     - _MaskSoftnessY: 0
     - _OutlineSoftness: 0
-    - _OutlineWidth: 0
+    - _OutlineWidth: 0.16
     - _PerspectiveFilter: 0
     - _ScaleRatioA: 0.75
     - _ScaleRatioB: 0.05499999
@@ -83094,6 +83111,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: "Popup_\uD2B9\uBCC4\uC0C1\uD488"
       objectReference: {fileID: 0}
+    - target: {fileID: 8204007979098030947, guid: 519c502a32ec95741aefe0d09acce3bb, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -83600,7 +83621,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 235767364650431117, guid: a2315d75a0d7d7a4eb5a80084a37a078, type: 3}
       propertyPath: m_fontStyle
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 235767364650431117, guid: a2315d75a0d7d7a4eb5a80084a37a078, type: 3}
       propertyPath: m_fontMaterial
@@ -83660,7 +83681,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2424780903415519957, guid: a2315d75a0d7d7a4eb5a80084a37a078, type: 3}
       propertyPath: m_fontStyle
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2424780903415519957, guid: a2315d75a0d7d7a4eb5a80084a37a078, type: 3}
       propertyPath: m_fontMaterial
@@ -84082,6 +84103,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: "Popup_\uC5C5\uC801"
       objectReference: {fileID: 0}
+    - target: {fileID: 8532033493985041705, guid: a2315d75a0d7d7a4eb5a80084a37a078, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 8761666737856808535, guid: a2315d75a0d7d7a4eb5a80084a37a078, type: 3}
       propertyPath: m_fontStyle
       value: 1
@@ -84096,7 +84121,7 @@ PrefabInstance:
       objectReference: {fileID: 709017294}
     - target: {fileID: 8813729275197778567, guid: a2315d75a0d7d7a4eb5a80084a37a078, type: 3}
       propertyPath: m_fontStyle
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8813729275197778567, guid: a2315d75a0d7d7a4eb5a80084a37a078, type: 3}
       propertyPath: m_fontMaterial
@@ -85122,6 +85147,10 @@ PrefabInstance:
     - target: {fileID: 6609881273763127558, guid: 68186daf6f59d0847b4fb065812ee282, type: 3}
       propertyPath: m_Name
       value: "Popup_\uBA54\uB274"
+      objectReference: {fileID: 0}
+    - target: {fileID: 6609881273763127558, guid: 68186daf6f59d0847b4fb065812ee282, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8640776774270448248, guid: 68186daf6f59d0847b4fb065812ee282, type: 3}
       propertyPath: m_fontMaterial
@@ -87374,6 +87403,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: "Popup_\uB7AD\uD0B9"
       objectReference: {fileID: 0}
+    - target: {fileID: 5414176289896083655, guid: 235ef6f05d55bf143ac78c87d7a9cb91, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 6461442944350161145, guid: 235ef6f05d55bf143ac78c87d7a9cb91, type: 3}
       propertyPath: m_IgnoreParentGroups
       value: 1
@@ -88179,6 +88212,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: "Popup_\uC77C\uC77C\uBBF8\uC158"
       objectReference: {fileID: 0}
+    - target: {fileID: 1566744382699817272, guid: 7ad48a715d89a7440903c7f7b0a64d54, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 4376988076687350002, guid: 7ad48a715d89a7440903c7f7b0a64d54, type: 3}
       propertyPath: m_IgnoreParentGroups
       value: 1
@@ -88319,6 +88356,10 @@ PrefabInstance:
     - target: {fileID: 947081672062044618, guid: d7859d06247e3b049aadfd7bc79ee4ba, type: 3}
       propertyPath: m_Name
       value: "Popup_\uC790\uB3D9\uC0AC\uB0E5"
+      objectReference: {fileID: 0}
+    - target: {fileID: 947081672062044618, guid: d7859d06247e3b049aadfd7bc79ee4ba, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1109654447309138559, guid: d7859d06247e3b049aadfd7bc79ee4ba, type: 3}
       propertyPath: m_text
@@ -89182,6 +89223,7 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 6aa49557657b841b38ce0959fa5f1637, type: 3}
   - {fileID: 21300000, guid: d0276b15b3ce07349b8a4fc95f074470, type: 3}
   - {fileID: 21300000, guid: 267927d09ab37a446801edc304ee956c, type: 3}
+  - {fileID: 21300000, guid: a5c576bc36761944bbe21ff568b409a9, type: 3}
   - {fileID: 21300000, guid: a1f16ea42d8efaa4c94e668618613854, type: 3}
   - {fileID: 21300000, guid: a14cee9e623d5144696cbf00f59e89f2, type: 3}
   - {fileID: 21300000, guid: 531816141486fb74d8132de73e43da95, type: 3}
@@ -89520,6 +89562,10 @@ PrefabInstance:
     - target: {fileID: 6830615473961846844, guid: b81f8834e5e0ef948bd9d056cb12e48a, type: 3}
       propertyPath: m_Name
       value: "Popup_\uC6B0\uD3B8"
+      objectReference: {fileID: 0}
+    - target: {fileID: 6830615473961846844, guid: b81f8834e5e0ef948bd9d056cb12e48a, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6852404577783902982, guid: b81f8834e5e0ef948bd9d056cb12e48a, type: 3}
       propertyPath: m_fontStyle
@@ -90100,6 +90146,10 @@ PrefabInstance:
     - target: {fileID: 1029358937575296897, guid: 76e062ff6f88b5145bfcb45e43e37a4e, type: 3}
       propertyPath: m_Name
       value: "Popup_\uC778\uBCA4\uD1A0\uB9AC"
+      objectReference: {fileID: 0}
+    - target: {fileID: 1029358937575296897, guid: 76e062ff6f88b5145bfcb45e43e37a4e, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1753526575958060631, guid: 76e062ff6f88b5145bfcb45e43e37a4e, type: 3}
       propertyPath: m_AnchorMax.y

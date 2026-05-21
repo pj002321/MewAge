@@ -61,6 +61,8 @@ public class RelicData
     private static RelicEffectType ParseEffect(string id)
     {
         if (string.IsNullOrEmpty(id)) return RelicEffectType.NONE;
+        // DB 표기와 enum 이름이 다른 경우 정규화
+        if (id == "HP_MAX") id = "MAX_HP";
         return System.Enum.TryParse(id, out RelicEffectType result)
             ? result
             : RelicEffectType.NONE;

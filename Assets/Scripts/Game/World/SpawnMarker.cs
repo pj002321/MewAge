@@ -70,7 +70,6 @@ public class SpawnMarker : MonoBehaviour
         }
 
         SetAlpha(0f);
-        gameObject.SetActive(false);
 
         if (GameManager.Shared != null && GameManager.Shared.IsGameOver)
         {

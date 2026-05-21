@@ -81,6 +81,7 @@ public class RewardManager : MonoBehaviourSingleton<RewardManager>
             case RewardType.EquipNeckMat:  EquipmentInventory.Shared?.AddMat(EquipCategory.NECK,  item.amount); break;
             case RewardType.EquipFootMat:  EquipmentInventory.Shared?.AddMat(EquipCategory.FOOT,  item.amount); break;
             case RewardType.EquipHeadMat:  EquipmentInventory.Shared?.AddMat(EquipCategory.HEAD,  item.amount); break;
+            case RewardType.RelicScroll:   RelicInventory.Shared?.AddEnhanceMaterial(item.amount); break;
             default:
                 // 뽑기권류: TicketManager 위임
                 TicketManager.Add(item.type, item.amount);

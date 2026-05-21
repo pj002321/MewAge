@@ -868,9 +868,53 @@ public class EnemyController : MonoBehaviour, IEnemyHost
         enabled = false;
         if (rb != null) rb.constraints = RigidbodyConstraints2D.FreezeAll;
 
-        yield return EnemyFX.SpawnBounce(transform, SpawnScale).WaitForCompletion();
+        Vector3 groundPos = transform.position;
+        Vector2 toPlayer  = playerTransform != null
+            ? ((Vector2)playerTransform.position - (Vector2)groundPos).normalized
+            : Vector2.up;
 
-        if (rb != null) rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+        // ── 포물선 점프 ───────────────────────────────────────────
+        // startPos: 착지 지점 뒤(플레이어 반대)에서 출발, Y는 지면과 동일
+        const float jumpDist   = 0.9f;  // 수평 도약 거리
+        const float jumpHeight = 1.3f;  // 호 최고점 높이
+        const float jumpDur    = 0.32f;
+
+        Vector3 startPos = groundPos - new Vector3(toPlayer.x * jumpDist, toPlayer.y * jumpDist * 0.4f, 0f);
+        transform.position = startPos;
+
+        float elapsed = 0f;
+        while (elapsed < jumpDur)
+        {
+            float t = elapsed / jumpDur;
+
+            // X/Y: 시작→착지 선형 이동 + Y 포물선 호 (4t(1-t) = t=0.5에서 최대)
+            float x   = Mathf.Lerp(startPos.x, groundPos.x, t);
+            float arc = jumpHeight * 4f * t * (1f - t);
+            float y   = Mathf.Lerp(startPos.y, groundPos.y, t) + arc;
+            transform.position = new Vector3(x, y, groundPos.z);
+
+            // 스케일: 공중엔 세로 늘어남 → 착지 직전 납작하게 전환
+            float squishT = Mathf.Clamp01((t - 0.60f) / 0.40f);
+            squishT = squishT * squishT; // ease-in
+            Vector3 airScale  = new Vector3(SpawnScale.x * 0.78f, SpawnScale.y * 1.35f, SpawnScale.z);
+            Vector3 landScale = new Vector3(SpawnScale.x * 1.38f, SpawnScale.y * 0.52f, SpawnScale.z);
+            transform.localScale = Vector3.Lerp(airScale, landScale, squishT);
+
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        // ── 착지 반동 ─────────────────────────────────────────────
+        transform.position   = groundPos;
+        transform.localScale = new Vector3(SpawnScale.x * 1.38f, SpawnScale.y * 0.52f, SpawnScale.z);
+        yield return EnemyFX.LandingSquish(transform, SpawnScale).WaitForCompletion();
+
+        transform.position = groundPos;
+        if (rb != null)
+        {
+            rb.position    = new Vector2(groundPos.x, groundPos.y);
+            rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+        }
         enabled = true;
     }
 
