@@ -59,7 +59,6 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
     [SerializeField] private Button[]  weaponButtonsLegendary; // 전설 5개
     [SerializeField] private Button[]  weaponButtonsMythic;    // 신화 5개
 
-    private bool _menuUnlocked    = false;
     private bool _invincible      = false;
     private bool _infiniteTime    = false;
     private bool _contentOpen     = true;
@@ -125,10 +124,18 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
         if (!IsGameScene(scene.name)) mainMenuPanel = FindObjectOfType<MainMenuPanel>(); // RefreshContent 전에 갱신
         RefreshContent(scene.name);
         if (IsGameScene(scene.name)) { BuildWaveButtons(); BuildWeaponButtons(); }
+        else StartCoroutine(SyncMenuLabelAfterStart());
         waveListContent?.gameObject.SetActive(false);
         weaponListContent?.gameObject.SetActive(false);
         _waveListOpen   = false;
         _weaponListOpen = false;
+    }
+
+    // MainMenuPanel.Start()가 실행된 후 라벨을 동기화
+    private System.Collections.IEnumerator SyncMenuLabelAfterStart()
+    {
+        yield return null;
+        RefreshMenuToggleLabel();
     }
 
     private static bool IsGameScene(string sceneName = null) =>
@@ -140,23 +147,14 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
         homeContent?.SetActive(!isGame);
         gameContent?.SetActive(isGame);
         _contentOpen = true;
-        if (!isGame) ApplyMenuButtons();
+        if (!isGame) RefreshMenuToggleLabel();
     }
 
-    private void ApplyMenuButtons()
+    private void RefreshMenuToggleLabel()
     {
-        if (mainMenuPanel == null) return;
-        foreach (var btn in new[]
-        {
-            mainMenuPanel.storageButton,     mainMenuPanel.specialGiftButton,
-            mainMenuPanel.dailymissionButton, mainMenuPanel.achievementButton,
-            mainMenuPanel.attendanceButton,   mainMenuPanel.rankingButton,
-            mainMenuPanel.inventoryButton,
-        })
-            if (btn) btn.gameObject.SetActive(_menuUnlocked);
-
         var label = menuToggleButton?.GetComponentInChildren<TextMeshProUGUI>();
-        if (label) label.text = _menuUnlocked ? "메뉴 잠금" : "메뉴 해금";
+        if (label == null || mainMenuPanel == null) return;
+        label.text = mainMenuPanel.IsMenuUnlocked ? "메뉴 잠금" : "메뉴 해금";
     }
 
     // ── 패널 show / hide ─────────────────────────────────────────────
@@ -188,8 +186,8 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
 
     private void OnToggleMenuButtons()
     {
-        _menuUnlocked = !_menuUnlocked;
-        ApplyMenuButtons();
+        mainMenuPanel?.DebugToggleMenu();
+        RefreshMenuToggleLabel();
     }
 
     private void OnResetData()

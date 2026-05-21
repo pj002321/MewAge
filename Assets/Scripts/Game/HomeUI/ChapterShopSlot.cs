@@ -35,7 +35,7 @@ public class ChapterShopSlot : MonoBehaviour
             }
         }
 
-        if (priceText) priceText.text = row.f_C가격.ToString();
+        if (priceText) priceText.text = $"₩ {row.f_C가격:#,0}";
 
         if (lockedOverlay) lockedOverlay.SetActive(locked);
         if (buyButton)
