@@ -23,11 +23,23 @@ public class SoundManager : MonoBehaviourSingleton<SoundManager>
     [Header("사운드 딕셔너리")]
     [SerializeField] private List<SoundEntry> soundList = new();
 
+    [System.Serializable]
+    public class ChapterBGMEntry
+    {
+        [Tooltip("이 챕터 번호 이상이면 아래 BGM 재생 (예: 1→챕터1부터, 5→챕터5부터)")]
+        public int       fromChapter;
+        [Tooltip("홈 화면 BGM")]
+        public AudioClip homeBGM;
+    }
+
     [Header("BGM")]
     [SerializeField] private AudioClip homeBGM;
     [SerializeField] private AudioClip gameBGM;
     [SerializeField] private AudioClip bossBGM;
     [SerializeField] private float bgmFadeDuration = 1f;
+
+    [Header("홈 BGM 임계값 목록 (fromChapter 오름차순으로 입력)")]
+    [SerializeField] private List<ChapterBGMEntry> chapterBGMs = new();
 
     private readonly Dictionary<SoundKey, SoundEntry> soundDict = new();
     private readonly Dictionary<SoundKey, float> lastPlayTime = new();
@@ -93,9 +105,34 @@ public class SoundManager : MonoBehaviourSingleton<SoundManager>
 
     public void PlayHomeBGM()                                    => PlayBGMWithFade(homeBGM);
     public void PlayGameBGM()                                    => PlayBGMWithFade(gameBGM);
-    public void PlayChapterHomeBGM(string chapterID)             => PlayBGMWithFade(homeBGM);
+    public void PlayChapterHomeBGM(string chapterID)             => PlayBGMWithFade(ResolveHomeBGM(chapterID));
     public void PlayChapterGameBGM(string chapterID)             => PlayBGMWithFade(gameBGM);
     public void PlayChapterBossBGM(string chapterID = null)      => PlayBGMWithFade(bossBGM);
+
+    /// <summary>챕터 번호를 파악해 해당하는 홈 BGM 반환. 매칭 없으면 기본 homeBGM.</summary>
+    private AudioClip ResolveHomeBGM(string chapterID)
+    {
+        int chNum = ParseChapterNumber(chapterID);
+
+        AudioClip result = homeBGM;
+        foreach (var entry in chapterBGMs)
+        {
+            if (entry.homeBGM != null && chNum >= entry.fromChapter)
+                result = entry.homeBGM;
+        }
+        return result;
+    }
+
+    /// <summary>"C3_S1" → 3. 파싱 실패 시 0 반환.</summary>
+    private static int ParseChapterNumber(string chapterID)
+    {
+        if (string.IsNullOrEmpty(chapterID)) return 0;
+        int under = chapterID.IndexOf('_');
+        string prefix = under >= 0 ? chapterID.Substring(0, under) : chapterID;
+        if (prefix.Length >= 2 && prefix[0] == 'C' &&
+            int.TryParse(prefix.Substring(1), out int n)) return n;
+        return 0;
+    }
 
     private void PlayBGMWithFade(AudioClip clip)
     {

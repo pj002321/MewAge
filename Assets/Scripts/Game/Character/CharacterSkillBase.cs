@@ -13,7 +13,7 @@ public abstract class CharacterSkillBase : MonoBehaviour
     [Tooltip("스킬 게이지 최대치 (적 처치 횟수)")]
     [SerializeField] protected int pointsRequired = 10;
 
-    public float Duration       => duration;
+    public virtual float Duration => duration;
     public int   PointsRequired => pointsRequired;
 
     /// <summary>스킬 고유 ID (f_스킬ID와 일치해야 합니다)</summary>

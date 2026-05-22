@@ -90,6 +90,9 @@ public class CharacterSlotView : MonoBehaviour
         if (data == null) return;
         PlayerCharacterManager.Shared?.EquipCharacter(data);
         _panel?.SetPortrait(data);
+
+        var label = equipButton?.GetComponentInChildren<TextMeshProUGUI>();
+        if (label) label.text = "장착중";
     }
 
     void OnBuy()

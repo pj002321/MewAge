@@ -1,6 +1,6 @@
 using TMPro;
 using UnityEngine;
-
+using UnityEngine.UI;
 /// <summary>
 /// 적이 데미지를 받을 때 팝인 → 좌우 떨림 → 페이드아웃하는 숫자 텍스트.
 /// TMP_Text 컴포넌트가 있는 Prefab에 부착하세요.
@@ -23,6 +23,8 @@ public class DamageText : MonoBehaviour
     [Header("팝인 스케일")]
     [SerializeField] private AnimationCurve scaleCurve = DefaultCurve();
 
+    [SerializeField] private Image criticalImg;
+
     private float   timer;
     private Color   baseColor;
     private Vector3 originPos;
@@ -42,6 +44,8 @@ public class DamageText : MonoBehaviour
         timer       = lifetime;
         originPos   = transform.position;
         _scale      = scale;
+
+        if (criticalImg != null) criticalImg.gameObject.SetActive(isCritical);
 
         transform.localScale = Vector3.zero;
     }

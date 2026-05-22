@@ -966,6 +966,9 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     public int    CurrentWave      => wave;
     public string CurrentChapterID => currentChapterID;
 
+    /// <summary>웨이브 타이머가 실제로 카운트되는 상태 (패널·게임오버 제외).</summary>
+    public bool   IsWaveActive     => !waitingForUpgrade && !isGameOver;
+
     /// <summary>현재 챕터+스테이지의 DB_웨이브에서 최대 웨이브 번호를 반환합니다.</summary>
     private int GetMaxWave()
     {

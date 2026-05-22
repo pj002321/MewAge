@@ -151,6 +151,7 @@ public class EquipmentDetailPopup : MonoBehaviour
     {
         if (_current == null) { Close(); return; }
         EquipmentInventory.Shared?.EquipFromBag(_current);
+        SoundManager.Shared?.Play(SoundKey.Weapon_Equip);
         Close();
     }
 

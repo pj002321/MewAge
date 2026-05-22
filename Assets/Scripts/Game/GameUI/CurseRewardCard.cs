@@ -32,6 +32,7 @@ public class CurseRewardCard : MonoBehaviour
     {
         if (_spinCoroutine != null) StopCoroutine(_spinCoroutine);
         _spinCoroutine = StartCoroutine(SpinRoutine());
+        SoundManager.Shared?.Play(SoundKey.Improv_Select);
     }
 
     private IEnumerator SpinRoutine()

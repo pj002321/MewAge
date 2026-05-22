@@ -672,8 +672,7 @@ public class EnemyController : MonoBehaviour, IEnemyHost
         if (!knockbackImmune && knockbackDir != Vector2.zero && knockbackForce > 0f)
             Knockback(knockbackDir, knockbackForce);
 
-        if (currentHP > 0f)
-            CharacterSkillManager.Shared?.TryAddPointFromHit(transform.position);
+        CharacterSkillManager.Shared?.TryAddPointFromHit(transform.position);
 
         if (currentHP <= 0f)
         {

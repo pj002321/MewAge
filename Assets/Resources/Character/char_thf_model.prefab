@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 54421883043995122}
   - component: {fileID: 1979059738611152619}
   - component: {fileID: 3420254453560308468}
+  - component: {fileID: -2153194271829444815}
   m_Layer: 6
   m_Name: char_thf_model
   m_TagString: Untagged
@@ -128,3 +129,23 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpriteYSort
   multiplier: 100
+--- !u!114 &-2153194271829444815
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6482918335171765871}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1f3135fccb92342b882e0386bada1939, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SkillThf
+  duration: 15
+  pointsRequired: 50
+  doppelgangerPrefab: {fileID: 6482918335171765871, guid: 7675e7efd7d7843f0b9dafd951a83a35, type: 3}
+  hitsPerEnemy: 3
+  hitInterval: 0.07
+  moveSpeed: 20
+  damageMult: 0.4
+  knockbackForce: 5
