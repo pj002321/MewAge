@@ -4,10 +4,15 @@ using UnityEngine;
 
 /// <summary>
 /// SkillThf — 시프냥 분신 엔티티.
-/// 프리팹에 부착하세요. 빠른 이동 중 고스트 트레일이 남습니다.
+/// 스폰/소멸 시 플레이어를 부모로 삼아 로컬 좌표로 연출합니다.
 /// </summary>
 public class ThfDoppelganger : MonoBehaviour
 {
+    [Header("스폰 / 소멸 연출")]
+    [SerializeField] private float spawnDuration  = 0.35f;
+    [SerializeField] private float spawnBackOffset = 0.8f;
+    [SerializeField] private float mergeDuration  = 0.5f;
+
     [Header("고스트 트레일")]
     [SerializeField] private float ghostSpawnInterval = 0.04f;
     [SerializeField] private float ghostFadeDuration  = 0.18f;
@@ -19,10 +24,13 @@ public class ThfDoppelganger : MonoBehaviour
     private float _knockbackForce;
     private float _moveSpeed;
 
+    private bool    _despawning;
+    private Color[] _originalColors;
     private readonly List<GameObject> _activeGhosts = new List<GameObject>();
 
     private void OnDestroy()
     {
+        if (_despawning) return;
         foreach (var g in _activeGhosts)
             if (g != null) Destroy(g);
         _activeGhosts.Clear();
@@ -39,7 +47,99 @@ public class ThfDoppelganger : MonoBehaviour
         _knockbackForce = knockbackForce;
         _moveSpeed      = moveSpeed;
 
-        StartCoroutine(BehaviorLoop());
+        StartCoroutine(SpawnAndRun());
+    }
+
+    // ── 스폰 연출 ─────────────────────────────────────────────────────
+
+    private IEnumerator SpawnAndRun()
+    {
+        yield return StartCoroutine(SpawnAnimation());
+        if (!_despawning)
+            StartCoroutine(BehaviorLoop());
+    }
+
+    private IEnumerator SpawnAnimation()
+    {
+        var srs = GetComponentsInChildren<SpriteRenderer>();
+        CacheOriginalColors(srs);
+
+        var player = PlayerController.Instance;
+        if (player == null) { RestoreOriginalColors(srs); yield break; }
+
+        // 플레이어 자식 편입 — 로컬 원점(= 플레이어 중심)에서 시작
+        transform.SetParent(player.transform, false);
+        transform.localPosition = Vector3.zero;
+        SetSilhouette(srs);
+
+        Vector3 targetLocal = BackLocalPos(player, spawnBackOffset);
+
+        float elapsed = 0f;
+        while (elapsed < spawnDuration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / spawnDuration);
+
+            transform.localPosition = Vector3.Lerp(Vector3.zero, targetLocal, t);
+            LerpToOriginal(srs, t);
+            yield return null;
+        }
+
+        transform.localPosition = targetLocal;
+        RestoreOriginalColors(srs);
+
+        // 자립 — 월드 위치 유지하며 부모 해제
+        transform.SetParent(null, true);
+    }
+
+    // ── 소멸 연출 (플레이어에게 흡수) ────────────────────────────────
+
+    public void Despawn()
+    {
+        if (_despawning) return;
+        _despawning = true;
+
+        StopAllCoroutines();
+        foreach (var g in _activeGhosts)
+            if (g != null) Destroy(g);
+        _activeGhosts.Clear();
+
+        StartCoroutine(MergeRoutine());
+    }
+
+    private IEnumerator MergeRoutine()
+    {
+        var srs         = GetComponentsInChildren<SpriteRenderer>();
+        var startColors = new Color[srs.Length];
+        for (int i = 0; i < srs.Length; i++)
+            startColors[i] = srs[i] != null ? srs[i].color : Color.white;
+
+        var player = PlayerController.Instance;
+        if (player == null) { Destroy(gameObject); yield break; }
+
+        // 플레이어 자식 편입 — 현재 월드 위치 유지
+        transform.SetParent(player.transform, true);
+        Vector3 startLocal = transform.localPosition;
+
+        float elapsed = 0f;
+        while (elapsed < mergeDuration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / mergeDuration);
+
+            // 로컬 원점(플레이어 중심)으로 수렴 — 플레이어 이동은 부모가 자동 처리
+            transform.localPosition = Vector3.Lerp(startLocal, Vector3.zero, t);
+
+            for (int i = 0; i < srs.Length; i++)
+            {
+                if (srs[i] == null) continue;
+                srs[i].color = Color.Lerp(startColors[i], Color.black, t);
+            }
+
+            yield return null;
+        }
+
+        Destroy(gameObject);
     }
 
     // ── 행동 루프 ─────────────────────────────────────────────────────
@@ -73,11 +173,11 @@ public class ThfDoppelganger : MonoBehaviour
 
         if (target == null) yield break;
 
-        float damage = CalcDamage();
         for (int i = 0; i < _hitsPerEnemy; i++)
         {
             if (target == null) yield break;
-            target.TakeDamage(damage);
+            var (dmg, isCrit) = RollDamage();
+            target.TakeDamage(dmg, isCritical: isCrit);
             yield return new WaitForSeconds(_hitInterval);
         }
 
@@ -141,12 +241,12 @@ public class ThfDoppelganger : MonoBehaviour
             ghost.transform.rotation   = sr.transform.rotation;
             ghost.transform.localScale = sr.transform.lossyScale;
 
-            var ghostSr         = ghost.AddComponent<SpriteRenderer>();
-            ghostSr.sprite      = sr.sprite;
+            var ghostSr            = ghost.AddComponent<SpriteRenderer>();
+            ghostSr.sprite         = sr.sprite;
             ghostSr.sortingLayerID = sr.sortingLayerID;
             ghostSr.sortingOrder   = sr.sortingOrder - 1;
-            ghostSr.flipX       = sr.flipX;
-            ghostSr.color       = ghostTint;
+            ghostSr.flipX          = sr.flipX;
+            ghostSr.color          = ghostTint;
 
             _activeGhosts.Add(ghost);
             StartCoroutine(FadeGhost(ghostSr));
@@ -170,14 +270,61 @@ public class ThfDoppelganger : MonoBehaviour
         Destroy(sr.gameObject);
     }
 
+    // ── 색상 유틸 ─────────────────────────────────────────────────────
+
+    private void CacheOriginalColors(SpriteRenderer[] srs)
+    {
+        _originalColors = new Color[srs.Length];
+        for (int i = 0; i < srs.Length; i++)
+            _originalColors[i] = srs[i] != null ? srs[i].color : Color.white;
+    }
+
+    private void SetSilhouette(SpriteRenderer[] srs)
+    {
+        foreach (var sr in srs)
+            if (sr != null) sr.color = Color.black;
+    }
+
+    private void LerpToOriginal(SpriteRenderer[] srs, float t)
+    {
+        for (int i = 0; i < srs.Length; i++)
+        {
+            if (srs[i] == null) continue;
+            srs[i].color = Color.Lerp(Color.black, _originalColors[i], t);
+        }
+    }
+
+    private void RestoreOriginalColors(SpriteRenderer[] srs)
+    {
+        for (int i = 0; i < srs.Length; i++)
+            if (srs[i] != null) srs[i].color = _originalColors[i];
+    }
+
+    // ── 위치 유틸 ─────────────────────────────────────────────────────
+
+    // 플레이어 로컬 공간에서 등 뒤 위치 (VisualSlot 스케일 부호로 facing 판단)
+    private Vector3 BackLocalPos(PlayerController player, float offset)
+    {
+        float facingSign = player.VisualSlot != null
+            ? Mathf.Sign(player.VisualSlot.localScale.x)
+            : 1f;
+        return Vector3.right * (-facingSign * offset);
+    }
+
     // ── 데미지 계산 ───────────────────────────────────────────────────
 
-    private float CalcDamage()
+    private const float CritChance = 0.5f;
+
+    private (float damage, bool isCrit) RollDamage()
     {
         var wps = WeaponManager.Instance?.GetActiveWeaponPoints();
-        if (wps == null || wps.Count == 0) return 0f;
+        if (wps == null || wps.Count == 0) return (0f, false);
         float total = 0f;
         foreach (var wp in wps) total += wp.AttackDamage;
-        return (total / wps.Count) * _damageMult;
+        float base_ = (total / wps.Count) * _damageMult;
+
+        bool  isCrit = Random.value < CritChance;
+        float mult   = isCrit ? 1f + (PlayerController.Instance?.CritDamageBonus ?? 1f) : 1f;
+        return (base_ * mult, isCrit);
     }
 }

@@ -80,7 +80,7 @@ public class InGameCharacterDisplay : MonoBehaviourSingleton<InGameCharacterDisp
 
     public void DropIn()
     {
-        if (_currentModel == null) SpawnModel();
+        SpawnModel();
         if (_currentModel == null) return;
 
         _currentModel.SetActive(true);

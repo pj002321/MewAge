@@ -55,7 +55,7 @@ public class SkillThf : CharacterSkillBase
         if (_lifetimeRoutine != null) { StopCoroutine(_lifetimeRoutine); _lifetimeRoutine = null; }
 
         if (_doppelganger == null) return;
-        Destroy(_doppelganger.gameObject);
+        _doppelganger.Despawn();
         _doppelganger = null;
     }
 
