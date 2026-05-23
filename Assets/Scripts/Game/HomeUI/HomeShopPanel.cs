@@ -22,9 +22,13 @@ public class HomeShopPanel : MonoBehaviour
     [SerializeField] RectTransform gemSection;
     [SerializeField] RectTransform goldSection;
 
+    [Header("구매 결과 팝업 (공용)")]
+    [SerializeField] ShopResultPopUp resultPopup;
+
     [Header("일일상점")]
-    [SerializeField] Transform     dailySlotContainer;
-    [SerializeField] DailyShopSlot dailySlotPrefab;
+    [SerializeField] Transform              dailySlotContainer;
+    [SerializeField] DailyShopSlot          dailySlotPrefab;
+    [SerializeField] DailyShopConfirmPopUp  dailyConfirmPopup;
 
     [Header("골드상점")]
     [SerializeField] Transform        goldRow1;
@@ -83,11 +87,20 @@ public class HomeShopPanel : MonoBehaviour
         int    bought = PlayerPrefs.GetInt(key, 0);
         if (row.f_한도 > 0 && bought >= row.f_한도) { PopupBaseNoti.Shared?.Show("구매 한도를 초과했습니다"); return; }
 
+        if (dailyConfirmPopup != null)
+            dailyConfirmPopup.Show(row, onConfirm: () => DoPurchase(row, slot, key));
+        else
+            DoPurchase(row, slot, key);
+    }
+
+    void DoPurchase(DB_상점 row, DailyShopSlot slot, string key)
+    {
         if (RewardManager.Shared == null) { Debug.LogError("[DailyBuy] RewardManager.Shared is null"); return; }
         var icon = RewardVisualConfig.Shared?.GetIcon(row.f_D보상);
         RewardManager.Shared.Dispatch(new RewardItem(row.f_D보상, 1), icon);
-        PlayerPrefs.SetInt(key, bought + 1);
+        PlayerPrefs.SetInt(key, PlayerPrefs.GetInt(key, 0) + 1);
         slot.RefreshLimit();
+        resultPopup?.Show(icon, 1);
     }
 
     // ── 골드상점 ──────────────────────────────────────────────────────────
@@ -98,7 +111,9 @@ public class HomeShopPanel : MonoBehaviour
         ClearChildren(goldRow1); ClearChildren(goldRow2);
         var rows = LoadRows(r => !string.IsNullOrEmpty(r.f_G상점ID), r => r.f_G행수,
             (a, b) => string.Compare(a.f_G상점ID, b.f_G상점ID, System.StringComparison.Ordinal));
-        var rubyIcon = RewardVisualConfig.Shared?.GetIcon(RewardType.Ruby);
+        var cfg      = RewardVisualConfig.Shared;
+        var rubyIcon = cfg?.GetIcon(RewardType.Ruby);
+        var goldIcon = cfg?.GetIcon(RewardType.Gold);
         for (int i = 0; i < rows.Count; i++)
         {
             var r = rows[i];
@@ -109,6 +124,7 @@ public class HomeShopPanel : MonoBehaviour
                 if (rm.Ruby < r.f_G가격) { PopupBaseNoti.Shared?.Show("루비가 부족합니다"); return; }
                 rm.SpendRuby(r.f_G가격);
                 rm.GiveReward(new RewardItem(RewardType.Gold, r.f_G수량));
+                resultPopup?.Show(goldIcon, r.f_G수량);
             });
         }
     }
@@ -121,12 +137,14 @@ public class HomeShopPanel : MonoBehaviour
         ClearChildren(rubyRow1); ClearChildren(rubyRow2);
         var rows = LoadRows(r => !string.IsNullOrEmpty(r.f_R상점ID), r => r.f_R행수,
             (a, b) => string.Compare(a.f_R상점ID, b.f_R상점ID, System.StringComparison.Ordinal));
+        var rubyIcon2 = RewardVisualConfig.Shared?.GetIcon(RewardType.Ruby);
         for (int i = 0; i < rows.Count; i++)
         {
             var r = rows[i];
             Instantiate(rubySlotPrefab, i < 3 ? rubyRow1 : rubyRow2).Setup(null, r.f_R수량, r.f_R가격, true, () =>
             {
                 RewardManager.Shared?.GiveReward(new RewardItem(RewardType.Ruby, r.f_R수량));
+                resultPopup?.Show(rubyIcon2, r.f_R수량);
             });
         }
     }
@@ -156,9 +174,17 @@ public class HomeShopPanel : MonoBehaviour
         var ids  = new[] { row.f_T1, row.f_T2, row.f_T3, row.f_T4 };
         var vals = new[] { row.f_V1, row.f_V2, row.f_V3, row.f_V4 };
         var cfg  = RewardVisualConfig.Shared;
+
+        var items = new System.Collections.Generic.List<(Sprite, int)>();
         for (int i = 0; i < ids.Length; i++)
-            if (!string.IsNullOrEmpty(ids[i]) && vals[i] > 0)
-                RewardManager.Shared.Dispatch(new RewardItem(ids[i], vals[i]), cfg?.GetIcon(ids[i]));
+        {
+            if (string.IsNullOrEmpty(ids[i]) || vals[i] <= 0) continue;
+            RewardManager.Shared.Dispatch(new RewardItem(ids[i], vals[i]), cfg?.GetIcon(ids[i]));
+            items.Add((cfg?.GetIcon(ids[i]), vals[i]));
+        }
+
+        if (resultPopup != null && items.Count > 0)
+            resultPopup.Show(items.ToArray());
     }
 
     // ── 뽑기 흐름 ─────────────────────────────────────────────────────────

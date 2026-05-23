@@ -29,7 +29,7 @@ public class RelicFragSlotView : MonoBehaviour
         }
 
         if (countText)
-            countText.text = $"+{count}";
+            countText.text = $"x{count}";
     }
 
     public void PlayScaleUp(float delay = 0f)

@@ -108,10 +108,15 @@ public class EquipmentSlotView : MonoBehaviour
 
     public EquipmentData Data => _data;
 
-    /// <summary>뽑기 결과 팝업에서 호출 — spinImage를 활성화하고 Z축 회전을 시작합니다.</summary>
+    /// <summary>뽑기 결과 팝업에서 호출 — EPIC 이상일 때만 spinImage를 활성화하고 Z축 회전을 시작합니다.</summary>
     public void StartSpin(float degreesPerSecond = 90f)
     {
         if (spinImage == null) return;
+        if (_data == null || _data.grade < EquipGrade.EPIC)
+        {
+            spinImage.gameObject.SetActive(false);
+            return;
+        }
         spinImage.gameObject.SetActive(true);
         if (_spinRoutine != null) StopCoroutine(_spinRoutine);
         _spinRoutine = StartCoroutine(SpinRoutine(degreesPerSecond));
