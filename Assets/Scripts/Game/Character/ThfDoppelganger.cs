@@ -148,57 +148,58 @@ public class ThfDoppelganger : MonoBehaviour
     {
         while (true)
         {
-            var target = PickTarget();
+            IEnemyHost target = PickTarget();
             if (target == null) { yield return null; continue; }
 
             yield return StartCoroutine(MoveAndAttack(target));
         }
     }
 
-    private EnemyController PickTarget()
+    private IEnemyHost PickTarget()
     {
-        var all   = EnemyController.All;
-        var alive = new List<EnemyController>(all.Count);
-        foreach (var e in all)
-            if (e != null) alive.Add(e);
+        var candidates = new List<IEnemyHost>(EnemyController.All.Count + 1);
+        foreach (var e in EnemyController.All)
+            if (e != null) candidates.Add(e);
+        var boss = BossController.Current;
+        if (boss != null) candidates.Add(boss);
 
-        return alive.Count == 0 ? null : alive[Random.Range(0, alive.Count)];
+        return candidates.Count == 0 ? null : candidates[Random.Range(0, candidates.Count)];
     }
 
     // ── 빠른 이동 + 히트 ──────────────────────────────────────────────
 
-    private IEnumerator MoveAndAttack(EnemyController target)
+    private IEnumerator MoveAndAttack(IEnemyHost target)
     {
         yield return StartCoroutine(MoveToTarget(target));
 
-        if (target == null) yield break;
+        if (!IsAlive(target)) yield break;
 
         for (int i = 0; i < _hitsPerEnemy; i++)
         {
-            if (target == null) yield break;
+            if (!IsAlive(target)) yield break;
             var (dmg, isCrit) = RollDamage();
             target.TakeDamage(dmg, isCritical: isCrit);
             yield return new WaitForSeconds(_hitInterval);
         }
 
-        if (target != null)
+        if (IsAlive(target))
         {
-            Vector2 kbDir = ((Vector2)target.transform.position - (Vector2)transform.position).normalized;
+            Vector2 kbDir = ((Vector2)target.SelfTransform.position - (Vector2)transform.position).normalized;
             if (kbDir.sqrMagnitude < 0.01f) kbDir = Vector2.right;
             target.Knockback(kbDir, _knockbackForce);
         }
     }
 
-    private IEnumerator MoveToTarget(EnemyController target)
+    private IEnumerator MoveToTarget(IEnemyHost target)
     {
         const float arriveThreshold = 0.35f;
 
         var trailRoutine = StartCoroutine(GhostTrailLoop());
 
-        while (target != null)
+        while (IsAlive(target))
         {
-            float side    = target.transform.position.x >= transform.position.x ? 1f : -1f;
-            var   destPos = (Vector2)target.transform.position + Vector2.right * (-side * 0.4f);
+            float side    = target.SelfTransform.position.x >= transform.position.x ? 1f : -1f;
+            var   destPos = (Vector2)target.SelfTransform.position + Vector2.right * (-side * 0.4f);
             var   current = (Vector2)transform.position;
 
             if (Vector2.Distance(current, destPos) <= arriveThreshold) break;
@@ -210,6 +211,9 @@ public class ThfDoppelganger : MonoBehaviour
 
         StopCoroutine(trailRoutine);
     }
+
+    private static bool IsAlive(IEnemyHost h) =>
+        h != null && (h as Object) != null;
 
     // ── 방향 처리 ─────────────────────────────────────────────────────
 

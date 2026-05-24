@@ -2,160 +2,248 @@ using System.Collections;
 using UnityEngine;
 
 /// <summary>
-/// 듀크냥 스킬 박쥐 엔티티.
-/// 단일 코루틴 안에서 _isAttacking 플래그로 Follow/Attack 전환합니다.
+/// 듀크냥 스킬 박쥐.
+/// - 평상시: 앵커(집) 위치를 타원으로 공전
+/// - 스킬 발동 시: 적 위에서 크게 내려꽂은 뒤 바닥에서 다타 데미지, 이후 다음 적 탐색
 /// </summary>
 public class DukeBat : MonoBehaviour
 {
-    public const int PecksPerCombo = 3;
+    public const int HitsPerPeck = 3;
 
-    private Transform _player;
-    private float     _orbitAngle;
-    private float     _orbitRadius;
-    private float     _orbitSpeed;
-    private float     _moveSpeed;
-    private bool      _isAttacking;
+    private const float PeckDashDuration = 0.15f;  // 내려꽂기 시간
+    private const float PeckPullDuration = 0.12f;  // 복귀 시간
+    private const float PeckHitInterval  = 0.04f;  // 바닥 다타 간격
+    private const float ArriveThreshold  = 0.4f;
+
+    // 공전
+    private const float OrbitRadius = 0.5f;
+    private const float OrbitSpeed  = 2.2f;
+    private const float ReturnSpeed = 8f;
+
+    private Transform  _anchor;
+    private float      _orbitAngle;
+    private float      _moveSpeed;
+    private bool       _isAttacking;
+    private bool       _inCombo;
 
     private float _damageMult;
-    private float _dotMult;
-    private float _dotDuration;
 
-    private const float ArriveThreshold = 0.35f;
+    private System.Func<IEnemyHost> _getOtherTarget;
+
+    private IEnemyHost       _target;
+    private IEnemyHost       _lastTarget;
+    private Rigidbody2D      _rb;
+    private SpriteRenderer[] _srs;
+
+    public IEnemyHost CurrentTarget => _target;
 
     // ── 초기화 ────────────────────────────────────────────────────────
 
-    public void InitFollow(Transform player, float startAngle, float orbitRadius, float orbitSpeed, float moveSpeed)
+    private void Awake()
     {
-        _player      = player;
-        _orbitAngle  = startAngle;
-        _orbitRadius = orbitRadius;
-        _orbitSpeed  = orbitSpeed;
-        _moveSpeed   = moveSpeed;
-        _isAttacking = false;
-
-        StartCoroutine(BehaviorLoop());
+        _rb  = GetComponent<Rigidbody2D>();
+        _srs = GetComponentsInChildren<SpriteRenderer>();
+        if (_rb != null)
+        {
+            _rb.bodyType     = RigidbodyType2D.Kinematic;
+            _rb.gravityScale = 0f;
+        }
     }
 
-    public void StartAttacking(float damageMult, float dotMult, float dotDuration)
+    public void Init(Transform anchor, float moveSpeed,
+                     System.Func<IEnemyHost> getOtherTarget = null,
+                     float orbitPhase = 0f)
+    {
+        _anchor         = anchor;
+        _moveSpeed      = moveSpeed;
+        _getOtherTarget = getOtherTarget;
+        _orbitAngle     = orbitPhase;
+        _isAttacking    = false;
+        _inCombo        = false;
+        _target         = null;
+    }
+
+    public void StartAttacking(float damageMult)
     {
         _damageMult  = damageMult;
-        _dotMult     = dotMult;
-        _dotDuration = dotDuration;
         _isAttacking = true;
     }
 
     public void StopAttacking()
     {
         _isAttacking = false;
+        _target      = null;
+        _lastTarget  = null;
     }
 
-    // ── 통합 행동 루프 ────────────────────────────────────────────────
+    // ── Update ────────────────────────────────────────────────────────
 
-    private IEnumerator BehaviorLoop()
+    private void Update()
     {
-        while (true)
+        if (_inCombo) return;
+
+        if (_isAttacking)
         {
-            if (!_isAttacking)
-            {
-                OrbitStep();
-                yield return null;
-            }
+            if (!IsAlive(_target))
+                _target = PickTarget();
+
+            if (_target != null)
+                ChaseTarget();
             else
-            {
-                var target = PickTarget();
-                if (target == null) { OrbitStep(); yield return null; continue; }
-
-                yield return StartCoroutine(MoveAndAttack(target));
-            }
+                MoveToAnchor();
         }
-    }
-
-    // ── 궤도 비행 ─────────────────────────────────────────────────────
-
-    private void OrbitStep()
-    {
-        if (_player == null) return;
-
-        _orbitAngle += _orbitSpeed * Time.deltaTime;
-        Vector2 orbitTarget = (Vector2)_player.position
-            + new Vector2(Mathf.Cos(_orbitAngle), Mathf.Sin(_orbitAngle)) * _orbitRadius;
-
-        FlipToward(orbitTarget.x >= transform.position.x);
-        transform.position = Vector2.MoveTowards(transform.position, orbitTarget, _moveSpeed * Time.deltaTime);
-    }
-
-    // ── 공격 ──────────────────────────────────────────────────────────
-
-    private EnemyController PickTarget()
-    {
-        var all = EnemyController.All;
-        if (all.Count == 0) return null;
-
-        EnemyController nearest   = null;
-        float           minSqDist = float.MaxValue;
-        foreach (var e in all)
+        else
         {
-            if (e == null) continue;
-            float sq = ((Vector2)e.transform.position - (Vector2)transform.position).sqrMagnitude;
-            if (sq < minSqDist) { minSqDist = sq; nearest = e; }
+            _target = null;
+            MoveToAnchor();
         }
+    }
+
+    // ── 추적 & 공격 ───────────────────────────────────────────────────
+
+    private void ChaseTarget()
+    {
+        Vector2 enemyPos = (Vector2)_target.SelfTransform.position;
+        Vector2 current  = GetPos();
+        float   side     = enemyPos.x >= current.x ? 1f : -1f;
+        Vector2 dest     = enemyPos + new Vector2(-side * 0.4f, 1.3f);
+
+        FlipToward(side > 0f);
+
+        if (Vector2.Distance(current, dest) <= ArriveThreshold)
+        {
+            _inCombo = true;
+            StartCoroutine(DoPeck(_target, dest));
+        }
+        else
+        {
+            MoveTo(dest);
+        }
+    }
+
+    private IEnumerator DoPeck(IEnemyHost target, Vector2 peckOrigin)
+    {
+        Vector2 strikePos = IsAlive(target)
+            ? (Vector2)target.SelfTransform.position
+            : peckOrigin;
+
+        // 크게 내려꽂기
+        float t = 0f;
+        while (t < PeckDashDuration)
+        {
+            t += Time.deltaTime;
+            SetPos(Vector2.Lerp(peckOrigin, strikePos,
+                                Mathf.Clamp01(t / PeckDashDuration)));
+            yield return null;
+        }
+
+        // 바닥에서 빠르게 다타
+        for (int i = 0; i < HitsPerPeck; i++)
+        {
+            if (IsAlive(target))
+                target.TakeDamage(CalcDamage());
+            if (i < HitsPerPeck - 1)
+                yield return new WaitForSeconds(PeckHitInterval);
+        }
+
+        // 복귀
+        t = 0f;
+        while (t < PeckPullDuration)
+        {
+            t += Time.deltaTime;
+            SetPos(Vector2.Lerp(strikePos, peckOrigin,
+                                Mathf.Clamp01(t / PeckPullDuration)));
+            yield return null;
+        }
+        SetPos(peckOrigin);
+
+        _lastTarget = target;
+        _target     = null;
+        _inCombo    = false;
+    }
+
+    // ── 집으로 이동 (공전) ────────────────────────────────────────────
+
+    private void MoveToAnchor()
+    {
+        if (_anchor == null) return;
+        _orbitAngle += OrbitSpeed * Time.deltaTime;
+        Vector2 orbitPos = (Vector2)_anchor.position + new Vector2(
+            Mathf.Cos(_orbitAngle) * OrbitRadius,
+            Mathf.Sin(_orbitAngle) * OrbitRadius * 0.6f
+        );
+        Vector2 dir = orbitPos - GetPos();
+        if (dir.sqrMagnitude > 0.01f) FlipToward(dir.x >= 0f);
+        SetPos(Vector2.MoveTowards(GetPos(), orbitPos, ReturnSpeed * Time.deltaTime));
+    }
+
+    // ── 타겟 탐색 ─────────────────────────────────────────────────────
+
+    private IEnemyHost PickTarget()
+    {
+        var otherTarget = _getOtherTarget?.Invoke();
+
+        var result = FindNearest(otherTarget, _lastTarget);
+        if (result == null) result = FindNearest(otherTarget, null);
+        if (result == null) result = FindNearest(null, null);
+        return result;
+    }
+
+    private IEnemyHost FindNearest(IEnemyHost exclude1, IEnemyHost exclude2)
+    {
+        IEnemyHost nearest = null;
+        float      minSq   = float.MaxValue;
+
+        foreach (var e in EnemyController.All)
+        {
+            if (e == null || e == exclude1 || e == exclude2) continue;
+            float sq = ((Vector2)e.transform.position - GetPos()).sqrMagnitude;
+            if (sq < minSq) { minSq = sq; nearest = e; }
+        }
+
+        var boss = BossController.Current;
+        if (boss != null && boss != exclude1 && boss != exclude2)
+        {
+            float sq = ((Vector2)boss.transform.position - GetPos()).sqrMagnitude;
+            if (sq < minSq) { nearest = boss; }
+        }
+
         return nearest;
     }
 
-    private IEnumerator MoveAndAttack(EnemyController target)
+    // ── 이동 유틸 ─────────────────────────────────────────────────────
+
+    private void MoveTo(Vector2 dest)
     {
-        // 이동 — 현재 위치 기준으로 적의 반대편에서 접근해 두 박쥐가 겹치지 않음
-        while (target != null)
-        {
-            Vector2 enemyPos = (Vector2)target.transform.position;
-            Vector2 current  = (Vector2)transform.position;
-            float   side     = enemyPos.x >= current.x ? 1f : -1f;
-            Vector2 dest     = enemyPos + Vector2.right * (-side * 0.3f);
-
-            if (Vector2.Distance(current, dest) <= ArriveThreshold) break;
-
-            FlipToward(side > 0f);
-            transform.position = Vector2.MoveTowards(current, dest, _moveSpeed * Time.deltaTime);
-            yield return null;
-        }
-
-        if (target == null) yield break;
-
-        // 3타
-        for (int i = 0; i < PecksPerCombo; i++)
-        {
-            if (target == null) yield break;
-            target.TakeDamage(CalcHitDamage());
-            yield return null;
-        }
-
-        // DoT
-        if (target != null) target.ApplyPurpleDot(CalcDotDamage(), _dotDuration);
+        SetPos(Vector2.MoveTowards(GetPos(), dest, _moveSpeed * Time.deltaTime));
     }
 
-    // ── 유틸 ──────────────────────────────────────────────────────────
+    private Vector2 GetPos() => _rb != null ? _rb.position : (Vector2)transform.position;
+
+    private void SetPos(Vector2 pos)
+    {
+        if (_rb != null)
+            _rb.position = pos;
+        else
+            transform.position = pos;
+    }
 
     private void FlipToward(bool facingRight)
     {
-        foreach (var sr in GetComponentsInChildren<SpriteRenderer>())
-            sr.flipX = !facingRight;
+        if (_srs == null) return;
+        foreach (var sr in _srs)
+            if (sr != null) sr.flipX = !facingRight;
     }
 
-    private float CalcHitDamage()
+    private static bool IsAlive(IEnemyHost h) =>
+        h != null && (h as Object) != null;
+
+    private float CalcDamage()
     {
         var wps = WeaponManager.Instance?.GetActiveWeaponPoints();
         if (wps == null || wps.Count == 0) return 0f;
         float total = 0f;
         foreach (var wp in wps) total += wp.AttackDamage;
         return total * _damageMult;
-    }
-
-    private float CalcDotDamage()
-    {
-        var wps = WeaponManager.Instance?.GetActiveWeaponPoints();
-        if (wps == null || wps.Count == 0) return 0f;
-        float total = 0f;
-        foreach (var wp in wps) total += wp.AttackDamage;
-        return total * _dotMult;
     }
 }

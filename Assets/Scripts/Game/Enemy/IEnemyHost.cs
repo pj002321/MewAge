@@ -16,4 +16,6 @@ public interface IEnemyHost
     void         MoveInDirection(Vector2 dir, float speed);
     void         FlipToward(Vector2 dir);
     void         MoveTowardPlayer(float speed);
+    void         TakeDamage(float damage, bool isCritical = false);
+    void         Knockback(Vector2 dir, float force);
 }

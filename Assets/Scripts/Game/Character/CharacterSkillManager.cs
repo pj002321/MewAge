@@ -97,6 +97,8 @@ public class CharacterSkillManager : MonoBehaviourSingleton<CharacterSkillManage
             }
         }
 
+        if (_skill != null) pointsRequired = _skill.PointsRequired;
+
         skillButton?.gameObject.SetActive(true);
         if (skillGaugeSlider)
         {

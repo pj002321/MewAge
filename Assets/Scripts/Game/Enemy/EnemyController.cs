@@ -558,15 +558,27 @@ public class EnemyController : MonoBehaviour, IEnemyHost
     /// <summary>듀크냥 스킬 — 보라색 실루엣으로 변경하고 지속 피해를 입힙니다.</summary>
     public void ApplyPurpleDot(float dotPerTick, float duration, float tickInterval = 1f)
     {
-        if (_purpleDotCoroutine != null) StopCoroutine(_purpleDotCoroutine);
+        if (_purpleDotCoroutine != null)
+        {
+            // StopCoroutine은 코루틴 내 cleanup 코드를 실행하지 않으므로 먼저 정리
+            hitFlash?.ExitPersistentState();
+            StopCoroutine(_purpleDotCoroutine);
+        }
         _purpleDotCoroutine = StartCoroutine(PurpleDotRoutine(dotPerTick, duration, tickInterval));
     }
 
+    private static readonly Color PurpleDoTColor = new Color(0.6f, 0f, 1f, 1f);
+
     private IEnumerator PurpleDotRoutine(float dotPerTick, float duration, float tickInterval)
     {
-        var purpleMat = GetPurpleDotMat();
-        if (srs != null && purpleMat != null)
-            foreach (var sr in srs) if (sr != null) sr.material = purpleMat;
+        if (hitFlash != null)
+            hitFlash.EnterPersistentStateImmediate(PurpleDoTColor);
+        else
+        {
+            var purpleMat = GetPurpleDotMat();
+            if (srs != null && purpleMat != null)
+                foreach (var sr in srs) if (sr != null) sr.material = purpleMat;
+        }
 
         float elapsed = 0f;
         float timer   = 0f;
@@ -578,11 +590,15 @@ public class EnemyController : MonoBehaviour, IEnemyHost
             {
                 timer -= tickInterval;
                 TakeDamage(dotPerTick);
+                if (UnityEngine.Random.value < 0.5f)
+                    PlayerController.Instance?.HealHP(dotPerTick);
             }
             yield return null;
         }
 
-        if (srs != null && _originalMats != null)
+        if (hitFlash != null)
+            hitFlash.ExitPersistentState();
+        else if (srs != null && _originalMats != null)
             for (int i = 0; i < srs.Length && i < _originalMats.Length; i++)
                 if (_originalMats[i] != null && srs[i] != null) srs[i].material = _originalMats[i];
 
@@ -696,6 +712,8 @@ public class EnemyController : MonoBehaviour, IEnemyHost
         }
         bleedCoroutine = null;
     }
+
+    void IEnemyHost.TakeDamage(float damage, bool isCritical) => TakeDamage(damage, isCritical);
 
     public void TakeDamage(float damage, bool isCritical = false, Vector2 knockbackDir = default, float knockbackForce = 0f)
     {

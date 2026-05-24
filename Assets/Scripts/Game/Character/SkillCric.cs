@@ -162,8 +162,13 @@ public class SkillCric : CharacterSkillBase
     private Vector2 FindDashTarget(Vector2 from)
     {
         var enemies = EnemyController.All;
-        if (enemies.Count == 0)
+        var boss    = BossController.Current;
+
+        if (enemies.Count == 0 && boss == null)
             return from + _lastMoveDir * dashDistance;
+
+        // 보스가 있으면 항상 우선
+        if (boss != null) return (Vector2)boss.transform.position;
 
         EnemyController best     = null;
         int             maxCount = -1;
@@ -203,6 +208,16 @@ public class SkillCric : CharacterSkillBase
                 enemy.TakeDamage(damage);
                 CameraFollow.Shared?.Shake(dashHitShakeDuration, dashHitShakeMagnitude);
             }
+        }
+
+        var boss = BossController.Current;
+        if (boss != null && Vector2.Distance(boss.transform.position, center) <= knockbackRadius)
+        {
+            Vector2 kbDir = (Vector2)boss.transform.position - center;
+            if (kbDir.sqrMagnitude < 0.01f) kbDir = dashDir;
+            boss.Knockback(kbDir.normalized, knockbackForce);
+            boss.TakeDamage(damage);
+            CameraFollow.Shared?.Shake(dashHitShakeDuration, dashHitShakeMagnitude);
         }
     }
 

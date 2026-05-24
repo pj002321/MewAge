@@ -78,6 +78,19 @@ public class HitFlash : MonoBehaviour
         ApplyMaterial();
     }
 
+    /// <summary>실루엣 머티리얼을 즉시 목표 색상으로 적용합니다 (흰색 시작 없음).</summary>
+    public void EnterPersistentStateImmediate(Color persistentColor)
+    {
+        if (_instanceMat == null) return;
+        if (_co != null) { StopCoroutine(_co); _co = null; }
+        if (_isFlashing) { Restore(); _isFlashing = false; }
+        if (!_persistent) SaveOriginals();
+        _persistent      = true;
+        _persistentColor = persistentColor;
+        SetMatColor(persistentColor);
+        ApplyMaterial();
+    }
+
     // 플래시 여부 별도 프로퍼티 (StopFlash 내부 guard용)
     private bool _isFlashing;
 

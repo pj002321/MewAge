@@ -26,7 +26,7 @@ Transform:
   m_GameObject: {fileID: 5283092152974400381}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -1, y: 1.5, z: 0}
+  m_LocalPosition: {x: -1, y: 2, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -222,13 +222,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SkillDuke
   duration: 10
-  pointsRequired: 50
+  pointsRequired: 100
   batPrefab: {fileID: 574793032822915054, guid: 07bd99cacbb92674f8c8830312113d58, type: 3}
-  batAnchor1: {fileID: 4170586680714898697}
-  batAnchor2: {fileID: 1320655591400953296}
-  moveSpeed: 10
+  anchors:
+  - {fileID: 4170586680714898697}
+  - {fileID: 1320655591400953296}
+  moveSpeed: 25
   damageMult: 0.25
-  dotDamageMult: 0.1
   dotDuration: 3
 --- !u!1 &8048823330902857978
 GameObject:
@@ -256,7 +256,7 @@ Transform:
   m_GameObject: {fileID: 8048823330902857978}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1, y: 1.5, z: 0}
+  m_LocalPosition: {x: 1, y: 2, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

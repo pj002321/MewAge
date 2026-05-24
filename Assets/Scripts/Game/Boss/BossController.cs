@@ -435,13 +435,18 @@ public class BossController : MonoBehaviour, IEnemyHost
         float duration = 0.5f;
         while (elapsed < duration)
         {
-            float t    = elapsed / duration;
+            float   t    = elapsed / duration;
             Vector2 next = Rb.position + dir * force * (1f - t) * Time.fixedDeltaTime;
+            var     mb   = MovementBounds.Shared;
+            if (mb != null && !mb.IsInside(next))
+                next = mb.ClosestPointOnBoundary(next);
             Rb?.MovePosition(next);
             elapsed += Time.fixedDeltaTime;
             yield return new WaitForFixedUpdate();
         }
     }
+
+    void IEnemyHost.TakeDamage(float damage, bool isCritical) => TakeDamage(damage, isCritical);
 
     public void TakeDamage(float damage, bool isCritical = false, Vector2 knockbackDir = default, float knockbackForce = 0f)
     {
