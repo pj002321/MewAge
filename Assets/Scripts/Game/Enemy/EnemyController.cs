@@ -80,6 +80,7 @@ public class EnemyController : MonoBehaviour, IEnemyHost
 
     private Coroutine _stunCoroutine;
     private Coroutine _freezeCoroutine;
+    private Coroutine _purpleDotCoroutine;
 
     // 사망 흰색 실루엣 재질 (SpriteSilhouette 쉐이더) — 씬 전체 공유
     private static Material _deathFlashMat;
@@ -91,6 +92,18 @@ public class EnemyController : MonoBehaviour, IEnemyHost
         _deathFlashMat = new Material(shader);
         _deathFlashMat.SetColor("_Color", Color.white);
         return _deathFlashMat;
+    }
+
+    // 듀크냥 스킬 보라색 실루엣 재질
+    private static Material _purpleDotMat;
+    private static Material GetPurpleDotMat()
+    {
+        if (_purpleDotMat != null) return _purpleDotMat;
+        var shader = Shader.Find("Custom/SpriteSilhouette");
+        if (shader == null) return null;
+        _purpleDotMat = new Material(shader);
+        _purpleDotMat.SetColor("_Color", new Color(0.6f, 0f, 1f, 1f));
+        return _purpleDotMat;
     }
 
     public event System.Action OnDeath;
@@ -278,6 +291,7 @@ public class EnemyController : MonoBehaviour, IEnemyHost
         _slowCoroutine     = null;
         knockbackCoroutine = null;
         _fireTintCoroutine = null;
+        _purpleDotCoroutine = null;
 
         // 이전 풀 사용에서 남은 상태 VFX 제거
         if (_freezeVfxInst != null) { Destroy(_freezeVfxInst); _freezeVfxInst = null; }
@@ -539,6 +553,40 @@ public class EnemyController : MonoBehaviour, IEnemyHost
         if (!isStunned) SetTint(Color.white);
         if (_fireVfxInst != null) { Destroy(_fireVfxInst); _fireVfxInst = null; }
         _fireCoroutine = null;
+    }
+
+    /// <summary>듀크냥 스킬 — 보라색 실루엣으로 변경하고 지속 피해를 입힙니다.</summary>
+    public void ApplyPurpleDot(float dotPerTick, float duration, float tickInterval = 1f)
+    {
+        if (_purpleDotCoroutine != null) StopCoroutine(_purpleDotCoroutine);
+        _purpleDotCoroutine = StartCoroutine(PurpleDotRoutine(dotPerTick, duration, tickInterval));
+    }
+
+    private IEnumerator PurpleDotRoutine(float dotPerTick, float duration, float tickInterval)
+    {
+        var purpleMat = GetPurpleDotMat();
+        if (srs != null && purpleMat != null)
+            foreach (var sr in srs) if (sr != null) sr.material = purpleMat;
+
+        float elapsed = 0f;
+        float timer   = 0f;
+        while (elapsed < duration && !_isDying)
+        {
+            elapsed += Time.deltaTime;
+            timer   += Time.deltaTime;
+            if (timer >= tickInterval)
+            {
+                timer -= tickInterval;
+                TakeDamage(dotPerTick);
+            }
+            yield return null;
+        }
+
+        if (srs != null && _originalMats != null)
+            for (int i = 0; i < srs.Length && i < _originalMats.Length; i++)
+                if (_originalMats[i] != null && srs[i] != null) srs[i].material = _originalMats[i];
+
+        _purpleDotCoroutine = null;
     }
 
     /// <summary>지정 방향으로 순간적으로 밀어냅니다.</summary>
