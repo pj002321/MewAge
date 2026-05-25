@@ -91,6 +91,7 @@ public class SlamBehaviour : EnemyBehaviourBase
         Owner.SelfTransform.localScale = origScale;
 
         // 2) 빠른 상승 — 세로 스트레치하며 화면 밖으로
+        anim?.SetTrigger(EnemyAnim.TAttack);
         Vector3 apexPos = new(startPos.x, startPos.y + slamJumpHeight, startPos.z);
         t = 0f;
         while (t < slamRiseTime)
@@ -139,8 +140,6 @@ public class SlamBehaviour : EnemyBehaviourBase
         Owner.SelfTransform.localScale = origScale;
 
         if (marker != null) Destroy(marker);
-
-        anim?.SetTrigger(EnemyAnim.TAttack);
 
         if (landingVfxPrefab != null)
         {

@@ -61,9 +61,10 @@ public class WeaponPoint : MonoBehaviour
     private float BonusMult => _grogySpeedMult * _skillSpeedMult * _permanentSpeedMult;
 
     // ── 내부 접근자 (behaviour 전용) ──────────────────────────────────
-    internal SpriteRenderer       WeaponSr       => _weaponSr;
-    internal WeaponGrade          Grade          => _grade;
-    internal WeaponHighGradeSkill HighGradeSkill => _highGradeSkill;
+    internal SpriteRenderer       WeaponSr         => _weaponSr;
+    internal WeaponGrade          Grade            => _grade;
+    internal WeaponHighGradeSkill HighGradeSkill   => _highGradeSkill;
+    internal bool                 IsBehaviourIdle  => !(_behaviour?.IsManagingLocalPos ?? false);
 
     // ── 공유 NonAlloc 버퍼 ────────────────────────────────────────────
     public static readonly Collider2D[] SharedHitBuffer = new Collider2D[32];

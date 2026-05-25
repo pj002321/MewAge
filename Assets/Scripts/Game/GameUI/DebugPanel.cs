@@ -349,7 +349,7 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
                 btn.onClick.AddListener(() =>
                 {
                     var weapon = WeaponData.FromDB(row);
-                    if (weapon != null) PlayerInventory.Shared?.QuietEquip(weapon);
+                    if (weapon != null) DebugAddWeapon(weapon);
                 });
             }
             else
@@ -357,6 +357,53 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
                 btn.gameObject.SetActive(false);
             }
         }
+    }
+
+    // ── 디버그 무기 추가 ──────────────────────────────────────────────
+
+    private static void DebugAddWeapon(WeaponData weapon)
+    {
+        var inv = PlayerInventory.Shared;
+        if (inv == null) return;
+
+        // 0. 이미 같은 무기가 2개 쌓인 성급이 있으면 그 성급으로 맞춤
+        //    (FromDB는 항상 1성이므로, 2성×2개 장착 상태에서 3번째를 눌러도 합성이 트리거되도록)
+        weapon = ResolveDebugStar(weapon, inv);
+
+        // 1. 인벤토리에 추가 — 꽉 찬 경우 토스트
+        if (!inv.TryAddToInventory(weapon))
+        {
+            PopupBaseNoti.Shared?.Show("인벤토리가 가득 찼습니다.");
+            return;
+        }
+
+        // 2. 같은 이름·성 3개 모이면 자동 합성 (TryMergeAll이 슬롯 배치까지 처리)
+        if (weapon.star < 5 && inv.CanMergeAll(weapon.weaponName, weapon.star))
+        {
+            inv.TryMergeAll(weapon.weaponName, weapon.star, weapon.UpgradedTo(weapon.star + 1));
+            return;
+        }
+
+        // 3. 장착 빈 슬롯 있으면 방금 추가된 인벤 마지막 항목을 바로 장착
+        bool hasEmpty = inv.Equipped.Count < PlayerInventory.MaxEquipped;
+        if (!hasEmpty)
+            for (int i = 0; i < inv.Equipped.Count; i++)
+                if (inv.Equipped[i] == null) { hasEmpty = true; break; }
+
+        if (hasEmpty && inv.Inventory.Count > 0)
+            inv.EquipFromInventory(inv.Inventory.Count - 1);
+    }
+
+    // 장착+인벤 합산으로 같은 이름이 2개인 성급을 찾아 그 성급으로 반환합니다.
+    // 해당하는 성급이 없으면 원본(1성)을 그대로 반환합니다.
+    private static WeaponData ResolveDebugStar(WeaponData weapon, PlayerInventory inv)
+    {
+        for (int s = 4; s >= 1; s--)
+        {
+            if (inv.CountAll(weapon.weaponName, s) == 2)
+                return weapon.UpgradedTo(s);
+        }
+        return weapon;
     }
 
     private System.Collections.IEnumerator StaggerShow(Transform content, float interval = 0.008f)

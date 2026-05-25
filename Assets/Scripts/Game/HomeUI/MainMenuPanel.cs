@@ -97,11 +97,13 @@ public class MainMenuPanel : MonoBehaviour
     float _dragMinY;
     float _dragMaxY;
 
-    // 배경 크로스페이드
+    // 배경 슬라이드
     Image     _bgOverlay;
     Image     _bgOverlay2;
     Coroutine _bgFadeCoroutine;
     string    _currentBgChapter;
+    Vector3   _bgHomePos;
+    Vector3   _bg2HomePos;
     const float BG_FADE_DURATION = 0.35f;
 
 
@@ -459,6 +461,8 @@ public class MainMenuPanel : MonoBehaviour
 
         if (_contentCG != null) _contentCG.alpha = 1f;
 
+        if (background  != null) _bgHomePos  = background.rectTransform.localPosition;
+        if (background2 != null) _bg2HomePos = background2.rectTransform.localPosition;
     }
 
     // ── 카드 생성 ────────────────────────────────────────────────────
@@ -587,23 +591,51 @@ public class MainMenuPanel : MonoBehaviour
 
     IEnumerator CrossfadeBackground(Sprite next, Sprite next2)
     {
-        if (_bgOverlay != null)  { _bgOverlay.sprite  = next;  _bgOverlay.color  = new Color(1f, 1f, 1f, 0f); }
-        if (_bgOverlay2 != null) { _bgOverlay2.sprite = next2; _bgOverlay2.color = new Color(1f, 1f, 1f, 0f); }
+        // 인터럽트 복구: base를 홈 위치로 스냅
+        if (background  != null) background.rectTransform.localPosition  = _bgHomePos;
+        if (background2 != null) background2.rectTransform.localPosition = _bg2HomePos;
+
+        float slideH = (background != null && background.rectTransform.rect.height > 10f)
+                       ? background.rectTransform.rect.height : 800f;
+
+        // 오버레이: 새 스프라이트, 완전 불투명, 화면 아래에 배치
+        if (_bgOverlay != null)
+        {
+            _bgOverlay.sprite = next;
+            _bgOverlay.color  = Color.white;
+            _bgOverlay.rectTransform.localPosition = _bgHomePos + Vector3.down * slideH;
+        }
+        if (_bgOverlay2 != null)
+        {
+            _bgOverlay2.sprite = next2;
+            _bgOverlay2.color  = Color.white;
+            _bgOverlay2.rectTransform.localPosition = _bg2HomePos + Vector3.down * slideH;
+        }
 
         float elapsed = 0f;
         while (elapsed < BG_FADE_DURATION)
         {
             elapsed += Time.unscaledDeltaTime;
-            float a = Mathf.Clamp01(elapsed / BG_FADE_DURATION);
-            if (_bgOverlay  != null) _bgOverlay.color  = new Color(1f, 1f, 1f, a);
-            if (_bgOverlay2 != null) _bgOverlay2.color = new Color(1f, 1f, 1f, a);
+            float t    = Mathf.Clamp01(elapsed / BG_FADE_DURATION);
+            float ease = 1f - Mathf.Pow(1f - t, 3f); // ease-out cubic
+
+            if (background  != null)
+                background.rectTransform.localPosition  = _bgHomePos  + Vector3.down * (slideH * ease);
+            if (background2 != null)
+                background2.rectTransform.localPosition = _bg2HomePos + Vector3.down * (slideH * ease);
+            if (_bgOverlay  != null)
+                _bgOverlay.rectTransform.localPosition  = _bgHomePos  + Vector3.down * (slideH * (1f - ease));
+            if (_bgOverlay2 != null)
+                _bgOverlay2.rectTransform.localPosition = _bg2HomePos + Vector3.down * (slideH * (1f - ease));
+
             yield return null;
         }
 
-        if (background  != null) { background.sprite  = next;  background.SetNativeSize();  }
-        if (background2 != null) { background2.sprite = next2; background2.SetNativeSize(); }
-        if (_bgOverlay  != null) _bgOverlay.color  = new Color(1f, 1f, 1f, 0f);
-        if (_bgOverlay2 != null) _bgOverlay2.color = new Color(1f, 1f, 1f, 0f);
+        // 마무리: base 교체 + 위치 복원, overlay 숨김
+        if (background  != null) { background.sprite  = next;  background.rectTransform.localPosition  = _bgHomePos;  background.SetNativeSize();  }
+        if (background2 != null) { background2.sprite = next2; background2.rectTransform.localPosition = _bg2HomePos; background2.SetNativeSize(); }
+        if (_bgOverlay  != null) { _bgOverlay.color   = new Color(1f,1f,1f,0f); _bgOverlay.rectTransform.localPosition  = _bgHomePos;  }
+        if (_bgOverlay2 != null) { _bgOverlay2.color  = new Color(1f,1f,1f,0f); _bgOverlay2.rectTransform.localPosition = _bg2HomePos; }
         _bgFadeCoroutine = null;
     }
 

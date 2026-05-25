@@ -38,6 +38,9 @@ public abstract class WeaponBehaviourBase
     /// <summary>true면 WeaponPoint의 UpdateRotation()을 이번 프레임 스킵합니다.</summary>
     public virtual bool OverridesRotation => false;
 
+    /// <summary>true이면 이 프레임에 localPosition을 직접 제어 중이므로 BonusOrbitBehaviour를 멈춥니다.</summary>
+    public virtual bool IsManagingLocalPos => _inWaveIntro;
+
     /// <summary>공격 시퀀스 중 유지할 시선 방향을 반환합니다. null이면 WeaponPoint가 자체 계산합니다.</summary>
     public virtual Vector2? GetAttackLookDir() => null;
 

@@ -10,10 +10,11 @@ public class DukeBat : MonoBehaviour
 {
     public const int HitsPerPeck = 3;
 
-    private const float PeckDashDuration = 0.15f;  // 내려꽂기 시간
-    private const float PeckPullDuration = 0.12f;  // 복귀 시간
-    private const float PeckHitInterval  = 0.04f;  // 바닥 다타 간격
-    private const float ArriveThreshold  = 0.4f;
+    private const float PeckWindupDuration = 0.07f;  // 위로 당기기 시간
+    private const float PeckDashDuration   = 0.07f;  // 내려꽂기 시간
+    private const float PeckPullDuration   = 0.13f;  // 복귀 시간
+    private const float PeckHitInterval    = 0.04f;  // 바닥 다타 간격
+    private const float ArriveThreshold    = 0.4f;
 
     // 공전
     private const float OrbitRadius = 0.5f;
@@ -26,7 +27,8 @@ public class DukeBat : MonoBehaviour
     private bool       _isAttacking;
     private bool       _inCombo;
 
-    private float _damageMult;
+    private float      _damageMult;
+    private GameObject _hitEffectPrefab;
 
     private System.Func<IEnemyHost> _getOtherTarget;
 
@@ -63,10 +65,11 @@ public class DukeBat : MonoBehaviour
         _target         = null;
     }
 
-    public void StartAttacking(float damageMult)
+    public void StartAttacking(float damageMult, GameObject hitEffectPrefab = null)
     {
-        _damageMult  = damageMult;
-        _isAttacking = true;
+        _damageMult      = damageMult;
+        _hitEffectPrefab = hitEffectPrefab;
+        _isAttacking     = true;
     }
 
     public void StopAttacking()
@@ -123,21 +126,38 @@ public class DukeBat : MonoBehaviour
 
     private IEnumerator DoPeck(IEnemyHost target, Vector2 peckOrigin)
     {
-        Vector2 strikePos = IsAlive(target)
-            ? (Vector2)target.SelfTransform.position
-            : peckOrigin;
+        if (!IsAlive(target)) { _inCombo = false; yield break; }
 
-        // 크게 내려꽂기
+        Vector2 enemyPos   = (Vector2)target.SelfTransform.position;
+        Vector2 strikePos  = enemyPos + new Vector2(0f, 0.35f);  // 적 머리
+        // 적 반대 방향으로 살짝 위로 당기기
+        float   peckSideX  = peckOrigin.x - enemyPos.x;
+        Vector2 windupPos  = peckOrigin + new Vector2(Mathf.Sign(peckSideX) * 0.2f, 0.4f);
+
+        // 1) 위로 살짝 당기기 (windup)
         float t = 0f;
+        while (t < PeckWindupDuration)
+        {
+            t += Time.deltaTime;
+            SetPos(Vector2.Lerp(peckOrigin, windupPos,
+                                Mathf.Clamp01(t / PeckWindupDuration)));
+            yield return null;
+        }
+        SetPos(windupPos);
+
+        // 2) 적 머리로 팍! 내려꽂기
+        t = 0f;
         while (t < PeckDashDuration)
         {
             t += Time.deltaTime;
-            SetPos(Vector2.Lerp(peckOrigin, strikePos,
+            SetPos(Vector2.Lerp(windupPos, strikePos,
                                 Mathf.Clamp01(t / PeckDashDuration)));
             yield return null;
         }
+        SetPos(strikePos);
 
-        // 바닥에서 빠르게 다타
+        // 3) 빠르게 다타 + 이펙트
+        if (IsAlive(target)) SpawnHitEffect(target.SelfTransform.position);
         for (int i = 0; i < HitsPerPeck; i++)
         {
             if (IsAlive(target))
@@ -146,7 +166,7 @@ public class DukeBat : MonoBehaviour
                 yield return new WaitForSeconds(PeckHitInterval);
         }
 
-        // 복귀
+        // 4) 복귀
         t = 0f;
         while (t < PeckPullDuration)
         {
@@ -233,6 +253,14 @@ public class DukeBat : MonoBehaviour
         if (_srs == null) return;
         foreach (var sr in _srs)
             if (sr != null) sr.flipX = !facingRight;
+    }
+
+    private void SpawnHitEffect(Vector3 pos)
+    {
+        if (_hitEffectPrefab == null) return;
+        var go = Instantiate(_hitEffectPrefab, pos, Quaternion.identity);
+        go.GetComponent<HitEffect>()?.Play(go, null);
+        Destroy(go, 0.5f);
     }
 
     private static bool IsAlive(IEnemyHost h) =>

@@ -287,9 +287,9 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
         for (int i = MortarShell.All.Count - 1; i >= 0; i--)
             if (MortarShell.All[i] != null) Destroy(MortarShell.All[i].gameObject);
 
-        // 보스/적 스킬이 남긴 경고선 일괄 제거
-        // 각 스킬은 "WarnLine" 이름으로 GameObject를 생성하므로 이름으로 탐색
+        // 보스/적 스킬이 남긴 경고선·텔레포트 마커 일괄 제거
         EnemyCombatRoutines.WarningLine.DestroyAll();
+        EnemyCombatRoutines.DestroyAllMarkers();
         var lineRenderers = FindObjectsByType<LineRenderer>(FindObjectsSortMode.None);
         foreach (var lr in lineRenderers)
             if (lr != null && lr.gameObject.name == "WarnLine")

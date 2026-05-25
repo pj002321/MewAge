@@ -103,11 +103,25 @@ public static class EnemyCombatRoutines
              + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * dist;
     }
 
+    private static readonly List<GameObject> _activeMarkers = new();
+
     private static void ShowMarker(Vector2 pos, GameObject prefab, float duration)
     {
         if (prefab == null) return;
         var go = UnityEngine.Object.Instantiate(prefab, pos, Quaternion.identity);
+        _activeMarkers.Add(go);
         go.GetComponent<TeleportMarker>()?.Show(duration);
+    }
+
+    /// <summary>씬에 남아있는 모든 텔레포트 마커를 일괄 제거합니다. 웨이브 전환 시 호출하세요.</summary>
+    public static void DestroyAllMarkers()
+    {
+        for (int i = _activeMarkers.Count - 1; i >= 0; i--)
+        {
+            var go = _activeMarkers[i];
+            if (go != null) UnityEngine.Object.Destroy(go);
+        }
+        _activeMarkers.Clear();
     }
 
     // ══════════════════════════════════════════════════════════════

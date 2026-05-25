@@ -20,8 +20,9 @@ public class SkillDuke : CharacterSkillBase
     [SerializeField] private float moveSpeed = 14f;
 
     [Header("박쥐 전투")]
-    [SerializeField] private float damageMult    = 0.25f;
-    [SerializeField] private float skillDuration = 10f;   // 웨이브 활성 시간 기준
+    [SerializeField] private float      damageMult       = 0.25f;
+    [SerializeField] private float      skillDuration    = 10f;
+    [SerializeField] private GameObject batHitEffectPrefab;  // 타격 시 이펙트 (일반 히트이펙트와 별개)
 
     public override string SkillId => "SKL_DUKE";
     public override float  Duration => Mathf.Infinity;   // 내부 WaveTimeLifetime이 관리
@@ -83,7 +84,7 @@ public class SkillDuke : CharacterSkillBase
         if (!_isPlayerInstance || _bats == null) return;
         float dmgMult = damageMult / DukeBat.HitsPerPeck;
         foreach (var bat in _bats)
-            if (bat != null) bat.StartAttacking(dmgMult);
+            if (bat != null) bat.StartAttacking(dmgMult, batHitEffectPrefab);
 
         if (_lifetimeRoutine != null) StopCoroutine(_lifetimeRoutine);
         _lifetimeRoutine = StartCoroutine(WaveTimeLifetime(skillDuration));

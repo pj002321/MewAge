@@ -299,7 +299,19 @@ public class PlayerController : MonoBehaviour
         }
 
         if (currentHP <= 0f)
-            GameManager.Shared?.TriggerGameOver();
+        {
+            // SYN_ALL_MYTH_REVIVE: 신화 6종 시너지 — 사망 시 1회 즉시 부활
+            if (WeaponSynergyFlags.MythReviveAvailable)
+            {
+                WeaponSynergyFlags.MythReviveAvailable = false;
+                Revive();
+                FXManager.Shared?.SpawnPlayerText("부활!", new Color(1f, 0.85f, 0f));
+            }
+            else
+            {
+                GameManager.Shared?.TriggerGameOver();
+            }
+        }
     }
 
     private IEnumerator PlayerKnockbackRoutine(Vector2 dir, float force)

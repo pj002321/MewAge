@@ -48,6 +48,8 @@ public class SynergyEffectManager : MonoBehaviourSingleton<SynergyEffectManager>
             // PlayerInventory가 Start() 시점에 아직 없으면 한 프레임 후 재시도
             StartCoroutine(LateSubscribeRoutine());
         }
+
+        _magicSlowRoutine = StartCoroutine(MagicSlowLoop());
     }
 
     private System.Collections.IEnumerator LateSubscribeRoutine()
@@ -70,10 +72,27 @@ public class SynergyEffectManager : MonoBehaviourSingleton<SynergyEffectManager>
         RemoveAllStatMods();
     }
 
+    // SYN_MAGIC3_SLOW: 2.5초마다 현재 모든 적에게 둔화 적용
+    private System.Collections.IEnumerator MagicSlowLoop()
+    {
+        var interval = new WaitForSeconds(2.5f);
+        while (true)
+        {
+            yield return interval;
+            if (!WeaponSynergyFlags.MagicSlowActive) continue;
+            foreach (var e in EnemyController.All)
+            {
+                if (e != null && e.gameObject.activeInHierarchy)
+                    e.ApplySlow(3f, 0.5f);
+            }
+        }
+    }
+
     // ── 핵심 계산 ─────────────────────────────────────────────────────
 
-    private bool _recalculating;
-    private bool _recalcPending;
+    private bool      _recalculating;
+    private bool      _recalcPending;
+    private Coroutine _magicSlowRoutine;
 
     public void RecalculateSynergies()
     {
@@ -219,17 +238,13 @@ public class SynergyEffectManager : MonoBehaviourSingleton<SynergyEffectManager>
                 break;
 
             case "SYN_ALL3_HIGHEST_EXTRA":
-                // 현재 최고등급의 1성 무기 사본을 장착 슬롯에 추가
+                // 현재 최고등급의 1성 무기 사본을 WeaponManager 보너스 슬롯(7번째 앵커)에 배치
                 WeaponData highest = null;
                 foreach (var w in inv.Equipped)
                     if (w != null && (highest == null || w.grade > highest.grade))
                         highest = w;
                 if (highest != null)
-                {
-                    var extra = highest.UpgradedTo(1);
-                    inv.ForceAddToInventory(extra);
-                    inv.EquipFromInventory(inv.Inventory.Count - 1);
-                }
+                    WeaponManager.Instance?.SetBonusWeapon(highest.UpgradedTo(1));
                 break;
         }
     }

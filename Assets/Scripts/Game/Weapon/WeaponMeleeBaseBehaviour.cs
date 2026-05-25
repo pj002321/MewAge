@@ -34,6 +34,8 @@ public abstract class WeaponMeleeBaseBehaviour : WeaponBehaviourBase
 
     // ── WeaponBehaviourBase override ─────────────────────────────────────
 
+    public override bool IsManagingLocalPos => _inWaveIntro || _state != State.Idle;
+
     public override Vector2? GetAttackLookDir()
     {
         // 인트로 또는 풀백 중에는 앵커 방향(바깥쪽)을 바라봄

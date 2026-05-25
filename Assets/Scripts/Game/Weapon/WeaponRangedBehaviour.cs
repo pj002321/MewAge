@@ -82,6 +82,37 @@ public class WeaponRangedBehaviour : WeaponBehaviourBase
         Host.TriggerAttackAnimation();
         TriggerRecoil(aimDir);
         if (Host.Grade >= WeaponGrade.Legendary) Host.HighGradeSkill?.OnShoot(spawnPos, aimDir);
+
+        // SYN_RANGE4_PROJECTILE_X2: 원거리 4개 이상 시 추가 투사체 발사 (±15°, 데미지 80%)
+        if (WeaponSynergyFlags.RangeDoubleProjectile && !useParabolicShot)
+            FireSynergyExtraProjectiles(spawnPos, aimDir, finalDmg * 0.8f, isCrit);
+    }
+
+    private void FireSynergyExtraProjectiles(Vector3 spawnPos, Vector2 aimDir, float dmg, bool isCrit)
+    {
+        Vector2 perpOffset = new Vector2(-aimDir.y, aimDir.x) * 0.25f;
+        SpawnExtra(spawnPos + (Vector3)perpOffset,  RotateDir(aimDir,  15f), dmg, isCrit);
+        SpawnExtra(spawnPos - (Vector3)perpOffset,  RotateDir(aimDir, -15f), dmg, isCrit);
+    }
+
+    private void SpawnExtra(Vector3 pos, Vector2 dir, float dmg, bool isCrit)
+    {
+        var go   = Object.Instantiate(_projectilePrefab, pos, Quaternion.identity);
+        var proj = go.GetComponent<Projectile>();
+        if (proj == null) { Object.Destroy(go); return; }
+        proj.Init(dmg, dir, projectileSpeed, isPrimaryCritical: isCrit,
+            lifeSteal: Host.lifeSteal, dotDamage: Host.dotDamage,
+            areaHitRadius: Host.areaHitRadius, areaHitDamageRatio: Host.areaHitDamageRatio,
+            criticalRate: Host.criticalRate, criticalMultiplier: Host.criticalMultiplier,
+            baseDamage: dmg, knockbackPower: Host.knockbackPower,
+            acceleration: Mathf.Clamp(projectileSpeed * 0.05f, 0.1f, 0.4f));
+    }
+
+    private static Vector2 RotateDir(Vector2 v, float degrees)
+    {
+        float r = degrees * Mathf.Deg2Rad;
+        return new Vector2(v.x * Mathf.Cos(r) - v.y * Mathf.Sin(r),
+                           v.x * Mathf.Sin(r) + v.y * Mathf.Cos(r));
     }
 
     private Vector3 GetParabolicSpawnPos()

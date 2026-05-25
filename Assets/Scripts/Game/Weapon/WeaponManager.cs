@@ -16,6 +16,11 @@ public class WeaponManager : MonoBehaviour
     [SerializeField] private Transform anchorRight;
     [SerializeField] private Transform anchorLeft;
 
+    [Header("SYN_ALL3_HIGHEST_EXTRA 전용 보너스 슬롯")]
+    [SerializeField] private Transform anchorBonus;
+    [SerializeField] private float bonusOrbitRadius = 1.8f;
+    [SerializeField] private float bonusOrbitSpeed  = 120f;
+
     private Transform[] _anchors;
 
     private void Awake()
@@ -118,6 +123,56 @@ public class WeaponManager : MonoBehaviour
             anchor.GetComponentsInChildren<WeaponPoint>(temp);
             result.AddRange(temp);
         }
+        if (anchorBonus != null)
+        {
+            anchorBonus.GetComponentsInChildren<WeaponPoint>(temp);
+            result.AddRange(temp);
+        }
         return result;
+    }
+
+    // ── SYN_ALL3_HIGHEST_EXTRA 전용 보너스 슬롯 ──────────────────────
+
+    /// <summary>보너스 앵커에 무기를 인스턴스화합니다. 이미 있으면 교체합니다.</summary>
+    public void SetBonusWeapon(WeaponData data)
+    {
+        ClearBonusWeapon();
+        if (anchorBonus == null)
+        {
+            this.DError("[WeaponManager] anchorBonus가 null입니다. Inspector에서 연결하세요.");
+            return;
+        }
+        if (data?.prefab == null) return;
+
+        var go = Instantiate(data.prefab, anchorBonus);
+        go.transform.localPosition = Vector3.zero;
+        go.transform.localRotation = Quaternion.identity;
+        go.transform.localScale    = Vector3.one;
+
+        // 공전 컴포넌트 추가 (Spin 타입은 자체 localPosition 제어를 하므로 제외)
+        if (data.weaponType != WeaponType.Spin)
+        {
+            var orbit = go.AddComponent<BonusOrbitBehaviour>();
+            orbit.Init(bonusOrbitRadius, bonusOrbitSpeed,
+                       startAngleDeg: Random.Range(0f, 360f));
+        }
+
+        if (!go.TryGetComponent<WeaponPoint>(out var wp))
+            wp = go.AddComponent<WeaponPoint>();
+        wp.Init(data);
+
+        this.DLog($"[WeaponManager] 보너스 슬롯: '{data.weaponName}' 장착 완료 (공전 반경={bonusOrbitRadius})");
+    }
+
+    /// <summary>보너스 앵커의 무기를 제거합니다.</summary>
+    public void ClearBonusWeapon()
+    {
+        if (anchorBonus == null) return;
+        for (int i = anchorBonus.childCount - 1; i >= 0; i--)
+        {
+            var child = anchorBonus.GetChild(i);
+            child.SetParent(null);
+            Destroy(child.gameObject);
+        }
     }
 }
