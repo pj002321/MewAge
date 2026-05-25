@@ -123,9 +123,11 @@ public class HomeUserInfoBar : MonoBehaviour
         if (currencyTexts.Length > 1 && currencyTexts[1] != null)
             currencyTexts[1].text = rm != null ? FormatCurrency(rm.Ruby) : "0";
 
-        // 스태미나 (RewardManager 미지원 — 추후 연동)
+        // 스태미나
         if (currencyTexts.Length > 2 && currencyTexts[2] != null)
-            currencyTexts[2].text = "0";
+            currencyTexts[2].text = rm != null
+                ? $"{rm.Stamina}/{RewardManager.MaxStamina}"
+                : $"0/{RewardManager.MaxStamina}";
     }
 
     private static string FormatCurrency(int amount)

@@ -37,6 +37,25 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
     [SerializeField] private Button        resetDataButton;
     [SerializeField] private Button        unlockAllChaptersButton;
 
+    // ── 홈씬 아이템 획득 ─────────────────────────────────────────────
+    [Header("홈씬 아이템 획득 (homeContent 하위)")]
+    [SerializeField] private Button    itemListToggle;
+    [SerializeField] private Transform itemListContent;
+    [SerializeField] private Button addRubyButton;
+    [SerializeField] private Button addEqKeyNormalButton;
+    [SerializeField] private Button addEqKeyRareButton;
+    [SerializeField] private Button addEqKeyEpicButton;
+    [SerializeField] private Button addRfKeyNormalButton;
+    [SerializeField] private Button addRfKeyEpicButton;
+    [SerializeField] private Button addEqMatRingButton;
+    [SerializeField] private Button addEqMatNeckButton;
+    [SerializeField] private Button addEqMatFootButton;
+    [SerializeField] private Button addEqMatTopButton;
+    [SerializeField] private Button addEqMatCloakButton;
+    [SerializeField] private Button addEqMatHeadButton;
+    [SerializeField] private Button addRelicScrollButton;
+    [SerializeField] private Button addAllRelicFragsButton;
+
     // ── 인게임 전용 ──────────────────────────────────────────────────
     [Header("인게임 (gameContent 하위)")]
     [SerializeField] private Button   waveEndButton;
@@ -64,9 +83,11 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
     private bool _contentOpen     = true;
     private bool _waveListOpen    = false;
     private bool _weaponListOpen  = false;
+    private bool _itemListOpen    = false;
 
     private Coroutine _waveStagger;
     private Coroutine _weaponStagger;
+    private Coroutine _itemStagger;
 
     private readonly List<DB_무기> _debugWeaponList = new();
 
@@ -87,6 +108,24 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
         menuToggleButton?.onClick.AddListener(OnToggleMenuButtons);
         resetDataButton?.onClick.AddListener(OnResetData);
         unlockAllChaptersButton?.onClick.AddListener(OnUnlockAllChapters);
+
+        itemListToggle?.onClick.AddListener(OnToggleItemList);
+        itemListContent?.gameObject.SetActive(false);
+
+        addRubyButton?.onClick.AddListener(() => RewardManager.Shared?.GiveReward(new RewardItem(RewardType.Ruby, 100)));
+        addEqKeyNormalButton?.onClick.AddListener(() => TicketManager.Add(RewardType.TicketEqNormal, 1));
+        addEqKeyRareButton?.onClick.AddListener(() => TicketManager.Add(RewardType.TicketEqRare, 1));
+        addEqKeyEpicButton?.onClick.AddListener(() => TicketManager.Add(RewardType.TicketEqEpic, 1));
+        addRfKeyNormalButton?.onClick.AddListener(() => TicketManager.Add(RewardType.TicketRfNormal, 1));
+        addRfKeyEpicButton?.onClick.AddListener(() => TicketManager.Add(RewardType.TicketRfEpic, 1));
+        addEqMatRingButton?.onClick.AddListener(() => RewardManager.Shared?.GiveReward(new RewardItem(RewardType.EquipRingMat, 1)));
+        addEqMatNeckButton?.onClick.AddListener(() => RewardManager.Shared?.GiveReward(new RewardItem(RewardType.EquipNeckMat, 1)));
+        addEqMatFootButton?.onClick.AddListener(() => RewardManager.Shared?.GiveReward(new RewardItem(RewardType.EquipFootMat, 1)));
+        addEqMatTopButton?.onClick.AddListener(() => RewardManager.Shared?.GiveReward(new RewardItem(RewardType.EquipTopMat, 1)));
+        addEqMatCloakButton?.onClick.AddListener(() => RewardManager.Shared?.GiveReward(new RewardItem(RewardType.EquipcloakMat, 1)));
+        addEqMatHeadButton?.onClick.AddListener(() => RewardManager.Shared?.GiveReward(new RewardItem(RewardType.EquipHeadMat, 1)));
+        addRelicScrollButton?.onClick.AddListener(() => RewardManager.Shared?.GiveReward(new RewardItem(RewardType.RelicScroll, 1)));
+        addAllRelicFragsButton?.onClick.AddListener(OnAddAllRelicFrags);
 
         waveEndButton?.onClick.AddListener(() => GameManager.Shared?.DebugEndWave());
         invincibleButton?.onClick.AddListener(OnToggleInvincible);
@@ -127,8 +166,10 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
         else StartCoroutine(SyncMenuLabelAfterStart());
         waveListContent?.gameObject.SetActive(false);
         weaponListContent?.gameObject.SetActive(false);
+        itemListContent?.gameObject.SetActive(false);
         _waveListOpen   = false;
         _weaponListOpen = false;
+        _itemListOpen   = false;
     }
 
     // MainMenuPanel.Start()가 실행된 후 라벨을 동기화
@@ -229,6 +270,14 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
         this.DLog("[Debug] 전 챕터 해금 완료");
     }
 
+    private void OnAddAllRelicFrags()
+    {
+        var inv = RelicInventory.Shared;
+        if (inv == null) return;
+        foreach (var relic in inv.GetAll())
+            inv.AddFragments(relic.relicId, 50);
+    }
+
     // ── 인게임 핸들러 ─────────────────────────────────────────────────
 
     public void OnToggleInvincible()
@@ -282,6 +331,24 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
             btn.onClick.RemoveAllListeners();
             int wave = i + 1;
             btn.onClick.AddListener(() => GameManager.Shared?.DebugJumpToWave(wave));
+        }
+    }
+
+    // ── 아이템 획득 패널 ──────────────────────────────────────────────
+
+    private void OnToggleItemList()
+    {
+        _itemListOpen = !_itemListOpen;
+
+        if (_itemListOpen)
+        {
+            if (_itemStagger != null) StopCoroutine(_itemStagger);
+            _itemStagger = StartCoroutine(StaggerShow(itemListContent));
+        }
+        else
+        {
+            if (_itemStagger != null) { StopCoroutine(_itemStagger); _itemStagger = null; }
+            itemListContent?.gameObject.SetActive(false);
         }
     }
 
@@ -366,10 +433,6 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
         var inv = PlayerInventory.Shared;
         if (inv == null) return;
 
-        // 0. 이미 같은 무기가 2개 쌓인 성급이 있으면 그 성급으로 맞춤
-        //    (FromDB는 항상 1성이므로, 2성×2개 장착 상태에서 3번째를 눌러도 합성이 트리거되도록)
-        weapon = ResolveDebugStar(weapon, inv);
-
         // 1. 인벤토리에 추가 — 꽉 찬 경우 토스트
         if (!inv.TryAddToInventory(weapon))
         {
@@ -377,11 +440,12 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
             return;
         }
 
-        // 2. 같은 이름·성 3개 모이면 자동 합성 (TryMergeAll이 슬롯 배치까지 처리)
-        if (weapon.star < 5 && inv.CanMergeAll(weapon.weaponName, weapon.star))
+        // 2. 연쇄 합성 — 3개 모일 때마다 반복
+        int star = weapon.star;
+        while (star < 5 && inv.CanMergeAll(weapon.weaponName, star))
         {
-            inv.TryMergeAll(weapon.weaponName, weapon.star, weapon.UpgradedTo(weapon.star + 1));
-            return;
+            if (!inv.TryMergeAll(weapon.weaponName, star, weapon.UpgradedTo(star + 1))) break;
+            star++;
         }
 
         // 3. 장착 빈 슬롯 있으면 방금 추가된 인벤 마지막 항목을 바로 장착
@@ -392,18 +456,6 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
 
         if (hasEmpty && inv.Inventory.Count > 0)
             inv.EquipFromInventory(inv.Inventory.Count - 1);
-    }
-
-    // 장착+인벤 합산으로 같은 이름이 2개인 성급을 찾아 그 성급으로 반환합니다.
-    // 해당하는 성급이 없으면 원본(1성)을 그대로 반환합니다.
-    private static WeaponData ResolveDebugStar(WeaponData weapon, PlayerInventory inv)
-    {
-        for (int s = 4; s >= 1; s--)
-        {
-            if (inv.CountAll(weapon.weaponName, s) == 2)
-                return weapon.UpgradedTo(s);
-        }
-        return weapon;
     }
 
     private System.Collections.IEnumerator StaggerShow(Transform content, float interval = 0.008f)

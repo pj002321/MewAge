@@ -173,7 +173,12 @@ public class EquipmentDetailPopup : MonoBehaviour
         }
 
         if (statText) statText.text = _current.StatDescription();
-        _animator?.SetTrigger("tLevelUp");
+        if (_animator != null)
+        {
+            _animator.enabled = false;
+            _animator.enabled = true;
+            _animator.SetTrigger("tLevelUp");
+        }
         // RefreshLevelUI는 TryLevelUp → UIDataBus.BroadcastCurrencyChanged → OnCurrencyChanged 이벤트로 자동 호출됨
     }
 

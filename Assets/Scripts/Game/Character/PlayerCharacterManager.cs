@@ -120,8 +120,9 @@ public class PlayerCharacterManager : MonoBehaviourSingleton<PlayerCharacterMana
             return;
         }
 
-        GetBaseStats(row.f_등급,
-            out float baseHp, out float baseDef, out float baseAtk);
+        float baseHp  = row.f_기초체력;
+        float baseDef = row.f_기초방어력;
+        float baseAtk = row.f_기초공격력;
 
         var player = PlayerController.Instance;
         var stats  = PlayerStats.Shared;
@@ -139,9 +140,11 @@ public class PlayerCharacterManager : MonoBehaviourSingleton<PlayerCharacterMana
         // 1. 기초 스탯 적용 — PlayerStatManager를 통해 설정하면 StatPanelUI에도 반영됨
         if (sm != null)
         {
-            sm.SetBase(StatType.MaxHP, baseHp);
-            sm.SetBase(StatType.DEF,   baseDef);
-            sm.SetBase(StatType.ATK,   baseAtk);
+            sm.SetBase(StatType.MaxHP,     baseHp);
+            sm.SetBase(StatType.DEF,       baseDef);
+            sm.SetBase(StatType.ATK,       baseAtk);
+            sm.SetBase(StatType.MoveSpeed, row.f_기초이속);
+            sm.SetBase(StatType.AtkSpeed,  row.f_기초공속);
         }
         else
         {
@@ -236,19 +239,6 @@ public class PlayerCharacterManager : MonoBehaviourSingleton<PlayerCharacterMana
     // 내부 유틸
     // ─────────────────────────────────────────────────────────────
 
-    /// <summary>등급 문자열 → 기초 체력 / 방어력 / 공격력</summary>
-    public static void GetBaseStats(string grade,
-        out float hp, out float def, out float atk)
-    {
-        switch (grade)
-        {
-            case "SS": hp = 300; def = 70; atk = 70; break;
-            case "S":  hp = 250; def = 50; atk = 50; break;
-            case "A":  hp = 200; def = 30; atk = 30; break;
-            case "B":  hp = 150; def = 20; atk = 20; break;
-            default:   hp = 100; def = 10; atk = 10; break; // C
-        }
-    }
 
     /// <summary>
     /// statId + valueStr을 PlayerController / PlayerStats에 적용합니다.

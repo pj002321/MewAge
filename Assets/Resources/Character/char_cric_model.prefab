@@ -143,6 +143,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SkillCric
   duration: 3
   pointsRequired: 50
+  skillEffectPrefab: {fileID: 552788712076978401, guid: 8e757d341be74734290082c5d8bb839d, type: 3}
+  skillEffectColor: {r: 0.9339623, g: 0.69195, b: 0.3480331, a: 1}
   sweepPrefab: {fileID: 917885316504536691, guid: 4872d68f93071445cab1d2e2af876c2f, type: 3}
   sweepSpeed: 15
   sweepKnockbackForce: 15
@@ -152,3 +154,5 @@ MonoBehaviour:
   knockbackForce: 30
   knockbackRadius: 3
   clusterRadius: 3
+  dashHitShakeDuration: 0.12
+  dashHitShakeMagnitude: 0.18

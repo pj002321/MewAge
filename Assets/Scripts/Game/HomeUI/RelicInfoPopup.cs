@@ -57,6 +57,7 @@ public class RelicInfoPopup : MonoBehaviour
     private Coroutine _anim;
     private RelicData _currentData;
     private bool      _isAnimating;
+    private int       _lastLevel;
 
     // ── 라이프사이클 ──────────────────────────────────────────────────────
     private void Awake()
@@ -79,7 +80,19 @@ public class RelicInfoPopup : MonoBehaviour
 
     private void OnInventoryChanged()
     {
-        if (_currentData != null) RefreshUI(_currentData);
+        if (_currentData == null) return;
+        int newLevel = RelicInventory.Shared?.GetLevel(_currentData.relicId) ?? 0;
+        if (newLevel > _lastLevel)
+        {
+            if (upgradeAnimator != null)
+            {
+                upgradeAnimator.enabled = false;
+                upgradeAnimator.enabled = true;
+                upgradeAnimator.SetTrigger("tLevelUp");
+            }
+        }
+        _lastLevel = newLevel;
+        RefreshUI(_currentData);
     }
 
     // ── 공개 API ──────────────────────────────────────────────────────────
@@ -87,6 +100,7 @@ public class RelicInfoPopup : MonoBehaviour
     {
         if (data == null) return;
         _currentData = data;
+        _lastLevel   = RelicInventory.Shared?.GetLevel(data.relicId) ?? 0;
         gameObject.SetActive(true);
         if (_anim != null) StopCoroutine(_anim);
         _anim = StartCoroutine(ScaleTo(Vector3.zero, Vector3.one));

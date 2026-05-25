@@ -13,8 +13,14 @@ public abstract class CharacterSkillBase : MonoBehaviour
     [Tooltip("스킬 게이지 최대치 (적 처치 횟수)")]
     [SerializeField] protected int pointsRequired = 10;
 
-    public virtual float Duration => duration;
-    public int   PointsRequired => pointsRequired;
+    [Header("이펙트")]
+    [SerializeField] private GameObject skillEffectPrefab;
+    [SerializeField] private Color      skillEffectColor = Color.white;
+
+    public virtual float Duration       => duration;
+    public int           PointsRequired => pointsRequired;
+
+    private GameObject _spawnedEffect;
 
     /// <summary>스킬 고유 ID (f_스킬ID와 일치해야 합니다)</summary>
     public abstract string SkillId { get; }
@@ -24,4 +30,26 @@ public abstract class CharacterSkillBase : MonoBehaviour
 
     /// <summary>스킬 종료 — duration 경과 후 또는 강제 종료 시 호출됩니다.</summary>
     public virtual void Deactivate() { }
+
+    // ── 이펙트 헬퍼 ──────────────────────────────────────────────────
+
+    public void SpawnEffect()
+    {
+        if (skillEffectPrefab == null) return;
+
+        var player = PlayerController.Instance;
+        var parent = player != null ? player.transform : transform;
+
+        _spawnedEffect = Instantiate(skillEffectPrefab, parent.position, Quaternion.identity, parent);
+
+        var sr = _spawnedEffect.GetComponentInChildren<SpriteRenderer>();
+        if (sr != null) sr.color = skillEffectColor;
+    }
+
+    public void DespawnEffect()
+    {
+        if (_spawnedEffect == null) return;
+        Destroy(_spawnedEffect);
+        _spawnedEffect = null;
+    }
 }

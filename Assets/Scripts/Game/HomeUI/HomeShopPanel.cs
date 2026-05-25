@@ -60,6 +60,18 @@ public class HomeShopPanel : MonoBehaviour
         BuildChapterShop();
     }
 
+    void OnDisable()
+    {
+        if (gachaPopup != null)
+        {
+            gachaPopup.StopAllCoroutines();
+            gachaPopup.OnDrawRequested = null;
+            gachaPopup.gameObject.SetActive(false);
+        }
+        resultPopup?.gameObject.SetActive(false);
+        dailyConfirmPopup?.gameObject.SetActive(false);
+    }
+
     // ── 일일상점 ──────────────────────────────────────────────────────────
 
     void BuildDailyShop()

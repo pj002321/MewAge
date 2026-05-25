@@ -11,21 +11,20 @@ public class PlayerStatManager : MonoBehaviourSingleton<PlayerStatManager>
 {
     protected override bool DontDestroy => true;
 
-    [Header("기본 능력치 (캐릭터 기준값)")]
-    [SerializeField] private float baseATK               = 0f;
-    [SerializeField] private float baseDEF               = 0f;
-    [SerializeField] private float baseMaxHP             = 100f;
-    [SerializeField] private float baseBleedPower        = 0f;
-    [SerializeField] private float baseHPRegen           = 0f;
-    [SerializeField] private float baseMoveSpeed         = 5f;
-    [SerializeField] private float baseMagnetRadius      = 1.5f;
-    [SerializeField] private float baseAtkSpeed          = 0f;   // 초 단위 쿨타임 감산량 (0 = 감산 없음)
-    [SerializeField] private float baseEvasion           = 0f;
-    [SerializeField] private float baseCritChance        = 0f;
-    [SerializeField] private float baseCritDmg           = 100f;
-    [SerializeField] private float baseStructureCooldown = 0f;
-    [SerializeField] private float baseKnockback         = 0f;
-    [SerializeField] private float baseHealOnKill        = 0f;
+    private float baseATK               = 0f;
+    private float baseDEF               = 0f;
+    private float baseMaxHP             = 100f;
+    private float baseBleedPower        = 0f;
+    private float baseHPRegen           = 0f;
+    private float baseMoveSpeed         = 5f;
+    private float baseMagnetRadius      = 1.5f;
+    private float baseAtkSpeed          = 0f;
+    private float baseEvasion           = 0f;
+    private float baseCritChance        = 0f;
+    private float baseCritDmg           = 100f;
+    private float baseStructureCooldown = 0f;
+    private float baseKnockback         = 0f;
+    private float baseHealOnKill        = 0f;
 
     private static readonly int StatCount =
         System.Enum.GetValues(typeof(StatType)).Length;

@@ -18,6 +18,7 @@ public class EquipSlot : MonoBehaviour,
     [SerializeField] private Image iconImg;
     [SerializeField] private Image weaponTypeImg;
     [SerializeField] private List<GameObject> starObjects; // 0=1성, 1=2성, 2=3성, 3=4성
+    [SerializeField] private GameObject      starGlowObj;
 
     public int SlotIndex { get; set; }
 
@@ -26,10 +27,6 @@ public class EquipSlot : MonoBehaviour,
     private Canvas       rootCanvas;
     private UpgradePanel panel;
     private bool         dragStarted;
-
-    // 반짝임 효과 (3성=골드, 4성=레인보우)
-    private Coroutine _shimmerCoroutine;
-    private int       _shimmerStar;
 
     // 하이라이트 효과
     private Coroutine _highlightCoroutine;
@@ -51,7 +48,6 @@ public class EquipSlot : MonoBehaviour,
 
     private void OnDisable()
     {
-        StopShimmer();
         StopHighlight();
     }
 
@@ -138,50 +134,7 @@ public class EquipSlot : MonoBehaviour,
             }
         }
 
-        // 3성 이상이면 shimmer 시작
-        bool useShimmer = has && data.star >= 3 && frameImg != null;
-        int  targetStar = useShimmer ? data.star : 0;
-
-        // 성 수가 바뀌었거나, 반짝임이 켜져야 하는데 코루틴이 없는 경우 재시작
-        bool needsUpdate = (targetStar != _shimmerStar) || (useShimmer && _shimmerCoroutine == null);
-        if (needsUpdate)
-        {
-            StopShimmer();
-            _shimmerStar = targetStar;
-            if (useShimmer)
-                _shimmerCoroutine = StartCoroutine(ShimmerRoutine(targetStar));
-        }
-    }
-
-    private void StopShimmer()
-    {
-        if (_shimmerCoroutine != null) { StopCoroutine(_shimmerCoroutine); _shimmerCoroutine = null; }
-        _shimmerStar = 0;
-    }
-
-    /// <summary>3성: 황금 펄스 / 4성 이상: 레인보우 사이클</summary>
-    private System.Collections.IEnumerator ShimmerRoutine(int star)
-    {
-        while (true)
-        {
-            if (frameImg == null) yield break;
-            if (star >= 4)
-            {
-                // 레인보우: hue를 시간에 따라 순환
-                float hue = Mathf.Repeat(Time.unscaledTime * 0.4f, 1f);
-                frameImg.color = Color.HSVToRGB(hue, 0.85f, 1f);
-            }
-            else
-            {
-                // 3성 황금 펄스: 진한 금 ↔ 밝은 금
-                float t = (Mathf.Sin(Time.unscaledTime * 4f) + 1f) * 0.5f;
-                frameImg.color = Color.Lerp(
-                    new Color(1f, 0.55f, 0f),    // 진한 금
-                    new Color(1f, 0.92f, 0.3f),  // 밝은 금
-                    t);
-            }
-            yield return null;
-        }
+        starGlowObj?.SetActive(has && data.star >= 3);
     }
 
     // ────────────────────────────────────────────────────────────────

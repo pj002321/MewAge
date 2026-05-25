@@ -29,10 +29,13 @@ public class RewardManager : MonoBehaviourSingleton<RewardManager>
     // 재화 직접 지급 시 발생 — (타입, 수량, 스크린 시작 위치)
     public static event System.Action<RewardType, int, Vector2> OnCurrencyFlying;
 
-    public int Gold  => _gold;
-    public int Exp   => _exp;
-    public int Ruby  => _ruby;
-    public int Level => _level;
+    public const int MaxStamina = 30;
+
+    public int Gold    => _gold;
+    public int Exp     => _exp;
+    public int Ruby    => _ruby;
+    public int Level   => _level;
+    public int Stamina => _stamina;
 
     // ── 초기화 ────────────────────────────────────────────────────────────
     protected override void Awake()
@@ -47,7 +50,7 @@ public class RewardManager : MonoBehaviourSingleton<RewardManager>
         _exp     = PlayerPrefs.GetInt(K_Exp,     0);
         _ruby    = PlayerPrefs.GetInt(K_Ruby,    0);
         _level   = Mathf.Max(1, PlayerPrefs.GetInt(K_Level, 1));
-        _stamina = PlayerPrefs.GetInt(K_Stamina, 0);
+        _stamina = PlayerPrefs.GetInt(K_Stamina, MaxStamina);
     }
 
     // ── 보상 지급 ─────────────────────────────────────────────────────────

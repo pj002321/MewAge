@@ -26,9 +26,9 @@ public class CharacterSkillManager : MonoBehaviourSingleton<CharacterSkillManage
     [SerializeField] private float skillCooldown    = 5f;   // 스킬 종료 후 재발동 쿨타임(초)
 
     [Header("기본 스킬 (프리팹 없을 때)")]
-    [SerializeField] private float      defaultSpeedMultiplier = 5f;
-    [SerializeField] private float      defaultDuration        = 3f;
-    [SerializeField] private GameObject skillEffectPrefab;
+    [SerializeField] private float defaultSpeedMultiplier = 5f;
+    [SerializeField] private float defaultDuration        = 3f;
+
 
     protected override bool DontDestroy => false;
 
@@ -41,7 +41,6 @@ public class CharacterSkillManager : MonoBehaviourSingleton<CharacterSkillManage
     private Coroutine  _activeRoutine;
     private Coroutine  _cooldownRoutine;
     private Coroutine  _pulseRoutine;
-    private GameObject _spawnedEffect;
 
     private Vector3    _sliderOriginalScale;
 
@@ -163,13 +162,9 @@ public class CharacterSkillManager : MonoBehaviourSingleton<CharacterSkillManage
         SetButtonInteractable(false);
         RefreshUI();
 
-        SpawnEffect();
-
-        // 플레이어 하이라이트 효과
-        PlayerController.Instance?.PlaySkillHighlight();
-
         if (_skill != null)
         {
+            _skill.SpawnEffect();
             _skill.Activate();
             _activeRoutine = StartCoroutine(SkillDurationRoutine(_skill.Duration));
         }
@@ -198,9 +193,8 @@ public class CharacterSkillManager : MonoBehaviourSingleton<CharacterSkillManage
     private void StopSkill()
     {
         if (_activeRoutine != null) { StopCoroutine(_activeRoutine); _activeRoutine = null; }
-        if (_skill != null) _skill.Deactivate();
+        if (_skill != null) { _skill.Deactivate(); _skill.DespawnEffect(); }
         else ApplyDefaultBoost(false);
-        DespawnEffect();
         if (skillReadyFX) skillReadyFX.SetActive(false);
         _isActive = false;
 
@@ -222,21 +216,6 @@ public class CharacterSkillManager : MonoBehaviourSingleton<CharacterSkillManage
             OnGaugeFull();
     }
 
-    private void SpawnEffect()
-    {
-        if (skillEffectPrefab == null) return;
-        if (_spawnedEffect != null) Destroy(_spawnedEffect);
-
-        var parent = PlayerController.Instance != null ? PlayerController.Instance.transform : transform;
-        _spawnedEffect = Instantiate(skillEffectPrefab, parent.position, skillEffectPrefab.transform.rotation, parent);
-    }
-
-    private void DespawnEffect()
-    {
-        if (_spawnedEffect == null) return;
-        Destroy(_spawnedEffect);
-        _spawnedEffect = null;
-    }
 
     private void ApplyDefaultBoost(bool apply)
     {
