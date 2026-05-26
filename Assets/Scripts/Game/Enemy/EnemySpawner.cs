@@ -26,7 +26,7 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
     [SerializeField] private int maxEnemiesOnMap = 30;
 
     [Header("플레이어로부터 최소 스폰 거리")]
-    [SerializeField] private float minDistanceFromPlayer = 6f;
+    [SerializeField] private float minDistanceFromPlayer = 9f;
 
     [Header("분산 스폰")]
     [SerializeField] [Range(4, 12)] private int sectorCount = 8; // 360도를 몇 섹터로 나눌지
@@ -429,15 +429,17 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
                 return pos;
         }
 
-        // fallback: 거리 조건만
-        for (int attempt = 0; attempt < 10; attempt++)
+        // fallback: 가장 먼 위치 반환 (거리 조건 미충족 시에도 최선)
+        Vector2 best     = SampleEdge();
+        float   bestDist = Vector2.Distance(best, playerPos);
+        for (int attempt = 1; attempt < 15; attempt++)
         {
-            Vector2 pos = SampleEdge();
-            if (Vector2.Distance(pos, playerPos) >= minDistanceFromPlayer)
-                return pos;
+            Vector2 pos  = SampleEdge();
+            float   dist = Vector2.Distance(pos, playerPos);
+            if (dist >= minDistanceFromPlayer) return pos;
+            if (dist > bestDist) { best = pos; bestDist = dist; }
         }
-
-        return SampleEdge();
+        return best;
     }
 
     private void ReshuffleSectors()

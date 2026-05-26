@@ -24,6 +24,7 @@ public class SkillCric : CharacterSkillBase
     [SerializeField] private float clusterRadius   = 3f;
     [SerializeField] private float dashHitShakeDuration  = 0.12f;
     [SerializeField] private float dashHitShakeMagnitude = 0.18f;
+    [SerializeField] private float postDashInvincibleDuration = 1f; // 돌진 후 무적 유지 시간
 
     public override string SkillId => "SKL_CRIC";
 
@@ -137,6 +138,8 @@ public class SkillCric : CharacterSkillBase
             Instantiate(dashWavePrefab, new Vector3(from.x, groundY, 0f), Quaternion.identity);
         }
 
+        // 이동 관성 제거 후 입력·무적 잠금
+        _rb.linearVelocity = Vector2.zero;
         player.InputLocked = true;
         player.SetSkillInvincible(true);
 
@@ -148,12 +151,17 @@ public class SkillCric : CharacterSkillBase
         {
             float t = (float)i / steps;
             _rb.MovePosition(Vector2.Lerp(from, endPos, t));
+            // 매 스텝마다 관성 억제
+            _rb.linearVelocity = Vector2.zero;
             ApplyHitAt(_rb.position, dir.normalized, damage, hitEnemies);
             yield return new WaitForFixedUpdate();
         }
 
-        player.SetSkillInvincible(false);
+        // 돌진 완료 → 이동 잠금 해제, 무적은 postDashInvincibleDuration 초 유지
         player.InputLocked = false;
+        yield return new WaitForSeconds(postDashInvincibleDuration);
+
+        player.SetSkillInvincible(false);
         _dashRoutine = null;
     }
 

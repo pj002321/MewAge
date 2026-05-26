@@ -12,8 +12,16 @@ public class BoomerangProjectile : MonoBehaviour
     [SerializeField] private float spinSpeed   = -720f;  // deg/s (시계방향)
     [SerializeField] private float returnRange = 0.35f; // 플레이어와 이 거리 내 도달 시 소멸
 
+    [Header("튕김 타격감")]
+    [SerializeField] private float bounceSpeedMult  = 2.2f;   // 튕김 직후 속도 배율
+    [SerializeField] private float bounceSpeedDecay = 0.18f;  // 원래 속도로 돌아오는 시간(초)
+    [SerializeField] private float bounceSpinBoost  = 1440f;  // 튕김 직후 추가 스핀 (deg/s)
+
     private float   damage;
     private float   speed;
+    private float   _currentSpeed;
+    private float   _bounceTimer;
+    private float   _currentSpinSpeed;
     private int     bouncesLeft;
     private float   bounceRange;
     private bool    initialized;
@@ -78,6 +86,9 @@ public class BoomerangProjectile : MonoBehaviour
         this.bounceRange        = bounceRange;
         this.playerTransform    = playerTf;
         this.initialized        = true;
+        _currentSpeed           = speed;
+        _currentSpinSpeed       = spinSpeed;
+        _bounceTimer            = 0f;
 
         // Rigidbody2D가 있으면 물리 간섭 차단
         if (TryGetComponent<Rigidbody2D>(out var rb))
@@ -105,8 +116,22 @@ public class BoomerangProjectile : MonoBehaviour
     {
         if (!initialized) return;
 
+        // 튕김 속도 감쇠 (bounceSpeedMult → 1.0 으로 부드럽게 복귀)
+        if (_bounceTimer > 0f)
+        {
+            _bounceTimer -= Time.deltaTime;
+            float t = Mathf.Clamp01(1f - _bounceTimer / bounceSpeedDecay);
+            _currentSpeed     = Mathf.Lerp(speed * bounceSpeedMult, speed, t);
+            _currentSpinSpeed = Mathf.Lerp(spinSpeed - bounceSpinBoost, spinSpeed, t);
+        }
+        else
+        {
+            _currentSpeed     = speed;
+            _currentSpinSpeed = spinSpeed;
+        }
+
         // 시각적 스핀
-        transform.Rotate(0f, 0f, spinSpeed * Time.deltaTime);
+        transform.Rotate(0f, 0f, _currentSpinSpeed * Time.deltaTime);
 
         switch (state)
         {
@@ -160,7 +185,7 @@ public class BoomerangProjectile : MonoBehaviour
     {
         Vector2 dir = ((Vector2)target - (Vector2)transform.position).normalized;
         flyDir = dir;
-        transform.Translate(dir * speed * Time.deltaTime, Space.World);
+        transform.Translate(dir * _currentSpeed * Time.deltaTime, Space.World);
     }
 
     private void OnTriggerEnter2D(Collider2D other)
@@ -233,7 +258,10 @@ public class BoomerangProjectile : MonoBehaviour
         Vector3 primaryPos = enemy != null ? enemy.transform.position : (boss != null ? boss.transform.position : transform.position);
         object next = FindNextEnemy(primaryPos);
         if (next != null)
+        {
             currentTarget = next;
+            _bounceTimer  = bounceSpeedDecay; // 튕김 속도 폭발
+        }
         else
             BeginReturn();
     }

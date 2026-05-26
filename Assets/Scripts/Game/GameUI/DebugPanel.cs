@@ -112,19 +112,19 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
         itemListToggle?.onClick.AddListener(OnToggleItemList);
         itemListContent?.gameObject.SetActive(false);
 
-        addRubyButton?.onClick.AddListener(() => RewardManager.Shared?.GiveReward(new RewardItem(RewardType.Ruby, 100)));
-        addEqKeyNormalButton?.onClick.AddListener(() => TicketManager.Add(RewardType.TicketEqNormal, 1));
-        addEqKeyRareButton?.onClick.AddListener(() => TicketManager.Add(RewardType.TicketEqRare, 1));
-        addEqKeyEpicButton?.onClick.AddListener(() => TicketManager.Add(RewardType.TicketEqEpic, 1));
-        addRfKeyNormalButton?.onClick.AddListener(() => TicketManager.Add(RewardType.TicketRfNormal, 1));
-        addRfKeyEpicButton?.onClick.AddListener(() => TicketManager.Add(RewardType.TicketRfEpic, 1));
-        addEqMatRingButton?.onClick.AddListener(() => RewardManager.Shared?.GiveReward(new RewardItem(RewardType.EquipRingMat, 1)));
-        addEqMatNeckButton?.onClick.AddListener(() => RewardManager.Shared?.GiveReward(new RewardItem(RewardType.EquipNeckMat, 1)));
-        addEqMatFootButton?.onClick.AddListener(() => RewardManager.Shared?.GiveReward(new RewardItem(RewardType.EquipFootMat, 1)));
-        addEqMatTopButton?.onClick.AddListener(() => RewardManager.Shared?.GiveReward(new RewardItem(RewardType.EquipTopMat, 1)));
-        addEqMatCloakButton?.onClick.AddListener(() => RewardManager.Shared?.GiveReward(new RewardItem(RewardType.EquipcloakMat, 1)));
-        addEqMatHeadButton?.onClick.AddListener(() => RewardManager.Shared?.GiveReward(new RewardItem(RewardType.EquipHeadMat, 1)));
-        addRelicScrollButton?.onClick.AddListener(() => RewardManager.Shared?.GiveReward(new RewardItem(RewardType.RelicScroll, 1)));
+        addRubyButton?.onClick.AddListener(() => RewardManager.Shared?.Dispatch(new RewardItem("RUBY", 100)));
+        addEqKeyNormalButton?.onClick.AddListener(() => RewardManager.Shared?.Dispatch(new RewardItem("KEY_NORMAL", 1)));
+        addEqKeyRareButton?.onClick.AddListener(() => RewardManager.Shared?.Dispatch(new RewardItem("KEY_SPECIAL", 1)));
+        addEqKeyEpicButton?.onClick.AddListener(() => RewardManager.Shared?.Dispatch(new RewardItem("KEY_EPIC", 1)));
+        addRfKeyNormalButton?.onClick.AddListener(() => RewardManager.Shared?.Dispatch(new RewardItem("KEY_RELIC_NORMAL", 1)));
+        addRfKeyEpicButton?.onClick.AddListener(() => RewardManager.Shared?.Dispatch(new RewardItem("KEY_RELIC_EPIC", 1)));
+        addEqMatRingButton?.onClick.AddListener(() => RewardManager.Shared?.Dispatch(new RewardItem("MAT_EQ_RING", 1)));
+        addEqMatNeckButton?.onClick.AddListener(() => RewardManager.Shared?.Dispatch(new RewardItem("MAT_EQ_NECK", 1)));
+        addEqMatFootButton?.onClick.AddListener(() => RewardManager.Shared?.Dispatch(new RewardItem("MAT_EQ_FOOT", 1)));
+        addEqMatTopButton?.onClick.AddListener(() => RewardManager.Shared?.Dispatch(new RewardItem("MAT_EQ_TOP", 1)));
+        addEqMatCloakButton?.onClick.AddListener(() => RewardManager.Shared?.Dispatch(new RewardItem("MAT_EQ_CLOAK", 1)));
+        addEqMatHeadButton?.onClick.AddListener(() => RewardManager.Shared?.Dispatch(new RewardItem("MAT_EQ_HEAD", 1)));
+        addRelicScrollButton?.onClick.AddListener(() => RewardManager.Shared?.Dispatch(new RewardItem("MAT_RELIC", 1)));
         addAllRelicFragsButton?.onClick.AddListener(OnAddAllRelicFrags);
 
         waveEndButton?.onClick.AddListener(() => GameManager.Shared?.DebugEndWave());

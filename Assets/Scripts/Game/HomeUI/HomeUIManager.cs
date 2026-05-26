@@ -22,6 +22,7 @@ public class HomeUIManager : MonoBehaviour
     [Header("Specific Image for Battle Tab")]
     public Image specificImage; // 특정 이미지를 Panel_전투에서만 비활성화
 
+
     [Header("Tab Colors")]
     public Color activeColor = new Color(1f, 0.8f, 0.2f, 1f);
     public Color inactiveColor = new Color(0.5f, 0.5f, 0.5f, 1f);
@@ -110,6 +111,8 @@ public class HomeUIManager : MonoBehaviour
     {
         if (index < 0 || index >= panels.Length) return;
 
+        RelicInfoPopup.Shared?.HideImmediate();
+        RelicFragResultPopup.Shared?.Close();
         currentTab = index;
 
         // 패널 활성화 + 위치·스케일 초기화

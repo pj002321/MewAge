@@ -56,8 +56,9 @@ public class PopUpInventory : MonoBehaviourSingleton<PopUpInventory>
 
         foreach (var (item, icon) in _received)
         {
+            var resolvedIcon = icon ?? RewardVisualConfig.Shared?.GetIcon(item.rewardId);
             Instantiate(slotPrefab, slotContainer)
-                .Setup(icon, $"×{item.amount}", null, item.rewardId);
+                .Setup(resolvedIcon, $"×{item.amount}", null, item.rewardId);
         }
     }
 }

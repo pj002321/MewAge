@@ -19,6 +19,8 @@ using TMPro;
 /// </summary>
 public class RelicInfoPopup : MonoBehaviour
 {
+    public static RelicInfoPopup Shared { get; private set; }
+
     [Header("아이콘")]
     [SerializeField] private Image iconImage;
     [SerializeField] private Image iconGradeImage;   // 아이콘 등급 프레임
@@ -62,6 +64,7 @@ public class RelicInfoPopup : MonoBehaviour
     // ── 라이프사이클 ──────────────────────────────────────────────────────
     private void Awake()
     {
+        Shared = this;
         closeButton?.onClick.AddListener(Hide);
         closeButton2?.onClick.AddListener(Hide);
         breakthroughButton?.onClick.AddListener(OnBreakthroughClicked);
@@ -229,9 +232,18 @@ public class RelicInfoPopup : MonoBehaviour
 
     public void Hide()
     {
+        if (!gameObject.activeSelf) return;
         if (_isAnimating) return;
         if (_anim != null) StopCoroutine(_anim);
         _anim = StartCoroutine(ScaleTo(transform.localScale, Vector3.zero, deactivateOnDone: true));
+    }
+
+    public void HideImmediate()
+    {
+        if (_anim != null) { StopCoroutine(_anim); _anim = null; }
+        _isAnimating = false;
+        transform.localScale = Vector3.zero;
+        gameObject.SetActive(false);
     }
 
     // ── 성급 돌파 ─────────────────────────────────────────────────────────

@@ -9,6 +9,7 @@ using TMPro;
 /// </summary>
 public class RelicFragResultPopup : MonoBehaviour
 {
+    public static RelicFragResultPopup Shared { get; private set; }
     public struct Entry
     {
         public RelicData data;
@@ -26,6 +27,7 @@ public class RelicFragResultPopup : MonoBehaviour
 
     void Awake()
     {
+        Shared = this;
         closeHitArea?.onClick.AddListener(Close);
         gameObject.SetActive(false);
     }
@@ -80,7 +82,7 @@ public class RelicFragResultPopup : MonoBehaviour
         _spawnedSlots.Clear();
     }
 
-    void Close()
+    public void Close()
     {
         ClearSlots();
         gameObject.SetActive(false);

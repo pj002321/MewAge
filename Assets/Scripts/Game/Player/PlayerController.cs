@@ -258,6 +258,7 @@ public class PlayerController : MonoBehaviour
         this.DLog($"[피해] {damage:0.#}  ← {sourceName ?? "unknown"}");
 
         if (_debugInvincible) return;
+        if (GameManager.Shared != null && GameManager.Shared.IsGameOver) return;
         if (isInvincible || _skillInvincible)
             return;
 
@@ -594,6 +595,12 @@ public class PlayerController : MonoBehaviour
     /// <summary>GameManager.Revive()에서 호출 — HP를 가득 채우고 3초 무적 부여</summary>
     public void Revive()
     {
+        // 진행 중인 피격 무적 코루틴이 isInvincible을 false로 덮어쓰지 못하게 취소
+        if (_hitInvincibleCoroutine != null)
+        {
+            StopCoroutine(_hitInvincibleCoroutine);
+            _hitInvincibleCoroutine = null;
+        }
         currentHP = maxHP;
         SyncHPUI();
         StartCoroutine(InvincibleRoutine(3f));

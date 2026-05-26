@@ -199,7 +199,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyController
   moveSpeed: 2
-  maxHP: 3500
+  maxHP: 7000
   contactDamage: 35
   goldDrop: 50
   expDrop: 50
@@ -239,6 +239,8 @@ MonoBehaviour:
   useAnimationEvent: 1
   animEventTimeout: 0.6
   retreatDuration: 1.4
+  flankSpeedMult: 1.4
+  flankArcHalf: 30
 --- !u!114 &-3044924429530644451
 MonoBehaviour:
   m_ObjectHideFlags: 0
