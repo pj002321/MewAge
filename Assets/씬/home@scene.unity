@@ -10628,6 +10628,8 @@ GameObject:
   - component: {fileID: 258404912}
   - component: {fileID: 258404915}
   - component: {fileID: 258404914}
+  - component: {fileID: 258404917}
+  - component: {fileID: 258404916}
   m_Layer: 0
   m_Name: "\uC601\uC6C5\uBC30\uACBD"
   m_TagString: Untagged
@@ -10728,6 +10730,35 @@ CanvasGroup:
   m_Interactable: 1
   m_BlocksRaycasts: 1
   m_IgnoreParentGroups: 0
+--- !u!114 &258404916
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 258404910}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 66868a5fa5620cb4e8ef2423aa760999, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIButtonPressAutoAttach
+  pressScale: 0.95
+  bounceScale: 1.05
+  pressDuration: 0.07
+  releaseDuration: 0.18
+--- !u!114 &258404917
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 258404910}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4c8c42db8ee6b449aa73fd76bf89fec, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIButtonSoundAutoAttach
+  clickKey: 1
 --- !u!1 &260419471
 GameObject:
   m_ObjectHideFlags: 0
@@ -21526,7 +21557,7 @@ RectTransform:
   m_Father: {fileID: 3435771222704633563}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 0.89}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -30402,6 +30433,47 @@ Material:
     - _UnderlayColor: {r: 0, g: 0, b: 0, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
+--- !u!21 &712633064
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: UI/RoundedCorners/RoundedCorners
+  m_Shader: {fileID: 4800000, guid: 0bd2ec5d73751e34a814274a454bec41, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _MainTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _ColorMask: 15
+    - _Stencil: 0
+    - _StencilComp: 8
+    - _StencilOp: 0
+    - _StencilReadMask: 255
+    - _StencilWriteMask: 255
+    - _UseUIAlphaClip: 0
+    m_Colors:
+    - _OuterUV: {r: 0, g: 0, b: 1, a: 1}
+    - _WidthHeightRadius: {r: 104, g: 104, b: 3.6, a: 0}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1
 --- !u!21 &713555825
 Material:
   serializedVersion: 8
@@ -39231,7 +39303,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: 1850714137}
+  m_Material: {fileID: 712633064}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
@@ -41537,6 +41609,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: b5e1738555f9ab3489f5c65087337632, type: 3}
+--- !u!114 &997567656 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6975204921071353421, guid: b5e1738555f9ab3489f5c65087337632, type: 3}
+  m_PrefabInstance: {fileID: 997567655}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
 --- !u!1 &999411942
 GameObject:
   m_ObjectHideFlags: 0
@@ -44555,8 +44638,8 @@ MonoBehaviour:
   gameContent: {fileID: 567693629}
   mainMenuPanel: {fileID: 8106880395536212899}
   menuToggleButton: {fileID: 580049924}
-  resetDataButton: {fileID: 0}
-  unlockAllChaptersButton: {fileID: 0}
+  resetDataButton: {fileID: 1653192026}
+  unlockAllChaptersButton: {fileID: 997567656}
   itemListToggle: {fileID: 1280226346}
   itemListContent: {fileID: 476925779}
   addRubyButton: {fileID: 0}
@@ -66365,6 +66448,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: b5e1738555f9ab3489f5c65087337632, type: 3}
+--- !u!114 &1653192026 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6975204921071353421, guid: b5e1738555f9ab3489f5c65087337632, type: 3}
+  m_PrefabInstance: {fileID: 1653192025}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
 --- !u!1 &1654117878
 GameObject:
   m_ObjectHideFlags: 0
@@ -71295,7 +71389,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 3476.0015}
+  m_AnchoredPosition: {x: 0, y: 959.9996}
   m_SizeDelta: {x: 1080, y: 0}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &1784310781
@@ -71327,7 +71421,7 @@ MonoBehaviour:
   m_Padding:
     m_Left: 0
     m_Right: 0
-    m_Top: 51
+    m_Top: 293
     m_Bottom: 0
   m_ChildAlignment: 0
   m_Spacing: 0
@@ -74024,47 +74118,6 @@ Material:
     - _FaceColor: {r: 1.1434487, g: 1.1434487, b: 1.1434487, a: 1}
     - _OutlineColor: {r: 0, g: 0, b: 0, a: 1}
     - _UnderlayColor: {r: 0, g: 0, b: 0, a: 1}
-  m_BuildTextureStacks: []
-  m_AllowLocking: 1
---- !u!21 &1850714137
-Material:
-  serializedVersion: 8
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: UI/RoundedCorners/RoundedCorners
-  m_Shader: {fileID: 4800000, guid: 0bd2ec5d73751e34a814274a454bec41, type: 3}
-  m_Parent: {fileID: 0}
-  m_ModifiedSerializedProperties: 0
-  m_ValidKeywords: []
-  m_InvalidKeywords: []
-  m_LightmapFlags: 4
-  m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
-  m_CustomRenderQueue: -1
-  stringTagMap: {}
-  disabledShaderPasses: []
-  m_LockedProperties: 
-  m_SavedProperties:
-    serializedVersion: 3
-    m_TexEnvs:
-    - _MainTex:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    m_Ints: []
-    m_Floats:
-    - _ColorMask: 15
-    - _Stencil: 0
-    - _StencilComp: 8
-    - _StencilOp: 0
-    - _StencilReadMask: 255
-    - _StencilWriteMask: 255
-    - _UseUIAlphaClip: 0
-    m_Colors:
-    - _OuterUV: {r: 0, g: 0, b: 1, a: 1}
-    - _WidthHeightRadius: {r: 104, g: 104, b: 3.6, a: 0}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
 --- !u!21 &1852834262
@@ -87904,7 +87957,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
-  m_AnchoredPosition: {x: -39.7, y: 0}
+  m_AnchoredPosition: {x: -50, y: 0}
   m_SizeDelta: {x: 424, y: 144}
   m_Pivot: {x: 0, y: 0.5}
 --- !u!224 &1624953827917922574
@@ -87926,7 +87979,7 @@ RectTransform:
   m_AnchorMin: {x: 1, y: 0.5}
   m_AnchorMax: {x: 1, y: 0.5}
   m_AnchoredPosition: {x: 200, y: 385}
-  m_SizeDelta: {x: 568, y: 740}
+  m_SizeDelta: {x: 568, y: 768}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!224 &1689179410708266486
 RectTransform:
@@ -93371,7 +93424,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -6299087801383862425, guid: fb2b0c65bda6cda4388c02ed7e40eaf2, type: 3}
+  m_Sprite: {fileID: 21300000, guid: fb2b0c65bda6cda4388c02ed7e40eaf2, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1

@@ -25,6 +25,9 @@ public class CharacterSlotView : MonoBehaviour
     public GameObject      lockImage;        // 자물쇠 아이콘
     public GameObject      lockedOverlay;    // 어두운 오버레이
 
+    [Header("선택 시 포트레이트 RawImage (RT 연결)")]
+    public RawImage        portraitImg;
+
     [Header("선택 하이라이트")]
     public GameObject      highlight;
 
@@ -108,6 +111,9 @@ public class CharacterSlotView : MonoBehaviour
         if (highlight) highlight.SetActive(true);
         SetChildrenScale(1.1f);
 
+        if (portraitImg)    portraitImg.gameObject.SetActive(true);
+        if (thumbnailImage) thumbnailImage.gameObject.SetActive(false);
+
         bool owned = data?.f_보유여부 ?? false;
         if (equipButton)
         {
@@ -122,8 +128,11 @@ public class CharacterSlotView : MonoBehaviour
 
     public void Deselect()
     {
-        if (highlight)   highlight  .SetActive(false);
+        if (highlight)      highlight.SetActive(false);
         SetChildrenScale(1f);
+
+        if (portraitImg)    portraitImg.gameObject.SetActive(false);
+        if (thumbnailImage) thumbnailImage.gameObject.SetActive(true);
 
         if (equipButton) equipButton.gameObject.SetActive(false);
         if (buyButton)   buyButton  .gameObject.SetActive(false);

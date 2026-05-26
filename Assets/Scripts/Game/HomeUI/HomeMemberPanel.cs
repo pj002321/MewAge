@@ -50,7 +50,32 @@ public class HomeMemberPanel : MonoBehaviour
     void OnEnable()
     {
         if (!_started) return; // Start 전에는 Skip (Start에서 처리)
+        ReselectEquipped();
         TriggerDropIn();
+    }
+
+    void OnDisable()
+    {
+        // 패널이 닫히면 장착된 캐릭터로 복원
+        var equippedId = PlayerCharacterManager.Shared?.EquippedCharID;
+        if (!string.IsNullOrEmpty(equippedId))
+            HomeCharacterDisplay.Shared?.ChangeCharacter(equippedId);
+    }
+
+    void ReselectEquipped()
+    {
+        string equippedId = PlayerCharacterManager.Shared?.EquippedCharID;
+        if (string.IsNullOrEmpty(equippedId) || characterContent == null) return;
+
+        foreach (Transform child in characterContent)
+        {
+            var slot = child.GetComponent<CharacterSlotView>();
+            if (slot != null && slot.data?.f_캐릭ID == equippedId)
+            {
+                SelectSlot(slot);
+                return;
+            }
+        }
     }
 
     void TriggerDropIn()
