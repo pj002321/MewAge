@@ -158,13 +158,13 @@ public class RelicInfoPopup : MonoBehaviour
 
         // 주속성
         if (attrText)
-            attrText.text = BuildAttrLine(data.primaryEffect, data.GetPrimaryValue(level), locked);
+            attrText.text = BuildAttrLine(data.primaryEffect, data.GetPrimaryValue(starLevel), locked);
 
         // 특수속성
         if (specialAttrText)
             specialAttrText.text = data.secondaryEffect == RelicEffectType.NONE
                 ? "특수한 기운은 느껴지지 않습니다"
-                : BuildAttrLine(data.secondaryEffect, data.GetSecondaryValue(level), locked);
+                : BuildAttrLine(data.secondaryEffect, data.GetSecondaryValue(starLevel), locked);
 
         // 설명
         if (descriptionText) descriptionText.text = data.description;

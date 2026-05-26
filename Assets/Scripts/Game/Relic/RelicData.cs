@@ -13,30 +13,24 @@ public class RelicData
     public string         description;
 
     public RelicEffectType primaryEffect;
-    public float           primaryBase;    // f_속성수치 (Lv.1 기준)
+    public float[]         primaryStarValues = new float[4]; // f_S1~f_S4: 성급별 주속성 수치
 
     public RelicEffectType secondaryEffect;
-    public float           secondaryBase;  // f_특수속성수치 (Lv.1 기준)
+    public float           secondaryBase;  // f_특수속성수치 (고정값)
 
-    /// <summary>레벨에 따른 주 효과 수치. Lv.1 = base, Lv.10 = base × 2.35</summary>
-    public float GetPrimaryValue(int level)
+    /// <summary>성급에 따른 주 효과 수치. DB f_S1~f_S4에서 직접 읽음.</summary>
+    public float GetPrimaryValue(int starLevel)
     {
         if (primaryEffect == RelicEffectType.NONE) return 0f;
-        return primaryBase * ScaleMult(level);
+        int idx = Mathf.Clamp(starLevel, 1, 4) - 1;
+        return primaryStarValues[idx];
     }
 
-    /// <summary>레벨에 따른 보조 효과 수치.</summary>
-    public float GetSecondaryValue(int level)
+    /// <summary>보조 효과 수치 (성급 무관 고정값).</summary>
+    public float GetSecondaryValue(int starLevel)
     {
         if (secondaryEffect == RelicEffectType.NONE) return 0f;
-        return secondaryBase * ScaleMult(level);
-    }
-
-    private static float ScaleMult(int level)
-    {
-        if (level <= 0) return 0f;   // 잠금 상태
-        int clamped = Mathf.Clamp(level, 1, RelicInventory.MaxLevel);
-        return 1f + (clamped - 1) * 0.15f;
+        return secondaryBase;
     }
 
     public static RelicData FromDB(DB_유물 row)
@@ -49,7 +43,7 @@ public class RelicData
             relicName     = row.f_이름,
             grade         = row.f_등급,
             description   = row.f_설명,
-            primaryBase   = row.f_속성수치,
+            primaryStarValues = new[] { row.f_S1, row.f_S2, row.f_S3, row.f_S4 },
             secondaryBase = row.f_특수속성수치,
         };
 

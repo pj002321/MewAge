@@ -42,9 +42,9 @@ public class RelicManager : MonoBehaviourSingleton<RelicManager>
 
         foreach (var relic in inv.GetAllOwned())
         {
-            int level = inv.GetLevel(relic.relicId);
-            ApplyEffect(relic.primaryEffect,   relic.GetPrimaryValue(level));
-            ApplyEffect(relic.secondaryEffect, relic.GetSecondaryValue(level));
+            int starLevel = inv.GetStarLevel(relic.relicId);
+            ApplyEffect(relic.primaryEffect,   relic.GetPrimaryValue(starLevel));
+            ApplyEffect(relic.secondaryEffect, relic.GetSecondaryValue(starLevel));
         }
 
         // 피해 감소 최대 75% 제한
