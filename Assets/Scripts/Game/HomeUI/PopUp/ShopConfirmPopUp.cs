@@ -72,6 +72,7 @@ public class DailyShopConfirmPopUp : MonoBehaviour
 
     private void OnConfirmClicked()
     {
+        SoundManager.Shared?.Play(SoundKey.UI_Buy);
         Popup.Hide();
         _onConfirm?.Invoke();
     }

@@ -13,17 +13,19 @@ public class RewardManager : MonoBehaviourSingleton<RewardManager>
 
     public const int MaxLevel = 50;
 
-    private const string K_Gold    = "RW_Gold";
-    private const string K_Exp     = "RW_Exp";
-    private const string K_Ruby    = "RW_Ruby";
-    private const string K_Level   = "RW_Level";
-    private const string K_Stamina = "RW_Stamina";
+    private const string K_Gold     = "RW_Gold";
+    private const string K_Exp      = "RW_Exp";
+    private const string K_Ruby     = "RW_Ruby";
+    private const string K_Level    = "RW_Level";
+    private const string K_Stamina  = "RW_Stamina";
+    private const string K_CharMat  = "RW_CharMat";
 
     private int _gold;
     private int _exp;
     private int _ruby;
     private int _level;
     private int _stamina;
+    private int _charMat;
 
     public static event System.Action OnChanged;
     // 재화 직접 지급 시 발생 — (타입, 수량, 스크린 시작 위치)
@@ -36,6 +38,7 @@ public class RewardManager : MonoBehaviourSingleton<RewardManager>
     public int Ruby    => _ruby;
     public int Level   => _level;
     public int Stamina => _stamina;
+    public int CharMat => _charMat;
 
     // ── 초기화 ────────────────────────────────────────────────────────────
     protected override void Awake()
@@ -51,6 +54,7 @@ public class RewardManager : MonoBehaviourSingleton<RewardManager>
         _ruby    = PlayerPrefs.GetInt(K_Ruby,    0);
         _level   = Mathf.Max(1, PlayerPrefs.GetInt(K_Level, 1));
         _stamina = PlayerPrefs.GetInt(K_Stamina, MaxStamina);
+        _charMat = PlayerPrefs.GetInt(K_CharMat, 0);
     }
 
     // ── 보상 지급 ─────────────────────────────────────────────────────────
@@ -72,6 +76,7 @@ public class RewardManager : MonoBehaviourSingleton<RewardManager>
             case RewardType.Exp:     _exp     += item.amount; break;
             case RewardType.Ruby:    _ruby    += item.amount; break;
             case RewardType.Stamina: _stamina += item.amount; break;
+            case RewardType.CharMat: _charMat += item.amount; break;
             case RewardType.EquipFrag:
                 PlayerPrefs.SetInt("EquipFrag", PlayerPrefs.GetInt("EquipFrag", 0) + item.amount);
                 break;
@@ -169,6 +174,7 @@ public class RewardManager : MonoBehaviourSingleton<RewardManager>
         PlayerPrefs.SetInt(K_Ruby,    _ruby);
         PlayerPrefs.SetInt(K_Level,   _level);
         PlayerPrefs.SetInt(K_Stamina, _stamina);
+        PlayerPrefs.SetInt(K_CharMat, _charMat);
         PlayerPrefs.Save();
         UIDataBus.BroadcastCurrencyChanged();
     }

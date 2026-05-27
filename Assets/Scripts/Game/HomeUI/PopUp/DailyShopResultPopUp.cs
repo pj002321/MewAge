@@ -45,6 +45,7 @@ public class ShopResultPopUp : MonoBehaviour
     {
         ClearSlots();
         gameObject.SetActive(true);
+        SoundManager.Shared?.Play(SoundKey.UI_Buy);
 
         for (int i = 0; i < items.Length; i++)
             SpawnSlot(items[i].icon, items[i].amount, delay: i * slotStagger);

@@ -76,6 +76,8 @@ public class RelicFragDrawButton : MonoBehaviour
             }
         }
 
+        SoundManager.Shared?.Play(SoundKey.Gacha_Open);
+
         if (drawCount <= 1)
         {
             var entry = RelicFragGacha.Draw(boxType);

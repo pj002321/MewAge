@@ -24,9 +24,6 @@ public enum SoundKey
     // 플레이어
     Player_Hit   = 13,
 
-    // 기물 스킬
-    Structure_Thunder = 14,
-
     // 증강
     Improv_Select     = 15,
     Improv_Confirm   = 16,
@@ -34,10 +31,13 @@ public enum SoundKey
     // 무기
     Weapon_Equip     = 17,
 
-    // 기물 설치
-    Structure_Place  = 18,
-
     // 가챠
     Gacha_Open       = 19,   // 상자 열리는 순간
     Gacha_ItemReveal = 20,   // 아이템 팝인
+
+    // 장비
+    Equip_LevelUp    = 21,
+
+    // 유물
+    Relic_LevelUp = 22,
 }

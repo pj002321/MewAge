@@ -2,6 +2,7 @@ using Mewage.DB;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System.Collections;
 
 /// <summary>
 /// 홈 대원(캐릭터) 패널.
@@ -26,14 +27,19 @@ public class HomeMemberPanel : MonoBehaviour
     public TextMeshProUGUI abilityDescText;  // f_능력설명  (예: "많은 적을 처치 시...")
 
 
-    [Header("스크롤 Content")]
-    public Transform characterContent;
+    [Header("스크롤")]
+    public ScrollRect      characterScrollRect;
+    public Transform       characterContent;
 
     [Header("슬롯 프리팹")]
     public CharacterSlotView slotPrefab;
 
+    [Header("캐릭터 레벨업 패널")]
+    public CharacterLevelUpPanel levelUpPanel;
+
     CharacterSlotView _selectedSlot;
     bool              _started;
+    bool              _wasScrolling;
 
     void Start()
     {
@@ -43,8 +49,40 @@ public class HomeMemberPanel : MonoBehaviour
         if (characterPortrait != null && HomeCharacterDisplay.Shared != null)
             characterPortrait.texture = HomeCharacterDisplay.Shared.renderTexture;
 
+        StartCoroutine(ApplyContentBottomPadding());
+
         _started = true;
         TriggerDropIn();
+    }
+
+    IEnumerator ApplyContentBottomPadding()
+    {
+        yield return null;
+        Canvas.ForceUpdateCanvases();
+
+        if (characterScrollRect == null || characterContent == null) yield break;
+
+        float viewportH = characterScrollRect.viewport.rect.height;
+
+        var spacer = new GameObject("BottomSpacer", typeof(RectTransform), typeof(LayoutElement));
+        spacer.transform.SetParent(characterContent, false);
+        var le = spacer.GetComponent<LayoutElement>();
+        le.preferredHeight = viewportH;
+        le.preferredWidth  = 1f;
+    }
+
+    void Update()
+    {
+        if (characterScrollRect == null) return;
+
+        bool isScrolling = characterScrollRect.velocity.sqrMagnitude > 100f;
+
+        if (isScrolling && !_wasScrolling)
+            _selectedSlot?.HidePortrait();
+        else if (!isScrolling && _wasScrolling)
+            _selectedSlot?.RefreshState();
+
+        _wasScrolling = isScrolling;
     }
 
     void OnEnable()
@@ -56,7 +94,8 @@ public class HomeMemberPanel : MonoBehaviour
 
     void OnDisable()
     {
-        // 패널이 닫히면 장착된 캐릭터로 복원
+        if (!gameObject.scene.isLoaded) return;
+        levelUpPanel?.gameObject.SetActive(false);
         var equippedId = PlayerCharacterManager.Shared?.EquippedCharID;
         if (!string.IsNullOrEmpty(equippedId))
             HomeCharacterDisplay.Shared?.ChangeCharacter(equippedId);
@@ -115,6 +154,46 @@ public class HomeMemberPanel : MonoBehaviour
         _selectedSlot.Select();
 
         if (slot.data != null) RefreshTopView(slot.data);
+    }
+
+    public void ToggleLevelUpPanel(DB_캐릭터 d)
+    {
+        if (levelUpPanel == null) return;
+        if (levelUpPanel.gameObject.activeSelf)
+        {
+            levelUpPanel.gameObject.SetActive(false);
+        }
+        else
+        {
+            if (_selectedSlot != null && characterScrollRect != null)
+                StartCoroutine(ScrollToSlotTop(_selectedSlot));
+            levelUpPanel.Show(d);
+        }
+    }
+
+    private IEnumerator ScrollToSlotTop(CharacterSlotView slot)
+    {
+        yield return null;
+        Canvas.ForceUpdateCanvases();
+
+        var slotRect    = slot.GetComponent<RectTransform>();
+        var contentRect = characterContent as RectTransform;
+        if (slotRect == null || contentRect == null) yield break;
+
+        Vector2 slotPos     = (Vector2)contentRect.InverseTransformPoint(slotRect.position);
+        float   topOffset   = contentRect.rect.height * contentRect.pivot.y + slotPos.y
+                              + slotRect.rect.height * (1f - slotRect.pivot.y);
+        float   scrollRange = contentRect.rect.height - characterScrollRect.viewport.rect.height;
+
+        if (scrollRange > 0f)
+            characterScrollRect.verticalNormalizedPosition = Mathf.Clamp01(topOffset / scrollRange);
+    }
+
+    public void RefreshAllSlots()
+    {
+        if (characterContent == null) return;
+        foreach (Transform child in characterContent)
+            child.GetComponent<CharacterSlotView>()?.RefreshState();
     }
 
     /// <summary>장착 버튼 클릭 시 CharacterSlotView → 여기로 전달.</summary>

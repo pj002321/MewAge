@@ -84,10 +84,6 @@ public class LightningProjectile : MonoBehaviour
             if (_targetEnemy == null && _targetBoss == null) break;
 
             ApplyDamage();
-            
-            // Visual/Sound feedback handled by FXManager and SoundManager
-            SoundManager.Shared?.Play(SoundKey.Structure_Thunder);
-
             yield return new WaitForSeconds(interval);
         }
 

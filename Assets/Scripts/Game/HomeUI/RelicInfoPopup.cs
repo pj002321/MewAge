@@ -59,7 +59,9 @@ public class RelicInfoPopup : MonoBehaviour
     private Coroutine _anim;
     private RelicData _currentData;
     private bool      _isAnimating;
+    private bool      _suppressInventoryAnim;
     private int       _lastLevel;
+    private int       _lastStarLevel;
 
     // ── 라이프사이클 ──────────────────────────────────────────────────────
     private void Awake()
@@ -84,9 +86,12 @@ public class RelicInfoPopup : MonoBehaviour
     private void OnInventoryChanged()
     {
         if (_currentData == null) return;
-        int newLevel = RelicInventory.Shared?.GetLevel(_currentData.relicId) ?? 0;
-        if (newLevel > _lastLevel)
+        int newLevel     = RelicInventory.Shared?.GetLevel(_currentData.relicId) ?? 0;
+        int newStarLevel = RelicInventory.Shared?.GetStarLevel(_currentData.relicId) ?? 1;
+
+        if (!_suppressInventoryAnim && (newLevel > _lastLevel || newStarLevel > _lastStarLevel))
         {
+            SoundManager.Shared?.Play(SoundKey.Relic_LevelUp);
             if (upgradeAnimator != null)
             {
                 upgradeAnimator.enabled = false;
@@ -94,7 +99,9 @@ public class RelicInfoPopup : MonoBehaviour
                 upgradeAnimator.SetTrigger("tLevelUp");
             }
         }
-        _lastLevel = newLevel;
+
+        _lastLevel     = newLevel;
+        _lastStarLevel = newStarLevel;
         RefreshUI(_currentData);
     }
 
@@ -102,8 +109,9 @@ public class RelicInfoPopup : MonoBehaviour
     public void Show(RelicData data)
     {
         if (data == null) return;
-        _currentData = data;
-        _lastLevel   = RelicInventory.Shared?.GetLevel(data.relicId) ?? 0;
+        _currentData   = data;
+        _lastLevel     = RelicInventory.Shared?.GetLevel(data.relicId) ?? 0;
+        _lastStarLevel = RelicInventory.Shared?.GetStarLevel(data.relicId) ?? 1;
         gameObject.SetActive(true);
         if (_anim != null) StopCoroutine(_anim);
         _anim = StartCoroutine(ScaleTo(Vector3.zero, Vector3.one));
@@ -272,11 +280,19 @@ public class RelicInfoPopup : MonoBehaviour
     private System.Collections.IEnumerator BreakThroughCoroutine()
     {
         _isAnimating = true;
+        _suppressInventoryAnim = true;
         SetCloseInteractable(false);
         if (breakthroughButton) breakthroughButton.interactable = false;
 
+        // 즉시 처리 — OnInventoryChanged의 중복 애니메이션은 플래그로 억제
+        RelicInventory.Shared?.TryBreakThrough(_currentData.relicId);
+        _suppressInventoryAnim = false;
+        RefreshUI(_currentData);
+
+        // 시각 효과
         if (upgradeAnimator != null)
         {
+            SoundManager.Shared?.Play(SoundKey.Relic_LevelUp);
             upgradeAnimator.Play("relic_star_upgrade");
             yield return null;
             yield return null;
@@ -289,9 +305,6 @@ public class RelicInfoPopup : MonoBehaviour
                 yield return null;
             }
         }
-
-        RelicInventory.Shared?.TryBreakThrough(_currentData.relicId);
-        RefreshUI(_currentData);
 
         _isAnimating = false;
         SetCloseInteractable(true);

@@ -28,8 +28,6 @@ public class StructurePlacer : MonoBehaviourSingleton<StructurePlacer>
     {
         Vector3 target = GetTargetPosition();
 
-        SoundManager.Shared?.Play(SoundKey.Structure_Place);
-
         string installPath = GetInstallPath(data.f_기물ID);
         var installPrefab  = Resources.Load<GameObject>(installPath);
         if (installPrefab != null)

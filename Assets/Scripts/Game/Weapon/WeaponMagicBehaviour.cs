@@ -106,7 +106,6 @@ public class WeaponMagicBehaviour : WeaponMeleeBaseBehaviour
 
             SpawnZapBolt(muzzle, targetTf);
             ZapLineDamage(muzzle.position, targetTf.position, enemy, boss);
-            SoundManager.Shared?.Play(SoundKey.Structure_Thunder);
             if (i < lightningBurstCount - 1)
                 yield return new WaitForSeconds(lightningBurstInterval);
         }

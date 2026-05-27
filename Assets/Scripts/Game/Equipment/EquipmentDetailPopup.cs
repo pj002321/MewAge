@@ -173,6 +173,7 @@ public class EquipmentDetailPopup : MonoBehaviour
         }
 
         if (statText) statText.text = _current.StatDescription();
+        SoundManager.Shared?.Play(SoundKey.Equip_LevelUp);
         if (_animator != null)
         {
             _animator.enabled = false;

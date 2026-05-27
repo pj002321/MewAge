@@ -10,18 +10,8 @@ using UnityEngine;
 /// </summary>
 public class SoundManager : MonoBehaviourSingleton<SoundManager>
 {
-    [System.Serializable]
-    public class SoundEntry
-    {
-        public SoundKey key;
-        public AudioClip clip;
-        [Range(0f, 1f)] public float volume = 1f;
-        [Tooltip("같은 사운드 최소 재생 간격(초). 0이면 제한 없음")]
-        public float minInterval = 0.05f;
-    }
-
-    [Header("사운드 딕셔너리")]
-    [SerializeField] private List<SoundEntry> soundList = new();
+    [Header("사운드 라이브러리")]
+    [SerializeField] private SoundLibrarySO library;
 
     [System.Serializable]
     public class ChapterBGMEntry
@@ -37,18 +27,26 @@ public class SoundManager : MonoBehaviourSingleton<SoundManager>
     [SerializeField] private AudioClip gameBGM;
     [SerializeField] private AudioClip bossBGM;
     [SerializeField] private float bgmFadeDuration = 1f;
+    [Range(0f, 1f)]
+    [SerializeField] private float defaultBGMVolume = 1f;
 
     [Header("홈 BGM 임계값 목록 (fromChapter 오름차순으로 입력)")]
     [SerializeField] private List<ChapterBGMEntry> chapterBGMs = new();
 
-    private readonly Dictionary<SoundKey, SoundEntry> soundDict = new();
-    private readonly Dictionary<SoundKey, float> lastPlayTime = new();
+    private readonly Dictionary<int, float> lastPlayTime = new();
 
     private AudioSource sfxSource;
     private AudioSource bgmSource;
     private Coroutine bgmFadeCoroutine;
 
     private AudioClip currentBGMClip;
+
+    void OnValidate()
+    {
+        BGMVolume = defaultBGMVolume;
+        if (bgmSource != null)
+            bgmSource.volume = BGMEnabled ? BGMVolume : 0f;
+    }
 
     protected override void Awake()
     {
@@ -61,20 +59,13 @@ public class SoundManager : MonoBehaviourSingleton<SoundManager>
         bgmSource.loop = true;
         bgmSource.playOnAwake = false;
 
-        RebuildDictionary();
-    }
+        BGMVolume = defaultBGMVolume;
+        SFXVolume = PlayerPrefs.GetFloat(K_SFXVolume, 1f);
+        sfxSource.volume = SFXVolume;
 
-    private void RebuildDictionary()
-    {
-        soundDict.Clear();
-        foreach (var entry in soundList)
-        {
-            if (entry != null && entry.clip != null)
-                soundDict[entry.key] = entry;
-        }
+        // BGM 켜기/끄기 상태 복원
+        BGMEnabled = PlayerPrefs.GetInt("Setting_BGM", 1) == 1;
     }
-
-    private void OnValidate() => RebuildDictionary();
 
     // ─────────────────────────────────────────────────
     // SFX
@@ -88,15 +79,40 @@ public class SoundManager : MonoBehaviourSingleton<SoundManager>
 
     public void Play(SoundKey key)
     {
-        if (!soundDict.TryGetValue(key, out var entry)) return;
+        if (library == null) return;
+        PlayEntry(library.Get(key), (int)key);
+    }
 
-        if (entry.minInterval > 0f &&
-            lastPlayTime.TryGetValue(key, out float last) &&
-            Time.unscaledTime - last < entry.minInterval)
+
+    public void PlayWeaponAttack(string weaponName, int chapter)
+    {
+        if (library == null) return;
+        var (clip, vol) = library.GetWeaponAttack(weaponName, chapter);
+        PlayClipWithInterval(clip, vol, weaponName.GetHashCode());
+    }
+
+    public void PlayWeaponHit(string weaponName, int chapter)
+    {
+        if (library == null) return;
+        var (clip, vol) = library.GetWeaponHit(weaponName, chapter);
+        PlayClipWithInterval(clip, vol, weaponName.GetHashCode() + 1);
+    }
+
+    private void PlayEntry(SoundLibrarySO.Entry entry, int intervalKey)
+    {
+        if (entry?.clip == null) return;
+        PlayClipWithInterval(entry.clip, entry.volume, intervalKey, entry.minInterval);
+    }
+
+    private void PlayClipWithInterval(AudioClip clip, float volume, int intervalKey, float minInterval = 0.05f)
+    {
+        if (clip == null) return;
+        if (minInterval > 0f &&
+            lastPlayTime.TryGetValue(intervalKey, out float last) &&
+            Time.unscaledTime - last < minInterval)
             return;
-
-        sfxSource.PlayOneShot(entry.clip, entry.volume);
-        lastPlayTime[key] = Time.unscaledTime;
+        sfxSource.PlayOneShot(clip, volume);
+        lastPlayTime[intervalKey] = Time.unscaledTime;
     }
 
     // ─────────────────────────────────────────────────
@@ -159,10 +175,10 @@ public class SoundManager : MonoBehaviourSingleton<SoundManager>
         while (elapsed < bgmFadeDuration)
         {
             elapsed += Time.unscaledDeltaTime;
-            bgmSource.volume = Mathf.Lerp(0f, 1f, elapsed / bgmFadeDuration);
+            bgmSource.volume = Mathf.Lerp(0f, BGMVolume, elapsed / bgmFadeDuration);
             yield return null;
         }
-        bgmSource.volume = 1f;
+        bgmSource.volume = BGMVolume;
     }
 
     public void StopBGM()
@@ -197,7 +213,27 @@ public class SoundManager : MonoBehaviourSingleton<SoundManager>
     // 설정 (뮤트)
     // ─────────────────────────────────────────────────
 
-    public bool BGMEnabled { get; private set; } = true;
+    private const string K_SFXVolume = "Setting_SFXVolume";
+
+    public float BGMVolume { get; private set; } = 1f;
+    public float SFXVolume { get; private set; } = 1f;
+    public bool  BGMEnabled { get; private set; } = true;
+
+    public void SetBGMVolume(float volume)
+    {
+        BGMVolume = Mathf.Clamp01(volume);
+        if (bgmSource != null && BGMEnabled)
+            bgmSource.volume = BGMVolume;
+    }
+
+    public void SetSFXVolume(float volume)
+    {
+        SFXVolume = Mathf.Clamp01(volume);
+        PlayerPrefs.SetFloat(K_SFXVolume, SFXVolume);
+        PlayerPrefs.Save();
+        if (sfxSource != null)
+            sfxSource.volume = SFXVolume;
+    }
 
     public void SetBGMEnabled(bool enabled)
     {

@@ -28,6 +28,8 @@ public class MemberVisualConfig : ScriptableObject
         public Sprite panelInactive;  // 잠긴(비활성) 패널 배경
         public Sprite indexUnlocked;  // 해금 인덱스 아이콘
         public Sprite indexLocked;    // 잠금 인덱스 아이콘
+        public Sprite slotNormal;     // 캐릭터 슬롯 배경 (미선택)
+        public Sprite slotSelected;   // 캐릭터 슬롯 배경 (선택됨)
     }
 
     [Serializable]
@@ -35,6 +37,7 @@ public class MemberVisualConfig : ScriptableObject
     {
         [CharacterID] public string charId;
         public Sprite     thumbnail;
+        public Sprite     fragmentIcon;
         public GameObject modelPrefab;
     }
 
@@ -71,11 +74,26 @@ public class MemberVisualConfig : ScriptableObject
         return null;
     }
 
+    public Sprite GetSlotSprite(string grade, bool selected = false)
+    {
+        foreach (var e in gradeVisuals)
+            if (e.grade == grade) return selected ? e.slotSelected : e.slotNormal;
+        return null;
+    }
+
     public Sprite GetThumbnail(string charId)
     {
         if (string.IsNullOrEmpty(charId)) return null;
         foreach (var e in characterThumbnails)
             if (e.charId == charId) return e.thumbnail;
+        return null;
+    }
+
+    public Sprite GetFragmentIcon(string charId)
+    {
+        if (string.IsNullOrEmpty(charId)) return null;
+        foreach (var e in characterThumbnails)
+            if (e.charId == charId) return e.fragmentIcon;
         return null;
     }
 
