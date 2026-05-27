@@ -177,7 +177,7 @@ public class WeaponSpecialEffectConfigEditor : EditorWindow
         "무기ID", "이름", "특성", "발동확률",
         "클론 프리팹", "전진(s)", "정지(s)", "복귀(s)", "사거리",
         "스파이크 프리팹",
-        "스턴타입", "스턴색상",
+        "스턴타입", "스턴색상", "효과 VFX",
         "영구공전",
         "서브 프리팹",
         "버프%", "버프 VFX",
@@ -187,7 +187,7 @@ public class WeaponSpecialEffectConfigEditor : EditorWindow
         90f, 80f, 105f, 55f,
         140f, 45f, 45f, 45f, 45f,
         130f,
-        70f, 80f,
+        70f, 80f, 140f,
         55f,
         130f,
         45f, 130f,
@@ -225,8 +225,8 @@ public class WeaponSpecialEffectConfigEditor : EditorWindow
 
     private void DrawRow(DB_무기 row)
     {
-        string wid   = row.f_무기ID ?? "";
-        string trait = row.f_특성  ?? "";
+        string wid   = (row.f_무기ID ?? "").Trim();
+        string trait = (row.f_특성  ?? "").Trim();
 
         EditorGUILayout.BeginHorizontal(GUI.skin.box);
         var lbl = new GUIStyle(EditorStyles.miniLabel) { alignment = TextAnchor.MiddleCenter };
@@ -237,7 +237,10 @@ public class WeaponSpecialEffectConfigEditor : EditorWindow
         int idx  = GetOrCreateEntry(wid, trait);
         var elem = _entriesProp.GetArrayElementAtIndex(idx);
 
-        bool isClone = trait.StartsWith("HIT_CLONE");
+        // HIT_CLONE_SPREAD는 타이밍 파라미터가 필요 없으므로 별도 분리
+        bool isCloneReturn = trait.StartsWith("HIT_CLONE") && trait != "HIT_CLONE_SPREAD";
+        bool isCloneSpread = trait == "HIT_CLONE_SPREAD";
+        bool isClone       = isCloneReturn || isCloneSpread;
         bool isSpike = trait == "BOSS_SPIKE" || trait == "HIT_SPIKE";
         bool isStun  = trait == "HIT_STUN" || trait == "HIT_ICE" || trait == "HIT_FIRE";
         bool isSpin  = trait == "HIT_SPIN";
@@ -246,30 +249,32 @@ public class WeaponSpecialEffectConfigEditor : EditorWindow
         // 발동확률 (모든 특성 공통)
         DrawFloatField(elem.FindPropertyRelative("triggerChance"), 3, true);
 
-        // HIT_CLONE 전용
-        DrawPrefabField(elem.FindPropertyRelative("cloneProjectilePrefab"), 4, isClone);
-        DrawFloatField (elem.FindPropertyRelative("cloneOutTime"),          5, isClone);
-        DrawFloatField (elem.FindPropertyRelative("clonePauseTime"),        6, isClone);
-        DrawFloatField (elem.FindPropertyRelative("cloneReturnTime"),       7, isClone);
+        // HIT_CLONE 공통 프리팹 (SPREAD 포함) + HIT_SPIN 공전 클론 프리팹 공용
+        DrawPrefabField(elem.FindPropertyRelative("cloneProjectilePrefab"), 4, isClone || isSpin);
+        // 타이밍 파라미터는 SPREAD 제외
+        DrawFloatField (elem.FindPropertyRelative("cloneOutTime"),          5, isCloneReturn);
+        DrawFloatField (elem.FindPropertyRelative("clonePauseTime"),        6, isCloneReturn);
+        DrawFloatField (elem.FindPropertyRelative("cloneReturnTime"),       7, isCloneReturn);
         DrawFloatField (elem.FindPropertyRelative("cloneRange"),            8, isClone);
 
         // HIT_SPIKE 전용
         DrawPrefabField(elem.FindPropertyRelative("spikePrefab"), 9, isSpike);
 
-        // HIT_STUN 전용
-        DrawEnumField (elem.FindPropertyRelative("hitStunType"),  10, isStun);
-        DrawColorField(elem.FindPropertyRelative("hitStunColor"), 11, isStun);
+        // HIT_STUN 전용 (타입·색상·무기별 VFX)
+        DrawEnumField (elem.FindPropertyRelative("hitStunType"),       10, isStun);
+        DrawColorField(elem.FindPropertyRelative("hitStunColor"),      11, isStun);
+        DrawPrefabField(elem.FindPropertyRelative("hitEffectVfxPrefab"), 12, isStun);
 
         // HIT_SPIN 전용
-        DrawToggleField(elem.FindPropertyRelative("hitSpinPermanent"), 12, isSpin);
+        DrawToggleField(elem.FindPropertyRelative("hitSpinPermanent"), 13, isSpin);
 
         // SHOOT_SUB 전용
         bool isSub = trait == "SHOOT_SUB";
-        DrawPrefabField(elem.FindPropertyRelative("subProjectilePrefab"), 13, isSub);
+        DrawPrefabField(elem.FindPropertyRelative("subProjectilePrefab"), 14, isSub);
 
         // BUFF_* 전용
-        DrawFloatField (elem.FindPropertyRelative("passiveBuffPct"),       14, isBuff);
-        DrawPrefabField(elem.FindPropertyRelative("passiveBuffVfxPrefab"), 15, isBuff);
+        DrawFloatField (elem.FindPropertyRelative("passiveBuffPct"),       15, isBuff);
+        DrawPrefabField(elem.FindPropertyRelative("passiveBuffVfxPrefab"), 16, isBuff);
 
         EditorGUILayout.EndHorizontal();
     }

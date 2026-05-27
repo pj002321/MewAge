@@ -61,7 +61,7 @@ public class SoundManager : MonoBehaviourSingleton<SoundManager>
 
         BGMVolume = defaultBGMVolume;
         SFXVolume = PlayerPrefs.GetFloat(K_SFXVolume, 1f);
-        sfxSource.volume = SFXVolume;
+        sfxSource.volume = 1f; // volumeScale은 PlayOneShot에서 직접 처리
 
         // BGM 켜기/끄기 상태 복원
         BGMEnabled = PlayerPrefs.GetInt("Setting_BGM", 1) == 1;
@@ -84,18 +84,18 @@ public class SoundManager : MonoBehaviourSingleton<SoundManager>
     }
 
 
-    public void PlayWeaponAttack(string weaponName, int chapter)
+    public void PlayWeaponShoot(string weaponId)
     {
         if (library == null) return;
-        var (clip, vol) = library.GetWeaponAttack(weaponName, chapter);
-        PlayClipWithInterval(clip, vol, weaponName.GetHashCode());
+        var (clip, vol) = library.GetWeaponShoot(weaponId);
+        PlayClipWithInterval(clip, vol, weaponId.GetHashCode());
     }
 
-    public void PlayWeaponHit(string weaponName, int chapter)
+    public void PlayWeaponHit(string weaponId)
     {
         if (library == null) return;
-        var (clip, vol) = library.GetWeaponHit(weaponName, chapter);
-        PlayClipWithInterval(clip, vol, weaponName.GetHashCode() + 1);
+        var (clip, vol) = library.GetWeaponHit(weaponId);
+        PlayClipWithInterval(clip, vol, weaponId.GetHashCode() + 1);
     }
 
     private void PlayEntry(SoundLibrarySO.Entry entry, int intervalKey)
@@ -111,7 +111,8 @@ public class SoundManager : MonoBehaviourSingleton<SoundManager>
             lastPlayTime.TryGetValue(intervalKey, out float last) &&
             Time.unscaledTime - last < minInterval)
             return;
-        sfxSource.PlayOneShot(clip, volume);
+        // entry.volume을 절대 볼륨으로 취급: sfxSource.volume은 1로 고정, SFX 마스터는 volumeScale로 전달
+        sfxSource.PlayOneShot(clip, volume * SFXVolume);
         lastPlayTime[intervalKey] = Time.unscaledTime;
     }
 
@@ -231,8 +232,7 @@ public class SoundManager : MonoBehaviourSingleton<SoundManager>
         SFXVolume = Mathf.Clamp01(volume);
         PlayerPrefs.SetFloat(K_SFXVolume, SFXVolume);
         PlayerPrefs.Save();
-        if (sfxSource != null)
-            sfxSource.volume = SFXVolume;
+        // sfxSource.volume은 1 고정 — volumeScale은 PlayOneShot에서 직접 처리
     }
 
     public void SetBGMEnabled(bool enabled)

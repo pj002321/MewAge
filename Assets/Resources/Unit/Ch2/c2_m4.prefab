@@ -263,7 +263,6 @@ MonoBehaviour:
   goldDrop: 5
   expDrop: 10
   scoreValue: 10
-  damageCooldown: 1
   contactMaxDist: 0.8
   knockbackImmune: 0
   bleedDuration: 5
@@ -372,9 +371,9 @@ MonoBehaviour:
   rangedDamage: 15
   firePoint: {fileID: 6088732849757114419}
   useWarningLines: 1
-  warningDuration: 0.4
-  warningLineLength: 8
-  warningLineWidth: 0.05
+  warningDuration: 1
+  warningLineLength: 1
+  warningLineWidth: 0.5
   warningColor: {r: 1, g: 0, b: 0, a: 1}
   warningMaterial: {fileID: 0}
   attackVfx: {fileID: 0}
@@ -382,6 +381,8 @@ MonoBehaviour:
   useAnimationEvent: 0
   animEventTimeout: 0.6
   retreatDuration: 1.4
+  flankSpeedMult: 1.4
+  flankArcHalf: 30
 --- !u!114 &6649752058689448536
 MonoBehaviour:
   m_ObjectHideFlags: 0

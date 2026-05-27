@@ -4,8 +4,9 @@ using UnityEngine;
 /// <summary>
 /// 게임 전체 사운드 라이브러리.
 /// ■ UI      — 상황별 named field
-/// ■ 무기/적 — 챕터별 프리셋 (DB 동기화 버튼으로 자동 생성)
-///             클립 미할당 시 default 클립으로 폴백
+/// ■ 무기    — 타입별 프리셋 (DB 동기화 버튼으로 자동 생성, 클립은 직접 할당)
+///             조회 우선순위: 무기 ID 개별 클립 → 글로벌 default 클립
+/// ■ 적      — 기본 폴백 클립
 /// </summary>
 [CreateAssetMenu(fileName = "SoundLibrary", menuName = "MuAge/Sound Library")]
 public class SoundLibrarySO : ScriptableObject
@@ -19,27 +20,27 @@ public class SoundLibrarySO : ScriptableObject
         public float     minInterval = 0.05f;
     }
 
+    /// <summary>무기 1개의 사운드 슬롯. DB 동기화로 자동 생성됨.</summary>
     [System.Serializable]
     public class WeaponSoundEntry
     {
-        [HideInInspector] public string weaponId;
-        [Tooltip("DB f_이름 — 에디터에서 자동 입력됨")]
+        [Tooltip("DB f_무기ID (자동 입력)")]
+        public string    weaponId;
+        [Tooltip("DB f_이름   (자동 입력)")]
         public string    weaponName;
-        [Tooltip("미할당 시 defaultWeaponAttack 사용")]
-        public AudioClip attack;
-        [Tooltip("미할당 시 defaultWeaponHit 사용")]
+        [Tooltip("공격 시작음 — 미할당 시 defaultWeaponShoot 사용")]
+        public AudioClip shoot;
+        [Tooltip("적 명중음  — 미할당 시 defaultWeaponHit 사용")]
         public AudioClip hit;
         [Range(0f, 1f)] public float volume = 1f;
     }
 
+    /// <summary>무기 타입 1개 묶음. DB 동기화로 자동 생성됨.</summary>
     [System.Serializable]
-    public class ChapterSoundPreset
+    public class WeaponTypeSoundPreset
     {
-        public int    chapter;
-        [Tooltip("에디터 표시용 라벨 (예: C1 구석기)")]
-        public string label;
-
-        [Header("무기 사운드")]
+        [Tooltip("무기 타입 (자동 입력)")]
+        public WeaponType weaponType;
         public List<WeaponSoundEntry> weapons = new();
     }
 
@@ -58,8 +59,13 @@ public class SoundLibrarySO : ScriptableObject
 
     [Header("── 무기 장착 / 기본 폴백 ────────────────────────────────────")]
     public Entry weaponEquip;
+    [Tooltip("개별 무기에 shoot 클립 없을 때 사용")]
     public Entry defaultWeaponAttack;
+    [Tooltip("개별 무기에 hit 클립 없을 때 사용")]
     public Entry defaultWeaponHit;
+
+    [Header("── 플레이어 ──────────────────────────────────────────────────")]
+    public Entry playerHit;
 
     [Header("── 적 기본 폴백 ──────────────────────────────────────────────")]
     public Entry defaultEnemyHit;
@@ -83,63 +89,63 @@ public class SoundLibrarySO : ScriptableObject
     [Header("── 유물 ────────────────────────────────────────────────────")]
     public Entry relicLevelUp;
 
-    // ── 챕터 프리셋 ──────────────────────────────────────────────────────
-    [Header("── 챕터별 무기 · 적 사운드 프리셋 ──────────────────────────")]
-    [Tooltip("에디터 상단 [DB 동기화] 버튼으로 목록을 자동 생성하세요.")]
-    public List<ChapterSoundPreset> chapters = new();
+    // ── 무기 타입별 프리셋 ───────────────────────────────────────────────
+    [Header("── 무기 타입별 사운드 프리셋 ──────────────────────────────────")]
+    [Tooltip("에디터 상단 [DB 동기화] 버튼으로 타입·무기 목록을 자동 생성합니다.")]
+    public List<WeaponTypeSoundPreset> weaponTypePresets = new();
 
-    // ── 런타임 조회 ──────────────────────────────────────────────────────
+    // ── SoundKey 조회 ────────────────────────────────────────────────────
 
     public Entry Get(SoundKey key) => key switch
     {
-        SoundKey.UI_Click           => uiClick,
-        SoundKey.UI_Hover           => uiHover,
-        SoundKey.UI_Buy             => uiBuy,
-        SoundKey.UI_Reroll          => uiReroll,
-        SoundKey.UI_Equip           => uiEquip,
-        SoundKey.UI_Unequip         => uiUnequip,
-        SoundKey.UI_Sell            => uiSell,
-        SoundKey.UI_Merge           => uiMerge,
-        SoundKey.Weapon_Equip       => weaponEquip,
-        SoundKey.Enemy_Hit          => defaultEnemyHit,
-        SoundKey.Pickup_Gold        => pickupGold,
-        SoundKey.Pickup_Exp         => pickupExp,
-        SoundKey.Improv_Select      => improvSelect,
-        SoundKey.Improv_Confirm     => improvConfirm,
-        SoundKey.Gacha_Open         => gachaOpen,
-        SoundKey.Gacha_ItemReveal   => gachaItemReveal,
-        SoundKey.Equip_LevelUp      => equipLevelUp,
-        SoundKey.Relic_LevelUp => relicLevelUp,
-        _                           => null,
+        SoundKey.UI_Click         => uiClick,
+        SoundKey.UI_Hover         => uiHover,
+        SoundKey.UI_Buy           => uiBuy,
+        SoundKey.UI_Reroll        => uiReroll,
+        SoundKey.UI_Equip         => uiEquip,
+        SoundKey.UI_Unequip       => uiUnequip,
+        SoundKey.UI_Sell          => uiSell,
+        SoundKey.UI_Merge         => uiMerge,
+        SoundKey.Weapon_Equip     => weaponEquip,
+        SoundKey.Weapon_Shoot     => defaultWeaponAttack,
+        SoundKey.Weapon_Attack    => defaultWeaponHit,
+        SoundKey.Player_Hit       => playerHit,
+        SoundKey.Enemy_Hit        => defaultEnemyHit,
+        SoundKey.Enemy_Die        => defaultEnemyDeath,
+        SoundKey.Pickup_Gold      => pickupGold,
+        SoundKey.Pickup_Exp       => pickupExp,
+        SoundKey.Improv_Select    => improvSelect,
+        SoundKey.Improv_Confirm   => improvConfirm,
+        SoundKey.Gacha_Open       => gachaOpen,
+        SoundKey.Gacha_ItemReveal => gachaItemReveal,
+        SoundKey.Equip_LevelUp    => equipLevelUp,
+        SoundKey.Relic_LevelUp    => relicLevelUp,
+        _                         => null,
     };
 
-    public (AudioClip clip, float volume) GetWeaponAttack(string weaponName, int chapter)
+    // ── 무기 사운드 런타임 조회 ──────────────────────────────────────────
+
+    /// <summary>무기 ID로 발사음 조회. 미할당 시 defaultWeaponAttack 반환.</summary>
+    public (AudioClip clip, float volume) GetWeaponShoot(string weaponId)
     {
-        var e = FindWeapon(weaponName, chapter);
-        if (e?.attack != null) return (e.attack, e.volume);
+        var e = FindWeapon(weaponId);
+        if (e?.shoot != null) return (e.shoot, e.volume);
         return (defaultWeaponAttack?.clip, defaultWeaponAttack?.volume ?? 1f);
     }
 
-    public (AudioClip clip, float volume) GetWeaponHit(string weaponName, int chapter)
+    /// <summary>무기 ID로 명중음 조회. 미할당 시 defaultWeaponHit 반환.</summary>
+    public (AudioClip clip, float volume) GetWeaponHit(string weaponId)
     {
-        var e = FindWeapon(weaponName, chapter);
+        var e = FindWeapon(weaponId);
         if (e?.hit != null) return (e.hit, e.volume);
         return (defaultWeaponHit?.clip, defaultWeaponHit?.volume ?? 1f);
     }
 
-    private ChapterSoundPreset GetChapter(int chapter)
+    private WeaponSoundEntry FindWeapon(string weaponId)
     {
-        foreach (var c in chapters)
-            if (c.chapter == chapter) return c;
-        return null;
-    }
-
-    private WeaponSoundEntry FindWeapon(string weaponName, int chapter)
-    {
-        var preset = GetChapter(chapter);
-        if (preset == null) return null;
-        foreach (var w in preset.weapons)
-            if (w.weaponName == weaponName) return w;
+        foreach (var preset in weaponTypePresets)
+            foreach (var w in preset.weapons)
+                if (w.weaponId == weaponId) return w;
         return null;
     }
 }

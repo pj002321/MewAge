@@ -47,6 +47,8 @@ public class StatusEffectConfig : ScriptableObject
         public HitStunType hitStunType;
         [Tooltip("Freeze 시 스프라이트 색상. 기본값(000000 alpha=0)이면 하늘색 자동 적용")]
         public Color       hitStunColor;
+        [Tooltip("무기별 상태이상 VFX. null이면 챕터별 기본 VFX 사용")]
+        public GameObject  hitEffectVfxPrefab;
 
         // ── HIT_SPIN ───────────────────────────────────────────
         [Tooltip("true = 무기 해제 전까지 고스트 영구 공전. false = 4초 후 자동 소멸")]
@@ -99,6 +101,19 @@ public class StatusEffectConfig : ScriptableObject
     public GameObject GetSpikePrefab(string weaponId) => FindEntry(weaponId)?.spikePrefab;
 
     // ── HIT_STUN 통합 ─────────────────────────────────────────────
+
+    /// <summary>무기별 VFX → 없으면 챕터 기본값 순으로 반환.</summary>
+    public GameObject GetHitEffectVfx(string weaponId, int chapter, string traitId)
+    {
+        var e = FindEntry(weaponId);
+        if (e?.hitEffectVfxPrefab != null) return e.Value.hitEffectVfxPrefab;
+        return traitId switch
+        {
+            "HIT_ICE"  => GetFreeze(chapter),
+            "HIT_FIRE" => GetFire(chapter),
+            _          => GetStun(chapter),
+        };
+    }
 
     /// <summary>weaponId 항목의 stun 타입을 반환합니다. 항목 없으면 traitId 기반 기본값.</summary>
     public HitStunType GetHitStunType(string weaponId, string traitIdFallback)

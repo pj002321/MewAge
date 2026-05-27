@@ -352,8 +352,8 @@ MonoBehaviour:
   firePoint: {fileID: 2980433386105245889}
   useWarningLines: 0
   warningDuration: 1
-  warningLineLength: 6
-  warningLineWidth: 0.8
+  warningLineLength: 1
+  warningLineWidth: 0.5
   warningColor: {r: 1, g: 0, b: 0, a: 1}
   warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
   attackVfx: {fileID: 0}
@@ -361,6 +361,8 @@ MonoBehaviour:
   useAnimationEvent: 1
   animEventTimeout: 0.6
   retreatDuration: 1.4
+  flankSpeedMult: 1.4
+  flankArcHalf: 30
 --- !u!114 &7104981991845133511
 MonoBehaviour:
   m_ObjectHideFlags: 0

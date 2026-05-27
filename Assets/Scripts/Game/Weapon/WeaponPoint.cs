@@ -253,9 +253,10 @@ public class WeaponPoint : MonoBehaviour
         knockbackPower     = data.knockbackPower;
         dotDamage          = data.bleedDamage;
 
-        _specialEffectId = data.trait;
+        _specialEffectId = data.trait?.Trim();
         _weaponChapter   = data.chapter;
         _weaponId        = data.id;
+        this.DLog($"[WeaponPoint.Init] id='{_weaponId}' trait='{_specialEffectId}' grade={_grade}");
         _passiveBuffStat        = null;
         _passiveBuffAmount      = 0f;
 
@@ -662,6 +663,8 @@ public class WeaponPoint : MonoBehaviour
     internal void TrySpecialEffectEnemy(EnemyController enemy, float damage, Vector2 hitDir)
     {
         if (string.IsNullOrEmpty(_specialEffectId) || enemy == null) return;
+        if (_specialEffectId.Contains("CLONE"))
+            this.DLog($"[TrySpecialEffect] id='{_specialEffectId}' len={_specialEffectId.Length}");
         switch (_specialEffectId)
         {
             case "HIT_ICE":
@@ -695,7 +698,8 @@ public class WeaponPoint : MonoBehaviour
                 break;
 
             case "HIT_CLONE_SPREAD":
-                if (_cloneFlying || Random.value > Chance(0.25f)) break;
+                if (_cloneFlying) { this.DLog("[SPREAD] _cloneFlying=true, 스킵"); break; }
+                if (Random.value > Chance(0.25f)) break;
                 SpawnCloneSpread(enemy.transform.position, damage);
                 break;
 
@@ -972,16 +976,18 @@ public class WeaponPoint : MonoBehaviour
     private GameObject SpawnCloneVisual(GameObject prefab, Vector2 pos, Vector2 dir = default)
     {
         var go = Instantiate(prefab, pos, Quaternion.identity);
+
+        // Rigidbody2D 즉시 정지 (Projectile 컴포넌트 파괴 전에 물리 이동 차단)
+        var rb = go.GetComponent<Rigidbody2D>();
+        if (rb != null) { rb.bodyType = RigidbodyType2D.Kinematic; rb.linearVelocity = Vector2.zero; }
+
         var p  = go.GetComponentInChildren<Projectile>();
-        if (p != null)
+        if (dir != default && dir.sqrMagnitude > 0.001f)
         {
-            if (dir != default && dir.sqrMagnitude > 0.001f)
-            {
-                float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg - p.ForwardAngleDeg;
-                go.transform.rotation = Quaternion.Euler(0f, 0f, angle);
-            }
-            Destroy(p);
+            float forwardOffset = p != null ? p.ForwardAngleDeg : 90f;
+            go.transform.rotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg - forwardOffset);
         }
+        if (p != null) Destroy(p);
         _activeClones.Add(go);
         return go;
     }
@@ -1199,17 +1205,49 @@ public class WeaponPoint : MonoBehaviour
 
     private void SpawnCloneSpread(Vector2 hitPos, float damage)
     {
-        var prefab = GetClonePrefab(); if (prefab == null) return;
+        var prefab = StatusEffectConfig.Shared?.GetClonePrefab(_weaponId)
+                     ?? _behaviour?.GetProjectilePrefab();
+        // prefab이 없으면 무기 스프라이트 복사본으로 폴백
+        bool useSpriteClone = prefab == null;
+        this.DLog($"[SPREAD] 발동 — prefab={prefab?.name ?? "null"} useSpriteClone={useSpriteClone} weaponSr={(_weaponSr != null ? _weaponSr.name : "NULL")} sprite={(_weaponSr?.sprite?.name ?? "null")}");
+        if (useSpriteClone && (_weaponSr == null || _weaponSr.sprite == null))
+        {
+            Debug.LogWarning($"[HIT_CLONE_SPREAD] 프리팹·스프라이트 모두 없음 — weaponId='{_weaponId}'");
+            return;
+        }
+
         float range = StatusEffectConfig.Shared?.GetCloneRange  (_weaponId, 4f)                ?? 4f;
         float ot    = StatusEffectConfig.Shared?.GetCloneOutTime(_weaponId, CloneOutTime * 0.8f) ?? CloneOutTime * 0.8f;
 
-        _cloneFlying = true; _cloneActiveCount = 8;
+        _cloneFlying      = true;
+        _cloneActiveCount = 0;
         for (int i = 0; i < 8; i++)
         {
             float   angle = i * 45f * Mathf.Deg2Rad;
             Vector2 d     = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
-            StartCoroutine(CloneOneWayRoutine(SpawnCloneVisual(prefab, hitPos), hitPos, hitPos + d * range, damage * 0.3f, ot));
+            var go = useSpriteClone ? SpawnSpriteClone(hitPos, d) : SpawnCloneVisual(prefab, hitPos, d);
+            if (go == null) continue;
+            _cloneActiveCount++;
+            StartCoroutine(CloneOneWayRoutine(go, hitPos, hitPos + d * range, damage * 0.3f, ot));
         }
+        if (_cloneActiveCount <= 0) _cloneFlying = false;
+    }
+
+    /// <summary>prefab 없을 때 무기 스프라이트를 복사한 임시 비주얼 생성. _activeClones에 등록됨.</summary>
+    private GameObject SpawnSpriteClone(Vector2 pos, Vector2 dir = default)
+    {
+        var go = new GameObject("SpriteClone");
+        go.transform.position   = pos;
+        go.transform.localScale = transform.localScale * 0.8f;
+        if (dir.sqrMagnitude > 0.001f)
+            go.transform.rotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg - 90f);
+        var sr             = go.AddComponent<SpriteRenderer>();
+        sr.sprite          = _weaponSr.sprite;
+        sr.color           = new Color(1f, 1f, 1f, 0.7f);
+        sr.sortingLayerID  = _weaponSr.sortingLayerID;
+        sr.sortingOrder    = _weaponSr.sortingOrder;
+        _activeClones.Add(go);
+        return go;
     }
 
     private GameObject GetClonePrefab()

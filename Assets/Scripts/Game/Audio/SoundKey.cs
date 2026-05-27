@@ -16,6 +16,7 @@ public enum SoundKey
     Weapon_Shoot    = 8,   // 발사/근접 공격
     Weapon_Attack   = 9,   // 적命中
     Enemy_Hit       = 10,
+    Enemy_Die       = 14,  // 적 사망
 
     // 아이템 획득
     Pickup_Gold  = 11,

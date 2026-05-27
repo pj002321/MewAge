@@ -1155,10 +1155,25 @@ namespace Mewage.DB
 			get => _f_최대스폰[Index];
 			set => _f_최대스폰.SetValue(this, value);
 		}
-		public System.String f_배경ID
+		public System.Int32 f_웨이브
 		{
-			get => _f_배경ID[Index];
-			set => _f_배경ID[Index] = value;
+			get => _f_웨이브[Index];
+			set => _f_웨이브.SetValue(this, value);
+		}
+		public System.Single f_체력배율
+		{
+			get => _f_체력배율[Index];
+			set => _f_체력배율.SetValue(this, value);
+		}
+		public System.Single f_피해배율
+		{
+			get => _f_피해배율[Index];
+			set => _f_피해배율.SetValue(this, value);
+		}
+		public System.Int32 f_시간
+		{
+			get => _f_시간[Index];
+			set => _f_시간.SetValue(this, value);
 		}
 		private static BansheeGz.BGDatabase.BGFieldEntityName _ufle12jhs77_f_name;
 		public static BansheeGz.BGDatabase.BGFieldEntityName _f_name => _ufle12jhs77_f_name ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldEntityName>(MetaDefault, new BGId(5309531424821574052UL, 6514542215626864563UL), () => _ufle12jhs77_f_name = null);
@@ -1186,8 +1201,14 @@ namespace Mewage.DB
 		public static BansheeGz.BGDatabase.BGFieldInt _f_동시스폰 => _ufle12jhs77_f_동시스폰 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(MetaDefault, new BGId(4748398473719027699UL, 11035357840078238123UL), () => _ufle12jhs77_f_동시스폰 = null);
 		private static BansheeGz.BGDatabase.BGFieldInt _ufle12jhs77_f_최대스폰;
 		public static BansheeGz.BGDatabase.BGFieldInt _f_최대스폰 => _ufle12jhs77_f_최대스폰 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(MetaDefault, new BGId(5407969624137051799UL, 11924674522886597510UL), () => _ufle12jhs77_f_최대스폰 = null);
-		private static BansheeGz.BGDatabase.BGFieldString _ufle12jhs77_f_배경ID;
-		public static BansheeGz.BGDatabase.BGFieldString _f_배경ID => _ufle12jhs77_f_배경ID ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(MetaDefault, new BGId(5017093440636256805UL, 2609378642618446752UL), () => _ufle12jhs77_f_배경ID = null);
+		private static BansheeGz.BGDatabase.BGFieldInt _ufle12jhs77_f_웨이브;
+		public static BansheeGz.BGDatabase.BGFieldInt _f_웨이브 => _ufle12jhs77_f_웨이브 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(MetaDefault, new BGId(5535443174152193681UL, 2996016444933521317UL), () => _ufle12jhs77_f_웨이브 = null);
+		private static BansheeGz.BGDatabase.BGFieldFloat _ufle12jhs77_f_체력배율;
+		public static BansheeGz.BGDatabase.BGFieldFloat _f_체력배율 => _ufle12jhs77_f_체력배율 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldFloat>(MetaDefault, new BGId(5710800573205261006UL, 11570167368612952973UL), () => _ufle12jhs77_f_체력배율 = null);
+		private static BansheeGz.BGDatabase.BGFieldFloat _ufle12jhs77_f_피해배율;
+		public static BansheeGz.BGDatabase.BGFieldFloat _f_피해배율 => _ufle12jhs77_f_피해배율 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldFloat>(MetaDefault, new BGId(4720301136843104944UL, 3405642665751682966UL), () => _ufle12jhs77_f_피해배율 = null);
+		private static BansheeGz.BGDatabase.BGFieldInt _ufle12jhs77_f_시간;
+		public static BansheeGz.BGDatabase.BGFieldInt _f_시간 => _ufle12jhs77_f_시간 ??= BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(MetaDefault, new BGId(4962373527402832072UL, 4064823840558155422UL), () => _ufle12jhs77_f_시간 = null);
 		private DB_웨이브() : base(MetaDefault) {}
 		private DB_웨이브(BGId id) : base(MetaDefault, id) {}
 		private DB_웨이브(BGMetaEntity meta) : base(meta) {}
@@ -1217,7 +1238,10 @@ namespace Mewage.DB
 			_ufle12jhs77_f_스폰간격 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldFloat>(_metaDefault, new BGId(5473841751603315057UL, 2674623474575057836UL));
 			_ufle12jhs77_f_동시스폰 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(_metaDefault, new BGId(4748398473719027699UL, 11035357840078238123UL));
 			_ufle12jhs77_f_최대스폰 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(_metaDefault, new BGId(5407969624137051799UL, 11924674522886597510UL));
-			_ufle12jhs77_f_배경ID = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldString>(_metaDefault, new BGId(5017093440636256805UL, 2609378642618446752UL));
+			_ufle12jhs77_f_웨이브 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(_metaDefault, new BGId(5535443174152193681UL, 2996016444933521317UL));
+			_ufle12jhs77_f_체력배율 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldFloat>(_metaDefault, new BGId(5710800573205261006UL, 11570167368612952973UL));
+			_ufle12jhs77_f_피해배율 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldFloat>(_metaDefault, new BGId(4720301136843104944UL, 3405642665751682966UL));
+			_ufle12jhs77_f_시간 = BGCodeGenUtils.GetField<BansheeGz.BGDatabase.BGFieldInt>(_metaDefault, new BGId(4962373527402832072UL, 4064823840558155422UL));
 		}
 		public static void ReleaseCodeGenRuntime()
 		{
@@ -1235,7 +1259,10 @@ namespace Mewage.DB
 			_ufle12jhs77_f_스폰간격 = null;
 			_ufle12jhs77_f_동시스폰 = null;
 			_ufle12jhs77_f_최대스폰 = null;
-			_ufle12jhs77_f_배경ID = null;
+			_ufle12jhs77_f_웨이브 = null;
+			_ufle12jhs77_f_체력배율 = null;
+			_ufle12jhs77_f_피해배율 = null;
+			_ufle12jhs77_f_시간 = null;
 		}
 
 		[Preserve]
@@ -1261,7 +1288,10 @@ namespace Mewage.DB
 			public const string 스폰간격 = "스폰간격";
 			public const string 동시스폰 = "동시스폰";
 			public const string 최대스폰 = "최대스폰";
-			public const string 배경ID = "배경ID";
+			public const string 웨이브 = "웨이브";
+			public const string 체력배율 = "체력배율";
+			public const string 피해배율 = "피해배율";
+			public const string 시간 = "시간";
 		}
 	}
 

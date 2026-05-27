@@ -215,7 +215,6 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         sm?.BeginBatch();
         PlayerCharacterManager.Shared?.ApplyCharacterStats();
         RelicManager.Shared?.ApplyRelicStats();
-        ApplyStageAtkBonus(sm);
         sm?.EndBatch();
 
         // 시작 시 Normal 무기 1개 지급 준비
@@ -234,14 +233,6 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         // 5. 오버레이 연출 중 낙하 입장 연출을 시작합니다.
         //    ThrowOut이 끝나기 전에 이미 연출이 진행되므로 자연스럽게 이어집니다.
         StartCoroutine(PlayerLandingIntroRoutine());
-    }
-
-    private void ApplyStageAtkBonus(PlayerStatManager sm)
-    {
-        if (sm == null || stageAtkBonusPct <= 0f) return;
-        int stage = ParseStageNumber(currentChapterID);
-        if (stage <= 1) return;
-        sm.AddPctMod(StatType.ATK, stageAtkBonusPct * (stage - 1));
     }
 
     private static int ParseStageNumber(string chapterID)
@@ -367,15 +358,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 
     private float WaveDuration(int w)
     {
-        float baseTime = w switch
-        {
-            <= 5  => 15f,
-            <= 10 => 17f,
-            <= 15 => 20f,
-            <= 20 => 22f,
-            <= 25 => 24f,
-            _     => 26f,
-        };
+        float baseTime = EnemyController.GetWaveTimeSecs(w);
         return IsEliteWave(w) ? baseTime + EliteWaveBonus : baseTime;
     }
 
@@ -1046,9 +1029,6 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         WaveEnvironmentSwitcher.Shared?.SetBoss();
         SoundManager.Shared?.PlayChapterBossBGM();
     }
-
-    [Header("스테이지 밸런스")]
-    [SerializeField] private float stageAtkBonusPct = 20f; // 스테이지 2부터 스테이지당 ATK % 보너스
 
     [Header("엘리트 몬스터")]
     [SerializeField] private CurseRewardPanel cursePanel;

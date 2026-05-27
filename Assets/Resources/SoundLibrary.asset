@@ -49,17 +49,17 @@ MonoBehaviour:
     volume: 1
     minInterval: 0.05
   defaultWeaponAttack:
-    clip: {fileID: 8300000, guid: dc7fd4338f30b9e47a572783f54308c4, type: 3}
-    volume: 1
+    clip: {fileID: 8300000, guid: 86366ae191f84ce498834c28e42d9ca1, type: 3}
+    volume: 0.934
     minInterval: 0.05
   defaultWeaponHit:
-    clip: {fileID: 8300000, guid: 0e5edb6bccf05984dad128fb1a9fc914, type: 3}
-    volume: 1
+    clip: {fileID: 8300000, guid: 1cd9fbc4bb2c19749aa2e61afd72aaaa, type: 3}
+    volume: 0.515
     minInterval: 0.05
   defaultEnemyHit:
-    clip: {fileID: 8300000, guid: 0e5edb6bccf05984dad128fb1a9fc914, type: 3}
-    volume: 1
-    minInterval: 0.05
+    clip: {fileID: 8300000, guid: 1f53a5fc6bd934e46a5d8cfa8fd27b64, type: 3}
+    volume: 0.329
+    minInterval: 0.1
   defaultEnemyDeath:
     clip: {fileID: 8300000, guid: b47c9013480bf4444a0406b4c0388e5a, type: 3}
     volume: 1
@@ -96,385 +96,393 @@ MonoBehaviour:
     clip: {fileID: 8300000, guid: 9532bba8ae9e40943965b4eeef306e53, type: 3}
     volume: 1
     minInterval: 0.05
-  chapters:
-  - chapter: 1
-    label: C1
+  weaponTypePresets:
+  - weaponType: 0
     weapons:
-    - weaponId: CH1_R_3
-      weaponName: "\uAC04\uC774 \uD22C\uC11D\uAE30"
-      attack: {fileID: 0}
-      hit: {fileID: 0}
-      volume: 1
-    - weaponId: CH1_L_1
-      weaponName: "\uACF0\uC758 \uBC1C\uD1B1"
-      attack: {fileID: 0}
-      hit: {fileID: 0}
-      volume: 1
-    - weaponId: CH1_C_3
-      weaponName: "\uAE68\uC9C4 \uB3CC \uC870\uAC01"
-      attack: {fileID: 0}
-      hit: {fileID: 0}
-      volume: 1
-    - weaponId: CH1_E_3
-      weaponName: "\uAE68\uC9C4 \uC11D\uAE30"
-      attack: {fileID: 0}
-      hit: {fileID: 0}
-      volume: 1
-    - weaponId: CH1_M_3
-      weaponName: "\uAEBC\uC9C0\uC9C0\uC54A\uB294 \uD683\uBD88"
-      attack: {fileID: 0}
-      hit: {fileID: 0}
-      volume: 1
-    - weaponId: CH1_R_4
-      weaponName: "\uB2E4\uB4EC\uC5B4\uC9C4 \uB3CC\uB9DD\uCE58"
-      attack: {fileID: 0}
-      hit: {fileID: 0}
-      volume: 1
-    - weaponId: CH1_M_1
-      weaponName: "\uB2E4\uC7AC\uB2E4\uB2A5\uC758 \uB3CC\uB3C4\uB07C"
-      attack: {fileID: 0}
-      hit: {fileID: 0}
-      volume: 1
-    - weaponId: CH1_R_0
-      weaponName: "\uB35C \uD22C\uBC15\uD55C \uB3CC\uCE7C "
-      attack: {fileID: 0}
-      hit: {fileID: 0}
-      volume: 1
-    - weaponId: CH1_E_4
-      weaponName: "\uB3CC\uACE8\uB818\uC758 \uC774\uBE68"
-      attack: {fileID: 0}
+    - weaponId: CH1_C_0
+      weaponName: "\uD22C\uBC15\uD55C \uB3CC\uCE7C"
+      shoot: {fileID: 8300000, guid: 48058ea4b622a9e41806cca5e939c6db, type: 3}
       hit: {fileID: 0}
       volume: 1
     - weaponId: CH1_C_1
       weaponName: "\uB3CC\uB9DD\uCE58"
-      attack: {fileID: 0}
-      hit: {fileID: 0}
-      volume: 1
-    - weaponId: CH1_L_0
-      weaponName: "\uB3CC\uBA54\uB791"
-      attack: {fileID: 0}
-      hit: {fileID: 0}
-      volume: 1
-    - weaponId: CH1_R_1
-      weaponName: "\uB3CC\uD45C\uCC3D"
-      attack: {fileID: 0}
-      hit: {fileID: 0}
-      volume: 1
-    - weaponId: CH1_R_2
-      weaponName: "\uB450\uAEBC\uC6B4 \uB098\uBB34\uC904\uAE30"
-      attack: {fileID: 0}
-      hit: {fileID: 0}
-      volume: 1
-    - weaponId: CH1_E_1
-      weaponName: "\uB9E4\uBA38\uB4DC\uC758 \uC1A1\uACF3\uB2C8"
-      attack: {fileID: 0}
-      hit: {fileID: 0}
-      volume: 1
-    - weaponId: CH1_E_0
-      weaponName: "\uBA67\uB3FC\uC9C0\uC758 \uC0C1\uC544"
-      attack: {fileID: 0}
-      hit: {fileID: 0}
-      volume: 1
-    - weaponId: CH1_M_0
-      weaponName: "\uBC14\uB2E4\uC0C1\uC5B4\uC758 \uC774\uBE68"
-      attack: {fileID: 0}
-      hit: {fileID: 0}
-      volume: 1
-    - weaponId: CH1_L_3
-      weaponName: "\uBD80\uB7EC\uC9C4 \uCC3D\uC758 \uBA38\uB9AC"
-      attack: {fileID: 0}
-      hit: {fileID: 0}
-      volume: 1
-    - weaponId: CH1_M_2
-      weaponName: "\uBD80\uC871\uC758 \uC720\uD488"
-      attack: {fileID: 0}
-      hit: {fileID: 0}
-      volume: 1
-    - weaponId: CH1_E_2
-      weaponName: "\uC131\uC7A5\uC758 \uBABD\uB465\uC774"
-      attack: {fileID: 0}
-      hit: {fileID: 0}
-      volume: 1
-    - weaponId: CH1_M_4
-      weaponName: "\uC815\uAD50\uD55C \uBF08 \uBABD\uB465\uC774"
-      attack: {fileID: 0}
+      shoot: {fileID: 8300000, guid: 48058ea4b622a9e41806cca5e939c6db, type: 3}
       hit: {fileID: 0}
       volume: 1
     - weaponId: CH1_C_2
       weaponName: "\uC8FC\uC6CC\uC628 \uBABD\uB465\uC774"
-      attack: {fileID: 0}
+      shoot: {fileID: 8300000, guid: 48058ea4b622a9e41806cca5e939c6db, type: 3}
       hit: {fileID: 0}
       volume: 1
     - weaponId: CH1_C_4
       weaponName: "\uC9D0\uC2B9\uC758 \uBC1C\uC790\uAD6D"
-      attack: {fileID: 0}
+      shoot: {fileID: 8300000, guid: 48058ea4b622a9e41806cca5e939c6db, type: 3}
       hit: {fileID: 0}
       volume: 1
-    - weaponId: CH1_L_4
-      weaponName: "\uD0DC\uC591\uC758 \uBC1C\uC790\uAD6D"
-      attack: {fileID: 0}
+    - weaponId: CH1_E_0
+      weaponName: "\uBA67\uB3FC\uC9C0\uC758 \uC0C1\uC544"
+      shoot: {fileID: 0}
       hit: {fileID: 0}
       volume: 1
-    - weaponId: CH1_C_0
-      weaponName: "\uD22C\uBC15\uD55C \uB3CC\uCE7C"
-      attack: {fileID: 0}
+    - weaponId: CH1_E_2
+      weaponName: "\uC131\uC7A5\uC758 \uBABD\uB465\uC774"
+      shoot: {fileID: 8300000, guid: 48058ea4b622a9e41806cca5e939c6db, type: 3}
+      hit: {fileID: 0}
+      volume: 1
+    - weaponId: CH1_E_3
+      weaponName: "\uAE68\uC9C4 \uC11D\uAE30"
+      shoot: {fileID: 8300000, guid: 48058ea4b622a9e41806cca5e939c6db, type: 3}
+      hit: {fileID: 0}
+      volume: 1
+    - weaponId: CH1_E_4
+      weaponName: "\uB3CC\uACE8\uB818\uC758 \uC774\uBE68"
+      shoot: {fileID: 8300000, guid: 48058ea4b622a9e41806cca5e939c6db, type: 3}
       hit: {fileID: 0}
       volume: 1
     - weaponId: CH1_L_2
       weaponName: "\uD638\uAE30\uC2EC\uC758 \uBABD\uB465\uC774"
-      attack: {fileID: 0}
+      shoot: {fileID: 8300000, guid: 48058ea4b622a9e41806cca5e939c6db, type: 3}
       hit: {fileID: 0}
       volume: 1
-  - chapter: 2
-    label: C2
-    weapons:
-    - weaponId: CH3_R_4
-      weaponName: "\uAC08\uACE0\uB9AC \uB0AB\uCC3D"
-      attack: {fileID: 0}
+    - weaponId: CH1_L_3
+      weaponName: "\uBD80\uB7EC\uC9C4 \uCC3D\uC758 \uBA38\uB9AC"
+      shoot: {fileID: 8300000, guid: 48058ea4b622a9e41806cca5e939c6db, type: 3}
       hit: {fileID: 0}
       volume: 1
-    - weaponId: CH3_C_1
-      weaponName: "\uAC70\uCE5C \uCCAD\uB3D9\uB3C4\uB07C"
-      attack: {fileID: 0}
+    - weaponId: CH1_L_4
+      weaponName: "\uD0DC\uC591\uC758 \uBC1C\uC790\uAD6D"
+      shoot: {fileID: 8300000, guid: 48058ea4b622a9e41806cca5e939c6db, type: 3}
       hit: {fileID: 0}
       volume: 1
-    - weaponId: CH3_R_2
-      weaponName: "\uACE0\uB9AC\uB0A0 \uB3C4\uB07C"
-      attack: {fileID: 0}
+    - weaponId: CH1_M_0
+      weaponName: "\uBC14\uB2E4\uC0C1\uC5B4\uC758 \uC774\uBE68"
+      shoot: {fileID: 8300000, guid: 48058ea4b622a9e41806cca5e939c6db, type: 3}
       hit: {fileID: 0}
       volume: 1
-    - weaponId: CH2_R_2
-      weaponName: "\uACE8\uB818\uC758 \uC774\uBE68"
-      attack: {fileID: 0}
+    - weaponId: CH1_M_1
+      weaponName: "\uB2E4\uC7AC\uB2E4\uB2A5\uC758 \uB3CC\uB3C4\uB07C"
+      shoot: {fileID: 0}
       hit: {fileID: 0}
       volume: 1
-    - weaponId: CH2_L_0
-      weaponName: "\uACF5\uB8E1\uC758 \uC774\uBE68"
-      attack: {fileID: 0}
+    - weaponId: CH1_M_4
+      weaponName: "\uC815\uAD50\uD55C \uBF08 \uBABD\uB465\uC774"
+      shoot: {fileID: 8300000, guid: 48058ea4b622a9e41806cca5e939c6db, type: 3}
       hit: {fileID: 0}
       volume: 1
-    - weaponId: CH3_L_4
-      weaponName: "\uAD11\uB9E5\uC758 \uACE1\uAD2D\uC774"
-      attack: {fileID: 0}
+    - weaponId: CH1_R_0
+      weaponName: "\uB35C \uD22C\uBC15\uD55C \uB3CC\uCE7C "
+      shoot: {fileID: 8300000, guid: 48058ea4b622a9e41806cca5e939c6db, type: 3}
       hit: {fileID: 0}
       volume: 1
-    - weaponId: CH3_C_4
-      weaponName: "\uAD7D\uC740 \uCCAD\uB3D9\uB0AB"
-      attack: {fileID: 0}
+    - weaponId: CH1_R_2
+      weaponName: "\uB450\uAEBC\uC6B4 \uB098\uBB34\uC904\uAE30"
+      shoot: {fileID: 8300000, guid: 48058ea4b622a9e41806cca5e939c6db, type: 3}
       hit: {fileID: 0}
       volume: 1
-    - weaponId: CH2_E_1
-      weaponName: "\uB0A0\uB835\uD55C \uBF08\uB3C4\uB07C"
-      attack: {fileID: 0}
-      hit: {fileID: 0}
-      volume: 1
-    - weaponId: CH2_C_4
-      weaponName: "\uB0E5\uCF54 \uB108\uD074"
-      attack: {fileID: 0}
-      hit: {fileID: 0}
-      volume: 1
-    - weaponId: CH3_C_2
-      weaponName: "\uB9E4\uB048\uD55C \uCCAD\uB3D9\uB9DD\uCE58"
-      attack: {fileID: 0}
-      hit: {fileID: 0}
-      volume: 1
-    - weaponId: CH2_M_4
-      weaponName: "\uBA67\uB3FC\uC9C0 \uCC9C\uB465\uB9E4"
-      attack: {fileID: 0}
-      hit: {fileID: 0}
-      volume: 1
-    - weaponId: CH2_E_4
-      weaponName: "\uBB3C\uACE0\uAE30 \uC0AC\uB0E5\uCC3D"
-      attack: {fileID: 0}
-      hit: {fileID: 0}
-      volume: 1
-    - weaponId: CH2_L_4
-      weaponName: "\uBC18\uB2EC\uB3CC\uCE7C"
-      attack: {fileID: 0}
-      hit: {fileID: 0}
-      volume: 1
-    - weaponId: CH2_C_3
-      weaponName: "\uBC1C\uBB34\uB2AC \uD22C\uCC99\uAE30"
-      attack: {fileID: 0}
-      hit: {fileID: 0}
-      volume: 1
-    - weaponId: CH3_C_3
-      weaponName: "\uBC84\uB824\uC9C4 \uD654\uC0B4\uCD09"
-      attack: {fileID: 0}
-      hit: {fileID: 0}
-      volume: 1
-    - weaponId: CH2_R_1
-      weaponName: "\uBD84\uC1C4\uC758 \uB3C4\uB07C"
-      attack: {fileID: 0}
-      hit: {fileID: 0}
-      volume: 1
-    - weaponId: CH2_R_0
-      weaponName: "\uBD84\uC1C4\uC758 \uB3CC\uAC80"
-      attack: {fileID: 0}
-      hit: {fileID: 0}
-      volume: 1
-    - weaponId: CH3_R_1
-      weaponName: "\uBD89\uC740 \uB9E4\uB4ED\uC644\uB4DC"
-      attack: {fileID: 0}
-      hit: {fileID: 0}
-      volume: 1
-    - weaponId: CH3_E_2
-      weaponName: "\uBE44\uD30C\uD615 \uB2E8\uAC80"
-      attack: {fileID: 0}
-      hit: {fileID: 0}
-      volume: 1
-    - weaponId: CH3_L_0
-      weaponName: "\uBE5B\uC758 \uAC80"
-      attack: {fileID: 0}
-      hit: {fileID: 0}
-      volume: 1
-    - weaponId: CH3_L_1
-      weaponName: "\uBE5B\uC758 \uBB38\uC591\uB95C"
-      attack: {fileID: 0}
-      hit: {fileID: 0}
-      volume: 1
-    - weaponId: CH2_E_0
-      weaponName: "\uBF08\uC778\uAC04\uC758 \uC870\uAC01"
-      attack: {fileID: 0}
-      hit: {fileID: 0}
-      volume: 1
-    - weaponId: CH2_C_1
-      weaponName: "\uBFB0\uC871\uBC14\uC704 \uB3C4\uB07C"
-      attack: {fileID: 0}
-      hit: {fileID: 0}
-      volume: 1
-    - weaponId: CH2_R_3
-      weaponName: "\uC0AC\uB0E5\uC6A9 \uAF2C\uCE58"
-      attack: {fileID: 0}
-      hit: {fileID: 0}
-      volume: 1
-    - weaponId: CH3_L_3
-      weaponName: "\uC131\uBCBD\uD30C\uAD34 \uB9DD\uCE58"
-      attack: {fileID: 0}
-      hit: {fileID: 0}
-      volume: 1
-    - weaponId: CH2_M_3
-      weaponName: "\uC2E0\uBE44\uC758 \uBE44\uC11D"
-      attack: {fileID: 0}
-      hit: {fileID: 0}
-      volume: 1
-    - weaponId: CH3_E_0
-      weaponName: "\uC30D\uB0A0 \uCCAD\uB3D9\uC6D4"
-      attack: {fileID: 0}
+    - weaponId: CH1_R_4
+      weaponName: "\uB2E4\uB4EC\uC5B4\uC9C4 \uB3CC\uB9DD\uCE58"
+      shoot: {fileID: 8300000, guid: 48058ea4b622a9e41806cca5e939c6db, type: 3}
       hit: {fileID: 0}
       volume: 1
     - weaponId: CH2_C_0
       weaponName: "\uC560\uB9E4\uD55C \uB3CC\uAC80"
-      attack: {fileID: 0}
+      shoot: {fileID: 8300000, guid: 48058ea4b622a9e41806cca5e939c6db, type: 3}
       hit: {fileID: 0}
       volume: 1
-    - weaponId: CH2_M_0
-      weaponName: "\uC601\uAC10\uC758 \uCC3D"
-      attack: {fileID: 0}
-      hit: {fileID: 0}
-      volume: 1
-    - weaponId: CH2_M_1
-      weaponName: "\uC6B0\uB450\uBA38\uB9AC \uB3C4\uB07C"
-      attack: {fileID: 0}
-      hit: {fileID: 0}
-      volume: 1
-    - weaponId: CH3_E_4
-      weaponName: "\uC758\uC2DD\uC758 \uCC3D"
-      attack: {fileID: 0}
-      hit: {fileID: 0}
-      volume: 1
-    - weaponId: CH3_R_0
-      weaponName: "\uC78E\uB0A0 \uCCAD\uB3D9\uCC3D"
-      attack: {fileID: 0}
-      hit: {fileID: 0}
-      volume: 1
-    - weaponId: CH2_M_2
-      weaponName: "\uC7A5\uC778\uC758 \uD45C\uCC3D"
-      attack: {fileID: 0}
-      hit: {fileID: 0}
-      volume: 1
-    - weaponId: CH3_E_1
-      weaponName: "\uC804\uC0AC\uC758 \uB3C4\uB07C"
-      attack: {fileID: 0}
-      hit: {fileID: 0}
-      volume: 1
-    - weaponId: CH3_E_3
-      weaponName: "\uC81C\uB828\uB41C \uCC3D\uCD09"
-      attack: {fileID: 0}
-      hit: {fileID: 0}
-      volume: 1
-    - weaponId: CH3_L_2
-      weaponName: "\uC81C\uC0AC\uC7A5\uC758 \uBCC4\uCD94"
-      attack: {fileID: 0}
-      hit: {fileID: 0}
-      volume: 1
-    - weaponId: CH2_E_3
-      weaponName: "\uC870\uAC1C\uB0A0 \uB2E8\uAC80"
-      attack: {fileID: 0}
-      hit: {fileID: 0}
-      volume: 1
-    - weaponId: CH2_E_2
-      weaponName: "\uC870\uC7A1\uD55C \uB0AB"
-      attack: {fileID: 0}
-      hit: {fileID: 0}
-      volume: 1
-    - weaponId: CH2_L_1
-      weaponName: "\uC871\uC7A5\uC758 \uC7A5\uC2DD"
-      attack: {fileID: 0}
-      hit: {fileID: 0}
-      volume: 1
-    - weaponId: CH3_M_4
-      weaponName: "\uCC9C\uC81C\uC758 \uCCAD\uB3D9\uD640"
-      attack: {fileID: 0}
-      hit: {fileID: 0}
-      volume: 1
-    - weaponId: CH3_C_0
-      weaponName: "\uCCAD\uB3D9\uAC80"
-      attack: {fileID: 0}
-      hit: {fileID: 0}
-      volume: 1
-    - weaponId: CH3_M_2
-      weaponName: "\uD0DC\uC591\uC2E0\uC758 \uD45C\uCC3D"
-      attack: {fileID: 0}
-      hit: {fileID: 0}
-      volume: 1
-    - weaponId: CH3_M_3
-      weaponName: "\uD0DC\uC591\uC758 \uB9DD\uCE58"
-      attack: {fileID: 0}
-      hit: {fileID: 0}
-      volume: 1
-    - weaponId: CH3_M_1
-      weaponName: "\uD0DC\uC591\uC758 \uCCAD\uB3C4\uB07C"
-      attack: {fileID: 0}
-      hit: {fileID: 0}
-      volume: 1
-    - weaponId: CH3_M_0
-      weaponName: "\uD0DC\uC591\uC758 \uCCAD\uB3D9\uAC80"
-      attack: {fileID: 0}
-      hit: {fileID: 0}
-      volume: 1
-    - weaponId: CH2_R_4
-      weaponName: "\uD22C\uC11D \uBC14\uAD6C\uB2C8"
-      attack: {fileID: 0}
+    - weaponId: CH2_C_1
+      weaponName: "\uBFB0\uC871\uBC14\uC704 \uB3C4\uB07C"
+      shoot: {fileID: 8300000, guid: 48058ea4b622a9e41806cca5e939c6db, type: 3}
       hit: {fileID: 0}
       volume: 1
     - weaponId: CH2_C_2
       weaponName: "\uD30C\uC1C4\uC758 \uB9DD\uCE58"
-      attack: {fileID: 0}
+      shoot: {fileID: 8300000, guid: 48058ea4b622a9e41806cca5e939c6db, type: 3}
       hit: {fileID: 0}
       volume: 1
-    - weaponId: CH2_L_2
-      weaponName: "\uD6C8\uB828\uC6A9 \uD45C\uCC3D"
-      attack: {fileID: 0}
+    - weaponId: CH2_C_4
+      weaponName: "\uB0E5\uCF54 \uB108\uD074"
+      shoot: {fileID: 8300000, guid: 48058ea4b622a9e41806cca5e939c6db, type: 3}
+      hit: {fileID: 0}
+      volume: 1
+    - weaponId: CH2_E_0
+      weaponName: "\uBF08\uC778\uAC04\uC758 \uC870\uAC01"
+      shoot: {fileID: 8300000, guid: 48058ea4b622a9e41806cca5e939c6db, type: 3}
+      hit: {fileID: 0}
+      volume: 1
+    - weaponId: CH2_L_0
+      weaponName: "\uACF5\uB8E1\uC758 \uC774\uBE68"
+      shoot: {fileID: 8300000, guid: 48058ea4b622a9e41806cca5e939c6db, type: 3}
+      hit: {fileID: 0}
+      volume: 1
+    - weaponId: CH2_M_0
+      weaponName: "\uC601\uAC10\uC758 \uCC3D"
+      shoot: {fileID: 0}
+      hit: {fileID: 0}
+      volume: 1
+    - weaponId: CH2_R_0
+      weaponName: "\uBD84\uC1C4\uC758 \uB3CC\uAC80"
+      shoot: {fileID: 0}
+      hit: {fileID: 0}
+      volume: 1
+    - weaponId: CH2_R_1
+      weaponName: "\uBD84\uC1C4\uC758 \uB3C4\uB07C"
+      shoot: {fileID: 0}
+      hit: {fileID: 0}
+      volume: 1
+    - weaponId: CH2_R_3
+      weaponName: "\uC0AC\uB0E5\uC6A9 \uAF2C\uCE58"
+      shoot: {fileID: 0}
+      hit: {fileID: 0}
+      volume: 1
+    - weaponId: CH3_C_0
+      weaponName: "\uCCAD\uB3D9\uAC80"
+      shoot: {fileID: 0}
+      hit: {fileID: 0}
+      volume: 1
+    - weaponId: CH3_E_0
+      weaponName: "\uC30D\uB0A0 \uCCAD\uB3D9\uC6D4"
+      shoot: {fileID: 0}
+      hit: {fileID: 0}
+      volume: 1
+    - weaponId: CH3_E_2
+      weaponName: "\uBE44\uD30C\uD615 \uB2E8\uAC80"
+      shoot: {fileID: 0}
+      hit: {fileID: 0}
+      volume: 1
+    - weaponId: CH3_E_3
+      weaponName: "\uC81C\uB828\uB41C \uCC3D\uCD09"
+      shoot: {fileID: 0}
+      hit: {fileID: 0}
+      volume: 1
+    - weaponId: CH3_E_4
+      weaponName: "\uC758\uC2DD\uC758 \uCC3D"
+      shoot: {fileID: 0}
+      hit: {fileID: 0}
+      volume: 1
+    - weaponId: CH3_L_0
+      weaponName: "\uBE5B\uC758 \uAC80"
+      shoot: {fileID: 0}
+      hit: {fileID: 0}
+      volume: 1
+    - weaponId: CH3_M_0
+      weaponName: "\uD0DC\uC591\uC758 \uCCAD\uB3D9\uAC80"
+      shoot: {fileID: 0}
+      hit: {fileID: 0}
+      volume: 1
+    - weaponId: CH3_R_0
+      weaponName: "\uC78E\uB0A0 \uCCAD\uB3D9\uCC3D"
+      shoot: {fileID: 0}
+      hit: {fileID: 0}
+      volume: 1
+    - weaponId: CH3_R_4
+      weaponName: "\uAC08\uACE0\uB9AC \uB0AB\uCC3D"
+      shoot: {fileID: 0}
+      hit: {fileID: 0}
+      volume: 1
+  - weaponType: 1
+    weapons:
+    - weaponId: CH1_C_3
+      weaponName: "\uAE68\uC9C4 \uB3CC \uC870\uAC01"
+      shoot: {fileID: 0}
+      hit: {fileID: 0}
+      volume: 1
+    - weaponId: CH1_M_3
+      weaponName: "\uAEBC\uC9C0\uC9C0\uC54A\uB294 \uD683\uBD88"
+      shoot: {fileID: 0}
+      hit: {fileID: 0}
+      volume: 1
+    - weaponId: CH1_R_3
+      weaponName: "\uAC04\uC774 \uD22C\uC11D\uAE30"
+      shoot: {fileID: 0}
+      hit: {fileID: 0}
+      volume: 1
+    - weaponId: CH2_C_3
+      weaponName: "\uBC1C\uBB34\uB2AC \uD22C\uCC99\uAE30"
+      shoot: {fileID: 0}
+      hit: {fileID: 0}
+      volume: 1
+    - weaponId: CH2_E_4
+      weaponName: "\uBB3C\uACE0\uAE30 \uC0AC\uB0E5\uCC3D"
+      shoot: {fileID: 0}
       hit: {fileID: 0}
       volume: 1
     - weaponId: CH2_L_3
       weaponName: "\uD6D4\uCCD0\uC628 \uD654\uC0B4"
-      attack: {fileID: 0}
+      shoot: {fileID: 0}
+      hit: {fileID: 0}
+      volume: 1
+    - weaponId: CH2_M_4
+      weaponName: "\uBA67\uB3FC\uC9C0 \uCC9C\uB465\uB9E4"
+      shoot: {fileID: 0}
+      hit: {fileID: 0}
+      volume: 1
+    - weaponId: CH2_R_4
+      weaponName: "\uD22C\uC11D \uBC14\uAD6C\uB2C8"
+      shoot: {fileID: 0}
       hit: {fileID: 0}
       volume: 1
     - weaponId: CH3_R_3
       weaponName: "\uD718\uC5B4\uC9C4 \uCCAD\uB3D9\uAD81"
-      attack: {fileID: 0}
+      shoot: {fileID: 0}
+      hit: {fileID: 0}
+      volume: 1
+  - weaponType: 2
+    weapons:
+    - weaponId: CH2_M_3
+      weaponName: "\uC2E0\uBE44\uC758 \uBE44\uC11D"
+      shoot: {fileID: 0}
+      hit: {fileID: 0}
+      volume: 1
+    - weaponId: CH3_C_2
+      weaponName: "\uB9E4\uB048\uD55C \uCCAD\uB3D9\uB9DD\uCE58"
+      shoot: {fileID: 0}
+      hit: {fileID: 0}
+      volume: 1
+    - weaponId: CH3_M_4
+      weaponName: "\uCC9C\uC81C\uC758 \uCCAD\uB3D9\uD640"
+      shoot: {fileID: 0}
+      hit: {fileID: 0}
+      volume: 1
+    - weaponId: CH3_R_1
+      weaponName: "\uBD89\uC740 \uB9E4\uB4ED\uC644\uB4DC"
+      shoot: {fileID: 0}
+      hit: {fileID: 0}
+      volume: 1
+  - weaponType: 3
+    weapons:
+    - weaponId: CH1_L_0
+      weaponName: "\uB3CC\uBA54\uB791"
+      shoot: {fileID: 0}
+      hit: {fileID: 0}
+      volume: 1
+    - weaponId: CH1_M_2
+      weaponName: "\uBD80\uC871\uC758 \uC720\uD488"
+      shoot: {fileID: 0}
+      hit: {fileID: 0}
+      volume: 1
+    - weaponId: CH1_R_1
+      weaponName: "\uB3CC\uD45C\uCC3D"
+      shoot: {fileID: 0}
+      hit: {fileID: 0}
+      volume: 1
+    - weaponId: CH2_E_3
+      weaponName: "\uC870\uAC1C\uB0A0 \uB2E8\uAC80"
+      shoot: {fileID: 0}
+      hit: {fileID: 0}
+      volume: 1
+    - weaponId: CH2_L_1
+      weaponName: "\uC871\uC7A5\uC758 \uC7A5\uC2DD"
+      shoot: {fileID: 0}
+      hit: {fileID: 0}
+      volume: 1
+    - weaponId: CH2_L_2
+      weaponName: "\uD6C8\uB828\uC6A9 \uD45C\uCC3D"
+      shoot: {fileID: 0}
+      hit: {fileID: 0}
+      volume: 1
+    - weaponId: CH2_M_2
+      weaponName: "\uC7A5\uC778\uC758 \uD45C\uCC3D"
+      shoot: {fileID: 0}
+      hit: {fileID: 0}
+      volume: 1
+    - weaponId: CH3_C_3
+      weaponName: "\uBC84\uB824\uC9C4 \uD654\uC0B4\uCD09"
+      shoot: {fileID: 0}
+      hit: {fileID: 0}
+      volume: 1
+    - weaponId: CH3_L_1
+      weaponName: "\uBE5B\uC758 \uBB38\uC591\uB95C"
+      shoot: {fileID: 0}
+      hit: {fileID: 0}
+      volume: 1
+    - weaponId: CH3_M_2
+      weaponName: "\uD0DC\uC591\uC2E0\uC758 \uD45C\uCC3D"
+      shoot: {fileID: 0}
+      hit: {fileID: 0}
+      volume: 1
+  - weaponType: 4
+    weapons:
+    - weaponId: CH1_E_1
+      weaponName: "\uB9E4\uBA38\uB4DC\uC758 \uC1A1\uACF3\uB2C8"
+      shoot: {fileID: 0}
+      hit: {fileID: 0}
+      volume: 1
+    - weaponId: CH1_L_1
+      weaponName: "\uACF0\uC758 \uBC1C\uD1B1"
+      shoot: {fileID: 0}
+      hit: {fileID: 0}
+      volume: 1
+    - weaponId: CH2_E_2
+      weaponName: "\uC870\uC7A1\uD55C \uB0AB"
+      shoot: {fileID: 0}
+      hit: {fileID: 0}
+      volume: 1
+    - weaponId: CH2_R_2
+      weaponName: "\uACE8\uB818\uC758 \uC774\uBE68"
+      shoot: {fileID: 0}
+      hit: {fileID: 0}
+      volume: 1
+    - weaponId: CH3_C_4
+      weaponName: "\uAD7D\uC740 \uCCAD\uB3D9\uB0AB"
+      shoot: {fileID: 0}
+      hit: {fileID: 0}
+      volume: 1
+    - weaponId: CH3_L_2
+      weaponName: "\uC81C\uC0AC\uC7A5\uC758 \uBCC4\uCD94"
+      shoot: {fileID: 0}
+      hit: {fileID: 0}
+      volume: 1
+    - weaponId: CH3_L_4
+      weaponName: "\uAD11\uB9E5\uC758 \uACE1\uAD2D\uC774"
+      shoot: {fileID: 0}
+      hit: {fileID: 0}
+      volume: 1
+  - weaponType: 5
+    weapons:
+    - weaponId: CH2_E_1
+      weaponName: "\uB0A0\uB835\uD55C \uBF08\uB3C4\uB07C"
+      shoot: {fileID: 0}
+      hit: {fileID: 0}
+      volume: 1
+    - weaponId: CH2_L_4
+      weaponName: "\uBC18\uB2EC\uB3CC\uCE7C"
+      shoot: {fileID: 0}
+      hit: {fileID: 0}
+      volume: 1
+    - weaponId: CH2_M_1
+      weaponName: "\uC6B0\uB450\uBA38\uB9AC \uB3C4\uB07C"
+      shoot: {fileID: 0}
+      hit: {fileID: 0}
+      volume: 1
+    - weaponId: CH3_C_1
+      weaponName: "\uAC70\uCE5C \uCCAD\uB3D9\uB3C4\uB07C"
+      shoot: {fileID: 0}
+      hit: {fileID: 0}
+      volume: 1
+    - weaponId: CH3_E_1
+      weaponName: "\uC804\uC0AC\uC758 \uB3C4\uB07C"
+      shoot: {fileID: 8300000, guid: 48058ea4b622a9e41806cca5e939c6db, type: 3}
+      hit: {fileID: 0}
+      volume: 1
+    - weaponId: CH3_M_1
+      weaponName: "\uD0DC\uC591\uC758 \uCCAD\uB3C4\uB07C"
+      shoot: {fileID: 0}
+      hit: {fileID: 0}
+      volume: 1
+    - weaponId: CH3_R_2
+      weaponName: "\uACE0\uB9AC\uB0A0 \uB3C4\uB07C"
+      shoot: {fileID: 0}
+      hit: {fileID: 0}
+      volume: 1
+  - weaponType: 7
+    weapons:
+    - weaponId: CH3_L_3
+      weaponName: "\uC131\uBCBD\uD30C\uAD34 \uB9DD\uCE58"
+      shoot: {fileID: 0}
+      hit: {fileID: 0}
+      volume: 1
+    - weaponId: CH3_M_3
+      weaponName: "\uD0DC\uC591\uC758 \uB9DD\uCE58"
+      shoot: {fileID: 0}
       hit: {fileID: 0}
       volume: 1

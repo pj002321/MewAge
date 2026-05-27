@@ -1,3 +1,5 @@
+using System.Collections;
+using System.Collections.Generic;
 using Mewage.DB;
 using Sirenix.OdinInspector;
 using UnityEngine;
@@ -212,7 +214,9 @@ public class WeaponHighGradeSkill : MonoBehaviour
             case "HIT_FIRE":       DoMeleeHit(hitBuffer, colCount); break;
             case "HIT_SHOCK":      DoHammerHit(hitBuffer, colCount); break;
             case "HIT_SPIN":       DoSpinClone(); break;
+            case "HIT_CLONE_RETURN": DoCloneReturn(); break;
             case "HIT_CLONE_SPREAD": DoCloneSpread(); break;
+            case "HIT_CLONE_BURST":  DoCloneBurst();  break;
             default:
                 if (TraitId.StartsWith("HIT_CLONE")) DoBoomerangHit();
                 break;
@@ -273,18 +277,35 @@ public class WeaponHighGradeSkill : MonoBehaviour
         var player = PlayerController.Instance;
         if (player == null) return;
 
-        var sr = GetComponentInChildren<SpriteRenderer>();
-        if (sr == null || sr.sprite == null) return;
-
-        var go     = new GameObject("SpinOrbitClone");
-        var cloneSr = go.AddComponent<SpriteRenderer>();
-        cloneSr.sprite         = sr.sprite;
-        cloneSr.sortingLayerID = sr.sortingLayerID;
-        cloneSr.sortingOrder   = sr.sortingOrder;
-        cloneSr.color          = new Color(1f, 1f, 1f, spinCloneAlpha);
-        go.transform.localScale = transform.lossyScale;
-
         float dmg = WP != null ? WP.AttackDamage : 1f;
+        GameObject go;
+
+        var prefab = StatusEffectConfig.Shared?.GetClonePrefab(WP?.WeaponId);
+        if (prefab != null)
+        {
+            go = Instantiate(prefab, player.transform.position, Quaternion.identity);
+            // Projectile 이동을 끄고 SpinOrbitClone이 위치를 직접 제어
+            var proj = go.GetComponent<Projectile>();
+            if (proj != null) proj.enabled = false;
+            var rb = go.GetComponent<Rigidbody2D>();
+            if (rb != null) rb.bodyType = RigidbodyType2D.Kinematic;
+            SetSpriteAlpha(go, spinCloneAlpha);
+        }
+        else
+        {
+            // 폴백: 무기 스프라이트 복사
+            var sr = GetComponentInChildren<SpriteRenderer>();
+            if (sr == null || sr.sprite == null) return;
+
+            go = new GameObject("SpinOrbitClone");
+            var cloneSr        = go.AddComponent<SpriteRenderer>();
+            cloneSr.sprite         = sr.sprite;
+            cloneSr.sortingLayerID = sr.sortingLayerID;
+            cloneSr.sortingOrder   = sr.sortingOrder;
+            cloneSr.color          = new Color(1f, 1f, 1f, spinCloneAlpha);
+            go.transform.localScale = transform.lossyScale;
+        }
+
         _activeSpinClones++;
         go.AddComponent<SpinOrbitClone>().Init(
             player.transform, spinCloneRadius, spinCloneSpeed,
@@ -301,6 +322,92 @@ public class WeaponHighGradeSkill : MonoBehaviour
         Vector2.down, new Vector2(-0.707f, -0.707f), Vector2.left,  new Vector2(-0.707f,  0.707f),
     };
 
+    private void DoCloneReturn()
+    {
+        if (Random.value > boomerangChance || WP == null) return;
+
+        Vector2 origin = WP.transform.parent != null
+            ? (Vector2)WP.transform.parent.position : (Vector2)transform.position;
+        Vector2 dir   = GetNearestEnemyDir(origin);
+        float   range = StatusEffectConfig.Shared?.GetCloneRange(WP.WeaponId, 6f) ?? 6f;
+        float   dmg   = WP.AttackDamage * 0.5f;
+
+        // 프리팹 우선, 없으면 스프라이트 복사
+        var prefab = StatusEffectConfig.Shared?.GetClonePrefab(WP.WeaponId);
+        GameObject go;
+        if (prefab != null)
+        {
+            go = Instantiate(prefab, origin, Quaternion.identity);
+            var proj = go.GetComponent<Projectile>(); if (proj != null) Destroy(proj);
+            var rb = go.GetComponent<Rigidbody2D>(); if (rb != null) rb.bodyType = RigidbodyType2D.Kinematic;
+            SetSpriteAlpha(go, cloneAlpha);
+        }
+        else
+        {
+            var sr = GetComponentInChildren<SpriteRenderer>();
+            if (sr == null || sr.sprite == null) return;
+            go = new GameObject("ReturnClone");
+            go.transform.position   = origin;
+            go.transform.localScale = transform.lossyScale * cloneScale;
+            var csr            = go.AddComponent<SpriteRenderer>();
+            csr.sprite         = sr.sprite;
+            csr.sortingLayerID = sr.sortingLayerID;
+            csr.sortingOrder   = sr.sortingOrder;
+            csr.color          = new Color(1f, 1f, 1f, cloneAlpha);
+        }
+
+        StartCoroutine(ReturnArcRoutine(go, origin, origin + dir * range, dmg));
+    }
+
+    private static readonly Collider2D[] _returnBuf = new Collider2D[16];
+
+    private IEnumerator ReturnArcRoutine(GameObject go, Vector2 from, Vector2 to, float damage)
+    {
+        const float outTime    = 0.45f;
+        const float pauseTime  = 0.25f;
+        const float returnTime = 0.35f;
+        var hitIds = new HashSet<int>();
+
+        // 날아가기
+        for (float t = 0f; t < outTime; t += Time.deltaTime)
+        {
+            if (go == null) yield break;
+            go.transform.position = Vector2.Lerp(from, to, t / outTime);
+            DealReturnHit(go.transform.position, damage, hitIds);
+            yield return null;
+        }
+        if (go == null) yield break;
+        go.transform.position = to;
+
+        yield return new WaitForSeconds(pauseTime);
+
+        // 귀환
+        for (float t = 0f; t < returnTime; t += Time.deltaTime)
+        {
+            if (go == null) yield break;
+            Vector2 playerPos = WP?.transform.parent != null
+                ? (Vector2)WP.transform.parent.position : from;
+            go.transform.position = Vector2.Lerp(to, playerPos, t / returnTime);
+            yield return null;
+        }
+
+        if (go != null) Destroy(go);
+    }
+
+    private static void DealReturnHit(Vector2 pos, float damage, HashSet<int> hitIds)
+    {
+        int cnt = Physics2D.OverlapCircleNonAlloc(pos, 0.35f, _returnBuf);
+        for (int i = 0; i < cnt; i++)
+        {
+            var col = _returnBuf[i]; if (col == null) continue;
+            var boss = col.GetComponentInParent<BossController>();
+            if (boss != null) { boss.TakeDamage(damage, false); continue; }
+            var enemy = col.GetComponentInParent<EnemyController>();
+            if (enemy != null && hitIds.Add(enemy.GetInstanceID()))
+                enemy.TakeDamage(damage, false);
+        }
+    }
+
     private void DoBoomerangHit()
     {
         if (Random.value > boomerangChance) return;
@@ -308,6 +415,35 @@ public class WeaponHighGradeSkill : MonoBehaviour
         var sr = GetComponentInChildren<SpriteRenderer>();
         foreach (var dir in CardinalDirs)
             SpawnBoomerangClone(origin, dir, sr);
+    }
+
+    private void DoCloneBurst()
+    {
+        if (Random.value > boomerangChance) return;
+        Vector3 origin  = transform.position;
+        var     sr      = GetComponentInChildren<SpriteRenderer>();
+        Vector2 forward = GetNearestEnemyDir(origin);
+        Vector2 perp    = new Vector2(-forward.y, forward.x);
+
+        // 전방 방향으로 4발 병렬 발사 (perpendicular 오프셋으로 퍼트림)
+        float[] slots = { -1.5f, -0.5f, 0.5f, 1.5f };
+        foreach (float s in slots)
+            SpawnBoomerangClone(origin + (Vector3)(perp * s * 0.3f), forward, sr);
+    }
+
+    private static Vector2 GetNearestEnemyDir(Vector3 origin)
+    {
+        float   bestSqr = float.MaxValue;
+        Vector2 best    = Vector2.up;
+        foreach (var e in EnemyController.All)
+        {
+            if (e == null || !e.gameObject.activeInHierarchy) continue;
+            float d = ((Vector2)(e.transform.position - origin)).sqrMagnitude;
+            if (d >= bestSqr) continue;
+            bestSqr = d;
+            best    = (e.transform.position - origin).normalized;
+        }
+        return best;
     }
 
     private void DoCloneSpread()

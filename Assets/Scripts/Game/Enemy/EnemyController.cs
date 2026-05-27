@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
+using Mewage.DB;
 using UnityEngine;
 
 /// <summary>
@@ -801,15 +802,51 @@ public class EnemyController : MonoBehaviour, IEnemyHost
     }
 
     // ── 웨이브 스케일링 커브 ─────────────────────────────────────
-    // 각 웨이브에서 적용할 절대 배율 키프레임 (wave, hpMult, dmgMult)
-    // 스테이지 내 웨이브(1~wavesPerStage) 기준
-    private static readonly int[]   s_curveWaves  = {  1,    5,    10,   15,   20,    25,    30   };
-    private static readonly float[] s_curveHp     = { 1.0f, 2.0f, 4.0f, 7.5f,12.0f, 20.0f, 30.0f };
-    private static readonly float[] s_curveDmg    = { 1.0f, 1.35f,1.8f, 2.5f, 3.4f,  4.5f,  6.0f };
+    // DB_웨이브에서 f_웨이브 > 0인 행을 로드해 동적으로 구성됩니다.
+    private static int[]   s_curveWaves;
+    private static float[] s_curveHp;
+    private static float[] s_curveDmg;
+    private static int[]   s_curveTimes;
+
+    private static void EnsureCurveLoaded()
+    {
+        if (s_curveWaves != null) return;
+
+        var rows = new List<DB_웨이브>();
+        DB_웨이브.ForEachEntity(e => { if (e.f_웨이브 > 0) rows.Add(e); });
+        rows.Sort((a, b) => a.f_웨이브.CompareTo(b.f_웨이브));
+
+        int n = rows.Count;
+        s_curveWaves = new int[n];
+        s_curveHp    = new float[n];
+        s_curveDmg   = new float[n];
+        s_curveTimes = new int[n];
+        for (int i = 0; i < n; i++)
+        {
+            s_curveWaves[i] = rows[i].f_웨이브;
+            s_curveHp[i]    = rows[i].f_체력배율;
+            s_curveDmg[i]   = rows[i].f_피해배율;
+            s_curveTimes[i] = rows[i].f_시간;
+        }
+    }
+
+    /// <summary>웨이브 번호에 해당하는 기본 시간(초) 반환. 키프레임 이하 중 가장 가까운 값.</summary>
+    public static int GetWaveTimeSecs(int wave)
+    {
+        EnsureCurveLoaded();
+        int result = s_curveTimes[0];
+        for (int i = 0; i < s_curveWaves.Length; i++)
+        {
+            if (s_curveWaves[i] <= wave) result = s_curveTimes[i];
+            else break;
+        }
+        return result;
+    }
 
     // wave(스테이지 내 1~N)에서의 배율을 키프레임 사이 선형 보간으로 반환
     private static float EvalScaleCurve(int wave, float[] keys)
     {
+        // s_curveWaves는 EnsureCurveLoaded() 호출 후 보장됨
         if (wave <= s_curveWaves[0]) return keys[0];
 
         int last = s_curveWaves.Length - 1;
@@ -845,6 +882,8 @@ public class EnemyController : MonoBehaviour, IEnemyHost
 
         int totalDelta = Mathf.Max(0, globalWave - designGlobalWave);
         if (totalDelta == 0) return;
+
+        EnsureCurveLoaded();
 
         // 스테이지 차이 (스테이지가 다르면 hpGrowthRate 기반 추가 배율 적용)
         int currentStage = (globalWave        - 1) / wavesPerStage + 1;
