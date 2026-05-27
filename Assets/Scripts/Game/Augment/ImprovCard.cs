@@ -154,6 +154,10 @@ public class ImprovCard : MonoBehaviour
         string desc = data.f_설명;
         if (string.IsNullOrEmpty(desc)) return string.Empty;
 
+        // 용어 통일
+        desc = desc.Replace("크리티컬", "치명타");
+        desc = desc.Replace("체형", "몸집");
+
         // 수치 플레이스홀더 제거 (배수·% 단위 포함, 순서 중요)
         desc = desc.Replace("{0}%", "").Replace("{1}%", "");
         desc = desc.Replace("{0}배", "").Replace("{1}배", "");

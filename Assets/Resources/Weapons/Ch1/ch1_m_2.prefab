@@ -111,7 +111,7 @@ MonoBehaviour:
   useTrail: 1
   trailTime: 0.1
   trailStartWidth: 0.28
-  trailColor: {r: 0.9528302, g: 0.33708617, b: 0.33708617, a: 1}
+  trailColor: {r: 1, g: 1, b: 1, a: 0.7058824}
   _weaponId: CH1_M_2
   references:
     version: 2
@@ -126,8 +126,8 @@ MonoBehaviour:
         hitDistance: 0.4
         overshootDistance: 0.5
         overshootSpeed: 60
-        maxBounces: 3
-        bounceRange: 5
+        maxBounces: 5
+        bounceRange: 20
 --- !u!114 &-4806209946334717316
 MonoBehaviour:
   m_ObjectHideFlags: 0

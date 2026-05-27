@@ -50,6 +50,7 @@ public class ChargeBehaviour : EnemyBehaviourBase
         _phaseTimer = moveDuration;
         _cachedSr   = Owner.SelfTransform.GetComponent<SpriteRenderer>();
         DestroyWarningLine();
+        if (EC != null) EC.KnockbackImmune = true;
     }
 
     private void OnDisable() => DestroyWarningLine();

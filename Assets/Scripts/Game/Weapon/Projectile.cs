@@ -480,6 +480,12 @@ public class Projectile : MonoBehaviour
         }
         else
         {
+            // 보물 상자 타격 체크
+            var chest = other.GetComponentInParent<TreasureChest>();
+            if (chest == null) return;
+            chest.TakeDamage(primaryDmg);
+            SpawnImpactVfx();
+            if (!_pierce) Destroy(gameObject);
             return;
         }
 

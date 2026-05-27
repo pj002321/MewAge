@@ -114,6 +114,10 @@ public class RunResultPanel : MonoBehaviour
         SpawnSlot(cfg, RewardType.Exp,  reward.exp.ToString());
         if (reward.ruby > 0)
             SpawnSlot(cfg, RewardType.Ruby, reward.ruby.ToString());
+
+        // 런 중 상자에서 획득한 보상
+        foreach (var kv in RunChestRewardTracker.GetAll())
+            SpawnSlot(cfg, kv.Key, kv.Value.ToString());
     }
 
     private void SpawnSlot(RewardVisualConfig cfg, RewardType type, string amount)

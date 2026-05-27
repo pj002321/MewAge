@@ -9,7 +9,6 @@ public class WeaponBoomerangBehaviour : WeaponMeleeBaseBehaviour
     [SerializeField] private float bounceRange = 5f;
 
     private WeaponPoint.CombatTarget _boomerang;
-    private Vector3                  _boomerangOvershootTarget;
     private int                      _bouncesLeft;
     private readonly HashSet<EnemyController> _hitEnemies = new();
     private readonly HashSet<BossController>  _hitBosses  = new();
@@ -59,9 +58,8 @@ public class WeaponBoomerangBehaviour : WeaponMeleeBaseBehaviour
         var next = FindNextTarget(targetPos);
         if (!next.IsNone)
         {
-            _boomerangOvershootTarget = targetPos + (next.Position - targetPos).normalized * overshootDistance;
             _boomerang = next;
-            _state     = State.Overshooting;
+            _state     = State.Striking;
         }
         else
         {
@@ -73,14 +71,6 @@ public class WeaponBoomerangBehaviour : WeaponMeleeBaseBehaviour
     protected override void OnStrikeHit(WeaponPoint.CombatTarget target, Vector2 hitDir)
     {
         // 부메랑은 UpdateStriking()에서 직접 처리하므로 이 메서드는 사용하지 않습니다.
-    }
-
-    // Overshooting을 부메랑 전용으로 오버라이드 (다음 타겟으로 이동)
-    public new void UpdateOvershooting()
-    {
-        // NOTE: base.OnUpdate() → UpdateOvershooting() 경로를 오버라이드할 수 없으므로
-        // WeaponMeleeBaseBehaviour의 UpdateOvershooting 그대로 사용 + 상태 전환만 차이남
-        // (부메랑의 Overshoot → 다음 Striking 전환은 UpdateStriking에서 처리)
     }
 
     private int GetTotalBounces()

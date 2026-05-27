@@ -122,20 +122,24 @@ public class WeaponPoint : MonoBehaviour
     {
         public readonly EnemyController Enemy;
         public readonly BossController  Boss;
+        public readonly TreasureChest   Chest;
 
-        public CombatTarget(EnemyController e) { Enemy = e; Boss = null; }
-        public CombatTarget(BossController  b) { Enemy = null; Boss = b; }
+        public CombatTarget(EnemyController e) { Enemy = e; Boss = null; Chest = null; }
+        public CombatTarget(BossController  b) { Enemy = null; Boss = b; Chest = null; }
+        public CombatTarget(TreasureChest   c) { Enemy = null; Boss = null; Chest = c; }
 
         public static readonly CombatTarget None = default;
-        public bool IsNone  => Enemy == null && Boss == null;
+        public bool IsNone  => Enemy == null && Boss == null && Chest == null;
         public bool IsValid => (Enemy != null && !Enemy.IsPooled && Enemy.gameObject.activeInHierarchy) ||
-                               (Boss  != null && Boss.gameObject.activeInHierarchy);
+                               (Boss  != null && Boss.gameObject.activeInHierarchy) ||
+                               (Chest != null && Chest.IsLanded && !Chest.IsBroken && Chest.gameObject.activeInHierarchy);
         public Vector3 Position
         {
             get
             {
                 if (Enemy != null) return Enemy.transform.position;
                 if (Boss  != null) return Boss.transform.position;
+                if (Chest != null) return Chest.transform.position;
                 return Vector3.zero;
             }
         }
@@ -421,7 +425,23 @@ public class WeaponPoint : MonoBehaviour
 
     internal CombatTarget FindBestTarget()
     {
-        Vector2 origin   = transform.parent != null ? (Vector2)transform.parent.position : (Vector2)transform.position;
+        Vector2 origin = transform.parent != null ? (Vector2)transform.parent.position : (Vector2)transform.position;
+
+        // 보물 상자 최우선 타겟
+        float minChestSq = float.MaxValue;
+        TreasureChest bestChest = null;
+        foreach (var chest in TreasureChest.All)
+        {
+            if (chest == null || !chest.IsLanded || chest.IsBroken || !chest.gameObject.activeInHierarchy) continue;
+            float sq = ((Vector2)chest.transform.position - origin).sqrMagnitude;
+            if (sq <= attackRange * attackRange && sq < minChestSq)
+            {
+                minChestSq = sq;
+                bestChest  = chest;
+            }
+        }
+        if (bestChest != null) return new CombatTarget(bestChest);
+
         int     colCount = Physics2D.OverlapCircle(origin, attackRange, EnemyFilter, _sharedHitList);
 
         CombatTarget bestBoss  = CombatTarget.None;
@@ -460,7 +480,9 @@ public class WeaponPoint : MonoBehaviour
 
         if (!bestBoss.IsNone)  return bestBoss;
         if (!bestElite.IsNone) return bestElite;
-        return bestEnemy;
+        if (!bestEnemy.IsNone) return bestEnemy;
+
+        return CombatTarget.None;
     }
 
     internal EnemyController FindNearestAny()
@@ -517,7 +539,11 @@ public class WeaponPoint : MonoBehaviour
                 }
             }
 
-            if (!hit.TryGetComponent<EnemyController>(out var enemy)) continue;
+            if (!hit.TryGetComponent<EnemyController>(out var enemy))
+            {
+                hit.GetComponentInParent<TreasureChest>()?.TakeDamage(attackDamage);
+                continue;
+            }
             bool isPrimary = enemy == primaryTarget;
             float baseDmg = isPrimary ? attackDamage : attackDamage * areaHitDamageRatio;
             var (fd, fc)  = RollCrit(baseDmg);

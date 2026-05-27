@@ -597,7 +597,7 @@ public class UpgradePanel : MonoBehaviour
         if (nextWaveButton) nextWaveButton.interactable = false;
         if (sellImg) sellImg.gameObject.SetActive(true);
         if (sellPriceText)
-            sellPriceText.text = draggedWeapon != null ? $"{Mathf.Max(1, draggedWeapon.price)}" : "";
+            sellPriceText.text = draggedWeapon != null ? $"{Mathf.Max(1, draggedWeapon.price / 2)}" : "";
         RefreshInventoryUI();
     }
 
@@ -643,10 +643,23 @@ public class UpgradePanel : MonoBehaviour
     // ────────────────────────────────────────────────────────────────
     // 판매 헬퍼 (코인 이펙트 포함)
     // ────────────────────────────────────────────────────────────────
+    private bool HasOnlyOneWeapon()
+    {
+        var inv = PlayerInventory.Shared;
+        if (inv == null) return false;
+        return inv.Equipped.Count + inv.Inventory.Count <= 1;
+    }
+
     private void DoSellInven(int slotIndex)
     {
         var inv = PlayerInventory.Shared;
         if (inv == null || slotIndex >= inv.Inventory.Count) return;
+
+        if (HasOnlyOneWeapon())
+        {
+            ShowNotification("마지막 무기는 판매할 수 없습니다.");
+            return;
+        }
 
         if (coinImageSource != null && rootCanvas != null && goldTextRect != null)
         {
@@ -664,6 +677,12 @@ public class UpgradePanel : MonoBehaviour
     {
         var inv = PlayerInventory.Shared;
         if (inv == null || slotIndex >= inv.Equipped.Count) return;
+
+        if (HasOnlyOneWeapon())
+        {
+            ShowNotification("마지막 무기는 판매할 수 없습니다.");
+            return;
+        }
 
         if (coinImageSource != null && rootCanvas != null && goldTextRect != null)
         {

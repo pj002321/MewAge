@@ -19,8 +19,8 @@ public static class AugmentHelper
         "AUG_CRI_DMG"      => "치명타 피해",
         "AUG_DOT_DMG"      => "출혈 피해",
         "AUG_REWARD_RNG"   => "흡수 반경",
-        "AUG_SIZE_HP_UP"   => "체형 확대",
-        "AUG_SIZE_HP_DOWN" => "체형 축소",
+        "AUG_SIZE_HP_UP"   => "몸집 확대",
+        "AUG_SIZE_HP_DOWN" => "몸집 축소",
         "AUG_HEAL"         => "즉시 회복",
         "AUG_HEAL_DEAD"    => "처치 회복",
         "AUG_SPW_HP_SKL"   => "회복 구슬",
@@ -68,26 +68,13 @@ public static class AugmentHelper
         return $"{statName} <color={color}>{sign}{valStr}%</color>";
     }
 
-    // ── CurseRewardCard 전용 — 이중 화살표 ↑↑/↓↓, 체형 계열은 수치 없이 방향만 표시 ──
-    // ImprovCard 화살표 방향 규칙과 일치:
-    //   SIZE_UP → ↑↑ (몸집 커짐), SIZE_DOWN → ↓↓ (몸집 작아짐)
+    // ── CurseRewardCard 전용 — 이중 화살표 ↑↑/↓↓, 수치 없이 방향만 표시 ──
     public static string BuildEffectLineDouble(string augIdStr, float value, bool positive)
     {
         if (string.IsNullOrEmpty(augIdStr) || value <= 0f) return null;
         string statName = ToKorean(augIdStr);
         string color    = positive ? "#55FF88" : "#FF5555";
-
-        // 체형 계열: 비율 수치 없이 방향 화살표만 (커짐=↑↑, 작아짐=↓↓)
-        if (augIdStr == "AUG_SIZE_HP_UP")
-            return $"{statName} <color={color}>↑↑</color>";
-        if (augIdStr == "AUG_SIZE_HP_DOWN")
-            return $"{statName} <color={color}>↓↓</color>";
-
-        string arrows = positive ? "↑↑" : "↓↓";
-        string sign   = positive ? "+" : "-";
-        string valStr = value == Mathf.Floor(value)
-            ? ((int)value).ToString()
-            : value.ToString("0.##");
-        return $"{statName} <color={color}>{sign}{valStr}% {arrows}</color>";
+        string arrows   = positive ? "↑↑" : "↓↓";
+        return $"{statName} <color={color}>{arrows}</color>";
     }
 }

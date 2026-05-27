@@ -82,7 +82,7 @@ public class PlayerInventory : MonoBehaviourSingleton<PlayerInventory>
     public int SellFromInventory(int invenIndex)
     {
         if (invenIndex < 0 || invenIndex >= inventory.Count) return 0;
-        int sellPrice = Mathf.Max(1, inventory[invenIndex].price);
+        int sellPrice = Mathf.Max(1, inventory[invenIndex].price / 2);
         inventory.RemoveAt(invenIndex);
         PlayerStats.Shared?.AddGold(sellPrice);
         OnChanged?.Invoke();
@@ -110,7 +110,7 @@ public class PlayerInventory : MonoBehaviourSingleton<PlayerInventory>
     public int SellFromEquipped(int equipIndex)
     {
         if (equipIndex < 0 || equipIndex >= equipped.Count) return 0;
-        int sellPrice = Mathf.Max(1, equipped[equipIndex].price);
+        int sellPrice = Mathf.Max(1, equipped[equipIndex].price / 2);
         equipped[equipIndex] = null;
         TrimTrailingNullSlots();
         PlayerStats.Shared?.AddGold(sellPrice);

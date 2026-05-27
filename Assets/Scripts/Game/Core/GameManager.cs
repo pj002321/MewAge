@@ -20,9 +20,8 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     [SerializeField] private RunResultPanel  gameOverResultPanel;  // 게임오버 결과 패널
     [SerializeField] private GamePausePanel  gamePausePanel;
 
-    private const float BossWaveTimeLimit  = 60f;
-    private const float EliteWaveTimeLimit = 25f;
-    private const float NormalWaveTimeLimit = 20f;
+    private const float BossWaveTimeLimit = 60f;
+    private const float EliteWaveBonus    = 5f;
 
     [Header("Wave Clear 노티")]
     [SerializeField] private GameObject waveClearPanel;
@@ -207,6 +206,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 
         // 이전 테스트 세션의 정적 디버그 플래그 초기화
         TestMonsterSpawner.ResetDebugFlags();
+        RunChestRewardTracker.Reset();
 
         // 이전 판 증강 수치 초기화 후 캐릭터 기초 스탯 일괄 반영
         // BeginBatch ~ EndBatch 사이 SetBase/AddPctMod는 마지막 EndBatch에서 1회만 적용됨
@@ -365,7 +365,19 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         EnemySpawner.Shared?.ClearAllEnemies();
     }
 
-    private float WaveDuration(int w) => IsEliteWave(w) ? EliteWaveTimeLimit : NormalWaveTimeLimit;
+    private float WaveDuration(int w)
+    {
+        float baseTime = w switch
+        {
+            <= 5  => 15f,
+            <= 10 => 17f,
+            <= 15 => 20f,
+            <= 20 => 22f,
+            <= 25 => 24f,
+            _     => 26f,
+        };
+        return IsEliteWave(w) ? baseTime + EliteWaveBonus : baseTime;
+    }
 
     private void UpdateTimerUI()
     {
@@ -968,6 +980,9 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 
     /// <summary>웨이브 타이머가 실제로 카운트되는 상태 (패널·게임오버 제외).</summary>
     public bool   IsWaveActive     => !waitingForUpgrade && !isGameOver;
+
+    /// <summary>현재 보스 웨이브 진행 중 여부.</summary>
+    public bool   IsBossWave       => bossWaveActive;
 
     /// <summary>현재 챕터+스테이지의 DB_웨이브에서 최대 웨이브 번호를 반환합니다.</summary>
     private int GetMaxWave()

@@ -96,7 +96,7 @@ public class WeaponInfoPanel : MonoBehaviourSingleton<WeaponInfoPanel>
         buyButton?.gameObject.SetActive(onBuy       != null);
 
         if (sellamountText != null)
-            sellamountText.text = $"{Mathf.Max(1, data.price)}";
+            sellamountText.text = $"{Mathf.Max(1, data.price / 2)}";
 
         // ── 프레임 / 등급 / 아이콘 ──────────────────────────────────────
         if (frameImage)
