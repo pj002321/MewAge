@@ -82,14 +82,16 @@ public class PlayerCharacterManager : MonoBehaviourSingleton<PlayerCharacterMana
         }
     }
 
-    /// <summary>캐릭터별 현재 증강 단계 (1~3). 미보유이거나 미설정이면 0.</summary>
-    public int GetAugmentTier(string charID)
-        => PlayerPrefs.GetInt(string.Format(PrefKeyTier, charID), 1);
+    public const int MaxAugmentTier = 3;
 
-    /// <summary>증강 단계를 변경합니다. (증강 버튼에서 호출)</summary>
+    /// <summary>캐릭터별 현재 증강 단계 (0~3). 0 = 모두 잠금.</summary>
+    public int GetAugmentTier(string charID)
+        => PlayerPrefs.GetInt(string.Format(PrefKeyTier, charID), 0);
+
+    /// <summary>증강 단계를 변경합니다.</summary>
     public void SetAugmentTier(string charID, int tier)
     {
-        PlayerPrefs.SetInt(string.Format(PrefKeyTier, charID), Mathf.Clamp(tier, 1, 3));
+        PlayerPrefs.SetInt(string.Format(PrefKeyTier, charID), Mathf.Clamp(tier, 0, MaxAugmentTier));
         PlayerPrefs.Save();
     }
 

@@ -114,7 +114,7 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
         int[] starterSlots = { 0, 2 };
         for (int i = 0; i < 2; i++)
         {
-            var starter = normals[Random.Range(0, normals.Count)];
+            var starter = normals[Random.Range(0, normals.Count)].UpgradedTo(1);
             if (inv.TryAddToInventory(starter))
             {
                 inv.MoveInvenToEquip(0, starterSlots[i]);
@@ -172,11 +172,21 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
         var inv = PlayerInventory.Shared;
         if (inv == null) return;
 
-        // 인벤이 꽉 찬 경우: 인벤+장착 합산 2개 이상 동일 무기가 있으면 구매 후 즉시 합성
-        if (inv.InventoryFull && inv.CountAll(data.weaponName, data.star) < 2)
+        // 인벤이 꽉 찬 경우: 슬롯 확보 시도
+        if (inv.InventoryFull)
         {
-            upgradePanel.ShowNotification("인벤토리가 가득 찼습니다.");
-            return;
+            bool hasSamePartner = inv.CountAll(data.weaponName, data.star) >= 1;
+            if (!hasSamePartner)
+            {
+                // 직접 파트너 없음 → 기존 합성 쌍으로 슬롯 1개 확보
+                if (!TryFreeOneInventorySlot(inv))
+                {
+                    upgradePanel.ShowNotification("인벤토리가 가득 찼습니다.");
+                    return;
+                }
+                // 슬롯 확보 성공 → 아래 정상 추가 경로로 진행
+            }
+            // hasSamePartner인 경우: ForceAdd → AutoMerge(data) 경로
         }
 
         var stats = PlayerStats.Shared;
@@ -188,12 +198,18 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
 
         stats.SpendGold(data.price);
 
-        // 인벤 꽉 찬 상태라면 ForceAdd(합성이 직후 발동되어 슬롯 확보됨)
+        // 인벤토리에는 독립 복사본을 넣어야 한다.
+        // data == currentDraw[index] 원본을 그대로 넣으면 AutoMerge에서 소모·Destroy 시
+        // currentDraw[index]가 파괴되어 RefreshPanel에서 카드가 사라지는 문제가 생긴다.
+        var invCopy = data.UpgradedTo(data.star);
+
+        // 인벤 꽉 찬 상태(직접 파트너 있는 경우)라면 ForceAdd → AutoMerge로 슬롯 확보
         if (inv.InventoryFull)
-            inv.ForceAddToInventory(data);
-        else if (!inv.TryAddToInventory(data))
+            inv.ForceAddToInventory(invCopy);
+        else if (!inv.TryAddToInventory(invCopy))
         {
             stats.AddGold(data.price); // 환불
+            Destroy(invCopy);
             upgradePanel.ShowNotification("인벤토리가 가득 찼습니다.");
             return;
         }
@@ -219,15 +235,56 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
         RefreshPanel();
     }
 
+    /// <summary>인벤에 합성 가능한 쌍이 있으면 하나 합성해서 슬롯 1개를 확보합니다.</summary>
+    private bool TryFreeOneInventorySlot(PlayerInventory inv)
+    {
+        // 인벤 내 종류별 개수 집계 (인벤에 최소 1개 있어야 합성 시 슬롯이 실제로 줄어듦)
+        var invCount = new System.Collections.Generic.Dictionary<(string, int), int>();
+        foreach (var w in inv.Inventory)
+        {
+            if (w == null) continue;
+            var key = (w.weaponName, w.star);
+            invCount.TryGetValue(key, out int c);
+            invCount[key] = c + 1;
+        }
+
+        foreach (var kvp in invCount)
+        {
+            if (kvp.Key.Item2 > 3) continue;
+            var (name, star) = kvp.Key;
+            if (inv.CountAll(name, star) < 2) continue; // 인벤+장착 합산 2개 미만
+
+            var result  = GetNextGradeWeapon(name, star);
+            if (result == null) continue;
+            var doubleUp = star >= 3 ? TryRollDoubleUp(result) : null;
+            var actual   = doubleUp ?? result;
+            if (!inv.TryMergeAll(name, star, actual,
+                displayResult:  doubleUp != null ? result : null,
+                isDoubleUp:     doubleUp != null,
+                doubleUpResult: doubleUp)) continue;
+            SoundManager.Shared?.Play(SoundKey.UI_Merge);
+            return true;
+        }
+        return false;
+    }
+
     private void AutoMerge(PlayerInventory inv, string weaponName, int star)
     {
-        while (star < 5 && inv.CanMergeAll(weaponName, star))
+        while (star <= 3 && inv.CanMergeAll(weaponName, star))
         {
-            WeaponData result = GetNextGradeWeapon(weaponName, star);
+            bool isGrandMerge = star >= 3;
+            WeaponData result   = GetNextGradeWeapon(weaponName, star);
             if (result == null) break;
-            if (!inv.TryMergeAll(weaponName, star, result)) break;
+            WeaponData doubleUp = isGrandMerge ? TryRollDoubleUp(result) : null;
+            WeaponData actual   = doubleUp ?? result;
+            if (!inv.TryMergeAll(weaponName, star, actual,
+                displayResult: doubleUp != null ? result : null,
+                isDoubleUp: doubleUp != null,
+                doubleUpResult: doubleUp)) break;
             SoundManager.Shared?.Play(SoundKey.UI_Merge);
-            star = result.star;
+            if (isGrandMerge) break; // 그랜드 머지 후 캐스케이드 중단 (다른 무기 합성 방지)
+            weaponName = actual.weaponName;
+            star       = actual.star;
         }
     }
 
@@ -256,11 +313,16 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
             }
             foreach (var kvp in seen)
             {
-                if (kvp.Value < 3 || kvp.Key.Item2 >= 5) continue;
+                if (kvp.Value < 2 || kvp.Key.Item2 > 3) continue;
                 var (name, star) = kvp.Key;
-                WeaponData result = GetNextGradeWeapon(name, star);
+                WeaponData result   = GetNextGradeWeapon(name, star);
                 if (result == null) continue;
-                if (!inv.TryMergeAll(name, star, result)) continue;
+                WeaponData doubleUp = star >= 3 ? TryRollDoubleUp(result) : null;
+                WeaponData actual   = doubleUp ?? result;
+                if (!inv.TryMergeAll(name, star, actual,
+                    displayResult: doubleUp != null ? result : null,
+                    isDoubleUp: doubleUp != null,
+                    doubleUpResult: doubleUp)) continue;
                 SoundManager.Shared?.Play(SoundKey.UI_Merge);
                 anyMerged = true;
                 break; // 합성 후 목록 재스캔
@@ -353,10 +415,14 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
         var inv = PlayerInventory.Shared;
         if (inv == null) return;
 
-        if (inv.InventoryFull && inv.CountAll(adCardData.weaponName, adCardData.star) < 2)
+        if (inv.InventoryFull)
         {
-            upgradePanel.ShowNotification("인벤토리가 가득 찼습니다.");
-            return;
+            bool hasSamePartner = inv.CountAll(adCardData.weaponName, adCardData.star) >= 1;
+            if (!hasSamePartner && !TryFreeOneInventorySlot(inv))
+            {
+                upgradePanel.ShowNotification("인벤토리가 가득 찼습니다.");
+                return;
+            }
         }
 
         string claimedName = adCardData.weaponName;
@@ -379,14 +445,64 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
     // ────────────────────────────────────────────────────────────────
     // 합성
     // ────────────────────────────────────────────────────────────────
-    /// <summary>같은 이름의 다음 등급 무기를 반환합니다.</summary>
+    /// <summary>합성 결과 무기를 반환합니다. 1★/2★ → 같은 무기 다음 성, 3★ → 상위등급 랜덤 무기 1★.</summary>
     public WeaponData GetNextGradeWeapon(string weaponName, int star)
     {
-        if (star >= 5) return null;
+        if (star <= 0 || star > 3) return null;
+        if (star == 3)
+        {
+            WeaponGrade baseGrade = WeaponGrade.Common;
+            foreach (var w in allWeapons)
+                if (w != null && w.weaponName == weaponName) { baseGrade = w.grade; break; }
+            return GetRandomHigherGradeWeapon(baseGrade);
+        }
         foreach (var w in allWeapons)
             if (w != null && w.weaponName == weaponName)
-                return w.UpgradedTo(star + 1);  // 목표 성까지 보너스 전부 적용
+                return w.UpgradedTo(star + 1);
         return null;
+    }
+
+    /// <summary>현재 챕터에서 baseGrade 한 단계 위 등급의 무기 1개를 랜덤 반환합니다.</summary>
+    private WeaponData GetRandomHigherGradeWeapon(WeaponGrade baseGrade)
+    {
+        WeaponGrade target = (WeaponGrade)((int)baseGrade + 1);
+        var candidates = new List<WeaponData>();
+        foreach (var w in allWeapons)
+            if (w != null && w.chapter == currentChapter && w.grade == target)
+                candidates.Add(w);
+        if (candidates.Count == 0) // 다음 등급 없으면 동일 등급 폴백
+            foreach (var w in allWeapons)
+                if (w != null && w.chapter == currentChapter && w.grade == baseGrade)
+                    candidates.Add(w);
+        if (candidates.Count == 0) return null;
+        return candidates[Random.Range(0, candidates.Count)].UpgradedTo(1);
+    }
+
+    /// <summary>true 시 더블업 머지 100% 발동 (디버그 전용).</summary>
+    public static bool ForceDoubleUp;
+
+    /// <summary>1% 확률로 더블업 머지를 발동합니다. 발동 시 grade+2 무기 반환, 실패 시 null.</summary>
+    private WeaponData TryRollDoubleUp(WeaponData grandResult)
+    {
+        if (grandResult == null || (!ForceDoubleUp && Random.value > 0.01f)) return null;
+        WeaponGrade target = (WeaponGrade)((int)grandResult.grade + 1);
+        var candidates = new List<WeaponData>();
+        foreach (var w in allWeapons)
+            if (w != null && w.chapter == currentChapter && w.grade == target)
+                candidates.Add(w);
+        if (candidates.Count == 0) return null;
+        return candidates[Random.Range(0, candidates.Count)].UpgradedTo(1);
+    }
+
+    /// <summary>그랜드 머지 사이클링 연출에 사용할 한 단계 위 등급 무기 목록을 반환합니다.</summary>
+    public List<WeaponData> GetGrandMergeCandidates(WeaponGrade baseGrade)
+    {
+        WeaponGrade target = (WeaponGrade)((int)baseGrade + 1);
+        var result = new List<WeaponData>();
+        foreach (var w in allWeapons)
+            if (w != null && w.chapter == currentChapter && w.grade == target)
+                result.Add(w);
+        return result;
     }
 
     /// <summary>인벤토리에서 같은 이름+성 3개를 합성합니다.</summary>
@@ -395,7 +511,7 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
         var inv = PlayerInventory.Shared;
         if (inv == null) return false;
 
-        if (star >= 5)
+        if (star > 3)
         {
             upgradePanel.ShowNotification("최대 성급은 합성할 수 없습니다.");
             return false;
@@ -403,7 +519,7 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
 
         if (!inv.CanMergeAll(weaponName, star))
         {
-            upgradePanel.ShowNotification("같은 무기 같은 성급이 3개 필요합니다.");
+            upgradePanel.ShowNotification("같은 무기 같은 성급이 2개 필요합니다.");
             return false;
         }
 
@@ -414,7 +530,12 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
             return false;
         }
 
-        if (!inv.TryMergeAll(weaponName, star, result)) return false;
+        WeaponData doubleUp = star >= 3 ? TryRollDoubleUp(result) : null;
+        WeaponData actual   = doubleUp ?? result;
+        if (!inv.TryMergeAll(weaponName, star, actual,
+            displayResult: doubleUp != null ? result : null,
+            isDoubleUp: doubleUp != null,
+            doubleUpResult: doubleUp)) return false;
 
         SoundManager.Shared?.Play(SoundKey.UI_Merge);
         RefreshPanel();
@@ -438,7 +559,7 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
             if (pool.Count == 0) break;
             WeaponGrade grade  = RollGrade(profile);
             WeaponData  picked = PickByGrade(pool, grade);
-            if (picked != null) { result[i] = picked; pool.Remove(picked); }
+            if (picked != null) { result[i] = picked.UpgradedTo(picked.star); pool.Remove(picked); }
         }
         return result;
     }

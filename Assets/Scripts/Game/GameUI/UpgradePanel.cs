@@ -102,6 +102,8 @@ public class UpgradePanel : MonoBehaviour
     private float              _lastDisplayedAtk   = -1f;
     private float              _atkBeforeMerge     = -1f; // 합성 직전 ATK 스냅샷
     private bool               _refreshing         = false;
+    private bool               _mergeAnimPlaying   = false;
+    private readonly Queue<PlayerInventory.MergeAnimInfo> _mergeQueue = new Queue<PlayerInventory.MergeAnimInfo>();
 
     // ────────────────────────────────────────────────────────────────
     // 초기화
@@ -206,6 +208,8 @@ public class UpgradePanel : MonoBehaviour
             PlayerInventory.Shared.OnChanged -= RefreshInventoryUI;
 
         PlayerInventory.OnBeforeMerge -= OnBeforeMerge;
+        _mergeQueue.Clear();
+        _mergeAnimPlaying = false;
 
         GameEvents.OnGoldChanged -= HandleGoldChanged;
         GameEvents.OnExpChanged  -= HandleExpChanged;
@@ -384,6 +388,7 @@ public class UpgradePanel : MonoBehaviour
     public void RefreshInventoryUI()
     {
         if (_refreshing) return;
+        if (_mergeAnimPlaying) return;
         _refreshing = true;
         try { RefreshInventoryUIInternal(); }
         finally { _refreshing = false; }
@@ -475,7 +480,7 @@ public class UpgradePanel : MonoBehaviour
         var inv = PlayerInventory.Shared;
         if (inv == null) return;
 
-        bool hasItem = slotIndex < inv.Inventory.Count;
+        bool hasItem = slotIndex < inv.Inventory.Count && inv.Inventory[slotIndex] != null;
 
         if (!hasItem || selectedInvenIndex == slotIndex)
         {
@@ -803,25 +808,30 @@ public class UpgradePanel : MonoBehaviour
     }
 
     // ────────────────────────────────────────────────────────────────
-    // 합성 슈루룩 애니메이션
+    // 합성 슬램 애니메이션
     // ────────────────────────────────────────────────────────────────
     private void OnBeforeMerge(PlayerInventory.MergeAnimInfo info)
     {
         if (!gameObject.activeInHierarchy) return;
-        _atkBeforeMerge = CalcTotalAtk(); // 합성 전 ATK 스냅샷 저장
-        if (coinImageSource == null || rootCanvas == null) return;
+        if (rootCanvas == null) return;
+        if (_mergeAnimPlaying)
+        {
+            _mergeQueue.Enqueue(info); // 재생 중이면 큐에 적재
+            return;
+        }
+        _atkBeforeMerge = CalcTotalAtk();
+        _mergeAnimPlaying = true;
         StartCoroutine(MergeAnimRoutine(info));
     }
 
     private IEnumerator MergeAnimRoutine(PlayerInventory.MergeAnimInfo info)
     {
-        const float spreadDuration   = 0.18f;
-        const float convergeDuration = 0.38f;
-        const float staggerDelay     = 0.07f;
+        const float flyDuration   = 0.32f;
+        const float punchDuration = 0.18f;
+        const float stagger       = 0.06f;
 
-        Camera cam = rootCanvas.renderMode != RenderMode.ScreenSpaceOverlay
-            ? rootCanvas.worldCamera : null;
-        var parentRt = (RectTransform)rootCanvas.transform;
+        Camera cam      = rootCanvas.renderMode != RenderMode.ScreenSpaceOverlay ? rootCanvas.worldCamera : null;
+        var    parentRt = (RectTransform)rootCanvas.transform;
 
         // 목적지 슬롯 위치
         RectTransform destRt = null;
@@ -829,140 +839,175 @@ public class UpgradePanel : MonoBehaviour
             destRt = equipSlots[info.destEquipSlot].GetComponent<RectTransform>();
         else if (info.destInvenSlot >= 0 && info.destInvenSlot < invenSlots.Length)
             destRt = invenSlots[info.destInvenSlot].GetComponent<RectTransform>();
-        else if (invenSlots.Length > 0)
-            destRt = invenSlots[invenSlots.Length - 1].GetComponent<RectTransform>();
         if (destRt == null) yield break;
 
         RectTransformUtility.ScreenPointToLocalPointInRectangle(
-            parentRt,
-            RectTransformUtility.WorldToScreenPoint(cam, destRt.position),
+            parentRt, RectTransformUtility.WorldToScreenPoint(cam, destRt.position),
             cam, out Vector2 destLocal);
 
-        // 소스 슬롯 목록 수집 (위치 + 크기 + 무기 데이터)
-        var sources  = new List<Vector2>();
-        var srcSizes = new List<Vector2>();
+        // 소스 ghost 수집 및 발사
+        // 목적지 슬롯과 동일한 소스는 건너뜀 (제자리 ghost가 "먼저 펄스" 처럼 보이는 문제 방지)
         var consumed = info.consumed ?? new List<WeaponData>();
+        int dataIdx  = 0;
+        int srcCount = 0;
 
         foreach (int i in info.invenIndices)
-            if (i < invenSlots.Length)
-            {
-                RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                    parentRt,
-                    RectTransformUtility.WorldToScreenPoint(cam, invenSlots[i].transform.position),
-                    cam, out Vector2 p);
-                sources.Add(p);
-                srcSizes.Add(((RectTransform)invenSlots[i].transform).rect.size);
-            }
-        foreach (int i in info.equipIndices)
-            if (i < equipSlots.Length)
-            {
-                RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                    parentRt,
-                    RectTransformUtility.WorldToScreenPoint(cam, equipSlots[i].transform.position),
-                    cam, out Vector2 p);
-                sources.Add(p);
-                srcSizes.Add(((RectTransform)equipSlots[i].transform).rect.size);
-            }
-
-        // 소스별 3-아이콘 버스트 발사
-        for (int s = 0; s < sources.Count; s++)
         {
-            var weaponData = s < consumed.Count ? consumed[s] : null;
-            var slotSize   = s < srcSizes.Count ? srcSizes[s] : new Vector2(80f, 80f);
-            StartCoroutine(MergeIconBurstRoutine(
-                sources[s], destLocal, weaponData, slotSize,
-                spreadDuration, convergeDuration, s * staggerDelay));
+            var data = dataIdx < consumed.Count ? consumed[dataIdx++] : null;
+            if (i >= invenSlots.Length) continue;
+            if (info.destEquipSlot < 0 && i == info.destInvenSlot) continue; // 목적지 슬롯은 건너뜀
+            // 소스 슬롯 즉시 숨김 → ghost가 무기 자체가 이동하는 것처럼 보임
+            invenSlots[i].transform.localScale = Vector3.zero;
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                parentRt, RectTransformUtility.WorldToScreenPoint(cam, invenSlots[i].transform.position),
+                cam, out Vector2 p);
+            var sz = ((RectTransform)invenSlots[i].transform).rect.size;
+            StartCoroutine(SlamRoutine(p, sz, destLocal, data, flyDuration, punchDuration, stagger * srcCount++));
+        }
+        foreach (int i in info.equipIndices)
+        {
+            var data = dataIdx < consumed.Count ? consumed[dataIdx++] : null;
+            if (i >= equipSlots.Length) continue;
+            if (info.destEquipSlot >= 0 && i == info.destEquipSlot) continue; // 목적지 슬롯은 건너뜀
+            // 소스 슬롯 즉시 숨김
+            equipSlots[i].transform.localScale = Vector3.zero;
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                parentRt, RectTransformUtility.WorldToScreenPoint(cam, equipSlots[i].transform.position),
+                cam, out Vector2 p);
+            var sz = ((RectTransform)equipSlots[i].transform).rect.size;
+            StartCoroutine(SlamRoutine(p, sz, destLocal, data, flyDuration, punchDuration, stagger * srcCount++));
         }
 
-        yield return new WaitForSecondsRealtime(spreadDuration + convergeDuration + sources.Count * staggerDelay);
+        if (srcCount == 0) yield break;
+
+        // 마지막 ghost가 착지 후 펀치까지 완전히 끝날 때까지 대기
+        yield return new WaitForSecondsRealtime(flyDuration + punchDuration + stagger * (srcCount - 1));
+
+        // 결과 즉시 표시 → 펄스 + UIShiny + 사운드
+        RefreshInventoryUI();
+        StartCoroutine(PulseSlotRoutine(destRt));
+
+        SoundManager.Shared?.Play(info.isGrandMerge ? SoundKey.Gacha_ItemReveal : SoundKey.UI_Merge);
+
+        if (info.destEquipSlot >= 0 && info.destEquipSlot < equipSlots.Length)
+            equipSlots[info.destEquipSlot].PlayMergeShiny();
+        else if (info.destInvenSlot >= 0 && info.destInvenSlot < invenSlots.Length)
+            invenSlots[info.destInvenSlot].PlayMergeShiny();
+
+        // 큐에 다음 합성이 있으면 바로 실행
+        if (_mergeQueue.Count > 0)
+        {
+            var next = _mergeQueue.Dequeue();
+            _atkBeforeMerge = CalcTotalAtk();
+            StartCoroutine(MergeAnimRoutine(next));
+            yield break;
+        }
+
+        _mergeAnimPlaying = false;
+        RefreshInventoryUI();
     }
 
-    /// <summary>한 소스 슬롯의 weaponIcon·synergyIcon·typeIcon 3개가 바깥으로 벌어졌다가 dest로 빨려들어갑니다.</summary>
-    private IEnumerator MergeIconBurstRoutine(
-        Vector2 slotPos, Vector2 dest, WeaponData data, Vector2 slotSize,
-        float spreadDuration, float convergeDuration, float delay)
+    /// <summary>소스 슬롯 고스트가 목적지로 날아가 박히는 슬램 연출.</summary>
+    private IEnumerator SlamRoutine(Vector2 srcLocal, Vector2 srcSize, Vector2 destLocal,
+        WeaponData data, float flyDuration, float punchDuration, float delay)
     {
         if (delay > 0f) yield return new WaitForSecondsRealtime(delay);
 
-        var cfg = WeaponVisualConfig.Shared;
-        // (sprite, sizeDelta)
-        var iconDefs = new (Sprite sprite, Vector2 size)[]
+        var go = new GameObject("SlamGhost", typeof(RectTransform), typeof(CanvasGroup));
+        go.transform.SetParent(rootCanvas.transform, false);
+        go.transform.SetAsLastSibling();
+
+        var mainRt = go.GetComponent<RectTransform>();
+        mainRt.anchoredPosition = srcLocal;
+        mainRt.sizeDelta        = srcSize;
+
+        var cg = go.GetComponent<CanvasGroup>();
+        cg.blocksRaycasts = false;
+
+        if (data != null)
         {
-            (data?.icon,                                                     slotSize),
-            (data != null ? cfg?.GetTypeSprite(data.weaponType) : null,     slotSize * 0.45f),
-        };
+            // 프레임
+            var frameGo = new GameObject("F", typeof(RectTransform), typeof(Image));
+            frameGo.transform.SetParent(go.transform, false);
+            var fRt = frameGo.GetComponent<RectTransform>();
+            fRt.anchorMin = fRt.anchorMax = new Vector2(0.5f, 0.5f);
+            fRt.sizeDelta = srcSize;
+            var fImg = frameGo.GetComponent<Image>();
+            fImg.sprite       = WeaponVisualConfig.Shared?.GetGradeSprite(data.grade);
+            fImg.type         = Image.Type.Simple;
+            fImg.raycastTarget = false;
 
-        // 3방향 벌어짐 각도 (120° 간격, 위쪽부터)
-        var ghosts = new List<(RectTransform rt, CanvasGroup cg, Vector2 spreadPos)>();
-        for (int i = 0; i < iconDefs.Length; i++)
-        {
-            var (sprite, size) = iconDefs[i];
-            if (sprite == null) continue;
-
-            float angle      = (90f + 120f * i) * Mathf.Deg2Rad;
-            float spreadDist = slotSize.x * 0.75f;
-            Vector2 spreadPos = slotPos + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * spreadDist;
-
-            var go = new GameObject("MergeGhost", typeof(RectTransform), typeof(CanvasGroup), typeof(Image));
-            go.transform.SetParent(rootCanvas.transform, false);
-            go.transform.SetAsLastSibling();
-
-            var img = go.GetComponent<Image>();
-            img.sprite = sprite;
-            img.raycastTarget = false;
-            img.color = Color.white;
-
-            var cg = go.GetComponent<CanvasGroup>();
-            cg.blocksRaycasts = false;
-            cg.alpha = 1f;
-
-            var rt = go.GetComponent<RectTransform>();
-            rt.sizeDelta = size;
-            rt.anchoredPosition = slotPos;
-            rt.localScale = Vector3.one * 0.8f;
-
-            ghosts.Add((rt, cg, spreadPos));
+            // 아이콘
+            if (data.icon != null)
+            {
+                var iconGo = new GameObject("I", typeof(RectTransform), typeof(Image));
+                iconGo.transform.SetParent(go.transform, false);
+                var iRt = iconGo.GetComponent<RectTransform>();
+                iRt.anchorMin = iRt.anchorMax = new Vector2(0.5f, 0.5f);
+                iRt.sizeDelta = srcSize * 0.75f;
+                var iImg = iconGo.GetComponent<Image>();
+                iImg.sprite        = data.icon;
+                iImg.raycastTarget = false;
+            }
         }
 
-        if (ghosts.Count == 0) yield break;
+        // 포물선 호: 가까운 슬롯도 이동감이 느껴지도록 최소 호 높이 보장
+        float dist = Vector2.Distance(srcLocal, destLocal);
+        float arcH = Mathf.Max(80f, dist * 0.4f);
+        Vector2 ctrl = (srcLocal + destLocal) * 0.5f + Vector2.up * arcH;
 
-        // Phase 1: 바깥으로 벌어짐
+        // ease-in 비행 (2차 베지어)
         float elapsed = 0f;
-        while (elapsed < spreadDuration)
+        while (elapsed < flyDuration)
         {
             elapsed += Time.unscaledDeltaTime;
-            float t    = Mathf.Clamp01(elapsed / spreadDuration);
-            float ease = 1f - (1f - t) * (1f - t); // ease-out
-            foreach (var (rt, cg, spreadPos) in ghosts)
-            {
-                rt.anchoredPosition = Vector2.LerpUnclamped(slotPos, spreadPos, ease);
-                rt.localScale       = Vector3.one * Mathf.Lerp(0.8f, 1.1f, ease);
-            }
+            float t  = Mathf.Clamp01(elapsed / flyDuration);
+            float et = t * t; // ease-in
+            float u  = 1f - et;
+            Vector2 pos = u * u * srcLocal + 2f * u * et * ctrl + et * et * destLocal;
+            mainRt.anchoredPosition = pos;
+            mainRt.localScale       = Vector3.one * Mathf.Lerp(1f, 1.15f, et);
             yield return null;
         }
+        mainRt.anchoredPosition = destLocal;
 
-        // Phase 2: 목적지로 빨려들어감 (거의 정 사이즈 유지)
+        // 박힘 펀치: 커졌다가 사라짐
         elapsed = 0f;
-        var spreadPositions = ghosts.ConvertAll(g => g.spreadPos);
-        while (elapsed < convergeDuration)
+        while (elapsed < punchDuration)
         {
             elapsed += Time.unscaledDeltaTime;
-            float t    = Mathf.Clamp01(elapsed / convergeDuration);
-            float ease = t * t * (3f - 2f * t); // smoothstep
-            float alpha = t > 0.8f ? Mathf.Lerp(1f, 0f, (t - 0.8f) / 0.2f) : 1f;
-            for (int i = 0; i < ghosts.Count; i++)
-            {
-                var (rt, cg, _) = ghosts[i];
-                rt.anchoredPosition = Vector2.LerpUnclamped(spreadPositions[i], dest, ease);
-                rt.localScale       = Vector3.one * Mathf.Lerp(1.1f, 0.95f, ease);
-                cg.alpha            = alpha;
-            }
+            float t = elapsed / punchDuration;
+            float s = t < 0.35f
+                ? Mathf.Lerp(1.15f, 1.4f,  t / 0.35f)
+                : Mathf.Lerp(1.4f,  0f,   (t - 0.35f) / 0.65f);
+            cg.alpha          = t < 0.35f ? 1f : Mathf.Lerp(1f, 0f, (t - 0.35f) / 0.65f);
+            mainRt.localScale = Vector3.one * s;
             yield return null;
         }
 
-        foreach (var (rt, _, _) in ghosts)
-            if (rt != null) Destroy(rt.gameObject);
+        Destroy(go);
     }
+
+    /// <summary>슬롯 RectTransform에 스케일 펄스 효과를 줍니다.</summary>
+    private IEnumerator PulseSlotRoutine(RectTransform slotRt)
+    {
+        if (slotRt == null) yield break;
+        Vector3 orig = slotRt.localScale;
+        const float dur = 0.25f;
+        float elapsed = 0f;
+        while (elapsed < dur)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float t = elapsed / dur;
+            float s = t < 0.4f
+                ? Mathf.Lerp(1f, 1.3f, t / 0.4f)
+                : Mathf.Lerp(1.3f, 1f, (t - 0.4f) / 0.6f);
+            slotRt.localScale = orig * s;
+            yield return null;
+        }
+        slotRt.localScale = orig;
+    }
+
 
     // ────────────────────────────────────────────────────────────────
     // 노티피케이션

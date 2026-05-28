@@ -35,6 +35,8 @@ public class CharacterLevelUpPanel : MonoBehaviour
     private const int ScrollCost  = 1;
     public  const int FragCost    = 10;
 
+    public System.Action OnLevelUpSuccess;
+
     private DB_캐릭터 _currentData;
 
     private void Awake()
@@ -99,8 +101,12 @@ public class CharacterLevelUpPanel : MonoBehaviour
         }
 
         // 레벨업 버튼 활성 여부
+        int currentTier = _currentData != null
+            ? (PlayerCharacterManager.Shared?.GetAugmentTier(_currentData.f_캐릭ID) ?? 0)
+            : 0;
+        bool maxReached = currentTier >= PlayerCharacterManager.MaxAugmentTier;
         if (levelUpButton)
-            levelUpButton.interactable = scrollCount >= ScrollCost && fragCount >= FragCost;
+            levelUpButton.interactable = !maxReached && scrollCount >= ScrollCost && fragCount >= FragCost;
     }
 
     private void OnLevelUpClicked()
@@ -120,8 +126,15 @@ public class CharacterLevelUpPanel : MonoBehaviour
         RewardManager.Shared?.GiveReward(new RewardItem(RewardType.CharMat, -ScrollCost));
         SpendHeroFrag(FragCost);
 
-        // TODO: 캐릭터 레벨업 실제 처리 (PlayerCharacterManager 연동)
-        Debug.Log($"[CharLevelUp] {_currentData.f_이름} 레벨업");
+        // 증강 티어 증가
+        var mgr = PlayerCharacterManager.Shared;
+        if (mgr != null)
+        {
+            int nextTier = mgr.GetAugmentTier(_currentData.f_캐릭ID) + 1;
+            mgr.SetAugmentTier(_currentData.f_캐릭ID, nextTier);
+        }
+
+        OnLevelUpSuccess?.Invoke();
     }
 
     // ── 영웅조각 — PlayerPrefs per-character ─────────────────────

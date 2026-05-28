@@ -132,6 +132,7 @@ MonoBehaviour:
   - {fileID: 6607917141167659122}
   - {fileID: 2990645777199026476}
   - {fileID: 1300500121585341009}
+  mergeShiny: {fileID: 2882167623011230265}
   selectedScale: 1.2
   normalScale: 1
 --- !u!1 &6942140288055952293
@@ -145,6 +146,7 @@ GameObject:
   - component: {fileID: 4531077296233928534}
   - component: {fileID: 625547304663717038}
   - component: {fileID: 2777268747547525718}
+  - component: {fileID: 2882167623011230265}
   m_Layer: 5
   m_Name: frame
   m_TagString: Untagged
@@ -212,6 +214,39 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &2882167623011230265
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6942140288055952293}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f19b7e2285c104f6ca47d583f3e5444f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Coffee.UIExtensions.UIShiny
+  m_Version: 300
+  m_EffectMaterial: {fileID: 2100000, guid: 9dc7e810a87b444ab96919f3215c2fe5, type: 2}
+  m_EffectFactor: 0
+  m_Width: 0.25
+  m_Rotation: 45
+  m_Softness: 1
+  m_Brightness: 1
+  m_Gloss: 1
+  m_EffectArea: 0
+  m_Player:
+    play: 1
+    initialPlayDelay: 0
+    duration: 1
+    loop: 0
+    loopDelay: 0
+    updateMode: 0
+  m_Play: 0
+  m_Loop: 0
+  m_Duration: 1
+  m_LoopDelay: 1
+  m_UpdateMode: 0
 --- !u!1 &7824787214049565147
 GameObject:
   m_ObjectHideFlags: 0

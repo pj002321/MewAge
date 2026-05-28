@@ -23,7 +23,11 @@ public class PlayerInventory : MonoBehaviourSingleton<PlayerInventory>
         public int              destEquipSlot; // 결과 장착 슬롯 (-1 = 인벤에 추가)
         public int              destInvenSlot; // 결과 인벤 슬롯 (destEquipSlot >= 0이면 무시)
         public Sprite           icon;
-        public List<WeaponData> consumed;      // 소모된 3개 무기 데이터 (아이콘 참조용)
+        public List<WeaponData> consumed;      // 소모된 2개 무기 데이터 (아이콘 참조용)
+        public bool             isGrandMerge;   // 3★+3★ → 상위등급 랜덤 무기 합성
+        public WeaponData       resultWeapon;   // 애니 표시용 결과 (그랜드 머지: grade+1)
+        public bool             isDoubleUp;     // 1% 더블업 머지 당첨
+        public WeaponData       doubleUpResult; // 더블업 최종 결과 (grade+2, 실제 인벤 저장값)
     }
     public static event System.Action<MergeAnimInfo> OnBeforeMerge;
 
@@ -31,13 +35,19 @@ public class PlayerInventory : MonoBehaviourSingleton<PlayerInventory>
 
     public IReadOnlyList<WeaponData> Equipped  => equipped;
     public IReadOnlyList<WeaponData> Inventory => inventory;
-    public bool InventoryFull => inventory.Count >= MaxInventory;
+    public bool InventoryFull
+    {
+        get { int n = 0; foreach (var w in inventory) if (w != null) n++; return n >= MaxInventory; }
+    }
 
     // ────────────────────────────────────────────────────────────────
     // 인벤토리 추가
     // ────────────────────────────────────────────────────────────────
     public bool TryAddToInventory(WeaponData data)
     {
+        // 중간 빈 슬롯(null) 우선 채움
+        for (int i = 0; i < inventory.Count; i++)
+            if (inventory[i] == null) { inventory[i] = data; OnChanged?.Invoke(); return true; }
         if (inventory.Count >= MaxInventory) return false;
         inventory.Add(data);
         OnChanged?.Invoke();
@@ -96,8 +106,11 @@ public class PlayerInventory : MonoBehaviourSingleton<PlayerInventory>
     public bool UnequipToInventory(int equipIndex)
     {
         if (equipIndex < 0 || equipIndex >= equipped.Count) return false;
-        if (inventory.Count >= MaxInventory) return false;
-        inventory.Add(equipped[equipIndex]);
+        if (InventoryFull) return false;
+        var weapon = equipped[equipIndex];
+        for (int i = 0; i < inventory.Count; i++)
+            if (inventory[i] == null) { inventory[i] = weapon; equipped[equipIndex] = null; TrimTrailingNullSlots(); OnChanged?.Invoke(); return true; }
+        inventory.Add(weapon);
         equipped[equipIndex] = null;
         TrimTrailingNullSlots();
         OnChanged?.Invoke();
@@ -155,27 +168,35 @@ public class PlayerInventory : MonoBehaviourSingleton<PlayerInventory>
     public void SwapInvenToInven(int a, int b)
     {
         if (a < 0 || b < 0 || a == b) return;
-        if (a >= inventory.Count || b >= inventory.Count) return;
+        if (a >= inventory.Count || b >= MaxInventory) return;
+
+        // b가 현재 아이템 범위 밖이면 null로 채워 빈 슬롯 이동 허용
+        while (inventory.Count <= b) inventory.Add(null);
         (inventory[a], inventory[b]) = (inventory[b], inventory[a]);
+
+        // 끝의 null 정리
+        while (inventory.Count > 0 && inventory[inventory.Count - 1] == null)
+            inventory.RemoveAt(inventory.Count - 1);
+
         OnChanged?.Invoke();
     }
 
     // ────────────────────────────────────────────────────────────────
     // 합성 (3 same type+grade → 1 next grade)
     // ────────────────────────────────────────────────────────────────
-    /// <summary>인벤토리에 같은 이름+등급 무기가 3개 이상 있는지 확인합니다.</summary>
+    /// <summary>인벤토리에 같은 이름+등급 무기가 2개 이상 있는지 확인합니다.</summary>
     public bool CanMerge(string weaponName, int star)
     {
         int count = 0;
         foreach (var w in inventory)
             if (w != null && w.weaponName == weaponName && w.star == star)
-                if (++count >= 3) return true;
+                if (++count >= 2) return true;
         return false;
     }
 
-    /// <summary>인벤 + 장착 슬롯 합산으로 3개 이상 있는지 확인합니다.</summary>
+    /// <summary>인벤 + 장착 슬롯 합산으로 2개 이상 있는지 확인합니다.</summary>
     public bool CanMergeAll(string weaponName, int star)
-        => CountAll(weaponName, star) >= 3;
+        => CountAll(weaponName, star) >= 2;
 
     /// <summary>인벤 + 장착 슬롯 합산 개수를 반환합니다.</summary>
     public int CountAll(string weaponName, int star)
@@ -188,21 +209,20 @@ public class PlayerInventory : MonoBehaviourSingleton<PlayerInventory>
         return count;
     }
 
-    /// <summary>인벤 내 같은 이름+성 3개를 제거하고 result를 인벤에 추가합니다.
-    /// 소모된 2개(result로 대체되지 않는 만큼)의 판매가를 골드로 지급합니다.</summary>
+    /// <summary>인벤 내 같은 이름+성 2개를 제거하고 result를 인벤에 추가합니다.</summary>
     public bool TryMerge(string weaponName, int star, WeaponData result)
     {
         if (result == null) return false;
 
         var indices = new List<int>();
-        for (int i = 0; i < inventory.Count && indices.Count < 3; i++)
+        for (int i = 0; i < inventory.Count && indices.Count < 2; i++)
         {
             var w = inventory[i];
             if (w != null && w.weaponName == weaponName && w.star == star)
                 indices.Add(i);
         }
 
-        if (indices.Count < 3) return false;
+        if (indices.Count < 2) return false;
 
         // 합성 결과물 가격 = 소모 3개 합산
         int totalPrice = 0;
@@ -218,30 +238,31 @@ public class PlayerInventory : MonoBehaviourSingleton<PlayerInventory>
         return true;
     }
 
-    /// <summary>인벤 + 장착 슬롯을 합산해 3개를 소모하고 result를 배치합니다.
+    /// <summary>인벤 + 장착 슬롯을 합산해 2개를 소모하고 result를 배치합니다.
     /// 장착 슬롯에서 소모된 경우 result는 그 슬롯에 우선 배치됩니다.</summary>
-    public bool TryMergeAll(string weaponName, int star, WeaponData result)
+    public bool TryMergeAll(string weaponName, int star, WeaponData result,
+        WeaponData displayResult = null, bool isDoubleUp = false, WeaponData doubleUpResult = null)
     {
         if (result == null) return false;
 
-        // 인벤 먼저, 그 다음 장착에서 최대 3개 수집
+        // 인벤 먼저, 그 다음 장착에서 최대 2개 수집
         var invenIdx = new List<int>();
         var equipIdx = new List<int>();
 
-        for (int i = 0; i < inventory.Count && invenIdx.Count + equipIdx.Count < 3; i++)
+        for (int i = 0; i < inventory.Count && invenIdx.Count + equipIdx.Count < 2; i++)
         {
             var w = inventory[i];
             if (w != null && w.weaponName == weaponName && w.star == star)
                 invenIdx.Add(i);
         }
-        for (int i = 0; i < equipped.Count && invenIdx.Count + equipIdx.Count < 3; i++)
+        for (int i = 0; i < equipped.Count && invenIdx.Count + equipIdx.Count < 2; i++)
         {
             var w = equipped[i];
             if (w != null && w.weaponName == weaponName && w.star == star)
                 equipIdx.Add(i);
         }
 
-        if (invenIdx.Count + equipIdx.Count < 3) return false;
+        if (invenIdx.Count + equipIdx.Count < 2) return false;
 
         // 소모 3개 목록 (가격용)
         var consumed = new List<WeaponData>();
@@ -253,17 +274,13 @@ public class PlayerInventory : MonoBehaviourSingleton<PlayerInventory>
         foreach (var w in consumed) totalPrice += Mathf.Max(1, w.price);
         result.price = totalPrice;
 
-        // 인벤 제거 (인덱스 밀림 방지: 높은 순)
-        for (int i = invenIdx.Count - 1; i >= 0; i--)
-            inventory.RemoveAt(invenIdx[i]);
-
-        // 장착 제거 (null 처리) + 결과 배치 슬롯 기억
+        // 결과 배치 슬롯 기억
         int resultEquipSlot = equipIdx.Count > 0 ? equipIdx[0] : -1;
-        for (int i = equipIdx.Count - 1; i >= 0; i--)
-            equipped[equipIdx[i]] = null;
 
-        // 합성 애니메이션 이벤트 — 인벤 제거 후이므로 inventory.Count가 결과물이 추가될 인덱스
-        int destInvenSlot = resultEquipSlot < 0 ? inventory.Count : -1;
+        // 애니 목적지: 첫 번째 소모 인벤 슬롯 원본 인덱스 (슬롯 이동 없으므로 그대로 유효)
+        int destInvenSlot = resultEquipSlot >= 0 ? -1
+            : invenIdx.Count > 0 ? invenIdx[0]
+            : inventory.Count;
 
         OnBeforeMerge?.Invoke(new MergeAnimInfo
         {
@@ -272,14 +289,53 @@ public class PlayerInventory : MonoBehaviourSingleton<PlayerInventory>
             destEquipSlot = resultEquipSlot,
             destInvenSlot = destInvenSlot,
             icon          = consumed.Count > 0 ? consumed[0].icon : null,
-            consumed      = new List<WeaponData>(consumed)
+            consumed      = new List<WeaponData>(consumed),
+            isGrandMerge   = star >= 3,
+            resultWeapon   = displayResult ?? result,
+            isDoubleUp     = isDoubleUp,
+            doubleUpResult = doubleUpResult,
         });
 
-        // 결과 배치: 장착 슬롯에서 소모됐으면 그 슬롯에, 아니면 인벤에
+        // 장착 소모 (null 처리)
+        for (int i = equipIdx.Count - 1; i >= 0; i--)
+        {
+            var w = equipped[equipIdx[i]];
+            equipped[equipIdx[i]] = null;
+            if (w != null) Destroy(w);
+        }
+
+        // 인벤 소모: null-in-place (다른 슬롯 이동 없이 해당 슬롯만 변경)
+        if (resultEquipSlot >= 0)
+        {
+            // 결과가 장착 슬롯에 배치 → 인벤 소모 슬롯 전부 null
+            for (int i = 0; i < invenIdx.Count; i++)
+            {
+                var w = inventory[invenIdx[i]];
+                inventory[invenIdx[i]] = null;
+                if (w != null) Destroy(w);
+            }
+        }
+        else if (invenIdx.Count > 0)
+        {
+            // 결과가 인벤에 배치 → 첫 번째 소모 슬롯에 결과, 나머지는 null
+            var w0 = inventory[invenIdx[0]];
+            inventory[invenIdx[0]] = result;
+            if (w0 != null) Destroy(w0);
+            for (int i = 1; i < invenIdx.Count; i++)
+            {
+                var w = inventory[invenIdx[i]];
+                inventory[invenIdx[i]] = null;
+                if (w != null) Destroy(w);
+            }
+        }
+        else
+        {
+            inventory.Add(result);
+        }
+
+        // 결과가 장착 슬롯에 배치되는 경우
         if (resultEquipSlot >= 0 && resultEquipSlot < equipped.Count)
             equipped[resultEquipSlot] = result;
-        else
-            inventory.Add(result);
 
         // 뒤의 null 장착 슬롯 정리
         while (equipped.Count > 0 && equipped[equipped.Count - 1] == null)
@@ -325,6 +381,8 @@ public class PlayerInventory : MonoBehaviourSingleton<PlayerInventory>
     /// <summary>용량 무시하고 인벤에 추가합니다. 합성으로 슬롯이 바로 확보되는 경우에만 사용하세요.</summary>
     public void ForceAddToInventory(WeaponData data)
     {
+        for (int i = 0; i < inventory.Count; i++)
+            if (inventory[i] == null) { inventory[i] = data; OnChanged?.Invoke(); return; }
         inventory.Add(data);
         OnChanged?.Invoke();
     }
@@ -390,6 +448,22 @@ public class PlayerInventory : MonoBehaviourSingleton<PlayerInventory>
         while (equipped.Count > 0 && equipped[equipped.Count - 1] == null)
             equipped.RemoveAt(equipped.Count - 1);
 
+        OnChanged?.Invoke();
+    }
+
+    /// <summary>인벤토리를 같은 무기끼리 묶고 성급 내림차순으로 정렬합니다.</summary>
+    public void SortInventory()
+    {
+        inventory.Sort((a, b) =>
+        {
+            if (a == null && b == null) return 0;
+            if (a == null) return 1;
+            if (b == null) return -1;
+            int nameComp = string.Compare(a.weaponName, b.weaponName, System.StringComparison.Ordinal);
+            return nameComp != 0 ? nameComp : b.star.CompareTo(a.star);
+        });
+        while (inventory.Count > 0 && inventory[inventory.Count - 1] == null)
+            inventory.RemoveAt(inventory.Count - 1);
         OnChanged?.Invoke();
     }
 }

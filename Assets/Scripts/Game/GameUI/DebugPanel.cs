@@ -55,6 +55,8 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
     [SerializeField] private Button addEqMatHeadButton;
     [SerializeField] private Button addRelicScrollButton;
     [SerializeField] private Button addAllRelicFragsButton;
+    [SerializeField] private Button addHeroScrollButton;
+    [SerializeField] private Button addHeroFragButton;
 
     // ── 인게임 전용 ──────────────────────────────────────────────────
     [Header("인게임 (gameContent 하위)")]
@@ -63,6 +65,7 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
     [SerializeField] private Button   infiniteTimeButton;
     [SerializeField] private Button   levelUpButton;
     [SerializeField] private Button   addGoldButton;
+    [SerializeField] private Button   doubleUpButton;
 
     [Header("웨이브 점프 패널")]
     [SerializeField] private Button    waveListToggle;  // "웨이브 이동 ▼" 토글 버튼
@@ -80,6 +83,7 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
 
     private bool _invincible      = false;
     private bool _infiniteTime    = false;
+    private bool _forceDoubleUp   = false;
     private bool _contentOpen     = true;
     private bool _waveListOpen    = false;
     private bool _weaponListOpen  = false;
@@ -126,12 +130,15 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
         addEqMatHeadButton?.onClick.AddListener(() => RewardManager.Shared?.Dispatch(new RewardItem("MAT_EQ_HEAD", 1)));
         addRelicScrollButton?.onClick.AddListener(() => RewardManager.Shared?.Dispatch(new RewardItem("MAT_RELIC", 1)));
         addAllRelicFragsButton?.onClick.AddListener(OnAddAllRelicFrags);
+        addHeroScrollButton?.onClick.AddListener(() => RewardManager.Shared?.Dispatch(new RewardItem("MAT_HERO", 1)));
+        addHeroFragButton?.onClick.AddListener(OnAddHeroFrag);
 
         waveEndButton?.onClick.AddListener(() => GameManager.Shared?.DebugEndWave());
         invincibleButton?.onClick.AddListener(OnToggleInvincible);
         infiniteTimeButton?.onClick.AddListener(OnToggleInfiniteTime);
         levelUpButton?.onClick.AddListener(OnLevelUp);
         addGoldButton?.onClick.AddListener(() => PlayerStats.Shared?.AddGold(100));
+        doubleUpButton?.onClick.AddListener(OnToggleDoubleUp);
 
         waveListToggle?.onClick.AddListener(OnToggleWaveList);
         waveListContent?.gameObject.SetActive(false);
@@ -270,6 +277,15 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
         this.DLog("[Debug] 전 챕터 해금 완료");
     }
 
+    private void OnAddHeroFrag()
+    {
+        string charId = PlayerCharacterManager.Shared?.EquippedCharID;
+        if (string.IsNullOrEmpty(charId)) return;
+        CharacterLevelUpPanel.AddHeroFrag(charId, CharacterLevelUpPanel.FragCost);
+        // CharMat 0 지급으로 OnChanged 이벤트 발화 → CharacterLevelUpPanel UI 갱신
+        RewardManager.Shared?.GiveReward(new RewardItem(RewardType.CharMat, 0));
+    }
+
     private void OnAddAllRelicFrags()
     {
         var inv = RelicInventory.Shared;
@@ -297,6 +313,14 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
     }
 
     public void OnLevelUp() => PlayerStats.Shared?.DebugLevelUp();
+
+    private void OnToggleDoubleUp()
+    {
+        _forceDoubleUp = !_forceDoubleUp;
+        UpgradeManager.ForceDoubleUp = _forceDoubleUp;
+        var label = doubleUpButton?.GetComponentInChildren<TextMeshProUGUI>();
+        if (label) label.text = _forceDoubleUp ? "더블업 100% ON" : "더블업 100% OFF";
+    }
 
     // ── 웨이브 점프 패널 ──────────────────────────────────────────────
 

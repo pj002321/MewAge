@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Coffee.UIExtensions;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -16,6 +17,7 @@ public class InvenSlot : MonoBehaviour,
     [SerializeField] private Image            iconImg;
     [SerializeField] private Image            weaponTypeImg;
     [SerializeField] private List<GameObject> starObjects; // 0=1성, 1=2성, 2=3성, 3=4성
+    [SerializeField] private UIShiny          mergeShiny;
 
     [Header("선택 확대")]
     [SerializeField] private float selectedScale = 1.2f;
@@ -38,6 +40,13 @@ public class InvenSlot : MonoBehaviour,
 
     public bool IsInitialized { get; private set; }
     public void Init(UpgradePanel upgradePanel) { panel = upgradePanel; IsInitialized = true; }
+
+    public void PlayMergeShiny()
+    {
+        if (mergeShiny == null) return;
+        mergeShiny.enabled = true;
+        mergeShiny.Play();
+    }
 
     // ────────────────────────────────────────────────────────────────
     // 슬롯 갱신

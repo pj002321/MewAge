@@ -51,6 +51,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     private int   wave = 0;
     private float waveTimer;
     private bool  isGameOver;
+    private int   _normalReviveCount;
     private bool  waitingForUpgrade = true; // 트랜지션/초기화 기간 중 0초 달성으로 증강이 뜨는 것 방지
     private bool  _pauseTimer;              // 웨이브 시작 연출 중 타이머 일시 정지
     private bool  _infiniteTime;
@@ -498,8 +499,8 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         if (gamePausePanel != null && gamePausePanel.gameObject.activeSelf)
             gamePausePanel.Hide();
 
-        // 보스 타임아웃 등 skipRevival 요청 시 부활 패널 없이 바로 결과 화면
-        if (skipRevival || gameOverPanel == null)
+        // 보스 타임아웃 등 skipRevival 요청 시, 또는 이미 일반 부활 1회 소모 시 바로 결과 화면
+        if (skipRevival || gameOverPanel == null || _normalReviveCount >= 1)
         {
             ShowGameOverResult();
             return;
@@ -540,6 +541,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         Debug.Log($"[GameManager] Revive() 호출 — isGameOver={isGameOver}, PlayerController={PlayerController.Instance}");
         if (!isGameOver) { Debug.LogWarning("[GameManager] Revive() 무시: isGameOver=false"); return; }
         isGameOver = false;
+        _normalReviveCount++;
         if (gameOverPanel)                   gameOverPanel.SetActive(false);
         if (gameOverResultPanel != null)     gameOverResultPanel.Hide();
         PlayerController.Instance?.Revive();

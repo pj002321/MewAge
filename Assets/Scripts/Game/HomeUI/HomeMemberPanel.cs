@@ -167,6 +167,7 @@ public class HomeMemberPanel : MonoBehaviour
         {
             if (_selectedSlot != null && characterScrollRect != null)
                 StartCoroutine(ScrollToSlotTop(_selectedSlot));
+            levelUpPanel.OnLevelUpSuccess = OnCharacterLeveledUp;
             levelUpPanel.Show(d);
         }
     }
@@ -187,6 +188,12 @@ public class HomeMemberPanel : MonoBehaviour
 
         if (scrollRange > 0f)
             characterScrollRect.verticalNormalizedPosition = Mathf.Clamp01(topOffset / scrollRange);
+    }
+
+    private void OnCharacterLeveledUp()
+    {
+        if (_selectedSlot?.data != null)
+            RefreshTopView(_selectedSlot.data);
     }
 
     public void RefreshAllSlots()

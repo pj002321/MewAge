@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Coffee.UIExtensions;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -19,6 +20,7 @@ public class EquipSlot : MonoBehaviour,
     [SerializeField] private Image weaponTypeImg;
     [SerializeField] private List<GameObject> starObjects; // 0=1성, 1=2성, 2=3성, 3=4성
     [SerializeField] private GameObject      starGlowObj;
+    [SerializeField] private UIShiny         mergeShiny;
 
     public int SlotIndex { get; set; }
 
@@ -67,6 +69,13 @@ public class EquipSlot : MonoBehaviour,
     {
         StopHighlight();
         if (synergyhilightImg) synergyhilightImg.enabled = false;
+    }
+
+    public void PlayMergeShiny()
+    {
+        if (mergeShiny == null) return;
+        mergeShiny.enabled = true;
+        mergeShiny.Play();
     }
 
     /// <summary>장착 확정 시 스케일업 + 페이드아웃 후 비활성화</summary>
