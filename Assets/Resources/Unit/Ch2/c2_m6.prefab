@@ -140,7 +140,6 @@ MonoBehaviour:
   goldDrop: 2
   expDrop: 2
   scoreValue: 10
-  damageCooldown: 1
   contactMaxDist: 0.8
   knockbackImmune: 0
   bleedDuration: 5
@@ -232,11 +231,12 @@ MonoBehaviour:
   chargeColor: {r: 1, g: 0, b: 0, a: 1}
   chargeScale: 0.85
   ghostInterval: 0.06
-  warningLineLength: 5
-  warningLineWidth: 0.06
+  warningLineLength: 3
+  warningLineWidth: 1
   warningColor: {r: 1, g: 0, b: 0, a: 1}
   warningMaterial: {fileID: 0}
   warningLineOrigin: {fileID: 0}
+  showWarningLine: 1
 --- !u!114 &-7682337208956565981
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -283,6 +283,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HitFlash
   flashDuration: 0.1
   flashMaterial: {fileID: 2100000, guid: f6d87d58797b8b9478efae2c2271cbe7, type: 2}
+  flashColor: {r: 1, g: 1, b: 1, a: 1}
   BaseColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &7957499469005562028
 GameObject:

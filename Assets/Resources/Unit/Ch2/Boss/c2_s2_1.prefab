@@ -146,7 +146,9 @@ MonoBehaviour:
   - rid: 2864143559287111824
   - rid: 2864143559287111826
   entryDrop: 1
-  entryScaleUpDuration: 0.35
+  entryDropHeight: 12
+  entryFallDuration: 0.5
+  entryBounceDuration: 0.35
   references:
     version: 2
     RefIds:
@@ -193,8 +195,8 @@ MonoBehaviour:
         bounceCount: 0
         bouncePause: 0.1
         warningDuration: 0.5
-        warningLineLength: 5
-        warningLineWidth: 0.5
+        warningLineLength: 3
+        warningLineWidth: 1
         warningColor: {r: 1, g: 0, b: 0, a: 1}
         warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
 --- !u!50 &8829713175602211872

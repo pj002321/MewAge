@@ -287,7 +287,9 @@ MonoBehaviour:
   - rid: 2864143559287111835
   - rid: 2864143559287111836
   entryDrop: 1
-  entryScaleUpDuration: 0.35
+  entryDropHeight: 12
+  entryFallDuration: 0.5
+  entryBounceDuration: 0.35
   references:
     version: 2
     RefIds:
@@ -305,18 +307,16 @@ MonoBehaviour:
         cloneLifetime: 30
         spreadSpacing: 2.5
         spreadDuration: 0.35
-        deathVfxPrefab: {fileID: 0}
-        deathVfxLifetime: 1
     - rid: 2864143559287111835
       type: {class: BossProjectileSkill, ns: , asm: Assembly-CSharp}
       data:
         cooldown: 2
         executeInPattern: 1
-        projectileID: Unit/Ch2/Proj/c1_s2_1_p
+        projectileID: Unit/Ch2/proj/c1_s2_1_p
         projectileSpeed: 6
-        firePoint: {fileID: 0}
-        warningLineLength: 5
-        warningLineWidth: 0.5
+        firePoint: {fileID: 2908955346115048226}
+        warningLineLength: 3
+        warningLineWidth: 1
         warningColor: {r: 1, g: 1, b: 1, a: 1}
         warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
         impactVfxPrefab: {fileID: 0}

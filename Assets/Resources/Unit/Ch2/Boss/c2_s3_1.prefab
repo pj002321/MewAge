@@ -268,7 +268,9 @@ MonoBehaviour:
   - rid: 2864143559287111830
   - rid: 2864143559287111831
   entryDrop: 1
-  entryScaleUpDuration: 0.35
+  entryDropHeight: 12
+  entryFallDuration: 0.5
+  entryBounceDuration: 0.35
   references:
     version: 2
     RefIds:
@@ -331,8 +333,8 @@ MonoBehaviour:
         preChargeDelay: 0.3
         poundChargeSpeed: 20
         chargeWarnDuration: 0.5
-        chargeWarningLength: 5
-        chargeWarningWidth: 0.5
+        chargeWarningLength: 3
+        chargeWarningWidth: 1
         chargeWarningColor: {r: 1, g: 0, b: 0, a: 1}
         chargeWarningMat: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
         ghostColor: {r: 1, g: 0.15, b: 0.15, a: 0.45}
