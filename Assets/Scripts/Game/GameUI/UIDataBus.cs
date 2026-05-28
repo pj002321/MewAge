@@ -8,4 +8,7 @@ public static class UIDataBus
     public static event System.Action OnCurrencyChanged;
 
     public static void BroadcastCurrencyChanged() => OnCurrencyChanged?.Invoke();
+
+    [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStatics() => OnCurrencyChanged = null;
 }

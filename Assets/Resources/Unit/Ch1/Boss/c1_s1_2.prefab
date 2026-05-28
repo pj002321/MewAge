@@ -388,7 +388,7 @@ MonoBehaviour:
   grogyDuration: 2
   grogyOverheadPrefab: {fileID: 7777409954982400410, guid: f66d4f4f0fe9de24182839d83a609535, type: 3}
   grogyOverheadAnchor: {fileID: 6968078373063109411}
-  chaseStopDistance: 1.5
+  chaseStopDistance: 4
   chaseDuration: 2.5
   idleDuration: 1
   _decal: {fileID: 4092441220517724094}
@@ -396,7 +396,9 @@ MonoBehaviour:
   - rid: 2864143559287111777
   - rid: 2864143559287111778
   entryDrop: 1
-  entryScaleUpDuration: 0.35
+  entryDropHeight: 12
+  entryFallDuration: 0.5
+  entryBounceDuration: 0.35
   references:
     version: 2
     RefIds:
@@ -405,8 +407,8 @@ MonoBehaviour:
       data:
         cooldown: 50
         executeInPattern: 1
-        cols: 6
-        rows: 8
+        cols: 7
+        rows: 9
         fillMode: 3
         randomCount: 12
         spikePrefab: {fileID: 6460595048091617095, guid: 4d3c28f74a20d0f46ac0e3698299bd9a, type: 3}

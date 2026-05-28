@@ -23,6 +23,14 @@ public class SynergyEffectManager : MonoBehaviourSingleton<SynergyEffectManager>
 
     public static HashSet<string> AchievedSynergies { get; private set; } = new();
 
+    [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStatics()
+    {
+        OnAchievedChanged    = null;
+        OnNewSynergyAchieved = null;
+        AchievedSynergies    = new HashSet<string>();
+    }
+
     private HashSet<string>          _previous    = new();
     private Dictionary<StatType, float> _appliedMods = new();
 

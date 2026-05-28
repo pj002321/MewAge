@@ -27,6 +27,10 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     [SerializeField] private GameObject waveClearPanel;
     [SerializeField] private float      waveClearDuration = 1f;
 
+    [Header("웨이브/스테이지 클리어 슬로우 모션")]
+    [SerializeField] private float clearSlowMoDuration = 0.6f;
+    [SerializeField] private float clearSlowMoScale    = 0.15f;
+
     [Header("타이머 색상")]
     [SerializeField] private Color timerNormalColor = Color.white;
     [SerializeField] private Color timerWarningColor = Color.red;
@@ -274,6 +278,18 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         yield return new WaitForSeconds(delay);
         if (anim != null) anim.speed = 0f;
     }
+    private IEnumerator SlowMoRoutine()
+    {
+        float elapsed = 0f;
+        while (elapsed < clearSlowMoDuration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            Time.timeScale = Mathf.Lerp(1f, clearSlowMoScale, elapsed / clearSlowMoDuration);
+            yield return null;
+        }
+        // 패널 진입 시 0f로 설정되므로 여기서는 복구하지 않음
+    }
+
     private IEnumerator WaveClearRoutine()
     {
         EnemySpawner.Shared?.StopSpawning();
@@ -294,6 +310,8 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 
         // 대기 중 사망(부활 패널)했다가 아직 isGameOver 상태면 패널 표시 중단
         if (isGameOver) yield break;
+
+        yield return StartCoroutine(SlowMoRoutine());
 
         // 최종 웨이브 클리어 → 게임 클리어 패널
         if (wave >= GetMaxWave())
@@ -829,10 +847,9 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
             FXManager.Shared?.SpawnLandingVFX(player.transform.position);
         }
 
-        // 입력 해제 + 보스 웨이브 시작
+        // 입력 해제 + 무기 준비 + 보스 스폰 시작 (타이머는 보스 착지 후 StartBossTimerCountdown에서 시작)
         if (player != null) player.InputLocked = false;
-        waveTimer   = BossWaveTimeLimit;
-        _pauseTimer = false;
+        waveTimer = BossWaveTimeLimit;   // 값 세팅만, _pauseTimer는 유지
         WeaponPoint.NotifyWaveStarted();
         if (WeaponManager.Instance != null)
             foreach (var wp in WeaponManager.Instance.GetActiveWeaponPoints())
@@ -840,6 +857,12 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         EnemySpawner.Shared?.ResumeSpawning(wave);
         if (BossIntroSequence.Shared != null)
             yield return StartCoroutine(BossIntroSequence.Shared.PlayBossNoti());
+    }
+
+    /// <summary>보스 낙하 연출 완료 후 BossController에서 호출 — 타이머 카운트다운을 시작합니다.</summary>
+    public void StartBossTimerCountdown()
+    {
+        _pauseTimer = false;
         StartCoroutine(TimerStartAnimation());
     }
 
@@ -1062,6 +1085,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         if (nextBoss <= 0)
         {
             WaveEnvironmentSwitcher.Shared?.SetNormal();
+            yield return StartCoroutine(SlowMoRoutine());
             ShowGameClear();
             yield break;
         }

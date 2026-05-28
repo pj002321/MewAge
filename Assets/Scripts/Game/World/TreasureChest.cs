@@ -20,6 +20,9 @@ public class TreasureChest : MonoBehaviour
     /// <summary>씬 내 활성 상자 목록. 웨이브 클리어 시 TreasureChestSpawner.ClearAll() 에서 정리.</summary>
     public static readonly List<TreasureChest> All = new();
 
+    [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStatics() => All.Clear();
+
     [Header("낙하")]
     [SerializeField] private float fallGravity = 35f;
 

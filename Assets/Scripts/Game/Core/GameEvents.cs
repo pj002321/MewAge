@@ -38,4 +38,13 @@ public static class GameEvents
     public static event Action<int, bool> OnWaveChanged;
     public static void WaveChanged(int wave, bool isBoss)
         => OnWaveChanged?.Invoke(wave, isBoss);
+
+    [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStatics()
+    {
+        OnGoldChanged  = null;
+        OnExpChanged   = null;
+        OnHPChanged    = null;
+        OnWaveChanged  = null;
+    }
 }

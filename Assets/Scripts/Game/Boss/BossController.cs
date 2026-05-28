@@ -95,11 +95,17 @@ public class BossController : MonoBehaviour, IEnemyHost
 
     // ── 입장 연출 ─────────────────────────────────────────────────────
     [BoxGroup("입장 연출")]
-    [Tooltip("true면 스케일 팝인 연출 후 패턴을 시작합니다")]
+    [Tooltip("true면 위에서 낙하 후 패턴을 시작합니다")]
     [SerializeField] private bool  entryDrop            = true;
     [BoxGroup("입장 연출")]
-    [Tooltip("팝인 완료 시간 (초). OutBack 커브로 오버슈트 바운스")]
-    [SerializeField] private float entryScaleUpDuration = 0.35f;
+    [Tooltip("낙하 시작 높이 (월드 유닛)")]
+    [SerializeField] private float entryDropHeight      = 12f;
+    [BoxGroup("입장 연출")]
+    [Tooltip("낙하 소요 시간 (초)")]
+    [SerializeField] private float entryFallDuration    = 0.5f;
+    [BoxGroup("입장 연출")]
+    [Tooltip("착지 후 바운스 복귀 시간 (초)")]
+    [SerializeField] private float entryBounceDuration  = 0.35f;
 
     // ── 내부 상태 ──────────────────────────────────────────────────
     private float            currentHP;
@@ -221,7 +227,10 @@ public class BossController : MonoBehaviour, IEnemyHost
         if (entryDrop && !_isClone)
             StartCoroutine(EntryDropRoutine());
         else
+        {
+            if (!_isClone) GameManager.Shared?.StartBossTimerCountdown();
             StartPatternLoop();
+        }
     }
 
     // ── 패턴 루프 관리 ────────────────────────────────────────────
@@ -249,29 +258,31 @@ public class BossController : MonoBehaviour, IEnemyHost
     {
         _dropping = true;
 
+        Vector3 targetPos   = transform.position;
         Vector3 targetScale = transform.localScale;
         if (targetScale.sqrMagnitude < 0.001f) targetScale = Vector3.one;
-        Vector3 spawnPos = transform.position;
 
-        transform.localScale = Vector3.zero;
-        FXManager.Shared?.SpawnBossEntryLandingVfx(spawnPos);
+        // 화면 위에서 낙하 시작
+        transform.position = targetPos + Vector3.up * entryDropHeight;
 
-        transform.DOScale(targetScale, entryScaleUpDuration)
-            .SetEase(Ease.OutBack)
-            .SetUpdate(true);
+        yield return transform.DOMove(targetPos, entryFallDuration)
+            .SetEase(Ease.InCubic)
+            .WaitForCompletion();
 
-        // WaitForCompletion 대신 직접 대기 — tween 실패 시 무한 대기 방지
-        float elapsed = 0f;
-        float timeout = entryScaleUpDuration + 0.5f;
-        while (elapsed < timeout && transform.localScale != targetScale)
-        {
-            elapsed += Time.unscaledDeltaTime;
-            yield return null;
-        }
+        // 착지 이펙트 + squash → 바운스 복귀
+        var col2d = GetComponent<Collider2D>();
+        Vector3 landingPos = col2d != null
+            ? new Vector3(targetPos.x, col2d.bounds.min.y, targetPos.z)
+            : targetPos;
+        FXManager.Shared?.SpawnBossEntryLandingVfx(landingPos);
+        yield return EnemyFX.ScaleY(transform, targetScale, 0.4f, 0.1f, Ease.OutQuad)
+            .WaitForCompletion();
+        yield return EnemyFX.ScaleY(transform, targetScale, 1f, entryBounceDuration, Ease.OutBack)
+            .WaitForCompletion();
 
         transform.localScale = targetScale;
-
         _dropping = false;
+        GameManager.Shared?.StartBossTimerCountdown();
         StartPatternLoop();
     }
 

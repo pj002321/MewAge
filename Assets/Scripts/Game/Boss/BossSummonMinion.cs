@@ -13,6 +13,9 @@ public class BossSummonMinion : MonoBehaviour
 
     public static readonly List<BossSummonMinion> All = new();
 
+    [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStatics() => All.Clear();
+
     private EnemyController _ec;
 
     public void Init(float duration, float moveSpeed, float contactDamage)
