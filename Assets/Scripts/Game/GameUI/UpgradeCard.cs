@@ -107,6 +107,16 @@ public class UpgradeCard : MonoBehaviour
 
     public void SetEmpty() => gameObject.SetActive(false);
 
+    public bool IsSold => soldOverlayImg != null && soldOverlayImg.gameObject.activeSelf;
+
+    public void SetBuyInteractable(bool interactable)
+    {
+        if (buyButton && buyButton.gameObject.activeSelf && !IsSold)
+            buyButton.interactable = interactable;
+        if (adButton && adButton.gameObject.activeSelf && !IsSold)
+            adButton.interactable = interactable;
+    }
+
     public void SoldOut(bool shake = true)
     {
         if (soldOverlayImg != null)

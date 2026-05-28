@@ -282,7 +282,7 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
                 isDoubleUp: doubleUp != null,
                 doubleUpResult: doubleUp)) break;
             SoundManager.Shared?.Play(SoundKey.UI_Merge);
-            if (isGrandMerge) break; // 그랜드 머지 후 캐스케이드 중단 (다른 무기 합성 방지)
+            // 결과 무기로 cascade (같은 무기가 인벤에 있으면 계속 합성)
             weaponName = actual.weaponName;
             star       = actual.star;
         }

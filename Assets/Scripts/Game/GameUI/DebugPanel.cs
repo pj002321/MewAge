@@ -464,13 +464,8 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
             return;
         }
 
-        // 2. 연쇄 합성 — 3개 모일 때마다 반복
-        int star = weapon.star;
-        while (star < 5 && inv.CanMergeAll(weapon.weaponName, star))
-        {
-            if (!inv.TryMergeAll(weapon.weaponName, star, weapon.UpgradedTo(star + 1))) break;
-            star++;
-        }
+        // 2. 상점 구매와 동일한 경로로 합성 — 그랜드 머지(3★) 포함 애니·더블업 모두 처리
+        UpgradeManager.Shared?.TryAutoMergeAll();
 
         // 3. 장착 빈 슬롯 있으면 방금 추가된 인벤 마지막 항목을 바로 장착
         bool hasEmpty = inv.Equipped.Count < PlayerInventory.MaxEquipped;

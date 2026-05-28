@@ -48,6 +48,17 @@ public class InvenSlot : MonoBehaviour,
         mergeShiny.Play();
     }
 
+    public Image IconImage => iconImg;
+
+    /// <summary>합성 슬램 연출 중 아이콘/별/타입아이콘만 숨깁니다. 프레임은 유지됩니다.</summary>
+    public void HideContentImages()
+    {
+        if (iconImg)      iconImg.enabled      = false;
+        if (weaponTypeImg) weaponTypeImg.enabled = false;
+        if (starObjects != null)
+            foreach (var s in starObjects) if (s != null) s.SetActive(false);
+    }
+
     // ────────────────────────────────────────────────────────────────
     // 슬롯 갱신
     // ────────────────────────────────────────────────────────────────

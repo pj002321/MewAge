@@ -23,9 +23,8 @@ public class HomeMemberPanel : MonoBehaviour
     public AugmentStatPanel[] augmentPanels; // [0]=Lv1, [1]=Lv2, [2]=Lv3
 
     [Header("고유능력 텍스트")]
-    public TextMeshProUGUI abilityNameText;  // f_고유능력  (예: "숙련")
-    public TextMeshProUGUI abilityDescText;  // f_능력설명  (예: "많은 적을 처치 시...")
-
+    public TextMeshProUGUI abilityNameText;
+    public TextMeshProUGUI abilityDescText;
 
     [Header("스크롤")]
     public ScrollRect      characterScrollRect;
@@ -55,7 +54,7 @@ public class HomeMemberPanel : MonoBehaviour
         TriggerDropIn();
     }
 
-    IEnumerator ApplyContentBottomPadding()
+IEnumerator ApplyContentBottomPadding()
     {
         yield return null;
         Canvas.ForceUpdateCanvases();
@@ -78,16 +77,17 @@ public class HomeMemberPanel : MonoBehaviour
         bool isScrolling = characterScrollRect.velocity.sqrMagnitude > 100f;
 
         if (isScrolling && !_wasScrolling)
-            _selectedSlot?.HidePortrait();
+            _selectedSlot?.OnScrollBegin();
         else if (!isScrolling && _wasScrolling)
-            _selectedSlot?.RefreshState();
+            _selectedSlot?.OnScrollEnd();
 
         _wasScrolling = isScrolling;
+
     }
 
     void OnEnable()
     {
-        if (!_started) return; // Start 전에는 Skip (Start에서 처리)
+        if (!_started) return;
         ReselectEquipped();
         TriggerDropIn();
     }
@@ -144,9 +144,12 @@ public class HomeMemberPanel : MonoBehaviour
                 SelectSlot(slot);
         });
     }
-    /// <summary>CharacterSlotView 에서 호출 — 선택 슬롯 교체.</summary>
+
     public void SelectSlot(CharacterSlotView slot)
     {
+        if (levelUpPanel != null && levelUpPanel.gameObject.activeSelf)
+            levelUpPanel.gameObject.SetActive(false);
+
         if (_selectedSlot != null && _selectedSlot != slot)
             _selectedSlot.Deselect();
 
@@ -162,9 +165,11 @@ public class HomeMemberPanel : MonoBehaviour
         if (levelUpPanel.gameObject.activeSelf)
         {
             levelUpPanel.gameObject.SetActive(false);
+            _selectedSlot?.SetCanvasOverride(true);
         }
         else
         {
+            _selectedSlot?.SetCanvasOverride(false);
             if (_selectedSlot != null && characterScrollRect != null)
                 StartCoroutine(ScrollToSlotTop(_selectedSlot));
             levelUpPanel.OnLevelUpSuccess = OnCharacterLeveledUp;
@@ -203,7 +208,6 @@ public class HomeMemberPanel : MonoBehaviour
             child.GetComponent<CharacterSlotView>()?.RefreshState();
     }
 
-    /// <summary>장착 버튼 클릭 시 CharacterSlotView → 여기로 전달.</summary>
     public void SetPortrait(DB_캐릭터 d)
     {
         if (characterNameText) characterNameText.text = d.f_이름;
@@ -216,7 +220,6 @@ public class HomeMemberPanel : MonoBehaviour
 
         HomeCharacterDisplay.Shared?.ChangeCharacter(d.f_캐릭ID);
 
-        // 스킬 아이콘
         if (skillIconImg)
         {
             var icon = MemberVisualConfig.Shared?.GetSkillIcon(d.f_스킬ID);
@@ -224,12 +227,9 @@ public class HomeMemberPanel : MonoBehaviour
             skillIconImg.enabled = icon != null;
         }
 
-        // 증강 티어 — 미보유 캐릭터는 0으로 처리(전부 잠금)
-        int tier = d.f_보유여부
-            ? (PlayerCharacterManager.Shared?.GetAugmentTier(d.f_캐릭ID) ?? 1)
-            : 0;
+        int rawTier = PlayerCharacterManager.Shared?.GetAugmentTier(d.f_캐릭ID) ?? 0;
+        int tier    = d.f_보유여부 ? Mathf.Max(1, rawTier) : 0;
 
-        // 증강 능력치 패널 3개
         if (augmentPanels != null)
         {
             if (augmentPanels.Length > 0 && augmentPanels[0] != null)
@@ -240,7 +240,6 @@ public class HomeMemberPanel : MonoBehaviour
                 augmentPanels[2].Refresh(d.f_속성3ID, d.f_S3, tier >= 3, d.f_등급);
         }
 
-        // 고유능력
         if (abilityNameText) abilityNameText.text = d.f_고유능력 ?? string.Empty;
         if (abilityDescText)  abilityDescText.text  = d.f_능력설명  ?? string.Empty;
     }

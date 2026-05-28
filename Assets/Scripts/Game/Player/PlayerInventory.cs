@@ -24,6 +24,9 @@ public class PlayerInventory : MonoBehaviourSingleton<PlayerInventory>
         public int              destInvenSlot; // 결과 인벤 슬롯 (destEquipSlot >= 0이면 무시)
         public Sprite           icon;
         public List<WeaponData> consumed;      // 소모된 2개 무기 데이터 (아이콘 참조용)
+        // Destroy 이전에 캡처한 아이콘·등급 — queued 애니에서도 유효
+        public List<Sprite>      consumedIcons;
+        public List<WeaponGrade> consumedGrades;
         public bool             isGrandMerge;   // 3★+3★ → 상위등급 랜덤 무기 합성
         public WeaponData       resultWeapon;   // 애니 표시용 결과 (그랜드 머지: grade+1)
         public bool             isDoubleUp;     // 1% 더블업 머지 당첨
@@ -282,14 +285,26 @@ public class PlayerInventory : MonoBehaviourSingleton<PlayerInventory>
             : invenIdx.Count > 0 ? invenIdx[0]
             : inventory.Count;
 
+        // ScriptableObject Destroy 전에 아이콘·등급 캡처
+        // (queued 애니메이션은 Destroy 이후 프레임에서 실행되므로 반드시 미리 저장)
+        var capIcons  = new List<Sprite>();
+        var capGrades = new List<WeaponGrade>();
+        foreach (var w in consumed)
+        {
+            capIcons.Add(w != null ? w.icon  : null);
+            capGrades.Add(w != null ? w.grade : WeaponGrade.Common);
+        }
+
         OnBeforeMerge?.Invoke(new MergeAnimInfo
         {
-            invenIndices  = new List<int>(invenIdx),
-            equipIndices  = new List<int>(equipIdx),
-            destEquipSlot = resultEquipSlot,
-            destInvenSlot = destInvenSlot,
-            icon          = consumed.Count > 0 ? consumed[0].icon : null,
-            consumed      = new List<WeaponData>(consumed),
+            invenIndices   = new List<int>(invenIdx),
+            equipIndices   = new List<int>(equipIdx),
+            destEquipSlot  = resultEquipSlot,
+            destInvenSlot  = destInvenSlot,
+            icon           = consumed.Count > 0 ? consumed[0].icon : null,
+            consumed       = new List<WeaponData>(consumed),
+            consumedIcons  = capIcons,
+            consumedGrades = capGrades,
             isGrandMerge   = star >= 3,
             resultWeapon   = displayResult ?? result,
             isDoubleUp     = isDoubleUp,
