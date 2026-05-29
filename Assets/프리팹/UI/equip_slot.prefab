@@ -93,7 +93,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Coffee.UIExtensions.UIShiny
   m_Version: 300
   m_EffectMaterial: {fileID: 2100000, guid: 9dc7e810a87b444ab96919f3215c2fe5, type: 2}
-  m_EffectFactor: 0
+  m_EffectFactor: 1
   m_Width: 0.25
   m_Rotation: 45
   m_Softness: 1
@@ -101,7 +101,7 @@ MonoBehaviour:
   m_Gloss: 1
   m_EffectArea: 0
   m_Player:
-    play: 1
+    play: 0
     initialPlayDelay: 0
     duration: 1
     loop: 0
@@ -197,8 +197,6 @@ GameObject:
   m_Component:
   - component: {fileID: 6933520656320497376}
   - component: {fileID: 5821894164580503932}
-  - component: {fileID: 5837785958502022851}
-  - component: {fileID: 1420911315978213854}
   m_Layer: 5
   m_Name: highlight
   m_TagString: Untagged
@@ -233,61 +231,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6592898190436432620}
   m_CullTransparentMesh: 1
---- !u!114 &5837785958502022851
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6592898190436432620}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Sprite: {fileID: 6173085861801296106, guid: 7f9faf6a986eadb4c8a271fa9721d04b, type: 3}
-  m_Type: 0
-  m_PreserveAspect: 0
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
---- !u!114 &1420911315978213854
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6592898190436432620}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 223db8059bc77144c9ba478a29ed4cd5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SpriteAnimation
-  frames:
-  - {fileID: 6173085861801296106, guid: 7f9faf6a986eadb4c8a271fa9721d04b, type: 3}
-  - {fileID: -837662104996745077, guid: 7f9faf6a986eadb4c8a271fa9721d04b, type: 3}
-  - {fileID: 3144518429546574231, guid: 7f9faf6a986eadb4c8a271fa9721d04b, type: 3}
-  - {fileID: -482948104340484489, guid: 7f9faf6a986eadb4c8a271fa9721d04b, type: 3}
-  - {fileID: 8227597053792346568, guid: 7f9faf6a986eadb4c8a271fa9721d04b, type: 3}
-  - {fileID: 6641857681792229012, guid: 7f9faf6a986eadb4c8a271fa9721d04b, type: 3}
-  - {fileID: 1189519528392649290, guid: 7f9faf6a986eadb4c8a271fa9721d04b, type: 3}
-  - {fileID: 8841844997069082280, guid: 7f9faf6a986eadb4c8a271fa9721d04b, type: 3}
-  - {fileID: 2898407644847333439, guid: 7f9faf6a986eadb4c8a271fa9721d04b, type: 3}
-  fps: 30
-  loop: 1
-  playOnEnable: 1
 --- !u!1 &6657267108625565554
 GameObject:
   m_ObjectHideFlags: 0
@@ -414,7 +357,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aa2b60f4ef0e96244b43874a49570f67, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EquipSlot
-  synergyhilightImg: {fileID: 5837785958502022851}
+  synergyhilightImg: {fileID: 0}
   frameImg: {fileID: 9079877753622942457}
   iconImg: {fileID: 4393228631931081257}
   weaponTypeImg: {fileID: 5771281226859125520}
@@ -478,7 +421,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8396771558544675873}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
@@ -508,7 +451,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8396771558544675873}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 223db8059bc77144c9ba478a29ed4cd5, type: 3}
   m_Name: 

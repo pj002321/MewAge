@@ -35,6 +35,7 @@ public class CharacterSlotView : MonoBehaviour
     HomeMemberPanel _panel;
     bool            _selected;
     Canvas          _canvas;
+    TextMeshProUGUI _deselectBtnLabel;
 
     void Awake()
     {
@@ -42,6 +43,8 @@ public class CharacterSlotView : MonoBehaviour
         if (_canvas == null) _canvas = gameObject.AddComponent<Canvas>();
         if (GetComponent<GraphicRaycaster>() == null)
             gameObject.AddComponent<GraphicRaycaster>();
+
+        _deselectBtnLabel = deselectLevelUpBtn?.GetComponentInChildren<TextMeshProUGUI>();
 
         GetComponent<Button>().onClick.AddListener(OnSlotClick);
         deselectLevelUpBtn?.onClick.AddListener(OnLevelUpClicked);
@@ -133,8 +136,16 @@ public class CharacterSlotView : MonoBehaviour
 
     void ApplySelectedState(bool owned, bool isEquipped)
     {
-        deselectPanel?.SetActive(!owned); // 미보유: 가격 표시용
+        deselectPanel?.SetActive(!owned);
         selectPanel  ?.SetActive(owned);
+
+        if (!owned)
+        {
+            fragGroup?.SetActive(false);
+            deselectLevelUpBtn?.gameObject.SetActive(true);
+            if (_deselectBtnLabel) _deselectBtnLabel.text = $"{data?.f_가격}";
+            return;
+        }
 
         if (portraitImg)    portraitImg   .gameObject.SetActive(true);
         if (thumbnailImage) thumbnailImage.gameObject.SetActive(false);

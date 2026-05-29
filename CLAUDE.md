@@ -8,6 +8,8 @@ MuAge is a 2D wave-based survival roguelite built in **Unity 6000.3.9f1 (Unity 6
 
 ---
 
+* 자체적인 생각을 줄이기 위해서 사용자에게 문제해결에 필요한 질문을 제시할 것.
+
 ## Script Folder Structure
 
 All C# game scripts live under `Assets/Scripts/Game/` and are organized by feature:

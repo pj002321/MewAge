@@ -229,10 +229,17 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
 
         SoundManager.Shared?.Play(SoundKey.Weapon_Equip);
 
-        // 자동 합성: 같은 이름+성이 3개 모이면 반복 합성
-        AutoMerge(inv, data.weaponName, data.star);
+        // 빈 장착 슬롯이 있으면 구매 즉시 장착
+        if (inv.HasEmptyEquipSlot())
+        {
+            for (int i = 0; i < inv.Inventory.Count; i++)
+            {
+                if (inv.Inventory[i] == invCopy) { inv.EquipFromInventory(i); break; }
+            }
+        }
 
-        RefreshPanel();
+        // 자동 합성: 인벤+장착 전체 스캔 후 가능한 모든 조합 합성
+        TryAutoMergeAll();
     }
 
     /// <summary>인벤에 합성 가능한 쌍이 있으면 하나 합성해서 슬롯 1개를 확보합니다.</summary>
@@ -438,8 +445,18 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
 
         isAdCardSold = true;
         SoundManager.Shared?.Play(SoundKey.UI_Buy);
-        AutoMerge(inv, claimedName, claimedStar);
-        RefreshPanel();
+
+        // 빈 장착 슬롯이 있으면 구매 즉시 장착
+        if (inv.HasEmptyEquipSlot())
+        {
+            for (int i = 0; i < inv.Inventory.Count; i++)
+            {
+                if (inv.Inventory[i] == adCardData) { inv.EquipFromInventory(i); break; }
+            }
+        }
+
+        // 자동 합성: 인벤+장착 전체 스캔 후 가능한 모든 조합 합성
+        TryAutoMergeAll();
     }
 
     // ────────────────────────────────────────────────────────────────

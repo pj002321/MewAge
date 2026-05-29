@@ -43,6 +43,14 @@ public class PlayerInventory : MonoBehaviourSingleton<PlayerInventory>
         get { int n = 0; foreach (var w in inventory) if (w != null) n++; return n >= MaxInventory; }
     }
 
+    public bool HasEmptyEquipSlot()
+    {
+        if (equipped.Count < MaxEquipped) return true;
+        foreach (var w in equipped)
+            if (w == null) return true;
+        return false;
+    }
+
     // ────────────────────────────────────────────────────────────────
     // 인벤토리 추가
     // ────────────────────────────────────────────────────────────────
@@ -272,9 +280,10 @@ public class PlayerInventory : MonoBehaviourSingleton<PlayerInventory>
         foreach (int i in invenIdx) consumed.Add(inventory[i]);
         foreach (int i in equipIdx) consumed.Add(equipped[i]);
 
-        // 합성 결과물 가격 = 소모 3개 합산
+        // 합성 결과물 가격 = 소모 2개 합산
         int totalPrice = 0;
-        foreach (var w in consumed) totalPrice += Mathf.Max(1, w.price);
+        foreach (var w in consumed)
+            totalPrice += Mathf.Max(1, w.price);
         result.price = totalPrice;
 
         // 결과 배치 슬롯 기억

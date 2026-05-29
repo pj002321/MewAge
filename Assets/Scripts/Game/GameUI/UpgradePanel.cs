@@ -197,6 +197,9 @@ public class UpgradePanel : MonoBehaviour
         _lastDisplayedAtk = -1f;
         _atkBeforeMerge   = -1f;
         RefreshAtkUI(animate: false);
+
+        // 상점 열릴 때 기존 합성 가능한 쌍이 있으면 자동 합성 (구독 완료 후 실행해야 애니 이벤트 수신 가능)
+        UpgradeManager.Shared?.TryAutoMergeAll();
     }
 
     private void OnDisable()
@@ -845,14 +848,31 @@ public class UpgradePanel : MonoBehaviour
         Camera cam      = rootCanvas.renderMode != RenderMode.ScreenSpaceOverlay ? rootCanvas.worldCamera : null;
         var    parentRt = (RectTransform)rootCanvas.transform;
 
-        // 목적지 슬롯 위치
-        RectTransform destRt = null;
-        if (info.destEquipSlot >= 0 && info.destEquipSlot < equipSlots.Length)
-            destRt = equipSlots[info.destEquipSlot].GetComponent<RectTransform>();
-        else if (info.destInvenSlot >= 0 && info.destInvenSlot < invenSlots.Length)
-            destRt = invenSlots[info.destInvenSlot].GetComponent<RectTransform>();
+        // ── 연쇄 그랜드 머지를 ghost 발사 전에 먼저 감지 ────────────────
+        // 목적지가 확정돼야 ghost들이 올바른 슬롯으로 날아간다.
+        bool isChainGrand = false;
+        PlayerInventory.MergeAnimInfo chainInfo = default;
+        if (!info.isGrandMerge && _mergeQueue.Count > 0)
+        {
+            var peeked = _mergeQueue.Peek();
+            bool destIsChainSource = info.destEquipSlot >= 0
+                ? peeked.isGrandMerge && peeked.equipIndices.Contains(info.destEquipSlot)
+                : peeked.isGrandMerge && peeked.invenIndices.Contains(info.destInvenSlot);
+            if (destIsChainSource)
+            {
+                isChainGrand = true;
+                chainInfo    = _mergeQueue.Dequeue();
+            }
+        }
 
-        // destRt null이면 _mergeAnimPlaying 리셋 후 종료
+        // 최종 목적지: 체인이면 체인의 결과 슬롯, 아니면 현재 합성의 결과 슬롯
+        var reveal = isChainGrand ? chainInfo : info;
+        RectTransform destRt = null;
+        if (reveal.destEquipSlot >= 0 && reveal.destEquipSlot < equipSlots.Length)
+            destRt = equipSlots[reveal.destEquipSlot].GetComponent<RectTransform>();
+        else if (reveal.destInvenSlot >= 0 && reveal.destInvenSlot < invenSlots.Length)
+            destRt = invenSlots[reveal.destInvenSlot].GetComponent<RectTransform>();
+
         if (destRt == null)
         {
             FinishMergeAnim();
@@ -863,8 +883,7 @@ public class UpgradePanel : MonoBehaviour
             parentRt, RectTransformUtility.WorldToScreenPoint(cam, destRt.position),
             cam, out Vector2 destLocal);
 
-        // 소스 ghost 수집 및 발사
-        // 목적지 슬롯과 동일한 소스는 건너뜀 (제자리 ghost가 "먼저 펄스" 처럼 보이는 문제 방지)
+        // ── 소스 ghost 발사 (모두 최종 목적지로) ─────────────────────────
         var consumedIcons  = info.consumedIcons  ?? new List<Sprite>();
         var consumedGrades = info.consumedGrades ?? new List<WeaponGrade>();
         int dataIdx  = 0;
@@ -876,8 +895,6 @@ public class UpgradePanel : MonoBehaviour
             WeaponGrade grade = dataIdx < consumedGrades.Count ? consumedGrades[dataIdx] : WeaponGrade.Common;
             dataIdx++;
             if (i >= invenSlots.Length) continue;
-            if (info.destEquipSlot < 0 && i == info.destInvenSlot) continue; // 목적지 슬롯은 건너뜀
-            // 소스 슬롯 콘텐츠만 숨김 (프레임은 유지) → ghost가 무기 자체가 이동하는 것처럼 보임
             invenSlots[i].HideContentImages();
             RectTransformUtility.ScreenPointToLocalPointInRectangle(
                 parentRt, RectTransformUtility.WorldToScreenPoint(cam, invenSlots[i].transform.position),
@@ -891,14 +908,46 @@ public class UpgradePanel : MonoBehaviour
             WeaponGrade grade = dataIdx < consumedGrades.Count ? consumedGrades[dataIdx] : WeaponGrade.Common;
             dataIdx++;
             if (i >= equipSlots.Length) continue;
-            if (info.destEquipSlot >= 0 && i == info.destEquipSlot) continue; // 목적지 슬롯은 건너뜀
-            // 소스 슬롯 콘텐츠만 숨김
             equipSlots[i].HideContentImages();
             RectTransformUtility.ScreenPointToLocalPointInRectangle(
                 parentRt, RectTransformUtility.WorldToScreenPoint(cam, equipSlots[i].transform.position),
                 cam, out Vector2 p);
             var sz = ((RectTransform)equipSlots[i].transform).rect.size;
             StartCoroutine(SlamRoutine(p, sz, destLocal, grade, icon, flyDuration, punchDuration, stagger * srcCount++));
+        }
+
+        // ── 체인 그랜드 머지: 추가 소스 ghost ────────────────────────────
+        if (isChainGrand)
+        {
+            int chainIdx = 0;
+            foreach (int ci in chainInfo.invenIndices)
+            {
+                var cIcon  = chainIdx < chainInfo.consumedIcons.Count  ? chainInfo.consumedIcons[chainIdx]  : null;
+                var cGrade = chainIdx < chainInfo.consumedGrades.Count ? chainInfo.consumedGrades[chainIdx] : WeaponGrade.Common;
+                chainIdx++;
+                if (ci == info.destInvenSlot) continue; // merge1 dest → 이미 위에서 처리됨
+                if (ci >= invenSlots.Length) continue;
+                invenSlots[ci].HideContentImages();
+                RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    parentRt, RectTransformUtility.WorldToScreenPoint(cam, invenSlots[ci].transform.position),
+                    cam, out Vector2 cp);
+                var csz = ((RectTransform)invenSlots[ci].transform).rect.size;
+                StartCoroutine(SlamRoutine(cp, csz, destLocal, cGrade, cIcon, flyDuration, punchDuration, stagger * srcCount++));
+            }
+            foreach (int ci in chainInfo.equipIndices)
+            {
+                var cIcon  = chainIdx < chainInfo.consumedIcons.Count  ? chainInfo.consumedIcons[chainIdx]  : null;
+                var cGrade = chainIdx < chainInfo.consumedGrades.Count ? chainInfo.consumedGrades[chainIdx] : WeaponGrade.Common;
+                chainIdx++;
+                if (info.destEquipSlot >= 0 && ci == info.destEquipSlot) continue;
+                if (ci >= equipSlots.Length) continue;
+                equipSlots[ci].HideContentImages();
+                RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    parentRt, RectTransformUtility.WorldToScreenPoint(cam, equipSlots[ci].transform.position),
+                    cam, out Vector2 cp);
+                var csz = ((RectTransform)equipSlots[ci].transform).rect.size;
+                StartCoroutine(SlamRoutine(cp, csz, destLocal, cGrade, cIcon, flyDuration, punchDuration, stagger * srcCount++));
+            }
         }
 
         if (srcCount == 0)
@@ -910,27 +959,33 @@ public class UpgradePanel : MonoBehaviour
         // 마지막 ghost가 착지 후 펀치까지 완전히 끝날 때까지 대기
         yield return new WaitForSecondsRealtime(flyDuration + punchDuration + stagger * (srcCount - 1));
 
-        // ── 그랜드 머지: 룰렛 + 화면 중앙 이동 연출 ──────────────────
-        if (info.isGrandMerge && grandMergeCenterAnchor != null)
+        // ── 그랜드 머지: 룰렛 + 화면 중앙 이동 연출 ──────────────────────
+        bool isGrand = info.isGrandMerge || isChainGrand;
+        if (isGrand && grandMergeCenterAnchor != null)
         {
-            yield return StartCoroutine(GrandMergeRevealRoutine(destRt, destLocal, info));
+            yield return StartCoroutine(GrandMergeRevealRoutine(destRt, destLocal, reveal));
         }
 
-        // 결과 즉시 표시 → 펄스 + UIShiny + 사운드
-        RefreshInventoryUI();
+        // 결과 표시
+        if (_mergeQueue.Count > 0)
+            ShowSlotIntermediate(reveal.destEquipSlot, reveal.destInvenSlot, reveal.resultWeapon);
+        else
+            RefreshInventoryUI();
         StartCoroutine(PulseSlotRoutine(destRt));
 
-        if (!info.isGrandMerge)
+        if (!isGrand)
             SoundManager.Shared?.Play(SoundKey.UI_Merge);
 
-        if (info.destEquipSlot >= 0 && info.destEquipSlot < equipSlots.Length)
-            equipSlots[info.destEquipSlot].PlayMergeShiny();
-        else if (info.destInvenSlot >= 0 && info.destInvenSlot < invenSlots.Length)
-            invenSlots[info.destInvenSlot].PlayMergeShiny();
+        if (reveal.destEquipSlot >= 0 && reveal.destEquipSlot < equipSlots.Length)
+            equipSlots[reveal.destEquipSlot].PlayMergeShiny();
+        else if (reveal.destInvenSlot >= 0 && reveal.destInvenSlot < invenSlots.Length)
+            invenSlots[reveal.destInvenSlot].PlayMergeShiny();
 
-        // 큐에 다음 합성이 있으면 바로 실행
+        // 큐에 다음 합성이 있으면 — 그랜드 머지 결과가 보이고 나서 실행
         if (_mergeQueue.Count > 0)
         {
+            if (isGrand)
+                yield return new WaitForSecondsRealtime(0.6f);
             var next = _mergeQueue.Dequeue();
             _atkBeforeMerge = CalcTotalAtk();
             StartCoroutine(MergeAnimRoutine(next));
@@ -939,6 +994,7 @@ public class UpgradePanel : MonoBehaviour
 
         _mergeAnimPlaying = false;
         SetCardsInteractable(true);
+        if (nextWaveButton) nextWaveButton.interactable = true;
         RefreshInventoryUI();
     }
 
@@ -954,7 +1010,19 @@ public class UpgradePanel : MonoBehaviour
         }
         _mergeAnimPlaying = false;
         SetCardsInteractable(true);
+        if (nextWaveButton) nextWaveButton.interactable = true;
         RefreshInventoryUI();
+    }
+
+    /// <summary>연속 합성 중 목적지 슬롯 하나만 중간 결과로 업데이트합니다.
+    /// RefreshInventoryUI 대신 사용해 이후 애니메이션 소스 슬롯이 올바르게 표시되도록 합니다.</summary>
+    private void ShowSlotIntermediate(int destEquipSlot, int destInvenSlot, WeaponData result)
+    {
+        if (result == null) return;
+        if (destEquipSlot >= 0 && destEquipSlot < equipSlots.Length)
+            equipSlots[destEquipSlot].Refresh(result);
+        else if (destInvenSlot >= 0 && destInvenSlot < invenSlots.Length)
+            invenSlots[destInvenSlot].Refresh(result, false);
     }
 
     /// <summary>소스 슬롯 고스트가 목적지로 날아가 박히는 슬램 연출.</summary>
