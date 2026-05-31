@@ -37,7 +37,7 @@ public abstract class WeaponMeleeBaseBehaviour : WeaponBehaviourBase
 
     private const float MaxStateTime     = 4f;
     private const float MaxReturnTime    = 3f;
-    private const float HitScaleAmount   = 1.15f;
+    private const float HitScaleAmount   = 1.1f;
     private const float HitScaleDuration = 0.15f;
 
     [System.NonSerialized] private Vector3   _restScale;
@@ -215,6 +215,8 @@ public abstract class WeaponMeleeBaseBehaviour : WeaponBehaviourBase
         _state = State.Overshooting;
         if (_hitScaleCo != null) StopCoroutine(_hitScaleCo);
         _hitScaleCo = StartCoroutine(HitScalePunchRoutine());
+        StartCoroutine(HitstopRoutine());
+        SpawnGradeFlash();
     }
 
     private IEnumerator HitScalePunchRoutine()
@@ -223,13 +225,52 @@ public abstract class WeaponMeleeBaseBehaviour : WeaponBehaviourBase
         var orig = _restScale.sqrMagnitude > 0.001f ? _restScale : tf.localScale;
         tf.localScale = orig * HitScaleAmount;
 
-        for (float t = 0f; t < HitScaleDuration; t += Time.deltaTime)
+        float hold = HitScaleHoldDuration;
+        if (hold > 0f)
+            yield return new WaitForSecondsRealtime(hold);
+
+        for (float t = 0f; t < HitScaleDuration; t += Time.unscaledDeltaTime)
         {
             tf.localScale = Vector3.LerpUnclamped(orig * HitScaleAmount, orig, t / HitScaleDuration);
             yield return null;
         }
         tf.localScale = orig;
         _hitScaleCo   = null;
+    }
+
+    internal static bool IsHitstop { get; private set; }
+
+    private IEnumerator HitstopRoutine()
+    {
+        if (Time.timeScale <= 0f) yield break;
+        IsHitstop      = true;
+        Time.timeScale = 0f;
+        yield return new WaitForSecondsRealtime(0.05f);
+        Time.timeScale = 1f;
+        IsHitstop      = false;
+    }
+
+    private void SpawnGradeFlash()
+    {
+        var sr = Host.WeaponSr;
+        if (sr == null || sr.sprite == null) return;
+
+        Color gradeColor = Host._grade == WeaponGrade.Common
+            ? Color.white
+            : WeaponGradeColors.Get(Host._grade);
+
+        var go = new GameObject("WeaponFlash", typeof(SpriteRenderer));
+        go.transform.position   = Host.transform.position;
+        go.transform.rotation   = Host.transform.rotation;
+        go.transform.localScale = Host.transform.lossyScale;
+
+        var flashSr = go.GetComponent<SpriteRenderer>();
+        flashSr.sprite        = sr.sprite;
+        flashSr.color         = new Color(gradeColor.r, gradeColor.g, gradeColor.b, 0.9f);
+        flashSr.sortingLayerID = sr.sortingLayerID;
+        flashSr.sortingOrder   = sr.sortingOrder + 1;
+
+        Object.Destroy(go, 0.15f);
     }
 
     protected virtual void UpdateOvershooting()
@@ -255,6 +296,9 @@ public abstract class WeaponMeleeBaseBehaviour : WeaponBehaviourBase
     }
 
     protected virtual void OnReturnUpdate() { }
+
+    /// <summary>타격 임베드 중 1.1x 스케일을 유지할 시간. 0이면 즉시 복귀.</summary>
+    protected virtual float HitScaleHoldDuration => 0f;
 
     // ── 미아 방지 타임아웃 ───────────────────────────────────────────────
     private void HandleTimeout()

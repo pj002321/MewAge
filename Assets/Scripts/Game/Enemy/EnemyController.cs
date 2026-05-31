@@ -836,38 +836,33 @@ public class EnemyController : MonoBehaviour, IEnemyHost
 
     private IEnumerator DieRoutine()
     {
-        // 이동·공격·충돌 데미지 비활성화
         enabled = false;
         if (rb != null) rb.linearVelocity = Vector2.zero;
 
-        // 사망 위치에 파편 스폰 (FXManager 없으면 인라인 실행)
+        SpriteRenderer mainSr = null;
+        if (srs != null)
+            foreach (var sr in srs)
+                if (sr != null && sr.sprite != null) { mainSr = sr; break; }
+
         var debrisPos = transform.position;
         if (FXManager.Shared != null)
             FXManager.Shared.SpawnDeathDebris(debrisPos, _deathDir);
         else
             SpawnDebrisFallback(debrisPos);
 
-        // SpriteSilhouette 쉐이더로 재질 교체 → 흰색 실루엣
-        var flashMat = GetDeathFlashMat();
-        if (srs != null && flashMat != null)
-            foreach (var sr in srs) if (sr != null) sr.material = flashMat;
-
-        float duration  = 0.22f;
-        float elapsed   = 0f;
-        Vector3 initScale = transform.localScale;
-        float spinSpeed = 1200f; // deg/s
-        float flySpeed  = 14f;
-
-        while (elapsed < duration)
+        if (mainSr != null)
         {
-            float t = elapsed / duration;
-            transform.localScale = Vector3.Lerp(initScale, Vector3.zero, t * t);
-            transform.Rotate(0f, 0f, spinSpeed * Time.deltaTime);
-            transform.position += (Vector3)(_deathDir * flySpeed * (1f - t) * Time.deltaTime);
-            elapsed += Time.deltaTime;
-            yield return null;
+            Vector2 flyDir = _deathDir;
+            if (PlayerController.Instance != null)
+            {
+                var toSelf = (Vector2)transform.position - (Vector2)PlayerController.Instance.transform.position;
+                if (toSelf.sqrMagnitude > 0.001f) flyDir = toSelf.normalized;
+            }
+            SpriteSliceFX.Play(mainSr, flyDir, 2, 2);
+            foreach (var sr in srs) if (sr != null) sr.enabled = false;
         }
 
+        yield return null;
         Destroy(gameObject);
     }
 

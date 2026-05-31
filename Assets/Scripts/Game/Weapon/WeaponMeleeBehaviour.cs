@@ -104,6 +104,8 @@ public class WeaponMeleeBehaviour : WeaponMeleeBaseBehaviour
         Host.HitArea(returnDir, null);
     }
 
+    protected override float HitScaleHoldDuration => embedDuration;
+
     protected override void OnStrikeHit(WeaponPoint.CombatTarget target, Vector2 hitDir)
         => Host.HitArea(hitDir, target.Enemy);
 

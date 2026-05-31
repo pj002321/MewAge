@@ -1,4 +1,5 @@
 using System.Collections;
+using DG.Tweening;
 using UnityEngine;
 
 /// <summary>
@@ -81,10 +82,10 @@ public abstract class WeaponBehaviourBase
         Host.transform.localPosition = Vector3.zero;
     }
 
-    // 앵커 방향 기반 snap 순서: 우상단→우하단→좌상단→좌하단→우→좌
+    // 앵커 방향 기반 착지 순서: 우상단→우하단→좌상단→좌하단→우→좌
     private float GetSnapDelay()
     {
-        const float step = 0.04f;
+        const float step = 0.06f;
         Vector2 d = AnchorDir();
         if (d.x >  0.2f && d.y >  0.2f) return 0 * step;
         if (d.x >  0.2f && d.y < -0.2f) return 1 * step;
@@ -98,26 +99,20 @@ public abstract class WeaponBehaviourBase
     {
         _inWaveIntro = true;
 
-        Vector3 outLocalPos  = (Vector3)AnchorDir() * 1.2f;
-        const float outTime  = 0.45f;
-        const float holdTime = 0.08f;
-        const float snapTime = 0.06f;
+        Vector3 anchorDir     = (Vector3)AnchorDir();
+        float   offscreenDist = Camera.main != null ? Camera.main.orthographicSize * 2.8f : 14f;
+        Host.transform.localPosition = anchorDir * offscreenDist;
 
-        for (float t = 0f; t < outTime; t += Time.deltaTime)
-        {
-            Host.transform.localPosition = Vector3.Lerp(Vector3.zero, outLocalPos,
-                Mathf.SmoothStep(0f, 1f, t / outTime));
-            yield return null;
-        }
-        Host.transform.localPosition = outLocalPos;
+        float delay = GetSnapDelay();
+        if (delay > 0f)
+            yield return new WaitForSeconds(delay);
 
-        yield return new WaitForSeconds(holdTime + GetSnapDelay());
+        var tween = Host.transform.DOLocalMove(Vector3.zero, 0.38f)
+            .SetEase(Ease.OutBack, 1.5f)
+            .SetLink(Host.gameObject);
 
-        for (float t = 0f; t < snapTime; t += Time.deltaTime)
-        {
-            Host.transform.localPosition = Vector3.Lerp(outLocalPos, Vector3.zero, t / snapTime);
-            yield return null;
-        }
+        yield return tween.WaitForCompletion();
+
         Host.transform.localPosition = Vector3.zero;
         _inWaveIntro = false;
         _introCo     = null;

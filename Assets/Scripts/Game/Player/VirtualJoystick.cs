@@ -36,7 +36,7 @@ public class VirtualJoystick : MonoBehaviour
     private void Update()
     {
         // 업그레이드 패널 등 pause 상태에서는 조이스틱 비활성
-        if (Time.timeScale == 0f)
+        if (Time.timeScale == 0f && !WeaponMeleeBaseBehaviour.IsHitstop)
         {
             if (background.gameObject.activeSelf) EndJoystick();
             return;
