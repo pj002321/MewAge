@@ -8,14 +8,20 @@ using UnityEngine;
 [System.Serializable]
 public abstract class WeaponMeleeBaseBehaviour : WeaponBehaviourBase
 {
-    // ── 상태머신 Inspector 설정 ──────────────────────────────────────────
-    [SerializeField] protected float pullbackDist     = 0.5f;
-    [SerializeField] protected float pullbackSpeed    = 8f;
-    [SerializeField] protected float strikeSpeed      = 80f;
-    [SerializeField] protected float returnSpeed      = 25f;
-    [SerializeField] protected float hitDistance      = 0.4f;
-    [SerializeField] protected float overshootDistance = 0.5f;
-    [SerializeField] protected float overshootSpeed    = 60f;
+    // ── 수치 (코드에서 통일 관리, Override 미사용 시 이 기본값 적용) ─────────
+    protected float pullbackDist      = 0.8f;
+    protected float pullbackSpeed     = 5f;
+    protected float strikeSpeed       = 300f;
+    protected float returnSpeed       = 70f;
+    protected float hitDistance       = 0.4f;
+    protected float overshootDistance = 0.5f;
+    protected float overshootSpeed    = 60f;
+
+    [Header("속도 오버라이드")]
+    [SerializeField] private bool  _overrideSpeed          = false;
+    [SerializeField] private float _overridePullbackSpeed  = 5f;
+    [SerializeField] private float _overrideStrikeSpeed    = 300f;
+    [SerializeField] private float _overrideReturnSpeed    = 70f;
 
     // ── 런타임 상태 ──────────────────────────────────────────────────────
     protected enum State { Idle, Pullback, Striking, Overshooting, Returning }
@@ -29,10 +35,27 @@ public abstract class WeaponMeleeBaseBehaviour : WeaponBehaviourBase
     private float _returningTimer;
     private Vector2 _attackLookDir;
 
-    private const float MaxStateTime  = 4f;
-    private const float MaxReturnTime = 3f;
+    private const float MaxStateTime     = 4f;
+    private const float MaxReturnTime    = 3f;
+    private const float HitScaleAmount   = 1.15f;
+    private const float HitScaleDuration = 0.15f;
+
+    [System.NonSerialized] private Vector3   _restScale;
+    [System.NonSerialized] private Coroutine _hitScaleCo;
 
     // ── WeaponBehaviourBase override ─────────────────────────────────────
+
+    public override void OnStart()
+    {
+        base.OnStart();
+        _restScale = Host.transform.localScale;
+        if (_overrideSpeed)
+        {
+            pullbackSpeed = _overridePullbackSpeed;
+            strikeSpeed   = _overrideStrikeSpeed;
+            returnSpeed   = _overrideReturnSpeed;
+        }
+    }
 
     public override bool IsManagingLocalPos => _inWaveIntro || _state != State.Idle;
 
@@ -183,8 +206,30 @@ public abstract class WeaponMeleeBaseBehaviour : WeaponBehaviourBase
             OnStrikeHit(_target, hitDir);
             _overshootTarget = targetPos + (Vector3)(hitDir * overshootDistance);
             _target = WeaponPoint.CombatTarget.None;
-            _state  = State.Overshooting;
+            EnterOvershooting();
         }
+    }
+
+    protected void EnterOvershooting()
+    {
+        _state = State.Overshooting;
+        if (_hitScaleCo != null) StopCoroutine(_hitScaleCo);
+        _hitScaleCo = StartCoroutine(HitScalePunchRoutine());
+    }
+
+    private IEnumerator HitScalePunchRoutine()
+    {
+        var tf   = Host.transform;
+        var orig = _restScale.sqrMagnitude > 0.001f ? _restScale : tf.localScale;
+        tf.localScale = orig * HitScaleAmount;
+
+        for (float t = 0f; t < HitScaleDuration; t += Time.deltaTime)
+        {
+            tf.localScale = Vector3.LerpUnclamped(orig * HitScaleAmount, orig, t / HitScaleDuration);
+            yield return null;
+        }
+        tf.localScale = orig;
+        _hitScaleCo   = null;
     }
 
     private void UpdateOvershooting()
@@ -218,6 +263,8 @@ public abstract class WeaponMeleeBaseBehaviour : WeaponBehaviourBase
                 _target = WeaponPoint.CombatTarget.None;
                 Host.transform.localPosition = Vector3.zero;
                 Host.transform.rotation      = Quaternion.identity;
+                if (_hitScaleCo != null) { StopCoroutine(_hitScaleCo); _hitScaleCo = null; }
+                if (_restScale.sqrMagnitude > 0.001f) Host.transform.localScale = _restScale;
                 RestoreWeaponAlpha();
                 Host.cooldownTimer = Host.attackCooldown;
                 _state             = State.Idle;

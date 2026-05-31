@@ -5,10 +5,12 @@ using UnityEngine;
 [System.Serializable]
 public class WeaponRangedBehaviour : WeaponBehaviourBase
 {
+    // 기본 투사체 속도 — Override 체크 해제 시 모든 원거리 무기에 통일 적용
+    private const float DefaultProjectileSpeed = 25f;
+
     [ProjectileID("Weapons")]
     [SerializeField] private string     projectileID;
     [System.NonSerialized] private GameObject _projectilePrefab;
-    [SerializeField] private float      projectileSpeed     = 8f;
     [SerializeField] private bool       useParabolicShot    = false;
     [SerializeField] private float      parabolicArcHeight  = 1.5f;
     [SerializeField] private Vector3    parabolicSpawnLocalPos;
@@ -18,12 +20,18 @@ public class WeaponRangedBehaviour : WeaponBehaviourBase
     [SerializeField] private float recoilBackDur   = 0.06f;
     [SerializeField] private float recoilReturnDur = 0.14f;
 
+    [Header("속도 오버라이드")]
+    [SerializeField] private bool  _overrideSpeed    = false;
+    [SerializeField] private float projectileSpeed   = DefaultProjectileSpeed;
+
+    private float EffectiveSpeed => _overrideSpeed ? projectileSpeed : DefaultProjectileSpeed;
+
     private Coroutine _recoilCoroutine;
 
     public override float      GetPlayerAttackBonus(PlayerController player) => player.RangedAttackBonus;
     public override float      GetRelicBonusPct(RelicManager relic)         => relic.RangedAtkBonusPct;
     public override GameObject GetProjectilePrefab()                         => _projectilePrefab;
-    public override float      GetProjectileSpeed()                          => projectileSpeed;
+    public override float      GetProjectileSpeed()                          => EffectiveSpeed;
 
     public override bool OverridesRotation => useParabolicShot;
 
@@ -55,6 +63,7 @@ public class WeaponRangedBehaviour : WeaponBehaviourBase
         SoundManager.Shared?.Play(SoundKey.Weapon_Shoot);
         var (finalDmg, isCrit) = Host.RollCrit(Host.attackDamage);
 
+        float   spd      = EffectiveSpeed;
         Vector3 spawnPos = useParabolicShot ? GetParabolicSpawnPos() : Host.transform.position;
         var go   = Object.Instantiate(_projectilePrefab, spawnPos, Quaternion.identity);
         var proj = go.GetComponent<Projectile>();
@@ -62,7 +71,7 @@ public class WeaponRangedBehaviour : WeaponBehaviourBase
 
         if (useParabolicShot)
         {
-            proj.InitParabolic(finalDmg, tgt.Position, projectileSpeed, parabolicArcHeight,
+            proj.InitParabolic(finalDmg, tgt.Position, spd, parabolicArcHeight,
                 isPrimaryCritical: isCrit, lifeSteal: Host.lifeSteal, dotDamage: Host.dotDamage,
                 areaHitRadius: Host.areaHitRadius, areaHitDamageRatio: Host.areaHitDamageRatio,
                 criticalRate: Host.criticalRate, criticalMultiplier: Host.criticalMultiplier,
@@ -70,12 +79,11 @@ public class WeaponRangedBehaviour : WeaponBehaviourBase
         }
         else
         {
-            proj.Init(finalDmg, aimDir, projectileSpeed, isPrimaryCritical: isCrit,
+            proj.Init(finalDmg, aimDir, spd, isPrimaryCritical: isCrit,
                 lifeSteal: Host.lifeSteal, dotDamage: Host.dotDamage,
                 areaHitRadius: Host.areaHitRadius, areaHitDamageRatio: Host.areaHitDamageRatio,
                 criticalRate: Host.criticalRate, criticalMultiplier: Host.criticalMultiplier,
-                baseDamage: Host.attackDamage, knockbackPower: Host.knockbackPower,
-                acceleration: Mathf.Clamp(projectileSpeed * 0.05f, 0.1f, 0.4f));
+                baseDamage: Host.attackDamage, knockbackPower: Host.knockbackPower);
         }
 
         Host.ApplyShootSpecialEffect(proj, spawnPos, aimDir);
@@ -100,12 +108,11 @@ public class WeaponRangedBehaviour : WeaponBehaviourBase
         var go   = Object.Instantiate(_projectilePrefab, pos, Quaternion.identity);
         var proj = go.GetComponent<Projectile>();
         if (proj == null) { Object.Destroy(go); return; }
-        proj.Init(dmg, dir, projectileSpeed, isPrimaryCritical: isCrit,
+        proj.Init(dmg, dir, EffectiveSpeed, isPrimaryCritical: isCrit,
             lifeSteal: Host.lifeSteal, dotDamage: Host.dotDamage,
             areaHitRadius: Host.areaHitRadius, areaHitDamageRatio: Host.areaHitDamageRatio,
             criticalRate: Host.criticalRate, criticalMultiplier: Host.criticalMultiplier,
-            baseDamage: dmg, knockbackPower: Host.knockbackPower,
-            acceleration: Mathf.Clamp(projectileSpeed * 0.05f, 0.1f, 0.4f));
+            baseDamage: dmg, knockbackPower: Host.knockbackPower);
     }
 
     private static Vector2 RotateDir(Vector2 v, float degrees)

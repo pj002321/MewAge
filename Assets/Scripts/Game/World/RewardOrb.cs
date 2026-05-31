@@ -143,6 +143,14 @@ public class RewardOrb : MonoBehaviour
         _floating   = true;
         _floatBaseY = transform.position.y;
         _floatTime  = Random.Range(0f, 1f);
+        StartCoroutine(AutoAttractRoutine());
+    }
+
+    private IEnumerator AutoAttractRoutine()
+    {
+        yield return new WaitForSeconds(0.5f);
+        if (gameObject != null && gameObject.activeInHierarchy && !_attracting)
+            BeginAttract();
     }
 
     private void BeginAttract()

@@ -232,7 +232,15 @@ public class DropItem : MonoBehaviour
     {
         _floating   = true;
         _floatBaseY = transform.position.y;
-        _floatTime  = Random.Range(0f, 1f); // 위상 무작위화 (오브들이 동기화되지 않도록)
+        _floatTime  = Random.Range(0f, 1f);
+        StartCoroutine(AutoAttractRoutine());
+    }
+
+    private IEnumerator AutoAttractRoutine()
+    {
+        yield return new WaitForSeconds(0.5f);
+        if (gameObject != null && gameObject.activeInHierarchy && _absorbState == AbsorbState.Idle)
+            ForceAttract();
     }
 
     private void BeginRepel(PlayerController player)

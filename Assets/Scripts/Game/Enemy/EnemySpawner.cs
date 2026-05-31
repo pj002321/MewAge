@@ -31,6 +31,12 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
     [Header("분산 스폰")]
     [SerializeField] [Range(4, 12)] private int sectorCount = 8; // 360도를 몇 섹터로 나눌지
 
+    [Header("그룹 스폰")]
+    [SerializeField] [Range(0f, 1f)] private float groupSpawnChance  = 0.5f;
+    [SerializeField] private float groupSpawnMinDist  = 5f;
+    [SerializeField] private float groupSpawnMaxDist  = 8f;
+    [SerializeField] private float groupSpawnRadius   = 1.2f;
+
     private int[] _shuffledSectors;
     private int   _sectorCursor;
 
@@ -114,8 +120,11 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
             int alive         = CountActiveEnemies();
             int spawnThisTick = Mathf.Max(0, Mathf.Min(currentSpawnCount, cap - alive));
 
-            for (int i = 0; i < spawnThisTick; i++)
-                SpawnEnemy();
+            if (spawnThisTick >= 2 && Random.value < groupSpawnChance)
+                SpawnEnemyGroup(spawnThisTick);
+            else
+                for (int i = 0; i < spawnThisTick; i++)
+                    SpawnEnemy();
 
             yield return new WaitForSeconds(currentInterval);
         }
@@ -132,6 +141,47 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
         DoSpawn(data.prefab, GetRandomEdgePosition(), data);
     }
 
+
+    private void SpawnEnemyGroup(int slotCount)
+    {
+        Vector2 center    = GetGroupCenter();
+        int     groupSize = Mathf.Min(slotCount, Random.Range(3, 5)); // 3~4마리
+
+        for (int i = 0; i < groupSize; i++)
+        {
+            var data = PickUnitData();
+            if (data?.prefab == null) continue;
+            Vector2 offset = Random.insideUnitCircle * groupSpawnRadius;
+            DoSpawn(data.prefab, center + offset, data);
+        }
+
+        // 남은 슬롯은 개별 스폰
+        for (int i = groupSize; i < slotCount; i++)
+            SpawnEnemy();
+    }
+
+    private Vector2 GetGroupCenter()
+    {
+        Vector2 playerPos = PlayerController.Instance != null
+            ? (Vector2)PlayerController.Instance.transform.position
+            : Vector2.zero;
+
+        Bounds b = SpawnZone.Shared != null
+            ? new Bounds(SpawnZone.Shared.BoundsCenter, SpawnZone.Shared.BoundsSize * 0.85f)
+            : new Bounds(Vector3.zero, new Vector3(10f, 18f, 0f));
+
+        for (int i = 0; i < 25; i++)
+        {
+            float   angle = Random.Range(0f, Mathf.PI * 2f);
+            float   dist  = Random.Range(groupSpawnMinDist, groupSpawnMaxDist);
+            Vector2 pos   = playerPos + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * dist;
+            if (pos.x >= b.min.x && pos.x <= b.max.x && pos.y >= b.min.y && pos.y <= b.max.y)
+                return pos;
+        }
+
+        float fb = Random.Range(0f, Mathf.PI * 2f);
+        return playerPos + new Vector2(Mathf.Cos(fb), Mathf.Sin(fb)) * groupSpawnMinDist;
+    }
 
     /// <summary>DB_웨이브 슬롯에서 비율 가중치 랜덤으로 UnitData 선택.</summary>
     private UnitData PickUnitData()

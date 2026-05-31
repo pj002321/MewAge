@@ -256,6 +256,9 @@ public class UpgradePanel : MonoBehaviour
         // 첫 웨이브(wave=0)는 리롤 금지
         if (rerollButton) rerollButton.interactable = !isFirstWave;
 
+        // 합성 애니 중에는 Setup()이 buyButton.interactable=true로 덮어쓰므로 재잠금
+        if (_mergeAnimPlaying) SetCardsInteractable(false);
+
         // 등급 확률 텍스트
         if (normalProbText)    normalProbText.text    = $"{pNormal:0.#}%";
         if (rareProbText)      rareProbText.text      = $"{pRare:0.#}%";

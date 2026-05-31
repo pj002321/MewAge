@@ -9,10 +9,13 @@ using UnityEngine.UI;
 /// </summary>
 public class SpriteAnimation : MonoBehaviour
 {
-    [SerializeField] List<Sprite> frames;
-    [SerializeField] float        fps      = 12f;
-    [SerializeField] bool         loop     = true;
-    [SerializeField] bool         playOnEnable = true;
+    public enum EndBehaviour { KeepLastFrame, Destroy, Disable }
+
+    [SerializeField] List<Sprite>  frames;
+    [SerializeField] float         fps          = 12f;
+    [SerializeField] bool          loop         = true;
+    [SerializeField] bool          playOnEnable = true;
+    [SerializeField] EndBehaviour  onEnd        = EndBehaviour.KeepLastFrame;
 
     Image          _image;
     SpriteRenderer _sr;
@@ -56,11 +59,17 @@ public class SpriteAnimation : MonoBehaviour
             index++;
             if (index >= frames.Count)
             {
-                if (loop) index = 0;
+                if (loop) { index = 0; }
                 else break;
             }
         }
         _co = null;
+        switch (onEnd)
+        {
+            case EndBehaviour.Destroy:  Destroy(gameObject);        break;
+            case EndBehaviour.Disable:  gameObject.SetActive(false); break;
+            // KeepLastFrame: 마지막 스프라이트가 그대로 남음
+        }
     }
 
     void SetSprite(Sprite sprite)

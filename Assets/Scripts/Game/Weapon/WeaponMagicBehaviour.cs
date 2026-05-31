@@ -28,7 +28,7 @@ public class WeaponMagicBehaviour : WeaponMeleeBaseBehaviour
     [ProjectileID("Weapons")]
     [SerializeField] private string     projectileID;
     [System.NonSerialized] private GameObject _projectilePrefab;
-    [SerializeField] private float      projectileSpeed = 8f;
+    [SerializeField] private float      projectileSpeed = 15f;
 
     // ── Visual ────────────────────────────────────────────────────────
     private SpriteRenderer _weaponSr;
