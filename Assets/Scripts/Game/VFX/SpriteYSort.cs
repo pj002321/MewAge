@@ -15,14 +15,16 @@ public class SpriteYSort : MonoBehaviour
 
     private SpriteRenderer[] _renderers;
     private int[]             _offsets;
+    private int               _cachedYBase = int.MinValue;
 
     private void Awake() => Refresh();
 
     /// <summary>동적으로 자식 SR 구성이 바뀌었을 때 호출 (무기 장착 등)</summary>
     public void Refresh()
     {
-        _renderers = GetComponentsInChildren<SpriteRenderer>(true);
-        _offsets   = new int[_renderers.Length];
+        _renderers   = GetComponentsInChildren<SpriteRenderer>(true);
+        _offsets     = new int[_renderers.Length];
+        _cachedYBase = int.MinValue;
         for (int i = 0; i < _renderers.Length; i++)
             _offsets[i] = _renderers[i].sortingOrder;
     }
@@ -30,6 +32,8 @@ public class SpriteYSort : MonoBehaviour
     private void LateUpdate()
     {
         int yBase = -Mathf.RoundToInt(transform.position.y * multiplier);
+        if (yBase == _cachedYBase) return;
+        _cachedYBase = yBase;
         for (int i = 0; i < _renderers.Length; i++)
             if (_renderers[i] != null)
                 _renderers[i].sortingOrder = yBase + _offsets[i];

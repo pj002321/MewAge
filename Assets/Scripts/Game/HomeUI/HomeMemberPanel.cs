@@ -134,15 +134,17 @@ IEnumerator ApplyContentBottomPadding()
 
         string equippedId = PlayerCharacterManager.Shared?.EquippedCharID;
 
-        DB_캐릭터.ForEachEntity(row =>
+        int limit = DB_캐릭터.CountEntities > 0 ? DB_캐릭터.GetEntity(0).f_캐릭행수 : 0;
+        for (int i = 0; i < limit && i < DB_캐릭터.CountEntities; i++)
         {
+            var row  = DB_캐릭터.GetEntity(i);
             var slot = Instantiate(slotPrefab, characterContent);
             slot.Init(this);
             slot.Bind(row);
 
             if (row.f_캐릭ID == equippedId)
                 SelectSlot(slot);
-        });
+        }
     }
 
     public void SelectSlot(CharacterSlotView slot)

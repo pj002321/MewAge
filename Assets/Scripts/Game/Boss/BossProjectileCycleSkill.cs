@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using DG.Tweening;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
@@ -28,7 +29,7 @@ public class BossProjectileSkill : BossSkillBase
     {
         public ProjectileType type = ProjectileType.Aimed;
 
-        [Tooltip("경고 라인/마커가 표시되는 시간 (초)")]
+        [Tooltip("발사 전 예비 동작 시간 (초)")]
         public float warningTime = 0.4f;
 
         // ── 공통 (조준/방사형/부채꼴/호밍/바위) ─────────────────────
@@ -115,21 +116,12 @@ public class BossProjectileSkill : BossSkillBase
     [Tooltip("null이면 보스 중심에서 발사")]
     [SerializeField] private Transform  firePoint;
 
-    [Header("경고 라인")]
-    [SerializeField] private float    warningLineLength = 10f;
-    [SerializeField] private float    warningLineWidth  = 0.06f;
-    [SerializeField] private Color    warningColor      = Color.red;
-    [Tooltip("null이면 Sprites/Default 자동 생성")]
-    [SerializeField] private Material warningMaterial;
-
     [Header("호밍 착탄 VFX")]
     [SerializeField] private GameObject impactVfxPrefab;
     [SerializeField] private float      impactVfxLifetime = 1f;
 
     [Header("페이즈 목록 (순서대로 실행)")]
     [SerializeField] private List<PhaseConfig> phases = new();
-
-    private readonly List<LineRenderer> _activeWarnLines = new();
 
     public override void Init(BossController boss)
     {
@@ -172,7 +164,8 @@ public class BossProjectileSkill : BossSkillBase
                 Vector2   spawnPos = GetSpawnPos();
                 Vector2[] dirs     = GetDirs(cfg, spawnPos);
 
-                await WarnThenFireAsync(spawnPos, dirs, cfg.warningTime, cfg.accelTime, cfg.initialSpeedRatio, ct);
+                bool doJump = cfg.type == ProjectileType.Radial || cfg.type == ProjectileType.Fan;
+                await WarnThenFireAsync(spawnPos, dirs, cfg.warningTime, cfg.accelTime, cfg.initialSpeedRatio, ct, doJump);
                 if (ct.IsCancellationRequested) return;
 
                 if (i < cfg.count - 1)
@@ -215,25 +208,14 @@ public class BossProjectileSkill : BossSkillBase
 
                 if (cfg.warningTime > 0f)
                 {
-                    var lr = SpawnWarningLine(spawnPos);
-                    if (lr != null) _activeWarnLines.Add(lr);
-
-                    Vector2 initDir = GetAimedDir(spawnPos);
-                    Boss.FlipToward(initDir);
-
+                    Boss.FlipToward(GetAimedDir(spawnPos));
                     float elapsed = 0f;
                     while (elapsed < cfg.warningTime)
                     {
-                        if (ct.IsCancellationRequested)
-                        {
-                            if (lr != null) { Object.Destroy(lr.gameObject); _activeWarnLines.Remove(lr); }
-                            return;
-                        }
+                        if (ct.IsCancellationRequested) return;
                         elapsed += Time.deltaTime;
-                        UpdateHomingWarnLine(lr, spawnPos);
                         await UniTask.Yield(ct);
                     }
-                    if (lr != null) { Object.Destroy(lr.gameObject); _activeWarnLines.Remove(lr); }
                 }
 
                 if (ct.IsCancellationRequested || PlayerT == null) return;
@@ -256,16 +238,6 @@ public class BossProjectileSkill : BossSkillBase
             }
         }
         finally { if (Boss != null) Boss.IsFiringSkill = false; }
-    }
-
-    private void UpdateHomingWarnLine(LineRenderer lr, Vector2 origin)
-    {
-        if (lr == null || PlayerT == null) return;
-        Vector2 cur      = GetSpawnPos();
-        Vector2 toPlayer = ((Vector2)PlayerT.position - cur).normalized;
-        lr.transform.position = new Vector3(cur.x, cur.y, 0f);
-        lr.SetPosition(0, Vector3.zero);
-        lr.SetPosition(1, lr.transform.InverseTransformPoint(PlayerT.position));
     }
 
     // ── Volley ───────────────────────────────────────────────────
@@ -310,10 +282,8 @@ public class BossProjectileSkill : BossSkillBase
             }
         }
 
-        // 포탄이 날아가는 동안 대기
         await UniTask.Delay(System.TimeSpan.FromSeconds(cfg.volleyHangTime), cancellationToken: ct);
 
-        // 순차 충격 연출
         for (int i = 0; i < cfg.volleyPointCount; i++)
         {
             if (ct.IsCancellationRequested) break;
@@ -336,45 +306,25 @@ public class BossProjectileSkill : BossSkillBase
         try
         {
             Vector2 spawnPos = GetSpawnPos();
-            // 보스가 이동 폴리곤 밖에 있으면 경계 안쪽으로 클램프
             var mb = MovementBounds.Shared;
             if (mb != null && !mb.IsInside(spawnPos))
                 spawnPos = mb.ClosestPointOnBoundary(spawnPos);
             Vector2 dir = GetAimedDir(spawnPos);
 
-            // 경고 라인
             if (cfg.warningTime > 0f)
             {
-                var lr = SpawnWarningLine(spawnPos);
-                if (lr != null) _activeWarnLines.Add(lr);
-
                 float elapsed = 0f;
                 while (elapsed < cfg.warningTime)
                 {
-                    if (ct.IsCancellationRequested)
-                    {
-                        if (lr != null) { Object.Destroy(lr.gameObject); _activeWarnLines.Remove(lr); }
-                        return;
-                    }
+                    if (ct.IsCancellationRequested) return;
                     elapsed += Time.deltaTime;
-                    float t = Mathf.Clamp01(elapsed / cfg.warningTime);
-                    if (lr != null)
-                    {
-                        Vector2 cur = GetSpawnPos();
-                        lr.transform.position = new Vector3(cur.x, cur.y, 0f);
-                        lr.SetPosition(0, Vector3.zero);
-                        Vector3 worldEnd = new(cur.x + dir.x * warningLineLength * t,
-                                               cur.y + dir.y * warningLineLength * t, 0f);
-                        lr.SetPosition(1, lr.transform.InverseTransformPoint(worldEnd));
-                    }
+                    Boss.FlipToward(dir);
                     await UniTask.Yield(ct);
                 }
-                if (lr != null) { Object.Destroy(lr.gameObject); _activeWarnLines.Remove(lr); }
             }
 
             if (ct.IsCancellationRequested) return;
 
-            // 바위 굴리기 (rollCount = count)
             for (int i = 0; i < cfg.count; i++)
             {
                 if (ct.IsCancellationRequested) return;
@@ -401,57 +351,42 @@ public class BossProjectileSkill : BossSkillBase
         p.SetOwnerBoss(Boss);
     }
 
-    // ── 경고 라인 → 발사 ────────────────────────────────────────
+    // ── 발사 ────────────────────────────────────────────────────
 
     private async UniTask WarnThenFireAsync(Vector2 spawnPos, Vector2[] dirs, float warnDuration,
-        float accelTime, float initialSpeedRatio, CancellationToken ct)
+        float accelTime, float initialSpeedRatio, CancellationToken ct, bool doJump = false)
     {
-        var lines = new LineRenderer[dirs.Length];
-        for (int i = 0; i < dirs.Length; i++)
+        if (warnDuration > 0f)
         {
-            lines[i] = SpawnWarningLine(spawnPos);
-            if (lines[i] != null) _activeWarnLines.Add(lines[i]);
-        }
-
-        float elapsed = 0f;
-        while (elapsed < warnDuration)
-        {
-            if (ct.IsCancellationRequested) { CleanupLines(lines); return; }
-            elapsed += Time.deltaTime;
-            float t = Mathf.Clamp01(elapsed / warnDuration);
-            Vector2 cur = GetSpawnPos();
-            Boss.FlipToward(dirs[0]);
-            for (int i = 0; i < lines.Length; i++)
+            float elapsed = 0f;
+            while (elapsed < warnDuration)
             {
-                if (lines[i] == null) continue;
-                var tf = lines[i].transform;
-                tf.position = new Vector3(cur.x, cur.y, 0f);
-                lines[i].SetPosition(0, Vector3.zero);
-                Vector3 worldEnd = new(cur.x + dirs[i].x * warningLineLength * t,
-                                       cur.y + dirs[i].y * warningLineLength * t, 0f);
-                lines[i].SetPosition(1, tf.InverseTransformPoint(worldEnd));
+                if (ct.IsCancellationRequested) return;
+                elapsed += Time.deltaTime;
+                Boss.FlipToward(dirs[0]);
+                await UniTask.Yield(ct);
             }
-            await UniTask.Yield(ct);
         }
 
-        CleanupLines(lines);
         if (ct.IsCancellationRequested) return;
 
         Boss.FlipToward(dirs[0]);
         Boss.EnemyAnimator?.SetTrigger(EnemyAnim.TAttack);
+
+        if (doJump && Boss != null)
+        {
+            DOTween.Kill(Boss.transform, true);
+            float origY = Boss.transform.localScale.y;
+            DOTween.Sequence()
+                .SetLink(Boss.gameObject)
+                .Append(Boss.transform.DOScaleY(origY * 1.5f, 0.1f).SetEase(Ease.OutQuad))
+                .Append(Boss.transform.DOScaleY(origY * 0.65f, 0.08f).SetEase(Ease.InQuad))
+                .Append(Boss.transform.DOScaleY(origY, 0.18f).SetEase(Ease.OutBack));
+        }
+
         Vector2 firePos = GetSpawnPos();
         foreach (var dir in dirs)
             SpawnProjectile(firePos, dir, accelTime, initialSpeedRatio);
-    }
-
-    private void CleanupLines(LineRenderer[] lines)
-    {
-        foreach (var lr in lines)
-        {
-            if (lr == null) continue;
-            Object.Destroy(lr.gameObject);
-            _activeWarnLines.Remove(lr);
-        }
     }
 
     // ── 방향 계산 ────────────────────────────────────────────────
@@ -502,33 +437,8 @@ public class BossProjectileSkill : BossSkillBase
         p.SetOwnerBoss(Boss);
     }
 
-    private LineRenderer SpawnWarningLine(Vector2 start)
-    {
-        if (!WarningLineSettings.Enabled) return null;
-        var go = new GameObject("WarnLine");
-        go.transform.position = new Vector3(start.x, start.y, 0f);
-        var lr = go.AddComponent<LineRenderer>();
-        lr.useWorldSpace     = false;
-        lr.positionCount     = 2;
-        lr.SetPosition(0, Vector3.zero);
-        lr.SetPosition(1, Vector3.zero);
-        lr.startWidth        = warningLineWidth;
-        lr.endWidth          = warningLineWidth;
-        lr.material          = warningMaterial != null
-            ? warningMaterial
-            : new Material(Shader.Find("Sprites/Default"));
-        lr.startColor        = warningColor;
-        lr.endColor          = warningColor;
-        lr.sortingOrder      = 10;
-        lr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-        return lr;
-    }
-
     public override void OnInterrupted()
     {
-        foreach (var lr in _activeWarnLines)
-            if (lr != null) Object.Destroy(lr.gameObject);
-        _activeWarnLines.Clear();
         if (Boss != null) Boss.IsFiringSkill = false;
     }
 }

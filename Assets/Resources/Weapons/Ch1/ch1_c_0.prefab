@@ -118,13 +118,11 @@ MonoBehaviour:
     - rid: 2864143502748942431
       type: {class: WeaponMeleeBehaviour, ns: , asm: Assembly-CSharp}
       data:
-        pullbackDist: 0.5
-        pullbackSpeed: 25
-        strikeSpeed: 80
-        returnSpeed: 70
-        hitDistance: 0.4
-        overshootDistance: 0.5
-        overshootSpeed: 60
+        _overrideSpeed: 0
+        _overridePullbackSpeed: 5
+        _overrideStrikeSpeed: 300
+        _overrideReturnSpeed: 70
+        embedDuration: 0.3
 --- !u!114 &-4031585572279877405
 MonoBehaviour:
   m_ObjectHideFlags: 0

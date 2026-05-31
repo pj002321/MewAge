@@ -134,7 +134,6 @@ public class WeaponSlashBehaviour : WeaponBehaviourBase
     private void PerformSlashHit()
     {
         int colCount = Physics2D.OverlapCircleNonAlloc(Host.transform.position, slashHitRadius, WeaponPoint.SharedHitBuffer);
-        Vector2 hitDir = ((Vector2)Host.transform.localPosition).normalized;
 
         for (int i = 0; i < colCount; i++)
         {
@@ -146,8 +145,11 @@ public class WeaponSlashBehaviour : WeaponBehaviourBase
                 if (boss != null)
                 {
                     _slashHitBoss = true;
+                    Vector2 bDir = ((Vector2)boss.transform.position - (Vector2)Host.transform.position);
+                    if (bDir.sqrMagnitude < 0.001f) bDir = Vector2.right;
+                    else bDir = bDir.normalized;
                     var (bDmg, bCrit) = Host.RollCrit(Host.attackDamage);
-                    boss.TakeDamage(bDmg, bCrit, hitDir, Host.knockbackPower);
+                    boss.TakeDamage(bDmg, bCrit, bDir, Host.knockbackPower);
                     Host.ApplyLifeSteal(bDmg);
                     Host.TrySpecialEffectBoss(boss, bDmg);
                     SoundManager.Shared?.Play(SoundKey.Weapon_Attack);
@@ -159,17 +161,19 @@ public class WeaponSlashBehaviour : WeaponBehaviourBase
             if (enemy == null || _slashHitEnemies.Contains(enemy)) continue;
             _slashHitEnemies.Add(enemy);
 
+            Vector2 eDir = ((Vector2)enemy.transform.position - (Vector2)Host.transform.position);
+            if (eDir.sqrMagnitude < 0.001f) eDir = Vector2.right;
+            else eDir = eDir.normalized;
             var (eDmg, eCrit) = Host.RollCrit(Host.attackDamage);
-            enemy.TakeDamage(eDmg, eCrit, hitDir, Host.knockbackPower);
+            enemy.TakeDamage(eDmg, eCrit, eDir, Host.knockbackPower);
             Host.ApplyLifeSteal(eDmg);
             if (Host.dotDamage > 0f) enemy.ApplyBleed(Host.dotDamage);
-            Host.TrySpecialEffectEnemy(enemy, eDmg, hitDir);
+            Host.TrySpecialEffectEnemy(enemy, eDmg, eDir);
             SoundManager.Shared?.Play(SoundKey.Weapon_Attack);
 
-            // Slash 타입: 타격 위치에 이펙트 프리팹 스폰 (선택)
             if (projectilePrefab != null)
             {
-                float angle = Mathf.Atan2(hitDir.y, hitDir.x) * Mathf.Rad2Deg - 90f;
+                float angle = Mathf.Atan2(eDir.y, eDir.x) * Mathf.Rad2Deg - 90f;
                 Object.Instantiate(projectilePrefab, Host.transform.position, Quaternion.Euler(0, 0, angle));
             }
         }

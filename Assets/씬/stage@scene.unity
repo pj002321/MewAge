@@ -7205,7 +7205,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraFollow
   target: {fileID: 757701469}
-  fixedOrthographicSize: 14
+  fixedOrthographicSize: 15
   smoothTime: 0.1
   defaultFollowPlayer: 0
   shakeDefaultDuration: 0.15
@@ -24148,6 +24148,7 @@ MonoBehaviour:
   fps: 12
   loop: 0
   playOnEnable: 1
+  onEnd: 0
 --- !u!21 &1588294306
 Material:
   serializedVersion: 8
@@ -31352,6 +31353,10 @@ MonoBehaviour:
   maxEnemiesOnMap: 30
   minDistanceFromPlayer: 3
   sectorCount: 8
+  groupSpawnChance: 0.5
+  groupSpawnMinDist: 5
+  groupSpawnMaxDist: 8
+  groupSpawnRadius: 1.2
 --- !u!4 &1899249700
 Transform:
   m_ObjectHideFlags: 0
@@ -31923,6 +31928,7 @@ MonoBehaviour:
   fps: 30
   loop: 0
   playOnEnable: 1
+  onEnd: 0
 --- !u!114 &1923695504
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -33909,6 +33915,7 @@ MonoBehaviour:
   fps: 12
   loop: 0
   playOnEnable: 1
+  onEnd: 0
 --- !u!114 &2028676461
 MonoBehaviour:
   m_ObjectHideFlags: 0

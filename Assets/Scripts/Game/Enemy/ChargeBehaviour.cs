@@ -16,19 +16,12 @@ public class ChargeBehaviour : EnemyBehaviourBase
     [SerializeField] private float chargeRange   = 4f;
 
     [Header("돌진 준비 시각")]
-    [SerializeField] private Color chargeColor   = Color.red;
-    [SerializeField] private float chargeScale   = 0.85f;
-    [SerializeField] private float ghostInterval = 0.06f;
+    [SerializeField] private Color      chargeColor   = Color.red;
+    [SerializeField] private float      chargeScale   = 0.85f;
+    [SerializeField] private float      ghostInterval = 0.06f;
 
-    [Header("경고 라인 (Idle 페이즈)")]
-    [SerializeField] private float    warningLineLength = 5f;
-    [SerializeField] private float    warningLineWidth  = 0.06f;
-    [SerializeField] private Color    warningColor      = Color.red;
-    [Tooltip("Sprites/Default 또는 URP Unlit 머티리얼 할당. null이면 자동 생성")]
-    [SerializeField] private Material warningMaterial;
-    [Tooltip("경고 라인 시작점. 미할당 시 적 중심에서 발사")]
-    [SerializeField] private Transform warningLineOrigin;
-    [SerializeField] private bool      showWarningLine = true;
+    [Header("이펙트")]
+    [SerializeField] private GameObject dashEffect;
 
     private enum Phase { Moving, Idle, Charging }
     private Phase   _phase;
@@ -40,7 +33,6 @@ public class ChargeBehaviour : EnemyBehaviourBase
     private float           ghostTimer;
     private Vector3         originalScale;
     private SpriteRenderer  _cachedSr;
-    private LineRenderer    _warnLine;
     private float           _origSepStrength;
 
     public override void Init(IEnemyHost host)
@@ -49,11 +41,14 @@ public class ChargeBehaviour : EnemyBehaviourBase
         _phase      = Phase.Moving;
         _phaseTimer = moveDuration;
         _cachedSr   = Owner.SelfTransform.GetComponent<SpriteRenderer>();
-        DestroyWarningLine();
         if (EC != null) EC.KnockbackImmune = true;
+        dashEffect?.SetActive(false);
     }
 
-    private void OnDisable() => DestroyWarningLine();
+    private void OnDisable()
+    {
+        if (EC != null) EC.separationStrength = _origSepStrength;
+    }
 
     public override void OnAttackUpdate()
     {
@@ -76,7 +71,6 @@ public class ChargeBehaviour : EnemyBehaviourBase
             s.y = Mathf.Lerp(originalScale.y, originalScale.y * chargeScale, t);
             Owner.SelfTransform.localScale = s;
 
-            UpdateWarningLine();
             if (_phaseTimer <= 0f)
                 BeginCharge();
         }
@@ -92,65 +86,14 @@ public class ChargeBehaviour : EnemyBehaviourBase
         _origSepStrength = chargeEC != null ? chargeEC.separationStrength : 0f;
         if (chargeEC != null) chargeEC.separationStrength = 0f;
 
-        Vector2 origin = warningLineOrigin != null
-            ? (Vector2)warningLineOrigin.position
-            : (Vector2)Owner.SelfTransform.position;
         _lockedChargeDir = Owner.PlayerTransform != null
-            ? ((Vector2)Owner.PlayerTransform.position - origin).normalized
+            ? ((Vector2)Owner.PlayerTransform.position - (Vector2)Owner.SelfTransform.position).normalized
             : Vector2.right;
-
-        SpawnWarningLine();
-    }
-
-    private void SpawnWarningLine()
-    {
-        if (_warnLine != null) return;
-        if (!showWarningLine || !WarningLineSettings.Enabled) return;
-        var go = new GameObject("ChargeWarnLine");
-        go.transform.rotation    = Quaternion.Euler(60f, 0f, 0f);
-        _warnLine = go.AddComponent<LineRenderer>();
-        _warnLine.useWorldSpace  = false;
-        _warnLine.positionCount  = 2;
-        _warnLine.startWidth     = warningLineWidth;
-        _warnLine.endWidth       = warningLineWidth;
-        _warnLine.sortingOrder   = 10;
-        _warnLine.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-        _warnLine.material = warningMaterial != null
-            ? warningMaterial
-            : new Material(Shader.Find("Sprites/Default"));
-        _warnLine.startColor = warningColor;
-        _warnLine.endColor   = warningColor;
-        _warnLine.SetPosition(0, Vector3.zero);
-        _warnLine.SetPosition(1, Vector3.zero);
-        Destroy(go, idleDuration + 0.5f);
-    }
-
-    private void UpdateWarningLine()
-    {
-        if (_warnLine == null) return;
-        float t = 1f - Mathf.Clamp01(_phaseTimer / idleDuration);
-        Vector2 origin = warningLineOrigin != null
-            ? (Vector2)warningLineOrigin.position
-            : (Vector2)Owner.SelfTransform.position;
-        var tf = _warnLine.transform;
-        tf.position = new Vector3(origin.x, origin.y, 0f);
-        _warnLine.SetPosition(0, Vector3.zero);
-        Vector3 worldEnd = new Vector3(origin.x + _lockedChargeDir.x * warningLineLength * t,
-                                       origin.y + _lockedChargeDir.y * warningLineLength * t, 0f);
-        _warnLine.SetPosition(1, tf.InverseTransformPoint(worldEnd));
-    }
-
-    private void DestroyWarningLine()
-    {
-        if (_warnLine == null) return;
-        UnityEngine.Object.Destroy(_warnLine.gameObject);
-        _warnLine = null;
-        if (EC != null) EC.separationStrength = _origSepStrength;
     }
 
     private void BeginCharge()
     {
-        DestroyWarningLine();
+        if (EC != null) EC.separationStrength = _origSepStrength;
 
         // 즉시 원상복구 후 돌진
         if (_cachedSr != null) _cachedSr.color = Color.white;
@@ -165,6 +108,7 @@ public class ChargeBehaviour : EnemyBehaviourBase
         chargeRemaining = chargeDistance;
         ghostTimer      = 0f;
 
+        dashEffect?.SetActive(true);
         Owner.EnemyAnimator?.SetTrigger(EnemyAnim.TCharge);
     }
 
@@ -178,6 +122,7 @@ public class ChargeBehaviour : EnemyBehaviourBase
             s.y = originalScale.y;
             Owner.SelfTransform.localScale = s;
         }
+        dashEffect?.SetActive(false);
         _phase      = Phase.Moving;
         _phaseTimer = moveDuration;
     }

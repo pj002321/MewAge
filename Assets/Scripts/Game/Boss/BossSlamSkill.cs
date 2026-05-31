@@ -58,14 +58,6 @@ public class BossSlamSkill : BossSkillBase
     [ShowIf("@slamType == SlamType.GroundPound")]
     [SerializeField] private float chargeWarnDuration   = 0.5f;
     [ShowIf("@slamType == SlamType.GroundPound")]
-    [SerializeField] private float chargeWarningLength  = 12f;
-    [ShowIf("@slamType == SlamType.GroundPound")]
-    [SerializeField] private float chargeWarningWidth   = 0.08f;
-    [ShowIf("@slamType == SlamType.GroundPound")]
-    [SerializeField] private Color chargeWarningColor   = Color.red;
-    [ShowIf("@slamType == SlamType.GroundPound")]
-    [SerializeField] private Material chargeWarningMat;
-    [ShowIf("@slamType == SlamType.GroundPound")]
     [SerializeField] private Color ghostColor       = new Color(1f, 0.15f, 0.15f, 0.45f);
     [ShowIf("@slamType == SlamType.GroundPound")]
     [SerializeField] private float ghostInterval    = 0.04f;
@@ -75,7 +67,6 @@ public class BossSlamSkill : BossSkillBase
     // ── 런타임 상태 (GroundPound) ─────────────────────────────────
     private Vector3           _origScale;
     private bool              _isExecuting;
-    private LineRenderer      _warnLine;
     private PlayerController  _floatingPlayer;
     private SlimeBobAnimation _floatingBob;
 
@@ -95,7 +86,6 @@ public class BossSlamSkill : BossSkillBase
         }
         _isExecuting = false;
         RestoreFloatingPlayer();
-        CleanupWarnLine();
     }
 
     // ── BasicSlam ─────────────────────────────────────────────────
@@ -361,29 +351,8 @@ public class BossSlamSkill : BossSkillBase
 
     private async UniTask WarnPhaseAsync(Vector2 dir, CancellationToken ct)
     {
-        Vector2 origin = Boss.Rb != null ? Boss.Rb.position : (Vector2)Boss.transform.position;
         Boss.FlipToward(dir);
-        _warnLine = SpawnWarnLine(origin);
-
-        float elapsed = 0f;
-        while (elapsed < chargeWarnDuration)
-        {
-            if (Boss == null || ct.IsCancellationRequested) { CleanupWarnLine(); return; }
-            elapsed += Time.deltaTime;
-            float t = Mathf.Clamp01(elapsed / chargeWarnDuration);
-
-            if (_warnLine != null)
-            {
-                Vector2 cur = Boss.Rb != null ? Boss.Rb.position : (Vector2)Boss.transform.position;
-                _warnLine.transform.position = new Vector3(cur.x, cur.y, 0f);
-                _warnLine.SetPosition(0, Vector3.zero);
-                Vector3 worldEnd = new(cur.x + dir.x * chargeWarningLength * t,
-                                       cur.y + dir.y * chargeWarningLength * t, 0f);
-                _warnLine.SetPosition(1, _warnLine.transform.InverseTransformPoint(worldEnd));
-            }
-            await UniTask.Yield(ct);
-        }
-        CleanupWarnLine();
+        await UniTask.Delay(System.TimeSpan.FromSeconds(chargeWarnDuration), cancellationToken: ct);
     }
 
     private async UniTask ChargeAtPlayerAsync(float speed, Vector2 dir, CancellationToken ct)
@@ -445,35 +414,6 @@ public class BossSlamSkill : BossSkillBase
         if (_floatingBob != null) { _floatingBob.ResetOrigin(); _floatingBob.enabled = true; }
         _floatingPlayer = null;
         _floatingBob    = null;
-    }
-
-    private void CleanupWarnLine()
-    {
-        if (_warnLine == null) return;
-        Object.Destroy(_warnLine.gameObject);
-        _warnLine = null;
-    }
-
-    private LineRenderer SpawnWarnLine(Vector2 start)
-    {
-        if (!WarningLineSettings.Enabled) return null;
-        var go = new GameObject("WarnLine");
-        go.transform.position = new Vector3(start.x, start.y, 0f);
-        var lr = go.AddComponent<LineRenderer>();
-        lr.useWorldSpace     = false;
-        lr.positionCount     = 2;
-        lr.SetPosition(0, Vector3.zero);
-        lr.SetPosition(1, Vector3.zero);
-        lr.startWidth        = chargeWarningWidth;
-        lr.endWidth          = chargeWarningWidth;
-        lr.material          = chargeWarningMat != null
-            ? chargeWarningMat
-            : new Material(Shader.Find("Sprites/Default"));
-        lr.startColor        = chargeWarningColor;
-        lr.endColor          = chargeWarningColor;
-        lr.sortingOrder      = 10;
-        lr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-        return lr;
     }
 
     private void SpawnChargeGhost(SpriteRenderer sr)

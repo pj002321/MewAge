@@ -326,7 +326,9 @@ MonoBehaviour:
   _skills:
   - rid: 2864143559287111771
   entryDrop: 1
-  entryScaleUpDuration: 0.35
+  entryDropHeight: 12
+  entryFallDuration: 0.5
+  entryBounceDuration: 0.35
   references:
     version: 2
     RefIds:
@@ -335,13 +337,9 @@ MonoBehaviour:
       data:
         cooldown: 2
         executeInPattern: 1
-        projectileID: "Unit/Ch1/Proj/c_\uD22C\uC0AC\uCCB4_\uBE68\uAC15\uC6D0"
+        projectileID: Unit/Ch1/Proj/proj_01
         projectileSpeed: 7
         firePoint: {fileID: 4475026578306635568}
-        warningLineLength: 5
-        warningLineWidth: 0.5
-        warningColor: {r: 1, g: 0, b: 0, a: 1}
-        warningMaterial: {fileID: 2100000, guid: 5fb34d7040f2b73489df2202c1a71e19, type: 2}
         impactVfxPrefab: {fileID: 0}
         impactVfxLifetime: 1
         phases:

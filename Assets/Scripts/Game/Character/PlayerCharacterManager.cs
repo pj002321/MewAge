@@ -64,11 +64,12 @@ public class PlayerCharacterManager : MonoBehaviourSingleton<PlayerCharacterMana
         if (!string.IsNullOrEmpty(EquippedCharID)) return;
 
         DB_캐릭터 first = null;
-        DB_캐릭터.ForEachEntity(row =>
+        int limit = DB_캐릭터.CountEntities > 0 ? DB_캐릭터.GetEntity(0).f_캐릭행수 : 0;
+        for (int i = 0; i < limit && i < DB_캐릭터.CountEntities; i++)
         {
-            if (first == null && row.f_보유여부)
-                first = row;
-        });
+            var row = DB_캐릭터.GetEntity(i);
+            if (row.f_보유여부) { first = row; break; }
+        }
 
         if (first != null)
         {

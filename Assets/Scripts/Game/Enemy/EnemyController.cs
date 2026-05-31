@@ -67,12 +67,20 @@ public class EnemyController : MonoBehaviour, IEnemyHost
     private bool      _isDying;
     public  bool      IsPooled { get; private set; }
     private Vector2   _pendingMove;
+    private bool      _isKnockedBack;
     private Coroutine knockbackCoroutine;
     private Coroutine bleedCoroutine;
     private Coroutine _fireCoroutine;
     private float     baseSpeed; // 넉백/스턴 전 원본 속도
     private Vector2   _deathDir;  // 사망 시 날아갈 방향
     private bool      isMoving;
+    private bool      _lastIsMoving = true; // 초기값 다르게 설정해 첫 프레임 강제 동기화
+    private float     _contactTimer;
+    private bool      _halfHpGoldDropped;
+
+    // ── 각도 슬롯 (포위 형성) ────────────────────────────────
+    public float SlotAngle         { get; private set; }
+    public bool  HasSlotAssignment { get; private set; }
 
     // 상태효과 VFX 인스턴스 (Resources/VFX/SE_Freeze, SE_Stun, SE_Fire)
     private GameObject _freezeVfxInst;
@@ -183,7 +191,11 @@ public class EnemyController : MonoBehaviour, IEnemyHost
         if (GameManager.Shared != null && GameManager.Shared.IsGameOver) return;
         if (isStunned) return;
         if (behaviour != null && behaviour.enabled) behaviour.OnAttackUpdate();
-        animator?.SetBool(EnemyAnim.BMove, isMoving);
+        if (isMoving != _lastIsMoving)
+        {
+            _lastIsMoving = isMoving;
+            animator?.SetBool(EnemyAnim.BMove, isMoving);
+        }
         CheckPlayerContact();
     }
 
@@ -194,10 +206,12 @@ public class EnemyController : MonoBehaviour, IEnemyHost
     /// </summary>
     private void CheckPlayerContact()
     {
+        if (_contactTimer > 0f) { _contactTimer -= Time.deltaTime; return; }
         if (playerTransform == null) return;
         if (((Vector2)transform.position - (Vector2)playerTransform.position).sqrMagnitude > contactMaxDist * contactMaxDist) return;
         var player = PlayerController.Instance;
         if (player == null) return;
+        _contactTimer = 0.5f;
         player.TakeDamage(contactDamage, isFromElite: _eliteMarker != null, sourceName: gameObject.name);
     }
 
@@ -216,8 +230,12 @@ public class EnemyController : MonoBehaviour, IEnemyHost
             return;
         }
 
-        if (behaviour != null && behaviour.enabled) behaviour.OnMoveFixedUpdate();
+        if (!_isKnockedBack && behaviour != null && behaviour.enabled) behaviour.OnMoveFixedUpdate();
         ApplySeparation();
+
+        // 각도 슬롯 갱신 — 목록 첫 번째 적만 담당 (정적 타이머 1회 실행)
+        if (All.Count > 0 && All[0] == this && playerTransform != null)
+            TryRefreshSlots(playerTransform);
 
         if (_pendingMove != Vector2.zero && rb != null)
         {
@@ -236,7 +254,7 @@ public class EnemyController : MonoBehaviour, IEnemyHost
     public static int ActiveCount => All.Count;
 
     [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
-    private static void ResetStatics() => All.Clear();
+    private static void ResetStatics() { All.Clear(); _slotTimer = 0f; }
 
     private void ApplySeparation()
     {
@@ -266,6 +284,38 @@ public class EnemyController : MonoBehaviour, IEnemyHost
             _pendingMove += push * separationStrength * SepInterval;
     }
 
+    // ── 각도 슬롯 갱신 ──────────────────────────────────────────
+    private static float _slotTimer;
+
+    private static void TryRefreshSlots(Transform playerTr)
+    {
+        _slotTimer -= Time.fixedDeltaTime;
+        if (_slotTimer > 0f) return;
+        _slotTimer = 0.4f;
+        RefreshAngularSlots((Vector2)playerTr.position);
+    }
+
+    private static void RefreshAngularSlots(Vector2 playerPos)
+    {
+        int n = All.Count;
+        if (n == 0) return;
+
+        var sorted = new (float angle, EnemyController ec)[n];
+        for (int i = 0; i < n; i++)
+        {
+            Vector2 d = All[i].rb != null ? All[i].rb.position - playerPos : Vector2.right;
+            sorted[i] = (Mathf.Atan2(d.y, d.x), All[i]);
+        }
+        System.Array.Sort(sorted, (a, b) => a.angle.CompareTo(b.angle));
+
+        float step = 360f / n;
+        for (int i = 0; i < n; i++)
+        {
+            sorted[i].ec.SlotAngle         = i * step;
+            sorted[i].ec.HasSlotAssignment = true;
+        }
+    }
+
     private void OnDestroy()
     {
         AllRemoveSwapBack(this);
@@ -291,6 +341,7 @@ public class EnemyController : MonoBehaviour, IEnemyHost
         _fireCoroutine     = null;
         _slowCoroutine     = null;
         knockbackCoroutine = null;
+        _isKnockedBack     = false;
         _fireTintCoroutine = null;
         _purpleDotCoroutine = null;
 
@@ -299,10 +350,14 @@ public class EnemyController : MonoBehaviour, IEnemyHost
         if (_stunVfxInst   != null) { Destroy(_stunVfxInst);   _stunVfxInst   = null; }
         if (_fireVfxInst   != null) { Destroy(_fireVfxInst);   _fireVfxInst   = null; }
 
-        IsPooled   = false;
-        enabled    = true;
-        isStunned  = false;
-        _isDying   = false;
+        IsPooled           = false;
+        enabled            = true;
+        isStunned          = false;
+        _isDying           = false;
+        _contactTimer      = 0f;
+        _lastIsMoving      = true;
+        _halfHpGoldDropped = false;
+        HasSlotAssignment  = false;
         moveSpeed  = baseSpeed;
         if (animator != null) animator.speed = 1f;
         if (rb != null)
@@ -397,19 +452,21 @@ public class EnemyController : MonoBehaviour, IEnemyHost
     // ── 충돌 접촉 피해 ──────────────────────────────────────────
     private void OnTriggerStay2D(Collider2D other)
     {
-        var p = other.GetComponentInParent<PlayerController>();
-        if (p == null) return;
-        if (other.gameObject != p.gameObject) return;
+        if (_contactTimer > 0f) return;
+        var p = PlayerController.Instance;
+        if (p == null || other.gameObject != p.gameObject) return;
         if (((Vector2)transform.position - (Vector2)p.transform.position).sqrMagnitude > contactMaxDist * contactMaxDist) return;
+        _contactTimer = 0.5f;
         p.TakeDamage(contactDamage, sourceName: gameObject.name);
     }
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        var p = other.GetComponentInParent<PlayerController>();
-        if (p == null) return;
-        if (other.gameObject != p.gameObject) return;
+        if (_contactTimer > 0f) return;
+        var p = PlayerController.Instance;
+        if (p == null || other.gameObject != p.gameObject) return;
         if (((Vector2)transform.position - (Vector2)p.transform.position).sqrMagnitude > contactMaxDist * contactMaxDist) return;
+        _contactTimer = 0.5f;
         p.TakeDamage(contactDamage, sourceName: gameObject.name);
     }
 
@@ -615,22 +672,32 @@ public class EnemyController : MonoBehaviour, IEnemyHost
 
     private IEnumerator KnockbackRoutine(Vector2 dir, float force)
     {
+        _isKnockedBack = true;
         float elapsed  = 0f;
         float duration = 0.5f;
 
         while (elapsed < duration)
         {
             float t = elapsed / duration;
-            // _pendingMove에 누적 → FixedUpdate에서 한 번만 MovePosition 호출
             _pendingMove += dir * force * (1f - t) * Time.fixedDeltaTime;
             elapsed += Time.fixedDeltaTime;
             yield return new WaitForFixedUpdate();
         }
 
+        _isKnockedBack     = false;
         knockbackCoroutine = null;
     }
 
     // ── 피격 / 사망 ──────────────────────────────────────────────
+
+    /// <summary>체력이 최초로 50% 이하가 됐을 때 골드를 드롭합니다.</summary>
+    private void CheckHalfHpDrop()
+    {
+        if (_halfHpGoldDropped || currentHP > maxHP * 0.5f || currentHP <= 0f) return;
+        _halfHpGoldDropped = true;
+        ItemDropManager.Shared?.SpawnGoldDrop(transform.position, goldDrop);
+    }
+
     /// <summary>출혈 적용 (WeaponPoint에서 호출)</summary>
     public void ApplyBleed(float damage)
     {
@@ -665,6 +732,7 @@ public class EnemyController : MonoBehaviour, IEnemyHost
             if (currentHP <= 0f) break;
 
             currentHP -= damage;
+            CheckHalfHpDrop();
             SoundManager.Shared?.Play(SoundKey.Enemy_Hit);
 
             Vector3 textPos = srs != null && srs.Length > 0
@@ -696,6 +764,7 @@ public class EnemyController : MonoBehaviour, IEnemyHost
 
             // 출혈 데미지 적용
             currentHP -= damage;
+            CheckHalfHpDrop();
             SoundManager.Shared?.Play(SoundKey.Enemy_Hit);
 
             // 데미지 텍스트 표시 (빨간색, - 기호)
@@ -725,6 +794,7 @@ public class EnemyController : MonoBehaviour, IEnemyHost
         if (damage <= 0f) return;
 
         currentHP -= damage;
+        CheckHalfHpDrop();
 
         SoundManager.Shared?.Play(SoundKey.Enemy_Hit);
         // 스프라이트 상단 기준으로 스폰 (몸집이 커도 텍스트가 가려지지 않음)
@@ -921,9 +991,10 @@ public class EnemyController : MonoBehaviour, IEnemyHost
     public void ApplyUnitData(UnitData data)
     {
         ActiveUnitData = data;
-        maxHP         = data.hp;
-        currentHP     = maxHP;
-        contactDamage = data.contactDamage;
+        maxHP              = data.hp;
+        currentHP          = maxHP;
+        _halfHpGoldDropped = false;
+        contactDamage      = data.contactDamage;
         moveSpeed     = data.moveSpeed;
         baseSpeed     = data.moveSpeed;
         goldDrop      = data.goldDrop;

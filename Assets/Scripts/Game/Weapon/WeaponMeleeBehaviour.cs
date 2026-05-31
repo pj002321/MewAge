@@ -2,7 +2,8 @@ using UnityEngine;
 
 /// <summary>
 /// 근거리(Melee) 타격 무기 행동.
-/// Pullback(느리게 수축) → 적 머리로 고속 직선 타격 → Returning.
+/// Pullback(느리게 수축) → 적 머리로 고속 직선 타격 → Embedded(꽂혀서 정지) → Returning.
+/// 돌진 도중(HitArea)과 귀환 시작 시점 모두 범위 내 적에게 피해를 줍니다.
 /// </summary>
 [System.Serializable]
 public class WeaponMeleeBehaviour : WeaponMeleeBaseBehaviour
@@ -10,20 +11,27 @@ public class WeaponMeleeBehaviour : WeaponMeleeBaseBehaviour
     public override float GetPlayerAttackBonus(PlayerController player) => player.MeleeAttackBonus;
     public override float GetRelicBonusPct(RelicManager relic)         => relic.MeleeAtkBonusPct;
 
+    [Header("박힘 대기")]
+    [SerializeField] private float embedDuration = 0.2f;
+
     // 타격 목표 (적 머리) — BeginStrikeSetup에서 고정
     private Vector3 _headTarget;
     private bool    _headTargetReady;
     private Vector2 _toTarget;
     private Vector2 _lastHitDir;
 
+    // 임베드 타이머 & 귀환 타격 여부
+    private float _embedTimer;
+    private bool  _returnHitFired;
+
     protected override void BeginAttack(WeaponPoint.CombatTarget best)
     {
-        _target   = best;
-        _toTarget = ((Vector2)best.Position - (Vector2)Host.transform.parent.position).normalized;
+        _target          = best;
+        _toTarget        = ((Vector2)best.Position - (Vector2)Host.transform.parent.position).normalized;
         if (_toTarget.sqrMagnitude < 0.001f) _toTarget = Vector2.up;
 
         _headTargetReady = false;
-        // 타겟 반대 방향으로 수축 — 팔을 뒤로 당기는 느낌
+        _returnHitFired  = false;
         StartPullback(best, -(Vector3)_toTarget * pullbackDist);
     }
 
@@ -35,7 +43,7 @@ public class WeaponMeleeBehaviour : WeaponMeleeBaseBehaviour
         _headTargetReady = true;
     }
 
-    // 적 머리를 향해 직선 고속 타격
+    // 적 머리를 향해 직선 고속 타격 — 명중 시 임베드 대기 진입
     protected override void UpdateStriking()
     {
         if (!_target.IsValid)
@@ -72,8 +80,28 @@ public class WeaponMeleeBehaviour : WeaponMeleeBaseBehaviour
             _overshootTarget = dest + (Vector3)(hitDir * overshootDistance);
             _target          = WeaponPoint.CombatTarget.None;
             _headTargetReady = false;
+            _embedTimer      = embedDuration;
             EnterOvershooting();
         }
+    }
+
+    // Overshooting 대신 제자리 임베드 대기
+    protected override void UpdateOvershooting()
+    {
+        _embedTimer -= Time.deltaTime;
+        if (_embedTimer <= 0f)
+            BeginReturn();
+    }
+
+    // 귀환 시작 시 범위 내 적에게 1회 타격
+    protected override void OnReturnUpdate()
+    {
+        if (_returnHitFired) return;
+        _returnHitFired = true;
+
+        Vector2 returnDir = ((Vector2)Host.transform.parent.position
+                            - (Vector2)Host.transform.position).normalized;
+        Host.HitArea(returnDir, null);
     }
 
     protected override void OnStrikeHit(WeaponPoint.CombatTarget target, Vector2 hitDir)
@@ -81,7 +109,7 @@ public class WeaponMeleeBehaviour : WeaponMeleeBaseBehaviour
 
     public override Vector2? GetAttackLookDir()
     {
-        if (_inWaveIntro || _state == State.Pullback) return _toTarget;  // 당기는 중에도 타겟 방향 유지 (뒤집힘 방지)
+        if (_inWaveIntro || _state == State.Pullback) return _toTarget;
         if (_state == State.Idle)                     return null;
         if (_state == State.Striking)                 return _toTarget;
         if (_lastHitDir.sqrMagnitude > 0.001f)        return _lastHitDir;

@@ -93,11 +93,30 @@ public class MeleeBehaviour : EnemyBehaviourBase
     {
         if (Owner.PlayerTransform == null) return;
 
-        Vector2 toPlayer = (Vector2)Owner.PlayerTransform.position - Owner.Rb.position;
-        float dist = toPlayer.magnitude;
+        Vector2 playerPos = (Vector2)Owner.PlayerTransform.position;
+        Vector2 toPlayer  = playerPos - Owner.Rb.position;
+        float   dist      = toPlayer.magnitude;
 
-        if (dist > attackRange)
-            Owner.MoveInDirection(toPlayer / Mathf.Max(dist, 0.001f), Owner.MoveSpeed);
+        if (dist <= attackRange)
+        {
+            Owner.FlipToward(toPlayer);
+            return;
+        }
+
+        // 슬롯 배정이 있고 근접 교전 거리 이내면 배정된 각도 방향으로 접근
+        Vector2 moveTarget = playerPos;
+        var ec = Owner as EnemyController;
+        if (ec != null && ec.HasSlotAssignment && dist < attackRange * 5f)
+        {
+            float   rad     = ec.SlotAngle * Mathf.Deg2Rad;
+            Vector2 slotDir = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad));
+            moveTarget = playerPos + slotDir * attackRange;
+        }
+
+        Vector2 toTarget   = moveTarget - Owner.Rb.position;
+        float   targetDist = toTarget.magnitude;
+        if (targetDist > 0.05f)
+            Owner.MoveInDirection(toTarget / targetDist, Owner.MoveSpeed);
         else
             Owner.FlipToward(toPlayer);
     }

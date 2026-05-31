@@ -195,9 +195,8 @@ public class WeaponInfoPanel : MonoBehaviourSingleton<WeaponInfoPanel>
                 ? $"{data.knockbackPower:0.#}"
                 : "-";
 
-        // ── 성별 강화 설명 (공격력 3 / 5 / 7 % 증가 형태) ────────────
-        SetCombinedStarDesc(starDesc, null, null,
-            data.bonus2Star, data.bonus3Star, data.bonus4Star, data.star);
+        // ── 성별 강화 설명 (공격력 +X 형태, 실제 수치) ──────────────
+        SetCombinedStarDesc(starDesc, data.bonus2Star, data.bonus3Star, data.star, data);
 
         // ── 특성 / 특수효과 ──────────────────────────────────────
         bool hasTraitDisplay = false;
@@ -285,72 +284,40 @@ public class WeaponInfoPanel : MonoBehaviourSingleton<WeaponInfoPanel>
             : $"<color=#EF9A9A>{apsDelta:0.#}</color>";
     }
 
-    /// <summary>
-    /// 성 강화 설명을 "공격력 3 / 5 / 7 % 증가" 형식으로 star2Desc 한 곳에 표시합니다.
-    ///
-    /// 하이라이트 규칙:
-    ///   · currentStar &lt; 2  → 전체 회색
-    ///   · currentStar &gt;= 2 → 숫자를 제외한 텍스트(스탯명, /, % 증가)는 흰색
-    ///                         현재 성에 해당하는 숫자만 금색, 나머지 숫자는 회색
-    /// star3Desc, star4Desc는 사용하지 않아 빈 문자열로 초기화합니다.
-    /// </summary>
+    /// <summary>현재 성에 해당하는 보너스를 "공격력 +X" 형식으로 표시합니다. X는 퍼센트 적용 실제 수치.</summary>
     private static void SetCombinedStarDesc(
-        TextMeshProUGUI labelDesc, TextMeshProUGUI label3, TextMeshProUGUI label4,
-        WeaponStarBonus b2, WeaponStarBonus b3, WeaponStarBonus b4,
-        int currentStar)
+        TextMeshProUGUI labelDesc, WeaponStarBonus b2, WeaponStarBonus b3, int currentStar, WeaponData data)
     {
-        if (label3 != null) label3.text = string.Empty;
-        if (label4 != null) label4.text = string.Empty;
         if (labelDesc == null) return;
 
-        // 보너스가 하나도 없으면 숨김
-        if (b2.IsEmpty && b3.IsEmpty && b4.IsEmpty)
-        {
-            labelDesc.text = string.Empty;
-            return;
-        }
+        WeaponStarBonus active = currentStar >= 3 ? b3 : (currentStar == 2 ? b2 : default);
+        if (active.IsEmpty) { labelDesc.text = string.Empty; return; }
 
-        // 스탯 레이블: 첫 번째 비어있지 않은 보너스의 statId 기준
-        string statId    = !b2.IsEmpty ? b2.statId : (!b3.IsEmpty ? b3.statId : b4.statId);
-        string statLabel = StatIdToLabel(statId);
+        string statLabel = StatIdToLabel(active.statId);
         if (string.IsNullOrEmpty(statLabel)) { labelDesc.text = string.Empty; return; }
-        string unit      = StatIdToUnit(statId);
 
-        // 수치 문자열 (정수이면 정수로, 소수면 소수점 1자리)
-        string v2 = FormatBonusVal(b2);
-        string v3 = FormatBonusVal(b3);
-        string v4 = FormatBonusVal(b4);
+        float baseVal  = GetStarBonusBase(active.statId, data);
+        float computed = baseVal * active.value / 100f;
+        string valStr  = Mathf.Approximately(computed % 1f, 0f)
+            ? $"{Mathf.RoundToInt(computed)}"
+            : $"{computed:0.#}";
 
-        // 색상 상수
-        const string Gold  = "#FFD740";
-        const string White = "#FFFFFF";
-        const string Gray  = "#888888";
-
-        bool bright = currentStar >= 2;   // 숫자 외 텍스트 밝기 여부
-        string tc   = bright ? White : Gray;
-
-        // 현재 성에 해당하는 숫자만 금색, 나머지는 회색
-        string c2 = (currentStar == 2) ? Gold : Gray;
-        string c3 = (currentStar == 3) ? Gold : Gray;
-        string c4 = (currentStar >= 4) ? Gold : Gray;
-
-        if (bright)
-        {
-            labelDesc.text =
-                $"<color={tc}>{statLabel} </color>" +
-                $"<color={c2}>{v2}</color>" +
-                $"<color={tc}> / </color>" +
-                $"<color={c3}>{v3}</color>" +
-                $"<color={tc}> / </color>" +
-                $"<color={c4}>{v4}</color>" +
-                $"<color={tc}> {unit} 증가</color>";
-        }
-        else
-        {
-            // 2성 미만: 전체 회색
-            labelDesc.text = $"<color={Gray}>{statLabel} {v2} / {v3} / {v4} {unit} 증가</color>";
-        }
+        labelDesc.text = $"<color=#FFD740>{statLabel} +{valStr}</color>";
     }
+
+    private static float GetStarBonusBase(string statId, WeaponData data) => statId switch
+    {
+        "ATK_ADD"    => data.attackDamage,
+        "CD_RED"     => data.attackCooldown,
+        "RNG_ADD"    => data.attackRange,
+        "CRIT_ADD"   => data.criticalRate * 100f,
+        "CRT_RATE"   => data.criticalRate * 100f,
+        "DOT_AD"     => data.bleedDamage,
+        "DOT_ADD"    => data.bleedDamage,
+        "HP_STL_ADD" => data.lifeSteal * 100f,
+        "NUK_ADD"    => data.knockbackPower,
+        _            => data.attackDamage,
+    };
 
     /// <summary>WeaponStarBonus 수치를 표시용 문자열로 변환. 보너스가 없으면 "-".</summary>
     private static string FormatBonusVal(WeaponStarBonus b)

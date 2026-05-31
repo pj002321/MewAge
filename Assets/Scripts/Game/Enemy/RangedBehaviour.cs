@@ -16,14 +16,7 @@ public class RangedBehaviour : EnemyBehaviourBase
     [Tooltip("null이면 적 중심에서 발사")]
     [SerializeField] private Transform firePoint;
 
-    [Header("경고 라인")]
-    [SerializeField] private bool     useWarningLines   = true;
-    [SerializeField] private float    warningDuration   = 0.4f;
-    [SerializeField] private float    warningLineLength = 8f;
-    [SerializeField] private float    warningLineWidth  = 0.05f;
-    [SerializeField] private Color    warningColor      = Color.red;
-    [Tooltip("Sprites/Default 또는 URP Unlit 머티리얼 할당. null이면 자동 생성")]
-    [SerializeField] private Material warningMaterial;
+    [SerializeField] private float warningDuration = 0.4f;
 
     [Header("VFX")]
     [SerializeField] private GameObject attackVfx;
@@ -58,7 +51,6 @@ public class RangedBehaviour : EnemyBehaviourBase
     private bool         _pendingShot;
     private Vector2      _pendingShotDir;
     private float        _pendingShotDmg;
-    private LineRenderer _activeWarnLine;
     private Collider2D   _col;
 
     public override void ApplyWaveScaling(float multiplier)
@@ -139,11 +131,6 @@ public class RangedBehaviour : EnemyBehaviourBase
         _retreatTimer = 0f;
         _col         = host.SelfTransform.GetComponentInChildren<Collider2D>();
         attackVfx?.SetActive(false);
-        if (_activeWarnLine != null)
-        {
-            Destroy(_activeWarnLine.gameObject);
-            _activeWarnLine = null;
-        }
 
         // 교대 카운터로 좌/우 균등 배분 + ±15° 분산
         Transform playerTr = host.PlayerTransform ?? PlayerController.Instance?.transform;
@@ -203,32 +190,13 @@ public class RangedBehaviour : EnemyBehaviourBase
         _isWarning = true;
         _moveState = MoveState.Idle;
 
-        Vector2 spawnPos = GetWarningOrigin();
-        Vector2 dir      = Owner.PlayerTransform != null
-            ? ((Vector2)Owner.PlayerTransform.position - spawnPos).normalized
-            : Vector2.right;
-
-        var lr = SpawnWarningLine(spawnPos, dir);
-        _activeWarnLine = lr;
         float elapsed = 0f;
         while (elapsed < warningDuration)
         {
-            if (Owner == null) { if (lr != null) Destroy(lr.gameObject); _activeWarnLine = null; _isWarning = false; yield break; }
-            spawnPos = GetWarningOrigin();
+            if (Owner == null) { _isWarning = false; yield break; }
             elapsed += Time.deltaTime;
-            float t = Mathf.Clamp01(elapsed / warningDuration);
-            if (lr != null)
-            {
-                lr.transform.position = new Vector3(spawnPos.x, spawnPos.y, 0f);
-                lr.SetPosition(0, Vector3.zero);
-                Vector3 worldEnd = new Vector3(spawnPos.x + dir.x * warningLineLength * t,
-                                               spawnPos.y + dir.y * warningLineLength * t, 0f);
-                lr.SetPosition(1, lr.transform.InverseTransformPoint(worldEnd));
-            }
             yield return null;
         }
-        if (lr != null) Destroy(lr.gameObject);
-        _activeWarnLine = null;
 
         if (Owner != null && Owner.PlayerTransform != null)
             ShootProjectile();
@@ -300,35 +268,7 @@ public class RangedBehaviour : EnemyBehaviourBase
 
     private void OnDisable()
     {
-        if (_activeWarnLine != null)
-        {
-            Destroy(_activeWarnLine.gameObject);
-            _activeWarnLine = null;
-        }
         _isWarning = false;
         SetWalk(false);
-    }
-
-    private LineRenderer SpawnWarningLine(Vector2 start, Vector2 dir)
-    {
-        if (!useWarningLines || !WarningLineSettings.Enabled) return null;
-        var go = new GameObject("WarnLine");
-        go.transform.position = new Vector3(start.x, start.y, 0f);
-        go.transform.rotation = Quaternion.Euler(60f, 0f, 0f);
-        var lr = go.AddComponent<LineRenderer>();
-        lr.useWorldSpace = false;
-        lr.positionCount = 2;
-        lr.SetPosition(0, Vector3.zero);
-        lr.SetPosition(1, Vector3.zero);
-        lr.startWidth   = warningLineWidth;
-        lr.endWidth     = warningLineWidth;
-        lr.material     = warningMaterial != null
-            ? warningMaterial
-            : new Material(Shader.Find("Sprites/Default"));
-        lr.startColor   = warningColor;
-        lr.endColor     = warningColor;
-        lr.sortingOrder = 10;
-        Destroy(go, warningDuration + 0.5f);
-        return lr;
     }
 }

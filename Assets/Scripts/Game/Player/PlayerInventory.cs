@@ -29,8 +29,14 @@ public class PlayerInventory : MonoBehaviourSingleton<PlayerInventory>
         public List<WeaponGrade> consumedGrades;
         public bool             isGrandMerge;   // 3★+3★ → 상위등급 랜덤 무기 합성
         public WeaponData       resultWeapon;   // 애니 표시용 결과 (그랜드 머지: grade+1)
+        // resultWeapon은 후속 합성에서 Destroy될 수 있으므로 아이콘·등급·성급을 미리 캡처
+        public Sprite           resultIcon;
+        public WeaponGrade      resultGrade;
+        public int              resultStar;
         public bool             isDoubleUp;     // 1% 더블업 머지 당첨
         public WeaponData       doubleUpResult; // 더블업 최종 결과 (grade+2, 실제 인벤 저장값)
+        public Sprite           doubleUpResultIcon;
+        public WeaponGrade      doubleUpResultGrade;
     }
     public static event System.Action<MergeAnimInfo> OnBeforeMerge;
 
@@ -304,20 +310,26 @@ public class PlayerInventory : MonoBehaviourSingleton<PlayerInventory>
             capGrades.Add(w != null ? w.grade : WeaponGrade.Common);
         }
 
+        var animResult   = displayResult ?? result;
         OnBeforeMerge?.Invoke(new MergeAnimInfo
         {
-            invenIndices   = new List<int>(invenIdx),
-            equipIndices   = new List<int>(equipIdx),
-            destEquipSlot  = resultEquipSlot,
-            destInvenSlot  = destInvenSlot,
-            icon           = consumed.Count > 0 ? consumed[0].icon : null,
-            consumed       = new List<WeaponData>(consumed),
-            consumedIcons  = capIcons,
-            consumedGrades = capGrades,
-            isGrandMerge   = star >= 3,
-            resultWeapon   = displayResult ?? result,
-            isDoubleUp     = isDoubleUp,
-            doubleUpResult = doubleUpResult,
+            invenIndices        = new List<int>(invenIdx),
+            equipIndices        = new List<int>(equipIdx),
+            destEquipSlot       = resultEquipSlot,
+            destInvenSlot       = destInvenSlot,
+            icon                = consumed.Count > 0 ? consumed[0].icon : null,
+            consumed            = new List<WeaponData>(consumed),
+            consumedIcons       = capIcons,
+            consumedGrades      = capGrades,
+            isGrandMerge        = star >= 3,
+            resultWeapon        = animResult,
+            resultIcon          = animResult  != null ? animResult.icon   : null,
+            resultGrade         = animResult  != null ? animResult.grade  : WeaponGrade.Common,
+            resultStar          = animResult  != null ? animResult.star   : 1,
+            isDoubleUp          = isDoubleUp,
+            doubleUpResult      = doubleUpResult,
+            doubleUpResultIcon  = doubleUpResult != null ? doubleUpResult.icon  : null,
+            doubleUpResultGrade = doubleUpResult != null ? doubleUpResult.grade : WeaponGrade.Common,
         });
 
         // 장착 소모 (null 처리)

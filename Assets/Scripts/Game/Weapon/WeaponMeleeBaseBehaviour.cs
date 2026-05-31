@@ -232,7 +232,7 @@ public abstract class WeaponMeleeBaseBehaviour : WeaponBehaviourBase
         _hitScaleCo   = null;
     }
 
-    private void UpdateOvershooting()
+    protected virtual void UpdateOvershooting()
     {
         Host.transform.position = Vector3.MoveTowards(
             Host.transform.position, _overshootTarget, overshootSpeed * Time.deltaTime);
@@ -245,12 +245,16 @@ public abstract class WeaponMeleeBaseBehaviour : WeaponBehaviourBase
         Host.transform.localPosition = Vector3.MoveTowards(
             Host.transform.localPosition, Vector3.zero, returnSpeed * Time.deltaTime);
 
+        OnReturnUpdate();
+
         if (Host.transform.localPosition.sqrMagnitude <= 0.001f)
         {
             Host.transform.localPosition = Vector3.zero;
             _state = State.Idle;
         }
     }
+
+    protected virtual void OnReturnUpdate() { }
 
     // ── 미아 방지 타임아웃 ───────────────────────────────────────────────
     private void HandleTimeout()

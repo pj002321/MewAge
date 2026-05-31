@@ -36,8 +36,8 @@ public class BossGridSpikeSkill : BossSkillBase
     [Tooltip("WaveRow/WaveCol: 각 줄 낙하 후 다음 줄까지 대기 시간")]
     [SerializeField] private float waveDelay       = 0.25f;
 
-    [Header("경고 표시")]
-    [Tooltip("null이면 흰 사각형 자동 생성")]
+    [Header("스파이크 마커")]
+    [Tooltip("null이면 주황 사각형 자동 생성")]
     [SerializeField] private GameObject warningMarkerPrefab;
     [SerializeField] private Color      warningColor = new Color(1f, 0.45f, 0f, 0.45f);
 
@@ -300,8 +300,6 @@ public class BossGridSpikeSkill : BossSkillBase
 
     private GameObject SpawnMarker(Vector2 pos, Vector2 cellSize)
     {
-        if (!WarningLineSettings.Enabled) return null;
-
         if (warningMarkerPrefab != null)
             return Object.Instantiate(warningMarkerPrefab, new Vector3(pos.x, pos.y, 0f), Quaternion.identity);
 

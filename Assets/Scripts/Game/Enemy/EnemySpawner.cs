@@ -42,8 +42,7 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
 
     private BossSpawnMarker _pendingBossMarker;
 
-    private float currentInterval  = 3f;
-    private int   currentSpawnCount = 3;
+    private float currentInterval  = 0.5f;
     private int   currentMaxOnMap;          // DB f_최대스폰 (0 = 무제한)
     private int   currentWave    = 1;
     private int   currentChapter = 1;
@@ -112,22 +111,57 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
     // ── 스폰 루프 ───────────────────────────────────────────────────
     private IEnumerator SpawnLoop()
     {
+        // 웨이브 시작: 마커 없이 즉시 최대까지 채우기
+        FillToCapDirect();
+
         while (spawning)
         {
             if (GameManager.Shared != null && GameManager.Shared.IsGameOver) yield break;
 
-            int cap           = currentMaxOnMap > 0 ? Mathf.Min(currentMaxOnMap, maxEnemiesOnMap) : maxEnemiesOnMap;
-            int alive         = CountActiveEnemies();
-            int spawnThisTick = Mathf.Max(0, Mathf.Min(currentSpawnCount, cap - alive));
+            int cap   = currentMaxOnMap > 0 ? Mathf.Min(currentMaxOnMap, maxEnemiesOnMap) : maxEnemiesOnMap;
+            int alive = CountActiveEnemies();
 
-            if (spawnThisTick >= 2 && Random.value < groupSpawnChance)
-                SpawnEnemyGroup(spawnThisTick);
-            else
-                for (int i = 0; i < spawnThisTick; i++)
-                    SpawnEnemy();
+            if (alive < cap)
+                SpawnEnemy(); // 마커 포함 → 카운트에 즉시 반영되어 과스폰 방지
 
             yield return new WaitForSeconds(currentInterval);
         }
+    }
+
+    /// <summary>웨이브 시작 시 마커 없이 즉시 최대 수까지 적을 채웁니다.</summary>
+    private void FillToCapDirect()
+    {
+        int cap   = currentMaxOnMap > 0 ? Mathf.Min(currentMaxOnMap, maxEnemiesOnMap) : maxEnemiesOnMap;
+        int count = EnemyController.ActiveCount;
+        while (count < cap)
+        {
+            SpawnEnemyDirect();
+            count++;
+        }
+    }
+
+    private void SpawnEnemyDirect()
+    {
+        var data = PickUnitData();
+        if (data?.prefab == null) return;
+        DoSpawnDirect(data.prefab, GetRandomEdgePosition(), data);
+    }
+
+    private void DoSpawnDirect(GameObject prefab, Vector2 pos, UnitData data = null)
+    {
+        int globalWave       = CalcGlobalWave(currentStage, currentWave);
+        int designGlobalWave = data != null ? data.designGlobalWave : globalWave;
+
+        var go    = Instantiate(prefab, pos, Quaternion.identity);
+        var enemy = go.GetComponent<EnemyController>();
+        if (enemy != null)
+        {
+            if (data != null) enemy.ApplyUnitData(data);
+            enemy.InitForWave(globalWave, designGlobalWave, wavesPerStage);
+            enemy.PlaySpawnBounce();
+        }
+        else
+            Debug.LogWarning($"[EnemySpawner] EnemyController 없음: prefab={prefab?.name}");
     }
 
     private int CountActiveEnemies()
@@ -307,11 +341,10 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
             return;
         }
 
-        currentInterval   = row.f_스폰간격 > 0f ? row.f_스폰간격 : 3f;
-        currentSpawnCount = row.f_동시스폰  > 0  ? row.f_동시스폰  : 3;
-        currentMaxOnMap   = row.f_최대스폰;
+        currentInterval = row.f_스폰간격 > 0f ? row.f_스폰간격 : 0.5f;
+        currentMaxOnMap = row.f_최대스폰;
 
-        Debug.Log($"[EnemySpawner] Wave {wave} → 보스: {isBossWave}, 간격: {currentInterval:F1}s, 동시: {currentSpawnCount}, 최대: {currentMaxOnMap}");
+        Debug.Log($"[EnemySpawner] Wave {wave} → 보스: {isBossWave}, 리필간격: {currentInterval:F1}s, 최대: {currentMaxOnMap}");
     }
 
     // ── 외부 호출 API ────────────────────────────────────────────────

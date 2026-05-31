@@ -971,7 +971,7 @@ public class UpgradePanel : MonoBehaviour
 
         // 결과 표시
         if (_mergeQueue.Count > 0)
-            ShowSlotIntermediate(reveal.destEquipSlot, reveal.destInvenSlot, reveal.resultWeapon);
+            ShowSlotIntermediate(reveal.destEquipSlot, reveal.destInvenSlot, reveal.resultIcon, reveal.resultGrade, reveal.resultStar);
         else
             RefreshInventoryUI();
         StartCoroutine(PulseSlotRoutine(destRt));
@@ -1018,14 +1018,13 @@ public class UpgradePanel : MonoBehaviour
     }
 
     /// <summary>연속 합성 중 목적지 슬롯 하나만 중간 결과로 업데이트합니다.
-    /// RefreshInventoryUI 대신 사용해 이후 애니메이션 소스 슬롯이 올바르게 표시되도록 합니다.</summary>
-    private void ShowSlotIntermediate(int destEquipSlot, int destInvenSlot, WeaponData result)
+    /// resultWeapon이 후속 합성에 의해 Destroy됐을 수 있으므로 사전 캡처된 값을 사용합니다.</summary>
+    private void ShowSlotIntermediate(int destEquipSlot, int destInvenSlot, Sprite icon, WeaponGrade grade, int star)
     {
-        if (result == null) return;
         if (destEquipSlot >= 0 && destEquipSlot < equipSlots.Length)
-            equipSlots[destEquipSlot].Refresh(result);
+            equipSlots[destEquipSlot].RefreshCaptured(icon, grade, star);
         else if (destInvenSlot >= 0 && destInvenSlot < invenSlots.Length)
-            invenSlots[destInvenSlot].Refresh(result, false);
+            invenSlots[destInvenSlot].RefreshCaptured(icon, grade, star);
     }
 
     /// <summary>소스 슬롯 고스트가 목적지로 날아가 박히는 슬램 연출.</summary>
@@ -1169,7 +1168,9 @@ public class UpgradePanel : MonoBehaviour
                 }
                 yield return null;
             }
-            if (info.resultWeapon?.icon != null) destIconImg.sprite = info.resultWeapon.icon;
+            // resultWeapon이 후속 합성에 의해 Destroy됐을 수 있으므로 캡처된 아이콘 사용
+            var finalIcon = info.resultIcon ?? info.resultWeapon?.icon;
+            if (finalIcon != null) destIconImg.sprite = finalIcon;
         }
 
         yield return new WaitForSecondsRealtime(0.08f);
@@ -1177,7 +1178,7 @@ public class UpgradePanel : MonoBehaviour
         // ── 2. 오버레이 카드 생성 후 목적지 슬롯 콘텐츠만 숨기기 ──────────
         float   slotScale = destRt.localScale.x;
         Vector2 slotSize  = destRt.rect.size * slotScale;
-        var cardGo = CreateMergeResultCard(destLocal, slotSize, info.resultWeapon);
+        var cardGo = CreateMergeResultCard(destLocal, slotSize, info.resultIcon, info.resultGrade);
         var cardRt = cardGo.GetComponent<RectTransform>();
 
         // 슬롯 스케일은 건드리지 않고 아이콘/별만 숨김 → 슬롯 프레임은 유지, 스케일 이상 방지
@@ -1276,13 +1277,16 @@ public class UpgradePanel : MonoBehaviour
             cardRt.anchoredPosition = Vector2.Lerp(centerLocal, riseTarget, ease);
             cardRt.localRotation    = Quaternion.Euler(0f, Mathf.Lerp(0f, 360f, ease), 0f);
             // 180도 시점(뒤집어지는 순간)에 결과로 교체
+            // doubleUpResult가 후속 합성에 의해 Destroy됐을 수 있으므로 캡처된 값 사용
             if (!swapped && t >= 0.5f)
             {
                 swapped = true;
-                if (cardIconImg != null && info.doubleUpResult?.icon != null)
-                    cardIconImg.sprite = info.doubleUpResult.icon;
-                if (cardFrameImg != null && info.doubleUpResult != null)
-                    cardFrameImg.sprite = WeaponVisualConfig.Shared?.GetGradeSprite(info.doubleUpResult.grade);
+                var duIcon  = info.doubleUpResultIcon;
+                var duGrade = info.doubleUpResultGrade;
+                if (cardIconImg != null && duIcon != null)
+                    cardIconImg.sprite = duIcon;
+                if (cardFrameImg != null)
+                    cardFrameImg.sprite = WeaponVisualConfig.Shared?.GetGradeSprite(duGrade);
             }
             yield return null;
         }
@@ -1290,10 +1294,12 @@ public class UpgradePanel : MonoBehaviour
         // 혹시 루프가 빠르게 끝나서 미교체된 경우 보정
         if (!swapped)
         {
-            if (cardIconImg != null && info.doubleUpResult?.icon != null)
-                cardIconImg.sprite = info.doubleUpResult.icon;
-            if (cardFrameImg != null && info.doubleUpResult != null)
-                cardFrameImg.sprite = WeaponVisualConfig.Shared?.GetGradeSprite(info.doubleUpResult.grade);
+            var duIcon  = info.doubleUpResultIcon;
+            var duGrade = info.doubleUpResultGrade;
+            if (cardIconImg != null && duIcon != null)
+                cardIconImg.sprite = duIcon;
+            if (cardFrameImg != null)
+                cardFrameImg.sprite = WeaponVisualConfig.Shared?.GetGradeSprite(duGrade);
         }
 
         yield return new WaitForSecondsRealtime(0.08f);
@@ -1331,8 +1337,9 @@ public class UpgradePanel : MonoBehaviour
         yield return new WaitForSecondsRealtime(0.6f);
     }
 
-    /// <summary>합성 결과 오버레이 카드를 생성합니다 (프레임 "F" + 아이콘 "I").</summary>
-    private GameObject CreateMergeResultCard(Vector2 localPos, Vector2 size, WeaponData data)
+    /// <summary>합성 결과 오버레이 카드를 생성합니다 (프레임 "F" + 아이콘 "I").
+    /// resultWeapon이 Destroy됐을 수 있으므로 사전 캡처된 icon/grade를 직접 받습니다.</summary>
+    private GameObject CreateMergeResultCard(Vector2 localPos, Vector2 size, Sprite icon, WeaponGrade grade)
     {
         var go = new GameObject("MergeResultCard", typeof(RectTransform), typeof(CanvasGroup));
         go.transform.SetParent(rootCanvas.transform, false);
@@ -1346,8 +1353,6 @@ public class UpgradePanel : MonoBehaviour
         var cg = go.GetComponent<CanvasGroup>();
         cg.blocksRaycasts = false;
 
-        if (data == null) return go;
-
         // 등급 프레임
         var fGo = new GameObject("F", typeof(RectTransform), typeof(Image));
         fGo.transform.SetParent(go.transform, false);
@@ -1355,12 +1360,12 @@ public class UpgradePanel : MonoBehaviour
         fRt.anchorMin = fRt.anchorMax = new Vector2(0.5f, 0.5f);
         fRt.sizeDelta = size;
         var fImg = fGo.GetComponent<Image>();
-        fImg.sprite        = WeaponVisualConfig.Shared?.GetGradeSprite(data.grade);
+        fImg.sprite        = WeaponVisualConfig.Shared?.GetGradeSprite(grade);
         fImg.type          = Image.Type.Simple;
         fImg.raycastTarget = false;
 
         // 무기 아이콘
-        if (data.icon != null)
+        if (icon != null)
         {
             var iGo = new GameObject("I", typeof(RectTransform), typeof(Image));
             iGo.transform.SetParent(go.transform, false);
@@ -1368,7 +1373,7 @@ public class UpgradePanel : MonoBehaviour
             iRt.anchorMin = iRt.anchorMax = new Vector2(0.5f, 0.5f);
             iRt.sizeDelta = size * 0.75f;
             var iImg = iGo.GetComponent<Image>();
-            iImg.sprite        = data.icon;
+            iImg.sprite        = icon;
             iImg.raycastTarget = false;
         }
 

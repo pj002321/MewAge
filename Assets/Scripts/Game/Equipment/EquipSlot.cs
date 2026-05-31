@@ -80,6 +80,21 @@ public class EquipSlot : MonoBehaviour,
 
     public Image IconImage => iconImg;
 
+    /// <summary>결과 무기가 Destroy된 경우를 대비해 사전 캡처된 값으로 슬롯을 표시합니다.</summary>
+    public void RefreshCaptured(Sprite icon, WeaponGrade grade, int star)
+    {
+        if (iconImg) { iconImg.enabled = icon != null; if (icon != null) iconImg.sprite = icon; }
+        if (weaponTypeImg) weaponTypeImg.enabled = false;
+        SetStarObject(starObjects, star);
+        if (frameImg)
+        {
+            var gradeSprite = WeaponVisualConfig.Shared?.GetGradeSprite(grade);
+            if (gradeSprite != null) { frameImg.sprite = gradeSprite; frameImg.type = Image.Type.Simple; frameImg.color = Color.white; }
+        }
+        if (starGlowObj) starGlowObj.SetActive(star >= 3);
+        transform.localScale = Vector3.one;
+    }
+
     /// <summary>합성 슬램 연출 중 슬롯을 빈 상태로 표시합니다.</summary>
     public void HideContentImages()
     {

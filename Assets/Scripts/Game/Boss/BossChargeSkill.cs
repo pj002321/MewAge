@@ -21,17 +21,9 @@ public class BossChargeSkill : BossSkillBase
     [Tooltip("튕긴 뒤 다음 돌진까지 잠깐 멈추는 시간 (0이면 즉시)")]
     [SerializeField] private float bouncePause = 0.1f;
 
-    [Header("경고 라인")]
-    [SerializeField] private float    warningDuration   = 0.5f;
-    [SerializeField] private float    warningLineLength = 12f;
-    [SerializeField] private float    warningLineWidth  = 0.08f;
-    [SerializeField] private Color    warningColor      = Color.red;
-    [Tooltip("null이면 Sprites/Default 자동 생성")]
-    [SerializeField] private Material warningMaterial;
+    [SerializeField] private float warningDuration = 0.5f;
 
-    private LineRenderer _warnLine;
-
-    public override void OnInterrupted() => CleanupWarnLine();
+    public override void OnInterrupted() { }
 
     protected override async UniTask OnExecuteAsync(CancellationToken ct)
     {
@@ -114,58 +106,8 @@ public class BossChargeSkill : BossSkillBase
 
     private async UniTask WarnPhaseAsync(Vector2 dir, CancellationToken ct)
     {
-        Vector2 origin = Boss.Rb != null ? Boss.Rb.position : (Vector2)Boss.transform.position;
-        _warnLine = SpawnWarnLine(origin);
-
-        float elapsed = 0f;
-        while (elapsed < warningDuration)
-        {
-            if (Boss == null || ct.IsCancellationRequested) { CleanupWarnLine(); return; }
-            elapsed += Time.deltaTime;
-            float t = Mathf.Clamp01(elapsed / warningDuration);
-
-            if (_warnLine != null)
-            {
-                Vector2 cur = Boss.Rb != null ? Boss.Rb.position : (Vector2)Boss.transform.position;
-                _warnLine.transform.position = new Vector3(cur.x, cur.y, 0f);
-                _warnLine.SetPosition(0, Vector3.zero);
-                Vector3 worldEnd = new(cur.x + dir.x * warningLineLength * t,
-                                       cur.y + dir.y * warningLineLength * t, 0f);
-                _warnLine.SetPosition(1, _warnLine.transform.InverseTransformPoint(worldEnd));
-            }
-            await UniTask.Yield(ct);
-        }
-        CleanupWarnLine();
-    }
-
-    private void CleanupWarnLine()
-    {
-        if (_warnLine == null) return;
-        Object.Destroy(_warnLine.gameObject);
-        _warnLine = null;
-    }
-
-    private LineRenderer SpawnWarnLine(Vector2 start)
-    {
-        if (!WarningLineSettings.Enabled) return null;
-        var go = new GameObject("WarnLine");
-        go.transform.position = new Vector3(start.x, start.y, 0f);
-        var lr = go.AddComponent<LineRenderer>();
-        lr.useWorldSpace     = false;
-        lr.positionCount     = 2;
-        lr.SetPosition(0, Vector3.zero);
-        lr.SetPosition(1, Vector3.zero);
-        lr.startWidth        = warningLineWidth;
-        lr.endWidth          = warningLineWidth;
-        lr.material          = warningMaterial != null
-            ? warningMaterial
-            : new Material(Shader.Find("Sprites/Default"));
-        lr.startColor        = warningColor;
-        lr.endColor          = warningColor;
-        lr.sortingOrder      = 10;
-        lr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-        Object.Destroy(go, warningDuration + 0.5f);
-        return lr;
+        Boss.FlipToward(dir);
+        await UniTask.Delay(System.TimeSpan.FromSeconds(warningDuration), cancellationToken: ct);
     }
 
     /// <summary>초과 위치와 클램프 위치의 차이로 부딪힌 벽 축을 판단해 방향을 반사합니다.</summary>

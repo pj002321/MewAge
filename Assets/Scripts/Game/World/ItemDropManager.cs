@@ -68,6 +68,13 @@ public class ItemDropManager : MonoBehaviourSingleton<ItemDropManager>
         go.GetComponent<DropItem>()?.InitParabolic(type, value, vel, eliteOrbGravity);
     }
 
+    /// <summary>골드만 드롭합니다. 체력 절반 도달 시 호출됩니다.</summary>
+    public void SpawnGoldDrop(Vector3 pos, int goldValue)
+    {
+        if (goldPrefab == null || Random.value > goldDropChance) return;
+        SpawnItem(goldPrefab, pos, DropItem.ItemType.Gold, goldValue);
+    }
+
     /// <summary>적 사망 위치에서 아이템을 드롭합니다.</summary>
     public void SpawnDrops(Vector3 pos, int goldValue, int expValue)
     {
