@@ -152,7 +152,7 @@ public class WeaponSlashBehaviour : WeaponBehaviourBase
                     boss.TakeDamage(bDmg, bCrit, bDir, Host.knockbackPower);
                     Host.ApplyLifeSteal(bDmg);
                     Host.TrySpecialEffectBoss(boss, bDmg);
-                    SoundManager.Shared?.Play(SoundKey.Weapon_Attack);
+                    SoundManager.Shared?.PlayWeaponHit(Host.WeaponId);
                     continue;
                 }
             }
@@ -169,7 +169,7 @@ public class WeaponSlashBehaviour : WeaponBehaviourBase
             Host.ApplyLifeSteal(eDmg);
             if (Host.dotDamage > 0f) enemy.ApplyBleed(Host.dotDamage);
             Host.TrySpecialEffectEnemy(enemy, eDmg, eDir);
-            SoundManager.Shared?.Play(SoundKey.Weapon_Attack);
+            SoundManager.Shared?.PlayWeaponHit(Host.WeaponId);
 
             if (projectilePrefab != null)
             {
@@ -190,7 +190,8 @@ public class WeaponSlashBehaviour : WeaponBehaviourBase
         vfx.AddComponent<SlashVfxBehaviour>().Init(
             slashVfxDuration, 0.25f, midDir,
             Host.attackDamage, Host.criticalRate, Host.criticalMultiplier,
-            Host.knockbackPower, Host.dotDamage, Host.lifeSteal);
+            Host.knockbackPower, Host.dotDamage, Host.lifeSteal,
+            weaponId: Host.WeaponId);
         Object.Destroy(vfx, slashVfxDuration);
         if (Host.Grade >= WeaponGrade.Legendary) OnSlashVfxSpawned?.Invoke(vfxWorldPos, midDir);
     }

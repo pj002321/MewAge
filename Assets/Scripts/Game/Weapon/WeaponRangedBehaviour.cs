@@ -60,7 +60,7 @@ public class WeaponRangedBehaviour : WeaponBehaviourBase
         Vector2 aimDir = ((Vector2)tgt.Position - (Vector2)Host.transform.position).normalized;
         if (!useParabolicShot) Host.SnapRotationToDir(aimDir);
 
-        SoundManager.Shared?.Play(SoundKey.Weapon_Shoot);
+        SoundManager.Shared?.PlayWeaponShoot(Host.WeaponId);
         var (finalDmg, isCrit) = Host.RollCrit(Host.attackDamage);
 
         float   spd      = EffectiveSpeed;
@@ -83,7 +83,8 @@ public class WeaponRangedBehaviour : WeaponBehaviourBase
                 lifeSteal: Host.lifeSteal, dotDamage: Host.dotDamage,
                 areaHitRadius: Host.areaHitRadius, areaHitDamageRatio: Host.areaHitDamageRatio,
                 criticalRate: Host.criticalRate, criticalMultiplier: Host.criticalMultiplier,
-                baseDamage: Host.attackDamage, knockbackPower: Host.knockbackPower);
+                baseDamage: Host.attackDamage, knockbackPower: Host.knockbackPower,
+                weaponId: Host.WeaponId);
         }
 
         Host.ApplyShootSpecialEffect(proj, spawnPos, aimDir);
@@ -112,7 +113,7 @@ public class WeaponRangedBehaviour : WeaponBehaviourBase
             lifeSteal: Host.lifeSteal, dotDamage: Host.dotDamage,
             areaHitRadius: Host.areaHitRadius, areaHitDamageRatio: Host.areaHitDamageRatio,
             criticalRate: Host.criticalRate, criticalMultiplier: Host.criticalMultiplier,
-            baseDamage: dmg, knockbackPower: Host.knockbackPower);
+            baseDamage: dmg, knockbackPower: Host.knockbackPower, weaponId: Host.WeaponId);
     }
 
     private static Vector2 RotateDir(Vector2 v, float degrees)

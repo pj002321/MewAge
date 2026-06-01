@@ -142,7 +142,7 @@ public abstract class WeaponMeleeBaseBehaviour : WeaponBehaviourBase
 
     protected void BeginStrike()
     {
-        SoundManager.Shared?.Play(SoundKey.Weapon_Shoot);
+        SoundManager.Shared?.PlayWeaponShoot(Host.WeaponId);
         OnBeginStrikeSetup();
         _state = State.Striking;
         Host.StartTrail();

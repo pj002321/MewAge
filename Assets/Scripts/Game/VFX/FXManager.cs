@@ -207,6 +207,14 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
         go.GetComponent<HitEffect>()?.Play(go, this);
     }
 
+    /// <summary>무기별 커스텀 hitVfxPrefab 지정 버전. null이면 기본 SpawnHitEffect 호출.</summary>
+    public void SpawnHitEffectAt(Vector3 worldPos, GameObject prefab)
+    {
+        if (prefab == null) { SpawnHitEffect(worldPos); return; }
+        var go = Instantiate(prefab, worldPos, Quaternion.identity);
+        go.GetComponent<HitEffect>()?.Play(go, this);
+    }
+
     public void SpawnLandingVFX(Vector3 worldPos)
     {
         if (landingVfxPrefab == null) return;

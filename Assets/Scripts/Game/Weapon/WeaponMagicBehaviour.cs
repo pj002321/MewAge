@@ -176,12 +176,14 @@ public class WeaponMagicBehaviour : WeaponMeleeBaseBehaviour
             homing.Init(finalDmg, projectileSpeed, tgt.Enemy,
                 lifeSteal: Host.lifeSteal, dotDamage: Host.dotDamage,
                 knockbackPower: Host.knockbackPower,
-                critRate: Host.criticalRate, critMult: Host.criticalMultiplier);
+                critRate: Host.criticalRate, critMult: Host.criticalMultiplier,
+                weaponId: Host.WeaponId);
         else if (tgt.Boss != null)
             homing.InitBoss(finalDmg, projectileSpeed, tgt.Boss,
                 lifeSteal: Host.lifeSteal, dotDamage: Host.dotDamage,
                 knockbackPower: Host.knockbackPower,
-                critRate: Host.criticalRate, critMult: Host.criticalMultiplier);
+                critRate: Host.criticalRate, critMult: Host.criticalMultiplier,
+                weaponId: Host.WeaponId);
 
         TriggerFireSpriteColor();
     }

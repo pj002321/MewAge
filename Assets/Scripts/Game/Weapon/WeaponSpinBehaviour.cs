@@ -152,7 +152,7 @@ public class WeaponSpinBehaviour : WeaponBehaviourBase
         Host.ApplyLifeSteal(finalDmg);
         if (Host.dotDamage > 0f) enemy.ApplyBleed(Host.dotDamage);
         Host.TrySpecialEffectEnemy(enemy, finalDmg, knockDir);
-        SoundManager.Shared?.Play(SoundKey.Weapon_Attack);
+        SoundManager.Shared?.PlayWeaponHit(Host.WeaponId);
         _hitTimers[enemy] = spinHitCooldown;
     }
 

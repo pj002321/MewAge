@@ -254,6 +254,9 @@ public class WeaponPoint : MonoBehaviour
         dotDamage          = data.bleedDamage;
 
         _specialEffectId = data.trait?.Trim();
+        // StatusEffectConfig에 skillOverride가 있으면 DB f_특성보다 우선 적용
+        var _soSkill = StatusEffectConfig.Shared?.GetSkillOverride(data.id);
+        if (!string.IsNullOrEmpty(_soSkill)) _specialEffectId = _soSkill;
         _weaponChapter   = data.chapter;
         _weaponId        = data.id;
         this.DLog($"[WeaponPoint.Init] id='{_weaponId}' trait='{_specialEffectId}' grade={_grade}");
@@ -561,7 +564,7 @@ public class WeaponPoint : MonoBehaviour
 
         if (anyHit)
         {
-            SoundManager.Shared?.Play(SoundKey.Weapon_Attack);
+            PlayWeaponHitSound();
             ApplyGradeProc(colCount, hitDir, hitBoss, transform.position);
         }
     }
@@ -622,7 +625,7 @@ public class WeaponPoint : MonoBehaviour
 
         if (anyHit)
         {
-            SoundManager.Shared?.Play(SoundKey.Weapon_Attack);
+            PlayWeaponHitSound();
             ApplyGradeProc(colCount, hitDir, hitBoss, transform.position);
         }
     }
@@ -925,8 +928,22 @@ public class WeaponPoint : MonoBehaviour
             }
         }
         FXManager.NextIsEpicHit = false;
-        if (anyHit) FXManager.Shared?.SpawnHitEffect(hitPos);
+        if (anyHit) PlayWeaponHitFX(hitPos);
     }
+
+    // ═════════════════════════════════════════════════════════════════
+    // 사운드 / VFX 헬퍼 (무기별 설정 우선, 없으면 기본값)
+    // ═════════════════════════════════════════════════════════════════
+
+    internal void PlayWeaponHitFX(Vector3 pos)
+    {
+        var custom = StatusEffectConfig.Shared?.GetHitVfxPrefab(_weaponId);
+        if (custom != null) FXManager.Shared?.SpawnHitEffectAt(pos, custom);
+        else                FXManager.Shared?.SpawnHitEffect(pos);
+    }
+
+    internal void PlayWeaponHitSound()  => SoundManager.Shared?.PlayWeaponHit(_weaponId);
+    internal void PlayWeaponShootSound() => SoundManager.Shared?.PlayWeaponShoot(_weaponId);
 
     // ═════════════════════════════════════════════════════════════════
     // 특수효과 헬퍼
@@ -1070,7 +1087,7 @@ public class WeaponPoint : MonoBehaviour
                 var (ed, ec) = RollCrit(damage);
                 e.TakeDamage(ed, ec, ((Vector2)e.transform.position - (Vector2)go.transform.position).normalized, knockbackPower);
             }
-            FXManager.Shared?.SpawnHitEffect(go.transform.position);
+            PlayWeaponHitFX(go.transform.position);
             yield return new WaitForSeconds(burstInterval);
         }
 
@@ -1379,7 +1396,7 @@ public class WeaponPoint : MonoBehaviour
             var b = _sharedHitList[i].GetComponentInParent<BossController>();
             if (b != null) b.TakeDamage(damage);
         }
-        FXManager.Shared?.SpawnHitEffect(center);
+        PlayWeaponHitFX(center);
     }
 
     private void FireExtraProjectile(Vector3 spawnPos, Vector2 dir, float dmg)
@@ -1392,7 +1409,7 @@ public class WeaponPoint : MonoBehaviour
         if (p != null)
             p.Init(dmg, dir, speed, criticalRate: criticalRate,
                 criticalMultiplier: criticalMultiplier, baseDamage: dmg,
-                knockbackPower: knockbackPower);
+                knockbackPower: knockbackPower, weaponId: _weaponId);
     }
 
     private void FireHomingProjectile(Vector3 spawnPos, Vector2 initialDir, float dmg)
@@ -1406,7 +1423,7 @@ public class WeaponPoint : MonoBehaviour
         if (p == null) return;
         p.Init(dmg, initialDir, speed, criticalRate: criticalRate,
             criticalMultiplier: criticalMultiplier, baseDamage: dmg,
-            knockbackPower: knockbackPower);
+            knockbackPower: knockbackPower, weaponId: _weaponId);
         p.SetHoming(turnSpeed: 220f);
     }
 

@@ -32,6 +32,10 @@ public class StatusEffectConfig : ScriptableObject
         public string     traitId;
         public float      triggerChance;          // 0 = 기본값 사용
 
+        // ── 스킬 오버라이드 ────────────────────────────────────
+        [Tooltip("에디터에서 할당한 스킬 ID. 비워두면 DB f_특성 사용")]
+        public string     skillOverride;
+
         // ── HIT_CLONE ──────────────────────────────────────────
         public GameObject cloneProjectilePrefab;
         public float      cloneOutTime;
@@ -63,6 +67,60 @@ public class StatusEffectConfig : ScriptableObject
         public float      passiveBuffPct;
         [Tooltip("장착 시 플레이어 머리 위에 떠오르다 사라질 VFX 프리팹")]
         public GameObject passiveBuffVfxPrefab;
+
+        // ── 공격 VFX ───────────────────────────────────────────
+        [Tooltip("타격 명중 시 VFX 프리팹. null이면 FXManager 기본 hitEffect 사용")]
+        public GameObject hitVfxPrefab;
+
+        // ── 스킬 파라미터 (0 = WeaponHighGradeSkill 기본값 사용) ──
+
+        // HIT_STUN · HIT_ICE · HIT_FIRE
+        [Tooltip("상태이상 지속 시간 (기본 1.5)")] public float p_stunDuration;
+        [Tooltip("빙결 해제 시 추가 피해 HIT_ICE (기본 0)")] public float p_freezeThawDmg;
+
+        // HIT_CLONE_*
+        [Tooltip("클론 이동 속도 (기본 10)")] public float p_cloneSpeed;
+        [Tooltip("클론 생존 시간 (기본 1.8)")] public float p_cloneLifetime;
+        [Tooltip("클론 크기 배율 (기본 2)")] public float p_cloneScale;
+        [Tooltip("클론 투명도 0~1 (기본 0.45)")] public float p_cloneAlpha;
+
+        // SHOOT_SUB
+        [Tooltip("서브 발사 각도 오프셋 (기본 18)")] public float p_spreadAngle;
+        [Tooltip("서브 데미지 비율 (기본 0.6)")] public float p_subDmgRatio;
+        [Tooltip("서브 속도 비율 (기본 0.9)")] public float p_subSpeedRatio;
+
+        // HIT_SLASH
+        [Tooltip("슬래시 투사체 프리팹")] public GameObject p_slashPrefab;
+        [Tooltip("슬래시 데미지 비율 (기본 0.5)")] public float p_slashDmgRatio;
+        [Tooltip("슬래시 투사체 속도 (기본 9)")] public float p_slashSpeed;
+
+        // HIT_SPIN
+        [Tooltip("공전 반경 배율 (기본 1.4)")] public float p_spinRadiusMult;
+        [Tooltip("공전 속도 배율 (기본 1.35)")] public float p_spinSpeedMult;
+        [Tooltip("클론 생성 확률 (기본 0.3)")] public float p_spinCloneChance;
+        [Tooltip("클론 공전 반경 (기본 1.5)")] public float p_spinCloneRadius;
+        [Tooltip("클론 공전 속도 deg/s (기본 220)")] public float p_spinCloneSpeed;
+        [Tooltip("클론 지속 시간 (기본 3)")] public float p_spinCloneDuration;
+        [Tooltip("클론 타격 반경 (기본 0.4)")] public float p_spinCloneHitRadius;
+        [Tooltip("클론 투명도 (기본 0.5)")] public float p_spinCloneAlpha;
+        [Tooltip("최대 동시 클론 수 (기본 3, 0=기본)")] public int  p_spinCloneMax;
+
+        // HIT_SHOCK
+        [Tooltip("충격파 반경 (기본 4.5)")] public float p_shockRadius;
+        [Tooltip("충격파 데미지 비율 (기본 0.4)")] public float p_shockDmgRatio;
+
+        // BOSS_SPIKE · HIT_SPIKE
+        [Tooltip("틱 피해량 (기본 5)")] public float p_spikeTickDmg;
+        [Tooltip("틱 간격 (기본 0.5)")] public float p_spikeTickInterval;
+        [Tooltip("스파이크 지속 시간 (기본 5)")] public float p_spikeDuration;
+        [Tooltip("사망 폭발 반경 (기본 2.5)")] public float p_spikeDeathRadius;
+        [Tooltip("사망 폭발 피해 (기본 20)")] public float p_spikeDeathDmg;
+
+        // BOSS_BIND
+        [Tooltip("구속 시간 (기본 2)")] public float p_bindDuration;
+
+        // BOSS_GROGY
+        [Tooltip("그로기 시간 (기본 2)")] public float p_groggySeconds;
     }
 
     // ── 인스펙터 필드 ─────────────────────────────────────────────
@@ -157,6 +215,36 @@ public class StatusEffectConfig : ScriptableObject
 
     public GameObject GetPassiveBuffVfx(string weaponId)
         => FindEntry(weaponId)?.passiveBuffVfxPrefab;
+
+    // ── 공격 VFX ─────────────────────────────────────────────────
+
+    public GameObject GetHitVfxPrefab(string weaponId)
+        => FindEntry(weaponId)?.hitVfxPrefab;
+
+    // ── 스킬 오버라이드 ───────────────────────────────────────────
+
+    public string GetSkillOverride(string weaponId)
+        => FindEntry(weaponId)?.skillOverride;
+
+    // ── 스킬 파라미터 오버라이드 헬퍼 ────────────────────────────
+
+    public float GetP(string weaponId, System.Func<WeaponEntry, float> sel, float fallback)
+    {
+        var e = FindEntry(weaponId); if (e == null) return fallback;
+        float v = sel(e.Value); return v > 0f ? v : fallback;
+    }
+    public int GetPI(string weaponId, System.Func<WeaponEntry, int> sel, int fallback)
+    {
+        var e = FindEntry(weaponId); if (e == null) return fallback;
+        int v = sel(e.Value); return v > 0 ? v : fallback;
+    }
+    public Color GetPC(string weaponId, System.Func<WeaponEntry, Color> sel, Color fallback)
+    {
+        var e = FindEntry(weaponId); if (e == null) return fallback;
+        Color c = sel(e.Value); return c.a > 0f ? c : fallback;
+    }
+    public GameObject GetPGO(string weaponId, System.Func<WeaponEntry, GameObject> sel)
+        => FindEntry(weaponId) is { } e ? sel(e) : null;
 
     // ── 내부 헬퍼 ─────────────────────────────────────────────────
 

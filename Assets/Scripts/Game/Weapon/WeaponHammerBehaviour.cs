@@ -118,7 +118,7 @@ public class WeaponHammerBehaviour : WeaponBehaviourBase
 
             if (anyHit)
             {
-                SoundManager.Shared?.Play(SoundKey.Weapon_Attack);
+                SoundManager.Shared?.PlayWeaponHit(Host.WeaponId);
                 Host.ApplyGradeProc(hitCount, Vector2.down, hammerHitBoss, (Vector3)impactCenter);
             }
 
