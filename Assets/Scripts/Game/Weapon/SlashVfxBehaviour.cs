@@ -26,14 +26,16 @@ public class SlashVfxBehaviour : MonoBehaviour
     private float _lifeSteal;
 
     private readonly HashSet<EnemyController> _hitEnemies = new();
-    private bool _hitBoss;
+    private bool   _hitBoss;
+    private string _weaponId;
 
     private const float FadeStartRatio = 0.4f;
 
     /// <param name="attackDamage">0이면 피해 처리 없이 시각 효과만.</param>
     public void Init(float duration, float driftDistance, Vector2 driftDir,
         float attackDamage = 0f, float critRate = 0f, float critMult = 2f,
-        float knockbackPower = 0f, float dotDamage = 0f, float lifeSteal = 0f)
+        float knockbackPower = 0f, float dotDamage = 0f, float lifeSteal = 0f,
+        string weaponId = "")
     {
         _duration       = Mathf.Max(duration, 0.01f);
         _driftDistance  = driftDistance;
@@ -45,6 +47,7 @@ public class SlashVfxBehaviour : MonoBehaviour
         _knockbackPower = knockbackPower;
         _dotDamage      = dotDamage;
         _lifeSteal      = lifeSteal;
+        _weaponId       = weaponId;
 
         _renderers      = GetComponentsInChildren<SpriteRenderer>(true);
         _originalAlphas = new float[_renderers.Length];
@@ -84,7 +87,7 @@ public class SlashVfxBehaviour : MonoBehaviour
                 Vector2 knock = (Vector2)boss.transform.position - (Vector2)transform.position;
                 boss.TakeDamage(dmg, crit, knock.sqrMagnitude > 0.001f ? knock.normalized : Vector2.up, _knockbackPower);
                 ApplyLifeSteal(dmg);
-                SoundManager.Shared?.Play(SoundKey.Weapon_Attack);
+                SoundManager.Shared?.PlayWeaponHit(_weaponId);
                 _hitBoss = true;
                 return;
             }
@@ -99,7 +102,7 @@ public class SlashVfxBehaviour : MonoBehaviour
         enemy.TakeDamage(eDmg, eCrit, eKnock.sqrMagnitude > 0.001f ? eKnock.normalized : Vector2.up, _knockbackPower);
         ApplyLifeSteal(eDmg);
         if (_dotDamage > 0f) enemy.ApplyBleed(_dotDamage);
-        SoundManager.Shared?.Play(SoundKey.Weapon_Attack);
+        SoundManager.Shared?.PlayWeaponHit(_weaponId);
     }
 
     private (float, bool) RollCrit(float baseDmg)

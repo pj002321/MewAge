@@ -54,6 +54,8 @@ public class Projectile : MonoBehaviour
     private SpriteRenderer _sr;
     private float          _ghostTimer;
 
+    private string _weaponId;
+
     // 가속 전용
     private float _curSpeed;
     private float _accel;
@@ -101,7 +103,7 @@ public class Projectile : MonoBehaviour
     private void OnEnable()  => All.Add(this);
     private void OnDisable() => All.Remove(this);
 
-    public void Init(float primaryDmg, Vector2 direction, float speed = 6f, float lifetime = 5f, bool isPrimaryCritical = false, float lifeSteal = 0f, float dotDamage = 0f, float areaHitRadius = 0f, float areaHitDamageRatio = 0f, float criticalRate = 0f, float criticalMultiplier = 2f, float baseDamage = 0f, float knockbackPower = 16f, float acceleration = 0f, float initialSpeedRatio = 0.25f)
+    public void Init(float primaryDmg, Vector2 direction, float speed = 6f, float lifetime = 5f, bool isPrimaryCritical = false, float lifeSteal = 0f, float dotDamage = 0f, float areaHitRadius = 0f, float areaHitDamageRatio = 0f, float criticalRate = 0f, float criticalMultiplier = 2f, float baseDamage = 0f, float knockbackPower = 16f, float acceleration = 0f, float initialSpeedRatio = 0.25f, string weaponId = "")
     {
         this.primaryDmg         = primaryDmg;
         this.direction          = direction.normalized;
@@ -120,6 +122,7 @@ public class Projectile : MonoBehaviour
         _curSpeed        = _accelDuration > 0f ? _accelStartSpeed : speed;
         _accel           = 0f;
         _accelTimer      = 0f;
+        _weaponId        = weaponId;
         Destroy(gameObject, lifetime);
 
         float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg - ForwardAngle;
@@ -353,7 +356,7 @@ public class Projectile : MonoBehaviour
         if (!_cachedBossCol.OverlapPoint(transform.position)) return;
 
         _bossHitDone = true;
-        SoundManager.Shared?.Play(SoundKey.Weapon_Attack);
+        SoundManager.Shared?.PlayWeaponHit(_weaponId);
         boss.TakeDamage(primaryDmg, isPrimaryCritical);
         if (lifeSteal > 0f) PlayerController.Instance?.HealHP(primaryDmg * lifeSteal);
         _onHitBoss?.Invoke(boss, primaryDmg);
@@ -402,7 +405,7 @@ public class Projectile : MonoBehaviour
         {
             if (_bossHitDone) return;
             _bossHitDone = true;
-            SoundManager.Shared?.Play(SoundKey.Weapon_Attack);
+            SoundManager.Shared?.PlayWeaponHit(_weaponId);
             boss.TakeDamage(primaryDmg, isPrimaryCritical);
             if (lifeSteal > 0f) PlayerController.Instance?.HealHP(primaryDmg * lifeSteal);
             _onHitBoss?.Invoke(boss, primaryDmg);
@@ -431,7 +434,7 @@ public class Projectile : MonoBehaviour
             // 관통: 이미 타격한 적은 스킵
             if (_pierce && _pierced.Contains(enemy)) return;
 
-            SoundManager.Shared?.Play(SoundKey.Weapon_Attack);
+            SoundManager.Shared?.PlayWeaponHit(_weaponId);
             // 범위 데미지 적용
             int colCount = Physics2D.OverlapCircleNonAlloc(transform.position, areaHitRadius, _hitBuffer);
             for (int i = 0; i < colCount; i++)

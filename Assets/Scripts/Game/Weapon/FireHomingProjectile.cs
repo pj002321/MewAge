@@ -22,13 +22,14 @@ public class FireHomingProjectile : MonoBehaviour
         _                   =>  90f,
     };
 
-    private float _damage;
-    private float _speed;
-    private float _lifeSteal;
-    private float _dotDamage;
-    private float _knockbackPower;
-    private float _critRate;
-    private float _critMult;
+    private float  _damage;
+    private float  _speed;
+    private float  _lifeSteal;
+    private float  _dotDamage;
+    private float  _knockbackPower;
+    private float  _critRate;
+    private float  _critMult;
+    private string _weaponId;
 
     // object 대신 타입 분리 — Unity의 == null 연산자가 올바르게 작동
     private EnemyController _targetEnemy;
@@ -38,7 +39,7 @@ public class FireHomingProjectile : MonoBehaviour
 
     public void Init(float damage, float speed, EnemyController target,
         float lifeSteal = 0f, float dotDamage = 0f,
-        float knockbackPower = 0f, float critRate = 0f, float critMult = 2f)
+        float knockbackPower = 0f, float critRate = 0f, float critMult = 2f, string weaponId = "")
     {
         _damage         = damage;
         _speed          = speed;
@@ -48,6 +49,7 @@ public class FireHomingProjectile : MonoBehaviour
         _knockbackPower = knockbackPower;
         _critRate       = critRate;
         _critMult       = critMult;
+        _weaponId       = weaponId;
         _velocity       = target != null
             ? ((Vector2)target.transform.position - (Vector2)transform.position).normalized * speed
             : Vector2.up * speed;
@@ -56,7 +58,7 @@ public class FireHomingProjectile : MonoBehaviour
 
     public void InitBoss(float damage, float speed, BossController target,
         float lifeSteal = 0f, float dotDamage = 0f,
-        float knockbackPower = 0f, float critRate = 0f, float critMult = 2f)
+        float knockbackPower = 0f, float critRate = 0f, float critMult = 2f, string weaponId = "")
     {
         _damage         = damage;
         _speed          = speed;
@@ -66,6 +68,7 @@ public class FireHomingProjectile : MonoBehaviour
         _knockbackPower = knockbackPower;
         _critRate       = critRate;
         _critMult       = critMult;
+        _weaponId       = weaponId;
         _velocity       = target != null
             ? ((Vector2)target.transform.position - (Vector2)transform.position).normalized * speed
             : Vector2.up * speed;
@@ -116,7 +119,7 @@ public class FireHomingProjectile : MonoBehaviour
             if (_lifeSteal > 0f) PlayerController.Instance?.HealHP(finalDmg * _lifeSteal);
         }
 
-        SoundManager.Shared?.Play(SoundKey.Weapon_Attack);
+        SoundManager.Shared?.PlayWeaponHit(_weaponId);
         Destroy(gameObject);
     }
 

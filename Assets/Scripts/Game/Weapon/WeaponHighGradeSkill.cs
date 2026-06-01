@@ -186,13 +186,28 @@ public class WeaponHighGradeSkill : MonoBehaviour
 
     private string TraitId => _traitId;
 
+    // ── SO 파라미터 오버라이드 헬퍼 ─────────────────────────────────────
+    private string Wid => WP?.WeaponId ?? "";
+    private StatusEffectConfig Cfg => StatusEffectConfig.Shared;
+
+    private float P(System.Func<StatusEffectConfig.WeaponEntry, float> sel, float def)
+        => Cfg?.GetP(Wid, sel, def) ?? def;
+    private int PI(System.Func<StatusEffectConfig.WeaponEntry, int> sel, int def)
+        => Cfg?.GetPI(Wid, sel, def) ?? def;
+    private Color PC(System.Func<StatusEffectConfig.WeaponEntry, Color> sel, Color def)
+        => Cfg?.GetPC(Wid, sel, def) ?? def;
+    private GameObject PGO(System.Func<StatusEffectConfig.WeaponEntry, GameObject> sel)
+        => Cfg?.GetPGO(Wid, sel);
+
     // ── 초기화 ───────────────────────────────────────────────────────────
 
     public void Initialize(WeaponPoint wp) => WP = wp;
 
     public void OnEquip()
     {
-        if (TraitId == "HIT_SPIN") WP?.ApplySpinBoost(radiusMultiplier, spinSpeedMultiplier);
+        float rMult = P(e => e.p_spinRadiusMult, radiusMultiplier);
+        float sMult = P(e => e.p_spinSpeedMult,  spinSpeedMultiplier);
+        if (TraitId == "HIT_SPIN") WP?.ApplySpinBoost(rMult, sMult);
         if (WP != null) WP.OnSlashVfxSpawned += HandleSlashVfx;
         if (IsReduction) ActiveDamageReduction = reductionPct;
     }
@@ -248,13 +263,17 @@ public class WeaponHighGradeSkill : MonoBehaviour
 
     private void DoMeleeHit(Collider2D[] hitBuffer, int colCount)
     {
-        if (Random.value > meleChance) return;
+        float chance = P(e => e.triggerChance, meleChance);
+        if (Random.value > chance) return;
         var status = TraitId switch
         {
             "HIT_ICE"  => StatusType.Freeze,
             "HIT_FIRE" => StatusType.Burn,
             _          => StatusType.Stun,
         };
+        float dur    = P(e => e.p_stunDuration, meleeDuration);
+        float thaw   = P(e => e.p_freezeThawDmg, freezeDamageOnThaw);
+        Color fColor = PC(e => e.hitStunColor, freezeColor);
         for (int i = 0; i < colCount; i++)
         {
             if (hitBuffer[i] == null) continue;
@@ -262,9 +281,9 @@ public class WeaponHighGradeSkill : MonoBehaviour
             if (!e.gameObject.activeInHierarchy) continue;
             switch (status)
             {
-                case StatusType.Stun:   e.Stun(meleeDuration); break;
-                case StatusType.Freeze: e.Freeze(meleeDuration, freezeDamageOnThaw, freezeColor); break;
-                case StatusType.Burn:   e.ApplyBleed(WP != null ? WP.BleedDamage + 1f : 5f); e.ApplySlow(meleeDuration, 0.5f); break;
+                case StatusType.Stun:   e.Stun(dur); break;
+                case StatusType.Freeze: e.Freeze(dur, thaw, fColor); break;
+                case StatusType.Burn:   e.ApplyBleed(WP != null ? WP.BleedDamage + 1f : 5f); e.ApplySlow(dur, 0.5f); break;
             }
         }
     }
@@ -273,27 +292,28 @@ public class WeaponHighGradeSkill : MonoBehaviour
 
     private void DoSpinClone()
     {
-        if (Random.value > spinCloneChance || _activeSpinClones >= spinCloneMaxCount) return;
+        float sChance = P(e => e.p_spinCloneChance, spinCloneChance);
+        int   sMax    = PI(e => e.p_spinCloneMax,  spinCloneMaxCount);
+        if (Random.value > sChance || _activeSpinClones >= sMax) return;
         var player = PlayerController.Instance;
         if (player == null) return;
 
         float dmg = WP != null ? WP.AttackDamage : 1f;
         GameObject go;
 
+        float sAlpha = P(e => e.p_spinCloneAlpha, spinCloneAlpha);
         var prefab = StatusEffectConfig.Shared?.GetClonePrefab(WP?.WeaponId);
         if (prefab != null)
         {
             go = Instantiate(prefab, player.transform.position, Quaternion.identity);
-            // Projectile 이동을 끄고 SpinOrbitClone이 위치를 직접 제어
             var proj = go.GetComponent<Projectile>();
             if (proj != null) proj.enabled = false;
             var rb = go.GetComponent<Rigidbody2D>();
             if (rb != null) rb.bodyType = RigidbodyType2D.Kinematic;
-            SetSpriteAlpha(go, spinCloneAlpha);
+            SetSpriteAlpha(go, sAlpha);
         }
         else
         {
-            // 폴백: 무기 스프라이트 복사
             var sr = GetComponentInChildren<SpriteRenderer>();
             if (sr == null || sr.sprite == null) return;
 
@@ -302,14 +322,18 @@ public class WeaponHighGradeSkill : MonoBehaviour
             cloneSr.sprite         = sr.sprite;
             cloneSr.sortingLayerID = sr.sortingLayerID;
             cloneSr.sortingOrder   = sr.sortingOrder;
-            cloneSr.color          = new Color(1f, 1f, 1f, spinCloneAlpha);
+            cloneSr.color          = new Color(1f, 1f, 1f, sAlpha);
             go.transform.localScale = transform.lossyScale;
         }
 
+        float sRadius   = P(e => e.p_spinCloneRadius,    spinCloneRadius);
+        float sSpeed    = P(e => e.p_spinCloneSpeed,     spinCloneSpeed);
+        float sDuration = P(e => e.p_spinCloneDuration,  spinCloneDuration);
+        float sHitR     = P(e => e.p_spinCloneHitRadius, spinCloneHitRadius);
         _activeSpinClones++;
         go.AddComponent<SpinOrbitClone>().Init(
-            player.transform, spinCloneRadius, spinCloneSpeed,
-            spinCloneDuration, spinCloneHitRadius, dmg,
+            player.transform, sRadius, sSpeed,
+            sDuration, sHitR, dmg,
             () => _activeSpinClones--);
     }
 
@@ -324,15 +348,16 @@ public class WeaponHighGradeSkill : MonoBehaviour
 
     private void DoCloneReturn()
     {
-        if (Random.value > boomerangChance || WP == null) return;
+        if (Random.value > P(e => e.triggerChance, boomerangChance) || WP == null) return;
 
         Vector2 origin = WP.transform.parent != null
             ? (Vector2)WP.transform.parent.position : (Vector2)transform.position;
         Vector2 dir   = GetNearestEnemyDir(origin);
         float   range = StatusEffectConfig.Shared?.GetCloneRange(WP.WeaponId, 6f) ?? 6f;
         float   dmg   = WP.AttackDamage * 0.5f;
+        float   cAlpha = P(e => e.p_cloneAlpha, cloneAlpha);
+        float   cScale = P(e => e.p_cloneScale, cloneScale);
 
-        // 프리팹 우선, 없으면 스프라이트 복사
         var prefab = StatusEffectConfig.Shared?.GetClonePrefab(WP.WeaponId);
         GameObject go;
         if (prefab != null)
@@ -340,7 +365,7 @@ public class WeaponHighGradeSkill : MonoBehaviour
             go = Instantiate(prefab, origin, Quaternion.identity);
             var proj = go.GetComponent<Projectile>(); if (proj != null) Destroy(proj);
             var rb = go.GetComponent<Rigidbody2D>(); if (rb != null) rb.bodyType = RigidbodyType2D.Kinematic;
-            SetSpriteAlpha(go, cloneAlpha);
+            SetSpriteAlpha(go, cAlpha);
         }
         else
         {
@@ -348,24 +373,25 @@ public class WeaponHighGradeSkill : MonoBehaviour
             if (sr == null || sr.sprite == null) return;
             go = new GameObject("ReturnClone");
             go.transform.position   = origin;
-            go.transform.localScale = transform.lossyScale * cloneScale;
+            go.transform.localScale = transform.lossyScale * cScale;
             var csr            = go.AddComponent<SpriteRenderer>();
             csr.sprite         = sr.sprite;
             csr.sortingLayerID = sr.sortingLayerID;
             csr.sortingOrder   = sr.sortingOrder;
-            csr.color          = new Color(1f, 1f, 1f, cloneAlpha);
+            csr.color          = new Color(1f, 1f, 1f, cAlpha);
         }
 
-        StartCoroutine(ReturnArcRoutine(go, origin, origin + dir * range, dmg));
+        float outTime    = P(e => e.cloneOutTime,    0.45f);
+        float pauseTime  = P(e => e.clonePauseTime,  0.25f);
+        float returnTime = P(e => e.cloneReturnTime, 0.35f);
+        StartCoroutine(ReturnArcRoutine(go, origin, origin + dir * range, dmg, outTime, pauseTime, returnTime));
     }
 
     private static readonly Collider2D[] _returnBuf = new Collider2D[16];
 
-    private IEnumerator ReturnArcRoutine(GameObject go, Vector2 from, Vector2 to, float damage)
+    private IEnumerator ReturnArcRoutine(GameObject go, Vector2 from, Vector2 to, float damage,
+        float outTime = 0.45f, float pauseTime = 0.25f, float returnTime = 0.35f)
     {
-        const float outTime    = 0.45f;
-        const float pauseTime  = 0.25f;
-        const float returnTime = 0.35f;
         var hitIds = new HashSet<int>();
 
         // 날아가기
@@ -410,7 +436,7 @@ public class WeaponHighGradeSkill : MonoBehaviour
 
     private void DoBoomerangHit()
     {
-        if (Random.value > boomerangChance) return;
+        if (Random.value > P(e => e.triggerChance, boomerangChance)) return;
         Vector3 origin = transform.position;
         var sr = GetComponentInChildren<SpriteRenderer>();
         foreach (var dir in CardinalDirs)
@@ -419,7 +445,7 @@ public class WeaponHighGradeSkill : MonoBehaviour
 
     private void DoCloneBurst()
     {
-        if (Random.value > boomerangChance) return;
+        if (Random.value > P(e => e.triggerChance, boomerangChance)) return;
         Vector3 origin  = transform.position;
         var     sr      = GetComponentInChildren<SpriteRenderer>();
         Vector2 forward = GetNearestEnemyDir(origin);
@@ -448,7 +474,7 @@ public class WeaponHighGradeSkill : MonoBehaviour
 
     private void DoCloneSpread()
     {
-        if (Random.value > boomerangChance) return;
+        if (Random.value > P(e => e.triggerChance, boomerangChance)) return;
         Vector3 origin = transform.position;
         var sr = GetComponentInChildren<SpriteRenderer>();
         foreach (var dir in EightDirs)
@@ -457,6 +483,11 @@ public class WeaponHighGradeSkill : MonoBehaviour
 
     private void SpawnBoomerangClone(Vector3 origin, Vector2 dir, SpriteRenderer sr)
     {
+        float cSpeed    = P(e => e.p_cloneSpeed,    cloneSpeed);
+        float cLifetime = P(e => e.p_cloneLifetime, cloneLifetime);
+        float cScale    = P(e => e.p_cloneScale,    cloneScale);
+        float cAlpha    = P(e => e.p_cloneAlpha,    cloneAlpha);
+
         var prefab = StatusEffectConfig.Shared?.GetClonePrefab(WP?.WeaponId);
         if (prefab != null)
         {
@@ -464,24 +495,24 @@ public class WeaponHighGradeSkill : MonoBehaviour
             var proj = go.GetComponent<Projectile>();
             if (proj != null)
             {
-                proj.Init(WP != null ? WP.AttackDamage * 0.6f : 1f, dir, cloneSpeed, lifetime: cloneLifetime);
-                go.transform.localScale *= cloneScale;
-                SetSpriteAlpha(go, cloneAlpha);
+                proj.Init(WP != null ? WP.AttackDamage * 0.6f : 1f, dir, cSpeed, lifetime: cLifetime);
+                go.transform.localScale *= cScale;
+                SetSpriteAlpha(go, cAlpha);
             }
-            else Destroy(go, cloneLifetime);
+            else Destroy(go, cLifetime);
             return;
         }
         if (sr == null || sr.sprite == null) return;
         var ghost              = new GameObject("BoomerangClone");
         ghost.transform.position   = origin;
-        ghost.transform.localScale = transform.lossyScale * cloneScale;
+        ghost.transform.localScale = transform.lossyScale * cScale;
         ghost.transform.rotation   = Quaternion.Euler(0f, 0f, Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg - 90f);
         var ghostSr            = ghost.AddComponent<SpriteRenderer>();
         ghostSr.sprite         = sr.sprite;
         ghostSr.sortingLayerID = sr.sortingLayerID;
         ghostSr.sortingOrder   = sr.sortingOrder;
-        ghostSr.color          = new Color(1f, 1f, 1f, cloneAlpha);
-        ghost.AddComponent<BoomerangCloneMover>().Init(dir, cloneSpeed, cloneLifetime);
+        ghostSr.color          = new Color(1f, 1f, 1f, cAlpha);
+        ghost.AddComponent<BoomerangCloneMover>().Init(dir, cSpeed, cLifetime);
     }
 
     private static void SetSpriteAlpha(GameObject go, float alpha)
@@ -498,10 +529,11 @@ public class WeaponHighGradeSkill : MonoBehaviour
     {
         var prefab = StatusEffectConfig.Shared?.GetSubProjectilePrefab(WP?.WeaponId);
         if (prefab == null || WP == null) return;
-        float dmg   = WP.AttackDamage * rangedDmgRatio;
-        float speed = WP.ProjectileSpeed * rangedSpeedRatio;
-        SpawnRangedSub(prefab, firePos, RotateDir(fireDir, -spreadAngle), dmg, speed);
-        SpawnRangedSub(prefab, firePos, RotateDir(fireDir,  spreadAngle), dmg, speed);
+        float angle = P(e => e.p_spreadAngle,  spreadAngle);
+        float dmg   = WP.AttackDamage * P(e => e.p_subDmgRatio,   rangedDmgRatio);
+        float speed = WP.ProjectileSpeed * P(e => e.p_subSpeedRatio, rangedSpeedRatio);
+        SpawnRangedSub(prefab, firePos, RotateDir(fireDir, -angle), dmg, speed);
+        SpawnRangedSub(prefab, firePos, RotateDir(fireDir,  angle), dmg, speed);
     }
 
     private void SpawnRangedSub(GameObject prefab, Vector3 pos, Vector2 dir, float dmg, float speed)
@@ -518,13 +550,16 @@ public class WeaponHighGradeSkill : MonoBehaviour
 
     private void HandleSlashVfx(Vector3 vfxPos, Vector2 slashDir)
     {
-        if (slashProjectilePrefab == null || WP == null) return;
-        var go   = Instantiate(slashProjectilePrefab, vfxPos, Quaternion.identity);
+        var prefab = PGO(e => e.p_slashPrefab) ?? slashProjectilePrefab;
+        if (prefab == null || WP == null) return;
+        float ratio = P(e => e.p_slashDmgRatio, slashDmgRatio);
+        float spd   = P(e => e.p_slashSpeed,    slashProjSpeed);
+        var go   = Instantiate(prefab, vfxPos, Quaternion.identity);
         var proj = go.GetComponent<Projectile>();
         if (proj == null) { Destroy(go); return; }
-        proj.Init(WP.AttackDamage * slashDmgRatio, slashDir, slashProjSpeed,
+        proj.Init(WP.AttackDamage * ratio, slashDir, spd,
             criticalRate: WP.CriticalRate, criticalMultiplier: WP.CriticalDamage,
-            baseDamage: WP.AttackDamage * slashDmgRatio, knockbackPower: WP.KnockbackPower * 0.5f);
+            baseDamage: WP.AttackDamage * ratio, knockbackPower: WP.KnockbackPower * 0.5f);
     }
 
     // ── [전설] 해머 구현 ─────────────────────────────────────────────────
@@ -534,8 +569,10 @@ public class WeaponHighGradeSkill : MonoBehaviour
     private void DoHammerHit(Collider2D[] hitBuffer, int colCount)
     {
         if (WP == null) return;
-        int   shockCount = Physics2D.OverlapCircleNonAlloc(transform.position, shockwaveRadius, _shockBuffer);
-        float dmg        = WP.AttackDamage * shockwaveDmgRatio;
+        float radius = P(e => e.p_shockRadius,   shockwaveRadius);
+        float ratio  = P(e => e.p_shockDmgRatio, shockwaveDmgRatio);
+        int   shockCount = Physics2D.OverlapCircleNonAlloc(transform.position, radius, _shockBuffer);
+        float dmg        = WP.AttackDamage * ratio;
         for (int i = 0; i < shockCount; i++)
         {
             if (_shockBuffer[i] == null) continue;
@@ -565,16 +602,21 @@ public class WeaponHighGradeSkill : MonoBehaviour
     private void DoSpikeHit(BossController boss, EnemyController enemy)
     {
         var prefab = StatusEffectConfig.Shared?.GetSpikePrefab(WP?.WeaponId);
-        if (prefab == null || Random.value > spikeChance) return;
+        if (prefab == null || Random.value > P(e => e.triggerChance, spikeChance)) return;
+        float tick     = P(e => e.p_spikeTickDmg,      tickDamage);
+        float interval = P(e => e.p_spikeTickInterval, tickInterval);
+        float dur      = P(e => e.p_spikeDuration,     spikeDuration);
+        float aoeR     = P(e => e.p_spikeDeathRadius,  deathAoeRadius);
+        float aoeDmg   = P(e => e.p_spikeDeathDmg,     deathAoeDamage);
         if (boss != null)
         {
             var s = Instantiate(prefab, boss.transform.position, Quaternion.identity);
-            s.AddComponent<SpikeTicker>().InitBoss(boss, tickDamage, tickInterval, spikeDuration);
+            s.AddComponent<SpikeTicker>().InitBoss(boss, tick, interval, dur);
         }
         else if (enemy != null)
         {
             var s = Instantiate(prefab, enemy.transform.position, Quaternion.identity);
-            s.AddComponent<SpikeTicker>().InitEnemy(enemy, tickDamage, tickInterval, spikeDuration, deathAoeRadius, deathAoeDamage);
+            s.AddComponent<SpikeTicker>().InitEnemy(enemy, tick, interval, dur, aoeR, aoeDmg);
         }
     }
 
@@ -583,8 +625,8 @@ public class WeaponHighGradeSkill : MonoBehaviour
     private void DoBindBoss(BossController boss)
     {
         if (boss == null || boss.IsMoveBound || boss.IsGrogy) return;
-        if (Random.value > bindChance) return;
-        boss.BindMovement(bindDuration);
+        if (Random.value > P(e => e.triggerChance, bindChance)) return;
+        boss.BindMovement(P(e => e.p_bindDuration, bindDuration));
     }
 
     // ── [신화] 그로기 구현 ───────────────────────────────────────────────
@@ -592,8 +634,8 @@ public class WeaponHighGradeSkill : MonoBehaviour
     private void DoGroggyBoss(BossController boss)
     {
         if (boss == null || boss.IsGrogy) return;
-        if (Random.value > groggyChance) return;
-        boss.TriggerGroggy(groggySeconds);
+        if (Random.value > P(e => e.triggerChance, groggyChance)) return;
+        boss.TriggerGroggy(P(e => e.p_groggySeconds, groggySeconds));
     }
 
     // ── 유틸 ─────────────────────────────────────────────────────────────

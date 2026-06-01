@@ -33,6 +33,7 @@ public class BoomerangProjectile : MonoBehaviour
     private float   criticalRate;
     private float   criticalMultiplier;
     private float   baseDamage;
+    private string  _weaponId;
 
     public static readonly System.Collections.Generic.List<BoomerangProjectile> All = new();
 
@@ -58,7 +59,8 @@ public class BoomerangProjectile : MonoBehaviour
     public void Init(float damage, float speed, int maxBounces, float bounceRange,
                       object firstTarget, Transform playerTf, bool isCritical = false, float lifeSteal = 0f,
                       float dotDamage = 0f, float areaHitRadius = 0f, float areaHitDamageRatio = 0f,
-                      float criticalRate = 0f, float criticalMultiplier = 2f, float baseDamage = 0f)
+                      float criticalRate = 0f, float criticalMultiplier = 2f, float baseDamage = 0f,
+                      string weaponId = "")
     {
         this.damage             = damage;
         this.isCritical         = isCritical;
@@ -70,6 +72,7 @@ public class BoomerangProjectile : MonoBehaviour
         this.criticalMultiplier = criticalMultiplier;
         this.baseDamage         = baseDamage;
         this.speed              = speed;
+        _weaponId               = weaponId;
         
         // DB 등에서 maxBounces가 명시적으로 지정되지 않았다면(-1 혹은 0)
         // 맵에 존재하는 몬스터 수를 튕김 횟수로 할당하되 최소치(3)를 보장.
@@ -244,7 +247,7 @@ public class BoomerangProjectile : MonoBehaviour
             }
         }
 
-        if (anyHit) SoundManager.Shared?.Play(SoundKey.Weapon_Attack);
+        if (anyHit) SoundManager.Shared?.PlayWeaponHit(_weaponId);
 
         bouncesLeft--;
 
