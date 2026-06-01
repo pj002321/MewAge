@@ -21,6 +21,7 @@ public class EquipSlot : MonoBehaviour,
     [SerializeField] private List<GameObject> starObjects; // 0=1성, 1=2성, 2=3성, 3=4성
     [SerializeField] private GameObject      starGlowObj;
     [SerializeField] private UIShiny         mergeShiny;
+    [SerializeField] private GameObject      grandMergeNotiObj; // 3★+3★ 수동 합성 가능 노티
 
     public int SlotIndex { get; set; }
 
@@ -103,8 +104,9 @@ public class EquipSlot : MonoBehaviour,
             var emptySprite = WeaponVisualConfig.Shared?.GetGradeSprite(WeaponGrade.Common);
             if (emptySprite != null) frameImg.sprite = emptySprite;
         }
-        if (iconImg)       iconImg.enabled        = false;
-        if (weaponTypeImg) weaponTypeImg.enabled  = false;
+        if (iconImg)           iconImg.enabled        = false;
+        if (weaponTypeImg)     weaponTypeImg.enabled  = false;
+        if (grandMergeNotiObj) grandMergeNotiObj.SetActive(false);
         if (starObjects != null)
             foreach (var s in starObjects) if (s != null) s.SetActive(false);
     }
@@ -175,6 +177,13 @@ public class EquipSlot : MonoBehaviour,
         }
 
         starGlowObj?.SetActive(has && data.star >= 3);
+
+        if (grandMergeNotiObj != null)
+        {
+            bool showNoti = has && data.star >= 3 &&
+                (PlayerInventory.Shared?.CountAll(data.weaponName, 3) ?? 0) >= 2;
+            grandMergeNotiObj.SetActive(showNoti);
+        }
     }
 
     // ────────────────────────────────────────────────────────────────
@@ -227,19 +236,40 @@ public class EquipSlot : MonoBehaviour,
 
             foreach (var hit in results)
             {
+                var inv = PlayerInventory.Shared;
                 var equipTarget = hit.gameObject.GetComponentInParent<EquipSlot>();
                 if (equipTarget != null && equipTarget != this && equipTarget.IsInitialized)
                 {
-                    Debug.Log($"[EquipSlot] SwapEquip {SlotIndex} → {equipTarget.SlotIndex}");
-                    PlayerInventory.Shared?.SwapEquipToEquip(SlotIndex, equipTarget.SlotIndex);
+                    var srcW = (inv != null && SlotIndex < inv.Equipped.Count) ? inv.Equipped[SlotIndex] : null;
+                    var dstW = (inv != null && equipTarget.SlotIndex < inv.Equipped.Count) ? inv.Equipped[equipTarget.SlotIndex] : null;
+                    if (srcW != null && dstW != null && srcW.star >= 3 && dstW.star >= 3 && srcW.weaponName == dstW.weaponName)
+                    {
+                        Debug.Log($"[EquipSlot] GrandMerge equip{SlotIndex} + equip{equipTarget.SlotIndex}");
+                        UpgradeManager.Shared?.TryGrandMerge(srcW.weaponName);
+                    }
+                    else
+                    {
+                        Debug.Log($"[EquipSlot] SwapEquip {SlotIndex} → {equipTarget.SlotIndex}");
+                        inv?.SwapEquipToEquip(SlotIndex, equipTarget.SlotIndex);
+                    }
                     break;
                 }
                 var invenTarget = hit.gameObject.GetComponentInParent<InvenSlot>();
                 if (invenTarget != null && invenTarget.IsInitialized)
                 {
-                    Debug.Log($"[EquipSlot] MoveEquipToInven {SlotIndex} → inven{invenTarget.SlotIndex}");
-                    PlayerInventory.Shared?.MoveEquipToInven(SlotIndex, invenTarget.SlotIndex);
-                    UpgradeManager.Shared?.TryAutoMergeAll();
+                    var srcW = (inv != null && SlotIndex < inv.Equipped.Count) ? inv.Equipped[SlotIndex] : null;
+                    var dstW = (inv != null && invenTarget.SlotIndex < inv.Inventory.Count) ? inv.Inventory[invenTarget.SlotIndex] : null;
+                    if (srcW != null && dstW != null && srcW.star >= 3 && dstW.star >= 3 && srcW.weaponName == dstW.weaponName)
+                    {
+                        Debug.Log($"[EquipSlot] GrandMerge equip{SlotIndex} + inven{invenTarget.SlotIndex}");
+                        UpgradeManager.Shared?.TryGrandMerge(srcW.weaponName);
+                    }
+                    else
+                    {
+                        Debug.Log($"[EquipSlot] MoveEquipToInven {SlotIndex} → inven{invenTarget.SlotIndex}");
+                        inv?.MoveEquipToInven(SlotIndex, invenTarget.SlotIndex);
+                        UpgradeManager.Shared?.TryAutoMergeAll();
+                    }
                     break;
                 }
             }

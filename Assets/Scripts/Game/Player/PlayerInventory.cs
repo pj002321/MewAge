@@ -406,6 +406,21 @@ public class PlayerInventory : MonoBehaviourSingleton<PlayerInventory>
             equipped.RemoveAt(equipped.Count - 1);
     }
 
+    /// <summary>인벤토리 내 특정 무기 인스턴스를 교체합니다 (참조 기준). 찾으면 true.</summary>
+    public bool ReplaceInInventory(WeaponData old, WeaponData replacement)
+    {
+        for (int i = 0; i < inventory.Count; i++)
+        {
+            if (inventory[i] == old)
+            {
+                inventory[i] = replacement;
+                OnChanged?.Invoke();
+                return true;
+            }
+        }
+        return false;
+    }
+
     /// <summary>장착 슬롯의 무기를 교체합니다 (증강 등 외부 업그레이드용).</summary>
     public void ReplaceEquipped(int index, WeaponData data)
     {

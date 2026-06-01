@@ -1,16 +1,16 @@
 /// <summary>
-/// 장착된 무기들의 평균 스탯 기여치를 StatType별로 반환합니다.
+/// 장착된 무기들의 스탯 기여치를 StatType별로 반환합니다.
 /// StatFieldUI.Refresh()에서 플레이어 스탯과 합산하여 실제 전투 수치를 표시하는 데 사용됩니다.
 ///
 /// 합산 대상 스탯:
-///   ATK        — avg(weapon.attackDamage)  [player.Attack에 더해지는 플랫 보너스]
+///   ATK        — sum(weapon.attackDamage)  [무기별 독립 공격이므로 합산]
 ///   CritChance — avg(0.05 + weapon.criticalRate)  [기본 5% + 무기 치명타]
 ///   BleedPower — avg(weapon.bleedDamage)   [무기 기본 출혈 데미지]
 ///   HealOnKill — avg(weapon.lifeSteal)     [흡혈 — 스탯패널의 HealOnKill 슬롯에 표시]
 /// </summary>
 public static class WeaponStatHelper
 {
-    /// <summary>장착 무기 평균 기여치. 무기가 없으면 0.</summary>
+    /// <summary>ATK는 합산, 나머지는 평균 기여치. 무기가 없으면 0.</summary>
     public static float GetAverageBonus(StatType stat)
     {
         var equipped = PlayerInventory.Shared?.Equipped;
@@ -24,6 +24,8 @@ public static class WeaponStatHelper
             count++;
             total += GetWeaponValue(w, stat);
         }
+        // ATK는 무기마다 독립 공격 → 합산, 그 외(치명타율 등)는 평균
+        if (stat == StatType.ATK) return total;
         return count > 0 ? total / count : 0f;
     }
 

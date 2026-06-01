@@ -25,6 +25,11 @@ public abstract class WeaponBehaviourBase
     public virtual void OnStart()
     {
         WeaponPoint.OnWaveStarted += OnWaveStart;
+
+        if (GameManager.Shared != null && GameManager.Shared.CurrentWave == 0)
+        {
+            Host.transform.localPosition = (Vector3)AnchorDir() * IntroOffset;
+        }
     }
 
     /// <summary>WeaponPoint.Update() 에서 호출됩니다.</summary>
@@ -82,33 +87,17 @@ public abstract class WeaponBehaviourBase
         Host.transform.localPosition = Vector3.zero;
     }
 
-    // 앵커 방향 기반 착지 순서: 우상단→우하단→좌상단→좌하단→우→좌
-    private float GetSnapDelay()
-    {
-        const float step = 0.06f;
-        Vector2 d = AnchorDir();
-        if (d.x >  0.2f && d.y >  0.2f) return 0 * step;
-        if (d.x >  0.2f && d.y < -0.2f) return 1 * step;
-        if (d.x < -0.2f && d.y >  0.2f) return 2 * step;
-        if (d.x < -0.2f && d.y < -0.2f) return 3 * step;
-        if (d.x >  0.2f)                return 4 * step;
-        return                                  5 * step;
-    }
+    private const float IntroOffset   = 2.0f;
+    public  const float IntroDuration = 1.0f; // GameManager의 WaveIntroWaitRoutine 대기 시간과 일치
 
     private IEnumerator WaveIntroRoutine()
     {
         _inWaveIntro = true;
 
-        Vector3 anchorDir     = (Vector3)AnchorDir();
-        float   offscreenDist = Camera.main != null ? Camera.main.orthographicSize * 2.8f : 14f;
-        Host.transform.localPosition = anchorDir * offscreenDist;
+        Host.transform.localPosition = (Vector3)AnchorDir() * IntroOffset;
 
-        float delay = GetSnapDelay();
-        if (delay > 0f)
-            yield return new WaitForSeconds(delay);
-
-        var tween = Host.transform.DOLocalMove(Vector3.zero, 0.38f)
-            .SetEase(Ease.OutBack, 1.5f)
+        var tween = Host.transform.DOLocalMove(Vector3.zero, IntroDuration)
+            .SetEase(Ease.OutBack, 1.4f)
             .SetLink(Host.gameObject);
 
         yield return tween.WaitForCompletion();

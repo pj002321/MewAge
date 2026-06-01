@@ -27,8 +27,8 @@ public static class SynergyConditionChecker
         if (allFull && active.All(w => w.star >= 2))
             achieved.Add("SYN_ALL2_UPGRADE3");
 
-        // SYN_ALL3_HIGHEST_EXTRA: 6슬롯 전부 3성 이상
-        if (allFull && active.All(w => w.star >= 3))
+        // SYN_ALL3_HIGHEST_EXTRA: 6슬롯 전부 2성 이상 (시너지 중 랜덤 2성 무기 1개를 임시 3성으로 부스트)
+        if (allFull && active.All(w => w.star >= 2))
             achieved.Add("SYN_ALL3_HIGHEST_EXTRA");
 
         // SYN_ALL_LEGEND_PROC: 6슬롯 전부 전설 등급 이상

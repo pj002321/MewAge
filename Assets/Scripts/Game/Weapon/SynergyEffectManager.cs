@@ -42,6 +42,9 @@ public class SynergyEffectManager : MonoBehaviourSingleton<SynergyEffectManager>
         AchievedSynergies = new HashSet<string>();
         _previous         = new HashSet<string>();
         WeaponSynergyFlags.Reset();
+        _all3OriginalData = null;
+        _all3BoostedData  = null;
+        _upgradeRecords.Clear();
     }
 
     private void Start()
@@ -78,6 +81,13 @@ public class SynergyEffectManager : MonoBehaviourSingleton<SynergyEffectManager>
 
         WeaponSynergyFlags.Reset();
         RemoveAllStatMods();
+
+        // 씬 정리 시 부스트 ScriptableObject만 파괴 (슬롯 복구는 하지 않음)
+        if (_all3BoostedData != null)
+            Destroy(_all3BoostedData);
+        _all3OriginalData = null;
+        _all3BoostedData  = null;
+        _upgradeRecords.Clear();
     }
 
     // SYN_MAGIC3_SLOW: 2.5초마다 현재 모든 적에게 둔화 적용
@@ -101,6 +111,13 @@ public class SynergyEffectManager : MonoBehaviourSingleton<SynergyEffectManager>
     private bool      _recalculating;
     private bool      _recalcPending;
     private Coroutine _magicSlowRoutine;
+
+    // SYN_ALL3_HIGHEST_EXTRA 임시 부스트 상태
+    private WeaponData _all3OriginalData;
+    private WeaponData _all3BoostedData;
+
+    // SYN_ALL2_UPGRADE3 / SYN_RARE4_LOWGRADE_UP 업그레이드 기록 (되돌리기용)
+    private readonly Dictionary<string, List<(int slot, string weaponName, int originalStar)>> _upgradeRecords = new();
 
     public void RecalculateSynergies()
     {
@@ -134,6 +151,10 @@ public class SynergyEffectManager : MonoBehaviourSingleton<SynergyEffectManager>
         var newlyGained = new HashSet<string>(newAchieved);
         newlyGained.ExceptWith(_previous);
 
+        // 신규 손실 (이전에 있었으나 이제 없는 것)
+        var newlyLost = new HashSet<string>(_previous);
+        newlyLost.ExceptWith(newAchieved);
+
         // 1. 이전 스탯 모디파이어 제거
         RemoveAllStatMods();
 
@@ -144,7 +165,11 @@ public class SynergyEffectManager : MonoBehaviourSingleton<SynergyEffectManager>
         // 3. 패시브 스탯 적용
         ApplyPassiveStats(newAchieved);
 
-        // 4. 신규 달성 일회성 효과 (최초 패스에서만 — 효과로 인한 장착 변경이 새 시너지를 연쇄 발동하는 것을 막음)
+        // 4. 시너지 손실 처리 (부스트 복구 등)
+        foreach (var id in newlyLost)
+            TriggerSynergyLost(id);
+
+        // 5. 신규 달성 일회성 효과 (최초 패스에서만 — 효과로 인한 장착 변경이 새 시너지를 연쇄 발동하는 것을 막음)
         if (allowOneTimeEffects)
         {
             foreach (var id in newlyGained)
@@ -209,7 +234,7 @@ public class SynergyEffectManager : MonoBehaviourSingleton<SynergyEffectManager>
 
     // ── 일회성 효과 ───────────────────────────────────────────────────
 
-    private static void TriggerOneTimeEffect(string synergyId)
+    private void TriggerOneTimeEffect(string synergyId)
     {
         var inv = PlayerInventory.Shared;
         if (inv == null) return;
@@ -217,12 +242,13 @@ public class SynergyEffectManager : MonoBehaviourSingleton<SynergyEffectManager>
         switch (synergyId)
         {
             case "SYN_ALL2_UPGRADE3":
-                // 장착 무기 중 star < 3인 첫 번째 무기를 3성으로 강화
+                // 장착 무기 중 star < 3인 첫 번째 무기를 3성으로 강화 (해제 시 복구)
                 for (int i = 0; i < inv.Equipped.Count; i++)
                 {
                     var w = inv.Equipped[i];
                     if (w != null && w.star < 3)
                     {
+                        AddUpgradeRecord(synergyId, i, w.weaponName, w.star);
                         inv.ReplaceEquipped(i, w.UpgradedTo(3));
                         break;
                     }
@@ -230,7 +256,7 @@ public class SynergyEffectManager : MonoBehaviourSingleton<SynergyEffectManager>
                 break;
 
             case "SYN_RARE4_LOWGRADE_UP":
-                // 장착 무기 중 가장 낮은 성의 무기를 1성 강화
+                // 장착 무기 중 가장 낮은 성의 무기를 1성 강화 (해제 시 복구)
                 int lowestStar = int.MaxValue;
                 int lowestIdx  = -1;
                 for (int i = 0; i < inv.Equipped.Count; i++)
@@ -241,19 +267,98 @@ public class SynergyEffectManager : MonoBehaviourSingleton<SynergyEffectManager>
                 if (lowestIdx >= 0)
                 {
                     var w = inv.Equipped[lowestIdx];
+                    AddUpgradeRecord(synergyId, lowestIdx, w.weaponName, w.star);
                     inv.ReplaceEquipped(lowestIdx, w.UpgradedTo(w.star + 1));
                 }
                 break;
 
             case "SYN_ALL3_HIGHEST_EXTRA":
-                // 현재 최고등급의 1성 무기 사본을 WeaponManager 보너스 슬롯(7번째 앵커)에 배치
-                WeaponData highest = null;
-                foreach (var w in inv.Equipped)
-                    if (w != null && (highest == null || w.grade > highest.grade))
-                        highest = w;
-                if (highest != null)
-                    WeaponManager.Instance?.SetBonusWeapon(highest.UpgradedTo(1));
+            {
+                // 장착된 2성 무기 중 랜덤 1개를 임시 3성으로 부스트 (시너지 해제 시 원래 성으로 복구)
+                var candidates = new System.Collections.Generic.List<int>();
+                for (int i = 0; i < inv.Equipped.Count; i++)
+                {
+                    var w = inv.Equipped[i];
+                    if (w != null && w.star == 2) candidates.Add(i);
+                }
+                if (candidates.Count == 0) break;
+                int chosen = candidates[UnityEngine.Random.Range(0, candidates.Count)];
+                _all3OriginalData = inv.Equipped[chosen];
+                var boosted = _all3OriginalData.UpgradedTo(3);
+                boosted.price = _all3OriginalData.price;  // 판매가는 원래 2성 기준 유지
+                _all3BoostedData = boosted;
+                inv.ReplaceEquipped(chosen, boosted);
+                break;
+            }
+        }
+    }
+
+    // ── 시너지 손실 처리 ──────────────────────────────────────────────
+
+    private void TriggerSynergyLost(string synergyId)
+    {
+        switch (synergyId)
+        {
+            case "SYN_ALL3_HIGHEST_EXTRA":
+                RevertAll3Boost();
+                break;
+            case "SYN_ALL2_UPGRADE3":
+            case "SYN_RARE4_LOWGRADE_UP":
+                RevertUpgradeRecords(synergyId);
                 break;
         }
+    }
+
+    private void AddUpgradeRecord(string synergyId, int slot, string weaponName, int originalStar)
+    {
+        if (!_upgradeRecords.TryGetValue(synergyId, out var list))
+            _upgradeRecords[synergyId] = list = new List<(int, string, int)>();
+        list.Add((slot, weaponName, originalStar));
+    }
+
+    private void RevertUpgradeRecords(string synergyId)
+    {
+        if (!_upgradeRecords.TryGetValue(synergyId, out var records)) return;
+        var inv = PlayerInventory.Shared;
+        if (inv != null)
+        {
+            foreach (var (slotIdx, weaponName, originalStar) in records)
+            {
+                if (slotIdx >= inv.Equipped.Count) continue;
+                var w = inv.Equipped[slotIdx];
+                // 슬롯에 같은 이름의 무기가 있고 성급이 높은 경우에만 복구
+                if (w != null && w.weaponName == weaponName && w.star > originalStar)
+                    inv.ReplaceEquipped(slotIdx, w.UpgradedTo(originalStar));
+            }
+        }
+        _upgradeRecords.Remove(synergyId);
+    }
+
+    private void RevertAll3Boost()
+    {
+        if (_all3OriginalData == null || _all3BoostedData == null) return;
+        var inv = PlayerInventory.Shared;
+        if (inv != null)
+        {
+            // 장착 슬롯에서 부스트된 무기를 참조로 탐색 (슬롯 이동에도 안전)
+            bool reverted = false;
+            for (int i = 0; i < inv.Equipped.Count && !reverted; i++)
+            {
+                if (inv.Equipped[i] == _all3BoostedData)
+                {
+                    inv.ReplaceEquipped(i, _all3OriginalData);
+                    reverted = true;
+                }
+            }
+            // 인벤토리로 이동된 경우
+            if (!reverted)
+                inv.ReplaceInInventory(_all3BoostedData, _all3OriginalData);
+            // 판매된 경우: 두 탐색 모두 실패하면 아무것도 안 함 (판매가는 이미 원래 가격)
+        }
+        var toDestroy = _all3BoostedData;
+        _all3OriginalData = null;
+        _all3BoostedData  = null;
+        if (toDestroy != null)
+            Destroy(toDestroy);
     }
 }

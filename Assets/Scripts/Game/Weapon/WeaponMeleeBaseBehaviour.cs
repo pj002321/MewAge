@@ -215,7 +215,6 @@ public abstract class WeaponMeleeBaseBehaviour : WeaponBehaviourBase
         _state = State.Overshooting;
         if (_hitScaleCo != null) StopCoroutine(_hitScaleCo);
         _hitScaleCo = StartCoroutine(HitScalePunchRoutine());
-        StartCoroutine(HitstopRoutine());
         SpawnGradeFlash();
     }
 
@@ -236,18 +235,6 @@ public abstract class WeaponMeleeBaseBehaviour : WeaponBehaviourBase
         }
         tf.localScale = orig;
         _hitScaleCo   = null;
-    }
-
-    internal static bool IsHitstop { get; private set; }
-
-    private IEnumerator HitstopRoutine()
-    {
-        if (Time.timeScale <= 0f) yield break;
-        IsHitstop      = true;
-        Time.timeScale = 0f;
-        yield return new WaitForSecondsRealtime(0.05f);
-        Time.timeScale = 1f;
-        IsHitstop      = false;
     }
 
     private void SpawnGradeFlash()

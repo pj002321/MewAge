@@ -18,6 +18,7 @@ public class InvenSlot : MonoBehaviour,
     [SerializeField] private Image            weaponTypeImg;
     [SerializeField] private List<GameObject> starObjects; // 0=1성, 1=2성, 2=3성, 3=4성
     [SerializeField] private UIShiny          mergeShiny;
+    [SerializeField] private GameObject       grandMergeNotiObj; // 3★+3★ 수동 합성 가능 노티
 
     [Header("선택 확대")]
     [SerializeField] private float selectedScale = 1.2f;
@@ -72,8 +73,9 @@ public class InvenSlot : MonoBehaviour,
             var emptySprite = WeaponVisualConfig.Shared?.GetGradeSprite(WeaponGrade.Common);
             if (emptySprite != null) frameImg.sprite = emptySprite;
         }
-        if (iconImg)       iconImg.enabled        = false;
-        if (weaponTypeImg) weaponTypeImg.enabled  = false;
+        if (iconImg)           iconImg.enabled        = false;
+        if (weaponTypeImg)     weaponTypeImg.enabled  = false;
+        if (grandMergeNotiObj) grandMergeNotiObj.SetActive(false);
         if (starObjects != null)
             foreach (var s in starObjects) if (s != null) s.SetActive(false);
     }
@@ -102,6 +104,13 @@ public class InvenSlot : MonoBehaviour,
 
         float s = (has && selected) ? selectedScale : normalScale;
         transform.localScale = Vector3.one * s;
+
+        if (grandMergeNotiObj != null)
+        {
+            bool showNoti = has && data.star >= 3 &&
+                (PlayerInventory.Shared?.CountAll(data.weaponName, 3) ?? 0) >= 2;
+            grandMergeNotiObj.SetActive(showNoti);
+        }
     }
 
     private static void SetStarObject(List<GameObject> objs, int star)
@@ -193,20 +202,41 @@ public class InvenSlot : MonoBehaviour,
 
                 foreach (var hit in results)
                 {
+                    var inv = PlayerInventory.Shared;
                     var equipTarget = hit.gameObject.GetComponentInParent<EquipSlot>();
                     if (equipTarget != null && equipTarget.IsInitialized)
                     {
-                        Debug.Log($"[InvenSlot] MoveInvenToEquip inven{SlotIndex} → equip{equipTarget.SlotIndex}");
-                        equipTarget.PlayEquipEffect();
-                        SoundManager.Shared?.Play(SoundKey.UI_Equip);
-                        PlayerInventory.Shared?.MoveInvenToEquip(SlotIndex, equipTarget.SlotIndex);
+                        var srcW = (inv != null && SlotIndex < inv.Inventory.Count) ? inv.Inventory[SlotIndex] : null;
+                        var dstW = (inv != null && equipTarget.SlotIndex < inv.Equipped.Count) ? inv.Equipped[equipTarget.SlotIndex] : null;
+                        if (srcW != null && dstW != null && srcW.star >= 3 && dstW.star >= 3 && srcW.weaponName == dstW.weaponName)
+                        {
+                            Debug.Log($"[InvenSlot] GrandMerge inven{SlotIndex} + equip{equipTarget.SlotIndex}");
+                            UpgradeManager.Shared?.TryGrandMerge(srcW.weaponName);
+                        }
+                        else
+                        {
+                            Debug.Log($"[InvenSlot] MoveInvenToEquip inven{SlotIndex} → equip{equipTarget.SlotIndex}");
+                            equipTarget.PlayEquipEffect();
+                            SoundManager.Shared?.Play(SoundKey.UI_Equip);
+                            inv?.MoveInvenToEquip(SlotIndex, equipTarget.SlotIndex);
+                        }
                         break;
                     }
                     var invenTarget = hit.gameObject.GetComponentInParent<InvenSlot>();
                     if (invenTarget != null && invenTarget != this && invenTarget.IsInitialized)
                     {
-                        Debug.Log($"[InvenSlot] SwapInven {SlotIndex} ↔ {invenTarget.SlotIndex}");
-                        PlayerInventory.Shared?.SwapInvenToInven(SlotIndex, invenTarget.SlotIndex);
+                        var srcW = (inv != null && SlotIndex < inv.Inventory.Count) ? inv.Inventory[SlotIndex] : null;
+                        var dstW = (inv != null && invenTarget.SlotIndex < inv.Inventory.Count) ? inv.Inventory[invenTarget.SlotIndex] : null;
+                        if (srcW != null && dstW != null && srcW.star >= 3 && dstW.star >= 3 && srcW.weaponName == dstW.weaponName)
+                        {
+                            Debug.Log($"[InvenSlot] GrandMerge inven{SlotIndex} + inven{invenTarget.SlotIndex}");
+                            UpgradeManager.Shared?.TryGrandMerge(srcW.weaponName);
+                        }
+                        else
+                        {
+                            Debug.Log($"[InvenSlot] SwapInven {SlotIndex} ↔ {invenTarget.SlotIndex}");
+                            inv?.SwapInvenToInven(SlotIndex, invenTarget.SlotIndex);
+                        }
                         break;
                     }
                 }

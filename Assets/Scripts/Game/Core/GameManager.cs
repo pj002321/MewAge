@@ -616,6 +616,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         // 일반 웨이브 시작 시 플레이어를 맵 중앙으로 이동
         TeleportPlayerToMapCenter();
 
+        // 무기 인트로 연출 시작
         WeaponPoint.NotifyWaveStarted();
 
         // 웨이브 시작 시 쿨타임 즉시 만료 — 이전 웨이브의 잔여 쿨타임이 이월되지 않도록 보장
@@ -624,21 +625,27 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
                 wp.ReadyForWave();
 
         SoundManager.Shared?.PlayChapterGameBGM(currentChapterID);
-        EnemySpawner.Shared?.ResumeSpawning(wave);
         WaveEnvironmentSwitcher.Shared?.SetWave(wave);
         WaveEnvironmentSwitcher.Shared?.TriggerFormations(wave);
 
+        // 인트로 연출이 끝날 때까지 타이머·스포너 대기
+        _pauseTimer = true;
+        StartCoroutine(WaveIntroWaitRoutine());
+    }
+
+    private IEnumerator WaveIntroWaitRoutine()
+    {
+        yield return new WaitForSeconds(WeaponBehaviourBase.IntroDuration);
+
         // 5,15,25… 웨이브 시작 시 돌연변이 출현 알림
         if (wave % 5 == 0 && wave > 1)
-        {
             StartCoroutine(ShowNotifyRoutine("돌연변이 출현!", new Color(1f, 0.55f, 0f)));
-        }
 
         if (IsEliteWave(wave))
             SpawnElite(wave);
 
-        // 타이머 텍스트 확대→복귀 연출 후 카운트다운 시작
-        StartCoroutine(TimerStartAnimation());
+        EnemySpawner.Shared?.ResumeSpawning(wave);
+        StartCoroutine(TimerStartAnimation()); // 내부에서 _pauseTimer 관리
     }
 
     private IEnumerator TimerStartAnimation()

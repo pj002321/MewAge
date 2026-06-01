@@ -257,18 +257,13 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
 
         foreach (var kvp in invCount)
         {
-            if (kvp.Key.Item2 > 3) continue;
+            if (kvp.Key.Item2 >= 3) continue; // 3★ 합성은 수동 전용
             var (name, star) = kvp.Key;
-            if (inv.CountAll(name, star) < 2) continue; // 인벤+장착 합산 2개 미만
+            if (inv.CountAll(name, star) < 2) continue;
 
-            var result  = GetNextGradeWeapon(name, star);
+            var result = GetNextGradeWeapon(name, star);
             if (result == null) continue;
-            var doubleUp = star >= 3 ? TryRollDoubleUp(result) : null;
-            var actual   = doubleUp ?? result;
-            if (!inv.TryMergeAll(name, star, actual,
-                displayResult:  doubleUp != null ? result : null,
-                isDoubleUp:     doubleUp != null,
-                doubleUpResult: doubleUp)) continue;
+            if (!inv.TryMergeAll(name, star, result)) continue;
             SoundManager.Shared?.Play(SoundKey.UI_Merge);
             return true;
         }
@@ -277,21 +272,14 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
 
     private void AutoMerge(PlayerInventory inv, string weaponName, int star)
     {
-        while (star <= 3 && inv.CanMergeAll(weaponName, star))
+        while (star < 3 && inv.CanMergeAll(weaponName, star))
         {
-            bool isGrandMerge = star >= 3;
-            WeaponData result   = GetNextGradeWeapon(weaponName, star);
+            WeaponData result = GetNextGradeWeapon(weaponName, star);
             if (result == null) break;
-            WeaponData doubleUp = isGrandMerge ? TryRollDoubleUp(result) : null;
-            WeaponData actual   = doubleUp ?? result;
-            if (!inv.TryMergeAll(weaponName, star, actual,
-                displayResult: doubleUp != null ? result : null,
-                isDoubleUp: doubleUp != null,
-                doubleUpResult: doubleUp)) break;
+            if (!inv.TryMergeAll(weaponName, star, result)) break;
             SoundManager.Shared?.Play(SoundKey.UI_Merge);
-            // 결과 무기로 cascade (같은 무기가 인벤에 있으면 계속 합성)
-            weaponName = actual.weaponName;
-            star       = actual.star;
+            weaponName = result.weaponName;
+            star       = result.star;
         }
     }
 
@@ -320,23 +308,41 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
             }
             foreach (var kvp in seen)
             {
-                if (kvp.Value < 2 || kvp.Key.Item2 > 3) continue;
+                if (kvp.Value < 2 || kvp.Key.Item2 >= 3) continue; // 3★ 합성은 수동 전용
                 var (name, star) = kvp.Key;
-                WeaponData result   = GetNextGradeWeapon(name, star);
+                WeaponData result = GetNextGradeWeapon(name, star);
                 if (result == null) continue;
-                WeaponData doubleUp = star >= 3 ? TryRollDoubleUp(result) : null;
-                WeaponData actual   = doubleUp ?? result;
-                if (!inv.TryMergeAll(name, star, actual,
-                    displayResult: doubleUp != null ? result : null,
-                    isDoubleUp: doubleUp != null,
-                    doubleUpResult: doubleUp)) continue;
+                if (!inv.TryMergeAll(name, star, result)) continue;
                 SoundManager.Shared?.Play(SoundKey.UI_Merge);
                 anyMerged = true;
-                break; // 합성 후 목록 재스캔
+                break;
             }
         } while (anyMerged);
 
         RefreshPanel();
+    }
+
+    // ────────────────────────────────────────────────────────────────
+    // 수동 그랜드 머지 (3★+3★ → 상위등급 1★)
+    // ────────────────────────────────────────────────────────────────
+    public bool TryGrandMerge(string weaponName)
+    {
+        var inv = PlayerInventory.Shared;
+        if (inv == null || !inv.CanMergeAll(weaponName, 3)) return false;
+
+        WeaponData result  = GetNextGradeWeapon(weaponName, 3);
+        if (result == null) return false;
+
+        WeaponData doubleUp = TryRollDoubleUp(result);
+        WeaponData actual   = doubleUp ?? result;
+        if (!inv.TryMergeAll(weaponName, 3, actual,
+            displayResult:  doubleUp != null ? result : null,
+            isDoubleUp:     doubleUp != null,
+            doubleUpResult: doubleUp)) return false;
+
+        SoundManager.Shared?.Play(SoundKey.UI_Merge);
+        TryAutoMergeAll(); // 결과물의 하위 성급 cascade 처리
+        return true;
     }
 
     // ────────────────────────────────────────────────────────────────
