@@ -30,10 +30,13 @@ public class FitSpriteToScreen : MonoBehaviour
         Camera cam = Camera.main;
         if (cam == null) return;
 
-        if (Mathf.Abs(cam.aspect - lastAspect) > 0.001f || Mathf.Abs(cam.orthographicSize - lastOrtho) > 0.001f)
+        // 줌 중에는 배경 리스케일 하지 않음 — 기준 orthographic size로 비교
+        float baseOrtho = CameraFollow.Shared != null ? CameraFollow.Shared.BaseOrthographicSize : cam.orthographicSize;
+
+        if (Mathf.Abs(cam.aspect - lastAspect) > 0.001f || Mathf.Abs(baseOrtho - lastOrtho) > 0.001f)
         {
             lastAspect = cam.aspect;
-            lastOrtho  = cam.orthographicSize;
+            lastOrtho  = baseOrtho;
             Fit();
         }
     }
@@ -60,7 +63,9 @@ public class FitSpriteToScreen : MonoBehaviour
         // zero div 방지
         if (targetSize.x <= 0.001f || targetSize.y <= 0.001f) return;
 
-        float camHeight = cam.orthographicSize * 2f;
+        // 줌과 무관한 기준 orthographic size로 배경 크기 계산
+        float baseOrtho = CameraFollow.Shared != null ? CameraFollow.Shared.BaseOrthographicSize : cam.orthographicSize;
+        float camHeight = baseOrtho * 2f;
         float camWidth  = camHeight * cam.aspect;
 
         float scaleX = camWidth  / targetSize.x;

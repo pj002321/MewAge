@@ -348,6 +348,15 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
             }
         }
 
+        // 몸집 연출 · 카메라 줌 복구가 끝난 뒤 증강 패널 열기
+        float restoreDeadline = Time.realtimeSinceStartup + 2f; // 최대 2초 타임아웃
+        yield return new WaitUntil(() =>
+            Time.realtimeSinceStartup >= restoreDeadline ||
+            (
+                (PlayerController.Instance == null || !PlayerController.Instance.IsSizeEffectActive) &&
+                (CameraFollow.Shared == null || CameraFollow.Shared.IsZoomAtDefault)
+            ));
+
         if (ImprovManager.Shared != null)
             ImprovManager.Shared.ShowPanel(wave);
         else if (UpgradeManager.Shared != null)

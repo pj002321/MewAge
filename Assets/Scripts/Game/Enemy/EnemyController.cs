@@ -69,6 +69,10 @@ public class EnemyController : MonoBehaviour, IEnemyHost
     private Vector2   _pendingMove;
     private bool      _isKnockedBack;
     private Coroutine knockbackCoroutine;
+
+    // 빅 모드 착지 충격 아크 (위로 튀었다 복귀)
+    private float     _launchYDelta;   // 이번 FixedUpdate에 추가할 Y 델타
+    private Coroutine _launchCoroutine;
     private Coroutine bleedCoroutine;
     private Coroutine _fireCoroutine;
     private float     baseSpeed; // 넉백/스턴 전 원본 속도
@@ -230,23 +234,53 @@ public class EnemyController : MonoBehaviour, IEnemyHost
             return;
         }
 
-        if (!_isKnockedBack && behaviour != null && behaviour.enabled) behaviour.OnMoveFixedUpdate();
-        ApplySeparation();
+        bool isLaunched = _launchCoroutine != null;
+        if (!_isKnockedBack && !isLaunched && behaviour != null && behaviour.enabled) behaviour.OnMoveFixedUpdate();
+        if (!isLaunched) ApplySeparation();
 
         // 각도 슬롯 갱신 — 목록 첫 번째 적만 담당 (정적 타이머 1회 실행)
         if (All.Count > 0 && All[0] == this && playerTransform != null)
             TryRefreshSlots(playerTransform);
 
-        if (_pendingMove != Vector2.zero && rb != null)
+        if ((_pendingMove != Vector2.zero || _launchYDelta != 0f) && rb != null)
         {
-            Vector2 next = rb.position + _pendingMove;
+            Vector2 next = rb.position + _pendingMove + new Vector2(0f, _launchYDelta);
             var mb = MovementBounds.Shared;
             if (mb != null && !mb.IsInside(next))
                 next = mb.ClosestPointOnBoundary(next);
             rb.MovePosition(next);
         }
         isMoving = _pendingMove != Vector2.zero;
-        _pendingMove = Vector2.zero;
+        _pendingMove  = Vector2.zero;
+        _launchYDelta = 0f;
+    }
+
+    /// <summary>빅 모드 착지 충격: 사인 아크로 위로 튀었다 원위치. 이미 공중이면 무시.</summary>
+    public void ApplyLaunchArc(float height, float duration)
+    {
+        if (_isDying || _launchCoroutine != null) return;
+        _launchCoroutine = StartCoroutine(LaunchArcRoutine(height, duration));
+    }
+
+    private IEnumerator LaunchArcRoutine(float height, float duration)
+    {
+        float elapsed    = 0f;
+        float prevOffset = 0f;
+
+        while (elapsed < duration)
+        {
+            float t         = elapsed / duration;
+            float newOffset = height * Mathf.Sin(t * Mathf.PI);
+            _launchYDelta = newOffset - prevOffset;
+            prevOffset    = newOffset;
+            elapsed      += Time.fixedDeltaTime;
+            yield return new WaitForFixedUpdate();
+        }
+        // 정확히 원점 복귀
+        _launchYDelta = -prevOffset;
+        yield return new WaitForFixedUpdate();
+        _launchYDelta    = 0f;
+        _launchCoroutine = null;
     }
 
     // ── 분리: Physics 쿼리 없이 전체 목록에서 직접 계산 ─────────
@@ -359,6 +393,8 @@ public class EnemyController : MonoBehaviour, IEnemyHost
         _halfHpGoldDropped = false;
         HasSlotAssignment  = false;
         moveSpeed  = baseSpeed;
+        _launchYDelta = 0f;
+        if (_launchCoroutine != null) { StopCoroutine(_launchCoroutine); _launchCoroutine = null; }
         if (animator != null) animator.speed = 1f;
         if (rb != null)
         {

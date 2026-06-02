@@ -31,7 +31,13 @@ public class SpriteYSort : MonoBehaviour
 
     private void LateUpdate()
     {
-        int yBase = -Mathf.RoundToInt(transform.position.y * multiplier);
+        float footY = float.MaxValue;
+        for (int i = 0; i < _renderers.Length; i++)
+            if (_renderers[i] != null && _renderers[i].gameObject.activeInHierarchy)
+                footY = Mathf.Min(footY, _renderers[i].bounds.min.y);
+        if (footY == float.MaxValue) footY = transform.position.y;
+
+        int yBase = -Mathf.RoundToInt(footY * multiplier);
         if (yBase == _cachedYBase) return;
         _cachedYBase = yBase;
         for (int i = 0; i < _renderers.Length; i++)

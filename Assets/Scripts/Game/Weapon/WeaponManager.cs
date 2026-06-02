@@ -22,6 +22,10 @@ public class WeaponManager : MonoBehaviour
     [SerializeField] private float bonusOrbitSpeed  = 120f;
 
     private Transform[] _anchors;
+    private Vector3[]   _anchorOrigPos;    // 이격 복구용 원본 localPosition
+    private Vector3     _anchorBonusOrigPos;
+    private Vector3[]   _anchorOrigScale;  // 크기 복구용 원본 localScale
+    private Vector3     _anchorBonusOrigScale;
 
     private const float MeleeStaggerStep = 0.08f;
 
@@ -37,6 +41,17 @@ public class WeaponManager : MonoBehaviour
             anchorTopLeft,  anchorBottomLeft,
             anchorRight,    anchorLeft,
         };
+
+        // 원본 위치·스케일 저장
+        _anchorOrigPos   = new Vector3[_anchors.Length];
+        _anchorOrigScale = new Vector3[_anchors.Length];
+        for (int i = 0; i < _anchors.Length; i++)
+        {
+            _anchorOrigPos[i]   = _anchors[i] != null ? _anchors[i].localPosition : Vector3.zero;
+            _anchorOrigScale[i] = _anchors[i] != null ? _anchors[i].localScale    : Vector3.one;
+        }
+        _anchorBonusOrigPos   = anchorBonus != null ? anchorBonus.localPosition : Vector3.zero;
+        _anchorBonusOrigScale = anchorBonus != null ? anchorBonus.localScale    : Vector3.one;
     }
 
     private void Start()
@@ -121,13 +136,37 @@ public class WeaponManager : MonoBehaviour
             player.ApplyStatSheet(sm);
     }
 
-    /// <summary>모든 무기 앵커의 localScale을 지정값으로 변경합니다 (스몰 모드 비주얼 전용).</summary>
-    public void SetWeaponVisualScale(Vector3 scale)
+    /// <summary>모든 무기 앵커의 localScale을 원본 기준 배율로 변경합니다 (크기 모드 비주얼 전용).</summary>
+    public void SetWeaponVisualScale(float multiplier)
     {
         if (_anchors != null)
-            foreach (var a in _anchors)
-                if (a != null) a.localScale = scale;
-        if (anchorBonus != null) anchorBonus.localScale = scale;
+            for (int i = 0; i < _anchors.Length; i++)
+                if (_anchors[i] != null)
+                    _anchors[i].localScale = _anchorOrigScale[i] * multiplier;
+        if (anchorBonus != null)
+            anchorBonus.localScale = _anchorBonusOrigScale * multiplier;
+    }
+
+    /// <summary>모든 무기 앵커의 localScale을 원본값으로 복구합니다.</summary>
+    public void ResetWeaponVisualScale()
+    {
+        if (_anchors != null)
+            for (int i = 0; i < _anchors.Length; i++)
+                if (_anchors[i] != null)
+                    _anchors[i].localScale = _anchorOrigScale[i];
+        if (anchorBonus != null)
+            anchorBonus.localScale = _anchorBonusOrigScale;
+    }
+
+    /// <summary>모든 무기 앵커의 localPosition을 원본 기준으로 multiplier배 이격합니다 (빅 모드 전용).</summary>
+    public void SetWeaponAnchorSpread(float multiplier)
+    {
+        if (_anchors != null)
+            for (int i = 0; i < _anchors.Length; i++)
+                if (_anchors[i] != null)
+                    _anchors[i].localPosition = _anchorOrigPos[i] * multiplier;
+        if (anchorBonus != null)
+            anchorBonus.localPosition = _anchorBonusOrigPos * multiplier;
     }
 
     /// <summary>현재 장착된 모든 WeaponPoint를 반환합니다.</summary>
