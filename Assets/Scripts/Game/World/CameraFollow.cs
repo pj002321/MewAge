@@ -80,6 +80,9 @@ public class CameraFollow : MonoBehaviour
             cam.orthographicSize = fixedOrthographicSize * _zoomMult;
     }
 
+    /// <summary>줌 배율 없는 기준 orthographic size (Inspector 고정값).</summary>
+    public float BaseOrthographicSize => fixedOrthographicSize;
+
     /// <summary>줌 배율 설정. 1=기본, 0.75=25% 확대. 스무스하게 전환됩니다.</summary>
     public void SetZoomMultiplier(float mult)
     {
@@ -91,6 +94,9 @@ public class CameraFollow : MonoBehaviour
     {
         _zoomMultTarget = 1f;
     }
+
+    /// <summary>줌이 기본값(1x)에 충분히 근접했는지 여부. WaveClearRoutine 대기 조건으로 사용.</summary>
+    public bool IsZoomAtDefault => Mathf.Abs(_zoomMult - 1f) < 0.05f && Mathf.Abs(_zoomMultTarget - 1f) < 0.001f;
 
     // ── Public API ────────────────────────────────────────────────
 

@@ -1,4 +1,5 @@
 using System.Collections;
+using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -62,18 +63,24 @@ public class PlayerController : MonoBehaviour
     private float     _bigContactTimer;
     private Coroutine _sizeEffectCoroutine;
     private bool      _enforceSizeScale;   // true이면 LateUpdate에서 매 프레임 스케일 유지
+    public  bool      IsSizeEffectActive => _sizeEffectCoroutine != null;
+
+    // 빅 모드 걷기 hop 연출
+    private float    _bigHopYOffset  = 0f;  // LateUpdate에서 Y 점프 오프셋 적용 (SlimeBob 우회)
+    private Sequence _bigHopSequence;
+    private Vector3  _visualSlotOrigLocalPos;
 
     private const float BigScaleMultiplier   = 4f;
     private const float SmallScaleMultiplier = 2f;    // 1/2 배율
     private const float BigSpeedFactor       = 0.3f;
-    private const float SmallSpeedFactor     = 2f;
+    private const float SmallSpeedFactor     = 0.8f;
     private const float BigDamageReduction   = 0.5f;
     private const float SmallDamageMult      = 1.5f;
     private const float SmallEvasionBonus    = 30f;   // +30% 회피
     private const float SmallCameraZoom      = 0.65f; // 65% 오소그래픽 (명확한 확대)
     private const float BigContactKnockback  = 30f;
     private const float BigContactInterval   = 0.5f;
-    private const float BigWalkShakeInterval = 0.25f;
+    private const float BigWalkShakeInterval = 0.22f;
 
     public float CritRateBonus    => critRateBonus;
     public float CritDamageBonus  => critDamageBonus;
@@ -130,8 +137,9 @@ public class PlayerController : MonoBehaviour
         Instance      = this;
         rb            = GetComponent<Rigidbody2D>();
         spriteRenderer = GetComponentInChildren<SpriteRenderer>();
-        _visualSlot          = visualSlot != null ? visualSlot : transform.Find("VisualSlot");
-        _originalVisualScale = _visualSlot != null ? _visualSlot.localScale : Vector3.one;
+        _visualSlot             = visualSlot != null ? visualSlot : transform.Find("VisualSlot");
+        _originalVisualScale    = _visualSlot != null ? _visualSlot.localScale : Vector3.one;
+        _visualSlotOrigLocalPos = _visualSlot != null ? _visualSlot.localPosition : Vector3.zero;
         hitFlash      = GetComponentInChildren<HitFlash>();
         hitShake      = GetComponent<HitShake>();
         currentHP     = maxHP;
@@ -195,17 +203,26 @@ public class PlayerController : MonoBehaviour
         if (_enforceSizeScale && _visualSlot != null)
         {
             float curSign = Mathf.Sign(_visualSlot.localScale.x);
-            float targetMag;
+            float baseMag;
             if (_isBigMode)
-                targetMag = Mathf.Abs(_originalVisualScale.x) * BigScaleMultiplier;
+                baseMag = Mathf.Abs(_originalVisualScale.x) * BigScaleMultiplier;
             else if (_isSmallMode)
-                targetMag = Mathf.Abs(_originalVisualScale.x) / SmallScaleMultiplier;
+                baseMag = Mathf.Abs(_originalVisualScale.x) / SmallScaleMultiplier;
             else
             {
                 _enforceSizeScale = false;
                 return;
             }
-            _visualSlot.localScale = new Vector3(curSign * targetMag, targetMag, targetMag);
+            _visualSlot.localScale = new Vector3(curSign * baseMag, baseMag, baseMag);
+        }
+
+        // 빅 모드 Y 점프 오프셋 — SlimeBobAnimation.Update() 이후 LateUpdate에서 덮어씀
+        if (_isBigMode && _enforceSizeScale && _visualSlot != null)
+        {
+            _visualSlot.localPosition = new Vector3(
+                _visualSlotOrigLocalPos.x,
+                _visualSlotOrigLocalPos.y + _bigHopYOffset,
+                _visualSlotOrigLocalPos.z);
         }
     }
 
@@ -254,6 +271,7 @@ public class PlayerController : MonoBehaviour
                 {
                     CameraFollow.Shared?.Shake(0.15f, 0.07f);
                     _bigWalkShakeTimer = BigWalkShakeInterval;
+                    TriggerBigHop();
                 }
             }
 
@@ -540,11 +558,14 @@ public class PlayerController : MonoBehaviour
         _sizeSpeedMultiplier = BigSpeedFactor;
         _bigContactTimer     = BigContactInterval;
         _bigWalkShakeTimer   = 0f;
+        _bigHopYOffset       = 0f;
+        WeaponManager.Instance?.SetWeaponVisualScale(1.5f);
+        WeaponManager.Instance?.SetWeaponAnchorSpread(2.5f);
         if (_sizeEffectCoroutine != null) StopCoroutine(_sizeEffectCoroutine);
         _sizeEffectCoroutine = StartCoroutine(BigModeEntryEffect());
     }
 
-    /// <summary>스몰 모드 활성화. 한 웨이브 동안 1/3 크기로 축소.</summary>
+    /// <summary>스몰 모드 활성화. 한 웨이브 동안 1/2 크기로 축소.</summary>
     public void ActivateSmallMode()
     {
         if (_isSmallMode) return;
@@ -553,14 +574,46 @@ public class PlayerController : MonoBehaviour
         _sizeSpeedMultiplier = SmallSpeedFactor;
         PlayerStatManager.Shared?.AddPctMod(StatType.Evasion, SmallEvasionBonus);
         CameraFollow.Shared?.SetZoomMultiplier(SmallCameraZoom);
+        WeaponManager.Instance?.SetWeaponVisualScale(1f / SmallScaleMultiplier);
+        if (_sizeEffectCoroutine != null) StopCoroutine(_sizeEffectCoroutine);
+        _sizeEffectCoroutine = StartCoroutine(SmallModeEntryEffect());
+    }
+
+    // 스몰 모드 진입 연출: 마리오 파워다운처럼 큰크기↔작은크기 교대 후 작은 크기로 정착
+    private IEnumerator SmallModeEntryEffect()
+    {
+        yield return new WaitUntil(() => Time.timeScale > 0f);
+        if (_visualSlot == null) yield break;
+
+        float sign    = Mathf.Sign(_originalVisualScale.x);
+        float fromMag = Mathf.Abs(_originalVisualScale.x);
+        float toMag   = fromMag / SmallScaleMultiplier;
+
+        var   srs        = GetComponentsInChildren<SpriteRenderer>();
+        Color flashColor = new Color(0.6f, 1f, 0.65f);
+
+        // 마지막(홀수 인덱스)이 small로 끝남
+        float[] intervals = { 0.05f, 0.05f, 0.06f, 0.07f, 0.08f, 0.09f };
+
+        for (int i = 0; i < intervals.Length; i++)
+        {
+            bool   isSmall  = (i % 2 == 1);
+            float  mag      = isSmall ? toMag : fromMag;
+            float  curSign  = _visualSlot != null ? Mathf.Sign(_visualSlot.localScale.x) : sign;
+            if (_visualSlot != null)
+                _visualSlot.localScale = new Vector3(curSign * mag, mag, mag);
+            foreach (var sr in srs) sr.color = isSmall ? flashColor : Color.white;
+            yield return new WaitForSecondsRealtime(intervals[i]);
+        }
 
         if (_visualSlot != null)
         {
-            float sign = Mathf.Sign(_originalVisualScale.x);
-            float mag  = Mathf.Abs(_originalVisualScale.x) / SmallScaleMultiplier;
-            _visualSlot.localScale = new Vector3(sign * mag, mag, mag);
+            float curSign = Mathf.Sign(_originalVisualScale.x);
+            float mag     = Mathf.Abs(_originalVisualScale.x) / SmallScaleMultiplier;
+            _visualSlot.localScale = new Vector3(curSign * mag, mag, mag);
         }
-        WeaponManager.Instance?.SetWeaponVisualScale(Vector3.one / SmallScaleMultiplier);
+        foreach (var sr in srs) sr.color = Color.white;
+        _sizeEffectCoroutine = null;
         _enforceSizeScale = true;
     }
 
@@ -575,7 +628,7 @@ public class PlayerController : MonoBehaviour
             _sizeSpeedMultiplier = 1f;
             PlayerStatManager.Shared?.AddPctMod(StatType.Evasion, -SmallEvasionBonus);
             CameraFollow.Shared?.ResetZoom();
-            WeaponManager.Instance?.SetWeaponVisualScale(Vector3.one);
+            // 무기 스케일은 SmallModeExitEffect 완료 시 복구 (연출 중 일관성 유지)
             if (_sizeEffectCoroutine != null) StopCoroutine(_sizeEffectCoroutine);
             _sizeEffectCoroutine = StartCoroutine(SmallModeExitEffect());
         }
@@ -587,10 +640,45 @@ public class PlayerController : MonoBehaviour
         _isBigMode           = false;
         _enforceSizeScale    = false;
         _sizeSpeedMultiplier = 1f;
+        WeaponManager.Instance?.ResetWeaponVisualScale();
+        WeaponManager.Instance?.SetWeaponAnchorSpread(1f);
         if (_sizeEffectCoroutine != null) { StopCoroutine(_sizeEffectCoroutine); _sizeEffectCoroutine = null; }
-        if (_visualSlot != null) _visualSlot.localScale = _originalVisualScale;
+        _bigHopSequence?.Kill();
+        _bigHopSequence = null;
+        _bigHopYOffset  = 0f;
+        if (_visualSlot != null)
+        {
+            _visualSlot.localScale    = _originalVisualScale;
+            _visualSlot.localPosition = _visualSlotOrigLocalPos;
+        }
         var srs = GetComponentsInChildren<SpriteRenderer>();
         foreach (var sr in srs) sr.color = Color.white;
+    }
+
+    // 빅 모드 한 걸음 hop: 위로 띄웠다 착지 (Y position만, scale 변경 없음)
+    private void TriggerBigHop()
+    {
+        // 이전 hop이 아직 진행 중이면 건너뜀 (부유 방지)
+        if (_visualSlot == null || !_enforceSizeScale || _bigHopSequence != null) return;
+
+        float hopH = Mathf.Abs(_originalVisualScale.y) * BigScaleMultiplier * 0.18f;
+
+        _bigHopSequence = DOTween.Sequence().SetLink(gameObject);
+        _bigHopSequence.Append(DOTween.To(() => _bigHopYOffset, v => _bigHopYOffset = v, hopH, 0.09f).SetEase(Ease.OutCubic));
+        _bigHopSequence.Append(DOTween.To(() => _bigHopYOffset, v => _bigHopYOffset = v, 0f,   0.13f).SetEase(Ease.InCubic));
+        _bigHopSequence.OnComplete(() => { _bigHopYOffset = 0f; _bigHopSequence = null; });
+    }
+
+    // 착지 충격으로 맵의 모든 적 공중으로 튀겨 올리기
+    private void BounceNearbyEnemies()
+    {
+        if (EnemyController.All == null) return;
+        for (int i = EnemyController.All.Count - 1; i >= 0; i--)
+        {
+            var enemy = EnemyController.All[i];
+            if (enemy != null)
+                enemy.ApplyLaunchArc(1.8f, 1.0f);
+        }
     }
 
     private void DeactivateSmallModeImmediate()
@@ -601,7 +689,7 @@ public class PlayerController : MonoBehaviour
         _sizeSpeedMultiplier = 1f;
         PlayerStatManager.Shared?.AddPctMod(StatType.Evasion, -SmallEvasionBonus);
         CameraFollow.Shared?.ResetZoom();
-        WeaponManager.Instance?.SetWeaponVisualScale(Vector3.one);
+        WeaponManager.Instance?.ResetWeaponVisualScale();
         if (_visualSlot != null) _visualSlot.localScale = _originalVisualScale;
     }
 
@@ -622,55 +710,37 @@ public class PlayerController : MonoBehaviour
             if (diff.sqrMagnitude > radiusSq) continue;
             Vector2 dir = diff.sqrMagnitude > 0.001f ? diff.normalized : Vector2.up;
             enemy.TakeDamage(dmg, false, dir, BigContactKnockback);
+            enemy.ApplyLaunchArc(1.2f, 0.5f);
         }
     }
 
-    // 빅 모드 진입 연출: 마리오 버섯처럼 스케일업 + 펄스 하이라이트
+    // 빅 모드 진입 연출: 마리오 버섯처럼 작은크기↔큰크기를 교대하다 큰 크기로 정착
     private IEnumerator BigModeEntryEffect()
     {
-        // 증강 패널이 열려있는 동안(timeScale=0)은 대기
         yield return new WaitUntil(() => Time.timeScale > 0f);
-
         if (_visualSlot == null) yield break;
-        float sign      = Mathf.Sign(_originalVisualScale.x);
-        float fromMag   = Mathf.Abs(_originalVisualScale.x);
-        float toMag     = fromMag * BigScaleMultiplier;
 
-        var   srs           = GetComponentsInChildren<SpriteRenderer>();
-        Color flashColor    = new Color(1f, 0.85f, 0.2f); // 황금색 하이라이트
-        float elapsed       = 0f;
-        float duration      = 0.55f;
-        float flashTimer    = 0f;
-        float flashInterval = 0.055f;
-        bool  bright        = false;
+        float sign    = Mathf.Sign(_originalVisualScale.x);
+        float fromMag = Mathf.Abs(_originalVisualScale.x);
+        float toMag   = fromMag * BigScaleMultiplier;
 
-        while (elapsed < duration)
+        var   srs        = GetComponentsInChildren<SpriteRenderer>();
+        Color flashColor = new Color(1f, 0.85f, 0.2f);
+
+        // 간격: 빠르게 시작 → 점점 느려지며 정착 / 마지막(홀수 인덱스)이 big으로 끝남
+        float[] intervals = { 0.05f, 0.05f, 0.06f, 0.07f, 0.07f, 0.09f, 0.10f, 0.10f };
+
+        for (int i = 0; i < intervals.Length; i++)
         {
-            float t = elapsed / duration;
-            // 3단계 스케일: 빠르게 오버슈트 → 살짝 내림 → 정착
-            float mag;
-            if (t < 0.65f)
-                mag = Mathf.Lerp(fromMag, toMag * 1.12f, t / 0.65f);
-            else
-                mag = Mathf.Lerp(toMag * 1.12f, toMag, (t - 0.65f) / 0.35f);
-
-            float curSign = _visualSlot != null ? Mathf.Sign(_visualSlot.localScale.x) : sign;
+            bool   isBig    = (i % 2 == 1);
+            float  mag      = isBig ? toMag : fromMag;
+            float  curSign  = _visualSlot != null ? Mathf.Sign(_visualSlot.localScale.x) : sign;
             if (_visualSlot != null)
                 _visualSlot.localScale = new Vector3(curSign * mag, mag, mag);
-
-            flashTimer -= Time.deltaTime;
-            if (flashTimer <= 0f)
-            {
-                flashTimer = flashInterval;
-                bright = !bright;
-                foreach (var sr in srs) sr.color = bright ? flashColor : Color.white;
-            }
-
-            elapsed += Time.deltaTime;
-            yield return null;
+            foreach (var sr in srs) sr.color = isBig ? flashColor : Color.white;
+            yield return new WaitForSecondsRealtime(intervals[i]);
         }
 
-        // 최종 스케일 확정
         if (_visualSlot != null)
         {
             float curSign = Mathf.Sign(_visualSlot.localScale.x);
@@ -678,7 +748,7 @@ public class PlayerController : MonoBehaviour
         }
         foreach (var sr in srs) sr.color = Color.white;
         _sizeEffectCoroutine = null;
-        _enforceSizeScale = true; // 이후 Animator 등의 덮어쓰기를 막음
+        _enforceSizeScale = true;
     }
 
     // 스몰 모드 종료 연출: 마리오 파워다운처럼 크기 펄스 루프 후 원래 크기로
@@ -698,7 +768,7 @@ public class PlayerController : MonoBehaviour
             if (_visualSlot != null)
                 _visualSlot.localScale = new Vector3(curSign * mag, mag, mag);
             foreach (var sr in srs) sr.color = showNormal ? Color.white : smallCol;
-            yield return new WaitForSeconds(0.09f);
+            yield return new WaitForSecondsRealtime(0.09f);
         }
 
         if (_visualSlot != null)
@@ -708,6 +778,8 @@ public class PlayerController : MonoBehaviour
             _visualSlot.localScale = new Vector3(finalX, _originalVisualScale.y, _originalVisualScale.z);
         }
         foreach (var sr in srs) sr.color = Color.white;
+        // 연출 완료 후 무기 스케일 복구 — 플레이어가 정상 크기로 돌아온 시점에 맞춤
+        WeaponManager.Instance?.ResetWeaponVisualScale();
         _sizeEffectCoroutine = null;
     }
 

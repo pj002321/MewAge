@@ -69,6 +69,28 @@ public static class EnemyFX
         return seq;
     }
 
+    // ── 빅 모드 착지 반동 ─────────────────────────────────────────
+
+    /// <summary>
+    /// 플레이어 빅 모드 착지 시 주변 적에게 적용: 찌부 → 세로 늘어남 → 복구.
+    /// SlimeBobAnimation 충돌 방지: 연출 중 비활성화 후 복구.
+    /// </summary>
+    public static Sequence BigImpactBounce(Transform t)
+    {
+        t.DOKill(false);
+        var slimeBob = t.GetComponent<SlimeBobAnimation>();
+        if (slimeBob != null) slimeBob.enabled = false;
+
+        Vector3 orig = t.localScale;
+        var seq = DOTween.Sequence().SetLink(t.gameObject);
+        seq.Append(t.DOScale(new Vector3(orig.x * 1.35f, orig.y * 0.52f, orig.z), 0.10f).SetEase(Ease.OutQuad));
+        seq.Append(t.DOScale(new Vector3(orig.x * 0.85f, orig.y * 1.32f, orig.z), 0.15f).SetEase(Ease.OutQuad));
+        seq.Append(t.DOScale(orig,                                                  0.11f).SetEase(Ease.InOutSine));
+        if (slimeBob != null)
+            seq.OnComplete(() => { if (slimeBob != null) slimeBob.enabled = true; });
+        return seq;
+    }
+
     // ── 스케일 Y (보스 입장 squash/stretch) ──────────────────────
 
     /// <summary>

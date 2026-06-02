@@ -26,6 +26,7 @@ public class WeaponMeleeBehaviour : WeaponMeleeBaseBehaviour
 
     protected override void BeginAttack(WeaponPoint.CombatTarget best)
     {
+        overshootDistance = 1.4f;
         _target          = best;
         _toTarget        = ((Vector2)best.Position - (Vector2)Host.transform.parent.position).normalized;
         if (_toTarget.sqrMagnitude < 0.001f) _toTarget = Vector2.up;
@@ -85,9 +86,15 @@ public class WeaponMeleeBehaviour : WeaponMeleeBaseBehaviour
         }
     }
 
-    // Overshooting 대신 제자리 임베드 대기
+    // 오버슈트 목표까지 이동 → 도달 후 임베드 대기
     protected override void UpdateOvershooting()
     {
+        if (Vector3.Distance(Host.transform.position, _overshootTarget) > 0.05f)
+        {
+            Host.transform.position = Vector3.MoveTowards(
+                Host.transform.position, _overshootTarget, strikeSpeed * Time.deltaTime);
+            return;
+        }
         _embedTimer -= Time.deltaTime;
         if (_embedTimer <= 0f)
             BeginReturn();
