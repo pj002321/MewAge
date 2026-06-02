@@ -1365,7 +1365,7 @@ public class WeaponPoint : MonoBehaviour
         switch (type)
         {
             case StatusEffectConfig.HitStunType.Stun:
-                enemy.Stun(1.5f, _weaponChapter);
+                enemy.Stun(1.5f, _weaponChapter, _weaponId, _specialEffectId);
                 break;
 
             case StatusEffectConfig.HitStunType.Freeze:

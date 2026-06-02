@@ -492,13 +492,13 @@ public class EnemyController : MonoBehaviour, IEnemyHost
     }
 
     /// <summary>지정 시간 동안 이동·공격을 모두 멈추고 스프라이트를 노란색으로 변경합니다.</summary>
-    public void Stun(float seconds, int weaponChapter = 1)
+    public void Stun(float seconds, int weaponChapter = 1, string weaponId = null, string traitId = "HIT_STUN")
     {
         if (_stunCoroutine != null) StopCoroutine(_stunCoroutine);
-        _stunCoroutine = StartCoroutine(StunRoutineVfx(seconds, weaponChapter));
+        _stunCoroutine = StartCoroutine(StunRoutineVfx(seconds, weaponChapter, weaponId, traitId));
     }
 
-    private IEnumerator StunRoutineVfx(float seconds, int weaponChapter)
+    private IEnumerator StunRoutineVfx(float seconds, int weaponChapter, string weaponId, string traitId)
     {
         isStunned = true;
         if (rb != null) rb.linearVelocity = Vector2.zero;
@@ -506,7 +506,9 @@ public class EnemyController : MonoBehaviour, IEnemyHost
         if (animator != null) animator.speed = 0f;
 
         if (_stunVfxInst != null) Destroy(_stunVfxInst);
-        var pfb = StatusEffectConfig.Shared?.GetStun(weaponChapter);
+        var cfg = StatusEffectConfig.Shared;
+        var pfb = (!string.IsNullOrEmpty(weaponId) ? cfg?.GetHitEffectVfx(weaponId, weaponChapter, traitId) : null)
+               ?? cfg?.GetStun(weaponChapter);
         if (pfb != null)
         {
             _stunVfxInst = Instantiate(pfb, transform);

@@ -345,7 +345,7 @@ public class WeaponHighGradeSkill : MonoBehaviour
             if (!e.gameObject.activeInHierarchy) continue;
             switch (status)
             {
-                case StatusType.Stun:   e.Stun(dur); break;
+                case StatusType.Stun:   e.Stun(dur, WP?.WeaponChapter ?? 1, Wid, TraitId); break;
                 case StatusType.Freeze: e.Freeze(dur, thaw, fColor); break;
                 case StatusType.Burn:   e.ApplyBleed(WP != null ? WP.BleedDamage + 1f : 5f); e.ApplySlow(dur, 0.5f); break;
             }
@@ -370,6 +370,8 @@ public class WeaponHighGradeSkill : MonoBehaviour
         if (prefab != null)
         {
             go = Instantiate(prefab, player.transform.position, Quaternion.identity);
+            var wp = go.GetComponent<WeaponPoint>();
+            if (wp != null) wp.enabled = false;
             var proj = go.GetComponent<Projectile>();
             if (proj != null) proj.enabled = false;
             var rb = go.GetComponent<Rigidbody2D>();

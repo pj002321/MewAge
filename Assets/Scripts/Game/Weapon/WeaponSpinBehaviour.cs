@@ -31,6 +31,12 @@ public class WeaponSpinBehaviour : WeaponBehaviourBase
     private const int   BoostMaxStack = 5;
     private const float BoostDecay    = 3f;
 
+    // 리듬감 (느슨하게 → 확 빠르게)
+    private float _rhythmTime;
+    private const float RhythmFreq = 0.42f;   // 사이클/초 (~2.4s 주기)
+    private const float RhythmMin  = 0.32f;   // 가장 느릴 때 배율
+    private const float RhythmMax  = 1.95f;   // 가장 빠를 때 배율
+
     private readonly List<GameObject> _ghosts = new();
 
     private BossController _cachedBossForCol;
@@ -68,7 +74,12 @@ public class WeaponSpinBehaviour : WeaponBehaviourBase
             if (_boostTimer <= 0f) { _boostStack = 0; _boostOrbit = 0f; _boostSpeed = 0f; }
         }
 
-        float effectOrbitSpeed  = orbitSpeed  + _boostSpeed;
+        _rhythmTime += Time.deltaTime;
+        float _t01  = (Mathf.Sin(_rhythmTime * (RhythmFreq * Mathf.PI * 2f)) + 1f) * 0.5f;
+        float _curv = _t01 * _t01 * _t01;   // power-3: 느린 구간 길게, 빠른 구간 짧게
+        float rhythmMult = Mathf.Lerp(RhythmMin, RhythmMax, _curv);
+
+        float effectOrbitSpeed  = (orbitSpeed + _boostSpeed) * rhythmMult;
         float effectOrbitRadius = orbitRadius + _boostOrbit;
         currentAngle += effectOrbitSpeed * Time.deltaTime;
         float rad = currentAngle * Mathf.Deg2Rad;
