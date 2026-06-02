@@ -1,12 +1,6 @@
 using System;
 using UnityEngine;
 
-/// <summary>
-/// 챕터별 유닛 아이콘 스프라이트만 등록하는 ScriptableObject.
-/// 유닛 ID는 DB_유닛에서 읽어오고, 이 에셋에는 Sprite만 등록합니다.
-/// 에디터 Inspector에서 DB 유닛 이름이 레이블로 표시됩니다.
-/// Resources/Unit/UnitVisualConfig 에 저장하면 Shared로 전역 접근합니다.
-/// </summary>
 [CreateAssetMenu(menuName = "Mewage/Unit Visual Config", fileName = "UnitVisualConfig")]
 public class UnitVisualConfig : ScriptableObject
 {
@@ -17,7 +11,18 @@ public class UnitVisualConfig : ScriptableObject
         public Sprite[] unitIcons;   // DB_유닛 ForEach 순서와 동일
     }
 
-    public ChapterEntry[] chapters;
+    [Serializable]
+    public struct BossIconEntry
+    {
+        public string bossId;
+        public Sprite icon;
+    }
+
+    public Sprite normalEnemyFrame;
+    public Sprite bossEnemyFrame;
+
+    public ChapterEntry[]  chapters;
+    public BossIconEntry[] bossIcons;  // DB_보스 f_보스ID 기준
 
     public Sprite GetSprite(int chapter, int indexInChapter)
     {
@@ -27,6 +32,14 @@ public class UnitVisualConfig : ScriptableObject
             if (ch.unitIcons == null || indexInChapter >= ch.unitIcons.Length) return null;
             return ch.unitIcons[indexInChapter];
         }
+        return null;
+    }
+
+    public Sprite GetBossIcon(string bossId)
+    {
+        if (bossIcons == null) return null;
+        foreach (var e in bossIcons)
+            if (e.bossId == bossId) return e.icon;
         return null;
     }
 

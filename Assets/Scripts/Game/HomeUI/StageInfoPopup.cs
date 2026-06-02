@@ -26,13 +26,15 @@ public class StageInfoPopup : MonoBehaviour
     [Header("공용 스크롤")]
     [SerializeField] ScrollRect    scroll;
     [SerializeField] RectTransform content;
+    [SerializeField] RectTransform bossContent;
 
     [Header("슬롯 프리팹")]
-    [SerializeField] EraEnemySlot  monsterSlotPrefab;
-    [SerializeField] EraWeaponSlot weaponSlotPrefab;
+    [SerializeField] EraEnemySlot   monsterSlotPrefab;
+    [SerializeField] StageWeaponSlot weaponSlotPrefab;
 
     ScalablePopup _popup;
-    int _chapter;
+    int    _chapter;
+    string _stageId;
 
     // ── 초기화 ────────────────────────────────────────────────────────────
 
@@ -52,11 +54,12 @@ public class StageInfoPopup : MonoBehaviour
 
     // ── 공개 API ──────────────────────────────────────────────────────────
 
-    public void Open(int chapter, string chapterName)
+    public void Open(int chapter, string stageId)
     {
         _chapter = chapter;
+        _stageId = stageId;
         StopAllCoroutines();
-        ShowTab(0);
+        ShowTab(1);
         _popup?.Show();
     }
 
@@ -86,17 +89,25 @@ public class StageInfoPopup : MonoBehaviour
     IEnumerator SpreadRoutine()
     {
         // 현재 자식 전부 납작하게 (삭제 대기 포함)
-        for (int i = 0; i < content.childCount; i++)
-            content.GetChild(i).localScale = new Vector3(1f, 0f, 1f);
+        foreach (var ct in new[] { content, bossContent })
+        {
+            if (ct == null) continue;
+            for (int i = 0; i < ct.childCount; i++)
+                ct.GetChild(i).localScale = new Vector3(1f, 0f, 1f);
+        }
 
         yield return null;  // 이 시점에 Destroy 처리 완료 → 실제 신규 슬롯만 남음
 
-        // 살아있는 슬롯만 캡처
-        int count = content.childCount;
-        var slots = new Transform[count];
-        for (int i = 0; i < count; i++)
+        // 살아있는 슬롯 전부 캡처 (content + bossContent)
+        int baseCount  = content != null ? content.childCount : 0;
+        int bossCount  = bossContent != null ? bossContent.childCount : 0;
+        var slots      = new Transform[baseCount + bossCount];
+        for (int i = 0; i < baseCount; i++)
             slots[i] = content.GetChild(i);
+        for (int i = 0; i < bossCount; i++)
+            slots[baseCount + i] = bossContent.GetChild(i);
 
+        LayoutRebuilder.ForceRebuildLayoutImmediate(content);
         Canvas.ForceUpdateCanvases();
         if (scroll != null) scroll.verticalNormalizedPosition = 1f;
 
@@ -135,23 +146,57 @@ public class StageInfoPopup : MonoBehaviour
             return;
         }
 
-        int count = 0;
-        int unitIdx = 0;
+        var visualCfg = UnitVisualConfig.Shared;
+
+        // DB_웨이브에서 이 스테이지에 출현하는 유닛 ID 수집 (중복 제거)
+        string wavePrefix = _stageId + "_W";
+        var unitIdSet = new HashSet<string>();
+        DB_웨이브.ForEachEntity(row =>
+        {
+            if (row == null || string.IsNullOrEmpty(row.f_웨이브ID)) return;
+            if (!row.f_웨이브ID.StartsWith(wavePrefix)) return;
+            if (!string.IsNullOrEmpty(row.f_유닛1)) unitIdSet.Add(row.f_유닛1);
+            if (!string.IsNullOrEmpty(row.f_유닛2)) unitIdSet.Add(row.f_유닛2);
+            if (!string.IsNullOrEmpty(row.f_유닛3)) unitIdSet.Add(row.f_유닛3);
+            if (!string.IsNullOrEmpty(row.f_유닛4)) unitIdSet.Add(row.f_유닛4);
+        });
+
+        // 챕터 내 유닛 순서 맵 (unitId → chapterIndex)
+        var unitIndexMap = new Dictionary<string, int>();
+        int idx = 0;
         DB_유닛.ForEachEntity(row =>
         {
             if (row == null || string.IsNullOrEmpty(row.f_유닛ID)) return;
             if (!row.f_유닛ID.StartsWith($"C{chapter}_")) return;
-
-            var    sprite      = UnitVisualConfig.Shared?.GetSprite(chapter, unitIdx);
-            string displayName = !string.IsNullOrEmpty(row.f_이름) ? row.f_이름 : row.f_유닛ID;
-
-            var slot = Instantiate(monsterSlotPrefab, content);
-            slot.Bind(sprite, displayName, row.f_타입ID);
-            unitIdx++;
-            count++;
+            unitIndexMap[row.f_유닛ID] = idx++;
         });
 
-        this.DLog($"챕터{chapter} 몬스터 {count}개 생성");
+        int count = 0;
+        foreach (var unitId in unitIdSet)
+        {
+            int unitIdx = unitIndexMap.TryGetValue(unitId, out int i) ? i : -1;
+            var slot = Instantiate(monsterSlotPrefab, content);
+            var sprite = (unitIdx >= 0 && visualCfg != null) ? visualCfg.GetSprite(chapter, unitIdx) : null;
+            slot.Bind(sprite, false);
+            count++;
+        }
+
+        // DB_보스에서 이 스테이지에 출현하는 보스 수집
+        if (bossContent != null)
+        {
+            DB_보스.ForEachEntity(row =>
+            {
+                if (row == null || string.IsNullOrEmpty(row.f_보스ID)) return;
+                if (!row.f_보스ID.StartsWith(_stageId + "_")) return;
+
+                var icon     = visualCfg != null ? visualCfg.GetBossIcon(row.f_보스ID) : null;
+                var bossSlot = Instantiate(monsterSlotPrefab, bossContent);
+                bossSlot.Bind(icon, true);
+                count++;
+            });
+        }
+
+        this.DLog($"스테이지{_stageId} 몬스터 {count}개 생성");
     }
 
     // ── 무기 빌드 ─────────────────────────────────────────────────────────
@@ -180,9 +225,13 @@ public class StageInfoPopup : MonoBehaviour
 
     void ClearContent()
     {
-        if (content == null) return;
-        for (int i = content.childCount - 1; i >= 0; i--)
-            Destroy(content.GetChild(i).gameObject);
+        if (content != null)
+            for (int i = content.childCount - 1; i >= 0; i--)
+                Destroy(content.GetChild(i).gameObject);
+
+        if (bossContent != null)
+            for (int i = bossContent.childCount - 1; i >= 0; i--)
+                Destroy(bossContent.GetChild(i).gameObject);
     }
 
     static string ChapterToEraName(int chapter) => chapter switch

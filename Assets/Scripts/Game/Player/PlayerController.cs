@@ -70,7 +70,7 @@ public class PlayerController : MonoBehaviour
     private Sequence _bigHopSequence;
     private Vector3  _visualSlotOrigLocalPos;
 
-    private const float BigScaleMultiplier   = 4f;
+    private const float BigScaleMultiplier   = 2.5f;
     private const float SmallScaleMultiplier = 2f;    // 1/2 배율
     private const float BigSpeedFactor       = 0.3f;
     private const float SmallSpeedFactor     = 0.8f;

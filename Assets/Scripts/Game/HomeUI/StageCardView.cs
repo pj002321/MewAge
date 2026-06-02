@@ -27,6 +27,7 @@ public class StageCardView : MonoBehaviour
 
     bool      _isLocked;
     int       _chapter;
+    string    _stageId;
     string    _chapterLabel;
     GameObject _symbolInstance;
 
@@ -37,7 +38,7 @@ public class StageCardView : MonoBehaviour
 
     void OnInfoClicked()
     {
-        StageInfoPopup.Shared?.Open(_chapter, _chapterLabel);
+        StageInfoPopup.Shared?.Open(_chapter, _stageId);
     }
 
     // ── 데이터 바인딩 ────────────────────────────────────────────────
@@ -45,6 +46,7 @@ public class StageCardView : MonoBehaviour
     {
         _isLocked     = entry.isLocked;
         _chapter      = ParseChapter(entry.chapterID);
+        _stageId      = entry.chapterID;
         _chapterLabel = entry.chapterLabel;
 
         if (iconImage != null && entry.icon != null)

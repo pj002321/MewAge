@@ -12,9 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 63c9a4a4fd463d343aeb824869f4173e, type: 3}
   m_Name: UnitVisualConfig
   m_EditorClassIdentifier: Assembly-CSharp::UnitVisualConfig
+  normalEnemyFrame: {fileID: 3074340479851116336, guid: 115d26c6affe1624398d1204ebfb71af, type: 3}
+  bossEnemyFrame: {fileID: -3556699427553966112, guid: b8066fc15443dd04584a4168423bf64c, type: 3}
   chapters:
   - chapter: 0
     unitIcons: []
+    bossIcon: {fileID: 0}
   - chapter: 1
     unitIcons:
     - {fileID: 21300000, guid: e9d5c02322930924c8f6238ff2e1e2fd, type: 3}
@@ -32,6 +35,7 @@ MonoBehaviour:
     - {fileID: -8196526413090103887, guid: 88c71e65449a02e49911d4b35a6b5d51, type: 3}
     - {fileID: -3754287678648780276, guid: 68005b20f982eaa4fa4fed1c92bcfe79, type: 3}
     - {fileID: -6404160987507800766, guid: 2fc75e5d21f1c104bac60fb82d1e51b6, type: 3}
+    bossIcon: {fileID: 0}
   - chapter: 2
     unitIcons:
     - {fileID: -5466982846370464035, guid: 28062c1bf8234d547b0241ccad7c6b35, type: 3}
@@ -48,6 +52,7 @@ MonoBehaviour:
     - {fileID: -160414358269569970, guid: 073bc32d40f8c63499fc0acb13195b3a, type: 3}
     - {fileID: 6688515786165189010, guid: 1775a2698d2bf6c4983018557f839cb8, type: 3}
     - {fileID: 2122481005468100178, guid: 869abc56b3fbff647b929badf1ee0c2f, type: 3}
+    bossIcon: {fileID: 0}
   - chapter: 3
     unitIcons:
     - {fileID: -5712714486216360291, guid: 7ccede8b1be4c1247803f2192b4af04f, type: 3}
@@ -65,3 +70,4 @@ MonoBehaviour:
     - {fileID: -160414358269569970, guid: 073bc32d40f8c63499fc0acb13195b3a, type: 3}
     - {fileID: 6688515786165189010, guid: 1775a2698d2bf6c4983018557f839cb8, type: 3}
     - {fileID: 3050153570303429046, guid: d57826368f54bd543a16c2d78216e415, type: 3}
+    bossIcon: {fileID: 0}
