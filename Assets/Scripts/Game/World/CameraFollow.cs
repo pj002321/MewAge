@@ -33,6 +33,11 @@ public class CameraFollow : MonoBehaviour
     private float   shakeTimeLeft;
     private float   shakeMagnitudeCurrent;
 
+    // 줌 배율 (1=기본, 0.8=20% 확대)
+    private float _zoomMult       = 1f;
+    private float _zoomMultTarget = 1f;
+    private float _zoomVelocity;
+
     // Runtime state
     private bool    _followPlayer;
     private bool    _useBounds;
@@ -72,7 +77,19 @@ public class CameraFollow : MonoBehaviour
         cam.ResetProjectionMatrix();
 
         if (fixedOrthographicSize > 0f)
-            cam.orthographicSize = fixedOrthographicSize;
+            cam.orthographicSize = fixedOrthographicSize * _zoomMult;
+    }
+
+    /// <summary>줌 배율 설정. 1=기본, 0.75=25% 확대. 스무스하게 전환됩니다.</summary>
+    public void SetZoomMultiplier(float mult)
+    {
+        _zoomMultTarget = Mathf.Max(0.1f, mult);
+    }
+
+    /// <summary>줌을 기본값(1x)으로 복구합니다.</summary>
+    public void ResetZoom()
+    {
+        _zoomMultTarget = 1f;
     }
 
     // ── Public API ────────────────────────────────────────────────
@@ -181,6 +198,12 @@ public class CameraFollow : MonoBehaviour
         // SmoothDamp can overshoot, clamp again
         if (_useBounds && _followPlayer)
             transform.position = ClampToBounds(transform.position);
+
+        // 줌 스무스 전환 (unscaledDeltaTime: 패널 열려있어도 즉시 반응)
+        _zoomMult = Mathf.SmoothDamp(_zoomMult, _zoomMultTarget, ref _zoomVelocity, 0.35f,
+                                     float.MaxValue, Time.unscaledDeltaTime);
+        if (fixedOrthographicSize > 0f)
+            cam.orthographicSize = fixedOrthographicSize * _zoomMult;
 
         // Camera shake
         transform.position -= (Vector3)shakeOffset;

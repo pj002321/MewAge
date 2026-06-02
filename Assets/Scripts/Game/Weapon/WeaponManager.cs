@@ -121,6 +121,15 @@ public class WeaponManager : MonoBehaviour
             player.ApplyStatSheet(sm);
     }
 
+    /// <summary>모든 무기 앵커의 localScale을 지정값으로 변경합니다 (스몰 모드 비주얼 전용).</summary>
+    public void SetWeaponVisualScale(Vector3 scale)
+    {
+        if (_anchors != null)
+            foreach (var a in _anchors)
+                if (a != null) a.localScale = scale;
+        if (anchorBonus != null) anchorBonus.localScale = scale;
+    }
+
     /// <summary>현재 장착된 모든 WeaponPoint를 반환합니다.</summary>
     public List<WeaponPoint> GetActiveWeaponPoints()
     {

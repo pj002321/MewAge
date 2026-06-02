@@ -66,6 +66,7 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
     [SerializeField] private Button   levelUpButton;
     [SerializeField] private Button   addGoldButton;
     [SerializeField] private Button   doubleUpButton;
+    [SerializeField] private Button   rerollAugmentButton;
 
     [Header("웨이브 점프 패널")]
     [SerializeField] private Button    waveListToggle;  // "웨이브 이동 ▼" 토글 버튼
@@ -139,6 +140,7 @@ public class DebugPanel : MonoBehaviourSingleton<DebugPanel>
         levelUpButton?.onClick.AddListener(OnLevelUp);
         addGoldButton?.onClick.AddListener(() => PlayerStats.Shared?.AddGold(100));
         doubleUpButton?.onClick.AddListener(OnToggleDoubleUp);
+        rerollAugmentButton?.onClick.AddListener(() => ImprovManager.Shared?.DebugReroll());
 
         waveListToggle?.onClick.AddListener(OnToggleWaveList);
         waveListContent?.gameObject.SetActive(false);

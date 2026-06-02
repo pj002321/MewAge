@@ -309,6 +309,9 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 
         PlayerStats.Shared?.AddExp(10);
 
+        // 크기 모드 증강 효과 해제 (빅: 즉시, 스몰: 펄스 귀환 연출 시작)
+        PlayerController.Instance?.DeactivateSizeEffects();
+
         // 대기 중 사망(부활 패널)했다가 아직 isGameOver 상태면 패널 표시 중단
         if (isGameOver) yield break;
 

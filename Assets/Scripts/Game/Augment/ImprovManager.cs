@@ -177,13 +177,11 @@ public class ImprovManager : MonoBehaviourSingleton<ImprovManager>
                 break;
 
             case ImprovType.AUG_SIZE_HP_UP:
-                player.IncreaseSizeHP(main, 0f);
-                if (RequireSm()) sm.SetBase(StatType.MaxHP, sm.GetBase(StatType.MaxHP) + sub);
+                player.ActivateBigMode();
                 break;
 
             case ImprovType.AUG_SIZE_HP_DOWN:
-                player.DecreaseSizeHP(main, 0f);
-                if (RequireSm()) sm.AddPctMod(StatType.MaxHP, -sub);
+                player.ActivateSmallMode();
                 break;
 
             // ── % 모디파이어 계열 — 설명에 % 있음 ───────────────────
@@ -233,6 +231,15 @@ public class ImprovManager : MonoBehaviourSingleton<ImprovManager>
         }
 
         this.DLog($"[ImprovManager] 증강 적용: {data.f_이름} (type={data.f_증강ID}, 주={main}, 보조={sub})");
+    }
+
+    /// <summary>증강 패널이 열려있는 동안 무료로 다시 뽑습니다 (디버그 전용).</summary>
+    public void DebugReroll()
+    {
+        if (improvPanel == null || !improvPanel.gameObject.activeSelf) return;
+        var draws = DrawImprovs(3);
+        if (draws.Length == 0) return;
+        improvPanel.Setup(draws);
     }
 
     // ── 다음 버튼 → UpgradePanel ─────────────────────────────────

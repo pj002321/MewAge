@@ -53,7 +53,7 @@ public class UnitData
         d.typeId        = row.f_타입ID;
         d.rowCount      = row.f_U행수;
         d.hpGrowthRate       = row.f_체력비율;
-        d.dmgGrowthRate      = row.f_데미지비율;
+        d.dmgGrowthRate      = 0f;
         d.designGlobalWave   = row.f_최초기준 > 0 ? row.f_최초기준 : 1;
 
         // 프리팹 로드: Resources/Unit/Ch1/c1_m1
@@ -62,47 +62,7 @@ public class UnitData
             string path = $"Unit/Ch{d.chapter}/{d.unitId.ToLower()}";
             d.prefab = Resources.Load<GameObject>(path);
             if (d.prefab == null)
-            {
                 Debug.LogWarning($"[UnitData] 프리팹 없음: Resources/{path}");
-            }
-            else
-            {
-                var renderers = d.prefab.GetComponentsInChildren<SpriteRenderer>(true);
-                if (renderers == null || renderers.Length == 0)
-                {
-                    Debug.LogWarning($"[UnitData] 프리팹에 SpriteRenderer 없음: {path}");
-                }
-                else
-                {
-                    foreach (var sr in renderers)
-                    {
-                        if (sr.sprite == null)
-                        {
-                            Debug.LogWarning($"[UnitData] 프리팹 SpriteRenderer의 sprite null: {path}");
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-
-        // RANGED 타입 투사체 데이터
-        if (d.typeId == "RANGED" && !string.IsNullOrEmpty(row.f_투사체ID))
-        {
-            string pPath = $"Unit/Ch{d.chapter}/Proj/{row.f_투사체ID.ToLower()}_p";
-            var pPrefab = Resources.Load<GameObject>(pPath);
-            if (pPrefab == null)
-                Debug.LogWarning($"[UnitData] 투사체 없음: Resources/{pPath}");
-
-            d.projectile = new ProjectileData
-            {
-                prefab      = pPrefab,
-                speed       = row.f_P이속,
-                damage      = row.f_P데미지,
-                bonusDamage = row.f_보조데미지,
-                canReflect  = row.f_반사,
-                rowCount    = row.f_P행수,
-            };
         }
 
         return d;

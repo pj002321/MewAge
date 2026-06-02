@@ -22,13 +22,30 @@ public class StageCardView : MonoBehaviour
     [Header("펀치 대상")]
     public GameObject floatTarget;
 
+    [Header("정보 버튼")]
+    public Button infoButton;
+
     bool      _isLocked;
+    int       _chapter;
+    string    _chapterLabel;
     GameObject _symbolInstance;
+
+    void Awake()
+    {
+        infoButton?.onClick.AddListener(OnInfoClicked);
+    }
+
+    void OnInfoClicked()
+    {
+        StageInfoPopup.Shared?.Open(_chapter, _chapterLabel);
+    }
 
     // ── 데이터 바인딩 ────────────────────────────────────────────────
     public void Bind(MainMenuPanel.StageEntry entry)
     {
-        _isLocked = entry.isLocked;
+        _isLocked     = entry.isLocked;
+        _chapter      = ParseChapter(entry.chapterID);
+        _chapterLabel = entry.chapterLabel;
 
         if (iconImage != null && entry.icon != null)
             iconImage.sprite = entry.icon;
@@ -112,6 +129,17 @@ public class StageCardView : MonoBehaviour
     }
 
     // ── 기타 ────────────────────────────────────────────────────────
+
+    static int ParseChapter(string chapterID)
+    {
+        if (string.IsNullOrEmpty(chapterID)) return 1;
+        var parts = chapterID.Split('_');
+        if (parts.Length > 0 && parts[0].Length > 1 &&
+            int.TryParse(parts[0].Substring(1), out int ch))
+            return ch;
+        return 1;
+    }
+
     public void PlayLandingEffect()
     {
         if (playerPortrait != null)
