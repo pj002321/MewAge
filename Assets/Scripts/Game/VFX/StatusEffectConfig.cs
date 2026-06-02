@@ -121,6 +121,26 @@ public class StatusEffectConfig : ScriptableObject
 
         // BOSS_GROGY
         [Tooltip("그로기 시간 (기본 2)")] public float p_groggySeconds;
+
+        // HIT_SPEAR
+        [Tooltip("창 프리팹")] public GameObject p_spearPrefab;
+        [Tooltip("착지 VFX 프리팹")] public GameObject p_spearLandingVfx;
+        [Tooltip("낙하 높이 (기본 8)")] public float p_spearDropHeight;
+        [Tooltip("사선 수평 오프셋 (기본 3)")] public float p_spearSideOffset;
+        [Tooltip("이동 속도 (기본 18)")] public float p_spearSpeed;
+        [Tooltip("데미지 비율 (기본 1)")] public float p_spearDmgRatio;
+        [Tooltip("타격 반경 (기본 0.45)")] public float p_spearHitRadius;
+
+        // HIT_CLONE_TRAIL
+        [Tooltip("클론 프리팹")] public GameObject p_trailClonePrefab;
+        [Tooltip("마커 프리팹")] public GameObject p_trailMarkerPrefab;
+        [Tooltip("이동 속도 (기본 6)")] public float p_trailSpeed;
+        [Tooltip("이동 거리 (기본 8)")] public float p_trailRange;
+        [Tooltip("데미지 비율 (기본 0.4)")] public float p_trailDmgRatio;
+        [Tooltip("마커 지속 시간 (기본 2)")] public float p_trailDuration;
+        [Tooltip("마커 생성 간격 (기본 0.15)")] public float p_trailSpawnInterval;
+        [Tooltip("마커 타격 반경 (기본 0.5)")] public float p_trailHitRadius;
+        [Tooltip("클론 투명도 (기본 0.5)")] public float p_trailCloneAlpha;
     }
 
     // ── 인스펙터 필드 ─────────────────────────────────────────────

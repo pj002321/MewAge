@@ -14,7 +14,6 @@ public class EquipSlot : MonoBehaviour,
     IPointerDownHandler, IPointerUpHandler,
     IBeginDragHandler, IDragHandler, IEndDragHandler
 {
-    [SerializeField] private Image synergyhilightImg;
     [SerializeField] private Image frameImg;
     [SerializeField] private Image iconImg;
     [SerializeField] private Image weaponTypeImg;
@@ -31,47 +30,14 @@ public class EquipSlot : MonoBehaviour,
     private UpgradePanel panel;
     private bool         dragStarted;
 
-    // 하이라이트 효과
-    private Coroutine _highlightCoroutine;
-    private Vector3   _highlightOriginalScale;
-
     private void Awake()
     {
         var c = GetComponentInParent<Canvas>();
         rootCanvas = c != null ? c.rootCanvas : null;
-        if (synergyhilightImg)
-        {
-            _highlightOriginalScale = synergyhilightImg.transform.localScale;
-            synergyhilightImg.enabled = false;
-        }
     }
 
     public bool IsInitialized { get; private set; }
     public void Init(UpgradePanel upgradePanel) { panel = upgradePanel; IsInitialized = true; }
-
-    private void OnDisable()
-    {
-        StopHighlight();
-    }
-
-    // ────────────────────────────────────────────────────────────────
-    // 하이라이트
-    // ────────────────────────────────────────────────────────────────
-    public void ShowHighlight()
-    {
-        if (synergyhilightImg == null) return;
-        StopHighlight();
-        synergyhilightImg.enabled              = true;
-        synergyhilightImg.color                = new Color(1f, 1f, 1f, 1f);
-        synergyhilightImg.transform.localScale = _highlightOriginalScale;
-    }
-
-    public void HideHighlight()
-    {
-        StopHighlight();
-        if (synergyhilightImg) synergyhilightImg.enabled = false;
-    }
-
     public void PlayMergeShiny()
     {
         if (mergeShiny == null) return;
@@ -109,44 +75,6 @@ public class EquipSlot : MonoBehaviour,
         if (grandMergeNotiObj) grandMergeNotiObj.SetActive(false);
         if (starObjects != null)
             foreach (var s in starObjects) if (s != null) s.SetActive(false);
-    }
-
-    /// <summary>장착 확정 시 스케일업 + 페이드아웃 후 비활성화</summary>
-    public void PlayEquipEffect()
-    {
-        if (synergyhilightImg == null) return;
-        StopHighlight();
-        _highlightCoroutine = StartCoroutine(EquipEffectRoutine());
-    }
-
-    private void StopHighlight()
-    {
-        if (_highlightCoroutine != null) { StopCoroutine(_highlightCoroutine); _highlightCoroutine = null; }
-    }
-
-    private System.Collections.IEnumerator EquipEffectRoutine()
-    {
-        synergyhilightImg.enabled = true;
-        synergyhilightImg.color   = new Color(1f, 1f, 1f, 1f);
-        var t = synergyhilightImg.transform;
-        t.localScale = _highlightOriginalScale;
-
-        const float duration  = 0.45f;
-        const float scaleMult = 1.6f;
-        float elapsed = 0f;
-        while (elapsed < duration)
-        {
-            elapsed += Time.unscaledDeltaTime;
-            float f    = elapsed / duration;
-            float ease = 1f - (1f - f) * (1f - f); // ease-out quad
-            t.localScale            = _highlightOriginalScale * Mathf.LerpUnclamped(1f, scaleMult, ease);
-            synergyhilightImg.color = new Color(1f, 1f, 1f, Mathf.Lerp(1f, 0f, ease));
-            yield return null;
-        }
-
-        synergyhilightImg.enabled = false;
-        t.localScale              = _highlightOriginalScale;
-        _highlightCoroutine       = null;
     }
 
     // ────────────────────────────────────────────────────────────────

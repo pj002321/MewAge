@@ -53,6 +53,7 @@ public class WeaponPoint : MonoBehaviour
     private SpriteRenderer    _weaponSr;
     private TrailRenderer     _trail;
     private float             _baseCooldown;
+    private float             _staggerOffset;
     private float             _statMultiplier   = 1f;
     private float             _grogySpeedMult   = 1f;  // BossController 그로기
     private float             _skillSpeedMult   = 1f;  // 캐릭터 스킬 (SkillNormal / defaultBoost)
@@ -283,7 +284,7 @@ public class WeaponPoint : MonoBehaviour
 
         attackCooldown      = data.attackCooldown;
         _baseCooldown       = data.attackCooldown;
-        cooldownTimer       = 0f;
+        cooldownTimer       = _staggerOffset;
         _grogySpeedMult     = 1f;
         _skillSpeedMult     = 1f;
         _permanentSpeedMult = 1f;
@@ -372,8 +373,11 @@ public class WeaponPoint : MonoBehaviour
         }
     }
 
-    /// <summary>웨이브 시작 시 호출 — 쿨타임 타이머를 즉시 만료시켜 첫 공격을 지연 없이 수행합니다.</summary>
-    public void ReadyForWave() { if (cooldownTimer > 0f) cooldownTimer = 0f; }
+    /// <summary>WeaponManager가 근거리 무기에 순번별 공격 편차를 부여합니다.</summary>
+    public void SetMeleeStagger(float offset) => _staggerOffset = offset;
+
+    /// <summary>웨이브 시작 시 호출 — 쿨타임을 스태거 오프셋으로 설정해 첫 공격 순서를 유지합니다.</summary>
+    public void ReadyForWave() { cooldownTimer = _staggerOffset; }
 
     /// <summary>WeaponHighGradeSkill(Spin 타입) OnEquip에서 호출 — 공전 반경·속도 배율 적용.</summary>
     public void ApplySpinBoost(float radiusMult, float speedMult)
@@ -722,6 +726,14 @@ public class WeaponPoint : MonoBehaviour
                 ApplyShockwave(enemy.transform.position, damage * 0.5f);
                 break;
 
+            case "HIT_SPEAR":
+                _highGradeSkill?.DoSpearHit(enemy.transform.position, enemy);
+                break;
+
+            case "HIT_CLONE_TRAIL":
+                _highGradeSkill?.DoCloneTrail(transform.position, hitDir);
+                break;
+
             case "HIT_SPIN":
             {
                 if (!(_behaviour is WeaponSpinBehaviour spinBeh)) break;
@@ -781,6 +793,14 @@ public class WeaponPoint : MonoBehaviour
             case "HIT_SHOCK":
                 if (Random.value > Chance(0.40f)) break;
                 ApplyShockwave(boss.transform.position, damage * 0.5f);
+                break;
+
+            case "HIT_SPEAR":
+                _highGradeSkill?.DoSpearHit(boss.transform.position, null, boss);
+                break;
+
+            case "HIT_CLONE_TRAIL":
+                _highGradeSkill?.DoCloneTrail(transform.position, (Vector2)(boss.transform.position - transform.position).normalized);
                 break;
         }
     }

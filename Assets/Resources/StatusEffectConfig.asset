@@ -29,6 +29,7 @@ MonoBehaviour:
   - weaponId: ch1_l_0
     traitId: HIT_CLONE
     triggerChance: 0
+    skillOverride: 
     cloneProjectilePrefab: {fileID: 5416354146166037338, guid: 4b6593131c2483a40aa3e20ed07a62e6, type: 3}
     cloneOutTime: 0
     clonePauseTime: 0
@@ -42,9 +43,57 @@ MonoBehaviour:
     subProjectilePrefab: {fileID: 0}
     passiveBuffPct: 0
     passiveBuffVfxPrefab: {fileID: 0}
+    hitVfxPrefab: {fileID: 0}
+    p_stunDuration: 0
+    p_freezeThawDmg: 0
+    p_cloneSpeed: 0
+    p_cloneLifetime: 0
+    p_cloneScale: 0
+    p_cloneAlpha: 0
+    p_spreadAngle: 0
+    p_subDmgRatio: 0
+    p_subSpeedRatio: 0
+    p_slashPrefab: {fileID: 0}
+    p_slashDmgRatio: 0
+    p_slashSpeed: 0
+    p_spinRadiusMult: 0
+    p_spinSpeedMult: 0
+    p_spinCloneChance: 0
+    p_spinCloneRadius: 0
+    p_spinCloneSpeed: 0
+    p_spinCloneDuration: 0
+    p_spinCloneHitRadius: 0
+    p_spinCloneAlpha: 0
+    p_spinCloneMax: 0
+    p_shockRadius: 0
+    p_shockDmgRatio: 0
+    p_spikeTickDmg: 0
+    p_spikeTickInterval: 0
+    p_spikeDuration: 0
+    p_spikeDeathRadius: 0
+    p_spikeDeathDmg: 0
+    p_bindDuration: 0
+    p_groggySeconds: 0
+    p_spearPrefab: {fileID: 0}
+    p_spearLandingVfx: {fileID: 0}
+    p_spearDropHeight: 0
+    p_spearSideOffset: 0
+    p_spearSpeed: 0
+    p_spearDmgRatio: 0
+    p_spearHitRadius: 0
+    p_trailClonePrefab: {fileID: 0}
+    p_trailMarkerPrefab: {fileID: 0}
+    p_trailSpeed: 0
+    p_trailRange: 0
+    p_trailDmgRatio: 0
+    p_trailDuration: 0
+    p_trailSpawnInterval: 0
+    p_trailHitRadius: 0
+    p_trailCloneAlpha: 0
   - weaponId: CH1_L_0
     traitId: HIT_CLONE
     triggerChance: 0.25
+    skillOverride: HIT_CLONE_TRAIL
     cloneProjectilePrefab: {fileID: 5416354146166037338, guid: 4b6593131c2483a40aa3e20ed07a62e6, type: 3}
     cloneOutTime: 1
     clonePauseTime: 1
@@ -58,9 +107,57 @@ MonoBehaviour:
     subProjectilePrefab: {fileID: 0}
     passiveBuffPct: 0
     passiveBuffVfxPrefab: {fileID: 0}
+    hitVfxPrefab: {fileID: 0}
+    p_stunDuration: 0
+    p_freezeThawDmg: 0
+    p_cloneSpeed: 0
+    p_cloneLifetime: 0
+    p_cloneScale: 0
+    p_cloneAlpha: 0
+    p_spreadAngle: 0
+    p_subDmgRatio: 0
+    p_subSpeedRatio: 0
+    p_slashPrefab: {fileID: 0}
+    p_slashDmgRatio: 0
+    p_slashSpeed: 0
+    p_spinRadiusMult: 0
+    p_spinSpeedMult: 0
+    p_spinCloneChance: 0
+    p_spinCloneRadius: 0
+    p_spinCloneSpeed: 0
+    p_spinCloneDuration: 0
+    p_spinCloneHitRadius: 0
+    p_spinCloneAlpha: 0
+    p_spinCloneMax: 0
+    p_shockRadius: 0
+    p_shockDmgRatio: 0
+    p_spikeTickDmg: 0
+    p_spikeTickInterval: 0
+    p_spikeDuration: 0
+    p_spikeDeathRadius: 0
+    p_spikeDeathDmg: 0
+    p_bindDuration: 0
+    p_groggySeconds: 0
+    p_spearPrefab: {fileID: 0}
+    p_spearLandingVfx: {fileID: 0}
+    p_spearDropHeight: 0
+    p_spearSideOffset: 0
+    p_spearSpeed: 0
+    p_spearDmgRatio: 0
+    p_spearHitRadius: 0
+    p_trailClonePrefab: {fileID: 5416354146166037338, guid: 4b6593131c2483a40aa3e20ed07a62e6, type: 3}
+    p_trailMarkerPrefab: {fileID: 7968452166247501650, guid: 72ff6bce4833c97448526e304497dfa2, type: 3}
+    p_trailSpeed: 5
+    p_trailRange: 80
+    p_trailDmgRatio: 0
+    p_trailDuration: 0
+    p_trailSpawnInterval: 0
+    p_trailHitRadius: 0
+    p_trailCloneAlpha: 0
   - weaponId: CH1_M_2
     traitId: HIT_CLONE
     triggerChance: 0.25
+    skillOverride: HIT_CLONE_RETURN
     cloneProjectilePrefab: {fileID: 5416354146166037338, guid: 59b6c0b5db7e03e46904bc7a4c0bb865, type: 3}
     cloneOutTime: 1
     clonePauseTime: 1
@@ -74,9 +171,57 @@ MonoBehaviour:
     subProjectilePrefab: {fileID: 0}
     passiveBuffPct: 0
     passiveBuffVfxPrefab: {fileID: 0}
+    hitVfxPrefab: {fileID: 0}
+    p_stunDuration: 0
+    p_freezeThawDmg: 0
+    p_cloneSpeed: 0
+    p_cloneLifetime: 0
+    p_cloneScale: 0
+    p_cloneAlpha: 0
+    p_spreadAngle: 0
+    p_subDmgRatio: 0
+    p_subSpeedRatio: 0
+    p_slashPrefab: {fileID: 0}
+    p_slashDmgRatio: 0
+    p_slashSpeed: 0
+    p_spinRadiusMult: 0
+    p_spinSpeedMult: 0
+    p_spinCloneChance: 0
+    p_spinCloneRadius: 0
+    p_spinCloneSpeed: 0
+    p_spinCloneDuration: 0
+    p_spinCloneHitRadius: 0
+    p_spinCloneAlpha: 0
+    p_spinCloneMax: 0
+    p_shockRadius: 0
+    p_shockDmgRatio: 0
+    p_spikeTickDmg: 0
+    p_spikeTickInterval: 0
+    p_spikeDuration: 0
+    p_spikeDeathRadius: 0
+    p_spikeDeathDmg: 0
+    p_bindDuration: 0
+    p_groggySeconds: 0
+    p_spearPrefab: {fileID: 0}
+    p_spearLandingVfx: {fileID: 0}
+    p_spearDropHeight: 0
+    p_spearSideOffset: 0
+    p_spearSpeed: 0
+    p_spearDmgRatio: 0
+    p_spearHitRadius: 0
+    p_trailClonePrefab: {fileID: 5416354146166037338, guid: 59b6c0b5db7e03e46904bc7a4c0bb865, type: 3}
+    p_trailMarkerPrefab: {fileID: 7968452166247501650, guid: 72ff6bce4833c97448526e304497dfa2, type: 3}
+    p_trailSpeed: 0
+    p_trailRange: 0
+    p_trailDmgRatio: 0
+    p_trailDuration: 0
+    p_trailSpawnInterval: 0
+    p_trailHitRadius: 0
+    p_trailCloneAlpha: 0
   - weaponId: CH1_M_4
     traitId: BOSS_SPIKE
     triggerChance: 0.25
+    skillOverride: HIT_SPEAR
     cloneProjectilePrefab: {fileID: 0}
     cloneOutTime: 0
     clonePauseTime: 0
@@ -90,9 +235,57 @@ MonoBehaviour:
     subProjectilePrefab: {fileID: 0}
     passiveBuffPct: 0
     passiveBuffVfxPrefab: {fileID: 0}
+    hitVfxPrefab: {fileID: 0}
+    p_stunDuration: 0
+    p_freezeThawDmg: 0
+    p_cloneSpeed: 0
+    p_cloneLifetime: 0
+    p_cloneScale: 0
+    p_cloneAlpha: 0
+    p_spreadAngle: 0
+    p_subDmgRatio: 0
+    p_subSpeedRatio: 0
+    p_slashPrefab: {fileID: 0}
+    p_slashDmgRatio: 0
+    p_slashSpeed: 0
+    p_spinRadiusMult: 0
+    p_spinSpeedMult: 0
+    p_spinCloneChance: 0
+    p_spinCloneRadius: 0
+    p_spinCloneSpeed: 0
+    p_spinCloneDuration: 0
+    p_spinCloneHitRadius: 0
+    p_spinCloneAlpha: 0
+    p_spinCloneMax: 0
+    p_shockRadius: 0
+    p_shockDmgRatio: 0
+    p_spikeTickDmg: 0
+    p_spikeTickInterval: 0
+    p_spikeDuration: 0
+    p_spikeDeathRadius: 0
+    p_spikeDeathDmg: 0
+    p_bindDuration: 0
+    p_groggySeconds: 0
+    p_spearPrefab: {fileID: 6277426376135361209, guid: a3cfed915179faf49854d440de725343, type: 3}
+    p_spearLandingVfx: {fileID: 5416354146166037338, guid: 3bdfc47fae04ded4c9087b112e349e81, type: 3}
+    p_spearDropHeight: 20
+    p_spearSideOffset: 0
+    p_spearSpeed: 150
+    p_spearDmgRatio: 0
+    p_spearHitRadius: 10
+    p_trailClonePrefab: {fileID: 0}
+    p_trailMarkerPrefab: {fileID: 0}
+    p_trailSpeed: 0
+    p_trailRange: 0
+    p_trailDmgRatio: 0
+    p_trailDuration: 0
+    p_trailSpawnInterval: 0
+    p_trailHitRadius: 0
+    p_trailCloneAlpha: 0
   - weaponId: CH1_L_2
     traitId: HIT_ICE
     triggerChance: 0.15
+    skillOverride: 
     cloneProjectilePrefab: {fileID: 0}
     cloneOutTime: 0
     clonePauseTime: 0
@@ -106,9 +299,57 @@ MonoBehaviour:
     subProjectilePrefab: {fileID: 0}
     passiveBuffPct: 0
     passiveBuffVfxPrefab: {fileID: 0}
+    hitVfxPrefab: {fileID: 0}
+    p_stunDuration: 0
+    p_freezeThawDmg: 0
+    p_cloneSpeed: 0
+    p_cloneLifetime: 0
+    p_cloneScale: 0
+    p_cloneAlpha: 0
+    p_spreadAngle: 0
+    p_subDmgRatio: 0
+    p_subSpeedRatio: 0
+    p_slashPrefab: {fileID: 0}
+    p_slashDmgRatio: 0
+    p_slashSpeed: 0
+    p_spinRadiusMult: 0
+    p_spinSpeedMult: 0
+    p_spinCloneChance: 0
+    p_spinCloneRadius: 0
+    p_spinCloneSpeed: 0
+    p_spinCloneDuration: 0
+    p_spinCloneHitRadius: 0
+    p_spinCloneAlpha: 0
+    p_spinCloneMax: 0
+    p_shockRadius: 0
+    p_shockDmgRatio: 0
+    p_spikeTickDmg: 0
+    p_spikeTickInterval: 0
+    p_spikeDuration: 0
+    p_spikeDeathRadius: 0
+    p_spikeDeathDmg: 0
+    p_bindDuration: 0
+    p_groggySeconds: 0
+    p_spearPrefab: {fileID: 0}
+    p_spearLandingVfx: {fileID: 0}
+    p_spearDropHeight: 0
+    p_spearSideOffset: 0
+    p_spearSpeed: 0
+    p_spearDmgRatio: 0
+    p_spearHitRadius: 0
+    p_trailClonePrefab: {fileID: 0}
+    p_trailMarkerPrefab: {fileID: 0}
+    p_trailSpeed: 0
+    p_trailRange: 0
+    p_trailDmgRatio: 0
+    p_trailDuration: 0
+    p_trailSpawnInterval: 0
+    p_trailHitRadius: 0
+    p_trailCloneAlpha: 0
   - weaponId: CH1_L_3
     traitId: HIT_SHOCK
     triggerChance: 0.15
+    skillOverride: 
     cloneProjectilePrefab: {fileID: 6277426376135361209, guid: 051440e49087d2842b3d033a3a90c191, type: 3}
     cloneOutTime: 0
     clonePauseTime: 0
@@ -122,9 +363,57 @@ MonoBehaviour:
     subProjectilePrefab: {fileID: 0}
     passiveBuffPct: 0
     passiveBuffVfxPrefab: {fileID: 0}
+    hitVfxPrefab: {fileID: 0}
+    p_stunDuration: 0
+    p_freezeThawDmg: 0
+    p_cloneSpeed: 0
+    p_cloneLifetime: 0
+    p_cloneScale: 0
+    p_cloneAlpha: 0
+    p_spreadAngle: 0
+    p_subDmgRatio: 0
+    p_subSpeedRatio: 0
+    p_slashPrefab: {fileID: 0}
+    p_slashDmgRatio: 0
+    p_slashSpeed: 0
+    p_spinRadiusMult: 0
+    p_spinSpeedMult: 0
+    p_spinCloneChance: 0
+    p_spinCloneRadius: 0
+    p_spinCloneSpeed: 0
+    p_spinCloneDuration: 0
+    p_spinCloneHitRadius: 0
+    p_spinCloneAlpha: 0
+    p_spinCloneMax: 0
+    p_shockRadius: 0
+    p_shockDmgRatio: 0
+    p_spikeTickDmg: 0
+    p_spikeTickInterval: 0
+    p_spikeDuration: 0
+    p_spikeDeathRadius: 0
+    p_spikeDeathDmg: 0
+    p_bindDuration: 0
+    p_groggySeconds: 0
+    p_spearPrefab: {fileID: 0}
+    p_spearLandingVfx: {fileID: 0}
+    p_spearDropHeight: 0
+    p_spearSideOffset: 0
+    p_spearSpeed: 0
+    p_spearDmgRatio: 0
+    p_spearHitRadius: 0
+    p_trailClonePrefab: {fileID: 0}
+    p_trailMarkerPrefab: {fileID: 0}
+    p_trailSpeed: 0
+    p_trailRange: 0
+    p_trailDmgRatio: 0
+    p_trailDuration: 0
+    p_trailSpawnInterval: 0
+    p_trailHitRadius: 0
+    p_trailCloneAlpha: 0
   - weaponId: CH1_L_4
     traitId: HIT_STUN
     triggerChance: 0.15
+    skillOverride: 
     cloneProjectilePrefab: {fileID: 0}
     cloneOutTime: 0
     clonePauseTime: 0
@@ -138,9 +427,57 @@ MonoBehaviour:
     subProjectilePrefab: {fileID: 0}
     passiveBuffPct: 0
     passiveBuffVfxPrefab: {fileID: 0}
+    hitVfxPrefab: {fileID: 0}
+    p_stunDuration: 0
+    p_freezeThawDmg: 0
+    p_cloneSpeed: 0
+    p_cloneLifetime: 0
+    p_cloneScale: 0
+    p_cloneAlpha: 0
+    p_spreadAngle: 0
+    p_subDmgRatio: 0
+    p_subSpeedRatio: 0
+    p_slashPrefab: {fileID: 0}
+    p_slashDmgRatio: 0
+    p_slashSpeed: 0
+    p_spinRadiusMult: 0
+    p_spinSpeedMult: 0
+    p_spinCloneChance: 0
+    p_spinCloneRadius: 0
+    p_spinCloneSpeed: 0
+    p_spinCloneDuration: 0
+    p_spinCloneHitRadius: 0
+    p_spinCloneAlpha: 0
+    p_spinCloneMax: 0
+    p_shockRadius: 0
+    p_shockDmgRatio: 0
+    p_spikeTickDmg: 0
+    p_spikeTickInterval: 0
+    p_spikeDuration: 0
+    p_spikeDeathRadius: 0
+    p_spikeDeathDmg: 0
+    p_bindDuration: 0
+    p_groggySeconds: 0
+    p_spearPrefab: {fileID: 0}
+    p_spearLandingVfx: {fileID: 0}
+    p_spearDropHeight: 0
+    p_spearSideOffset: 0
+    p_spearSpeed: 0
+    p_spearDmgRatio: 0
+    p_spearHitRadius: 0
+    p_trailClonePrefab: {fileID: 0}
+    p_trailMarkerPrefab: {fileID: 0}
+    p_trailSpeed: 0
+    p_trailRange: 0
+    p_trailDmgRatio: 0
+    p_trailDuration: 0
+    p_trailSpawnInterval: 0
+    p_trailHitRadius: 0
+    p_trailCloneAlpha: 0
   - weaponId: CH1_M_1
     traitId: BOSS_BIND
     triggerChance: 1
+    skillOverride: 
     cloneProjectilePrefab: {fileID: 0}
     cloneOutTime: 0
     clonePauseTime: 0
@@ -154,9 +491,57 @@ MonoBehaviour:
     subProjectilePrefab: {fileID: 0}
     passiveBuffPct: 5
     passiveBuffVfxPrefab: {fileID: 6239690835715291398, guid: c8f520a64e088c24a91f850c1f37104e, type: 3}
+    hitVfxPrefab: {fileID: 0}
+    p_stunDuration: 0
+    p_freezeThawDmg: 0
+    p_cloneSpeed: 0
+    p_cloneLifetime: 0
+    p_cloneScale: 0
+    p_cloneAlpha: 0
+    p_spreadAngle: 0
+    p_subDmgRatio: 0
+    p_subSpeedRatio: 0
+    p_slashPrefab: {fileID: 0}
+    p_slashDmgRatio: 0
+    p_slashSpeed: 0
+    p_spinRadiusMult: 0
+    p_spinSpeedMult: 0
+    p_spinCloneChance: 0
+    p_spinCloneRadius: 0
+    p_spinCloneSpeed: 0
+    p_spinCloneDuration: 0
+    p_spinCloneHitRadius: 0
+    p_spinCloneAlpha: 0
+    p_spinCloneMax: 0
+    p_shockRadius: 0
+    p_shockDmgRatio: 0
+    p_spikeTickDmg: 0
+    p_spikeTickInterval: 0
+    p_spikeDuration: 0
+    p_spikeDeathRadius: 0
+    p_spikeDeathDmg: 0
+    p_bindDuration: 0
+    p_groggySeconds: 0
+    p_spearPrefab: {fileID: 0}
+    p_spearLandingVfx: {fileID: 0}
+    p_spearDropHeight: 0
+    p_spearSideOffset: 0
+    p_spearSpeed: 0
+    p_spearDmgRatio: 0
+    p_spearHitRadius: 0
+    p_trailClonePrefab: {fileID: 0}
+    p_trailMarkerPrefab: {fileID: 0}
+    p_trailSpeed: 0
+    p_trailRange: 0
+    p_trailDmgRatio: 0
+    p_trailDuration: 0
+    p_trailSpawnInterval: 0
+    p_trailHitRadius: 0
+    p_trailCloneAlpha: 0
   - weaponId: CH1_L_1
     traitId: HIT_SPIN
     triggerChance: 0
+    skillOverride: 
     cloneProjectilePrefab: {fileID: 0}
     cloneOutTime: 0
     clonePauseTime: 0
@@ -170,9 +555,57 @@ MonoBehaviour:
     subProjectilePrefab: {fileID: 0}
     passiveBuffPct: 0
     passiveBuffVfxPrefab: {fileID: 0}
+    hitVfxPrefab: {fileID: 0}
+    p_stunDuration: 0
+    p_freezeThawDmg: 0
+    p_cloneSpeed: 0
+    p_cloneLifetime: 0
+    p_cloneScale: 0
+    p_cloneAlpha: 0
+    p_spreadAngle: 0
+    p_subDmgRatio: 0
+    p_subSpeedRatio: 0
+    p_slashPrefab: {fileID: 0}
+    p_slashDmgRatio: 0
+    p_slashSpeed: 0
+    p_spinRadiusMult: 0
+    p_spinSpeedMult: 0
+    p_spinCloneChance: 0
+    p_spinCloneRadius: 0
+    p_spinCloneSpeed: 0
+    p_spinCloneDuration: 0
+    p_spinCloneHitRadius: 0
+    p_spinCloneAlpha: 0
+    p_spinCloneMax: 0
+    p_shockRadius: 0
+    p_shockDmgRatio: 0
+    p_spikeTickDmg: 0
+    p_spikeTickInterval: 0
+    p_spikeDuration: 0
+    p_spikeDeathRadius: 0
+    p_spikeDeathDmg: 0
+    p_bindDuration: 0
+    p_groggySeconds: 0
+    p_spearPrefab: {fileID: 0}
+    p_spearLandingVfx: {fileID: 0}
+    p_spearDropHeight: 0
+    p_spearSideOffset: 0
+    p_spearSpeed: 0
+    p_spearDmgRatio: 0
+    p_spearHitRadius: 0
+    p_trailClonePrefab: {fileID: 0}
+    p_trailMarkerPrefab: {fileID: 0}
+    p_trailSpeed: 0
+    p_trailRange: 0
+    p_trailDmgRatio: 0
+    p_trailDuration: 0
+    p_trailSpawnInterval: 0
+    p_trailHitRadius: 0
+    p_trailCloneAlpha: 0
   - weaponId: CH1_M_0
     traitId: HIT_CLONE_BURST
     triggerChance: 0.25
+    skillOverride: 
     cloneProjectilePrefab: {fileID: 6277426376135361209, guid: 0f39f5577add846409b7586f56b2fcd3, type: 3}
     cloneOutTime: 0
     clonePauseTime: 0
@@ -186,9 +619,57 @@ MonoBehaviour:
     subProjectilePrefab: {fileID: 0}
     passiveBuffPct: 0
     passiveBuffVfxPrefab: {fileID: 0}
+    hitVfxPrefab: {fileID: 0}
+    p_stunDuration: 0
+    p_freezeThawDmg: 0
+    p_cloneSpeed: 0
+    p_cloneLifetime: 0
+    p_cloneScale: 0
+    p_cloneAlpha: 0
+    p_spreadAngle: 0
+    p_subDmgRatio: 0
+    p_subSpeedRatio: 0
+    p_slashPrefab: {fileID: 0}
+    p_slashDmgRatio: 0
+    p_slashSpeed: 0
+    p_spinRadiusMult: 0
+    p_spinSpeedMult: 0
+    p_spinCloneChance: 0
+    p_spinCloneRadius: 0
+    p_spinCloneSpeed: 0
+    p_spinCloneDuration: 0
+    p_spinCloneHitRadius: 0
+    p_spinCloneAlpha: 0
+    p_spinCloneMax: 0
+    p_shockRadius: 0
+    p_shockDmgRatio: 0
+    p_spikeTickDmg: 0
+    p_spikeTickInterval: 0
+    p_spikeDuration: 0
+    p_spikeDeathRadius: 0
+    p_spikeDeathDmg: 0
+    p_bindDuration: 0
+    p_groggySeconds: 0
+    p_spearPrefab: {fileID: 0}
+    p_spearLandingVfx: {fileID: 0}
+    p_spearDropHeight: 0
+    p_spearSideOffset: 0
+    p_spearSpeed: 0
+    p_spearDmgRatio: 0
+    p_spearHitRadius: 0
+    p_trailClonePrefab: {fileID: 0}
+    p_trailMarkerPrefab: {fileID: 0}
+    p_trailSpeed: 0
+    p_trailRange: 0
+    p_trailDmgRatio: 0
+    p_trailDuration: 0
+    p_trailSpawnInterval: 0
+    p_trailHitRadius: 0
+    p_trailCloneAlpha: 0
   - weaponId: CH2_L_0
     traitId: HIT_CLONE_BURST
     triggerChance: 0.25
+    skillOverride: 
     cloneProjectilePrefab: {fileID: 6277426376135361209, guid: f836785b5f326f348a38f3ef2dcf0391, type: 3}
     cloneOutTime: 0
     clonePauseTime: 0
@@ -202,9 +683,57 @@ MonoBehaviour:
     subProjectilePrefab: {fileID: 0}
     passiveBuffPct: 0
     passiveBuffVfxPrefab: {fileID: 0}
+    hitVfxPrefab: {fileID: 0}
+    p_stunDuration: 0
+    p_freezeThawDmg: 0
+    p_cloneSpeed: 0
+    p_cloneLifetime: 0
+    p_cloneScale: 0
+    p_cloneAlpha: 0
+    p_spreadAngle: 0
+    p_subDmgRatio: 0
+    p_subSpeedRatio: 0
+    p_slashPrefab: {fileID: 0}
+    p_slashDmgRatio: 0
+    p_slashSpeed: 0
+    p_spinRadiusMult: 0
+    p_spinSpeedMult: 0
+    p_spinCloneChance: 0
+    p_spinCloneRadius: 0
+    p_spinCloneSpeed: 0
+    p_spinCloneDuration: 0
+    p_spinCloneHitRadius: 0
+    p_spinCloneAlpha: 0
+    p_spinCloneMax: 0
+    p_shockRadius: 0
+    p_shockDmgRatio: 0
+    p_spikeTickDmg: 0
+    p_spikeTickInterval: 0
+    p_spikeDuration: 0
+    p_spikeDeathRadius: 0
+    p_spikeDeathDmg: 0
+    p_bindDuration: 0
+    p_groggySeconds: 0
+    p_spearPrefab: {fileID: 0}
+    p_spearLandingVfx: {fileID: 0}
+    p_spearDropHeight: 0
+    p_spearSideOffset: 0
+    p_spearSpeed: 0
+    p_spearDmgRatio: 0
+    p_spearHitRadius: 0
+    p_trailClonePrefab: {fileID: 0}
+    p_trailMarkerPrefab: {fileID: 0}
+    p_trailSpeed: 0
+    p_trailRange: 0
+    p_trailDmgRatio: 0
+    p_trailDuration: 0
+    p_trailSpawnInterval: 0
+    p_trailHitRadius: 0
+    p_trailCloneAlpha: 0
   - weaponId: CH2_L_1
     traitId: HIT_CLONE_RETURN
     triggerChance: 0.25
+    skillOverride: 
     cloneProjectilePrefab: {fileID: 5416354146166037338, guid: b30c391b08cf0ae468733c432f26c2e0, type: 3}
     cloneOutTime: 1
     clonePauseTime: 1
@@ -218,9 +747,57 @@ MonoBehaviour:
     subProjectilePrefab: {fileID: 0}
     passiveBuffPct: 0
     passiveBuffVfxPrefab: {fileID: 0}
+    hitVfxPrefab: {fileID: 0}
+    p_stunDuration: 0
+    p_freezeThawDmg: 0
+    p_cloneSpeed: 0
+    p_cloneLifetime: 0
+    p_cloneScale: 0
+    p_cloneAlpha: 0
+    p_spreadAngle: 0
+    p_subDmgRatio: 0
+    p_subSpeedRatio: 0
+    p_slashPrefab: {fileID: 0}
+    p_slashDmgRatio: 0
+    p_slashSpeed: 0
+    p_spinRadiusMult: 0
+    p_spinSpeedMult: 0
+    p_spinCloneChance: 0
+    p_spinCloneRadius: 0
+    p_spinCloneSpeed: 0
+    p_spinCloneDuration: 0
+    p_spinCloneHitRadius: 0
+    p_spinCloneAlpha: 0
+    p_spinCloneMax: 0
+    p_shockRadius: 0
+    p_shockDmgRatio: 0
+    p_spikeTickDmg: 0
+    p_spikeTickInterval: 0
+    p_spikeDuration: 0
+    p_spikeDeathRadius: 0
+    p_spikeDeathDmg: 0
+    p_bindDuration: 0
+    p_groggySeconds: 0
+    p_spearPrefab: {fileID: 0}
+    p_spearLandingVfx: {fileID: 0}
+    p_spearDropHeight: 0
+    p_spearSideOffset: 0
+    p_spearSpeed: 0
+    p_spearDmgRatio: 0
+    p_spearHitRadius: 0
+    p_trailClonePrefab: {fileID: 0}
+    p_trailMarkerPrefab: {fileID: 0}
+    p_trailSpeed: 0
+    p_trailRange: 0
+    p_trailDmgRatio: 0
+    p_trailDuration: 0
+    p_trailSpawnInterval: 0
+    p_trailHitRadius: 0
+    p_trailCloneAlpha: 0
   - weaponId: CH2_L_2
     traitId: HIT_CLONE_RETURN
     triggerChance: 0.25
+    skillOverride: 
     cloneProjectilePrefab: {fileID: 5416354146166037338, guid: a6f4314ef07903c43a01fa7ff09e90a1, type: 3}
     cloneOutTime: 1
     clonePauseTime: 1
@@ -234,9 +811,57 @@ MonoBehaviour:
     subProjectilePrefab: {fileID: 0}
     passiveBuffPct: 0
     passiveBuffVfxPrefab: {fileID: 0}
+    hitVfxPrefab: {fileID: 0}
+    p_stunDuration: 0
+    p_freezeThawDmg: 0
+    p_cloneSpeed: 0
+    p_cloneLifetime: 0
+    p_cloneScale: 0
+    p_cloneAlpha: 0
+    p_spreadAngle: 0
+    p_subDmgRatio: 0
+    p_subSpeedRatio: 0
+    p_slashPrefab: {fileID: 0}
+    p_slashDmgRatio: 0
+    p_slashSpeed: 0
+    p_spinRadiusMult: 0
+    p_spinSpeedMult: 0
+    p_spinCloneChance: 0
+    p_spinCloneRadius: 0
+    p_spinCloneSpeed: 0
+    p_spinCloneDuration: 0
+    p_spinCloneHitRadius: 0
+    p_spinCloneAlpha: 0
+    p_spinCloneMax: 0
+    p_shockRadius: 0
+    p_shockDmgRatio: 0
+    p_spikeTickDmg: 0
+    p_spikeTickInterval: 0
+    p_spikeDuration: 0
+    p_spikeDeathRadius: 0
+    p_spikeDeathDmg: 0
+    p_bindDuration: 0
+    p_groggySeconds: 0
+    p_spearPrefab: {fileID: 0}
+    p_spearLandingVfx: {fileID: 0}
+    p_spearDropHeight: 0
+    p_spearSideOffset: 0
+    p_spearSpeed: 0
+    p_spearDmgRatio: 0
+    p_spearHitRadius: 0
+    p_trailClonePrefab: {fileID: 0}
+    p_trailMarkerPrefab: {fileID: 0}
+    p_trailSpeed: 0
+    p_trailRange: 0
+    p_trailDmgRatio: 0
+    p_trailDuration: 0
+    p_trailSpawnInterval: 0
+    p_trailHitRadius: 0
+    p_trailCloneAlpha: 0
   - weaponId: CH2_M_0
     traitId: HIT_STUN
     triggerChance: 0.25
+    skillOverride: 
     cloneProjectilePrefab: {fileID: 0}
     cloneOutTime: 0
     clonePauseTime: 0
@@ -250,9 +875,57 @@ MonoBehaviour:
     subProjectilePrefab: {fileID: 0}
     passiveBuffPct: 0
     passiveBuffVfxPrefab: {fileID: 0}
+    hitVfxPrefab: {fileID: 0}
+    p_stunDuration: 0
+    p_freezeThawDmg: 0
+    p_cloneSpeed: 0
+    p_cloneLifetime: 0
+    p_cloneScale: 0
+    p_cloneAlpha: 0
+    p_spreadAngle: 0
+    p_subDmgRatio: 0
+    p_subSpeedRatio: 0
+    p_slashPrefab: {fileID: 0}
+    p_slashDmgRatio: 0
+    p_slashSpeed: 0
+    p_spinRadiusMult: 0
+    p_spinSpeedMult: 0
+    p_spinCloneChance: 0
+    p_spinCloneRadius: 0
+    p_spinCloneSpeed: 0
+    p_spinCloneDuration: 0
+    p_spinCloneHitRadius: 0
+    p_spinCloneAlpha: 0
+    p_spinCloneMax: 0
+    p_shockRadius: 0
+    p_shockDmgRatio: 0
+    p_spikeTickDmg: 0
+    p_spikeTickInterval: 0
+    p_spikeDuration: 0
+    p_spikeDeathRadius: 0
+    p_spikeDeathDmg: 0
+    p_bindDuration: 0
+    p_groggySeconds: 0
+    p_spearPrefab: {fileID: 0}
+    p_spearLandingVfx: {fileID: 0}
+    p_spearDropHeight: 0
+    p_spearSideOffset: 0
+    p_spearSpeed: 0
+    p_spearDmgRatio: 0
+    p_spearHitRadius: 0
+    p_trailClonePrefab: {fileID: 0}
+    p_trailMarkerPrefab: {fileID: 0}
+    p_trailSpeed: 0
+    p_trailRange: 0
+    p_trailDmgRatio: 0
+    p_trailDuration: 0
+    p_trailSpawnInterval: 0
+    p_trailHitRadius: 0
+    p_trailCloneAlpha: 0
   - weaponId: CH2_M_2
     traitId: HIT_CLONE_CROSS
     triggerChance: 0.25
+    skillOverride: 
     cloneProjectilePrefab: {fileID: 5416354146166037338, guid: 6d3aff62b446c144d9a5e8bd626c4b63, type: 3}
     cloneOutTime: 1
     clonePauseTime: 1
@@ -266,9 +939,57 @@ MonoBehaviour:
     subProjectilePrefab: {fileID: 0}
     passiveBuffPct: 0
     passiveBuffVfxPrefab: {fileID: 0}
+    hitVfxPrefab: {fileID: 0}
+    p_stunDuration: 0
+    p_freezeThawDmg: 0
+    p_cloneSpeed: 0
+    p_cloneLifetime: 0
+    p_cloneScale: 0
+    p_cloneAlpha: 0
+    p_spreadAngle: 0
+    p_subDmgRatio: 0
+    p_subSpeedRatio: 0
+    p_slashPrefab: {fileID: 0}
+    p_slashDmgRatio: 0
+    p_slashSpeed: 0
+    p_spinRadiusMult: 0
+    p_spinSpeedMult: 0
+    p_spinCloneChance: 0
+    p_spinCloneRadius: 0
+    p_spinCloneSpeed: 0
+    p_spinCloneDuration: 0
+    p_spinCloneHitRadius: 0
+    p_spinCloneAlpha: 0
+    p_spinCloneMax: 0
+    p_shockRadius: 0
+    p_shockDmgRatio: 0
+    p_spikeTickDmg: 0
+    p_spikeTickInterval: 0
+    p_spikeDuration: 0
+    p_spikeDeathRadius: 0
+    p_spikeDeathDmg: 0
+    p_bindDuration: 0
+    p_groggySeconds: 0
+    p_spearPrefab: {fileID: 0}
+    p_spearLandingVfx: {fileID: 0}
+    p_spearDropHeight: 0
+    p_spearSideOffset: 0
+    p_spearSpeed: 0
+    p_spearDmgRatio: 0
+    p_spearHitRadius: 0
+    p_trailClonePrefab: {fileID: 0}
+    p_trailMarkerPrefab: {fileID: 0}
+    p_trailSpeed: 0
+    p_trailRange: 0
+    p_trailDmgRatio: 0
+    p_trailDuration: 0
+    p_trailSpawnInterval: 0
+    p_trailHitRadius: 0
+    p_trailCloneAlpha: 0
   - weaponId: CH2_M_4
     traitId: BOSS_GROGY
     triggerChance: 0.25
+    skillOverride: 
     cloneProjectilePrefab: {fileID: 0}
     cloneOutTime: 0
     clonePauseTime: 0
@@ -282,9 +1003,57 @@ MonoBehaviour:
     subProjectilePrefab: {fileID: 0}
     passiveBuffPct: 0
     passiveBuffVfxPrefab: {fileID: 0}
+    hitVfxPrefab: {fileID: 0}
+    p_stunDuration: 0
+    p_freezeThawDmg: 0
+    p_cloneSpeed: 0
+    p_cloneLifetime: 0
+    p_cloneScale: 0
+    p_cloneAlpha: 0
+    p_spreadAngle: 0
+    p_subDmgRatio: 0
+    p_subSpeedRatio: 0
+    p_slashPrefab: {fileID: 0}
+    p_slashDmgRatio: 0
+    p_slashSpeed: 0
+    p_spinRadiusMult: 0
+    p_spinSpeedMult: 0
+    p_spinCloneChance: 0
+    p_spinCloneRadius: 0
+    p_spinCloneSpeed: 0
+    p_spinCloneDuration: 0
+    p_spinCloneHitRadius: 0
+    p_spinCloneAlpha: 0
+    p_spinCloneMax: 0
+    p_shockRadius: 0
+    p_shockDmgRatio: 0
+    p_spikeTickDmg: 0
+    p_spikeTickInterval: 0
+    p_spikeDuration: 0
+    p_spikeDeathRadius: 0
+    p_spikeDeathDmg: 0
+    p_bindDuration: 0
+    p_groggySeconds: 0
+    p_spearPrefab: {fileID: 0}
+    p_spearLandingVfx: {fileID: 0}
+    p_spearDropHeight: 0
+    p_spearSideOffset: 0
+    p_spearSpeed: 0
+    p_spearDmgRatio: 0
+    p_spearHitRadius: 0
+    p_trailClonePrefab: {fileID: 0}
+    p_trailMarkerPrefab: {fileID: 0}
+    p_trailSpeed: 0
+    p_trailRange: 0
+    p_trailDmgRatio: 0
+    p_trailDuration: 0
+    p_trailSpawnInterval: 0
+    p_trailHitRadius: 0
+    p_trailCloneAlpha: 0
   - weaponId: CH1_M_3
     traitId: SHOOT_SUB
     triggerChance: 0.25
+    skillOverride: SHOOT_SUB
     cloneProjectilePrefab: {fileID: 0}
     cloneOutTime: 0
     clonePauseTime: 0
@@ -298,9 +1067,57 @@ MonoBehaviour:
     subProjectilePrefab: {fileID: 6277426376135361209, guid: 1344441c4f5be5740a2657a7842b3453, type: 3}
     passiveBuffPct: 0
     passiveBuffVfxPrefab: {fileID: 0}
+    hitVfxPrefab: {fileID: 0}
+    p_stunDuration: 0
+    p_freezeThawDmg: 0
+    p_cloneSpeed: 0
+    p_cloneLifetime: 0
+    p_cloneScale: 0
+    p_cloneAlpha: 0
+    p_spreadAngle: 0
+    p_subDmgRatio: 0
+    p_subSpeedRatio: 0
+    p_slashPrefab: {fileID: 0}
+    p_slashDmgRatio: 0
+    p_slashSpeed: 0
+    p_spinRadiusMult: 0
+    p_spinSpeedMult: 0
+    p_spinCloneChance: 0
+    p_spinCloneRadius: 0
+    p_spinCloneSpeed: 0
+    p_spinCloneDuration: 0
+    p_spinCloneHitRadius: 0
+    p_spinCloneAlpha: 0
+    p_spinCloneMax: 0
+    p_shockRadius: 0
+    p_shockDmgRatio: 0
+    p_spikeTickDmg: 0
+    p_spikeTickInterval: 0
+    p_spikeDuration: 0
+    p_spikeDeathRadius: 0
+    p_spikeDeathDmg: 0
+    p_bindDuration: 0
+    p_groggySeconds: 0
+    p_spearPrefab: {fileID: 6277426376135361209, guid: a3cfed915179faf49854d440de725343, type: 3}
+    p_spearLandingVfx: {fileID: 0}
+    p_spearDropHeight: 20
+    p_spearSideOffset: 0
+    p_spearSpeed: 30
+    p_spearDmgRatio: 0
+    p_spearHitRadius: 10
+    p_trailClonePrefab: {fileID: 0}
+    p_trailMarkerPrefab: {fileID: 0}
+    p_trailSpeed: 0
+    p_trailRange: 0
+    p_trailDmgRatio: 0
+    p_trailDuration: 0
+    p_trailSpawnInterval: 0
+    p_trailHitRadius: 0
+    p_trailCloneAlpha: 0
   - weaponId: CH2_L_3
     traitId: SHOOT_PIERCE
     triggerChance: 0.25
+    skillOverride: 
     cloneProjectilePrefab: {fileID: 0}
     cloneOutTime: 0
     clonePauseTime: 0
@@ -314,9 +1131,57 @@ MonoBehaviour:
     subProjectilePrefab: {fileID: 0}
     passiveBuffPct: 0
     passiveBuffVfxPrefab: {fileID: 0}
+    hitVfxPrefab: {fileID: 0}
+    p_stunDuration: 0
+    p_freezeThawDmg: 0
+    p_cloneSpeed: 0
+    p_cloneLifetime: 0
+    p_cloneScale: 0
+    p_cloneAlpha: 0
+    p_spreadAngle: 0
+    p_subDmgRatio: 0
+    p_subSpeedRatio: 0
+    p_slashPrefab: {fileID: 0}
+    p_slashDmgRatio: 0
+    p_slashSpeed: 0
+    p_spinRadiusMult: 0
+    p_spinSpeedMult: 0
+    p_spinCloneChance: 0
+    p_spinCloneRadius: 0
+    p_spinCloneSpeed: 0
+    p_spinCloneDuration: 0
+    p_spinCloneHitRadius: 0
+    p_spinCloneAlpha: 0
+    p_spinCloneMax: 0
+    p_shockRadius: 0
+    p_shockDmgRatio: 0
+    p_spikeTickDmg: 0
+    p_spikeTickInterval: 0
+    p_spikeDuration: 0
+    p_spikeDeathRadius: 0
+    p_spikeDeathDmg: 0
+    p_bindDuration: 0
+    p_groggySeconds: 0
+    p_spearPrefab: {fileID: 0}
+    p_spearLandingVfx: {fileID: 0}
+    p_spearDropHeight: 0
+    p_spearSideOffset: 0
+    p_spearSpeed: 0
+    p_spearDmgRatio: 0
+    p_spearHitRadius: 0
+    p_trailClonePrefab: {fileID: 0}
+    p_trailMarkerPrefab: {fileID: 0}
+    p_trailSpeed: 0
+    p_trailRange: 0
+    p_trailDmgRatio: 0
+    p_trailDuration: 0
+    p_trailSpawnInterval: 0
+    p_trailHitRadius: 0
+    p_trailCloneAlpha: 0
   - weaponId: CH2_L_4
     traitId: SHOOT_WAVE
     triggerChance: 0.25
+    skillOverride: 
     cloneProjectilePrefab: {fileID: 0}
     cloneOutTime: 0
     clonePauseTime: 0
@@ -330,9 +1195,57 @@ MonoBehaviour:
     subProjectilePrefab: {fileID: 0}
     passiveBuffPct: 0
     passiveBuffVfxPrefab: {fileID: 0}
+    hitVfxPrefab: {fileID: 0}
+    p_stunDuration: 0
+    p_freezeThawDmg: 0
+    p_cloneSpeed: 0
+    p_cloneLifetime: 0
+    p_cloneScale: 0
+    p_cloneAlpha: 0
+    p_spreadAngle: 0
+    p_subDmgRatio: 0
+    p_subSpeedRatio: 0
+    p_slashPrefab: {fileID: 0}
+    p_slashDmgRatio: 0
+    p_slashSpeed: 0
+    p_spinRadiusMult: 0
+    p_spinSpeedMult: 0
+    p_spinCloneChance: 0
+    p_spinCloneRadius: 0
+    p_spinCloneSpeed: 0
+    p_spinCloneDuration: 0
+    p_spinCloneHitRadius: 0
+    p_spinCloneAlpha: 0
+    p_spinCloneMax: 0
+    p_shockRadius: 0
+    p_shockDmgRatio: 0
+    p_spikeTickDmg: 0
+    p_spikeTickInterval: 0
+    p_spikeDuration: 0
+    p_spikeDeathRadius: 0
+    p_spikeDeathDmg: 0
+    p_bindDuration: 0
+    p_groggySeconds: 0
+    p_spearPrefab: {fileID: 0}
+    p_spearLandingVfx: {fileID: 0}
+    p_spearDropHeight: 0
+    p_spearSideOffset: 0
+    p_spearSpeed: 0
+    p_spearDmgRatio: 0
+    p_spearHitRadius: 0
+    p_trailClonePrefab: {fileID: 0}
+    p_trailMarkerPrefab: {fileID: 0}
+    p_trailSpeed: 0
+    p_trailRange: 0
+    p_trailDmgRatio: 0
+    p_trailDuration: 0
+    p_trailSpawnInterval: 0
+    p_trailHitRadius: 0
+    p_trailCloneAlpha: 0
   - weaponId: CH2_M_1
     traitId: SHOOT_WAVE
     triggerChance: 0.25
+    skillOverride: 
     cloneProjectilePrefab: {fileID: 0}
     cloneOutTime: 0
     clonePauseTime: 0
@@ -346,9 +1259,57 @@ MonoBehaviour:
     subProjectilePrefab: {fileID: 0}
     passiveBuffPct: 0
     passiveBuffVfxPrefab: {fileID: 0}
+    hitVfxPrefab: {fileID: 0}
+    p_stunDuration: 0
+    p_freezeThawDmg: 0
+    p_cloneSpeed: 0
+    p_cloneLifetime: 0
+    p_cloneScale: 0
+    p_cloneAlpha: 0
+    p_spreadAngle: 0
+    p_subDmgRatio: 0
+    p_subSpeedRatio: 0
+    p_slashPrefab: {fileID: 0}
+    p_slashDmgRatio: 0
+    p_slashSpeed: 0
+    p_spinRadiusMult: 0
+    p_spinSpeedMult: 0
+    p_spinCloneChance: 0
+    p_spinCloneRadius: 0
+    p_spinCloneSpeed: 0
+    p_spinCloneDuration: 0
+    p_spinCloneHitRadius: 0
+    p_spinCloneAlpha: 0
+    p_spinCloneMax: 0
+    p_shockRadius: 0
+    p_shockDmgRatio: 0
+    p_spikeTickDmg: 0
+    p_spikeTickInterval: 0
+    p_spikeDuration: 0
+    p_spikeDeathRadius: 0
+    p_spikeDeathDmg: 0
+    p_bindDuration: 0
+    p_groggySeconds: 0
+    p_spearPrefab: {fileID: 0}
+    p_spearLandingVfx: {fileID: 0}
+    p_spearDropHeight: 0
+    p_spearSideOffset: 0
+    p_spearSpeed: 0
+    p_spearDmgRatio: 0
+    p_spearHitRadius: 0
+    p_trailClonePrefab: {fileID: 0}
+    p_trailMarkerPrefab: {fileID: 0}
+    p_trailSpeed: 0
+    p_trailRange: 0
+    p_trailDmgRatio: 0
+    p_trailDuration: 0
+    p_trailSpawnInterval: 0
+    p_trailHitRadius: 0
+    p_trailCloneAlpha: 0
   - weaponId: CH2_M_3
     traitId: HIT_SPIKE
     triggerChance: 0.25
+    skillOverride: 
     cloneProjectilePrefab: {fileID: 0}
     cloneOutTime: 0
     clonePauseTime: 0
@@ -362,9 +1323,57 @@ MonoBehaviour:
     subProjectilePrefab: {fileID: 0}
     passiveBuffPct: 0
     passiveBuffVfxPrefab: {fileID: 0}
+    hitVfxPrefab: {fileID: 0}
+    p_stunDuration: 0
+    p_freezeThawDmg: 0
+    p_cloneSpeed: 0
+    p_cloneLifetime: 0
+    p_cloneScale: 0
+    p_cloneAlpha: 0
+    p_spreadAngle: 0
+    p_subDmgRatio: 0
+    p_subSpeedRatio: 0
+    p_slashPrefab: {fileID: 0}
+    p_slashDmgRatio: 0
+    p_slashSpeed: 0
+    p_spinRadiusMult: 0
+    p_spinSpeedMult: 0
+    p_spinCloneChance: 0
+    p_spinCloneRadius: 0
+    p_spinCloneSpeed: 0
+    p_spinCloneDuration: 0
+    p_spinCloneHitRadius: 0
+    p_spinCloneAlpha: 0
+    p_spinCloneMax: 0
+    p_shockRadius: 0
+    p_shockDmgRatio: 0
+    p_spikeTickDmg: 0
+    p_spikeTickInterval: 0
+    p_spikeDuration: 0
+    p_spikeDeathRadius: 0
+    p_spikeDeathDmg: 0
+    p_bindDuration: 0
+    p_groggySeconds: 0
+    p_spearPrefab: {fileID: 0}
+    p_spearLandingVfx: {fileID: 0}
+    p_spearDropHeight: 0
+    p_spearSideOffset: 0
+    p_spearSpeed: 0
+    p_spearDmgRatio: 0
+    p_spearHitRadius: 0
+    p_trailClonePrefab: {fileID: 0}
+    p_trailMarkerPrefab: {fileID: 0}
+    p_trailSpeed: 0
+    p_trailRange: 0
+    p_trailDmgRatio: 0
+    p_trailDuration: 0
+    p_trailSpawnInterval: 0
+    p_trailHitRadius: 0
+    p_trailCloneAlpha: 0
   - weaponId: CH3_L_0
     traitId: HIT_CLONE_BURST
     triggerChance: 0.25
+    skillOverride: 
     cloneProjectilePrefab: {fileID: 6277426376135361209, guid: 76f3062b98d1ab948950cadf13c891e9, type: 3}
     cloneOutTime: 1
     clonePauseTime: 1
@@ -378,9 +1387,57 @@ MonoBehaviour:
     subProjectilePrefab: {fileID: 0}
     passiveBuffPct: 0
     passiveBuffVfxPrefab: {fileID: 0}
+    hitVfxPrefab: {fileID: 0}
+    p_stunDuration: 0
+    p_freezeThawDmg: 0
+    p_cloneSpeed: 0
+    p_cloneLifetime: 0
+    p_cloneScale: 0
+    p_cloneAlpha: 0
+    p_spreadAngle: 0
+    p_subDmgRatio: 0
+    p_subSpeedRatio: 0
+    p_slashPrefab: {fileID: 0}
+    p_slashDmgRatio: 0
+    p_slashSpeed: 0
+    p_spinRadiusMult: 0
+    p_spinSpeedMult: 0
+    p_spinCloneChance: 0
+    p_spinCloneRadius: 0
+    p_spinCloneSpeed: 0
+    p_spinCloneDuration: 0
+    p_spinCloneHitRadius: 0
+    p_spinCloneAlpha: 0
+    p_spinCloneMax: 0
+    p_shockRadius: 0
+    p_shockDmgRatio: 0
+    p_spikeTickDmg: 0
+    p_spikeTickInterval: 0
+    p_spikeDuration: 0
+    p_spikeDeathRadius: 0
+    p_spikeDeathDmg: 0
+    p_bindDuration: 0
+    p_groggySeconds: 0
+    p_spearPrefab: {fileID: 0}
+    p_spearLandingVfx: {fileID: 0}
+    p_spearDropHeight: 0
+    p_spearSideOffset: 0
+    p_spearSpeed: 0
+    p_spearDmgRatio: 0
+    p_spearHitRadius: 0
+    p_trailClonePrefab: {fileID: 0}
+    p_trailMarkerPrefab: {fileID: 0}
+    p_trailSpeed: 0
+    p_trailRange: 0
+    p_trailDmgRatio: 0
+    p_trailDuration: 0
+    p_trailSpawnInterval: 0
+    p_trailHitRadius: 0
+    p_trailCloneAlpha: 0
   - weaponId: CH3_L_1
     traitId: HIT_CLONE_RETURN
     triggerChance: 0.25
+    skillOverride: 
     cloneProjectilePrefab: {fileID: 5416354146166037338, guid: 1025aba5a4b03e04b9f45f42fbf276b6, type: 3}
     cloneOutTime: 1
     clonePauseTime: 1
@@ -394,9 +1451,57 @@ MonoBehaviour:
     subProjectilePrefab: {fileID: 0}
     passiveBuffPct: 0
     passiveBuffVfxPrefab: {fileID: 0}
+    hitVfxPrefab: {fileID: 0}
+    p_stunDuration: 0
+    p_freezeThawDmg: 0
+    p_cloneSpeed: 0
+    p_cloneLifetime: 0
+    p_cloneScale: 0
+    p_cloneAlpha: 0
+    p_spreadAngle: 0
+    p_subDmgRatio: 0
+    p_subSpeedRatio: 0
+    p_slashPrefab: {fileID: 0}
+    p_slashDmgRatio: 0
+    p_slashSpeed: 0
+    p_spinRadiusMult: 0
+    p_spinSpeedMult: 0
+    p_spinCloneChance: 0
+    p_spinCloneRadius: 0
+    p_spinCloneSpeed: 0
+    p_spinCloneDuration: 0
+    p_spinCloneHitRadius: 0
+    p_spinCloneAlpha: 0
+    p_spinCloneMax: 0
+    p_shockRadius: 0
+    p_shockDmgRatio: 0
+    p_spikeTickDmg: 0
+    p_spikeTickInterval: 0
+    p_spikeDuration: 0
+    p_spikeDeathRadius: 0
+    p_spikeDeathDmg: 0
+    p_bindDuration: 0
+    p_groggySeconds: 0
+    p_spearPrefab: {fileID: 0}
+    p_spearLandingVfx: {fileID: 0}
+    p_spearDropHeight: 0
+    p_spearSideOffset: 0
+    p_spearSpeed: 0
+    p_spearDmgRatio: 0
+    p_spearHitRadius: 0
+    p_trailClonePrefab: {fileID: 0}
+    p_trailMarkerPrefab: {fileID: 0}
+    p_trailSpeed: 0
+    p_trailRange: 0
+    p_trailDmgRatio: 0
+    p_trailDuration: 0
+    p_trailSpawnInterval: 0
+    p_trailHitRadius: 0
+    p_trailCloneAlpha: 0
   - weaponId: CH3_L_2
     traitId: BUFF_DEF
     triggerChance: 0.25
+    skillOverride: 
     cloneProjectilePrefab: {fileID: 0}
     cloneOutTime: 0
     clonePauseTime: 0
@@ -410,9 +1515,57 @@ MonoBehaviour:
     subProjectilePrefab: {fileID: 0}
     passiveBuffPct: 5
     passiveBuffVfxPrefab: {fileID: 6239690835715291398, guid: c8f520a64e088c24a91f850c1f37104e, type: 3}
+    hitVfxPrefab: {fileID: 0}
+    p_stunDuration: 0
+    p_freezeThawDmg: 0
+    p_cloneSpeed: 0
+    p_cloneLifetime: 0
+    p_cloneScale: 0
+    p_cloneAlpha: 0
+    p_spreadAngle: 0
+    p_subDmgRatio: 0
+    p_subSpeedRatio: 0
+    p_slashPrefab: {fileID: 0}
+    p_slashDmgRatio: 0
+    p_slashSpeed: 0
+    p_spinRadiusMult: 0
+    p_spinSpeedMult: 0
+    p_spinCloneChance: 0
+    p_spinCloneRadius: 0
+    p_spinCloneSpeed: 0
+    p_spinCloneDuration: 0
+    p_spinCloneHitRadius: 0
+    p_spinCloneAlpha: 0
+    p_spinCloneMax: 0
+    p_shockRadius: 0
+    p_shockDmgRatio: 0
+    p_spikeTickDmg: 0
+    p_spikeTickInterval: 0
+    p_spikeDuration: 0
+    p_spikeDeathRadius: 0
+    p_spikeDeathDmg: 0
+    p_bindDuration: 0
+    p_groggySeconds: 0
+    p_spearPrefab: {fileID: 0}
+    p_spearLandingVfx: {fileID: 0}
+    p_spearDropHeight: 0
+    p_spearSideOffset: 0
+    p_spearSpeed: 0
+    p_spearDmgRatio: 0
+    p_spearHitRadius: 0
+    p_trailClonePrefab: {fileID: 0}
+    p_trailMarkerPrefab: {fileID: 0}
+    p_trailSpeed: 0
+    p_trailRange: 0
+    p_trailDmgRatio: 0
+    p_trailDuration: 0
+    p_trailSpawnInterval: 0
+    p_trailHitRadius: 0
+    p_trailCloneAlpha: 0
   - weaponId: CH3_L_3
     traitId: HIT_SHOCK
     triggerChance: 0.25
+    skillOverride: 
     cloneProjectilePrefab: {fileID: 0}
     cloneOutTime: 0
     clonePauseTime: 0
@@ -426,9 +1579,57 @@ MonoBehaviour:
     subProjectilePrefab: {fileID: 0}
     passiveBuffPct: 0
     passiveBuffVfxPrefab: {fileID: 0}
+    hitVfxPrefab: {fileID: 0}
+    p_stunDuration: 0
+    p_freezeThawDmg: 0
+    p_cloneSpeed: 0
+    p_cloneLifetime: 0
+    p_cloneScale: 0
+    p_cloneAlpha: 0
+    p_spreadAngle: 0
+    p_subDmgRatio: 0
+    p_subSpeedRatio: 0
+    p_slashPrefab: {fileID: 0}
+    p_slashDmgRatio: 0
+    p_slashSpeed: 0
+    p_spinRadiusMult: 0
+    p_spinSpeedMult: 0
+    p_spinCloneChance: 0
+    p_spinCloneRadius: 0
+    p_spinCloneSpeed: 0
+    p_spinCloneDuration: 0
+    p_spinCloneHitRadius: 0
+    p_spinCloneAlpha: 0
+    p_spinCloneMax: 0
+    p_shockRadius: 0
+    p_shockDmgRatio: 0
+    p_spikeTickDmg: 0
+    p_spikeTickInterval: 0
+    p_spikeDuration: 0
+    p_spikeDeathRadius: 0
+    p_spikeDeathDmg: 0
+    p_bindDuration: 0
+    p_groggySeconds: 0
+    p_spearPrefab: {fileID: 0}
+    p_spearLandingVfx: {fileID: 0}
+    p_spearDropHeight: 0
+    p_spearSideOffset: 0
+    p_spearSpeed: 0
+    p_spearDmgRatio: 0
+    p_spearHitRadius: 0
+    p_trailClonePrefab: {fileID: 0}
+    p_trailMarkerPrefab: {fileID: 0}
+    p_trailSpeed: 0
+    p_trailRange: 0
+    p_trailDmgRatio: 0
+    p_trailDuration: 0
+    p_trailSpawnInterval: 0
+    p_trailHitRadius: 0
+    p_trailCloneAlpha: 0
   - weaponId: CH3_L_4
     traitId: HIT_SPIN
     triggerChance: 0.25
+    skillOverride: 
     cloneProjectilePrefab: {fileID: 0}
     cloneOutTime: 0
     clonePauseTime: 0
@@ -442,9 +1643,57 @@ MonoBehaviour:
     subProjectilePrefab: {fileID: 0}
     passiveBuffPct: 0
     passiveBuffVfxPrefab: {fileID: 0}
+    hitVfxPrefab: {fileID: 0}
+    p_stunDuration: 0
+    p_freezeThawDmg: 0
+    p_cloneSpeed: 0
+    p_cloneLifetime: 0
+    p_cloneScale: 0
+    p_cloneAlpha: 0
+    p_spreadAngle: 0
+    p_subDmgRatio: 0
+    p_subSpeedRatio: 0
+    p_slashPrefab: {fileID: 0}
+    p_slashDmgRatio: 0
+    p_slashSpeed: 0
+    p_spinRadiusMult: 0
+    p_spinSpeedMult: 0
+    p_spinCloneChance: 0
+    p_spinCloneRadius: 0
+    p_spinCloneSpeed: 0
+    p_spinCloneDuration: 0
+    p_spinCloneHitRadius: 0
+    p_spinCloneAlpha: 0
+    p_spinCloneMax: 0
+    p_shockRadius: 0
+    p_shockDmgRatio: 0
+    p_spikeTickDmg: 0
+    p_spikeTickInterval: 0
+    p_spikeDuration: 0
+    p_spikeDeathRadius: 0
+    p_spikeDeathDmg: 0
+    p_bindDuration: 0
+    p_groggySeconds: 0
+    p_spearPrefab: {fileID: 0}
+    p_spearLandingVfx: {fileID: 0}
+    p_spearDropHeight: 0
+    p_spearSideOffset: 0
+    p_spearSpeed: 0
+    p_spearDmgRatio: 0
+    p_spearHitRadius: 0
+    p_trailClonePrefab: {fileID: 0}
+    p_trailMarkerPrefab: {fileID: 0}
+    p_trailSpeed: 0
+    p_trailRange: 0
+    p_trailDmgRatio: 0
+    p_trailDuration: 0
+    p_trailSpawnInterval: 0
+    p_trailHitRadius: 0
+    p_trailCloneAlpha: 0
   - weaponId: CH3_M_0
     traitId: HIT_STUN
     triggerChance: 0.25
+    skillOverride: 
     cloneProjectilePrefab: {fileID: 0}
     cloneOutTime: 0
     clonePauseTime: 0
@@ -458,9 +1707,57 @@ MonoBehaviour:
     subProjectilePrefab: {fileID: 0}
     passiveBuffPct: 0
     passiveBuffVfxPrefab: {fileID: 0}
+    hitVfxPrefab: {fileID: 0}
+    p_stunDuration: 0
+    p_freezeThawDmg: 0
+    p_cloneSpeed: 0
+    p_cloneLifetime: 0
+    p_cloneScale: 0
+    p_cloneAlpha: 0
+    p_spreadAngle: 0
+    p_subDmgRatio: 0
+    p_subSpeedRatio: 0
+    p_slashPrefab: {fileID: 0}
+    p_slashDmgRatio: 0
+    p_slashSpeed: 0
+    p_spinRadiusMult: 0
+    p_spinSpeedMult: 0
+    p_spinCloneChance: 0
+    p_spinCloneRadius: 0
+    p_spinCloneSpeed: 0
+    p_spinCloneDuration: 0
+    p_spinCloneHitRadius: 0
+    p_spinCloneAlpha: 0
+    p_spinCloneMax: 0
+    p_shockRadius: 0
+    p_shockDmgRatio: 0
+    p_spikeTickDmg: 0
+    p_spikeTickInterval: 0
+    p_spikeDuration: 0
+    p_spikeDeathRadius: 0
+    p_spikeDeathDmg: 0
+    p_bindDuration: 0
+    p_groggySeconds: 0
+    p_spearPrefab: {fileID: 0}
+    p_spearLandingVfx: {fileID: 0}
+    p_spearDropHeight: 0
+    p_spearSideOffset: 0
+    p_spearSpeed: 0
+    p_spearDmgRatio: 0
+    p_spearHitRadius: 0
+    p_trailClonePrefab: {fileID: 0}
+    p_trailMarkerPrefab: {fileID: 0}
+    p_trailSpeed: 0
+    p_trailRange: 0
+    p_trailDmgRatio: 0
+    p_trailDuration: 0
+    p_trailSpawnInterval: 0
+    p_trailHitRadius: 0
+    p_trailCloneAlpha: 0
   - weaponId: CH3_M_1
     traitId: HIT_SPIKE
     triggerChance: 0.25
+    skillOverride: 
     cloneProjectilePrefab: {fileID: 0}
     cloneOutTime: 0
     clonePauseTime: 0
@@ -474,9 +1771,57 @@ MonoBehaviour:
     subProjectilePrefab: {fileID: 0}
     passiveBuffPct: 0
     passiveBuffVfxPrefab: {fileID: 0}
+    hitVfxPrefab: {fileID: 0}
+    p_stunDuration: 0
+    p_freezeThawDmg: 0
+    p_cloneSpeed: 0
+    p_cloneLifetime: 0
+    p_cloneScale: 0
+    p_cloneAlpha: 0
+    p_spreadAngle: 0
+    p_subDmgRatio: 0
+    p_subSpeedRatio: 0
+    p_slashPrefab: {fileID: 0}
+    p_slashDmgRatio: 0
+    p_slashSpeed: 0
+    p_spinRadiusMult: 0
+    p_spinSpeedMult: 0
+    p_spinCloneChance: 0
+    p_spinCloneRadius: 0
+    p_spinCloneSpeed: 0
+    p_spinCloneDuration: 0
+    p_spinCloneHitRadius: 0
+    p_spinCloneAlpha: 0
+    p_spinCloneMax: 0
+    p_shockRadius: 0
+    p_shockDmgRatio: 0
+    p_spikeTickDmg: 0
+    p_spikeTickInterval: 0
+    p_spikeDuration: 0
+    p_spikeDeathRadius: 0
+    p_spikeDeathDmg: 0
+    p_bindDuration: 0
+    p_groggySeconds: 0
+    p_spearPrefab: {fileID: 0}
+    p_spearLandingVfx: {fileID: 0}
+    p_spearDropHeight: 0
+    p_spearSideOffset: 0
+    p_spearSpeed: 0
+    p_spearDmgRatio: 0
+    p_spearHitRadius: 0
+    p_trailClonePrefab: {fileID: 0}
+    p_trailMarkerPrefab: {fileID: 0}
+    p_trailSpeed: 0
+    p_trailRange: 0
+    p_trailDmgRatio: 0
+    p_trailDuration: 0
+    p_trailSpawnInterval: 0
+    p_trailHitRadius: 0
+    p_trailCloneAlpha: 0
   - weaponId: CH3_M_2
     traitId: HIT_CLONE_CROSS
     triggerChance: 0.25
+    skillOverride: 
     cloneProjectilePrefab: {fileID: 5416354146166037338, guid: d87add9b74d3b624499e68a8273f074c, type: 3}
     cloneOutTime: 1
     clonePauseTime: 1
@@ -490,9 +1835,57 @@ MonoBehaviour:
     subProjectilePrefab: {fileID: 0}
     passiveBuffPct: 0
     passiveBuffVfxPrefab: {fileID: 0}
+    hitVfxPrefab: {fileID: 0}
+    p_stunDuration: 0
+    p_freezeThawDmg: 0
+    p_cloneSpeed: 0
+    p_cloneLifetime: 0
+    p_cloneScale: 0
+    p_cloneAlpha: 0
+    p_spreadAngle: 0
+    p_subDmgRatio: 0
+    p_subSpeedRatio: 0
+    p_slashPrefab: {fileID: 0}
+    p_slashDmgRatio: 0
+    p_slashSpeed: 0
+    p_spinRadiusMult: 0
+    p_spinSpeedMult: 0
+    p_spinCloneChance: 0
+    p_spinCloneRadius: 0
+    p_spinCloneSpeed: 0
+    p_spinCloneDuration: 0
+    p_spinCloneHitRadius: 0
+    p_spinCloneAlpha: 0
+    p_spinCloneMax: 0
+    p_shockRadius: 0
+    p_shockDmgRatio: 0
+    p_spikeTickDmg: 0
+    p_spikeTickInterval: 0
+    p_spikeDuration: 0
+    p_spikeDeathRadius: 0
+    p_spikeDeathDmg: 0
+    p_bindDuration: 0
+    p_groggySeconds: 0
+    p_spearPrefab: {fileID: 0}
+    p_spearLandingVfx: {fileID: 0}
+    p_spearDropHeight: 0
+    p_spearSideOffset: 0
+    p_spearSpeed: 0
+    p_spearDmgRatio: 0
+    p_spearHitRadius: 0
+    p_trailClonePrefab: {fileID: 0}
+    p_trailMarkerPrefab: {fileID: 0}
+    p_trailSpeed: 0
+    p_trailRange: 0
+    p_trailDmgRatio: 0
+    p_trailDuration: 0
+    p_trailSpawnInterval: 0
+    p_trailHitRadius: 0
+    p_trailCloneAlpha: 0
   - weaponId: CH3_M_3
     traitId: BOSS_GROGY
     triggerChance: 0.25
+    skillOverride: 
     cloneProjectilePrefab: {fileID: 0}
     cloneOutTime: 0
     clonePauseTime: 0
@@ -506,9 +1899,57 @@ MonoBehaviour:
     subProjectilePrefab: {fileID: 0}
     passiveBuffPct: 0
     passiveBuffVfxPrefab: {fileID: 0}
+    hitVfxPrefab: {fileID: 0}
+    p_stunDuration: 0
+    p_freezeThawDmg: 0
+    p_cloneSpeed: 0
+    p_cloneLifetime: 0
+    p_cloneScale: 0
+    p_cloneAlpha: 0
+    p_spreadAngle: 0
+    p_subDmgRatio: 0
+    p_subSpeedRatio: 0
+    p_slashPrefab: {fileID: 0}
+    p_slashDmgRatio: 0
+    p_slashSpeed: 0
+    p_spinRadiusMult: 0
+    p_spinSpeedMult: 0
+    p_spinCloneChance: 0
+    p_spinCloneRadius: 0
+    p_spinCloneSpeed: 0
+    p_spinCloneDuration: 0
+    p_spinCloneHitRadius: 0
+    p_spinCloneAlpha: 0
+    p_spinCloneMax: 0
+    p_shockRadius: 0
+    p_shockDmgRatio: 0
+    p_spikeTickDmg: 0
+    p_spikeTickInterval: 0
+    p_spikeDuration: 0
+    p_spikeDeathRadius: 0
+    p_spikeDeathDmg: 0
+    p_bindDuration: 0
+    p_groggySeconds: 0
+    p_spearPrefab: {fileID: 0}
+    p_spearLandingVfx: {fileID: 0}
+    p_spearDropHeight: 0
+    p_spearSideOffset: 0
+    p_spearSpeed: 0
+    p_spearDmgRatio: 0
+    p_spearHitRadius: 0
+    p_trailClonePrefab: {fileID: 0}
+    p_trailMarkerPrefab: {fileID: 0}
+    p_trailSpeed: 0
+    p_trailRange: 0
+    p_trailDmgRatio: 0
+    p_trailDuration: 0
+    p_trailSpawnInterval: 0
+    p_trailHitRadius: 0
+    p_trailCloneAlpha: 0
   - weaponId: CH3_M_4
     traitId: SHOOT_SUB
     triggerChance: 0.25
+    skillOverride: 
     cloneProjectilePrefab: {fileID: 0}
     cloneOutTime: 0
     clonePauseTime: 0
@@ -522,3 +1963,1010 @@ MonoBehaviour:
     subProjectilePrefab: {fileID: 0}
     passiveBuffPct: 0
     passiveBuffVfxPrefab: {fileID: 0}
+    hitVfxPrefab: {fileID: 0}
+    p_stunDuration: 0
+    p_freezeThawDmg: 0
+    p_cloneSpeed: 0
+    p_cloneLifetime: 0
+    p_cloneScale: 0
+    p_cloneAlpha: 0
+    p_spreadAngle: 0
+    p_subDmgRatio: 0
+    p_subSpeedRatio: 0
+    p_slashPrefab: {fileID: 0}
+    p_slashDmgRatio: 0
+    p_slashSpeed: 0
+    p_spinRadiusMult: 0
+    p_spinSpeedMult: 0
+    p_spinCloneChance: 0
+    p_spinCloneRadius: 0
+    p_spinCloneSpeed: 0
+    p_spinCloneDuration: 0
+    p_spinCloneHitRadius: 0
+    p_spinCloneAlpha: 0
+    p_spinCloneMax: 0
+    p_shockRadius: 0
+    p_shockDmgRatio: 0
+    p_spikeTickDmg: 0
+    p_spikeTickInterval: 0
+    p_spikeDuration: 0
+    p_spikeDeathRadius: 0
+    p_spikeDeathDmg: 0
+    p_bindDuration: 0
+    p_groggySeconds: 0
+    p_spearPrefab: {fileID: 0}
+    p_spearLandingVfx: {fileID: 0}
+    p_spearDropHeight: 0
+    p_spearSideOffset: 0
+    p_spearSpeed: 0
+    p_spearDmgRatio: 0
+    p_spearHitRadius: 0
+    p_trailClonePrefab: {fileID: 0}
+    p_trailMarkerPrefab: {fileID: 0}
+    p_trailSpeed: 0
+    p_trailRange: 0
+    p_trailDmgRatio: 0
+    p_trailDuration: 0
+    p_trailSpawnInterval: 0
+    p_trailHitRadius: 0
+    p_trailCloneAlpha: 0
+  - weaponId: CH1_C_0
+    traitId: 
+    triggerChance: 0.25
+    skillOverride: 
+    cloneProjectilePrefab: {fileID: 0}
+    cloneOutTime: 0
+    clonePauseTime: 0
+    cloneReturnTime: 0
+    cloneRange: 5
+    spikePrefab: {fileID: 5416354146166037338, guid: 3bdfc47fae04ded4c9087b112e349e81, type: 3}
+    hitStunType: 0
+    hitStunColor: {r: 0, g: 0, b: 0, a: 0}
+    hitEffectVfxPrefab: {fileID: 0}
+    hitSpinPermanent: 0
+    subProjectilePrefab: {fileID: 0}
+    passiveBuffPct: 0
+    passiveBuffVfxPrefab: {fileID: 0}
+    hitVfxPrefab: {fileID: 0}
+    p_stunDuration: 0
+    p_freezeThawDmg: 0
+    p_cloneSpeed: 0
+    p_cloneLifetime: 0
+    p_cloneScale: 0
+    p_cloneAlpha: 0
+    p_spreadAngle: 0
+    p_subDmgRatio: 0
+    p_subSpeedRatio: 0
+    p_slashPrefab: {fileID: 0}
+    p_slashDmgRatio: 0
+    p_slashSpeed: 0
+    p_spinRadiusMult: 0
+    p_spinSpeedMult: 0
+    p_spinCloneChance: 0
+    p_spinCloneRadius: 0
+    p_spinCloneSpeed: 0
+    p_spinCloneDuration: 0
+    p_spinCloneHitRadius: 0
+    p_spinCloneAlpha: 0
+    p_spinCloneMax: 0
+    p_shockRadius: 0
+    p_shockDmgRatio: 0
+    p_spikeTickDmg: 0
+    p_spikeTickInterval: 0
+    p_spikeDuration: 0
+    p_spikeDeathRadius: 0
+    p_spikeDeathDmg: 0
+    p_bindDuration: 0
+    p_groggySeconds: 0
+    p_spearPrefab: {fileID: 0}
+    p_spearLandingVfx: {fileID: 0}
+    p_spearDropHeight: 0
+    p_spearSideOffset: 0
+    p_spearSpeed: 0
+    p_spearDmgRatio: 0
+    p_spearHitRadius: 0
+    p_trailClonePrefab: {fileID: 0}
+    p_trailMarkerPrefab: {fileID: 0}
+    p_trailSpeed: 0
+    p_trailRange: 0
+    p_trailDmgRatio: 0
+    p_trailDuration: 0
+    p_trailSpawnInterval: 0
+    p_trailHitRadius: 0
+    p_trailCloneAlpha: 0
+  - weaponId: CH1_C_1
+    traitId: 
+    triggerChance: 0.25
+    skillOverride: 
+    cloneProjectilePrefab: {fileID: 0}
+    cloneOutTime: 0
+    clonePauseTime: 0
+    cloneReturnTime: 0
+    cloneRange: 5
+    spikePrefab: {fileID: 5416354146166037338, guid: 3bdfc47fae04ded4c9087b112e349e81, type: 3}
+    hitStunType: 0
+    hitStunColor: {r: 0, g: 0, b: 0, a: 0}
+    hitEffectVfxPrefab: {fileID: 0}
+    hitSpinPermanent: 0
+    subProjectilePrefab: {fileID: 0}
+    passiveBuffPct: 0
+    passiveBuffVfxPrefab: {fileID: 0}
+    hitVfxPrefab: {fileID: 0}
+    p_stunDuration: 0
+    p_freezeThawDmg: 0
+    p_cloneSpeed: 0
+    p_cloneLifetime: 0
+    p_cloneScale: 0
+    p_cloneAlpha: 0
+    p_spreadAngle: 0
+    p_subDmgRatio: 0
+    p_subSpeedRatio: 0
+    p_slashPrefab: {fileID: 0}
+    p_slashDmgRatio: 0
+    p_slashSpeed: 0
+    p_spinRadiusMult: 0
+    p_spinSpeedMult: 0
+    p_spinCloneChance: 0
+    p_spinCloneRadius: 0
+    p_spinCloneSpeed: 0
+    p_spinCloneDuration: 0
+    p_spinCloneHitRadius: 0
+    p_spinCloneAlpha: 0
+    p_spinCloneMax: 0
+    p_shockRadius: 0
+    p_shockDmgRatio: 0
+    p_spikeTickDmg: 0
+    p_spikeTickInterval: 0
+    p_spikeDuration: 0
+    p_spikeDeathRadius: 0
+    p_spikeDeathDmg: 0
+    p_bindDuration: 0
+    p_groggySeconds: 0
+    p_spearPrefab: {fileID: 0}
+    p_spearLandingVfx: {fileID: 0}
+    p_spearDropHeight: 0
+    p_spearSideOffset: 0
+    p_spearSpeed: 0
+    p_spearDmgRatio: 0
+    p_spearHitRadius: 0
+    p_trailClonePrefab: {fileID: 0}
+    p_trailMarkerPrefab: {fileID: 0}
+    p_trailSpeed: 0
+    p_trailRange: 0
+    p_trailDmgRatio: 0
+    p_trailDuration: 0
+    p_trailSpawnInterval: 0
+    p_trailHitRadius: 0
+    p_trailCloneAlpha: 0
+  - weaponId: CH1_C_2
+    traitId: 
+    triggerChance: 0.25
+    skillOverride: 
+    cloneProjectilePrefab: {fileID: 0}
+    cloneOutTime: 0
+    clonePauseTime: 0
+    cloneReturnTime: 0
+    cloneRange: 5
+    spikePrefab: {fileID: 5416354146166037338, guid: 3bdfc47fae04ded4c9087b112e349e81, type: 3}
+    hitStunType: 0
+    hitStunColor: {r: 0, g: 0, b: 0, a: 0}
+    hitEffectVfxPrefab: {fileID: 0}
+    hitSpinPermanent: 0
+    subProjectilePrefab: {fileID: 0}
+    passiveBuffPct: 0
+    passiveBuffVfxPrefab: {fileID: 0}
+    hitVfxPrefab: {fileID: 0}
+    p_stunDuration: 0
+    p_freezeThawDmg: 0
+    p_cloneSpeed: 0
+    p_cloneLifetime: 0
+    p_cloneScale: 0
+    p_cloneAlpha: 0
+    p_spreadAngle: 0
+    p_subDmgRatio: 0
+    p_subSpeedRatio: 0
+    p_slashPrefab: {fileID: 0}
+    p_slashDmgRatio: 0
+    p_slashSpeed: 0
+    p_spinRadiusMult: 0
+    p_spinSpeedMult: 0
+    p_spinCloneChance: 0
+    p_spinCloneRadius: 0
+    p_spinCloneSpeed: 0
+    p_spinCloneDuration: 0
+    p_spinCloneHitRadius: 0
+    p_spinCloneAlpha: 0
+    p_spinCloneMax: 0
+    p_shockRadius: 0
+    p_shockDmgRatio: 0
+    p_spikeTickDmg: 0
+    p_spikeTickInterval: 0
+    p_spikeDuration: 0
+    p_spikeDeathRadius: 0
+    p_spikeDeathDmg: 0
+    p_bindDuration: 0
+    p_groggySeconds: 0
+    p_spearPrefab: {fileID: 0}
+    p_spearLandingVfx: {fileID: 0}
+    p_spearDropHeight: 0
+    p_spearSideOffset: 0
+    p_spearSpeed: 0
+    p_spearDmgRatio: 0
+    p_spearHitRadius: 0
+    p_trailClonePrefab: {fileID: 0}
+    p_trailMarkerPrefab: {fileID: 0}
+    p_trailSpeed: 0
+    p_trailRange: 0
+    p_trailDmgRatio: 0
+    p_trailDuration: 0
+    p_trailSpawnInterval: 0
+    p_trailHitRadius: 0
+    p_trailCloneAlpha: 0
+  - weaponId: CH1_C_3
+    traitId: 
+    triggerChance: 0.25
+    skillOverride: 
+    cloneProjectilePrefab: {fileID: 0}
+    cloneOutTime: 0
+    clonePauseTime: 0
+    cloneReturnTime: 0
+    cloneRange: 5
+    spikePrefab: {fileID: 5416354146166037338, guid: 3bdfc47fae04ded4c9087b112e349e81, type: 3}
+    hitStunType: 0
+    hitStunColor: {r: 0, g: 0, b: 0, a: 0}
+    hitEffectVfxPrefab: {fileID: 0}
+    hitSpinPermanent: 0
+    subProjectilePrefab: {fileID: 0}
+    passiveBuffPct: 0
+    passiveBuffVfxPrefab: {fileID: 0}
+    hitVfxPrefab: {fileID: 0}
+    p_stunDuration: 0
+    p_freezeThawDmg: 0
+    p_cloneSpeed: 0
+    p_cloneLifetime: 0
+    p_cloneScale: 0
+    p_cloneAlpha: 0
+    p_spreadAngle: 0
+    p_subDmgRatio: 0
+    p_subSpeedRatio: 0
+    p_slashPrefab: {fileID: 0}
+    p_slashDmgRatio: 0
+    p_slashSpeed: 0
+    p_spinRadiusMult: 0
+    p_spinSpeedMult: 0
+    p_spinCloneChance: 0
+    p_spinCloneRadius: 0
+    p_spinCloneSpeed: 0
+    p_spinCloneDuration: 0
+    p_spinCloneHitRadius: 0
+    p_spinCloneAlpha: 0
+    p_spinCloneMax: 0
+    p_shockRadius: 0
+    p_shockDmgRatio: 0
+    p_spikeTickDmg: 0
+    p_spikeTickInterval: 0
+    p_spikeDuration: 0
+    p_spikeDeathRadius: 0
+    p_spikeDeathDmg: 0
+    p_bindDuration: 0
+    p_groggySeconds: 0
+    p_spearPrefab: {fileID: 0}
+    p_spearLandingVfx: {fileID: 0}
+    p_spearDropHeight: 0
+    p_spearSideOffset: 0
+    p_spearSpeed: 0
+    p_spearDmgRatio: 0
+    p_spearHitRadius: 0
+    p_trailClonePrefab: {fileID: 0}
+    p_trailMarkerPrefab: {fileID: 0}
+    p_trailSpeed: 0
+    p_trailRange: 0
+    p_trailDmgRatio: 0
+    p_trailDuration: 0
+    p_trailSpawnInterval: 0
+    p_trailHitRadius: 0
+    p_trailCloneAlpha: 0
+  - weaponId: CH1_C_4
+    traitId: 
+    triggerChance: 0.25
+    skillOverride: 
+    cloneProjectilePrefab: {fileID: 0}
+    cloneOutTime: 0
+    clonePauseTime: 0
+    cloneReturnTime: 0
+    cloneRange: 5
+    spikePrefab: {fileID: 5416354146166037338, guid: 3bdfc47fae04ded4c9087b112e349e81, type: 3}
+    hitStunType: 0
+    hitStunColor: {r: 0, g: 0, b: 0, a: 0}
+    hitEffectVfxPrefab: {fileID: 0}
+    hitSpinPermanent: 0
+    subProjectilePrefab: {fileID: 0}
+    passiveBuffPct: 0
+    passiveBuffVfxPrefab: {fileID: 0}
+    hitVfxPrefab: {fileID: 0}
+    p_stunDuration: 0
+    p_freezeThawDmg: 0
+    p_cloneSpeed: 0
+    p_cloneLifetime: 0
+    p_cloneScale: 0
+    p_cloneAlpha: 0
+    p_spreadAngle: 0
+    p_subDmgRatio: 0
+    p_subSpeedRatio: 0
+    p_slashPrefab: {fileID: 0}
+    p_slashDmgRatio: 0
+    p_slashSpeed: 0
+    p_spinRadiusMult: 0
+    p_spinSpeedMult: 0
+    p_spinCloneChance: 0
+    p_spinCloneRadius: 0
+    p_spinCloneSpeed: 0
+    p_spinCloneDuration: 0
+    p_spinCloneHitRadius: 0
+    p_spinCloneAlpha: 0
+    p_spinCloneMax: 0
+    p_shockRadius: 0
+    p_shockDmgRatio: 0
+    p_spikeTickDmg: 0
+    p_spikeTickInterval: 0
+    p_spikeDuration: 0
+    p_spikeDeathRadius: 0
+    p_spikeDeathDmg: 0
+    p_bindDuration: 0
+    p_groggySeconds: 0
+    p_spearPrefab: {fileID: 0}
+    p_spearLandingVfx: {fileID: 0}
+    p_spearDropHeight: 0
+    p_spearSideOffset: 0
+    p_spearSpeed: 0
+    p_spearDmgRatio: 0
+    p_spearHitRadius: 0
+    p_trailClonePrefab: {fileID: 0}
+    p_trailMarkerPrefab: {fileID: 0}
+    p_trailSpeed: 0
+    p_trailRange: 0
+    p_trailDmgRatio: 0
+    p_trailDuration: 0
+    p_trailSpawnInterval: 0
+    p_trailHitRadius: 0
+    p_trailCloneAlpha: 0
+  - weaponId: CH1_R_0
+    traitId: 
+    triggerChance: 0.25
+    skillOverride: 
+    cloneProjectilePrefab: {fileID: 0}
+    cloneOutTime: 0
+    clonePauseTime: 0
+    cloneReturnTime: 0
+    cloneRange: 5
+    spikePrefab: {fileID: 5416354146166037338, guid: 3bdfc47fae04ded4c9087b112e349e81, type: 3}
+    hitStunType: 0
+    hitStunColor: {r: 0, g: 0, b: 0, a: 0}
+    hitEffectVfxPrefab: {fileID: 0}
+    hitSpinPermanent: 0
+    subProjectilePrefab: {fileID: 0}
+    passiveBuffPct: 0
+    passiveBuffVfxPrefab: {fileID: 0}
+    hitVfxPrefab: {fileID: 0}
+    p_stunDuration: 0
+    p_freezeThawDmg: 0
+    p_cloneSpeed: 0
+    p_cloneLifetime: 0
+    p_cloneScale: 0
+    p_cloneAlpha: 0
+    p_spreadAngle: 0
+    p_subDmgRatio: 0
+    p_subSpeedRatio: 0
+    p_slashPrefab: {fileID: 0}
+    p_slashDmgRatio: 0
+    p_slashSpeed: 0
+    p_spinRadiusMult: 0
+    p_spinSpeedMult: 0
+    p_spinCloneChance: 0
+    p_spinCloneRadius: 0
+    p_spinCloneSpeed: 0
+    p_spinCloneDuration: 0
+    p_spinCloneHitRadius: 0
+    p_spinCloneAlpha: 0
+    p_spinCloneMax: 0
+    p_shockRadius: 0
+    p_shockDmgRatio: 0
+    p_spikeTickDmg: 0
+    p_spikeTickInterval: 0
+    p_spikeDuration: 0
+    p_spikeDeathRadius: 0
+    p_spikeDeathDmg: 0
+    p_bindDuration: 0
+    p_groggySeconds: 0
+    p_spearPrefab: {fileID: 0}
+    p_spearLandingVfx: {fileID: 0}
+    p_spearDropHeight: 0
+    p_spearSideOffset: 0
+    p_spearSpeed: 0
+    p_spearDmgRatio: 0
+    p_spearHitRadius: 0
+    p_trailClonePrefab: {fileID: 0}
+    p_trailMarkerPrefab: {fileID: 0}
+    p_trailSpeed: 0
+    p_trailRange: 0
+    p_trailDmgRatio: 0
+    p_trailDuration: 0
+    p_trailSpawnInterval: 0
+    p_trailHitRadius: 0
+    p_trailCloneAlpha: 0
+  - weaponId: CH1_R_1
+    traitId: 
+    triggerChance: 0.25
+    skillOverride: 
+    cloneProjectilePrefab: {fileID: 0}
+    cloneOutTime: 0
+    clonePauseTime: 0
+    cloneReturnTime: 0
+    cloneRange: 5
+    spikePrefab: {fileID: 5416354146166037338, guid: 3bdfc47fae04ded4c9087b112e349e81, type: 3}
+    hitStunType: 0
+    hitStunColor: {r: 0, g: 0, b: 0, a: 0}
+    hitEffectVfxPrefab: {fileID: 0}
+    hitSpinPermanent: 0
+    subProjectilePrefab: {fileID: 0}
+    passiveBuffPct: 0
+    passiveBuffVfxPrefab: {fileID: 0}
+    hitVfxPrefab: {fileID: 0}
+    p_stunDuration: 0
+    p_freezeThawDmg: 0
+    p_cloneSpeed: 0
+    p_cloneLifetime: 0
+    p_cloneScale: 0
+    p_cloneAlpha: 0
+    p_spreadAngle: 0
+    p_subDmgRatio: 0
+    p_subSpeedRatio: 0
+    p_slashPrefab: {fileID: 0}
+    p_slashDmgRatio: 0
+    p_slashSpeed: 0
+    p_spinRadiusMult: 0
+    p_spinSpeedMult: 0
+    p_spinCloneChance: 0
+    p_spinCloneRadius: 0
+    p_spinCloneSpeed: 0
+    p_spinCloneDuration: 0
+    p_spinCloneHitRadius: 0
+    p_spinCloneAlpha: 0
+    p_spinCloneMax: 0
+    p_shockRadius: 0
+    p_shockDmgRatio: 0
+    p_spikeTickDmg: 0
+    p_spikeTickInterval: 0
+    p_spikeDuration: 0
+    p_spikeDeathRadius: 0
+    p_spikeDeathDmg: 0
+    p_bindDuration: 0
+    p_groggySeconds: 0
+    p_spearPrefab: {fileID: 0}
+    p_spearLandingVfx: {fileID: 0}
+    p_spearDropHeight: 0
+    p_spearSideOffset: 0
+    p_spearSpeed: 0
+    p_spearDmgRatio: 0
+    p_spearHitRadius: 0
+    p_trailClonePrefab: {fileID: 0}
+    p_trailMarkerPrefab: {fileID: 0}
+    p_trailSpeed: 0
+    p_trailRange: 0
+    p_trailDmgRatio: 0
+    p_trailDuration: 0
+    p_trailSpawnInterval: 0
+    p_trailHitRadius: 0
+    p_trailCloneAlpha: 0
+  - weaponId: CH1_R_2
+    traitId: 
+    triggerChance: 0.25
+    skillOverride: 
+    cloneProjectilePrefab: {fileID: 0}
+    cloneOutTime: 0
+    clonePauseTime: 0
+    cloneReturnTime: 0
+    cloneRange: 5
+    spikePrefab: {fileID: 5416354146166037338, guid: 3bdfc47fae04ded4c9087b112e349e81, type: 3}
+    hitStunType: 0
+    hitStunColor: {r: 0, g: 0, b: 0, a: 0}
+    hitEffectVfxPrefab: {fileID: 0}
+    hitSpinPermanent: 0
+    subProjectilePrefab: {fileID: 0}
+    passiveBuffPct: 0
+    passiveBuffVfxPrefab: {fileID: 0}
+    hitVfxPrefab: {fileID: 0}
+    p_stunDuration: 0
+    p_freezeThawDmg: 0
+    p_cloneSpeed: 0
+    p_cloneLifetime: 0
+    p_cloneScale: 0
+    p_cloneAlpha: 0
+    p_spreadAngle: 0
+    p_subDmgRatio: 0
+    p_subSpeedRatio: 0
+    p_slashPrefab: {fileID: 0}
+    p_slashDmgRatio: 0
+    p_slashSpeed: 0
+    p_spinRadiusMult: 0
+    p_spinSpeedMult: 0
+    p_spinCloneChance: 0
+    p_spinCloneRadius: 0
+    p_spinCloneSpeed: 0
+    p_spinCloneDuration: 0
+    p_spinCloneHitRadius: 0
+    p_spinCloneAlpha: 0
+    p_spinCloneMax: 0
+    p_shockRadius: 0
+    p_shockDmgRatio: 0
+    p_spikeTickDmg: 0
+    p_spikeTickInterval: 0
+    p_spikeDuration: 0
+    p_spikeDeathRadius: 0
+    p_spikeDeathDmg: 0
+    p_bindDuration: 0
+    p_groggySeconds: 0
+    p_spearPrefab: {fileID: 0}
+    p_spearLandingVfx: {fileID: 0}
+    p_spearDropHeight: 0
+    p_spearSideOffset: 0
+    p_spearSpeed: 0
+    p_spearDmgRatio: 0
+    p_spearHitRadius: 0
+    p_trailClonePrefab: {fileID: 0}
+    p_trailMarkerPrefab: {fileID: 0}
+    p_trailSpeed: 0
+    p_trailRange: 0
+    p_trailDmgRatio: 0
+    p_trailDuration: 0
+    p_trailSpawnInterval: 0
+    p_trailHitRadius: 0
+    p_trailCloneAlpha: 0
+  - weaponId: CH1_R_3
+    traitId: 
+    triggerChance: 0.25
+    skillOverride: 
+    cloneProjectilePrefab: {fileID: 0}
+    cloneOutTime: 0
+    clonePauseTime: 0
+    cloneReturnTime: 0
+    cloneRange: 5
+    spikePrefab: {fileID: 5416354146166037338, guid: 3bdfc47fae04ded4c9087b112e349e81, type: 3}
+    hitStunType: 0
+    hitStunColor: {r: 0, g: 0, b: 0, a: 0}
+    hitEffectVfxPrefab: {fileID: 0}
+    hitSpinPermanent: 0
+    subProjectilePrefab: {fileID: 0}
+    passiveBuffPct: 0
+    passiveBuffVfxPrefab: {fileID: 0}
+    hitVfxPrefab: {fileID: 0}
+    p_stunDuration: 0
+    p_freezeThawDmg: 0
+    p_cloneSpeed: 0
+    p_cloneLifetime: 0
+    p_cloneScale: 0
+    p_cloneAlpha: 0
+    p_spreadAngle: 0
+    p_subDmgRatio: 0
+    p_subSpeedRatio: 0
+    p_slashPrefab: {fileID: 0}
+    p_slashDmgRatio: 0
+    p_slashSpeed: 0
+    p_spinRadiusMult: 0
+    p_spinSpeedMult: 0
+    p_spinCloneChance: 0
+    p_spinCloneRadius: 0
+    p_spinCloneSpeed: 0
+    p_spinCloneDuration: 0
+    p_spinCloneHitRadius: 0
+    p_spinCloneAlpha: 0
+    p_spinCloneMax: 0
+    p_shockRadius: 0
+    p_shockDmgRatio: 0
+    p_spikeTickDmg: 0
+    p_spikeTickInterval: 0
+    p_spikeDuration: 0
+    p_spikeDeathRadius: 0
+    p_spikeDeathDmg: 0
+    p_bindDuration: 0
+    p_groggySeconds: 0
+    p_spearPrefab: {fileID: 0}
+    p_spearLandingVfx: {fileID: 0}
+    p_spearDropHeight: 0
+    p_spearSideOffset: 0
+    p_spearSpeed: 0
+    p_spearDmgRatio: 0
+    p_spearHitRadius: 0
+    p_trailClonePrefab: {fileID: 0}
+    p_trailMarkerPrefab: {fileID: 0}
+    p_trailSpeed: 0
+    p_trailRange: 0
+    p_trailDmgRatio: 0
+    p_trailDuration: 0
+    p_trailSpawnInterval: 0
+    p_trailHitRadius: 0
+    p_trailCloneAlpha: 0
+  - weaponId: CH1_R_4
+    traitId: 
+    triggerChance: 0.25
+    skillOverride: 
+    cloneProjectilePrefab: {fileID: 0}
+    cloneOutTime: 0
+    clonePauseTime: 0
+    cloneReturnTime: 0
+    cloneRange: 5
+    spikePrefab: {fileID: 5416354146166037338, guid: 3bdfc47fae04ded4c9087b112e349e81, type: 3}
+    hitStunType: 0
+    hitStunColor: {r: 0, g: 0, b: 0, a: 0}
+    hitEffectVfxPrefab: {fileID: 0}
+    hitSpinPermanent: 0
+    subProjectilePrefab: {fileID: 0}
+    passiveBuffPct: 0
+    passiveBuffVfxPrefab: {fileID: 0}
+    hitVfxPrefab: {fileID: 0}
+    p_stunDuration: 0
+    p_freezeThawDmg: 0
+    p_cloneSpeed: 0
+    p_cloneLifetime: 0
+    p_cloneScale: 0
+    p_cloneAlpha: 0
+    p_spreadAngle: 0
+    p_subDmgRatio: 0
+    p_subSpeedRatio: 0
+    p_slashPrefab: {fileID: 0}
+    p_slashDmgRatio: 0
+    p_slashSpeed: 0
+    p_spinRadiusMult: 0
+    p_spinSpeedMult: 0
+    p_spinCloneChance: 0
+    p_spinCloneRadius: 0
+    p_spinCloneSpeed: 0
+    p_spinCloneDuration: 0
+    p_spinCloneHitRadius: 0
+    p_spinCloneAlpha: 0
+    p_spinCloneMax: 0
+    p_shockRadius: 0
+    p_shockDmgRatio: 0
+    p_spikeTickDmg: 0
+    p_spikeTickInterval: 0
+    p_spikeDuration: 0
+    p_spikeDeathRadius: 0
+    p_spikeDeathDmg: 0
+    p_bindDuration: 0
+    p_groggySeconds: 0
+    p_spearPrefab: {fileID: 0}
+    p_spearLandingVfx: {fileID: 0}
+    p_spearDropHeight: 0
+    p_spearSideOffset: 0
+    p_spearSpeed: 0
+    p_spearDmgRatio: 0
+    p_spearHitRadius: 0
+    p_trailClonePrefab: {fileID: 0}
+    p_trailMarkerPrefab: {fileID: 0}
+    p_trailSpeed: 0
+    p_trailRange: 0
+    p_trailDmgRatio: 0
+    p_trailDuration: 0
+    p_trailSpawnInterval: 0
+    p_trailHitRadius: 0
+    p_trailCloneAlpha: 0
+  - weaponId: CH1_E_0
+    traitId: 
+    triggerChance: 0.25
+    skillOverride: 
+    cloneProjectilePrefab: {fileID: 0}
+    cloneOutTime: 0
+    clonePauseTime: 0
+    cloneReturnTime: 0
+    cloneRange: 5
+    spikePrefab: {fileID: 5416354146166037338, guid: 3bdfc47fae04ded4c9087b112e349e81, type: 3}
+    hitStunType: 0
+    hitStunColor: {r: 0, g: 0, b: 0, a: 0}
+    hitEffectVfxPrefab: {fileID: 0}
+    hitSpinPermanent: 0
+    subProjectilePrefab: {fileID: 0}
+    passiveBuffPct: 0
+    passiveBuffVfxPrefab: {fileID: 0}
+    hitVfxPrefab: {fileID: 0}
+    p_stunDuration: 0
+    p_freezeThawDmg: 0
+    p_cloneSpeed: 0
+    p_cloneLifetime: 0
+    p_cloneScale: 0
+    p_cloneAlpha: 0
+    p_spreadAngle: 0
+    p_subDmgRatio: 0
+    p_subSpeedRatio: 0
+    p_slashPrefab: {fileID: 0}
+    p_slashDmgRatio: 0
+    p_slashSpeed: 0
+    p_spinRadiusMult: 0
+    p_spinSpeedMult: 0
+    p_spinCloneChance: 0
+    p_spinCloneRadius: 0
+    p_spinCloneSpeed: 0
+    p_spinCloneDuration: 0
+    p_spinCloneHitRadius: 0
+    p_spinCloneAlpha: 0
+    p_spinCloneMax: 0
+    p_shockRadius: 0
+    p_shockDmgRatio: 0
+    p_spikeTickDmg: 0
+    p_spikeTickInterval: 0
+    p_spikeDuration: 0
+    p_spikeDeathRadius: 0
+    p_spikeDeathDmg: 0
+    p_bindDuration: 0
+    p_groggySeconds: 0
+    p_spearPrefab: {fileID: 0}
+    p_spearLandingVfx: {fileID: 0}
+    p_spearDropHeight: 0
+    p_spearSideOffset: 0
+    p_spearSpeed: 0
+    p_spearDmgRatio: 0
+    p_spearHitRadius: 0
+    p_trailClonePrefab: {fileID: 0}
+    p_trailMarkerPrefab: {fileID: 0}
+    p_trailSpeed: 0
+    p_trailRange: 0
+    p_trailDmgRatio: 0
+    p_trailDuration: 0
+    p_trailSpawnInterval: 0
+    p_trailHitRadius: 0
+    p_trailCloneAlpha: 0
+  - weaponId: CH1_E_1
+    traitId: 
+    triggerChance: 0.25
+    skillOverride: 
+    cloneProjectilePrefab: {fileID: 0}
+    cloneOutTime: 0
+    clonePauseTime: 0
+    cloneReturnTime: 0
+    cloneRange: 5
+    spikePrefab: {fileID: 5416354146166037338, guid: 3bdfc47fae04ded4c9087b112e349e81, type: 3}
+    hitStunType: 0
+    hitStunColor: {r: 0, g: 0, b: 0, a: 0}
+    hitEffectVfxPrefab: {fileID: 0}
+    hitSpinPermanent: 0
+    subProjectilePrefab: {fileID: 0}
+    passiveBuffPct: 0
+    passiveBuffVfxPrefab: {fileID: 0}
+    hitVfxPrefab: {fileID: 0}
+    p_stunDuration: 0
+    p_freezeThawDmg: 0
+    p_cloneSpeed: 0
+    p_cloneLifetime: 0
+    p_cloneScale: 0
+    p_cloneAlpha: 0
+    p_spreadAngle: 0
+    p_subDmgRatio: 0
+    p_subSpeedRatio: 0
+    p_slashPrefab: {fileID: 0}
+    p_slashDmgRatio: 0
+    p_slashSpeed: 0
+    p_spinRadiusMult: 0
+    p_spinSpeedMult: 0
+    p_spinCloneChance: 0
+    p_spinCloneRadius: 0
+    p_spinCloneSpeed: 0
+    p_spinCloneDuration: 0
+    p_spinCloneHitRadius: 0
+    p_spinCloneAlpha: 0
+    p_spinCloneMax: 0
+    p_shockRadius: 0
+    p_shockDmgRatio: 0
+    p_spikeTickDmg: 0
+    p_spikeTickInterval: 0
+    p_spikeDuration: 0
+    p_spikeDeathRadius: 0
+    p_spikeDeathDmg: 0
+    p_bindDuration: 0
+    p_groggySeconds: 0
+    p_spearPrefab: {fileID: 0}
+    p_spearLandingVfx: {fileID: 0}
+    p_spearDropHeight: 0
+    p_spearSideOffset: 0
+    p_spearSpeed: 0
+    p_spearDmgRatio: 0
+    p_spearHitRadius: 0
+    p_trailClonePrefab: {fileID: 0}
+    p_trailMarkerPrefab: {fileID: 0}
+    p_trailSpeed: 0
+    p_trailRange: 0
+    p_trailDmgRatio: 0
+    p_trailDuration: 0
+    p_trailSpawnInterval: 0
+    p_trailHitRadius: 0
+    p_trailCloneAlpha: 0
+  - weaponId: CH1_E_2
+    traitId: 
+    triggerChance: 0.25
+    skillOverride: 
+    cloneProjectilePrefab: {fileID: 0}
+    cloneOutTime: 0
+    clonePauseTime: 0
+    cloneReturnTime: 0
+    cloneRange: 5
+    spikePrefab: {fileID: 5416354146166037338, guid: 3bdfc47fae04ded4c9087b112e349e81, type: 3}
+    hitStunType: 0
+    hitStunColor: {r: 0, g: 0, b: 0, a: 0}
+    hitEffectVfxPrefab: {fileID: 0}
+    hitSpinPermanent: 0
+    subProjectilePrefab: {fileID: 0}
+    passiveBuffPct: 0
+    passiveBuffVfxPrefab: {fileID: 0}
+    hitVfxPrefab: {fileID: 0}
+    p_stunDuration: 0
+    p_freezeThawDmg: 0
+    p_cloneSpeed: 0
+    p_cloneLifetime: 0
+    p_cloneScale: 0
+    p_cloneAlpha: 0
+    p_spreadAngle: 0
+    p_subDmgRatio: 0
+    p_subSpeedRatio: 0
+    p_slashPrefab: {fileID: 0}
+    p_slashDmgRatio: 0
+    p_slashSpeed: 0
+    p_spinRadiusMult: 0
+    p_spinSpeedMult: 0
+    p_spinCloneChance: 0
+    p_spinCloneRadius: 0
+    p_spinCloneSpeed: 0
+    p_spinCloneDuration: 0
+    p_spinCloneHitRadius: 0
+    p_spinCloneAlpha: 0
+    p_spinCloneMax: 0
+    p_shockRadius: 0
+    p_shockDmgRatio: 0
+    p_spikeTickDmg: 0
+    p_spikeTickInterval: 0
+    p_spikeDuration: 0
+    p_spikeDeathRadius: 0
+    p_spikeDeathDmg: 0
+    p_bindDuration: 0
+    p_groggySeconds: 0
+    p_spearPrefab: {fileID: 0}
+    p_spearLandingVfx: {fileID: 0}
+    p_spearDropHeight: 0
+    p_spearSideOffset: 0
+    p_spearSpeed: 0
+    p_spearDmgRatio: 0
+    p_spearHitRadius: 0
+    p_trailClonePrefab: {fileID: 0}
+    p_trailMarkerPrefab: {fileID: 0}
+    p_trailSpeed: 0
+    p_trailRange: 0
+    p_trailDmgRatio: 0
+    p_trailDuration: 0
+    p_trailSpawnInterval: 0
+    p_trailHitRadius: 0
+    p_trailCloneAlpha: 0
+  - weaponId: CH1_E_3
+    traitId: 
+    triggerChance: 0.25
+    skillOverride: 
+    cloneProjectilePrefab: {fileID: 0}
+    cloneOutTime: 0
+    clonePauseTime: 0
+    cloneReturnTime: 0
+    cloneRange: 5
+    spikePrefab: {fileID: 5416354146166037338, guid: 3bdfc47fae04ded4c9087b112e349e81, type: 3}
+    hitStunType: 0
+    hitStunColor: {r: 0, g: 0, b: 0, a: 0}
+    hitEffectVfxPrefab: {fileID: 0}
+    hitSpinPermanent: 0
+    subProjectilePrefab: {fileID: 0}
+    passiveBuffPct: 0
+    passiveBuffVfxPrefab: {fileID: 0}
+    hitVfxPrefab: {fileID: 0}
+    p_stunDuration: 0
+    p_freezeThawDmg: 0
+    p_cloneSpeed: 0
+    p_cloneLifetime: 0
+    p_cloneScale: 0
+    p_cloneAlpha: 0
+    p_spreadAngle: 0
+    p_subDmgRatio: 0
+    p_subSpeedRatio: 0
+    p_slashPrefab: {fileID: 0}
+    p_slashDmgRatio: 0
+    p_slashSpeed: 0
+    p_spinRadiusMult: 0
+    p_spinSpeedMult: 0
+    p_spinCloneChance: 0
+    p_spinCloneRadius: 0
+    p_spinCloneSpeed: 0
+    p_spinCloneDuration: 0
+    p_spinCloneHitRadius: 0
+    p_spinCloneAlpha: 0
+    p_spinCloneMax: 0
+    p_shockRadius: 0
+    p_shockDmgRatio: 0
+    p_spikeTickDmg: 0
+    p_spikeTickInterval: 0
+    p_spikeDuration: 0
+    p_spikeDeathRadius: 0
+    p_spikeDeathDmg: 0
+    p_bindDuration: 0
+    p_groggySeconds: 0
+    p_spearPrefab: {fileID: 0}
+    p_spearLandingVfx: {fileID: 0}
+    p_spearDropHeight: 0
+    p_spearSideOffset: 0
+    p_spearSpeed: 0
+    p_spearDmgRatio: 0
+    p_spearHitRadius: 0
+    p_trailClonePrefab: {fileID: 0}
+    p_trailMarkerPrefab: {fileID: 0}
+    p_trailSpeed: 0
+    p_trailRange: 0
+    p_trailDmgRatio: 0
+    p_trailDuration: 0
+    p_trailSpawnInterval: 0
+    p_trailHitRadius: 0
+    p_trailCloneAlpha: 0
+  - weaponId: CH1_E_4
+    traitId: 
+    triggerChance: 0.25
+    skillOverride: 
+    cloneProjectilePrefab: {fileID: 0}
+    cloneOutTime: 0
+    clonePauseTime: 0
+    cloneReturnTime: 0
+    cloneRange: 5
+    spikePrefab: {fileID: 5416354146166037338, guid: 3bdfc47fae04ded4c9087b112e349e81, type: 3}
+    hitStunType: 0
+    hitStunColor: {r: 0, g: 0, b: 0, a: 0}
+    hitEffectVfxPrefab: {fileID: 0}
+    hitSpinPermanent: 0
+    subProjectilePrefab: {fileID: 0}
+    passiveBuffPct: 0
+    passiveBuffVfxPrefab: {fileID: 0}
+    hitVfxPrefab: {fileID: 0}
+    p_stunDuration: 0
+    p_freezeThawDmg: 0
+    p_cloneSpeed: 0
+    p_cloneLifetime: 0
+    p_cloneScale: 0
+    p_cloneAlpha: 0
+    p_spreadAngle: 0
+    p_subDmgRatio: 0
+    p_subSpeedRatio: 0
+    p_slashPrefab: {fileID: 0}
+    p_slashDmgRatio: 0
+    p_slashSpeed: 0
+    p_spinRadiusMult: 0
+    p_spinSpeedMult: 0
+    p_spinCloneChance: 0
+    p_spinCloneRadius: 0
+    p_spinCloneSpeed: 0
+    p_spinCloneDuration: 0
+    p_spinCloneHitRadius: 0
+    p_spinCloneAlpha: 0
+    p_spinCloneMax: 0
+    p_shockRadius: 0
+    p_shockDmgRatio: 0
+    p_spikeTickDmg: 0
+    p_spikeTickInterval: 0
+    p_spikeDuration: 0
+    p_spikeDeathRadius: 0
+    p_spikeDeathDmg: 0
+    p_bindDuration: 0
+    p_groggySeconds: 0
+    p_spearPrefab: {fileID: 0}
+    p_spearLandingVfx: {fileID: 0}
+    p_spearDropHeight: 0
+    p_spearSideOffset: 0
+    p_spearSpeed: 0
+    p_spearDmgRatio: 0
+    p_spearHitRadius: 0
+    p_trailClonePrefab: {fileID: 0}
+    p_trailMarkerPrefab: {fileID: 0}
+    p_trailSpeed: 0
+    p_trailRange: 0
+    p_trailDmgRatio: 0
+    p_trailDuration: 0
+    p_trailSpawnInterval: 0
+    p_trailHitRadius: 0
+    p_trailCloneAlpha: 0

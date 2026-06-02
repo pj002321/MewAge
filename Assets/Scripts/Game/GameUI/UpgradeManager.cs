@@ -20,7 +20,7 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
 
     private struct DrawProfile
     {
-        public int   minLevel;
+        public float minLevel;
         public float common, rare, epic, legendary, mythic;
     }
 
@@ -611,12 +611,12 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
         if (drawProfiles.Length == 0) return default;
 
         // 플레이어 레벨을 충족하는 프로필 중 minLevel이 가장 높은 것을 선택
-        DrawProfile result    = drawProfiles[0]; // minLevel 최솟값 프로필을 기본 폴백으로
-        int         bestLevel = int.MinValue;
+        DrawProfile result    = drawProfiles[0];
+        float       bestLevel = float.MinValue;
         foreach (var p in drawProfiles)
         {
             if (p.minLevel < result.minLevel)
-                result = p; // 가장 낮은 minLevel 프로필 추적 (폴백용)
+                result = p;
             if (level >= p.minLevel && p.minLevel > bestLevel)
             {
                 bestLevel = p.minLevel;

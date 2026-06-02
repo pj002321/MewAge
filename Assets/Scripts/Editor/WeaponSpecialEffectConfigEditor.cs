@@ -41,6 +41,8 @@ public class WeaponEffectConfigEditor : EditorWindow
         "BOSS_SPIKE", "HIT_SPIKE",
         "BOSS_BIND",
         "BOSS_GROGY",
+        "HIT_SPEAR",
+        "HIT_CLONE_TRAIL",
         "BUFF_ATK", "BUFF_DEF", "BUFF_HP", "BUFF_SPD", "BUFF_CRI",
     };
     private static readonly string[] SkillLabels;
@@ -160,7 +162,7 @@ public class WeaponEffectConfigEditor : EditorWindow
         {
             var footer = new GUIStyle(EditorStyles.miniLabel) { normal = { textColor = Color.gray } };
             GUILayout.Label(
-                "발동확률 0 = 효과별 기본값. HIT_STUN=25% HIT_ICE=30% HIT_FIRE=35% HIT_CLONE=25% HIT_SHOCK=40% HIT_SPIN=30% BOSS_SPIKE=25% BOSS_BIND=15% BOSS_GROGY=20%",
+                "발동확률 0 = 효과별 기본값. HIT_STUN=25% HIT_ICE=30% HIT_FIRE=35% HIT_CLONE=25% HIT_SHOCK=40% HIT_SPIN=30% BOSS_SPIKE=25% BOSS_BIND=15% BOSS_GROGY=20% HIT_SPEAR=25% HIT_CLONE_TRAIL=30%",
                 footer);
         }
 
@@ -370,7 +372,8 @@ public class WeaponEffectConfigEditor : EditorWindow
         GUILayout.Space(20); // 들여쓰기
 
         bool isStun   = skillId is "HIT_STUN" or "HIT_ICE" or "HIT_FIRE";
-        bool isClone  = skillId.StartsWith("HIT_CLONE");
+        bool isTrail  = skillId == "HIT_CLONE_TRAIL";
+        bool isClone  = !isTrail && skillId.StartsWith("HIT_CLONE");
         bool isSub    = skillId == "SHOOT_SUB";
         bool isSlash  = skillId == "HIT_SLASH";
         bool isSpin   = skillId == "HIT_SPIN";
@@ -378,6 +381,7 @@ public class WeaponEffectConfigEditor : EditorWindow
         bool isSpike  = skillId is "BOSS_SPIKE" or "HIT_SPIKE";
         bool isBind   = skillId == "BOSS_BIND";
         bool isGroggy = skillId == "BOSS_GROGY";
+        bool isSpear  = skillId == "HIT_SPEAR";
         bool isBuff   = skillId.StartsWith("BUFF_");
 
         // 발동확률 (공통 - 스킬이 있는 모든 케이스)
@@ -457,6 +461,28 @@ public class WeaponEffectConfigEditor : EditorWindow
         {
             DrawLabeledFloat(elem.FindPropertyRelative("p_groggySeconds"), "그로기(s)", 55f);
         }
+        else if (isSpear)
+        {
+            DrawLabeledPrefab(elem.FindPropertyRelative("p_spearPrefab"),      "창프리팹",    140f);
+            DrawLabeledPrefab(elem.FindPropertyRelative("p_spearLandingVfx"), "착지VFX",    140f);
+            DrawLabeledFloat(elem.FindPropertyRelative("p_spearDropHeight"),   "낙하높이",   50f);
+            DrawLabeledFloat(elem.FindPropertyRelative("p_spearSideOffset"),   "수평오프셋", 50f);
+            DrawLabeledFloat(elem.FindPropertyRelative("p_spearSpeed"),        "속도",       50f);
+            DrawLabeledFloat(elem.FindPropertyRelative("p_spearDmgRatio"),     "피해비율",   55f);
+            DrawLabeledFloat(elem.FindPropertyRelative("p_spearHitRadius"),    "타격반경",   50f);
+        }
+        else if (isTrail)
+        {
+            DrawLabeledPrefab(elem.FindPropertyRelative("p_trailClonePrefab"), "클론프리팹", 140f);
+            DrawLabeledPrefab(elem.FindPropertyRelative("p_trailMarkerPrefab"),"마커프리팹", 140f);
+            DrawLabeledFloat(elem.FindPropertyRelative("p_trailSpeed"),        "속도",      50f);
+            DrawLabeledFloat(elem.FindPropertyRelative("p_trailRange"),        "거리",      50f);
+            DrawLabeledFloat(elem.FindPropertyRelative("p_trailDmgRatio"),     "피해비율",  55f);
+            DrawLabeledFloat(elem.FindPropertyRelative("p_trailDuration"),     "마커지속",  50f);
+            DrawLabeledFloat(elem.FindPropertyRelative("p_trailSpawnInterval"),"생성간격",  50f);
+            DrawLabeledFloat(elem.FindPropertyRelative("p_trailHitRadius"),    "타격반경",  50f);
+            DrawLabeledFloat(elem.FindPropertyRelative("p_trailCloneAlpha"),   "투명도",    50f);
+        }
         else if (isBuff)
         {
             DrawLabeledFloat(elem.FindPropertyRelative("passiveBuffPct"),       "버프%",  50f);
@@ -469,9 +495,15 @@ public class WeaponEffectConfigEditor : EditorWindow
 
     // ── 인라인 레이블 + 필드 헬퍼 ───────────────────────────────────
 
+    private float LblW(string label)
+    {
+        var style = _subLblStyle ?? EditorStyles.miniLabel;
+        return style.CalcSize(new GUIContent(label)).x + 4f;
+    }
+
     private void DrawLabeledFloat(SerializedProperty p, string label, float fieldW)
     {
-        GUILayout.Label(label, _subLblStyle, GUILayout.Width(label.Length * 7f));
+        GUILayout.Label(label, _subLblStyle, GUILayout.Width(LblW(label)));
         EditorGUI.BeginChangeCheck();
         float v = EditorGUILayout.FloatField(p.floatValue, GUILayout.Width(fieldW));
         if (EditorGUI.EndChangeCheck()) p.floatValue = v;
@@ -480,7 +512,7 @@ public class WeaponEffectConfigEditor : EditorWindow
 
     private void DrawLabeledInt(SerializedProperty p, string label, float fieldW)
     {
-        GUILayout.Label(label, _subLblStyle, GUILayout.Width(label.Length * 7f));
+        GUILayout.Label(label, _subLblStyle, GUILayout.Width(LblW(label)));
         EditorGUI.BeginChangeCheck();
         int v = EditorGUILayout.IntField(p.intValue, GUILayout.Width(fieldW));
         if (EditorGUI.EndChangeCheck()) p.intValue = v;
@@ -489,7 +521,7 @@ public class WeaponEffectConfigEditor : EditorWindow
 
     private void DrawLabeledEnum(SerializedProperty p, string label, float fieldW)
     {
-        GUILayout.Label(label, _subLblStyle, GUILayout.Width(label.Length * 7f));
+        GUILayout.Label(label, _subLblStyle, GUILayout.Width(LblW(label)));
         EditorGUI.BeginChangeCheck();
         int v = EditorGUILayout.Popup(p.enumValueIndex, p.enumDisplayNames, GUILayout.Width(fieldW));
         if (EditorGUI.EndChangeCheck()) p.enumValueIndex = v;
@@ -498,7 +530,7 @@ public class WeaponEffectConfigEditor : EditorWindow
 
     private void DrawLabeledColor(SerializedProperty p, string label, float fieldW)
     {
-        GUILayout.Label(label, _subLblStyle, GUILayout.Width(label.Length * 7f));
+        GUILayout.Label(label, _subLblStyle, GUILayout.Width(LblW(label)));
         EditorGUI.BeginChangeCheck();
         Color v = EditorGUILayout.ColorField(p.colorValue, GUILayout.Width(fieldW));
         if (EditorGUI.EndChangeCheck()) p.colorValue = v;
@@ -507,7 +539,7 @@ public class WeaponEffectConfigEditor : EditorWindow
 
     private void DrawLabeledToggle(SerializedProperty p, string label, float fieldW)
     {
-        GUILayout.Label(label, _subLblStyle, GUILayout.Width(label.Length * 7f));
+        GUILayout.Label(label, _subLblStyle, GUILayout.Width(LblW(label)));
         EditorGUI.BeginChangeCheck();
         bool v = EditorGUILayout.Toggle(p.boolValue, GUILayout.Width(fieldW));
         if (EditorGUI.EndChangeCheck()) p.boolValue = v;
@@ -516,7 +548,7 @@ public class WeaponEffectConfigEditor : EditorWindow
 
     private void DrawLabeledPrefab(SerializedProperty p, string label, float fieldW)
     {
-        GUILayout.Label(label, _subLblStyle, GUILayout.Width(label.Length * 7f));
+        GUILayout.Label(label, _subLblStyle, GUILayout.Width(LblW(label)));
         EditorGUI.BeginChangeCheck();
         var v = EditorGUILayout.ObjectField(p.objectReferenceValue, typeof(GameObject), false, GUILayout.Width(fieldW));
         if (EditorGUI.EndChangeCheck()) p.objectReferenceValue = v;

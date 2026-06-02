@@ -196,7 +196,7 @@ public class WeaponInfoPanel : MonoBehaviourSingleton<WeaponInfoPanel>
                 : "-";
 
         // ── 성별 강화 설명 (공격력 +X 형태, 실제 수치) ──────────────
-        SetCombinedStarDesc(starDesc, data.bonus2Star, data.bonus3Star, data.star, data);
+        SetCombinedStarDesc(starDesc, data.bonus1Star, data.bonus2Star, data.bonus3Star, data.star, data);
 
         // ── 특성 / 특수효과 ──────────────────────────────────────
         bool hasTraitDisplay = false;
@@ -286,11 +286,11 @@ public class WeaponInfoPanel : MonoBehaviourSingleton<WeaponInfoPanel>
 
     /// <summary>현재 성에 해당하는 보너스를 "공격력 +X" 형식으로 표시합니다. X는 퍼센트 적용 실제 수치.</summary>
     private static void SetCombinedStarDesc(
-        TextMeshProUGUI labelDesc, WeaponStarBonus b2, WeaponStarBonus b3, int currentStar, WeaponData data)
+        TextMeshProUGUI labelDesc, WeaponStarBonus b1, WeaponStarBonus b2, WeaponStarBonus b3, int currentStar, WeaponData data)
     {
         if (labelDesc == null) return;
 
-        WeaponStarBonus active = currentStar >= 3 ? b3 : (currentStar == 2 ? b2 : default);
+        WeaponStarBonus active = currentStar >= 3 ? b3 : (currentStar >= 2 ? b2 : (currentStar >= 1 ? b1 : default));
         if (active.IsEmpty) { labelDesc.text = string.Empty; return; }
 
         string statLabel = StatIdToLabel(active.statId);
@@ -310,7 +310,7 @@ public class WeaponInfoPanel : MonoBehaviourSingleton<WeaponInfoPanel>
         "ATK_ADD"    => data.attackDamage,
         "CD_RED"     => data.attackCooldown,
         "RNG_ADD"    => data.attackRange,
-        "CRIT_ADD"   => data.criticalRate * 100f,
+        "CRIT_ADD"   => 100f,              // flat criticalDamage 가산 → value 그대로 표시
         "CRT_RATE"   => data.criticalRate * 100f,
         "DOT_AD"     => data.bleedDamage,
         "DOT_ADD"    => data.bleedDamage,

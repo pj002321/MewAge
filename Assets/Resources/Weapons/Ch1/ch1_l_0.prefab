@@ -62,7 +62,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: e901129e9679f8e428ec8abe92cf485f, type: 2}
+  - {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -85,7 +85,7 @@ SpriteRenderer:
   m_SortingLayer: 1
   m_SortingOrder: 101
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 5462544555987826815, guid: 78d61fd33e0f98e479b493b4683771cf, type: 3}
+  m_Sprite: {fileID: -6387761896825223848, guid: c71444f0162ea5740be1b354b4f4d6e4, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -112,7 +112,7 @@ MonoBehaviour:
   useTrail: 1
   trailTime: 0.1
   trailStartWidth: 0.28
-  trailColor: {r: 1, g: 1, b: 1, a: 0.7058824}
+  trailColor: {r: 0.9056604, g: 0.75653374, b: 0, a: 0.7058824}
   _weaponId: CH1_L_0
   references:
     version: 2
@@ -120,13 +120,10 @@ MonoBehaviour:
     - rid: 2864143502748942441
       type: {class: WeaponBoomerangBehaviour, ns: , asm: Assembly-CSharp}
       data:
-        pullbackDist: 0.5
-        pullbackSpeed: 8
-        strikeSpeed: 80
-        returnSpeed: 70
-        hitDistance: 0.4
-        overshootDistance: 0.5
-        overshootSpeed: 60
+        _overrideSpeed: 0
+        _overridePullbackSpeed: 5
+        _overrideStrikeSpeed: 300
+        _overrideReturnSpeed: 70
         maxBounces: 3
         bounceRange: 15
 --- !u!114 &-5742848553004821721
@@ -203,4 +200,21 @@ MonoBehaviour:
   bindDuration: 2
   groggyChance: 0.15
   groggySeconds: 2
+  spearChance: 0.25
+  spearPrefab: {fileID: 0}
+  spearDropHeight: 8
+  spearSideOffset: 3
+  spearSpeed: 18
+  spearDmgRatio: 1
+  spearHitRadius: 0.45
+  trailChance: 0.3
+  trailClonePrefab: {fileID: 0}
+  trailMarkerPrefab: {fileID: 0}
+  trailSpeed: 6
+  trailRange: 8
+  trailDmgRatio: 0.4
+  trailDuration: 2
+  trailSpawnInterval: 0.15
+  trailHitRadius: 0.5
+  trailCloneAlpha: 0.5
   reductionPct: 0.2

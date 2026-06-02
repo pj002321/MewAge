@@ -151,7 +151,7 @@ public static class WeaponStatRegistry
                 data.areaHitRadius  += data.baseAreaHitRadius   * bonus.value / 100f;
                 break;
             case "CRIT_ADD":
-                data.criticalRate   += bonus.value / 100f;
+                data.criticalDamage += bonus.value / 100f;
                 break;
             case "DOT_AD":
             case "DOT_ADD":

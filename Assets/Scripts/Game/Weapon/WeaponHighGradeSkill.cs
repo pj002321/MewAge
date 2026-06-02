@@ -38,6 +38,8 @@ public class WeaponHighGradeSkill : MonoBehaviour
     private bool IsBind     => _traitId == "BOSS_BIND";
     private bool IsGroggy   => _traitId == "BOSS_GROGY";
     private bool IsReduction => _traitId == "(신화 피해감소)";
+    private bool IsSpear    => _traitId == "HIT_SPEAR";
+    private bool IsTrail    => _traitId == "HIT_CLONE_TRAIL";
 
     // ── [HIT_STUN · HIT_ICE · HIT_FIRE] 근접 상태이상 ──────────────────
     [BoxGroup("[HIT_STUN·ICE·FIRE] 근접"), ShowIf(nameof(IsMelee))]
@@ -173,6 +175,59 @@ public class WeaponHighGradeSkill : MonoBehaviour
     [BoxGroup("[BOSS_GROGY] 그로기"), ShowIf(nameof(IsGroggy)), LabelText("그로기 시간")]
     [SerializeField] private float groggySeconds = 2f;
 
+    // ── [HIT_SPEAR] 천공의 창 ───────────────────────────────────────────
+    [BoxGroup("[HIT_SPEAR] 천공의 창"), ShowIf(nameof(IsSpear)), LabelText("발동 확률")]
+    [SerializeField, Range(0f, 1f)] private float spearChance = 0.25f;
+
+    [BoxGroup("[HIT_SPEAR] 천공의 창"), ShowIf(nameof(IsSpear)), LabelText("창 프리팹")]
+    [SerializeField] private GameObject spearPrefab;
+
+    [BoxGroup("[HIT_SPEAR] 천공의 창"), ShowIf(nameof(IsSpear)), LabelText("낙하 높이")]
+    [SerializeField] private float spearDropHeight = 8f;
+
+    [BoxGroup("[HIT_SPEAR] 천공의 창"), ShowIf(nameof(IsSpear)), LabelText("사선 수평 오프셋")]
+    [SerializeField] private float spearSideOffset = 3f;
+
+    [BoxGroup("[HIT_SPEAR] 천공의 창"), ShowIf(nameof(IsSpear)), LabelText("이동 속도")]
+    [SerializeField] private float spearSpeed = 18f;
+
+    [BoxGroup("[HIT_SPEAR] 천공의 창"), ShowIf(nameof(IsSpear)), LabelText("데미지 비율")]
+    [SerializeField] private float spearDmgRatio = 1f;
+
+    [BoxGroup("[HIT_SPEAR] 천공의 창"), ShowIf(nameof(IsSpear)), LabelText("타격 반경")]
+    [SerializeField] private float spearHitRadius = 0.45f;
+
+    // ── [HIT_CLONE_TRAIL] 흔적 ──────────────────────────────────────────
+    [BoxGroup("[HIT_CLONE_TRAIL] 흔적"), ShowIf(nameof(IsTrail)), LabelText("발동 확률")]
+    [SerializeField, Range(0f, 1f)] private float trailChance = 0.3f;
+
+    [BoxGroup("[HIT_CLONE_TRAIL] 흔적"), ShowIf(nameof(IsTrail)), LabelText("클론 프리팹")]
+    [SerializeField] private GameObject trailClonePrefab;
+
+    [BoxGroup("[HIT_CLONE_TRAIL] 흔적"), ShowIf(nameof(IsTrail)), LabelText("마커 프리팹")]
+    [SerializeField] private GameObject trailMarkerPrefab;
+
+    [BoxGroup("[HIT_CLONE_TRAIL] 흔적"), ShowIf(nameof(IsTrail)), LabelText("이동 속도")]
+    [SerializeField] private float trailSpeed = 6f;
+
+    [BoxGroup("[HIT_CLONE_TRAIL] 흔적"), ShowIf(nameof(IsTrail)), LabelText("이동 거리")]
+    [SerializeField] private float trailRange = 8f;
+
+    [BoxGroup("[HIT_CLONE_TRAIL] 흔적"), ShowIf(nameof(IsTrail)), LabelText("데미지 비율")]
+    [SerializeField] private float trailDmgRatio = 0.4f;
+
+    [BoxGroup("[HIT_CLONE_TRAIL] 흔적"), ShowIf(nameof(IsTrail)), LabelText("마커 지속 시간")]
+    [SerializeField] private float trailDuration = 2f;
+
+    [BoxGroup("[HIT_CLONE_TRAIL] 흔적"), ShowIf(nameof(IsTrail)), LabelText("마커 생성 간격")]
+    [SerializeField] private float trailSpawnInterval = 0.15f;
+
+    [BoxGroup("[HIT_CLONE_TRAIL] 흔적"), ShowIf(nameof(IsTrail)), LabelText("마커 타격 반경")]
+    [SerializeField] private float trailHitRadius = 0.5f;
+
+    [BoxGroup("[HIT_CLONE_TRAIL] 흔적"), ShowIf(nameof(IsTrail)), LabelText("클론 투명도")]
+    [SerializeField, Range(0f, 1f)] private float trailCloneAlpha = 0.5f;
+
     // ── [신화] 피해 감소 (패시브) ───────────────────────────────────────
     [BoxGroup("[신화] 피해 감소"), ShowIf(nameof(IsReduction)), LabelText("보스 피해 감소율")]
     [SerializeField, Range(0f, 1f)] private float reductionPct = 0.2f;
@@ -232,6 +287,9 @@ public class WeaponHighGradeSkill : MonoBehaviour
             case "HIT_CLONE_RETURN": DoCloneReturn(); break;
             case "HIT_CLONE_SPREAD": DoCloneSpread(); break;
             case "HIT_CLONE_BURST":  DoCloneBurst();  break;
+            case "HIT_CLONE_TRAIL":
+                DoCloneTrail(WP != null ? (Vector2)WP.transform.position : (Vector2)transform.position, hitDir);
+                break;
             default:
                 if (TraitId.StartsWith("HIT_CLONE")) DoBoomerangHit();
                 break;
@@ -248,15 +306,21 @@ public class WeaponHighGradeSkill : MonoBehaviour
         switch (TraitId)
         {
             case "BOSS_SPIKE":
-            case "HIT_SPIKE":  DoSpikeHit(boss, null); break;
-            case "BOSS_BIND":  DoBindBoss(boss);        break;
-            case "BOSS_GROGY": DoGroggyBoss(boss);      break;
+            case "HIT_SPIKE":  DoSpikeHit(boss, null);                          break;
+            case "BOSS_BIND":  DoBindBoss(boss);                                 break;
+            case "BOSS_GROGY": DoGroggyBoss(boss);                               break;
+            case "HIT_SPEAR":  DoSpearHit(boss.transform.position, null, boss); break;
         }
     }
 
     public void OnEnemyHit(EnemyController enemy, Vector2 hitDir)
     {
-        if (TraitId is "BOSS_SPIKE" or "HIT_SPIKE") DoSpikeHit(null, enemy);
+        switch (TraitId)
+        {
+            case "BOSS_SPIKE":
+            case "HIT_SPIKE": DoSpikeHit(null, enemy); break;
+            case "HIT_SPEAR": DoSpearHit(enemy.transform.position, enemy); break;
+        }
     }
 
     // ── 근접 상태이상 구현 ───────────────────────────────────────────────
@@ -638,6 +702,80 @@ public class WeaponHighGradeSkill : MonoBehaviour
         boss.TriggerGroggy(P(e => e.p_groggySeconds, groggySeconds));
     }
 
+    // ── [HIT_SPEAR] 천공의 창 구현 ──────────────────────────────────────
+
+    private int _lastSpearFrame = -1;
+
+    internal void DoSpearHit(Vector2 targetPos, EnemyController enemy = null, BossController boss = null)
+    {
+        // 같은 프레임 내 중복 발동 방지 (TrySpecialEffectEnemy + ApplyGradeProc 동시 경로 대응)
+        if (Time.frameCount == _lastSpearFrame) return;
+        if (WP == null || Random.value > P(e => e.triggerChance, spearChance)) return;
+        _lastSpearFrame = Time.frameCount;
+
+        var prefab = PGO(e => e.p_spearPrefab) ?? spearPrefab;
+        if (prefab == null) return;
+
+        float dmg    = WP.AttackDamage * P(e => e.p_spearDmgRatio,    spearDmgRatio);
+        float height = P(e => e.p_spearDropHeight, spearDropHeight);
+        float side   = P(e => e.p_spearSideOffset, spearSideOffset);
+        float speed  = P(e => e.p_spearSpeed,      spearSpeed);
+        float hitR   = P(e => e.p_spearHitRadius,  spearHitRadius);
+
+        Vector2 startPos = targetPos + new Vector2(side, height);
+        Vector2 dir      = (targetPos - startPos).normalized;
+        float   rotZ     = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg - 90f;
+
+        var landingVfx = PGO(e => e.p_spearLandingVfx);
+        var go = Instantiate(prefab, (Vector3)startPos, Quaternion.Euler(0f, 0f, rotZ));
+        go.AddComponent<SpearDrop>().Init(targetPos, speed, dmg, hitR, enemy, boss, landingVfx);
+    }
+
+    // ── [HIT_CLONE_TRAIL] 흔적 구현 ─────────────────────────────────────
+
+    private int _lastTrailFrame = -1;
+
+    internal void DoCloneTrail(Vector2 origin, Vector2 dir)
+    {
+        if (Time.frameCount == _lastTrailFrame) return;
+        if (WP == null || Random.value > P(e => e.triggerChance, trailChance)) return;
+        _lastTrailFrame = Time.frameCount;
+
+        float dmg        = WP.AttackDamage * P(e => e.p_trailDmgRatio,      trailDmgRatio);
+        float alpha      = P(e => e.p_trailCloneAlpha,  trailCloneAlpha);
+        float speed      = P(e => e.p_trailSpeed,        trailSpeed);
+        float range      = P(e => e.p_trailRange,        trailRange);
+        float duration   = P(e => e.p_trailDuration,     trailDuration);
+        float interval   = P(e => e.p_trailSpawnInterval,trailSpawnInterval);
+        float hitR       = P(e => e.p_trailHitRadius,    trailHitRadius);
+        var   clonePrefab  = PGO(e => e.p_trailClonePrefab)  ?? trailClonePrefab;
+        var   markerPrefab = PGO(e => e.p_trailMarkerPrefab) ?? trailMarkerPrefab;
+
+        GameObject cloneGo;
+        if (clonePrefab != null)
+        {
+            cloneGo = Instantiate(clonePrefab, origin, Quaternion.identity);
+            var proj = cloneGo.GetComponent<Projectile>(); if (proj != null) Destroy(proj);
+            var rb   = cloneGo.GetComponent<Rigidbody2D>(); if (rb != null) rb.bodyType = RigidbodyType2D.Kinematic;
+            SetSpriteAlpha(cloneGo, alpha);
+        }
+        else
+        {
+            var sr = GetComponentInChildren<SpriteRenderer>();
+            if (sr == null || sr.sprite == null) return;
+            cloneGo = new GameObject("TrailClone");
+            cloneGo.transform.position = origin;
+            var csr            = cloneGo.AddComponent<SpriteRenderer>();
+            csr.sprite         = sr.sprite;
+            csr.sortingLayerID = sr.sortingLayerID;
+            csr.sortingOrder   = sr.sortingOrder;
+            csr.color          = new Color(1f, 1f, 1f, alpha);
+        }
+
+        cloneGo.AddComponent<TrailClone>().Init(
+            dir, speed, range, dmg, duration, interval, hitR, markerPrefab);
+    }
+
     // ── 유틸 ─────────────────────────────────────────────────────────────
 
     private static Vector2 RotateDir(Vector2 dir, float deg)
@@ -817,4 +955,167 @@ public class BoomerangCloneMover : MonoBehaviour
     }
 
     private void Update() => transform.position += (Vector3)(_dir * _speed * Time.deltaTime);
+}
+
+/// <summary>HIT_SPEAR — 사선으로 낙하해 대상에 꽂히는 창.</summary>
+public class SpearDrop : MonoBehaviour
+{
+    private Vector2         _target;
+    private float           _speed;
+    private float           _damage;
+    private float           _hitRadius;
+    private EnemyController _enemy;
+    private BossController  _boss;
+    private GameObject      _landingVfx;
+    private bool            _landed;
+
+    public void Init(Vector2 target, float speed, float damage, float hitRadius,
+                     EnemyController enemy, BossController boss, GameObject landingVfx = null)
+    {
+        _target     = target;
+        _speed      = speed;
+        _damage     = damage;
+        _hitRadius  = hitRadius;
+        _enemy      = enemy;
+        _boss       = boss;
+        _landingVfx = landingVfx;
+        Destroy(gameObject, 4f);
+    }
+
+    private void Update()
+    {
+        if (_landed) return;
+        Vector2 pos  = transform.position;
+        Vector2 diff = _target - pos;
+        float   step = _speed * Time.deltaTime;
+
+        if (diff.magnitude <= step)
+        {
+            transform.position = _target;
+            Land();
+            return;
+        }
+        transform.position = pos + diff.normalized * step;
+    }
+
+    private void Land()
+    {
+        _landed = true;
+        if (_landingVfx != null)
+            Instantiate(_landingVfx, _target, Quaternion.identity);
+        if (_enemy != null && _enemy.gameObject.activeInHierarchy)
+            _enemy.TakeDamage(_damage, false);
+        else if (_boss != null && _boss.gameObject.activeInHierarchy)
+            _boss.TakeDamage(_damage, false);
+        Destroy(gameObject, 0.3f);
+    }
+}
+
+/// <summary>HIT_CLONE_TRAIL — 한 방향으로 이동하며 순차적으로 흔적 마커를 생성하는 클론.</summary>
+public class TrailClone : MonoBehaviour
+{
+    private Vector2    _dir;
+    private float      _speed;
+    private float      _remainDist;
+    private float      _damage;
+    private float      _markerDuration;
+    private float      _spawnInterval;
+    private float      _hitRadius;
+    private GameObject _markerPrefab;
+    private float      _nextSpawn;
+
+    public void Init(Vector2 dir, float speed, float range, float damage,
+                     float markerDuration, float spawnInterval, float hitRadius,
+                     GameObject markerPrefab)
+    {
+        _dir            = dir.normalized;
+        _speed          = speed;
+        _remainDist     = range;
+        _damage         = damage;
+        _markerDuration = markerDuration;
+        _spawnInterval  = spawnInterval;
+        _hitRadius      = hitRadius;
+        _markerPrefab   = markerPrefab;
+
+        float rotZ = Mathf.Atan2(_dir.y, _dir.x) * Mathf.Rad2Deg - 90f;
+        transform.rotation = Quaternion.Euler(0f, 0f, rotZ);
+
+        SpawnMarker();
+        _nextSpawn = _spawnInterval;
+    }
+
+    private void Update()
+    {
+        if (_remainDist <= 0f) { Destroy(gameObject); return; }
+
+        float step = _speed * Time.deltaTime;
+        transform.position += (Vector3)(_dir * step);
+        _remainDist -= step;
+
+        _nextSpawn -= Time.deltaTime;
+        if (_nextSpawn <= 0f)
+        {
+            SpawnMarker();
+            _nextSpawn = _spawnInterval;
+        }
+    }
+
+    private void SpawnMarker()
+    {
+        var go = _markerPrefab != null
+            ? Instantiate(_markerPrefab, transform.position, Quaternion.identity)
+            : new GameObject("TrailMarker");
+        if (_markerPrefab == null) go.transform.position = transform.position;
+        go.AddComponent<TrailMarker>().Init(_damage, _markerDuration, _hitRadius);
+    }
+}
+
+/// <summary>HIT_CLONE_TRAIL — 일정 반경 내 적에게 지속적으로 피해를 주는 잔류 마커.</summary>
+public class TrailMarker : MonoBehaviour
+{
+    private float _damage;
+    private float _hitRadius;
+    private float _bossCd;
+
+    private readonly System.Collections.Generic.Dictionary<EnemyController, float> _hitCd   = new();
+    private readonly System.Collections.Generic.List<EnemyController>              _expired = new();
+    private readonly Collider2D[]                                                  _buf     = new Collider2D[16];
+
+    public void Init(float damage, float duration, float hitRadius)
+    {
+        _damage    = damage;
+        _hitRadius = hitRadius;
+        Destroy(gameObject, duration);
+    }
+
+    private void Update()
+    {
+        _expired.Clear();
+        foreach (var k in _hitCd.Keys)
+        {
+            _hitCd[k] -= Time.deltaTime;
+            if (_hitCd[k] <= 0f) _expired.Add(k);
+        }
+        foreach (var k in _expired) _hitCd.Remove(k);
+        _bossCd -= Time.deltaTime;
+
+        int count = Physics2D.OverlapCircleNonAlloc(transform.position, _hitRadius, _buf);
+        for (int i = 0; i < count; i++)
+        {
+            if (_buf[i] == null) continue;
+            var boss = _buf[i].GetComponentInParent<BossController>();
+            if (boss != null && boss.gameObject.activeInHierarchy && _bossCd <= 0f)
+            {
+                boss.TakeDamage(_damage, false);
+                _bossCd = 0.5f;
+                continue;
+            }
+            var enemy = _buf[i].GetComponentInParent<EnemyController>();
+            if (enemy != null && enemy.gameObject.activeInHierarchy && !_hitCd.ContainsKey(enemy))
+            {
+                enemy.TakeDamage(_damage, false);
+                _hitCd[enemy] = 0.5f;
+            }
+        }
+    }
 }

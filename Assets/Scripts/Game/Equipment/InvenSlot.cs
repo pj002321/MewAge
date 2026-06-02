@@ -156,13 +156,11 @@ public class InvenSlot : MonoBehaviour,
         var inv = PlayerInventory.Shared;
         if (inv == null || SlotIndex >= inv.Inventory.Count || inv.Inventory[SlotIndex] == null)
         {
-            Debug.Log($"[InvenSlot] OnBeginDrag CANCELLED slot={SlotIndex}, inv={inv != null}, count={inv?.Inventory.Count}");
             return;
         }
         dragStarted = true;
         panel?.NotifyDragBegin(inv.Inventory[SlotIndex]);
         CreateGhost(eventData.position);
-        Debug.Log($"[InvenSlot] OnBeginDrag OK slot={SlotIndex}");
     }
 
     public void OnDrag(PointerEventData eventData)
@@ -174,12 +172,9 @@ public class InvenSlot : MonoBehaviour,
 
         // EquipSlot 호버 하이라이트 (RectTransform bounds 기준, raycastTarget 무관)
         EquipSlot hovered = panel?.GetEquipSlotAtScreenPos(eventData.position);
-        Debug.Log($"[InvenSlot] hover={hovered?.SlotIndex.ToString() ?? "none"} pos={eventData.position}");
         if (hovered != _hoveredEquipSlot)
         {
-            _hoveredEquipSlot?.HideHighlight();
             _hoveredEquipSlot = hovered;
-            _hoveredEquipSlot?.ShowHighlight();
         }
     }
 
@@ -188,7 +183,6 @@ public class InvenSlot : MonoBehaviour,
         if (dragStarted)
         {
             bool sold = panel?.NotifyDragEnd(eventData.position) ?? false;
-            _hoveredEquipSlot?.HideHighlight();
             _hoveredEquipSlot = null;
             if (sold)
             {
@@ -198,7 +192,6 @@ public class InvenSlot : MonoBehaviour,
             {
                 var results = new List<RaycastResult>();
                 EventSystem.current.RaycastAll(eventData, results);
-                Debug.Log($"[InvenSlot] OnEndDrag slot={SlotIndex}, hits={results.Count}");
 
                 foreach (var hit in results)
                 {
@@ -210,13 +203,10 @@ public class InvenSlot : MonoBehaviour,
                         var dstW = (inv != null && equipTarget.SlotIndex < inv.Equipped.Count) ? inv.Equipped[equipTarget.SlotIndex] : null;
                         if (srcW != null && dstW != null && srcW.star >= 3 && dstW.star >= 3 && srcW.weaponName == dstW.weaponName)
                         {
-                            Debug.Log($"[InvenSlot] GrandMerge inven{SlotIndex} + equip{equipTarget.SlotIndex}");
                             UpgradeManager.Shared?.TryGrandMerge(srcW.weaponName);
                         }
                         else
                         {
-                            Debug.Log($"[InvenSlot] MoveInvenToEquip inven{SlotIndex} → equip{equipTarget.SlotIndex}");
-                            equipTarget.PlayEquipEffect();
                             SoundManager.Shared?.Play(SoundKey.UI_Equip);
                             inv?.MoveInvenToEquip(SlotIndex, equipTarget.SlotIndex);
                         }
@@ -240,8 +230,6 @@ public class InvenSlot : MonoBehaviour,
                         break;
                     }
                 }
-                // 드롭 후 호버 정리 (PlayEquipEffect가 없는 경우 HideHighlight)
-                _hoveredEquipSlot?.HideHighlight();
                 _hoveredEquipSlot = null;
             }
         }

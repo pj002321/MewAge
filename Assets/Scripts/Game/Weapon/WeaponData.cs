@@ -73,9 +73,9 @@ public class WeaponData : ScriptableObject
     // 성별 강화 보너스
     // ────────────────────────────────────────────────────────────────
     [Header("성별 강화 보너스")]
+    public WeaponStarBonus bonus1Star;
     public WeaponStarBonus bonus2Star;
     public WeaponStarBonus bonus3Star;
-    public WeaponStarBonus bonus4Star;
 
     // ────────────────────────────────────────────────────────────────
     // 합성 — 같은 무기를 복사하고 성 1단계 올립니다
@@ -94,16 +94,16 @@ public class WeaponData : ScriptableObject
         next.prefab           = prefab;
         next.grade            = grade;
         next.chapter          = chapter;
-        next.star             = Mathf.Clamp(targetStar, 1, 5);
+        next.star             = Mathf.Clamp(targetStar, 1, 3);
         // 성 차이만큼 3^n 배 (1성 기준: 2성=3배, 3성=9배)
         next.price            = Mathf.RoundToInt(price * Mathf.Pow(3f, next.star - star));
         next.storyDescription  = storyDescription;
         next.trait             = trait;
         next.specialEffectId   = specialEffectId;
         next.specialEffectDesc = specialEffectDesc;
+        next.bonus1Star       = bonus1Star;
         next.bonus2Star       = bonus2Star;
         next.bonus3Star       = bonus3Star;
-        next.bonus4Star       = bonus4Star;
 
         next.baseAttackDamage   = baseAttackDamage;
         next.baseAttackCooldown = baseAttackCooldown;
@@ -155,9 +155,9 @@ public class WeaponData : ScriptableObject
         data.specialEffectDesc = !string.IsNullOrEmpty(data.trait)
             ? LookupEffectDesc(data.trait)
             : string.Empty;
-        data.bonus2Star = WeaponStatRegistry.Build(row.f_속성2성ID, row.f_S1);
-        data.bonus3Star = WeaponStatRegistry.Build(row.f_속성3성ID, row.f_S2);
-        data.bonus4Star = WeaponStatRegistry.Build(row.f_속성4성ID, row.f_S3);
+        data.bonus1Star = WeaponStatRegistry.Build(row.f_속성2성ID, row.f_S1);
+        data.bonus2Star = WeaponStatRegistry.Build(row.f_속성3성ID, row.f_S2);
+        data.bonus3Star = WeaponStatRegistry.Build(row.f_속성4성ID, row.f_S3);
 
         // DB에서 직접 기본 스탯 로드
         // f_공격속도는 float (초 단위 쿨타임) — 0.8 → 0.8초에 한 번 공격
@@ -283,16 +283,19 @@ public class WeaponData : ScriptableObject
 
     private void ApplyBonusesUpToStar()
     {
+        // 성마다 공격력 ×1.5 누적 (1성=×1.0, 2성=×1.5, 3성=×2.25)
+        attackDamage = baseAttackDamage * Mathf.Pow(1.5f, star - 1);
+
+        if (star >= 1) WeaponStatRegistry.ApplyBonus(this, bonus1Star);
         if (star >= 2) WeaponStatRegistry.ApplyBonus(this, bonus2Star);
         if (star >= 3) WeaponStatRegistry.ApplyBonus(this, bonus3Star);
-        if (star >= 4) WeaponStatRegistry.ApplyBonus(this, bonus4Star);
 
         // 부메랑 전용: 성마다 튕김 횟수 +2
         if (weaponType == WeaponType.Boomerang)
         {
+            if (star >= 1) maxBounces += 2;
             if (star >= 2) maxBounces += 2;
             if (star >= 3) maxBounces += 2;
-            if (star >= 4) maxBounces += 2;
         }
     }
 }

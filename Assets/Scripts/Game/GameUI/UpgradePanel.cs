@@ -31,6 +31,7 @@ public class UpgradePanel : MonoBehaviour
     [Header("정보 텍스트")]
     [SerializeField] private TextMeshProUGUI playerGoldText;
     [SerializeField] private TextMeshProUGUI playerAtkText;
+    [SerializeField] private TextMeshProUGUI playerCrtText;
 
     [Header("노티피케이션")]
     [SerializeField] private GameObject      notificationRoot;
@@ -99,11 +100,18 @@ public class UpgradePanel : MonoBehaviour
     private Coroutine          autoStartCoroutine;
     private Coroutine          buyExpHoldCoroutine;
     private Coroutine          atkTextCoroutine;
+    private Coroutine          crtTextCoroutine;
+    private Vector2            _atkTextOriginPos;
+    private Vector2            _crtTextOriginPos;
     private int                selectedInvenIndex  = -1;
     private int                selectedEquipIndex  = -1;
     private bool               isFirstWave         = false;
     private float              _lastDisplayedAtk   = -1f;
-    private float              _atkBeforeMerge     = -1f; // 합성 직전 ATK 스냅샷
+    private float              _lastDisplayedCrt   = -1f;
+    private float              _atkBeforeMerge     = -1f;
+    private float              _mergeDestAtk       = -1f; // 합성 목적지 슬롯의 합성 전 ATK
+    private int                _mergeDestEquipSlot = -1;
+    private int                _mergeDestInvenSlot = -1;
     private bool               _refreshing         = false;
     private bool               _mergeAnimPlaying   = false;
     private readonly Queue<PlayerInventory.MergeAnimInfo> _mergeQueue = new Queue<PlayerInventory.MergeAnimInfo>();
@@ -113,6 +121,9 @@ public class UpgradePanel : MonoBehaviour
     // ────────────────────────────────────────────────────────────────
     private void Awake()
     {
+        if (playerAtkText != null) _atkTextOriginPos = ((RectTransform)playerAtkText.transform).anchoredPosition;
+        if (playerCrtText != null) _crtTextOriginPos = ((RectTransform)playerCrtText.transform).anchoredPosition;
+
         equipSlots = new[]
         {
             equipSlotTopRight, equipSlotBottomRight,
@@ -195,8 +206,10 @@ public class UpgradePanel : MonoBehaviour
 
         InGameCharacterDisplay.Shared?.DropIn();
         _lastDisplayedAtk = -1f;
+        _lastDisplayedCrt = -1f;
         _atkBeforeMerge   = -1f;
         RefreshAtkUI(animate: false);
+        RefreshCrtUI(animate: false);
 
         // 상점 열릴 때 기존 합성 가능한 쌍이 있으면 자동 합성 (구독 완료 후 실행해야 애니 이벤트 수신 가능)
         UpgradeManager.Shared?.TryAutoMergeAll();
@@ -209,6 +222,8 @@ public class UpgradePanel : MonoBehaviour
         if (autoStartCoroutine != null) StopCoroutine(autoStartCoroutine);
         if (notifCoroutine != null) { StopCoroutine(notifCoroutine); notifCoroutine = null; }
         if (buyExpHoldCoroutine != null) { StopCoroutine(buyExpHoldCoroutine); buyExpHoldCoroutine = null; }
+        if (atkTextCoroutine != null) { StopCoroutine(atkTextCoroutine); atkTextCoroutine = null; ResetTextState(playerAtkText); }
+        if (crtTextCoroutine != null) { StopCoroutine(crtTextCoroutine); crtTextCoroutine = null; ResetTextState(playerCrtText); }
         if (notificationRoot) notificationRoot.SetActive(false);
         if (PlayerInventory.Shared != null)
             PlayerInventory.Shared.OnChanged -= RefreshInventoryUI;
@@ -287,21 +302,43 @@ public class UpgradePanel : MonoBehaviour
 
         if (!animate || _lastDisplayedAtk < 0f)
         {
-            // 패널 열릴 때: 값만 기록, 텍스트는 숨김
-            _lastDisplayedAtk = atk;
-            _atkBeforeMerge   = -1f;
+            _lastDisplayedAtk   = atk;
+            _atkBeforeMerge     = -1f;
+            _mergeDestAtk       = -1f;
+            _mergeDestEquipSlot = -1;
+            _mergeDestInvenSlot = -1;
             playerAtkText.gameObject.SetActive(false);
             return;
         }
 
-        // 합성 직전에 캡처된 스냅샷이 있으면 그것을 비교 기준으로 사용
-        float from = (_atkBeforeMerge >= 0f) ? _atkBeforeMerge : _lastDisplayedAtk;
+        float from, to;
+        if (_mergeDestAtk >= 0f)
+        {
+            // 합성 모드: 목적지 슬롯의 전/후 ATK를 비교
+            var inv = PlayerInventory.Shared;
+            WeaponData destWeapon =
+                _mergeDestEquipSlot >= 0 && inv?.Equipped.Count > _mergeDestEquipSlot
+                    ? inv.Equipped[_mergeDestEquipSlot]
+                    : (_mergeDestInvenSlot >= 0 && inv?.Inventory.Count > _mergeDestInvenSlot
+                        ? inv.Inventory[_mergeDestInvenSlot]
+                        : null);
+            from = _mergeDestAtk;
+            to   = destWeapon != null ? CalcSingleWeaponAtk(destWeapon) : atk;
+            _mergeDestAtk       = -1f;
+            _mergeDestEquipSlot = -1;
+            _mergeDestInvenSlot = -1;
+        }
+        else
+        {
+            from = (_atkBeforeMerge >= 0f) ? _atkBeforeMerge : _lastDisplayedAtk;
+            to   = atk;
+        }
         _atkBeforeMerge = -1f;
 
-        if (Mathf.Approximately(atk, from) && Mathf.Approximately(atk, _lastDisplayedAtk)) return;
+        if (Mathf.Approximately(to, from) && Mathf.Approximately(atk, _lastDisplayedAtk)) return;
 
         if (atkTextCoroutine != null) StopCoroutine(atkTextCoroutine);
-        atkTextCoroutine = StartCoroutine(AtkRollRoutine(from, atk));
+        atkTextCoroutine = StartCoroutine(AtkRollRoutine(from, to));
         _lastDisplayedAtk = atk;
     }
 
@@ -328,42 +365,130 @@ public class UpgradePanel : MonoBehaviour
         return total;
     }
 
+    private float CalcSingleWeaponAtk(WeaponData w)
+    {
+        if (w == null) return 0f;
+        var pc = PlayerController.Instance;
+        float playerAtk = pc?.Attack ?? PlayerStatManager.Shared?.GetFinal(StatType.ATK) ?? 0f;
+        float dmg = w.attackDamage + playerAtk;
+        if (pc != null)
+        {
+            bool isMelee = w.weaponType == WeaponType.Melee || w.weaponType == WeaponType.Spin;
+            dmg += isMelee ? pc.MeleeAttackBonus : pc.RangedAttackBonus;
+        }
+        return dmg;
+    }
+
     private IEnumerator AtkRollRoutine(float from, float to)
     {
         bool increase = to > from;
-        Color col = increase ? Color.green : Color.red;
-
-        playerAtkText.color = col;
+        playerAtkText.color = increase ? Color.green : Color.red;
         playerAtkText.gameObject.SetActive(true);
 
         var cg = playerAtkText.GetComponent<CanvasGroup>()
               ?? playerAtkText.gameObject.AddComponent<CanvasGroup>();
         cg.alpha = 1f;
 
-        const float rollDuration = 0.5f;
+        var rt = (RectTransform)playerAtkText.transform;
+        rt.anchoredPosition = _atkTextOriginPos;
+
+        const float rollDuration = 0.4f;
         float elapsed = 0f;
         while (elapsed < rollDuration)
         {
             elapsed += Time.unscaledDeltaTime;
-            float roll = Random.Range(Mathf.Min(from, to), Mathf.Max(from, to));
-            playerAtkText.text = $"{roll:0}";
+            playerAtkText.text = $"{Random.Range(Mathf.Min(from, to), Mathf.Max(from, to)):0}";
             yield return null;
         }
-
         playerAtkText.text = $"{to:0}";
-        yield return new WaitForSecondsRealtime(2f);
 
-        const float fadeDuration = 0.3f;
-        float fadeElapsed = 0f;
-        while (fadeElapsed < fadeDuration)
+        const float floatDuration = 0.8f;
+        const float risePixels    = 55f;
+        elapsed = 0f;
+        while (elapsed < floatDuration)
         {
-            fadeElapsed += Time.unscaledDeltaTime;
-            cg.alpha = Mathf.Lerp(1f, 0f, fadeElapsed / fadeDuration);
+            elapsed += Time.unscaledDeltaTime;
+            float t = Mathf.Clamp01(elapsed / floatDuration);
+            rt.anchoredPosition = _atkTextOriginPos + Vector2.up * (risePixels * t);
+            cg.alpha = Mathf.Lerp(1f, 0f, t);
             yield return null;
         }
+
         cg.alpha = 1f;
+        rt.anchoredPosition = _atkTextOriginPos;
         playerAtkText.gameObject.SetActive(false);
         atkTextCoroutine = null;
+    }
+
+    public void RefreshCrtUI(bool animate = true)
+    {
+        if (playerCrtText == null) return;
+        float crt = CalcTotalCrit();
+
+        if (!animate || _lastDisplayedCrt < 0f)
+        {
+            _lastDisplayedCrt = crt;
+            playerCrtText.gameObject.SetActive(false);
+            return;
+        }
+
+        float delta = crt - _lastDisplayedCrt;
+        if (Mathf.Abs(delta) < 0.01f) return;
+
+        if (crtTextCoroutine != null) StopCoroutine(crtTextCoroutine);
+        crtTextCoroutine = StartCoroutine(CrtFloatRoutine(delta));
+        _lastDisplayedCrt = crt;
+    }
+
+    private float CalcTotalCrit()
+    {
+        float total = 0f;
+        var equipped = PlayerInventory.Shared?.Equipped;
+        if (equipped != null)
+            foreach (var w in equipped)
+                if (w != null) total += (w.criticalDamage - w.baseCriticalDamage) * 100f;
+        return total;
+    }
+
+    private IEnumerator CrtFloatRoutine(float delta)
+    {
+        bool increase = delta > 0f;
+        string sign = increase ? "+" : "";
+        playerCrtText.text  = $"{sign}{delta:0.#}%";
+        playerCrtText.color = increase ? Color.green : Color.red;
+        playerCrtText.gameObject.SetActive(true);
+
+        var cg = playerCrtText.GetComponent<CanvasGroup>()
+              ?? playerCrtText.gameObject.AddComponent<CanvasGroup>();
+        cg.alpha = 1f;
+
+        var rt = (RectTransform)playerCrtText.transform;
+        rt.anchoredPosition = _crtTextOriginPos;
+
+        const float floatDuration = 0.8f;
+        const float risePixels    = 55f;
+        float elapsed = 0f;
+        while (elapsed < floatDuration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float t = Mathf.Clamp01(elapsed / floatDuration);
+            rt.anchoredPosition = _crtTextOriginPos + Vector2.up * (risePixels * t);
+            cg.alpha = Mathf.Lerp(1f, 0f, t);
+            yield return null;
+        }
+
+        cg.alpha = 1f;
+        rt.anchoredPosition = _crtTextOriginPos;
+        playerCrtText.gameObject.SetActive(false);
+        crtTextCoroutine = null;
+    }
+
+    private static void ResetTextState(TextMeshProUGUI text)
+    {
+        if (text == null) return;
+        var cg = text.GetComponent<CanvasGroup>();
+        if (cg != null) cg.alpha = 1f;
+        text.gameObject.SetActive(false);
     }
 
     public void RefreshExpUI()
@@ -374,9 +499,11 @@ public class UpgradePanel : MonoBehaviour
         int level = ps.Level;
         int expToNext = PlayerStats.Shared?.ExpToNext ?? (20 + (level - 1) * 50);
 
-        if (levelText) levelText.text = level >= (PlayerStats.Shared?.MaxLevel ?? int.MaxValue) ? "MAX" : $"LV.{level}";
-        if (expSlider) expSlider.value = (float)exp / expToNext;
-        if (expText) expText.text = $"{exp}/{expToNext}";
+        bool isMaxLevel = level >= (PlayerStats.Shared?.MaxLevel ?? int.MaxValue);
+        if (levelText) levelText.text = isMaxLevel ? "MAX" : $"LV.{level}";
+        if (expSlider) expSlider.value = isMaxLevel ? 1f : (float)exp / expToNext;
+        if (expText) expText.text = isMaxLevel ? "MAX" : $"{exp}/{expToNext}";
+        if (buyExpButton) buyExpButton.interactable = !isMaxLevel;
 
         if (expGainText)
         {
@@ -422,6 +549,7 @@ public class UpgradePanel : MonoBehaviour
 
         RefreshGold();
         RefreshAtkUI();
+        RefreshCrtUI();
         SynergyEffectManager.Shared?.RecalculateSynergies();
     }
 
@@ -834,7 +962,15 @@ public class UpgradePanel : MonoBehaviour
             _mergeQueue.Enqueue(info); // 재생 중이면 큐에 적재
             return;
         }
-        _atkBeforeMerge = CalcTotalAtk();
+        _atkBeforeMerge     = CalcTotalAtk();
+        _mergeDestEquipSlot = info.destEquipSlot;
+        _mergeDestInvenSlot = info.destInvenSlot;
+        var invSnap = PlayerInventory.Shared;
+        _mergeDestAtk = info.destEquipSlot >= 0 && invSnap?.Equipped.Count > info.destEquipSlot
+            ? CalcSingleWeaponAtk(invSnap.Equipped[info.destEquipSlot])
+            : (info.destInvenSlot >= 0 && invSnap?.Inventory.Count > info.destInvenSlot
+                ? CalcSingleWeaponAtk(invSnap.Inventory[info.destInvenSlot])
+                : -1f);
         _mergeAnimPlaying = true;
         // 합성 애니 중 카드 구매 및 웨이브 시작 차단
         SetCardsInteractable(false);

@@ -61,7 +61,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: e901129e9679f8e428ec8abe92cf485f, type: 2}
+  - {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -84,7 +84,7 @@ SpriteRenderer:
   m_SortingLayer: 1
   m_SortingOrder: 101
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -6569494952262782350, guid: 78d61fd33e0f98e479b493b4683771cf, type: 3}
+  m_Sprite: {fileID: -5079705026752082564, guid: c71444f0162ea5740be1b354b4f4d6e4, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -111,7 +111,7 @@ MonoBehaviour:
   useTrail: 1
   trailTime: 0.1
   trailStartWidth: 0.28
-  trailColor: {r: 1, g: 1, b: 1, a: 0.7058824}
+  trailColor: {r: 0.15566039, g: 0.5784828, b: 1, a: 0.7058824}
   _weaponId: CH1_R_1
   references:
     version: 2
@@ -119,13 +119,10 @@ MonoBehaviour:
     - rid: 2864143502748942453
       type: {class: WeaponBoomerangBehaviour, ns: , asm: Assembly-CSharp}
       data:
-        pullbackDist: 0.5
-        pullbackSpeed: 25
-        strikeSpeed: 80
-        returnSpeed: 25
-        hitDistance: 0.4
-        overshootDistance: 0.5
-        overshootSpeed: 60
+        _overrideSpeed: 0
+        _overridePullbackSpeed: 5
+        _overrideStrikeSpeed: 300
+        _overrideReturnSpeed: 70
         maxBounces: 3
         bounceRange: 15
 --- !u!114 &-1599712404541412420

@@ -23,6 +23,11 @@ public class WeaponManager : MonoBehaviour
 
     private Transform[] _anchors;
 
+    private const float MeleeStaggerStep = 0.08f;
+
+    private static bool IsMeleeRange(WeaponType t) =>
+        t is WeaponType.Melee or WeaponType.Slash or WeaponType.Hammer or WeaponType.Spin or WeaponType.Charge;
+
     private void Awake()
     {
         Instance = this;
@@ -67,6 +72,7 @@ public class WeaponManager : MonoBehaviour
         }
 
         var equipped = PlayerInventory.Shared.Equipped;
+        int meleeStaggerIdx = 0;
 
         for (int i = 0; i < _anchors.Length; i++)
         {
@@ -98,6 +104,10 @@ public class WeaponManager : MonoBehaviour
                 // WeaponPoint 컴포넌트가 없으면 추가, 있으면 가져와서 Init
                 if (!weaponGO.TryGetComponent<WeaponPoint>(out var wp))
                     wp = weaponGO.AddComponent<WeaponPoint>();
+
+                if (IsMeleeRange(equipped[i].weaponType))
+                    wp.SetMeleeStagger(meleeStaggerIdx++ * MeleeStaggerStep);
+
                 wp.Init(equipped[i]);
 
                 this.DLog($"[WeaponManager] 슬롯 [{i}]: '{equipped[i].weaponName}' 장착 완료 (부모: {anchor.name})");
