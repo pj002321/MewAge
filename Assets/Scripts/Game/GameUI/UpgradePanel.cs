@@ -741,6 +741,27 @@ public class UpgradePanel : MonoBehaviour
         if (sellPriceText)
             sellPriceText.text = draggedWeapon != null ? $"{Mathf.Max(1, draggedWeapon.price / 2)}" : "";
         RefreshInventoryUI();
+
+        // 3성 무기 드래그 시 같은 이름의 3성 슬롯 하이라이트
+        if (draggedWeapon != null && draggedWeapon.star >= 3)
+        {
+            string name = draggedWeapon.weaponName;
+            var inv = PlayerInventory.Shared;
+            foreach (var slot in equipSlots)
+            {
+                var w = (inv != null && slot.SlotIndex < inv.Equipped.Count)
+                    ? inv.Equipped[slot.SlotIndex] : null;
+                if (w != null && w.star >= 3 && w.weaponName == name)
+                    slot.SetMergeHighlight(true);
+            }
+            foreach (var slot in invenSlots)
+            {
+                var w = (inv != null && slot.SlotIndex < inv.Inventory.Count)
+                    ? inv.Inventory[slot.SlotIndex] : null;
+                if (w != null && w.star >= 3 && w.weaponName == name)
+                    slot.SetMergeHighlight(true);
+            }
+        }
     }
 
     public void NotifyDragHover(Vector2 screenPos)
@@ -752,9 +773,16 @@ public class UpgradePanel : MonoBehaviour
         sellImg.localScale = Vector3.one * (over ? sellZoneHoverScale : 1f);
     }
 
+    private void ClearMergeHighlights()
+    {
+        foreach (var slot in equipSlots) slot?.SetMergeHighlight(false);
+        foreach (var slot in invenSlots) slot?.SetMergeHighlight(false);
+    }
+
     /// <summary>드래그 종료. sellImg 위면 true 반환 (판매 실행은 슬롯 쪽에서 호출).</summary>
     public bool NotifyDragEnd(Vector2 screenPos)
     {
+        ClearMergeHighlights();
         bool overSell = false;
         if (sellImg != null && sellImg.gameObject.activeSelf)
         {

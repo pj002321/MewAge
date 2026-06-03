@@ -283,8 +283,8 @@ public class WeaponData : ScriptableObject
 
     private void ApplyBonusesUpToStar()
     {
-        // 성마다 공격력 ×1.5 누적 (1성=×1.0, 2성=×1.5, 3성=×2.25)
-        attackDamage = baseAttackDamage * Mathf.Pow(1.5f, star - 1);
+        // 성마다 공격력 ×1.15 누적 (1성=×1.0, 2성=×1.15, 3성=×1.3225)
+        attackDamage = baseAttackDamage * Mathf.Pow(1.15f, star - 1);
 
         if (star >= 1) WeaponStatRegistry.ApplyBonus(this, bonus1Star);
         if (star >= 2) WeaponStatRegistry.ApplyBonus(this, bonus2Star);

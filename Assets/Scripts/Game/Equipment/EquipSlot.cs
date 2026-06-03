@@ -30,6 +30,17 @@ public class EquipSlot : MonoBehaviour,
     private UpgradePanel panel;
     private bool         dragStarted;
 
+    private bool       _mergeHighlight;
+    private WeaponData _currentData;
+    private static readonly Color MergeHighlightColor = new Color(1f, 0.85f, 0.1f);
+
+    public void SetMergeHighlight(bool active)
+    {
+        _mergeHighlight = active;
+        if (frameImg != null)
+            frameImg.color = active && _currentData != null ? MergeHighlightColor : Color.white;
+    }
+
     private void Awake()
     {
         var c = GetComponentInParent<Canvas>();
@@ -82,6 +93,7 @@ public class EquipSlot : MonoBehaviour,
     // ────────────────────────────────────────────────────────────────
     public void Refresh(WeaponData data, bool selected = false)
     {
+        _currentData = data;
         bool has = data != null;
         if (iconImg)  iconImg.enabled = has;
         if (has && iconImg && data.icon) iconImg.sprite = data.icon;
@@ -100,7 +112,7 @@ public class EquipSlot : MonoBehaviour,
             {
                 frameImg.sprite = gradeSprite;
                 frameImg.type   = UnityEngine.UI.Image.Type.Simple;
-                frameImg.color  = Color.white;
+                frameImg.color  = _mergeHighlight && has ? MergeHighlightColor : Color.white;
             }
         }
 

@@ -76,9 +76,8 @@ public class StageInfoPopup : MonoBehaviour
         StopAllCoroutines();
         ClearContent();
 
-        string suffix = tab == 0 ? "유닛" : "무기";
         if (titleText != null)
-            titleText.text = $"{ChapterToEraName(_chapter)} {suffix}";
+            titleText.text = tab == 0 ? "출현하는 적" : $"{ChapterToEraName(_chapter)} 무기";
 
         if (tab == 0) BuildMonsters(_chapter);
         else          BuildWeapons(_chapter);

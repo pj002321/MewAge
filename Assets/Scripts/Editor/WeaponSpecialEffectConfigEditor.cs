@@ -238,9 +238,19 @@ public class WeaponEffectConfigEditor : EditorWindow
 
     private void DrawAVRow(DB_무기 row)
     {
-        string wid  = (row.f_무기ID  ?? "").Trim();
-        string name = (row.f_이름    ?? "-").Trim();
-        string type = (row.f_타입    ?? "-").Trim();
+        string wid, name, type;
+        try
+        {
+            wid  = (row.f_무기ID ?? "").Trim();
+            name = (row.f_이름   ?? "-").Trim();
+            type = (row.f_타입   ?? "-").Trim();
+        }
+        catch (System.IndexOutOfRangeException)
+        {
+            // DB가 리로드되어 캐시가 무효화됨 — 다음 프레임에서 Reload 예약
+            EditorApplication.delayCall += Reload;
+            return;
+        }
 
         EditorGUILayout.BeginHorizontal(GUI.skin.box);
         var lbl = new GUIStyle(EditorStyles.miniLabel) { alignment = TextAnchor.MiddleCenter };
@@ -302,10 +312,19 @@ public class WeaponEffectConfigEditor : EditorWindow
 
     private void DrawSkillCard(DB_무기 row)
     {
-        string wid    = (row.f_무기ID ?? "").Trim();
-        string name   = (row.f_이름  ?? "-").Trim();
-        string type   = (row.f_타입  ?? "-").Trim();
-        string dbSkill = (row.f_특성 ?? "").Trim();
+        string wid, name, type, dbSkill;
+        try
+        {
+            wid     = (row.f_무기ID ?? "").Trim();
+            name    = (row.f_이름   ?? "-").Trim();
+            type    = (row.f_타입   ?? "-").Trim();
+            dbSkill = (row.f_특성   ?? "").Trim();
+        }
+        catch (System.IndexOutOfRangeException)
+        {
+            EditorApplication.delayCall += Reload;
+            return;
+        }
 
         int entryIdx = GetOrCreateEntry(wid, dbSkill);
         var elem     = _entriesProp.GetArrayElementAtIndex(entryIdx);

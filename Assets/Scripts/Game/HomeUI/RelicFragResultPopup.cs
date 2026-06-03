@@ -32,6 +32,11 @@ public class RelicFragResultPopup : MonoBehaviour
         gameObject.SetActive(false);
     }
 
+    private void OnDestroy()
+    {
+        if (Shared == this) Shared = null;
+    }
+
     // ── 공개 API ─────────────────────────────────────────────────────
 
     public void ShowSingle(RelicData data, int count)

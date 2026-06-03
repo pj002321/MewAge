@@ -73,6 +73,11 @@ public class RelicInfoPopup : MonoBehaviour
         gameObject.SetActive(false);
     }
 
+    private void OnDestroy()
+    {
+        if (Shared == this) Shared = null;
+    }
+
     private void OnEnable()
     {
         RelicInventory.OnChanged += OnInventoryChanged;
