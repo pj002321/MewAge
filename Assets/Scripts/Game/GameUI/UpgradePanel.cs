@@ -24,6 +24,7 @@ public class UpgradePanel : MonoBehaviour
     [SerializeField] private Button          nextWaveButton;
     [SerializeField] private Button          infoButton;
     [SerializeField] private Button          eraWeaponInfoButton;
+    [SerializeField] private Button          synergyButton;
 
     [Header("시대별 무기 정보 팝업")]
     [SerializeField] private EraWeaponInfoPopup eraWeaponInfoPopup;
@@ -109,7 +110,7 @@ public class UpgradePanel : MonoBehaviour
     private float              _lastDisplayedAtk   = -1f;
     private float              _lastDisplayedCrt   = -1f;
     private float              _atkBeforeMerge     = -1f;
-    private float              _mergeDestAtk       = -1f; // 합성 목적지 슬롯의 합성 전 ATK
+    private float              _mergeDestAtk       = -1f;  // 합성 전 목적지 무기 단독 ATK
     private int                _mergeDestEquipSlot = -1;
     private int                _mergeDestInvenSlot = -1;
     private bool               _refreshing         = false;
@@ -139,6 +140,8 @@ public class UpgradePanel : MonoBehaviour
         if (infoButtonRedDot != null) infoButtonRedDot.gameObject.SetActive(false);
         eraWeaponInfoButton?.onClick.AddListener(() =>
             eraWeaponInfoPopup?.Open(UpgradeManager.Shared?.CurrentChapter ?? 1));
+        synergyButton?.onClick.AddListener(() =>
+            SynergyInfoPanel.Shared?.Show(UpgradeManager.Shared?.CurrentChapter ?? 1));
 
         // EXP 구매 버튼: 롱프레스 지원 (EventTrigger로 PointerDown/Up 처리)
         if (buyExpButton != null)
@@ -205,9 +208,12 @@ public class UpgradePanel : MonoBehaviour
         RefreshExpUI();
 
         InGameCharacterDisplay.Shared?.DropIn();
-        _lastDisplayedAtk = -1f;
-        _lastDisplayedCrt = -1f;
-        _atkBeforeMerge   = -1f;
+        _lastDisplayedAtk   = -1f;
+        _lastDisplayedCrt   = -1f;
+        _atkBeforeMerge     = -1f;
+        _mergeDestAtk       = -1f;
+        _mergeDestEquipSlot = -1;
+        _mergeDestInvenSlot = -1;
         RefreshAtkUI(animate: false);
         RefreshCrtUI(animate: false);
 
@@ -302,11 +308,8 @@ public class UpgradePanel : MonoBehaviour
 
         if (!animate || _lastDisplayedAtk < 0f)
         {
-            _lastDisplayedAtk   = atk;
-            _atkBeforeMerge     = -1f;
-            _mergeDestAtk       = -1f;
-            _mergeDestEquipSlot = -1;
-            _mergeDestInvenSlot = -1;
+            _lastDisplayedAtk = atk;
+            _atkBeforeMerge   = -1f;
             playerAtkText.gameObject.SetActive(false);
             return;
         }
@@ -314,22 +317,23 @@ public class UpgradePanel : MonoBehaviour
         float from, to;
         if (_mergeDestAtk >= 0f)
         {
-            // 합성 모드: 목적지 슬롯의 전/후 ATK를 비교
+            // 합성: 목적지 무기의 단독 ATK 변화량 표시
             var inv = PlayerInventory.Shared;
-            WeaponData destWeapon =
+            WeaponData dest =
                 _mergeDestEquipSlot >= 0 && inv?.Equipped.Count > _mergeDestEquipSlot
                     ? inv.Equipped[_mergeDestEquipSlot]
                     : (_mergeDestInvenSlot >= 0 && inv?.Inventory.Count > _mergeDestInvenSlot
                         ? inv.Inventory[_mergeDestInvenSlot]
                         : null);
             from = _mergeDestAtk;
-            to   = destWeapon != null ? CalcSingleWeaponAtk(destWeapon) : atk;
+            to   = dest != null ? CalcSingleWeaponAtk(dest) : atk;
             _mergeDestAtk       = -1f;
             _mergeDestEquipSlot = -1;
             _mergeDestInvenSlot = -1;
         }
         else
         {
+            // 장착/교체: 총 ATK 변화량 표시
             from = (_atkBeforeMerge >= 0f) ? _atkBeforeMerge : _lastDisplayedAtk;
             to   = atk;
         }
@@ -381,7 +385,9 @@ public class UpgradePanel : MonoBehaviour
 
     private IEnumerator AtkRollRoutine(float from, float to)
     {
-        bool increase = to > from;
+        float delta   = to - from;
+        bool increase = delta > 0f;
+        string sign   = increase ? "+" : "";
         playerAtkText.color = increase ? Color.green : Color.red;
         playerAtkText.gameObject.SetActive(true);
 
@@ -397,10 +403,11 @@ public class UpgradePanel : MonoBehaviour
         while (elapsed < rollDuration)
         {
             elapsed += Time.unscaledDeltaTime;
-            playerAtkText.text = $"{Random.Range(Mathf.Min(from, to), Mathf.Max(from, to)):0}";
+            float roll = Random.Range(0f, Mathf.Abs(delta));
+            playerAtkText.text = $"{sign}{roll:0}";
             yield return null;
         }
-        playerAtkText.text = $"{to:0}";
+        playerAtkText.text = $"{sign}{Mathf.Abs(delta):0}";
 
         const float floatDuration = 0.8f;
         const float risePixels    = 55f;
@@ -420,25 +427,7 @@ public class UpgradePanel : MonoBehaviour
         atkTextCoroutine = null;
     }
 
-    public void RefreshCrtUI(bool animate = true)
-    {
-        if (playerCrtText == null) return;
-        float crt = CalcTotalCrit();
-
-        if (!animate || _lastDisplayedCrt < 0f)
-        {
-            _lastDisplayedCrt = crt;
-            playerCrtText.gameObject.SetActive(false);
-            return;
-        }
-
-        float delta = crt - _lastDisplayedCrt;
-        if (Mathf.Abs(delta) < 0.01f) return;
-
-        if (crtTextCoroutine != null) StopCoroutine(crtTextCoroutine);
-        crtTextCoroutine = StartCoroutine(CrtFloatRoutine(delta));
-        _lastDisplayedCrt = crt;
-    }
+    public void RefreshCrtUI(bool animate = true) { }
 
     private float CalcTotalCrit()
     {
@@ -578,7 +567,15 @@ public class UpgradePanel : MonoBehaviour
         newSynergyNoti.Show(icon, row.f_이름);
     }
 
-    private void OnAchievedChanged(HashSet<string> _) => RefreshSynergyCompleteSlots();
+    private void OnAchievedChanged(HashSet<string> achieved)
+    {
+        RefreshSynergyCompleteSlots();
+        if (achieved == null || achieved.Count == 0)
+        {
+            if (_infoButtonShiny != null) _infoButtonShiny.enabled = false;
+            if (infoButtonRedDot != null) infoButtonRedDot.gameObject.SetActive(false);
+        }
+    }
 
     private void RefreshSynergyCompleteSlots()
     {

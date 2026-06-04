@@ -80,7 +80,6 @@ public class EnemyController : MonoBehaviour, IEnemyHost
     private bool      isMoving;
     private bool      _lastIsMoving = true; // 초기값 다르게 설정해 첫 프레임 강제 동기화
     private float     _contactTimer;
-    private bool      _halfHpGoldDropped;
 
     // ── 각도 슬롯 (포위 형성) ────────────────────────────────
     public float SlotAngle         { get; private set; }
@@ -390,7 +389,6 @@ public class EnemyController : MonoBehaviour, IEnemyHost
         _isDying           = false;
         _contactTimer      = 0f;
         _lastIsMoving      = true;
-        _halfHpGoldDropped = false;
         HasSlotAssignment  = false;
         moveSpeed  = baseSpeed;
         _launchYDelta = 0f;
@@ -728,13 +726,6 @@ public class EnemyController : MonoBehaviour, IEnemyHost
 
     // ── 피격 / 사망 ──────────────────────────────────────────────
 
-    /// <summary>체력이 최초로 50% 이하가 됐을 때 골드를 드롭합니다.</summary>
-    private void CheckHalfHpDrop()
-    {
-        if (_halfHpGoldDropped || currentHP > maxHP * 0.5f || currentHP <= 0f) return;
-        _halfHpGoldDropped = true;
-        ItemDropManager.Shared?.SpawnGoldDrop(transform.position, goldDrop);
-    }
 
     /// <summary>출혈 적용 (WeaponPoint에서 호출)</summary>
     public void ApplyBleed(float damage)
@@ -770,7 +761,6 @@ public class EnemyController : MonoBehaviour, IEnemyHost
             if (currentHP <= 0f) break;
 
             currentHP -= damage;
-            CheckHalfHpDrop();
             SoundManager.Shared?.Play(SoundKey.Enemy_Hit);
 
             Vector3 textPos = srs != null && srs.Length > 0
@@ -802,7 +792,6 @@ public class EnemyController : MonoBehaviour, IEnemyHost
 
             // 출혈 데미지 적용
             currentHP -= damage;
-            CheckHalfHpDrop();
             SoundManager.Shared?.Play(SoundKey.Enemy_Hit);
 
             // 데미지 텍스트 표시 (빨간색, - 기호)
@@ -832,7 +821,6 @@ public class EnemyController : MonoBehaviour, IEnemyHost
         if (damage <= 0f) return;
 
         currentHP -= damage;
-        CheckHalfHpDrop();
 
         SoundManager.Shared?.Play(SoundKey.Enemy_Hit);
         // 스프라이트 상단 기준으로 스폰 (몸집이 커도 텍스트가 가려지지 않음)
@@ -1026,7 +1014,6 @@ public class EnemyController : MonoBehaviour, IEnemyHost
         ActiveUnitData = data;
         maxHP              = data.hp;
         currentHP          = maxHP;
-        _halfHpGoldDropped = false;
         contactDamage      = data.contactDamage;
         moveSpeed     = data.moveSpeed;
         baseSpeed     = data.moveSpeed;

@@ -85,15 +85,16 @@ public class ChargeBehaviour : EnemyBehaviourBase
         var chargeEC     = EC;
         _origSepStrength = chargeEC != null ? chargeEC.separationStrength : 0f;
         if (chargeEC != null) chargeEC.separationStrength = 0f;
-
-        _lockedChargeDir = Owner.PlayerTransform != null
-            ? ((Vector2)Owner.PlayerTransform.position - (Vector2)Owner.SelfTransform.position).normalized
-            : Vector2.right;
     }
 
     private void BeginCharge()
     {
         if (EC != null) EC.separationStrength = _origSepStrength;
+
+        // 돌진 직전 플레이어 방향 확정
+        _lockedChargeDir = Owner.PlayerTransform != null
+            ? ((Vector2)Owner.PlayerTransform.position - (Vector2)Owner.SelfTransform.position).normalized
+            : Vector2.right;
 
         // 즉시 원상복구 후 돌진
         if (_cachedSr != null) _cachedSr.color = Color.white;
@@ -102,9 +103,7 @@ public class ChargeBehaviour : EnemyBehaviourBase
         Owner.SelfTransform.localScale = s;
 
         _phase          = Phase.Charging;
-        chargeDir       = _lockedChargeDir.sqrMagnitude > 0f
-            ? _lockedChargeDir
-            : ((Vector2)Owner.PlayerTransform.position - Owner.Rb.position).normalized;
+        chargeDir       = _lockedChargeDir;
         chargeRemaining = chargeDistance;
         ghostTimer      = 0f;
 
@@ -160,7 +159,11 @@ public class ChargeBehaviour : EnemyBehaviourBase
         }
         else if (_phase == Phase.Idle)
         {
-            Owner.FlipToward(_lockedChargeDir);
+            if (Owner.PlayerTransform != null)
+            {
+                Vector2 toPlayer = (Vector2)Owner.PlayerTransform.position - (Vector2)Owner.SelfTransform.position;
+                Owner.FlipToward(toPlayer);
+            }
         }
     }
 

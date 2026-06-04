@@ -302,6 +302,8 @@ public class WeaponInfoPanel : MonoBehaviourSingleton<WeaponInfoPanel>
             ? $"{Mathf.RoundToInt(computed)}"
             : $"{computed:0.#}";
 
+        if (valStr == "0") { labelDesc.text = string.Empty; return; }
+
         labelDesc.text = $"<color=#FFD740>{statLabel} +{valStr}</color>";
     }
 

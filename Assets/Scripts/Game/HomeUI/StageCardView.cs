@@ -55,6 +55,8 @@ public class StageCardView : MonoBehaviour
             overlayImage.gameObject.SetActive(entry.isLocked);
         if (lockBackgroundImage != null)
             lockBackgroundImage.gameObject.SetActive(entry.isLocked);
+        if (infoButton != null)
+            infoButton.gameObject.SetActive(!entry.isLocked);
 
         if (stageNameText != null) stageNameText.text = entry.stageName;
         if (bestWaveText  != null)

@@ -464,22 +464,32 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
     public void SpawnEliteAt(GameObject prefab)
     {
         if (prefab == null) return;
+        StartCoroutine(EliteSpawnRoutine(prefab));
+    }
+
+    private IEnumerator EliteSpawnRoutine(GameObject prefab)
+    {
         Vector2 pos        = GetRandomEdgePosition();
         int     globalWave = CalcGlobalWave(currentStage, currentWave);
 
+        // 마커는 비주얼 전용 — SpawnMarker 로직(IsSpawning/IsOverCap 체크) 완전 우회
         var markerPrefab = eliteSpawnMarkerPrefab != null ? eliteSpawnMarkerPrefab : spawnMarkerPrefab;
         if (markerPrefab != null)
         {
             var markerObj = Instantiate(markerPrefab, pos, Quaternion.identity);
-            if (markerObj.TryGetComponent<SpawnMarker>(out var marker))
-                marker.Init(prefab, globalWave, globalWave, null, wavesPerStage);
+            Destroy(markerObj, 1.5f);
+            yield return new WaitForSeconds(1.5f);
         }
-        else
+
+        if (GameManager.Shared == null || GameManager.Shared.IsGameOver)
+            yield break;
+
+        var go    = Instantiate(prefab, pos, Quaternion.identity);
+        var enemy = go.GetComponent<EnemyController>();
+        if (enemy != null)
         {
-            var go    = Instantiate(prefab, pos, Quaternion.identity);
-            var enemy = go.GetComponent<EnemyController>();
-            if (enemy != null)
-                enemy.InitForWave(globalWave, globalWave, wavesPerStage);
+            enemy.InitForWave(globalWave, globalWave, wavesPerStage);
+            enemy.PlaySpawnBounce();
         }
     }
 

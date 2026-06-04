@@ -94,17 +94,11 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 
     private void SpawnElite(int w)
     {
-        // DB_웨이브에서 f_웨이브ID 조회 (예: "C1_S1_W5")
-        string waveKey = currentChapterID + "_W" + w;
-        string waveId  = waveKey;
-        Mewage.DB.DB_웨이브.ForEachEntity(row =>
-        {
-            if (row.f_웨이브ID == waveKey) waveId = row.f_웨이브ID;
-        });
+        int    idx    = currentChapterID.IndexOf('_');
+        string ch     = $"Ch{(idx > 1 ? currentChapterID.Substring(1, idx - 1) : "1")}";
+        string waveId = (currentChapterID + "_W" + w).ToLower();
+        string path   = $"Unit/{ch}/Elite/{waveId}";
 
-        int idx   = currentChapterID.IndexOf('_');
-        string ch = $"Ch{(idx > 1 ? currentChapterID.Substring(1, idx - 1) : "1")}";
-        string path = $"Unit/{ch}/Elite/{waveId.ToLower()}";
         var prefab = Resources.Load<GameObject>(path);
         if (prefab == null) { this.DLog($"[GameManager] Elite prefab not found: {path}"); return; }
 
@@ -653,10 +647,10 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         if (wave % 5 == 0 && wave > 1)
             StartCoroutine(ShowNotifyRoutine("돌연변이 출현!", new Color(1f, 0.55f, 0f)));
 
+        EnemySpawner.Shared?.ResumeSpawning(wave);
+
         if (IsEliteWave(wave))
             SpawnElite(wave);
-
-        EnemySpawner.Shared?.ResumeSpawning(wave);
         StartCoroutine(TimerStartAnimation()); // 내부에서 _pauseTimer 관리
     }
 
@@ -1111,10 +1105,16 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
             yield break;
         }
 
-        // 중간 보스: 보스 아레나를 유지하면서 orb 수집 대기
-        waveTimer = orbCollectWait;
-        this.DLog($"[GameManager] Orb 수집 대기 {orbCollectWait}s 시작");
-        yield return new WaitForSeconds(orbCollectWait);
+        // 중간 보스: orb가 전부 수집될 때까지 대기 (최대 orbCollectWait 초)
+        float elapsed = 0f;
+        yield return new WaitForSeconds(0.5f); // orb 스폰 대기
+        while (elapsed < orbCollectWait)
+        {
+            if (Object.FindObjectsByType<DropItem>(FindObjectsSortMode.None).Length == 0)
+                break;
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
 
         // 상점(업그레이드 패널) 직전에 맵 복구
         WaveEnvironmentSwitcher.Shared?.SetNormal();

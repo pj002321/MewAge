@@ -26,7 +26,7 @@ public class WeaponMeleeBehaviour : WeaponMeleeBaseBehaviour
 
     protected override void BeginAttack(WeaponPoint.CombatTarget best)
     {
-        overshootDistance = 1.4f;
+        overshootDistance = 0.7f;
         _target          = best;
         _toTarget        = ((Vector2)best.Position - (Vector2)Host.transform.parent.position).normalized;
         if (_toTarget.sqrMagnitude < 0.001f) _toTarget = Vector2.up;
