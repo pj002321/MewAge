@@ -33,8 +33,12 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
     private string       currentChapterID = "C1_S1";
     private bool[]       isCardSold = new bool[3]; // 일반 카드 판매 여부
     private bool         isAdCardSold;             // 광고 카드 판매 여부
+    private int          _currentWave;
     public  int          CurrentChapter => currentChapter;
     public  string       CurrentChapterID => currentChapterID;
+
+    // 첫 구매 무기 변형 훅 (AUG_FIRST_HUNT 등에서 구독)
+    public static event System.Func<WeaponData, WeaponData> OnModifyPurchasedWeapon;
 
     protected override bool DontDestroy => false;
 
@@ -128,6 +132,7 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
     // ────────────────────────────────────────────────────────────────
     public void ShowPanel(int wave)
     {
+        _currentWave = wave;
         CollectAllDropItems();
         int         playerLevel = PlayerStats.Shared?.Level ?? 1;
         DrawProfile p           = GetCurrentProfile(playerLevel);
@@ -202,6 +207,8 @@ public class UpgradeManager : MonoBehaviourSingleton<UpgradeManager>
         // data == currentDraw[index] 원본을 그대로 넣으면 AutoMerge에서 소모·Destroy 시
         // currentDraw[index]가 파괴되어 RefreshPanel에서 카드가 사라지는 문제가 생긴다.
         var invCopy = data.UpgradedTo(data.star);
+        if (OnModifyPurchasedWeapon != null)
+            invCopy = OnModifyPurchasedWeapon(invCopy) ?? invCopy;
 
         // 인벤 꽉 찬 상태(직접 파트너 있는 경우)라면 ForceAdd → AutoMerge로 슬롯 확보
         if (inv.InventoryFull)

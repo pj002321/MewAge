@@ -30,7 +30,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.5, y: 0.47975, z: 0.5}
+  m_LocalScale: {x: 1, y: 0.9595, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}
@@ -80,8 +80,8 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 1049025713
+  m_SortingLayer: 1
   m_SortingOrder: 101
   m_MaskInteraction: 0
   m_Sprite: {fileID: -8173629745121443379, guid: b5152f2e7d5d94445858c2e0acce24df, type: 3}
@@ -165,7 +165,7 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 0.4, y: 1.25}
+  m_Size: {x: 0.4, y: 0.38}
   m_EdgeRadius: 0
 --- !u!114 &1988008754126552034
 MonoBehaviour:
@@ -182,3 +182,8 @@ MonoBehaviour:
   targetLayer:
     serializedVersion: 2
     m_Bits: 128
+  spriteForward: 0
+  ghostTrail: 0
+  ghostColor: {r: 1, g: 0.15, b: 0.15, a: 0.45}
+  ghostInterval: 0.04
+  ghostLifetime: 0.12

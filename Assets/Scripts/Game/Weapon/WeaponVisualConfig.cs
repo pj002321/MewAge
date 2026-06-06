@@ -43,6 +43,10 @@ public class WeaponVisualConfig : ScriptableObject
     [Header("특성 뱃지 이미지 (등급별, 특수효과 보유 무기에 표시)")]
     public TraitBadgeEntry[] traitBadges;
 
+    // ── 스테이지 무기 슬롯 전용 프레임 ──────────────────────────────────
+    [Header("스테이지 무기 슬롯 전용 프레임 (등급별)")]
+    public GradeEntry[] stageSlotFrames;
+
     // ── 조회 헬퍼 ───────────────────────────────────────────────────
     public Sprite GetGradeSprite(WeaponGrade grade)
     {
@@ -61,6 +65,13 @@ public class WeaponVisualConfig : ScriptableObject
     public Sprite GetTraitBadgeSprite(WeaponGrade grade)
     {
         foreach (var e in traitBadges)
+            if (e.grade == grade) return e.sprite;
+        return null;
+    }
+
+    public Sprite GetStageSlotFrameSprite(WeaponGrade grade)
+    {
+        foreach (var e in stageSlotFrames)
             if (e.grade == grade) return e.sprite;
         return null;
     }

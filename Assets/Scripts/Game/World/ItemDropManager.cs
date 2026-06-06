@@ -152,4 +152,11 @@ public class ItemDropManager : MonoBehaviourSingleton<ItemDropManager>
         foreach (var drop in Object.FindObjectsByType<DropItem>(FindObjectsSortMode.None))
             drop.ThrowUp();
     }
+
+    /// <summary>보스 처치 후 맵에 남은 orb를 모두 플레이어 쪽으로 자동 흡수시킵니다.</summary>
+    public void ForceAttractAll()
+    {
+        foreach (var drop in Object.FindObjectsByType<DropItem>(FindObjectsSortMode.None))
+            drop.ForceAttract();
+    }
 }

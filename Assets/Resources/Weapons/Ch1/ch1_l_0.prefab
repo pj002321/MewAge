@@ -85,7 +85,7 @@ SpriteRenderer:
   m_SortingLayer: 1
   m_SortingOrder: 101
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -6387761896825223848, guid: c71444f0162ea5740be1b354b4f4d6e4, type: 3}
+  m_Sprite: {fileID: 518812884199674664, guid: c6aeb395ca1170143925db93b1e4d37e, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -108,7 +108,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponPoint
   _behaviour:
-    rid: 2864143502748942441
+    rid: 5375542154661986450
   useTrail: 1
   trailTime: 0.1
   trailStartWidth: 0.28
@@ -117,15 +117,14 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 2864143502748942441
-      type: {class: WeaponBoomerangBehaviour, ns: , asm: Assembly-CSharp}
+    - rid: 5375542154661986450
+      type: {class: WeaponMeleeBehaviour, ns: , asm: Assembly-CSharp}
       data:
         _overrideSpeed: 0
-        _overridePullbackSpeed: 5
+        _overridePullbackSpeed: 7
         _overrideStrikeSpeed: 300
         _overrideReturnSpeed: 70
-        maxBounces: 3
-        bounceRange: 15
+        embedDuration: 0.2
 --- !u!114 &-5742848553004821721
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -84,7 +84,7 @@ SpriteRenderer:
   m_SortingLayer: 1
   m_SortingOrder: 101
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 3210547757871814199, guid: c71444f0162ea5740be1b354b4f4d6e4, type: 3}
+  m_Sprite: {fileID: -4005194006209364072, guid: c6aeb395ca1170143925db93b1e4d37e, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -107,7 +107,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponPoint
   _behaviour:
-    rid: 2864143502748942450
+    rid: 5375542154661986456
   useTrail: 1
   trailTime: 0.1
   trailStartWidth: 0.28
@@ -116,14 +116,18 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 2864143502748942450
-      type: {class: WeaponMeleeBehaviour, ns: , asm: Assembly-CSharp}
+    - rid: 5375542154661986456
+      type: {class: WeaponSlashBehaviour, ns: , asm: Assembly-CSharp}
       data:
-        _overrideSpeed: 0
-        _overridePullbackSpeed: 7
-        _overrideStrikeSpeed: 300
-        _overrideReturnSpeed: 75
-        embedDuration: 0.2
+        slashRadius: 3
+        slashArcDegrees: 180
+        slashSweepSpeed: 480
+        slashHitRadius: 0.35
+        slashVfxPrefab: {fileID: 1462283702018711274, guid: a977d758164395145bb01826d494a9be, type: 3}
+        slashVfxDuration: 1
+        slashTeleportMaxDist: 3
+        slashFadeTime: 0.12
+        projectilePrefab: {fileID: 0}
 --- !u!114 &6601740639246217058
 MonoBehaviour:
   m_ObjectHideFlags: 0

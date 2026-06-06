@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -7,8 +8,26 @@ public class EraEnemySlot : MonoBehaviour
     [SerializeField] Image iconImage;
     [SerializeField] Image bossIconImage;
 
-    public void Bind(Sprite icon, bool isBoss)
+    Button _button;
+    Action<string, bool, Sprite, RectTransform> _onClick;
+    string _entityId;
+    bool   _isBoss;
+
+    void Awake()
     {
+        _button = GetComponentInChildren<Button>();
+        _button?.onClick.AddListener(OnClick);
+    }
+
+    public void Bind(Sprite icon, bool isBoss, string entityId = null, Action<string, bool, Sprite, RectTransform> onClick = null)
+    {
+        _entityId = entityId;
+        _isBoss   = isBoss;
+        _onClick  = onClick;
+
+        if (_button != null)
+            _button.interactable = onClick != null;
+
         if (frameImage != null)
         {
             var cfg = UnitVisualConfig.Shared;
@@ -34,5 +53,10 @@ public class EraEnemySlot : MonoBehaviour
 
         if (bossIconImage != null)
             bossIconImage.enabled = isBoss;
+    }
+
+    void OnClick()
+    {
+        _onClick?.Invoke(_entityId, _isBoss, iconImage?.sprite, GetComponent<RectTransform>());
     }
 }

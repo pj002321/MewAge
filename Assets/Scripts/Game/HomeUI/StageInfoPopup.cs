@@ -32,6 +32,9 @@ public class StageInfoPopup : MonoBehaviour
     [SerializeField] EraEnemySlot   monsterSlotPrefab;
     [SerializeField] StageWeaponSlot weaponSlotPrefab;
 
+    [SerializeField] EnemyInfoPopup    _enemyInfoPopup;
+    [SerializeField] WeaponDetailPopup _weaponDetailPopup;
+
     ScalablePopup _popup;
     int    _chapter;
     string _stageId;
@@ -66,6 +69,7 @@ public class StageInfoPopup : MonoBehaviour
     public void Close()
     {
         StopAllCoroutines();
+        HideInfoPopups();
         _popup.Hide();
     }
 
@@ -74,6 +78,7 @@ public class StageInfoPopup : MonoBehaviour
     void ShowTab(int tab)
     {
         StopAllCoroutines();
+        HideInfoPopups();
         ClearContent();
 
         if (titleText != null)
@@ -176,7 +181,7 @@ public class StageInfoPopup : MonoBehaviour
             int unitIdx = unitIndexMap.TryGetValue(unitId, out int i) ? i : -1;
             var slot = Instantiate(monsterSlotPrefab, content);
             var sprite = (unitIdx >= 0 && visualCfg != null) ? visualCfg.GetSprite(chapter, unitIdx) : null;
-            slot.Bind(sprite, false);
+            slot.Bind(sprite, false, unitId, ShowEnemyInfo);
             count++;
         }
 
@@ -190,7 +195,7 @@ public class StageInfoPopup : MonoBehaviour
 
                 var icon     = visualCfg != null ? visualCfg.GetBossIcon(row.f_보스ID) : null;
                 var bossSlot = Instantiate(monsterSlotPrefab, bossContent);
-                bossSlot.Bind(icon, true);
+                bossSlot.Bind(icon, true, row.f_보스ID, ShowEnemyInfo);
                 count++;
             });
         }
@@ -216,8 +221,39 @@ public class StageInfoPopup : MonoBehaviour
         foreach (var w in weapons)
         {
             var slot = Instantiate(weaponSlotPrefab, content);
-            slot.Bind(w);
+            slot.Bind(w, ShowWeaponInfo);
         }
+    }
+
+    // ── 정보 팝업 ─────────────────────────────────────────────────────────
+
+    void ShowEnemyInfo(string entityId, bool isBoss, Sprite icon, RectTransform anchor)
+    {
+        if (_enemyInfoPopup == null) return;
+        _weaponDetailPopup?.Hide();
+        if (isBoss)
+        {
+            var boss = DB_보스.FindEntity(r => r.f_보스ID == entityId);
+            _enemyInfoPopup.ShowBoss(boss, icon);
+        }
+        else
+        {
+            var unit = DB_유닛.FindEntity(r => r.f_유닛ID == entityId);
+            _enemyInfoPopup.Show(unit, icon);
+        }
+    }
+
+    void ShowWeaponInfo(WeaponData weapon, RectTransform anchor)
+    {
+        if (_weaponDetailPopup == null) return;
+        _enemyInfoPopup?.Hide();
+        _weaponDetailPopup.Show(weapon);
+    }
+
+    void HideInfoPopups()
+    {
+        _enemyInfoPopup?.Hide();
+        _weaponDetailPopup?.Hide();
     }
 
     // ── 공통 유틸 ─────────────────────────────────────────────────────────

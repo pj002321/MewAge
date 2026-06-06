@@ -84,12 +84,12 @@ SpriteRenderer:
   m_SortingLayer: 1
   m_SortingOrder: 101
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -4547286307435760764, guid: c71444f0162ea5740be1b354b4f4d6e4, type: 3}
+  m_Sprite: {fileID: 470653585, guid: c6aeb395ca1170143925db93b1e4d37e, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 1.025, y: 1.15}
+  m_Size: {x: 0.63, y: 1.3}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
@@ -107,7 +107,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponPoint
   _behaviour:
-    rid: 2864143502748942447
+    rid: 5375542154661986455
   useTrail: 1
   trailTime: 0.1
   trailStartWidth: 0.28
@@ -116,19 +116,14 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 2864143502748942447
-      type: {class: WeaponRangedBehaviour, ns: , asm: Assembly-CSharp}
+    - rid: 5375542154661986455
+      type: {class: WeaponMeleeBehaviour, ns: , asm: Assembly-CSharp}
       data:
-        projectileID: Weapons/Ch1/Proj/fire_proj
-        useParabolicShot: 0
-        parabolicArcHeight: 1.5
-        parabolicSpawnLocalPos: {x: 0, y: 0, z: 0}
-        shootRecoil: 1
-        recoilDist: 0.15
-        recoilBackDur: 0.06
-        recoilReturnDur: 0.14
         _overrideSpeed: 0
-        projectileSpeed: 20
+        _overridePullbackSpeed: 5
+        _overrideStrikeSpeed: 300
+        _overrideReturnSpeed: 70
+        embedDuration: 0.2
 --- !u!114 &-894401967451571572
 MonoBehaviour:
   m_ObjectHideFlags: 0

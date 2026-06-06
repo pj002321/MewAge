@@ -22,7 +22,7 @@ public class AugmentStatPanel : MonoBehaviour
         }
 
         if (statText != null)
-            statText.text = unlocked ? BuildStatLine(statId, value) : "???";
+            statText.text = BuildStatLine(statId, value);
     }
 
     static string BuildStatLine(string statId, string value)

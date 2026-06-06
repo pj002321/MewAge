@@ -6,6 +6,7 @@ using UnityEngine;
 /// </summary>
 public class PlayerStats : MonoBehaviourSingleton<PlayerStats>
 {
+    public static event System.Action OnLevelUp;
     [Header("레벨 설정")]
     [SerializeField] private int maxLevel          = 20;  // 만렙
     [SerializeField] private int baseExpPerLevel   = 20;  // 레벨 1→2 필요 경험치
@@ -73,6 +74,7 @@ public class PlayerStats : MonoBehaviourSingleton<PlayerStats>
             Debug.Log($"[PlayerStats] Level Up! → {level}");
             PlayerController.Instance?.HealHP(10f);
             FXManager.Shared?.SpawnPlayerText("+10", Color.green);
+            OnLevelUp?.Invoke();
         }
 
         // 만렙 도달 시 exp 바를 0/200으로 고정
@@ -104,6 +106,7 @@ public class PlayerStats : MonoBehaviourSingleton<PlayerStats>
             Debug.Log($"[PlayerStats] Debug Level Up! → {level}");
             PlayerController.Instance?.HealHP(10f);
             FXManager.Shared?.SpawnPlayerText("+10", Color.green);
+            OnLevelUp?.Invoke();
         }
 
         if (level >= maxLevel)

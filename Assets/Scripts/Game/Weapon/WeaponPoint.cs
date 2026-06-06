@@ -115,6 +115,8 @@ public class WeaponPoint : MonoBehaviour
     public static event System.Action OnWaveStarted;
     public static void NotifyWaveStarted() => OnWaveStarted?.Invoke();
 
+    public static event System.Action<EnemyController, float, WeaponGrade> OnHitEnemy;
+
     // ─────────────────────────────────────────────────────────────────
     // CombatTarget
     // ─────────────────────────────────────────────────────────────────
@@ -669,6 +671,7 @@ public class WeaponPoint : MonoBehaviour
 
     internal void TrySpecialEffectEnemy(EnemyController enemy, float damage, Vector2 hitDir)
     {
+        if (enemy != null) OnHitEnemy?.Invoke(enemy, damage, _grade);
         if (string.IsNullOrEmpty(_specialEffectId) || enemy == null) return;
         if (_specialEffectId.Contains("CLONE"))
             this.DLog($"[TrySpecialEffect] id='{_specialEffectId}' len={_specialEffectId.Length}");

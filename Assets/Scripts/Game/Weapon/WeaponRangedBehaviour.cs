@@ -15,6 +15,8 @@ public class WeaponRangedBehaviour : WeaponBehaviourBase
     [SerializeField] private float      parabolicArcHeight  = 1.5f;
     [SerializeField] private Vector3    parabolicSpawnLocalPos;
 
+    [SerializeField] private bool  useGrenadeMode  = false;
+
     [SerializeField] private bool  shootRecoil     = true;
     [SerializeField] private float recoilDist      = 0.15f;
     [SerializeField] private float recoilBackDur   = 0.06f;
@@ -46,7 +48,7 @@ public class WeaponRangedBehaviour : WeaponBehaviourBase
     {
         if (Host.cooldownTimer > 0f) return;
         if (PlayerController.Instance != null && PlayerController.Instance.InputLocked) return;
-        if (_projectilePrefab == null) return;
+        if (!useGrenadeMode && _projectilePrefab == null) return;
 
         var best = Host.FindBestTarget();
         if (best.IsNone) return;
@@ -57,6 +59,8 @@ public class WeaponRangedBehaviour : WeaponBehaviourBase
 
     private void Shoot(WeaponPoint.CombatTarget tgt)
     {
+        if (useGrenadeMode) { ShootGrenade(tgt); return; }
+
         Vector2 aimDir = ((Vector2)tgt.Position - (Vector2)Host.transform.position).normalized;
         if (!useParabolicShot) Host.SnapRotationToDir(aimDir);
 
@@ -127,6 +131,43 @@ public class WeaponRangedBehaviour : WeaponBehaviourBase
     {
         var parent = Host.transform.parent != null ? Host.transform.parent : Host.transform;
         return parent.TransformPoint(parabolicSpawnLocalPos);
+    }
+
+    private void ShootGrenade(WeaponPoint.CombatTarget tgt)
+    {
+        var weaponSr = Host.WeaponSr;
+        if (weaponSr == null || weaponSr.sprite == null) return;
+
+        SoundManager.Shared?.PlayWeaponShoot(Host.WeaponId);
+        var (finalDmg, isCrit) = Host.RollCrit(Host.attackDamage);
+
+        weaponSr.enabled = false;
+        var trail = Host.GetComponent<TrailRenderer>();
+        if (trail != null) trail.emitting = false;
+
+        var go = new GameObject("GrenadeProjectile");
+        go.transform.position = Host.transform.position;
+        var grenade = go.AddComponent<GrenadeProjectile>();
+        grenade.Init(
+            weaponSr,
+            finalDmg, Host.attackDamage, isCrit,
+            Host.areaHitRadius, Host.areaHitDamageRatio,
+            Host.criticalRate, Host.criticalMultiplier,
+            Host.knockbackPower, Host.dotDamage, Host.lifeSteal,
+            Host.WeaponId,
+            tgt.Position, EffectiveSpeed, parabolicArcHeight,
+            () =>
+            {
+                if (weaponSr != null) weaponSr.enabled = true;
+                if (trail != null) trail.emitting = true;
+            });
+
+        Host.TriggerAttackAnimation();
+        if (Host.Grade >= WeaponGrade.Legendary)
+        {
+            Vector2 aimDir = ((Vector2)tgt.Position - (Vector2)Host.transform.position).normalized;
+            Host.HighGradeSkill?.OnShoot(Host.transform.position, aimDir);
+        }
     }
 
     private void TriggerRecoil(Vector2 shootDir)

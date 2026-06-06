@@ -27,10 +27,6 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     [SerializeField] private GameObject waveClearPanel;
     [SerializeField] private float      waveClearDuration = 1f;
 
-    [Header("웨이브/스테이지 클리어 슬로우 모션")]
-    [SerializeField] private float clearSlowMoDuration = 0.6f;
-    [SerializeField] private float clearSlowMoScale    = 0.15f;
-
     [Header("타이머 색상")]
     [SerializeField] private Color timerNormalColor = Color.white;
     [SerializeField] private Color timerWarningColor = Color.red;
@@ -50,6 +46,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 
     private int   wave = 0;
     private float waveTimer;
+    private float _timerDisplayTimer;
     private bool  isGameOver;
     private int   _normalReviveCount;
     private bool  waitingForUpgrade = true; // 트랜지션/초기화 기간 중 0초 달성으로 증강이 뜨는 것 방지
@@ -273,29 +270,19 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         yield return new WaitForSeconds(delay);
         if (anim != null) anim.speed = 0f;
     }
-    private IEnumerator SlowMoRoutine()
-    {
-        float elapsed = 0f;
-        while (elapsed < clearSlowMoDuration)
-        {
-            elapsed += Time.unscaledDeltaTime;
-            Time.timeScale = Mathf.Lerp(1f, clearSlowMoScale, elapsed / clearSlowMoDuration);
-            yield return null;
-        }
-        // 패널 진입 시 0f로 설정되므로 여기서는 복구하지 않음
-    }
-
     private IEnumerator WaveClearRoutine()
     {
         EnemySpawner.Shared?.StopSpawning();
+        ImprovManager.Shared?.NotifyWaveEnd();
 
-        // 남은 orb 파편 즉시 터뜨리기 (노티 전)
+        // 남은 orb 파편 터뜨리기
         ItemDropManager.Shared?.ThrowUpAll();
 
-        yield return new WaitForSeconds(0.15f);  // 파편 연출이 잠깐 보이도록 대기
+        // 00:00 화면을 잠깐 보여준 뒤 적 사망 연출
+        yield return new WaitForSeconds(0.6f);
 
-        // 적 사망 연출 + 기물 스케일다운 후 파괴 (DieRoutine 기준 0.45s)
-        yield return StartCoroutine(ClearAllWithScaleDown(0.45f));
+        // 적 사망 연출 (DieRoutine 기준 0.45s보다 여유 있게)
+        yield return StartCoroutine(ClearAllWithScaleDown(0.6f));
 
         FXManager.Shared?.ClearAllFX();          // 투사체·파편 즉시 제거
         WeaponPoint.RecallAll();                 // 날아가는 클론 즉시 회수
@@ -308,8 +295,6 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 
         // 대기 중 사망(부활 패널)했다가 아직 isGameOver 상태면 패널 표시 중단
         if (isGameOver) yield break;
-
-        yield return StartCoroutine(SlowMoRoutine());
 
         // 최종 웨이브 클리어 → 게임 클리어 패널
         if (wave >= GetMaxWave())
@@ -351,7 +336,9 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
                 (CameraFollow.Shared == null || CameraFollow.Shared.IsZoomAtDefault)
             ));
 
-        if (ImprovManager.Shared != null)
+        // 증강 웨이브면 증강 패널 먼저 (OnNextClicked에서 무기상점으로 넘김)
+        // 아니면 바로 무기상점
+        if (ImprovManager.Shared != null && ImprovManager.IsAugmentWave(wave))
             ImprovManager.Shared.ShowPanel(wave);
         else if (UpgradeManager.Shared != null)
             UpgradeManager.Shared.ShowPanel(wave);
@@ -390,8 +377,13 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
     private void UpdateTimerUI()
     {
         if (timerText == null || _isCountingDown) return;
-        int secs = Mathf.CeilToInt(Mathf.Max(0f, waveTimer));
-        timerText.text  = $"{secs / 60:00}:{secs % 60:00}";
+        _timerDisplayTimer -= Time.deltaTime;
+        if (_timerDisplayTimer > 0f) return;
+        _timerDisplayTimer = 0.05f;
+        float t      = Mathf.Max(0f, waveTimer);
+        int   secs   = (int)t;
+        int   centis = Mathf.Min(99, (int)((t - secs) * 100));
+        timerText.text  = $"{secs:00}:{centis:00}";
         timerText.color = waveTimer <= timerWarningThreshold ? timerWarningColor : timerNormalColor;
     }
 
@@ -579,6 +571,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 
     public void StartNextWave()
     {
+        Time.timeScale       = 1f;
         wave++;
         waitingForUpgrade    = false;
         _eliteKilledThisWave = false;
@@ -1100,15 +1093,20 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         if (nextBoss <= 0)
         {
             WaveEnvironmentSwitcher.Shared?.SetNormal();
-            yield return StartCoroutine(SlowMoRoutine());
             ShowGameClear();
             yield break;
         }
 
-        // 중간 보스: orb가 전부 수집될 때까지 대기 (최대 orbCollectWait 초)
+        // 중간 보스: 타이머 0 표시 → orb 자동흡수 → 웨이브 클리어
+        waveTimer = 0f;
+        yield return new WaitForSeconds(0.5f); // 00:00 잠깐 표시
+
+        // orb 자동흡수 시작
+        ItemDropManager.Shared?.ForceAttractAll();
+
+        // 전부 흡수될 때까지 대기 (최대 3초)
         float elapsed = 0f;
-        yield return new WaitForSeconds(0.5f); // orb 스폰 대기
-        while (elapsed < orbCollectWait)
+        while (elapsed < 3f)
         {
             if (Object.FindObjectsByType<DropItem>(FindObjectsSortMode.None).Length == 0)
                 break;
@@ -1116,7 +1114,6 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
             yield return null;
         }
 
-        // 상점(업그레이드 패널) 직전에 맵 복구
         WaveEnvironmentSwitcher.Shared?.SetNormal();
         StartCoroutine(WaveClearRoutine());
     }

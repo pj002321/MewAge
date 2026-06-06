@@ -104,19 +104,7 @@ public class ImprovPanel : MonoBehaviour
     private (StatType stat, float pct)? GetPreviewStat(DB_증강 data)
     {
         if (data == null) return null;
-        float main = data.f_주수치;
-        float sub  = data.f_보조수치;
-
-        // 특수 케이스
-        switch (data.f_증강ID)
-        {
-            case ImprovType.AUG_SIZE_HP_UP:   return (StatType.MaxHP,       sub);
-            case ImprovType.AUG_SIZE_HP_DOWN: return (StatType.MaxHP,      -sub);
-            case ImprovType.AUG_HEAL_DEAD:    return (StatType.HealOnKill,  main);
-        }
-
-        // 일반 스탯 계열 — AugmentHelper 공용 매핑 사용
-        var stat = AugmentHelper.ToStatType(data.f_증강ID.ToString());
-        return stat.HasValue ? (stat.Value, main) : ((StatType, float)?)null;
+        var stat = AugmentHelper.ToStatType(data.f_증강ID);
+        return stat.HasValue ? (stat.Value, data.f_주수치) : ((StatType, float)?)null;
     }
 }

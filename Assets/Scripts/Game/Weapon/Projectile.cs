@@ -253,7 +253,27 @@ public class Projectile : MonoBehaviour
                 transform.rotation = Quaternion.Euler(0f, 0f, angle);
             }
 
-            if (t >= 1f) { SpawnImpactVfx(); Destroy(gameObject); }
+            if (t >= 1f)
+            {
+                // transform.position 직접 이동이라 OnTriggerEnter2D 누락 가능 → 착지 지점 직접 피해
+                float landRadius = Mathf.Max(areaHitRadius, 0.6f);
+                int count = Physics2D.OverlapCircleNonAlloc(_paraEnd, landRadius, _hitBuffer, targetLayer);
+                for (int i = 0; i < count; i++)
+                {
+                    var boss = _hitBuffer[i].GetComponentInParent<BossController>();
+                    if (boss != null && !_bossHitDone)
+                    {
+                        _bossHitDone = true;
+                        boss.TakeDamage(primaryDmg, isPrimaryCritical);
+                        continue;
+                    }
+                    var e = _hitBuffer[i].GetComponentInParent<EnemyController>();
+                    if (e != null)
+                        e.TakeDamage(primaryDmg, isPrimaryCritical);
+                }
+                SpawnImpactVfx();
+                Destroy(gameObject);
+            }
             return;
         }
 

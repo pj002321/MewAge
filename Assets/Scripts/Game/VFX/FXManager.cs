@@ -295,6 +295,9 @@ public class FXManager : MonoBehaviourSingleton<FXManager>
         for (int i = MortarShell.All.Count - 1; i >= 0; i--)
             if (MortarShell.All[i] != null) Destroy(MortarShell.All[i].gameObject);
 
+        for (int i = GrenadeProjectile.All.Count - 1; i >= 0; i--)
+            if (GrenadeProjectile.All[i] != null) Destroy(GrenadeProjectile.All[i].gameObject);
+
         // 보스/적 스킬이 남긴 경고선·텔레포트 마커 일괄 제거
         EnemyCombatRoutines.WarningLine.DestroyAll();
         EnemyCombatRoutines.DestroyAllMarkers();
