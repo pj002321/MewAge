@@ -107,7 +107,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponPoint
   _behaviour:
-    rid: 2864143502748942431
+    rid: 5375542204598583450
   useTrail: 1
   trailTime: 0.1
   trailStartWidth: 0.28
@@ -116,14 +116,18 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 2864143502748942431
-      type: {class: WeaponMeleeBehaviour, ns: , asm: Assembly-CSharp}
+    - rid: 5375542204598583450
+      type: {class: WeaponSlashBehaviour, ns: , asm: Assembly-CSharp}
       data:
-        _overrideSpeed: 0
-        _overridePullbackSpeed: 5
-        _overrideStrikeSpeed: 300
-        _overrideReturnSpeed: 70
-        embedDuration: 0.2
+        slashRadius: 1.2
+        slashArcDegrees: 180
+        slashSweepSpeed: 480
+        slashHitRadius: 0.35
+        slashVfxPrefab: {fileID: 0}
+        slashVfxDuration: 1
+        slashTeleportMaxDist: 3
+        slashFadeTime: 0.12
+        projectilePrefab: {fileID: 0}
 --- !u!114 &-3097853947098103379
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -152,6 +156,9 @@ MonoBehaviour:
   meleeDuration: 1.5
   freezeDamageOnThaw: 0
   freezeColor: {r: 0.5, g: 0.85, b: 1, a: 1}
+  sprayEffect: {fileID: 0}
+  sprayRadius: 2
+  sprayAngle: 120
   boomerangChance: 0.3
   cloneSpeed: 10
   cloneLifetime: 1.8
@@ -201,4 +208,5 @@ MonoBehaviour:
   trailSpawnInterval: 0.15
   trailHitRadius: 0.5
   trailCloneAlpha: 0.5
+  reflectBounceCount: 3
   reductionPct: 0.2

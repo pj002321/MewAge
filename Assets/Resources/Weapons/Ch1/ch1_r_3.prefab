@@ -106,7 +106,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponPoint
   _behaviour:
-    rid: 5375542154661986458
+    rid: 5375542204598583448
   useTrail: 1
   trailTime: 0.1
   trailStartWidth: 0.28
@@ -115,15 +115,16 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 5375542154661986458
-      type: {class: WeaponBoomerangBehaviour, ns: , asm: Assembly-CSharp}
+    - rid: 5375542204598583448
+      type: {class: WeaponMeleeBehaviour, ns: , asm: Assembly-CSharp}
       data:
         _overrideSpeed: 0
         _overridePullbackSpeed: 5
         _overrideStrikeSpeed: 300
-        _overrideReturnSpeed: 70
-        maxBounces: 3
-        bounceRange: 5
+        _overrideReturnSpeed: 80
+        embedDuration: 0.2
+        useFadeWarp: 0
+        useEmbedPulse: 0
 --- !u!114 &-8207411115395186190
 MonoBehaviour:
   m_ObjectHideFlags: 0
