@@ -60,7 +60,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: e901129e9679f8e428ec8abe92cf485f, type: 2}
+  - {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -83,7 +83,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 101
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -2074846832123040869, guid: 738e44c156ecb483791abe5b98002305, type: 3}
+  m_Sprite: {fileID: 3630346856969071065, guid: 738e44c156ecb483791abe5b98002305, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -118,13 +118,10 @@ MonoBehaviour:
     - rid: 2864143526218694753
       type: {class: WeaponBoomerangBehaviour, ns: , asm: Assembly-CSharp}
       data:
-        pullbackDist: 0.5
-        pullbackSpeed: 30
-        strikeSpeed: 80
-        returnSpeed: 25
-        hitDistance: 0.4
-        overshootDistance: 0.5
-        overshootSpeed: 60
+        _overrideSpeed: 0
+        _overridePullbackSpeed: 5
+        _overrideStrikeSpeed: 300
+        _overrideReturnSpeed: 70
         maxBounces: 2
         bounceRange: 5
 --- !u!114 &-3097853947098103379
@@ -139,9 +136,3 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d880b36e09b826b4aa4d33b07b710c84, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpriteOutline
-  starColors:
-  - {r: 1, g: 1, b: 1, a: 0}
-  - {r: 0.504717, g: 0.9414869, b: 1, a: 1}
-  - {r: 0.39999998, g: 1, b: 0.6414886, a: 1}
-  - {r: 0.8, g: 0.4, b: 1, a: 1}
-  - {r: 1, g: 0.35, b: 0.35, a: 1}

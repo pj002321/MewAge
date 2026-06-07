@@ -214,7 +214,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: e901129e9679f8e428ec8abe92cf485f, type: 2}
+  - {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -237,7 +237,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 101
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -43427412077927677, guid: 738e44c156ecb483791abe5b98002305, type: 3}
+  m_Sprite: {fileID: 119439956, guid: 5eb5cf9b1ec9dc74c8cb39a01fc96ca7, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -345,6 +345,13 @@ MonoBehaviour:
   slashProjSpeed: 9
   radiusMultiplier: 1.4
   spinSpeedMultiplier: 1.35
+  spinCloneChance: 0.3
+  spinCloneRadius: 1.5
+  spinCloneSpeed: 220
+  spinCloneDuration: 3
+  spinCloneHitRadius: 0.4
+  spinCloneAlpha: 0.5
+  spinCloneMaxCount: 3
   shockwaveRadius: 4.5
   shockwaveDmgRatio: 0.4
   spikeChance: 0.2
@@ -357,4 +364,21 @@ MonoBehaviour:
   bindDuration: 2
   groggyChance: 0.15
   groggySeconds: 2
+  spearChance: 0.25
+  spearPrefab: {fileID: 0}
+  spearDropHeight: 8
+  spearSideOffset: 3
+  spearSpeed: 18
+  spearDmgRatio: 1
+  spearHitRadius: 0.45
+  trailChance: 0.3
+  trailClonePrefab: {fileID: 0}
+  trailMarkerPrefab: {fileID: 0}
+  trailSpeed: 6
+  trailRange: 8
+  trailDmgRatio: 0.4
+  trailDuration: 2
+  trailSpawnInterval: 0.15
+  trailHitRadius: 0.5
+  trailCloneAlpha: 0.5
   reductionPct: 0.2

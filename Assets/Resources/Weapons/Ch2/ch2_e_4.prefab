@@ -60,7 +60,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: e901129e9679f8e428ec8abe92cf485f, type: 2}
+  - {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -106,7 +106,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponPoint
   _behaviour:
-    rid: 2864143526218694760
+    rid: 5375542204598583404
   useTrail: 1
   trailTime: 0.1
   trailStartWidth: 0.28
@@ -115,18 +115,16 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 2864143526218694760
-      type: {class: WeaponRangedBehaviour, ns: , asm: Assembly-CSharp}
+    - rid: 5375542204598583404
+      type: {class: WeaponMeleeBehaviour, ns: , asm: Assembly-CSharp}
       data:
-        projectileID: Weapons/Ch2/Proj/ch2_e_4_proj
-        projectileSpeed: 20
-        useParabolicShot: 0
-        parabolicArcHeight: 1.5
-        parabolicSpawnLocalPos: {x: 0, y: 0, z: 0}
-        shootRecoil: 1
-        recoilDist: 0.15
-        recoilBackDur: 0.06
-        recoilReturnDur: 0.14
+        _overrideSpeed: 0
+        _overridePullbackSpeed: 5
+        _overrideStrikeSpeed: 300
+        _overrideReturnSpeed: 70
+        embedDuration: 0.2
+        useFadeWarp: 1
+        useEmbedPulse: 0
 --- !u!114 &-3097853947098103379
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -139,9 +137,3 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d880b36e09b826b4aa4d33b07b710c84, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpriteOutline
-  starColors:
-  - {r: 1, g: 1, b: 1, a: 0}
-  - {r: 0.504717, g: 0.9414869, b: 1, a: 1}
-  - {r: 0.39999998, g: 1, b: 0.6414886, a: 1}
-  - {r: 0.8, g: 0.4, b: 1, a: 1}
-  - {r: 1, g: 0.35, b: 0.35, a: 1}

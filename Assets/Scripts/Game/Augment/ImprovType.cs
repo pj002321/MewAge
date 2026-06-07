@@ -10,7 +10,7 @@ public enum ImprovType
     // ── C1 원시시대 ───────────────────────────────────────────────
     AUG_FIRST_HUNT       = 100, // 첫 구매 무기 2성
     AUG_WILD_FUSION      = 101, // 무기 6개 장착 시 하나로 합성
-    AUG_SPAWN_SNAIL      = 102, // 주기적으로 달팽이 설치물 소환
+    AUG_SPAWN_TURRET     = 102, // 주기적으로 터렛 설치물 소환
     AUG_PET_BEAST        = 103, // 애완동물 소환
     AUG_MUD_OPENING      = 104, // 웨이브 시작 시 진흙 3발 둔화
     AUG_ICE_AGE          = 105, // 웨이브 시작 시 빙하기 → 공속 증가

@@ -119,7 +119,7 @@ MonoBehaviour:
     - rid: 5375542154661986451
       type: {class: WeaponBoomerangBehaviour, ns: , asm: Assembly-CSharp}
       data:
-        _overrideSpeed: 0
+        _overrideSpeed: 1
         _overridePullbackSpeed: 7
         _overrideStrikeSpeed: 300
         _overrideReturnSpeed: 70
@@ -153,6 +153,12 @@ MonoBehaviour:
   meleeDuration: 1.5
   freezeDamageOnThaw: 0
   freezeColor: {r: 0.5, g: 0.85, b: 1, a: 1}
+  iceSprayPrefab: {fileID: 0}
+  iceSprayCount: 7
+  iceSprayAngleSpan: 80
+  iceSpraySpeed: 7
+  iceSprayDecel: 20
+  iceSprayLifetime: 0.35
   boomerangChance: 0.3
   cloneSpeed: 10
   cloneLifetime: 1.8

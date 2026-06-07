@@ -14,7 +14,7 @@ public abstract class WeaponMeleeBaseBehaviour : WeaponBehaviourBase
     protected float strikeSpeed       = 300f;
     protected float returnSpeed       = 70f;
     protected float hitDistance       = 0.4f;
-    protected float overshootDistance = 0.5f;
+    protected float overshootDistance = 0.25f;
     protected float overshootSpeed    = 60f;
 
     [Header("속도 오버라이드")]
@@ -146,6 +146,8 @@ public abstract class WeaponMeleeBaseBehaviour : WeaponBehaviourBase
         OnBeginStrikeSetup();
         _state = State.Striking;
         Host.StartTrail();
+        Vector2 aimDir = GetAttackLookDir() ?? (Vector2)Host.transform.up;
+        Host.HighGradeSkill?.OnBeginAttack(aimDir);
     }
 
     protected void BeginReturn(bool resetCooldown = true)

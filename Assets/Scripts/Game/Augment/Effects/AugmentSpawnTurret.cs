@@ -3,9 +3,9 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
-// f_주수치 초마다 랜덤 위치에 달팽이 설치물 소환. 설치물은 주기적으로 투사체를 발사한다.
+// f_주수치 초마다 랜덤 위치에 터렛 설치물 소환. 설치물은 주기적으로 투사체를 발사한다.
 // f_주수치 = 소환 주기(초), f_보조수치 = 공격 데미지
-public class AugmentSpawnSnail : AugmentEffectBase
+public class AugmentSpawnTurret : AugmentEffectBase
 {
     private const int MaxTurrets = 4;
 
@@ -28,20 +28,20 @@ public class AugmentSpawnSnail : AugmentEffectBase
 
     private async UniTaskVoid SpawnLoop(CancellationToken ct)
     {
-        var snailPrefab      = ImprovVisualConfig.Shared?.GetEntry(ImprovType.AUG_SPAWN_SNAIL).companionPrefab;
-        var projectilePrefab = ImprovVisualConfig.Shared?.GetEntry(ImprovType.AUG_SPAWN_SNAIL).projectilePrefab;
+        var turretPrefab     = ImprovVisualConfig.Shared?.GetEntry(ImprovType.AUG_SPAWN_TURRET).companionPrefab;
+        var projectilePrefab = ImprovVisualConfig.Shared?.GetEntry(ImprovType.AUG_SPAWN_TURRET).projectilePrefab;
 
         while (!ct.IsCancellationRequested)
         {
             await UniTask.WaitForSeconds(Data.f_주수치, cancellationToken: ct);
 
-            if (snailPrefab == null) continue;
+            if (turretPrefab == null) continue;
 
             _active.RemoveAll(go => go == null);
             if (_active.Count >= MaxTurrets) continue;
 
             Vector2 pos = RandomMapPosition();
-            var go = Object.Instantiate(snailPrefab, pos, Quaternion.identity);
+            var go = Object.Instantiate(turretPrefab, pos, Quaternion.identity);
             go.GetComponent<AugmentTurretController>()?.Init(Data.f_보조수치, projectilePrefab);
             _active.Add(go);
         }

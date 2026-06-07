@@ -12,7 +12,12 @@ public class WeaponMeleeBehaviour : WeaponMeleeBaseBehaviour
     public override float GetRelicBonusPct(RelicManager relic)         => relic.MeleeAtkBonusPct;
 
     [Header("박힘 대기")]
-    [SerializeField] private float embedDuration = 0.2f;
+    [SerializeField] private float embedDuration  = 0.2f;
+    [SerializeField] private bool  useFadeWarp    = false;
+    [SerializeField] private bool  useEmbedPulse  = false;
+
+    private const float EmbedPulseInterval = 0.06f;
+    private const float EmbedPulseFadeDur  = 0.18f;
 
     // 타격 목표 (적 머리) — BeginStrikeSetup에서 고정
     private Vector3 _headTarget;
@@ -21,18 +26,23 @@ public class WeaponMeleeBehaviour : WeaponMeleeBaseBehaviour
     private Vector2 _lastHitDir;
 
     // 임베드 타이머 & 귀환 타격 여부
-    private float _embedTimer;
-    private bool  _returnHitFired;
+    private float     _embedTimer;
+    private bool      _returnHitFired;
+    private bool      _warping;
+    private bool      _embedStarted;
+    private Coroutine _embedPulseCo;
 
     protected override void BeginAttack(WeaponPoint.CombatTarget best)
     {
-        overshootDistance = 0.7f;
+        overshootDistance = 0.3f;
         _target          = best;
         _toTarget        = ((Vector2)best.Position - (Vector2)Host.transform.parent.position).normalized;
         if (_toTarget.sqrMagnitude < 0.001f) _toTarget = Vector2.up;
 
         _headTargetReady = false;
         _returnHitFired  = false;
+        _embedStarted    = false;
+        StopEmbedPulse();
         StartPullback(best, -(Vector3)_toTarget * pullbackDist);
     }
 
@@ -86,18 +96,88 @@ public class WeaponMeleeBehaviour : WeaponMeleeBaseBehaviour
         }
     }
 
-    // 오버슈트 목표까지 이동 → 도달 후 임베드 대기
+    // 오버슈트 목표까지 이동 → 도달 후 임베드 대기 → 페이드아웃 후 원위치 워프
     protected override void UpdateOvershooting()
     {
+        if (_warping) return;
+
         if (Vector3.Distance(Host.transform.position, _overshootTarget) > 0.05f)
         {
             Host.transform.position = Vector3.MoveTowards(
                 Host.transform.position, _overshootTarget, strikeSpeed * Time.deltaTime);
             return;
         }
+        if (!_embedStarted)
+        {
+            _embedStarted = true;
+            if (useEmbedPulse) _embedPulseCo = StartCoroutine(EmbedPulseRoutine());
+        }
+
         _embedTimer -= Time.deltaTime;
         if (_embedTimer <= 0f)
-            BeginReturn();
+        {
+            StopEmbedPulse();
+            if (useFadeWarp) { _warping = true; StartCoroutine(FadeWarpRoutine()); }
+            else BeginReturn();
+        }
+    }
+
+    private System.Collections.IEnumerator FadeWarpRoutine()
+    {
+        const float popInDur     = 0.12f;
+        const float ghostHoldDur = 0.45f;
+        const float ghostFadeDur = 0.22f;
+
+        var sr = Host.WeaponSr;
+
+        // 박힌 자리에 고스트 생성 — 꽂혀있는 채로 유지
+        if (sr != null && sr.sprite != null)
+        {
+            var ghost              = new GameObject("EmbedGhost");
+            ghost.transform.position   = Host.transform.position;
+            ghost.transform.rotation   = Host.transform.rotation;
+            ghost.transform.localScale = Host.transform.lossyScale;
+            var ghostSr            = ghost.AddComponent<SpriteRenderer>();
+            ghostSr.sprite         = sr.sprite;
+            ghostSr.color          = sr.color;
+            ghostSr.sortingLayerID = sr.sortingLayerID;
+            ghostSr.sortingOrder   = sr.sortingOrder;
+            StartCoroutine(FadeAndDestroyGhost(ghost, ghostSr, ghostHoldDur, ghostFadeDur));
+        }
+
+        // 실제 무기는 숨기고 즉시 원위치로 이동
+        if (sr != null) { var c = sr.color; c.a = 0f; sr.color = c; }
+        Host.transform.localPosition = Vector3.zero;
+        Host.StopTrail();
+
+        // 새 무기처럼 페이드인
+        for (float t = 0f; t < popInDur; t += Time.deltaTime)
+        {
+            if (sr != null) { var c = sr.color; c.a = t / popInDur; sr.color = c; }
+            yield return null;
+        }
+        if (sr != null) { var c = sr.color; c.a = 1f; sr.color = c; }
+
+        Host.cooldownTimer = Host.attackCooldown;
+        _returnHitFired    = false;
+        _warping           = false;
+        _state             = State.Idle;
+    }
+
+    private System.Collections.IEnumerator FadeAndDestroyGhost(
+        GameObject go, SpriteRenderer ghostSr, float holdDur, float fadeDur)
+    {
+        yield return new WaitForSeconds(holdDur);
+        float startAlpha = ghostSr != null ? ghostSr.color.a : 1f;
+        for (float t = 0f; t < fadeDur; t += Time.deltaTime)
+        {
+            if (ghostSr == null) yield break;
+            var c = ghostSr.color;
+            c.a = Mathf.Lerp(startAlpha, 0f, t / fadeDur);
+            ghostSr.color = c;
+            yield return null;
+        }
+        if (go != null) Object.Destroy(go);
     }
 
     // 귀환 시작 시 범위 내 적에게 1회 타격
@@ -123,6 +203,62 @@ public class WeaponMeleeBehaviour : WeaponMeleeBaseBehaviour
         if (_state == State.Striking)                 return _toTarget;
         if (_lastHitDir.sqrMagnitude > 0.001f)        return _lastHitDir;
         return _toTarget;
+    }
+
+    private void StopEmbedPulse()
+    {
+        if (_embedPulseCo == null) return;
+        StopCoroutine(_embedPulseCo);
+        _embedPulseCo = null;
+    }
+
+    private System.Collections.IEnumerator EmbedPulseRoutine()
+    {
+        while (true)
+        {
+            SpawnEmbedGhost();
+            yield return new WaitForSeconds(EmbedPulseInterval);
+        }
+    }
+
+    private void SpawnEmbedGhost()
+    {
+        var sr = Host.WeaponSr;
+        if (sr == null || sr.sprite == null) return;
+
+        Color pulseColor = Host.Grade == WeaponGrade.Common
+            ? Color.white : WeaponGradeColors.Get(Host.Grade);
+        pulseColor.a = 0.7f;
+
+        var go = new GameObject("EmbedGhost");
+        go.transform.position   = Host.transform.position;
+        go.transform.rotation   = Host.transform.rotation;
+        go.transform.localScale = Host.transform.lossyScale;
+
+        var ghostSr            = go.AddComponent<SpriteRenderer>();
+        ghostSr.sprite         = sr.sprite;
+        ghostSr.color          = pulseColor;
+        ghostSr.sortingLayerID = sr.sortingLayerID;
+        ghostSr.sortingOrder   = sr.sortingOrder - 1;
+
+        StartCoroutine(FadeOutGhost(go, ghostSr, Host.transform.lossyScale));
+    }
+
+    private System.Collections.IEnumerator FadeOutGhost(GameObject go, SpriteRenderer ghostSr, Vector3 startScale)
+    {
+        const float endScaleMult = 3.5f;
+        float startAlpha = ghostSr.color.a;
+        for (float t = 0f; t < EmbedPulseFadeDur; t += Time.deltaTime)
+        {
+            if (ghostSr == null) yield break;
+            float p = t / EmbedPulseFadeDur;
+            var c = ghostSr.color;
+            c.a = Mathf.Lerp(startAlpha, 0f, p);
+            ghostSr.color    = c;
+            go.transform.localScale = Vector3.Lerp(startScale, startScale * endScaleMult, p);
+            yield return null;
+        }
+        Object.Destroy(go);
     }
 
     // 적 콜라이더 상단(머리) 좌표

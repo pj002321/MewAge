@@ -504,8 +504,11 @@ public void ForceDie()
     private IEnumerator DieRoutine()
     {
         isDead = true;
-        CancelPattern(); // OnInterrupted()까지 내부 처리
+        CancelPattern();
         StopGrogyVisuals();
+
+        foreach (var col in GetComponentsInChildren<Collider2D>()) col.enabled = false;
+
         OnDeath?.Invoke();
 
         if (!_isClone)
@@ -520,20 +523,94 @@ public void ForceDie()
         if (srs != null)
             foreach (var sr in srs) sr.color = Color.white;
 
-        float elapsed = 0f;
+        // 서서히 스케일 업
         Vector3 initScale = transform.localScale;
-        while (elapsed < 0.4f)
+        float   elapsed   = 0f;
+        const float scaleUpDuration = 0.8f;
+        while (elapsed < scaleUpDuration)
         {
-            float t = elapsed / 0.4f;
-            transform.localScale = Vector3.Lerp(initScale, Vector3.zero, t * t);
+            float t     = elapsed / scaleUpDuration;
+            float eased = t * t * (3f - 2f * t);
+            transform.localScale = initScale * Mathf.LerpUnclamped(1f, 1.7f, eased);
             elapsed += Time.deltaTime;
             yield return null;
         }
 
-        gameObject.SetActive(false); // Destroy는 프레임 말 처리이므로 즉시 숨김
+        // 조각 폭발 생성 후 스프라이트 즉시 숨김
+        SpawnDeathPieces();
+        if (srs != null)
+            foreach (var sr in srs) sr.enabled = false;
+
+        const float pieceFadeDuration = 1.2f;
+        yield return new WaitForSeconds(pieceFadeDuration);
+
         if (!_isClone)
             GameManager.Shared?.OnBossDefeated();
         Destroy(gameObject);
+    }
+
+    private void SpawnDeathPieces()
+    {
+        SpriteRenderer mainSR = null;
+        if (srs != null)
+            foreach (var sr in srs)
+                if (sr != null && sr.sprite != null) { mainSR = sr; break; }
+        if (mainSR == null) return;
+
+        var sprite = mainSR.sprite;
+        if (sprite == null || !sprite.texture.isReadable) return;
+
+        const int cols = 2;
+        const int rows = 5;
+
+        var   tex     = sprite.texture;
+        float ppu     = sprite.pixelsPerUnit;
+        float pTexW   = sprite.rect.width  / cols;
+        float pTexH   = sprite.rect.height / rows;
+        var   center  = mainSR.bounds.center;
+        float worldPW = mainSR.bounds.size.x / cols;
+        float worldPH = mainSR.bounds.size.y / rows;
+        var   ls      = mainSR.transform.lossyScale;
+
+        for (int r = 0; r < rows; r++)
+        {
+            for (int c = 0; c < cols; c++)
+            {
+                var pieceSprite = Sprite.Create(
+                    tex,
+                    new Rect(sprite.rect.x + c * pTexW, sprite.rect.y + r * pTexH, pTexW, pTexH),
+                    new Vector2(0.5f, 0.5f),
+                    ppu);
+
+                float ox = (c + 0.5f - cols * 0.5f) * worldPW;
+                float oy = (r + 0.5f - rows * 0.5f) * worldPH;
+
+                var go = new GameObject("BossDeathPiece");
+                go.transform.position   = center + new Vector3(ox, oy, 0f);
+                go.transform.localScale = new Vector3(ls.x, ls.y, 1f);
+
+                var psr = go.AddComponent<SpriteRenderer>();
+                psr.sprite         = pieceSprite;
+                psr.sortingLayerID = mainSR.sortingLayerID;
+                psr.sortingOrder   = mainSR.sortingOrder;
+
+                var rb = go.AddComponent<Rigidbody2D>();
+                rb.gravityScale = 0.4f;
+
+                Vector2 dir = new Vector2(ox, oy);
+                if (dir.sqrMagnitude < 0.001f) dir = Random.insideUnitCircle.normalized;
+                else                            dir = dir.normalized;
+
+                rb.AddForce(dir * Random.Range(4f, 8f), ForceMode2D.Impulse);
+                rb.AddTorque(Random.Range(-5f, 5f), ForceMode2D.Impulse);
+
+                const float fadeDur = 1.2f;
+                psr.DOFade(0f, fadeDur)
+                   .SetEase(Ease.InQuad)
+                   .SetLink(go)
+                   .OnComplete(() => { if (go != null) Destroy(go); });
+            }
+        }
     }
 
     // ── 그로기 ────────────────────────────────────────────────────

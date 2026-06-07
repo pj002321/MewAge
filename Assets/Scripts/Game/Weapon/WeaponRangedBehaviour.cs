@@ -17,6 +17,12 @@ public class WeaponRangedBehaviour : WeaponBehaviourBase
 
     [SerializeField] private bool  useGrenadeMode  = false;
 
+    [Header("부채꼴 발사")]
+    [SerializeField] private bool  useFanShot      = false;
+    [SerializeField] [Range(2, 7)] private int   fanCount     = 3;
+    [SerializeField] private float fanAngleSpan    = 60f;
+    [SerializeField] [Range(0.1f, 1f)] private float fanDamageRatio = 1f;
+
     [SerializeField] private bool  shootRecoil     = true;
     [SerializeField] private float recoilDist      = 0.15f;
     [SerializeField] private float recoilBackDur   = 0.06f;
@@ -28,7 +34,10 @@ public class WeaponRangedBehaviour : WeaponBehaviourBase
 
     private float EffectiveSpeed => _overrideSpeed ? projectileSpeed : DefaultProjectileSpeed;
 
-    private Coroutine _recoilCoroutine;
+    private Coroutine  _recoilCoroutine;
+    private Coroutine  _vfxCoroutine;
+    [SerializeField] private GameObject _shootVfx;
+    [SerializeField] private float      _shootVfxDuration = 0.15f;
 
     public override float      GetPlayerAttackBonus(PlayerController player) => player.RangedAttackBonus;
     public override float      GetRelicBonusPct(RelicManager relic)         => relic.RangedAtkBonusPct;
@@ -42,6 +51,8 @@ public class WeaponRangedBehaviour : WeaponBehaviourBase
         base.OnStart();
         if (!string.IsNullOrEmpty(projectileID))
             _projectilePrefab = Resources.Load<GameObject>(projectileID);
+
+        if (_shootVfx != null) _shootVfx.SetActive(false);
     }
 
     public override void OnUpdate()
@@ -61,44 +72,82 @@ public class WeaponRangedBehaviour : WeaponBehaviourBase
     {
         if (useGrenadeMode) { ShootGrenade(tgt); return; }
 
-        Vector2 aimDir = ((Vector2)tgt.Position - (Vector2)Host.transform.position).normalized;
-        if (!useParabolicShot) Host.SnapRotationToDir(aimDir);
-
-        SoundManager.Shared?.PlayWeaponShoot(Host.WeaponId);
-        var (finalDmg, isCrit) = Host.RollCrit(Host.attackDamage);
-
-        float   spd      = EffectiveSpeed;
+        Vector2 aimDir   = ((Vector2)tgt.Position - (Vector2)Host.transform.position).normalized;
         Vector3 spawnPos = useParabolicShot ? GetParabolicSpawnPos() : Host.transform.position;
-        var go   = Object.Instantiate(_projectilePrefab, spawnPos, Quaternion.identity);
-        var proj = go.GetComponent<Projectile>();
-        if (proj == null) { Object.Destroy(go); return; }
 
-        if (useParabolicShot)
+        if (!useParabolicShot) Host.SnapRotationToDir(aimDir);
+        SoundManager.Shared?.PlayWeaponShoot(Host.WeaponId);
+
+        if (useFanShot && !useParabolicShot)
         {
-            proj.InitParabolic(finalDmg, tgt.Position, spd, parabolicArcHeight,
-                isPrimaryCritical: isCrit, lifeSteal: Host.lifeSteal, dotDamage: Host.dotDamage,
-                areaHitRadius: Host.areaHitRadius, areaHitDamageRatio: Host.areaHitDamageRatio,
-                criticalRate: Host.criticalRate, criticalMultiplier: Host.criticalMultiplier,
-                baseDamage: Host.attackDamage, knockbackPower: Host.knockbackPower);
+            ShootFan(spawnPos, aimDir);
         }
         else
         {
-            proj.Init(finalDmg, aimDir, spd, isPrimaryCritical: isCrit,
+            var (finalDmg, isCrit) = Host.RollCrit(Host.attackDamage);
+            float spd = EffectiveSpeed;
+            var go    = Object.Instantiate(_projectilePrefab, spawnPos, Quaternion.identity);
+            var proj  = go.GetComponent<Projectile>();
+            if (proj == null) { Object.Destroy(go); return; }
+
+            if (useParabolicShot)
+            {
+                proj.InitParabolic(finalDmg, tgt.Position, spd, parabolicArcHeight,
+                    isPrimaryCritical: isCrit, lifeSteal: Host.lifeSteal, dotDamage: Host.dotDamage,
+                    areaHitRadius: Host.areaHitRadius, areaHitDamageRatio: Host.areaHitDamageRatio,
+                    criticalRate: Host.criticalRate, criticalMultiplier: Host.criticalMultiplier,
+                    baseDamage: Host.attackDamage, knockbackPower: Host.knockbackPower);
+            }
+            else
+            {
+                proj.Init(finalDmg, aimDir, spd, isPrimaryCritical: isCrit,
+                    lifeSteal: Host.lifeSteal, dotDamage: Host.dotDamage,
+                    areaHitRadius: Host.areaHitRadius, areaHitDamageRatio: Host.areaHitDamageRatio,
+                    criticalRate: Host.criticalRate, criticalMultiplier: Host.criticalMultiplier,
+                    baseDamage: Host.attackDamage, knockbackPower: Host.knockbackPower,
+                    weaponId: Host.WeaponId);
+                Host.HighGradeSkill?.OnProjectileSpawned(proj);
+            }
+
+            Host.ApplyShootSpecialEffect(proj, spawnPos, aimDir);
+            if (WeaponSynergyFlags.RangeDoubleProjectile && !useParabolicShot)
+                FireSynergyExtraProjectiles(spawnPos, aimDir, finalDmg * 0.8f, isCrit);
+        }
+
+        Host.TriggerAttackAnimation();
+        TriggerRecoil(aimDir);
+        Host.HighGradeSkill?.OnBeginAttack(aimDir);
+        if (Host.Grade >= WeaponGrade.Legendary) Host.HighGradeSkill?.OnShoot(spawnPos, aimDir);
+        PlayShootVfx();
+    }
+
+    private void ShootFan(Vector3 spawnPos, Vector2 centerDir)
+    {
+        float spd      = EffectiveSpeed;
+        float halfSpan = fanAngleSpan * 0.5f;
+        float step     = fanCount > 1 ? fanAngleSpan / (fanCount - 1) : 0f;
+        float baseDmg  = Host.attackDamage * fanDamageRatio;
+
+        for (int i = 0; i < fanCount; i++)
+        {
+            float angle = fanCount > 1 ? -halfSpan + step * i : 0f;
+            Vector2 dir = RotateDir(centerDir, angle);
+
+            var go   = Object.Instantiate(_projectilePrefab, spawnPos, Quaternion.identity);
+            var proj = go.GetComponent<Projectile>();
+            if (proj == null) { Object.Destroy(go); continue; }
+
+            var (finalDmg, isCrit) = Host.RollCrit(baseDmg);
+            proj.Init(finalDmg, dir, spd, isPrimaryCritical: isCrit,
                 lifeSteal: Host.lifeSteal, dotDamage: Host.dotDamage,
                 areaHitRadius: Host.areaHitRadius, areaHitDamageRatio: Host.areaHitDamageRatio,
                 criticalRate: Host.criticalRate, criticalMultiplier: Host.criticalMultiplier,
-                baseDamage: Host.attackDamage, knockbackPower: Host.knockbackPower,
+                baseDamage: baseDmg, knockbackPower: Host.knockbackPower,
                 weaponId: Host.WeaponId);
+            Host.HighGradeSkill?.OnProjectileSpawned(proj);
+
+            Host.ApplyShootSpecialEffect(proj, spawnPos, dir);
         }
-
-        Host.ApplyShootSpecialEffect(proj, spawnPos, aimDir);
-        Host.TriggerAttackAnimation();
-        TriggerRecoil(aimDir);
-        if (Host.Grade >= WeaponGrade.Legendary) Host.HighGradeSkill?.OnShoot(spawnPos, aimDir);
-
-        // SYN_RANGE4_PROJECTILE_X2: 원거리 4개 이상 시 추가 투사체 발사 (±15°, 데미지 80%)
-        if (WeaponSynergyFlags.RangeDoubleProjectile && !useParabolicShot)
-            FireSynergyExtraProjectiles(spawnPos, aimDir, finalDmg * 0.8f, isCrit);
     }
 
     private void FireSynergyExtraProjectiles(Vector3 spawnPos, Vector2 aimDir, float dmg, bool isCrit)
@@ -118,6 +167,21 @@ public class WeaponRangedBehaviour : WeaponBehaviourBase
             areaHitRadius: Host.areaHitRadius, areaHitDamageRatio: Host.areaHitDamageRatio,
             criticalRate: Host.criticalRate, criticalMultiplier: Host.criticalMultiplier,
             baseDamage: dmg, knockbackPower: Host.knockbackPower, weaponId: Host.WeaponId);
+    }
+
+    private void PlayShootVfx()
+    {
+        if (_shootVfx == null) return;
+        if (_vfxCoroutine != null) StopCoroutine(_vfxCoroutine);
+        _vfxCoroutine = StartCoroutine(ShootVfxRoutine());
+    }
+
+    private IEnumerator ShootVfxRoutine()
+    {
+        _shootVfx.SetActive(true);
+        yield return new WaitForSeconds(_shootVfxDuration);
+        _shootVfx.SetActive(false);
+        _vfxCoroutine = null;
     }
 
     private static Vector2 RotateDir(Vector2 v, float degrees)
@@ -168,6 +232,7 @@ public class WeaponRangedBehaviour : WeaponBehaviourBase
             Vector2 aimDir = ((Vector2)tgt.Position - (Vector2)Host.transform.position).normalized;
             Host.HighGradeSkill?.OnShoot(Host.transform.position, aimDir);
         }
+        PlayShootVfx();
     }
 
     private void TriggerRecoil(Vector2 shootDir)

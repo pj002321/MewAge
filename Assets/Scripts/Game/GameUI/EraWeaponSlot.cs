@@ -35,6 +35,7 @@ public class EraWeaponSlot : MonoBehaviour
         {
             iconImage.sprite  = data.icon;
             iconImage.enabled = data.icon != null;
+            if (data.icon != null) iconImage.SetNativeSize();
         }
 
         // 등급 프레임 스프라이트 + 색상
@@ -63,6 +64,7 @@ public class EraWeaponSlot : MonoBehaviour
             weaponTypeIcon.sprite  = typeSprite;
             weaponTypeIcon.color   = WeaponGradeColors.Get(data.grade);
             weaponTypeIcon.enabled = typeSprite != null;
+            if (typeSprite != null) weaponTypeIcon.SetNativeSize();
         }
 
         // 무기 타입 텍스트
@@ -88,6 +90,7 @@ public class EraWeaponSlot : MonoBehaviour
             var badgeSprite = hasTraitDisplay ? cfg?.GetTraitBadgeSprite(data.grade) : null;
             traitBadgeImage.sprite  = badgeSprite;
             traitBadgeImage.enabled = badgeSprite != null;
+            if (badgeSprite != null) traitBadgeImage.SetNativeSize();
         }
 
         // 신화 등급일 때만 백라이트

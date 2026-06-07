@@ -37,7 +37,7 @@ public class ImprovManager : MonoBehaviourSingleton<ImprovManager>
         // C1 원시시대
         { ImprovType.AUG_FIRST_HUNT,       () => new AugmentFirstHunt()      },
         { ImprovType.AUG_WILD_FUSION,      () => new AugmentWildFusion()     },
-        { ImprovType.AUG_SPAWN_SNAIL,      () => new AugmentSpawnSnail()     },
+        { ImprovType.AUG_SPAWN_TURRET,     () => new AugmentSpawnTurret()    },
         { ImprovType.AUG_PET_BEAST,        () => new AugmentPetBeast()       },
         { ImprovType.AUG_MUD_OPENING,      () => new AugmentMudOpening()     },
         { ImprovType.AUG_ICE_AGE,          () => new AugmentIceAge()         },

@@ -131,6 +131,9 @@ public class StatusEffectConfig : ScriptableObject
         [Tooltip("데미지 비율 (기본 1)")] public float p_spearDmgRatio;
         [Tooltip("타격 반경 (기본 0.45)")] public float p_spearHitRadius;
 
+        // SHOOT_SPREAD
+        [Tooltip("피해 비율 (기본 0.12)")] public float p_sprayDmgRatio;
+
         // HIT_CLONE_TRAIL
         [Tooltip("클론 프리팹")] public GameObject p_trailClonePrefab;
         [Tooltip("마커 프리팹")] public GameObject p_trailMarkerPrefab;

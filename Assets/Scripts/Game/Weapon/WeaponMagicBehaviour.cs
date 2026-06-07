@@ -30,6 +30,7 @@ public class WeaponMagicBehaviour : WeaponMeleeBaseBehaviour
     [System.NonSerialized] private GameObject _projectilePrefab;
     [SerializeField] private float      projectileSpeed = 15f;
 
+
     // ── Visual ────────────────────────────────────────────────────────
     private SpriteRenderer _weaponSr;
     private Coroutine      _srColorCoroutine;
@@ -76,7 +77,7 @@ public class WeaponMagicBehaviour : WeaponMeleeBaseBehaviour
                 break;
         }
 
-        // None (또는 Fire 프리팹 없음): Melee 상태머신 진입
+        // None (또는 프리팹 없음): Melee 상태머신 진입
         BeginAttack(best);
     }
 

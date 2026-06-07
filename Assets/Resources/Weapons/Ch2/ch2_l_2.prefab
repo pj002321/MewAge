@@ -61,7 +61,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: e901129e9679f8e428ec8abe92cf485f, type: 2}
+  - {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -84,7 +84,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 101
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -7076861006480083509, guid: 738e44c156ecb483791abe5b98002305, type: 3}
+  m_Sprite: {fileID: -1307453319, guid: 5eb5cf9b1ec9dc74c8cb39a01fc96ca7, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -107,7 +107,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponPoint
   _behaviour:
-    rid: 2864143526218694750
+    rid: 5375542204598583435
   useTrail: 1
   trailTime: 0.1
   trailStartWidth: 0.28
@@ -116,18 +116,16 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 2864143526218694750
-      type: {class: WeaponBoomerangBehaviour, ns: , asm: Assembly-CSharp}
+    - rid: 5375542204598583435
+      type: {class: WeaponMeleeBehaviour, ns: , asm: Assembly-CSharp}
       data:
-        pullbackDist: 0.5
-        pullbackSpeed: 30
-        strikeSpeed: 80
-        returnSpeed: 25
-        hitDistance: 0.4
-        overshootDistance: 0.5
-        overshootSpeed: 60
-        maxBounces: 3
-        bounceRange: 5
+        _overrideSpeed: 0
+        _overridePullbackSpeed: 5
+        _overrideStrikeSpeed: 300
+        _overrideReturnSpeed: 70
+        embedDuration: 0.2
+        useFadeWarp: 0
+        useEmbedPulse: 1
 --- !u!114 &-3097853947098103379
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -140,12 +138,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d880b36e09b826b4aa4d33b07b710c84, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpriteOutline
-  starColors:
-  - {r: 1, g: 1, b: 1, a: 0}
-  - {r: 0.504717, g: 0.9414869, b: 1, a: 1}
-  - {r: 0.39999998, g: 1, b: 0.6414886, a: 1}
-  - {r: 0.8, g: 0.4, b: 1, a: 1}
-  - {r: 1, g: 0.35, b: 0.35, a: 1}
 --- !u!114 &-2383084221775247632
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -162,6 +154,12 @@ MonoBehaviour:
   meleeDuration: 1.5
   freezeDamageOnThaw: 0
   freezeColor: {r: 0.5, g: 0.85, b: 1, a: 1}
+  sprayPrefab: {fileID: 0}
+  sprayCount: 7
+  sprayAngleSpan: 80
+  spraySpeed: 7
+  sprayDecel: 20
+  sprayLifetime: 0.35
   boomerangChance: 0.3
   cloneSpeed: 10
   cloneLifetime: 1.8
@@ -175,6 +173,13 @@ MonoBehaviour:
   slashProjSpeed: 9
   radiusMultiplier: 1.4
   spinSpeedMultiplier: 1.35
+  spinCloneChance: 0.3
+  spinCloneRadius: 1.5
+  spinCloneSpeed: 220
+  spinCloneDuration: 3
+  spinCloneHitRadius: 0.4
+  spinCloneAlpha: 0.5
+  spinCloneMaxCount: 3
   shockwaveRadius: 4.5
   shockwaveDmgRatio: 0.4
   spikeChance: 0.2
@@ -187,4 +192,22 @@ MonoBehaviour:
   bindDuration: 2
   groggyChance: 0.15
   groggySeconds: 2
+  spearChance: 0.25
+  spearPrefab: {fileID: 0}
+  spearDropHeight: 8
+  spearSideOffset: 3
+  spearSpeed: 18
+  spearDmgRatio: 1
+  spearHitRadius: 0.45
+  trailChance: 0.3
+  trailClonePrefab: {fileID: 0}
+  trailMarkerPrefab: {fileID: 0}
+  trailSpeed: 6
+  trailRange: 8
+  trailDmgRatio: 0.4
+  trailDuration: 2
+  trailSpawnInterval: 0.15
+  trailHitRadius: 0.5
+  trailCloneAlpha: 0.5
+  reflectBounceCount: 3
   reductionPct: 0.2

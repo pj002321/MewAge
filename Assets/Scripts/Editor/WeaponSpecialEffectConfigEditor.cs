@@ -33,8 +33,8 @@ public class WeaponEffectConfigEditor : EditorWindow
     {
         "",
         "HIT_STUN", "HIT_ICE", "HIT_FIRE",
-        "HIT_CLONE_RETURN", "HIT_CLONE_SPREAD", "HIT_CLONE_BURST",
-        "SHOOT_SUB",
+        "HIT_CLONE_RETURN", "HIT_CLONE_SPREAD", "HIT_CLONE_BURST", "HIT_CLONE_CROSS",
+        "SHOOT_SUB", "SHOOT_SPREAD", "SHOOT_REFLECT", "SHOOT_MULTI", "SHOOT_PIERCE", "SHOOT_WAVE",
         "HIT_SLASH",
         "HIT_SPIN",
         "HIT_SHOCK",
@@ -43,7 +43,7 @@ public class WeaponEffectConfigEditor : EditorWindow
         "BOSS_GROGY",
         "HIT_SPEAR",
         "HIT_CLONE_TRAIL",
-        "BUFF_ATK", "BUFF_DEF", "BUFF_HP", "BUFF_SPD", "BUFF_CRI",
+        "BUFF_ATK", "BUFF_DEF", "BUFF_HP", "BUFF_SPD", "BUFF_CRI", "BUFF_HEAL",
     };
     private static readonly string[] SkillLabels;
     static WeaponEffectConfigEditor()
@@ -501,6 +501,10 @@ public class WeaponEffectConfigEditor : EditorWindow
             DrawLabeledFloat(elem.FindPropertyRelative("p_trailSpawnInterval"),"생성간격",  50f);
             DrawLabeledFloat(elem.FindPropertyRelative("p_trailHitRadius"),    "타격반경",  50f);
             DrawLabeledFloat(elem.FindPropertyRelative("p_trailCloneAlpha"),   "투명도",    50f);
+        }
+        else if (skillId == "SHOOT_SPREAD")
+        {
+            DrawLabeledFloat(elem.FindPropertyRelative("p_sprayDmgRatio"), "피해비율", 55f);
         }
         else if (isBuff)
         {

@@ -55,6 +55,7 @@ public class UpgradeCard : MonoBehaviour
             weaponIcon.sprite  = weaponData.icon;
             weaponIcon.enabled = weaponData.icon != null;
             weaponIcon.color   = Color.white;
+            if (weaponData.icon != null) weaponIcon.SetNativeSize();
         }
         ApplyWeaponOverlays(weaponData);
         if (weaponNameText) weaponNameText.text = weaponData.weaponName;
@@ -161,7 +162,11 @@ public class UpgradeCard : MonoBehaviour
             var sprite = cfg?.GetTypeSprite(data.weaponType);
             weaponTypeImg.sprite  = sprite;
             weaponTypeImg.enabled = sprite != null;
-            if (sprite != null) weaponTypeImg.color = WeaponGradeColors.Get(data.grade);
+            if (sprite != null)
+            {
+                weaponTypeImg.color = WeaponGradeColors.Get(data.grade);
+                weaponTypeImg.SetNativeSize();
+            }
         }
     }
 

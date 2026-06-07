@@ -79,7 +79,7 @@ public class WeaponInfoEditor : Editor
 
     private void OnSceneGUI()
     {
-        if (targets.Length > 1) return;
+        if (target == null) return;
         var weapon = (WeaponPoint)target;
 
         if (_hammerImpactWorldPos != null && _hammerImpactRadius != null)

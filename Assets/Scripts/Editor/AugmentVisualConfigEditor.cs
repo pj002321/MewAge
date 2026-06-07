@@ -20,13 +20,13 @@ public class AugmentVisualConfigEditor : EditorWindow
 
     private static readonly HashSet<ImprovType> NeedsCompanion = new()
     {
-        ImprovType.AUG_SPAWN_SNAIL, // 달팽이 설치물 프리팹
+        ImprovType.AUG_SPAWN_TURRET, // 달팽이 설치물 프리팹
         ImprovType.AUG_PET_BEAST,
     };
 
     private static readonly HashSet<ImprovType> NeedsProjectile = new()
     {
-        ImprovType.AUG_SPAWN_SNAIL, // 달팽이가 발사하는 투사체 프리팹
+        ImprovType.AUG_SPAWN_TURRET, // 달팽이가 발사하는 투사체 프리팹
         ImprovType.AUG_MUD_OPENING,
     };
 

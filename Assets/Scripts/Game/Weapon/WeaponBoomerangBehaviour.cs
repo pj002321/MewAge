@@ -5,27 +5,36 @@ using UnityEngine;
 [System.Serializable]
 public class WeaponBoomerangBehaviour : WeaponMeleeBaseBehaviour
 {
-    [SerializeField] private int   maxBounces  = 3;
-    [SerializeField] private float bounceRange = 5f;
+    [SerializeField] private int maxBounces = 3;
 
     private WeaponPoint.CombatTarget _boomerang;
     private int                      _bouncesLeft;
     private readonly HashSet<EnemyController> _hitEnemies = new();
     private readonly HashSet<BossController>  _hitBosses  = new();
 
+    private const float BounceHoldDuration = 0.2f;
+    private bool                      _inBounceHold;
+    private float                     _bounceHoldTimer;
+    private WeaponPoint.CombatTarget  _nextBoomerang;
+
     public override float GetPlayerAttackBonus(PlayerController player) => player.RangedAttackBonus;
     public override float GetRelicBonusPct(RelicManager relic)         => relic.BoomerangAtkBonusPct;
 
+    private const float SpinSpeed = 720f;
+
+    public override bool OverridesRotation =>
+        _state == State.Striking || _state == State.Returning;
+
     public override void OnInitData(WeaponData data)
     {
-        maxBounces  = data.maxBounces  > 0 ? data.maxBounces  : maxBounces;
-        bounceRange = data.bounceRange > 0 ? data.bounceRange : bounceRange;
+        maxBounces = data.maxBounces > 0 ? data.maxBounces : maxBounces;
     }
 
     protected override void BeginAttack(WeaponPoint.CombatTarget best)
     {
-        _boomerang   = best;
-        _bouncesLeft = GetTotalBounces();
+        _boomerang      = best;
+        _bouncesLeft    = GetTotalBounces();
+        _inBounceHold   = false;
         _hitEnemies.Clear();
         _hitBosses.Clear();
 
@@ -37,8 +46,26 @@ public class WeaponBoomerangBehaviour : WeaponMeleeBaseBehaviour
 
     protected override void OnBeginStrikeSetup() { /* 부메랑은 애니메이션 없음 */ }
 
+    protected override void OnReturnUpdate()
+    {
+        Host.transform.Rotate(0f, 0f, SpinSpeed * Time.deltaTime);
+    }
+
     protected override void UpdateStriking()
     {
+        Host.transform.Rotate(0f, 0f, SpinSpeed * Time.deltaTime);
+
+        if (_inBounceHold)
+        {
+            _bounceHoldTimer -= Time.deltaTime;
+            if (_bounceHoldTimer <= 0f)
+            {
+                _inBounceHold = false;
+                _boomerang    = _nextBoomerang;
+            }
+            return;
+        }
+
         if (_boomerang.IsNone) { BeginReturn(); return; }
         if (!_boomerang.IsValid) { _boomerang = WeaponPoint.CombatTarget.None; BeginReturn(false); return; }
 
@@ -58,8 +85,10 @@ public class WeaponBoomerangBehaviour : WeaponMeleeBaseBehaviour
         var next = FindNextTarget(targetPos);
         if (!next.IsNone)
         {
-            _boomerang = next;
-            _state     = State.Striking;
+            _nextBoomerang   = next;
+            _boomerang       = WeaponPoint.CombatTarget.None;
+            _inBounceHold    = true;
+            _bounceHoldTimer = BounceHoldDuration;
         }
         else
         {
@@ -91,14 +120,14 @@ public class WeaponBoomerangBehaviour : WeaponMeleeBaseBehaviour
             if (e == null || !e.gameObject.activeInHierarchy) continue;
             if (_hitEnemies.Contains(e)) continue;
             float d = Vector2.Distance(fromPos, e.transform.position);
-            if (d < minDist && d <= bounceRange) { minDist = d; nearestEnemy = e; }
+            if (d < minDist) { minDist = d; nearestEnemy = e; }
         }
 
         var boss = BossController.Current;
         if (boss != null && boss.gameObject.activeInHierarchy && !_hitBosses.Contains(boss))
         {
             float d = Vector2.Distance(fromPos, boss.transform.position);
-            if (d < minDist && d <= bounceRange) { minDist = d; nearestBoss = boss; nearestEnemy = null; }
+            if (d < minDist) { minDist = d; nearestBoss = boss; nearestEnemy = null; }
         }
 
         if (nearestBoss  != null) return new WeaponPoint.CombatTarget(nearestBoss);

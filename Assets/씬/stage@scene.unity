@@ -7698,7 +7698,6 @@ Material:
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
   - OUTLINE_ON
-  - UNDERLAY_ON
   m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -7718,16 +7717,16 @@ Material:
     m_Floats:
     - _ColorMask: 15
     - _CullMode: 2
-    - _FaceDilate: 0
+    - _FaceDilate: 0.15
     - _GradientScale: 4
     - _MaskSoftnessX: 0
     - _MaskSoftnessY: 0
     - _OutlineSoftness: 0
-    - _OutlineWidth: 0.16
+    - _OutlineWidth: 0
     - _PerspectiveFilter: 0
     - _ScaleRatioA: 0.75
     - _ScaleRatioB: 0.05499999
-    - _ScaleRatioC: 0.609375
+    - _ScaleRatioC: 0.496875
     - _ScaleX: 1
     - _ScaleY: 1
     - _ShaderFlags: 0
@@ -26385,10 +26384,6 @@ PrefabInstance:
       propertyPath: m_AnchorMax.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 3302747247969693829, guid: f9a8c0e29c2e9bc4bb518c36b372a05d, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 3743302631712945789, guid: f9a8c0e29c2e9bc4bb518c36b372a05d, type: 3}
       propertyPath: m_Camera
       value: 
@@ -26432,14 +26427,6 @@ PrefabInstance:
     - target: {fileID: 3768263777332437215, guid: f9a8c0e29c2e9bc4bb518c36b372a05d, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3953135899010041423, guid: f9a8c0e29c2e9bc4bb518c36b372a05d, type: 3}
-      propertyPath: baseExpPerLevel
-      value: 30
-      objectReference: {fileID: 0}
-    - target: {fileID: 3953135899010041423, guid: f9a8c0e29c2e9bc4bb518c36b372a05d, type: 3}
-      propertyPath: expGrowthPerLevel
-      value: 30
       objectReference: {fileID: 0}
     - target: {fileID: 6088640636082143099, guid: f9a8c0e29c2e9bc4bb518c36b372a05d, type: 3}
       propertyPath: m_Name
@@ -28383,7 +28370,6 @@ Material:
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
   - OUTLINE_ON
-  - UNDERLAY_ON
   m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -28403,16 +28389,16 @@ Material:
     m_Floats:
     - _ColorMask: 15
     - _CullMode: 2
-    - _FaceDilate: 0
+    - _FaceDilate: 0.15
     - _GradientScale: 4
     - _MaskSoftnessX: 0
     - _MaskSoftnessY: 0
     - _OutlineSoftness: 0
-    - _OutlineWidth: 0.16
+    - _OutlineWidth: 0
     - _PerspectiveFilter: 0
     - _ScaleRatioA: 0.75
     - _ScaleRatioB: 0.05499999
-    - _ScaleRatioC: 0.609375
+    - _ScaleRatioC: 0.496875
     - _ScaleX: 1
     - _ScaleY: 1
     - _ShaderFlags: 0
@@ -29146,8 +29132,6 @@ MonoBehaviour:
   gamePausePanel: {fileID: 643234040}
   waveClearPanel: {fileID: 1879206110}
   waveClearDuration: 1
-  clearSlowMoDuration: 0.1
-  clearSlowMoScale: 0.15
   timerNormalColor: {r: 1, g: 1, b: 1, a: 1}
   timerWarningColor: {r: 1, g: 0, b: 0, a: 1}
   timerWarningThreshold: 5
@@ -31323,7 +31307,6 @@ Material:
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
   - OUTLINE_ON
-  - UNDERLAY_ON
   m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -31343,16 +31326,16 @@ Material:
     m_Floats:
     - _ColorMask: 15
     - _CullMode: 2
-    - _FaceDilate: 0
+    - _FaceDilate: 0.15
     - _GradientScale: 4
     - _MaskSoftnessX: 0
     - _MaskSoftnessY: 0
     - _OutlineSoftness: 0
-    - _OutlineWidth: 0.16
+    - _OutlineWidth: 0
     - _PerspectiveFilter: 0
     - _ScaleRatioA: 0.75
     - _ScaleRatioB: 0.05499999
-    - _ScaleRatioC: 0.609375
+    - _ScaleRatioC: 0.496875
     - _ScaleX: 1
     - _ScaleY: 1
     - _ShaderFlags: 0
@@ -32087,7 +32070,6 @@ Material:
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
   - OUTLINE_ON
-  - UNDERLAY_ON
   m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -32107,16 +32089,16 @@ Material:
     m_Floats:
     - _ColorMask: 15
     - _CullMode: 2
-    - _FaceDilate: 0
+    - _FaceDilate: 0.15
     - _GradientScale: 4
     - _MaskSoftnessX: 0
     - _MaskSoftnessY: 0
     - _OutlineSoftness: 0
-    - _OutlineWidth: 0.16
+    - _OutlineWidth: 0
     - _PerspectiveFilter: 0
     - _ScaleRatioA: 0.75
     - _ScaleRatioB: 0.05499999
-    - _ScaleRatioC: 0.609375
+    - _ScaleRatioC: 0.496875
     - _ScaleX: 1
     - _ScaleY: 1
     - _ShaderFlags: 0

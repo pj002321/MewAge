@@ -120,8 +120,11 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
 
             int cap   = currentMaxOnMap > 0 ? Mathf.Min(currentMaxOnMap, maxEnemiesOnMap) : maxEnemiesOnMap;
             int alive = CountActiveEnemies();
+            int slots = cap - alive;
 
-            if (alive < cap)
+            if (slots >= 3 && Random.value < groupSpawnChance)
+                SpawnEnemyGroup(slots);
+            else if (slots > 0)
                 SpawnEnemy(); // 마커 포함 → 카운트에 즉시 반영되어 과스폰 방지
 
             yield return new WaitForSeconds(currentInterval);
@@ -385,6 +388,7 @@ public class EnemySpawner : MonoBehaviourSingleton<EnemySpawner>
     public void OnWaveUp(int wave)
     {
         Debug.Log($"[EnemySpawner] OnWaveUp: wave={wave}, isBossWave={isBossWave}, spawning={spawning}");
+        WeaponHighGradeSkill.DestroyAllLiveClones();
         currentWave = wave;
         ApplyRule(wave);
         StopAllCoroutines();

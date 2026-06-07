@@ -116,6 +116,7 @@ public class WeaponInfoPanel : MonoBehaviourSingleton<WeaponInfoPanel>
         {
             iconImage.sprite  = data.icon;
             iconImage.enabled = data.icon != null;
+            if (data.icon != null) iconImage.SetNativeSize();
         }
 
         if (weaponTypeImg)

@@ -29,6 +29,7 @@ public class WeaponHighGradeSkill : MonoBehaviour
     // ── ShowIf 조건 ──────────────────────────────────────────────────────
     private string _traitId => WP?.SpecialEffectId is { Length: > 0 } s ? s : DbTraitId;
     private bool IsMelee    => _traitId is "HIT_STUN" or "HIT_ICE" or "HIT_FIRE";
+    private bool IsSpread   => _traitId == "SHOOT_SPREAD";
     private bool IsClone    => _traitId.StartsWith("HIT_CLONE");
     private bool IsRanged   => _traitId == "SHOOT_SUB";
     private bool IsSlash    => _traitId == "HIT_SLASH";
@@ -40,6 +41,7 @@ public class WeaponHighGradeSkill : MonoBehaviour
     private bool IsReduction => _traitId == "(신화 피해감소)";
     private bool IsSpear    => _traitId == "HIT_SPEAR";
     private bool IsTrail    => _traitId == "HIT_CLONE_TRAIL";
+    private bool IsReflect  => _traitId == "SHOOT_REFLECT";
 
     // ── [HIT_STUN · HIT_ICE · HIT_FIRE] 근접 상태이상 ──────────────────
     [BoxGroup("[HIT_STUN·ICE·FIRE] 근접"), ShowIf(nameof(IsMelee))]
@@ -55,6 +57,16 @@ public class WeaponHighGradeSkill : MonoBehaviour
 
     [BoxGroup("[HIT_STUN·ICE·FIRE] 근접"), ShowIf(nameof(IsMelee)), LabelText("빙결 색상 (HIT_ICE)")]
     [SerializeField] private Color freezeColor = new Color(0.5f, 0.85f, 1f, 1f);
+
+    // ── [SHOOT_SPREAD] 분사 ──────────────────────────────────────────────
+    [BoxGroup("[SHOOT_SPREAD] 분사"), ShowIf(nameof(IsSpread)), LabelText("연출 오브젝트")]
+    [SerializeField] private GameObject sprayEffect;
+
+    [BoxGroup("[SHOOT_SPREAD] 분사"), ShowIf(nameof(IsSpread)), LabelText("피해 반경")]
+    [SerializeField] private float sprayRadius = 2f;
+
+    [BoxGroup("[SHOOT_SPREAD] 분사"), ShowIf(nameof(IsSpread)), LabelText("부채꼴 각도")]
+    [SerializeField] private float sprayAngle = 120f;
 
     // ── [HIT_CLONE_*] 클론 ───────────────────────────────────────────────
     [BoxGroup("[HIT_CLONE_*] 클론"), ShowIf(nameof(IsClone))]
@@ -228,6 +240,10 @@ public class WeaponHighGradeSkill : MonoBehaviour
     [BoxGroup("[HIT_CLONE_TRAIL] 흔적"), ShowIf(nameof(IsTrail)), LabelText("클론 투명도")]
     [SerializeField, Range(0f, 1f)] private float trailCloneAlpha = 0.5f;
 
+    // ── [SHOOT_REFLECT] 반사 ────────────────────────────────────────────
+    [BoxGroup("[SHOOT_REFLECT] 반사"), ShowIf(nameof(IsReflect)), LabelText("최대 반사 횟수")]
+    [SerializeField, Range(1, 10)] private int reflectBounceCount = 3;
+
     // ── [신화] 피해 감소 (패시브) ───────────────────────────────────────
     [BoxGroup("[신화] 피해 감소"), ShowIf(nameof(IsReduction)), LabelText("보스 피해 감소율")]
     [SerializeField, Range(0f, 1f)] private float reductionPct = 0.2f;
@@ -238,6 +254,15 @@ public class WeaponHighGradeSkill : MonoBehaviour
     // ── 런타임 ───────────────────────────────────────────────────────────
     protected WeaponPoint WP { get; private set; }
     private int _activeSpinClones;
+
+    private static readonly List<GameObject> _liveClones = new();
+
+    public static void DestroyAllLiveClones()
+    {
+        foreach (var go in _liveClones)
+            if (go != null) Destroy(go);
+        _liveClones.Clear();
+    }
 
     private string TraitId => _traitId;
 
@@ -285,7 +310,7 @@ public class WeaponHighGradeSkill : MonoBehaviour
             case "HIT_SHOCK":      DoHammerHit(hitBuffer, colCount); break;
             case "HIT_SPIN":       DoSpinClone(); break;
             case "HIT_CLONE_RETURN": DoCloneReturn(); break;
-            case "HIT_CLONE_SPREAD": DoCloneSpread(); break;
+            case "HIT_CLONE_SPREAD": break;
             case "HIT_CLONE_BURST":  DoCloneBurst();  break;
             case "HIT_CLONE_TRAIL":
                 DoCloneTrail(WP != null ? (Vector2)WP.transform.position : (Vector2)transform.position, hitDir);
@@ -294,6 +319,16 @@ public class WeaponHighGradeSkill : MonoBehaviour
                 if (TraitId.StartsWith("HIT_CLONE")) DoBoomerangHit();
                 break;
         }
+    }
+
+    public void OnBeginAttack(Vector2 aimDir)
+    {
+        if (IsSpread) SpawnSpread(aimDir);
+    }
+
+    public void OnProjectileSpawned(Projectile proj)
+    {
+        if (IsReflect) proj.SetBounce(reflectBounceCount, 0f);
     }
 
     public void OnShoot(Vector3 firePos, Vector2 fireDir)
@@ -450,6 +485,7 @@ public class WeaponHighGradeSkill : MonoBehaviour
         float outTime    = P(e => e.cloneOutTime,    0.45f);
         float pauseTime  = P(e => e.clonePauseTime,  0.25f);
         float returnTime = P(e => e.cloneReturnTime, 0.35f);
+        _liveClones.Add(go);
         StartCoroutine(ReturnArcRoutine(go, origin, origin + dir * range, dmg, outTime, pauseTime, returnTime));
     }
 
@@ -566,6 +602,7 @@ public class WeaponHighGradeSkill : MonoBehaviour
                 SetSpriteAlpha(go, cAlpha);
             }
             else Destroy(go, cLifetime);
+            _liveClones.Add(go);
             return;
         }
         if (sr == null || sr.sprite == null) return;
@@ -579,6 +616,7 @@ public class WeaponHighGradeSkill : MonoBehaviour
         ghostSr.sortingOrder   = sr.sortingOrder;
         ghostSr.color          = new Color(1f, 1f, 1f, cAlpha);
         ghost.AddComponent<BoomerangCloneMover>().Init(dir, cSpeed, cLifetime);
+        _liveClones.Add(ghost);
     }
 
     private static void SetSpriteAlpha(GameObject go, float alpha)
@@ -776,6 +814,74 @@ public class WeaponHighGradeSkill : MonoBehaviour
 
         cloneGo.AddComponent<TrailClone>().Init(
             dir, speed, range, dmg, duration, interval, hitR, markerPrefab);
+    }
+
+    // ── [SHOOT_SPREAD] 분사 구현 ─────────────────────────────────────────
+
+    private static readonly Collider2D[] _sprayBuf = new Collider2D[16];
+
+    private void SpawnSpread(Vector2 aimDir)
+    {
+        if (sprayEffect != null)
+            StartCoroutine(BurstSprayEffectRoutine());
+
+        if (WP == null) return;
+        float dmgRatio  = P(e => e.p_sprayDmgRatio, 0.12f);
+        float dmg       = WP.AttackDamage * dmgRatio;
+        float frostMax  = WP.AttackDamage * 2f;
+        Vector2 origin  = WP.transform.position;
+        float halfAngle = sprayAngle * 0.5f;
+        bool checkAngle = aimDir.sqrMagnitude > 0.001f;
+
+        int count = Physics2D.OverlapCircleNonAlloc(origin, sprayRadius, _sprayBuf);
+        var hitIds = new System.Collections.Generic.HashSet<int>();
+        for (int i = 0; i < count; i++)
+        {
+            if (_sprayBuf[i] == null) continue;
+            if (checkAngle)
+            {
+                Vector2 toTarget = ((Vector2)_sprayBuf[i].bounds.center - origin).normalized;
+                if (Vector2.Angle(aimDir, toTarget) > halfAngle) continue;
+            }
+            var enemy = _sprayBuf[i].GetComponentInParent<EnemyController>();
+            if (enemy != null && enemy.gameObject.activeInHierarchy && hitIds.Add(enemy.GetInstanceID()))
+            {
+                enemy.TakeDamage(dmg, false);
+                SpreadFrostEffect.Apply(enemy.gameObject, dmg, frostMax);
+            }
+            var boss = _sprayBuf[i].GetComponentInParent<BossController>();
+            if (boss != null && boss.gameObject.activeInHierarchy && hitIds.Add(boss.GetInstanceID()))
+                boss.TakeDamage(dmg, false);
+        }
+    }
+
+    private System.Collections.IEnumerator BurstSprayEffectRoutine()
+    {
+        sprayEffect.SetActive(true);
+        yield return new WaitForSeconds(0.3f);
+        if (sprayEffect != null) sprayEffect.SetActive(false);
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        if (!IsSpread || sprayRadius <= 0f) return;
+        Vector3 center  = transform.position;
+        Vector3 forward = transform.up;
+        float   halfA   = sprayAngle * 0.5f;
+        Gizmos.color = new Color(0.35f, 0.65f, 1f, 0.6f);
+        Vector3 leftEdge  = Quaternion.Euler(0f, 0f,  halfA) * forward * sprayRadius;
+        Vector3 rightEdge = Quaternion.Euler(0f, 0f, -halfA) * forward * sprayRadius;
+        Gizmos.DrawLine(center, center + leftEdge);
+        Gizmos.DrawLine(center, center + rightEdge);
+        const int Seg = 24;
+        Vector3 prev = center + leftEdge;
+        for (int i = 1; i <= Seg; i++)
+        {
+            float   a    = Mathf.Lerp(halfA, -halfA, (float)i / Seg);
+            Vector3 curr = center + Quaternion.Euler(0f, 0f, a) * forward * sprayRadius;
+            Gizmos.DrawLine(prev, curr);
+            prev = curr;
+        }
     }
 
     // ── 유틸 ─────────────────────────────────────────────────────────────
@@ -1121,3 +1227,4 @@ public class TrailMarker : MonoBehaviour
         }
     }
 }
+

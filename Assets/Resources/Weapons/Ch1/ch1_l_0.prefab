@@ -120,11 +120,13 @@ MonoBehaviour:
     - rid: 5375542154661986450
       type: {class: WeaponMeleeBehaviour, ns: , asm: Assembly-CSharp}
       data:
-        _overrideSpeed: 0
+        _overrideSpeed: 1
         _overridePullbackSpeed: 7
         _overrideStrikeSpeed: 300
         _overrideReturnSpeed: 70
-        embedDuration: 0.2
+        embedDuration: 0.15
+        useFadeWarp: 0
+        useEmbedPulse: 1
 --- !u!114 &-5742848553004821721
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -167,6 +169,12 @@ MonoBehaviour:
   meleeDuration: 1.5
   freezeDamageOnThaw: 0
   freezeColor: {r: 0.5, g: 0.85, b: 1, a: 1}
+  sprayPrefab: {fileID: 0}
+  sprayCount: 7
+  sprayAngleSpan: 80
+  spraySpeed: 7
+  sprayDecel: 20
+  sprayLifetime: 0.35
   boomerangChance: 0.2
   cloneSpeed: 10
   cloneLifetime: 1.8
@@ -216,4 +224,5 @@ MonoBehaviour:
   trailSpawnInterval: 0.15
   trailHitRadius: 0.5
   trailCloneAlpha: 0.5
+  reflectBounceCount: 3
   reductionPct: 0.2

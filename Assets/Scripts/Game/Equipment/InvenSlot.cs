@@ -70,7 +70,7 @@ public class InvenSlot : MonoBehaviour,
             var gradeSprite = WeaponVisualConfig.Shared?.GetGradeSprite(grade);
             if (gradeSprite != null) { frameImg.sprite = gradeSprite; frameImg.type = Image.Type.Simple; frameImg.color = Color.white; }
         }
-        if (iconImg) { iconImg.enabled = icon != null; if (icon != null) iconImg.sprite = icon; }
+        if (iconImg) { iconImg.enabled = icon != null; if (icon != null) { iconImg.sprite = icon; iconImg.SetNativeSize(); } }
         if (weaponTypeImg) weaponTypeImg.enabled = false;
         SetStarObject(starObjects, star);
         transform.localScale = Vector3.one * (selected ? selectedScale : normalScale);
@@ -110,7 +110,7 @@ public class InvenSlot : MonoBehaviour,
                 frameImg.color  = _mergeHighlight && has ? MergeHighlightColor : Color.white;
             }
         }
-        if (has && iconImg && data.icon) iconImg.sprite = data.icon;
+        if (has && iconImg && data.icon) { iconImg.sprite = data.icon; iconImg.SetNativeSize(); }
         ApplyWeaponOverlays(has ? data : null);
         SetStarObject(starObjects, has ? data.star : 0);
 
@@ -141,7 +141,7 @@ public class InvenSlot : MonoBehaviour,
             var sprite = data != null ? cfg?.GetTypeSprite(data.weaponType) : null;
             weaponTypeImg.sprite  = sprite;
             weaponTypeImg.enabled = sprite != null;
-            if (sprite != null) weaponTypeImg.color = WeaponGradeColors.Get(data.grade);
+            if (sprite != null) { weaponTypeImg.color = WeaponGradeColors.Get(data.grade); weaponTypeImg.SetNativeSize(); }
         }
     }
 

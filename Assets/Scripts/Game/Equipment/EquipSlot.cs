@@ -61,7 +61,7 @@ public class EquipSlot : MonoBehaviour,
     /// <summary>결과 무기가 Destroy된 경우를 대비해 사전 캡처된 값으로 슬롯을 표시합니다.</summary>
     public void RefreshCaptured(Sprite icon, WeaponGrade grade, int star)
     {
-        if (iconImg) { iconImg.enabled = icon != null; if (icon != null) iconImg.sprite = icon; }
+        if (iconImg) { iconImg.enabled = icon != null; if (icon != null) { iconImg.sprite = icon; iconImg.SetNativeSize(); } }
         if (weaponTypeImg) weaponTypeImg.enabled = false;
         SetStarObject(starObjects, star);
         if (frameImg)
@@ -96,11 +96,14 @@ public class EquipSlot : MonoBehaviour,
         _currentData = data;
         bool has = data != null;
         if (iconImg)  iconImg.enabled = has;
-        if (has && iconImg && data.icon) iconImg.sprite = data.icon;
+        if (has && iconImg && data.icon) { iconImg.sprite = data.icon; iconImg.SetNativeSize(); }
 
         SetStarObject(starObjects, has ? data.star : 0);
         if (has)
+        {
             WeaponInfoPanel.SetTypeIcon(weaponTypeImg, data.weaponType, data.grade);
+            if (weaponTypeImg && weaponTypeImg.enabled) weaponTypeImg.SetNativeSize();
+        }
         else if (weaponTypeImg)
             weaponTypeImg.enabled = false;
         transform.localScale = Vector3.one * (has && selected ? 1.15f : 1f);

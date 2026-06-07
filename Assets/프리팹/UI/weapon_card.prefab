@@ -262,7 +262,7 @@ MonoBehaviour:
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 1
+  m_fontStyle: 0
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 4096
   m_textAlignment: 65535
@@ -313,7 +313,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7be279fc5c8399540926613fc6b0b8db, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TextStyleApplier
-  preset: {fileID: 11400000, guid: e726866e6d2949a4ea2676e9ba402573, type: 2}
+  preset: {fileID: 11400000, guid: 4c8721c40e8e9f3459386f2997055b85, type: 2}
   overrideFaceColor: 0
   localFaceColor: {r: 1, g: 1, b: 1, a: 1}
   overrideOutlineColor: 0
@@ -760,6 +760,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 103481519796971245}
   - {fileID: 4246736262930084416}
   m_Father: {fileID: 3562448494167567188}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -1213,8 +1214,7 @@ RectTransform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 103481519796971245}
+  m_Children: []
   m_Father: {fileID: 414331687666581701}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
@@ -1634,7 +1634,7 @@ PrefabInstance:
   serializedVersion: 2
   m_Modification:
     serializedVersion: 3
-    m_TransformParent: {fileID: 4246736262930084416}
+    m_TransformParent: {fileID: 414331687666581701}
     m_Modifications:
     - target: {fileID: 6733276480860914538, guid: 141d42add8017624da3bdf1c213859fd, type: 3}
       propertyPath: m_Name
@@ -1690,23 +1690,23 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7077808978557935103, guid: 141d42add8017624da3bdf1c213859fd, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: 7077808978557935103, guid: 141d42add8017624da3bdf1c213859fd, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: 7077808978557935103, guid: 141d42add8017624da3bdf1c213859fd, type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: 7077808978557935103, guid: 141d42add8017624da3bdf1c213859fd, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: -16
+      value: -20
       objectReference: {fileID: 0}
     - target: {fileID: 7077808978557935103, guid: 141d42add8017624da3bdf1c213859fd, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 16
+      value: 22
       objectReference: {fileID: 0}
     - target: {fileID: 7077808978557935103, guid: 141d42add8017624da3bdf1c213859fd, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
